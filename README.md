@@ -1,53 +1,37 @@
-# New Project Template
+# Optimus Prime Database Assessment
 
-This repository contains a template that can be used to seed a repository for a
-new Google open source project.
+This project intends to enable an easier Oracle database assessment for homogenous and hetereogeous migration. It is integrated with Google Big Query database what makes easy to query all data collected. This tool can be used for one or many Oracle databases. It will cover:
 
-See [go/releasing](http://go/releasing) (available externally at
-https://opensource.google/docs/releasing/) for more information about
-releasing a new Google open source project.
+1. Script to collect data from Oracle Databases
+2. Script to import this data to be analyzed into Google Big Query
+3. Script to create some views that add value to the analysis. For instance, Database Migration Effort Estimate, Google Bare Metal Sizing, etc.
 
-This template uses the Apache license, as is Google's default.  See the
-documentation for instructions on using alternate license.
+NOTE: The script to collect data only runs SELECT statements against Oracle dictionary. No application data is accessed nor is any data changed or deleted.
 
-## How to use this template
+## How to use this tool
 
-1. Clone it from GitHub.
-    * There is no reason to fork it.
-1. Create a new local repository and copy the files from this repo into it.
-1. Modify README.md and docs/contributing.md to represent your project, not the
-   template project.
-1. Develop your new project!
+Part 1 - Collecting the data in the Oracle source system
 
-``` shell
-git clone https://github.com/google/new-project
-mkdir my-new-thing
-cd my-new-thing
-git init
-cp -r ../new-project/* ../new-project/.github .
-git add *
-git commit -a -m 'Boilerplate for new Google open source project'
-```
+1. Create an Oracle database user with minimum provileges to collect data from Oracle dictionary.
+	* If you decide to use an existing database user with all the privileges already please go to step 3.
+2. Run the script called `minimum_select_grants_for_targets.sql`
+	* When prompted, provide the name of the database user created at Step 1.
+3. Execute the SQL script called `oracle_db_assessment.sql`.
+	* This execution can use any Oracle native tool that supports SQL Script. In some cases some other third party tools as well.
+	* For example you can use Oracle SQL*Plus which is the recommended approach.
+	* NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB neither in each Oracle RAC instance.
+4. Once the script is executed you should see many psodb*log files generated. It might be a good idea to zip/tar those files.
+	* Please use meaningful names when zip/tar the files. For instance, dbassess_<hostname>_<dbname>_<PROD or NON-PROD>.tar.
+5. Repeat step 3 for all Oracle databases that you want to assess.
 
-## Source Code Headers
+Part 2 - Importing the data collected into Google Big Query for analysis
 
-Every file containing source code must include copyright and license
-information. This includes any JS/CSS files that you might be serving out to
-browsers. (This is to help well-intentioned people avoid accidental copying that
-doesn't comply with the license.)
+To Be Developed
 
-Apache header:
+## Contributing to the project
 
-    Copyright 2021 Google LLC
+Contributions and pull requests are welcome.  See [docs/contributing.md](docs/contributing.md) and [docs/code-of-conduct.md](docs/code-of-conduct.md) for details.
 
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+## The fine print
 
-        https://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+This product is [licensed](LICENSE) under the Apache 2 license.  This is not an officially supported Google project
