@@ -1,0 +1,5 @@
+select TO_CHAR(A.ORIGINATING_TIMESTAMP, 'dd/mm/yyyy hh24:mi:ss') MESSAGE_TIME,
+        a.message_text, a.host_id, a.con_id, a.component_id,
+        a.message_type, a.message_level, a.message_id, a.message_group, a.filename, a.container_name
+from V$DIAG_ALERT_EXT A
+/
