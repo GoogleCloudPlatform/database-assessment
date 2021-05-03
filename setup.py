@@ -18,7 +18,7 @@ import setuptools
 
 name = "oracle-db-assessment"
 description = "A tool to enable collection of data from Oracle datases for homogeneous and heterogeneous database migration assessment"
-version = "0.1.0"
+version = "0.1.0dev"
 release_status = "Development Status :: 4 - Beta"
 
 with open("README.md", "r") as fh:
@@ -29,7 +29,8 @@ dependencies = [v for v in dependencies if not v.startswith("#")]  # Remove comm
 
 extras_require = {}
 
-packages = []
+packages = ['db-assessment',
+]
 
 packages += []
 
