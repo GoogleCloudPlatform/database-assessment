@@ -1,0 +1,62 @@
+{
+    "rules":
+
+            {
+                "rule1":
+                        {
+                            "id": 1,
+                            "name": "RULE 01",
+                            "type": "NUMBER",
+                            "priority": 100,
+                            "action": "ADD_COLUMN",
+                            "action_details": {"column_name": "db_cpu_consumption", "datatype": "NUMBER"},
+                            "status": "ENABLED",
+                            "tags": ["SIZING","EFFORT_ESTIMATE"],
+                            "expr1": "dbStats[@cpu used@];/;dbStats[-cpu total-]",
+                            "iferror": "NULL",
+                            "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
+                        },
+                "rule2":
+                        {
+                            "id": 2,
+                            "name": "RULE 02",
+                            "type": "VARIABLE",
+                            "priority": 200,
+                            "action": "CREATE",
+                            "action_details": {"varname": "ora_db_11g_and_above","value": "Microsoft Windows (32-bit),Linux x86 64-bit", "datatype": "LIST"},
+                            "status": "ENABLED",
+                            "tags": ["MIGRATIONTECHIQUE","DATAGUARD"],
+                            "expr1": "",
+                            "iferror": "IGNORE",
+                            "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
+                        },
+                "rule3":
+                        {
+                            "id": 3,
+                            "name": "RULE 03",
+                            "type": "LOGICAL_IN",
+                            "priority": 300,
+                            "action": "ADD_COLUMN",
+                            "action_details": {"type": "VARIABLE", "value": "rulesResult[Rule 02][Result Value]"},
+                            "status": "ENABLED",
+                            "tags": ["MIGRATIONTECHIQUE","DATAGUARD"],
+                            "expr1": "dbStats[@os platform@]",
+                            "iferror": "IGNORE",
+                            "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
+                        },
+                "rule4":
+                        {
+                            "id": 4,
+                            "name": "RULE 04",
+                            "type": "VARIABLE",
+                            "priority": 0,
+                            "action": "CREATE",
+                            "action_details": {"varname": "from_to_columns_for_hist_sys_stat","value": "{\"I/O Megabytes per Second\": \"IOMBPS\", \"I/O Requests per Second\": \"IOPS\"}", "datatype": "DICTIONARY"},
+                            "status": "ENABLED",
+                            "tags": ["PREPROCESS"],
+                            "expr1": "",
+                            "iferror": "IGNORE",
+                            "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
+                        }
+            }
+}
