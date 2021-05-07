@@ -3,22 +3,29 @@ import pandas as pd
 
 import json
 
+#import import_db_assessment
 
 def createTransformersVariable(transformerRule):
 
-    if transformerRule['action_details']['datatype'] == 'DICTIONARY':
+    if str(transformerRule['action_details']['datatype']).upper() == 'DICTIONARY':
 
-        resRule = {}
+        return json.loads(str(transformerRule['action_details']['value']).strip())
 
-        print ('\n\nTo be Dictionary: ', str(transformerRule['action_details']['value']))
+    elif str(transformerRule['action_details']['datatype']).upper() == 'LIST':
 
-        resRule = json.loads(str(transformerRule['action_details']['value']).strip())
+        return str(transformerRule['action_details']['value']).split(',')
 
-        return resRule
+    elif str(transformerRule['action_details']['datatype']).upper() == 'STRING':
+
+        return str(transformerRule['action_details']['value'])
+
+    elif str(transformerRule['action_details']['datatype']).upper() == 'NUMBER':
+
+        return float(transformerRule['action_details']['value'])
 
     else:
 
-        return {}
+        return None
 
 def runRules(transformerRules, dataFrames):
 
@@ -35,7 +42,8 @@ def runRules(transformerRules, dataFrames):
     # Looping on ALL rules from transformers.json
     for ruleItem in transformerRules['rules']:
 
-        if transformerRules['rules'][ruleItem]['type'] == "VARIABLE" and transformerRules['rules'][ruleItem]['action'] == "CREATE":
+        if str(transformerRules['rules'][ruleItem]['type']).upper() == "VARIABLE" and str(transformerRules['rules'][ruleItem]['action']).upper() == "CREATE":
+        # transformers.json asking to create a variable which is a dictionary
 
             try:
                 transformerResults[ruleItem] = {'Status': EXECUTEDSTATUS, 'Result Value': createTransformersVariable(transformerRules['rules'][ruleItem])}
@@ -45,6 +53,11 @@ def runRules(transformerRules, dataFrames):
             except:
                 transformerResults[ruleItem] = {'Status': FAILEDSTATUS, 'Result Value': None}
                 transformerVariables[transformerRules['rules'][ruleItem]['action_details']['varname']] = None
+
+        elif str(transformerRules['rules'][ruleItem]['type']).upper() == "NUMBER" and str(transformerRules['rules'][ruleItem]['action']).upper() == "ADD_COLUMN":
+        # transformers.json asking to add a column that is type number meaning it can be a calculation and the column to be added is NUMBER too
+
+            None
 
     return transformerResults, transformerVariables
 
@@ -82,131 +95,132 @@ def getDataFrameFromCSV(csvFileName,skipRows):
     return df
 
 
-def getAllDataFrames():
+def getAllDataFrames(fileList, skipRows):
+# Fuction to read from CSVs and store the data into a dataframe. The dataframe is placed then into a Hash Table.
 
+    # Hash table to store dataframes after being loaded from CSVs
     dataFrames = {}
-    skipRows = 1
 
-    csvFileName = '/Users/erisantos/cloud-source-repo/optimus-prime-db-assessment/dbResults/opalldb__dbsummary__consolidate.log'
-    dbsummary_df = getDataFrameFromCSV(csvFileName,skipRows)
-    dataFrames['dbsummary'] = {'dataframe': dbsummary_df}
+    for fileName in fileList:
 
-    #csvFileName = '/Users/erisantos/cloud-source-repo/optimus-prime-db-assessment/dbResults/opalldb__dbsummary__consolidate.log'
-    #dboverview_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['dboverview'] = {'dataframe': dboverview_df}
+        # Final table name from the CSV file names
+        tableName = import_db_assessment.getObjNameFromFiles(fileName,'__',1)
 
-    csvFileName = '/Users/erisantos/cloud-source-repo/optimus-prime-db-assessment/dbResults/opalldb__pdbsinfo__consolidate.log'
-    pdbsinfo_df = getDataFrameFromCSV(csvFileName,skipRows)
-    dataFrames['pdbsinfo'] = {'dataframe': pdbsinfo_df}
+        # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
+        df = getDataFrameFromCSV(fileName,skipRows)
+        # Trimming the data before storing it
+        dataFrames[tableName] = trimDataframe(df)
 
-    csvFileName = '/Users/erisantos/cloud-source-repo/optimus-prime-db-assessment/dbResults/opalldb__pdbsopenmode__consolidate.log'
-    pdbsopenmode_df = getDataFrameFromCSV(csvFileName,skipRows)
-    dataFrames['pdbsopenmode'] = {'dataframe': pdbsopenmode_df}
-
-    csvFileName = '/Users/erisantos/cloud-source-repo/optimus-prime-db-assessment/dbResults/opalldb__dbinstances__consolidate.log'
-    dbinstances_df = getDataFrameFromCSV(csvFileName,skipRows)
-    dataFrames['dbinstances'] = {'dataframe': dbinstances_df}
-
-    #usedspacedetails_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['usedspacedetails'] = {'dataframe': usedspacedetails_df}
-
-    #compressbytable_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['compressbytable'] = {'dataframe': compressbytable_df}
-
-    #compressbytype_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['compressbytype'] = {'dataframe': compressbytype_df}
-
-    #spacebyownersegtype_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['spacebyownersegtype'] = {'dataframe': spacebyownersegtype_df}
-
-    #spacebytablespace_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['spacebytablespace'] = {'dataframe': spacebytablespace_df}
-
-    #freespaces_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #ataFrames['freespaces'] = {'dataframe': freespaces_df}
-
-    #dblinks_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['dblinks'] = {'dataframe': dblinks_df}
-
-    #dbparameters_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['dbparameters'] = {'dataframe': dbparameters_df}
-
-    #dbfeatures_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['dbfeatures'] = {'dataframe': dbfeatures_df}
-
-    #dbhwmarkstatistics_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['dbhwmarkstatistics'] = {'dataframe': dbhwmarkstatistics_df}
-
-    #cpucoresusage_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['cpucoresusage'] = {'dataframe': cpucoresusage_df}
-
-    #dbobjects_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['dbobjects'] = {'dataframe': dbobjects_df}
-
-    #sourcecode_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['sourcecode'] = {'dataframe': sourcecode_df}
-
-    #partsubparttypes_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['partsubparttypes'] = {'dataframe': partsubparttypes_df}
-
-    #indexestypes_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['indexestypes'] = {'dataframe': indexestypes_df}
-
-    #datatypes_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['datatypes'] = {'dataframe': datatypes_df}
-
-    #tablesnopk_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['tablesnopk'] = {'dataframe': tablesnopk_df}
-
-    #systemstats_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['systemstats'] = {'dataframe': systemstats_df}
-
-    #patchlevel_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['patchlevel'] = {'dataframe': patchlevel_df}
-
-    csvFileName = '/Users/erisantos/cloud-source-repo/optimus-prime-db-assessment/dbResults/opalldb__awrhistsysmetrichist__consolidate.log'
-    awrhistsysmetrichist_df = getDataFrameFromCSV(csvFileName,skipRows)
-    dataFrames['awrhistsysmetrichist'] = {'dataframe': awrhistsysmetrichist_df}
-
-    #awrhistsystimemodel_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['awrhistsystimemodel'] = {'dataframe': awrhistsystimemodel_df}
-
-    #awrhistosstat_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['awrhistosstat'] = {'dataframe': awrhistosstat_df}
-
-    #awrhistcmdtypes_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['awrhistcmdtypes'] = {'dataframe': awrhistcmdtypes_df}
-
-    #optimusconfig_bms_machinesizes_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['optimusconfig_bms_machinesizes'] = {'dataframe': optimusconfig_bms_machinesizes_df}
-
-    #optimusconfig_network_to_gcp_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['optimusconfig_network_to_gcp'] = {'dataframe': optimusconfig_network_to_gcp_df}
-
-    #alertlog_df = getDataFrameFromCSV(csvFileName,skipRows)
-    #dataFrames['alertlog'] = {'dataframe': alertlog_df}
 
     return dataFrames
 
-def swapDbAssessmentRowsToColumns(dbAssessmentDataframe,swapRowsToColumns,colsDataframeShort,swapColumns):
+def trimDataframe(df):
 
-    dbAssessmentDataframeShort = dbAssessmentDataframe[colsDataframeShort].copy()
+    # Removing spaces (TRIM/Strip) for ALL columns
+    cols = list(df.columns)
+    df[cols] = df[cols].apply(lambda x: x.str.strip())
 
-    columnName = None
+    # trimmed dataframe
+    return df
 
-    for index, row in dbAssessmentDataframe.iterrows():
+def getAllReShapedDataframes(dataFrames, targetTableNames):
+    # Function to iterate on getReShapedDataframe to reShape some dataframes accordingly with targetTableNames
+    # dataFrames is expected to be a Hash Table of dataframes
+    # targetTableNames is expected to be a list with the right keys from the Hash table dataFrames
 
-        # If there is a match is because this row supposed to be swapped
-        columnName = swapRowsToColumns.get(str(row['METRIC_NAME']).strip())
+    for tableName in targetTableNames:
 
-        if columnName is not None:
+        getReShapedDataframe(dataFrames[tableName], )
 
-            # Columns that we want to keep in the dataFrame
-            for column in swapColumns:
+def getReShapedDataframe(df, transformersParameters):
+# Function to get a dataframe in one format and reshape it to another one that would make a lot simpler to create rules on.
+# Input dataframe to be reshaped example:
+#
+# FROM:
+#   DBID	HOUR	METRIC	PERC50	PERC90	PERC95
+#   1	0	Active Sessions	15	20	22
+#   1	1	Active Sessions	14	18	19
+#   1	2	Active Sessions	13	18	18
+#   1	0	User Transaction Per Sec	369	450	460
+#   1  	1	User Transaction Per Sec	301	400	420
+#   1	2	User Transaction Per Sec	280	390	400
+#   1	0	Physical Reads	904	1405	1500
+#   1	1	Physical Reads	1050	1589	1600
+#   1	2	Physical Reads	1120	1400	1450
+#
+# TO: (Using a from/to: Active Sessions == AAS, User Transaction Per Sec == UT)
+#   DBID	HOUR	AAS_PERC90	AAS_PERC95	UT_PERC90	UT_PER95
+#   1	0	20	22	450	460
+#   1	1	18	19	400	420
+#   1	2	18	18	390	400
 
-                columnName = columnName + '_' + column
 
-                dbAssessmentDataframeShort[columnName] = row['']
+    hours = df.drop_duplicates(subset=['HO'])['HO'].tolist()
+    metrics = {'User Transaction Per Sec': 'USPS','SQL Service Response Time': 'SQLRT','Redo Generated Per Sec': 'RGPS'}
+
+    newShapeDataframe = df[['PKEY', 'CON_ID', 'DBID','INSTANCE_NUMBER','HO']].copy()
+    newBaseShapeDataframe = newShapeDataframe.drop_duplicates()
+
+    results = {}
+
+    resultsDataframes = {}
+
+    # Most of the times this column will be an HOUR from 0..23. However, that might be cases in which this is the CON_ID or somethihg else
+    # This column should always have uniq (Unique Key) combination with the field that will become a column for that given collection. For example:
+    # PKEY + HOUR + METRIC_NAME = UNIQUE (UK)
+    # PKEY + CON_ID + INITORA_PARAMETER = UNIQUE (UK)
+    for hour in hours:
+
+        df_by_hour = df[(df['HO'] == hour)]
+        newBaseShapeDataframe_by_hour = newBaseShapeDataframe[(newBaseShapeDataframe['HO'] == hour)]
+
+        results[hour] = {}
+
+        # Looping on all metrics to become columns. It will be used to filter the dataframe
+        for metric in metrics.keys():
+
+            results[hour][metrics.get(metric) + '_PERC95'] = []
+            results[hour][metrics.get(metric) + '_PERC90'] = []
+      
+
+            # Filterting dataframe per metric which means 1 line per database collection
+            df_by_hour_by_metric = df_by_hour[(df_by_hour['METRIC_NAME'] == metric)]
+
+      
+            # Looping all lines for the given hour and metric (it will only have multiple lines if there are multiple collections, otherwise, it will be always 1 row)
+            for index, row in df_by_hour_by_metric.iterrows():
+
+                # Storing the metric by hour value that will turn into column
+                results[hour][metrics.get(metric) + '_PERC95'].append(row['PERC95'])
+                results[hour][metrics.get(metric) + '_PERC90'].append(row['PERC90'])
+
+          
+            # Creating a new column in the df using a list accordingly with the hour
+            newBaseShapeDataframe_by_hour[metrics.get(metric) + '_PERC95'] = results[hour][metrics.get(metric) + '_PERC95']
+            newBaseShapeDataframe_by_hour[metrics.get(metric) + '_PERC90'] = results[hour][metrics.get(metric) + '_PERC90']
+
+            resultsDataframes[hour] = newBaseShapeDataframe_by_hour
+
+
+
+    # Generating Final Dataframe with all hours and metrics
+    finalDF = appendListOfDataframes(resultsDataframes)
+
+    return finalDF
+
+
+def appendListOfDataframes(dataframesList):
+
+    for dfIndex in len(dataframesList):
+
+        if dfIndex == 0:
+
+            df = dataframesList[dfIndex]
+            continue
+
+        df.append(dataframesList[dfIndex])
+
+    return df
 
 if __name__ == '__main__':
 
@@ -221,11 +235,11 @@ if __name__ == '__main__':
     print (transformerVariables)
 
     dbAssessmentDataframes = {}
-    dbAssessmentDataframes = getAllDataFrames()
+    dbAssessmentDataframes = getAllDataFrames(fileList, 1)
 
     colsDataframeShort = ['PKEY','CON_ID','DBID','INSTANCE_NUMBER']
     swapRowsToColumns = {"I/O Megabytes per Second": "IOMBPS", "I/O Requests per Second": "IOPS"}
     swapColumns = ['PERC90','PERC95','PERC100']
-    swapDbAssessmentRowsToColumns(dbAssessmentDataframes['awrhistsysmetrichist']['dataframe'], swapRowsToColumns, colsDataframeShort, swapColumns)
+    #swapDbAssessmentRowsToColumns(dbAssessmentDataframes['awrhistsysmetrichist']['dataframe'], swapRowsToColumns, colsDataframeShort, swapColumns)
 
 

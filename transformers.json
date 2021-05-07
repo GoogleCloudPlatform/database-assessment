@@ -1,4 +1,49 @@
 {
+    "parameters":
+            {
+                "parameter1":
+                            {
+                                "id": 1,
+                                "name": "DATAFRAMERESHAPE",
+                                "type": "VARIABLE",
+                                "priority": 0,
+                                "action": "CREATE",
+                                "action_details": {"varname": "AWRHISTSYSMETRICHIST","value": "{\"FROM_TO_ROWS_TO_COLUMNS\": {\"I/O Megabytes per Second\": \"IOMBPS\", \"I/O Requests per Second\": \"IOPS\"}, \"TARGET_COLUMN\": \"METRIC_NAME\", \"CLUSTER_COLUMN\": \"HO\", \"KEEP_COLUMNS\": ['PKEY', 'CON_ID', 'DBID','INSTANCE_NUMBER','HO']}", "datatype": "DICTIONARY"},
+                                "status": "ENABLED",
+                                "tags": ["DATAFRAMERESHAPE","AWRHISTSYSMETRICHIST"],
+                                "expr1": "",
+                                "iferror": "IGNORE",
+                                "description": "This parameter indicates that CSV for AWRHISTSYSMETRICHIST tablename needs to have its dataframe reshaped."
+                            },
+                "parameter2":
+                            {
+                                "id": 2,
+                                "name": "DATAFRAMERESHAPE",
+                                "type": "VARIABLE",
+                                "priority": 0,
+                                "action": "CREATE",
+                                "action_details": {"varname": "AWRHISTOSSTAT","value": "{\"FROM_TO_ROWS_TO_COLUMNS\": {\"I/O Megabytes per Second\": \"IOMBPS\", \"I/O Requests per Second\": \"IOPS\"}, \"TARGET_COLUMN\": \"METRIC_NAME\", \"CLUSTER_COLUMN\": \"HO\", \"KEEP_COLUMNS\": ['PKEY', 'CON_ID', 'DBID','INSTANCE_NUMBER','HO']}", "datatype": "DICTIONARY"},
+                                "status": "ENABLED",
+                                "tags": ["DATAFRAMERESHAPE","AWRHISTOSSTAT"],
+                                "expr1": "",
+                                "iferror": "IGNORE",
+                                "description": "This parameter indicates that CSV for AWRHISTOSSTAT tablename needs to have its dataframe reshaped."
+                            },
+                "parameter3":
+                            {
+                                "id": 2,
+                                "name": "PARAMETER 02",
+                                "type": "VARIABLE",
+                                "priority": 0,
+                                "action": "CREATE",
+                                "action_details": {"varname": "DF_TO_RESHAPE","value": "awrhistsysmetrichist,awrhistosstat", "datatype": "LIST"},
+                                "status": "ENABLED",
+                                "tags": ["DATAFRAMERESHAPE"],
+                                "expr1": "",
+                                "iferror": "IGNORE",
+                                "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
+                            }
+            },
     "rules":
 
             {
