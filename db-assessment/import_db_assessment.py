@@ -35,7 +35,7 @@ __version__='0.1.0'
 
 def getVersion():
 
-    return import_db_assessment.__version__
+    return __version__
 
 def consolidateLos(args):
 # This function intents to consolidate the collected files into a single large file to facilidate importing the data to Big Query
