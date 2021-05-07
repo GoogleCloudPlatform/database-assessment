@@ -3,7 +3,7 @@ import pandas as pd
 
 import json
 
-#import import_db_assessment
+import import_db_assessment
 
 def createTransformersVariable(transformerRule):
 
@@ -234,6 +234,7 @@ if __name__ == '__main__':
     print (transformerResults)
     print (transformerVariables)
 
+    fileList = import_db_assessment.getAllFilesByPattern('/Users/erisantos/cloud-source-repo/optimus-prime-db-assessment/dbResults/opalldb*log')
     dbAssessmentDataframes = {}
     dbAssessmentDataframes = getAllDataFrames(fileList, 1)
 
