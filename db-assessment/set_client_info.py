@@ -15,10 +15,11 @@
 # Handwritten HTTP clients
 from google.api_core import client_info as http_client_info
 
-import import_db_assessment
+# Information for analytics and tool improvement
+__version__='0.1.0'
 
 APPLICATION_NAME = "google-pso-tool/optimus-prime-db-assessment"
-USER_AGENT = "{}/{}".format(APPLICATION_NAME, import_db_assessment.__version__)
+USER_AGENT = "{}/{}".format(APPLICATION_NAME, __version__)
 
 
 def get_http_client_info():
