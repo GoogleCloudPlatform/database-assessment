@@ -14,7 +14,7 @@ SELECT a.ckey,
        SUM(a.bms_database_memory_gb)           bms_database_memory_gb,
        SUM(a.bms_db_tb_disk_for_iops)          bms_db_tb_disk_for_iops,
        SUM(a.bms_est_monthly_storage_bill)     bms_est_monthly_storage_bill
-FROM   mydataset.vbms_sizing_detailperpdb a
+FROM   ${dataset}.vbms_sizing_detailperpdb a
 GROUP  BY a.ckey,
           a.db_name,
           a.dbid,

@@ -13,8 +13,8 @@ WITH bms_machine_sizing_by_pdb AS
                       b.est_price                                                                                                                                  bms_offer_est_price,
                       ROUND((a.bms_host_machine_cores) / CAST(b.cores AS INT64) * 100,0)                                                                           bms_est_cpu_usage_peak,
                       MIN(CAST(b.cores AS INT64)       - a.bms_host_machine_cores) over(PARTITION BY a.ckey, a.db_name, a.dbversion, a.dbid, a.instance_number) AS min_bms_machine
-           FROM       mydataset.vbms_sizing_summperpdb a
-           cross join mydataset.vconfig_machinesizes b
+           FROM       ${dataset}.vbms_sizing_summperpdb a
+           cross join ${dataset}.vconfig_machinesizes b
            WHERE      ((
                                             cast(b.cores AS int64) - a.bms_host_machine_cores) / cast(b.cores AS int64) * 100) > 30
            ORDER BY   (cast(b.cores AS int64) - a.bms_host_machine_cores) )

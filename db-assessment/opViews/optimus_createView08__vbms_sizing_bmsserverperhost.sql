@@ -11,8 +11,8 @@ WITH bms_machine_sizing_by_hostname AS
                       a.bms_database_memory_gb,
                       a.bms_db_tb_disk_for_iops,
                       a.bms_est_monthly_storage_bill
-           FROM       mydataset.vbms_sizing_summperhost a
-           cross join mydataset.vconfig_machinesizes b
+           FROM       ${dataset}.vbms_sizing_summperhost a
+           cross join ${dataset}.vconfig_machinesizes b
            WHERE      ((
                                             cast(b.cores AS int64) - a.bms_host_machine_cores) / cast(b.cores AS int64) * 100) > 30
            ORDER BY   (cast(b.cores AS int64) - a.bms_host_machine_cores) )

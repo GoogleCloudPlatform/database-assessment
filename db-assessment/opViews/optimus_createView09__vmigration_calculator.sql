@@ -44,13 +44,13 @@ FROM     (
                                                                          ROUND(a.db_size_allocated_gb / b.gbytes_per_sec / 60 / 60,2)     time_to_transfer_to_gcp_hour,
                                                                          ROUND(a.db_size_allocated_gb / c.gbytes_per_sec / 60 / 60,2)*2.5 time_to_importrestore_hour,
                                                                          1                                                                time_to_validate_migration_hour
-                                                              FROM       mydataset.vdbsummary a
-                                                              cross join mydataset.vconfig_networktogcp b
+                                                              FROM       ${dataset}.vdbsummary a
+                                                              cross join ${dataset}.vconfig_networktogcp b
                                                               cross join
                                                                          (
                                                                                 SELECT network_to_gcp,
                                                                                        gbytes_per_sec
-                                                                                FROM   mydataset.vconfig_networktogcp
+                                                                                FROM   ${dataset}.vconfig_networktogcp
                                                                                 WHERE  network_to_gcp = 'To SSD') c ) a ) a ) a ) a
 WHERE    a.network_to_gcp != 'To SSD'
 ORDER BY ckey,

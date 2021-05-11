@@ -11,7 +11,7 @@ SELECT ckey,
        MAX(host_free_mem_perc)            host_free_mem_perc,
        MAX(host_load_avg)                 host_load_avg,
        MAX(host_swap_bytes_perc)          host_swap_bytes_perc
-FROM   mydataset.vosstat_metrics
+FROM   ${dataset}.vosstat_metrics
 GROUP  BY ckey,
           dbid,
           con_id,

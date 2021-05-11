@@ -8,6 +8,6 @@ SELECT TRIM(a.pkey)            ckey,
        TRIM(a.value)           value,
        TRIM(a.default_value)   default_value,
        TRIM(a.isdefault_value) isdefault_value
-FROM   mydataset.dbparameters a
-       INNER JOIN mydataset.vdbsummary b
+FROM   ${dataset}.dbparameters a
+       INNER JOIN ${dataset}.vdbsummary b
                ON TRIM(a.pkey) = b.ckey; 

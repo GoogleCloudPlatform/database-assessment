@@ -40,13 +40,13 @@ FROM   (
                                            CASE TRIM(name)
                                                   WHEN 'pga_aggregate_target' THEN CAST(TRIM(a.value) AS INT64)
                                            END AS pga_aggregate_target
-                                    FROM   mydataset.dbparameters a
+                                    FROM   ${dataset}.dbparameters a
                                     WHERE  trim(name) IN ('memory_max_target',
                                                           'memory_target',
                                                           'sga_max_size',
                                                           'sga_target',
                                                           'pga_aggregate_target') ) a
-                  inner join mydataset.vinstsummary b
+                  inner join ${dataset}.vinstsummary b
                   ON         a.ckey = b.ckey
                   AND        a.inst_id = b.inst_id
                   GROUP BY   a.ckey,

@@ -10,7 +10,7 @@ SELECT a.ckey,
        MAX(bms_database_memory_gb)       bms_database_memory_gb,
        MAX(bms_db_tb_disk_for_iops)      bms_db_tb_disk_for_iops,
        MAX(bms_est_monthly_storage_bill) bms_est_monthly_storage_bill
-FROM   mydataset.vbms_sizing_detailperpdb a
+FROM   ${dataset}.vbms_sizing_detailperpdb a
 GROUP  BY a.ckey,
           a.db_name,
           a.dbversion,

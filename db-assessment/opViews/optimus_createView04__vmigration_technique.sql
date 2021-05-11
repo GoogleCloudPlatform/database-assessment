@@ -4,7 +4,7 @@ SELECT db_name,
        dbfullversion,
        (
               SELECT TRIM(value)
-              FROM   mydataset.dbparameters a
+              FROM   ${dataset}.dbparameters a
               WHERE  trim(con_id) = '1'
               AND    trim(name) = 'compatible' limit 1) compatible,
        log_mode,
@@ -42,4 +42,4 @@ SELECT db_name,
        END                                                               initial_recommended_migration_technique_to_same_dbversion,
        'References: Doc ID 413484.1, Doc ID 1401921.1, Doc ID 2005729.1' oracle_references,
        ''                                                                other_references
-FROM   mydataset.vdbsummary a;
+FROM   ${dataset}.vdbsummary a;

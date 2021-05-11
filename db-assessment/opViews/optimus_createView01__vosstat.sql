@@ -55,7 +55,7 @@ FROM     (
                        CASE TRIM(stat_name)
                               WHEN 'LOAD' THEN Cast(TRIM(a.median_value) AS INT64)
                        END AS LOAD,
-                FROM   mydataset.awrhistosstat a
+                FROM   ${dataset}.awrhistosstat a
          ) a
 GROUP BY trim(a.pkey),
          trim(a.con_id),

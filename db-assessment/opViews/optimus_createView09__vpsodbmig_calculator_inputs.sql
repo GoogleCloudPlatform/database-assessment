@@ -17,4 +17,4 @@ SELECT db_size_allocated_gb database_size,
        'Enterprise')        database_edition,
        platform_name        source_os_platform,
        ''                   for_more_information
-FROM   mydataset.vdbsummary; 
+FROM   ${dataset}.vdbsummary; 

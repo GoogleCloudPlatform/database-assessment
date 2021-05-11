@@ -21,6 +21,6 @@ SELECT     TRIM(pkey)                                  ckey,
            TRIM(dg_database_role)                    dg_database_role,
            TRIM(dg_protection_mode)                  dg_protection_mode,
            TRIM(dg_protection_level)                 dg_protection_level
-FROM       mydataset.dbsummary a
-inner join mydataset.vdbmemory_usageperpdb d
+FROM       ${dataset}.dbsummary a
+inner join ${dataset}.vdbmemory_usageperpdb d
 ON         trim(a.pkey) = d.ckey;

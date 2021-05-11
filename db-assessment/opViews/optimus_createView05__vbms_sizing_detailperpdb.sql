@@ -36,18 +36,18 @@ SELECT a.ckey,
        bms_db_tb_disk_for_iops,
        ROUND(a.io_req_per_sec_perc95 / 6000, 0) * 60
        bms_est_monthly_storage_bill
-FROM   mydataset.vsysmetric_hist a
-       INNER JOIN mydataset.vdbsummary b
+FROM   ${dataset}.vsysmetric_hist a
+       INNER JOIN ${dataset}.vdbsummary b
                ON a.ckey = b.ckey
-       INNER JOIN mydataset.vosstat_metrics c
+       INNER JOIN ${dataset}.vosstat_metrics c
                ON a.ckey = c.ckey
                   AND a.dbid = c.dbid
                   AND a.instance_number = c.instance_number
                   AND a.hour = c.hour
-       INNER JOIN mydataset.vdbmemory_usageperpdb d
+       INNER JOIN ${dataset}.vdbmemory_usageperpdb d
                ON a.ckey = d.ckey
                   AND a.instance_number = d.inst_id
                   AND a.con_id = d.con_id
-       INNER JOIN mydataset.vinstsummary e
+       INNER JOIN ${dataset}.vinstsummary e
                ON a.ckey = e.ckey
                   AND a.instance_number = e.inst_id; 

@@ -110,8 +110,8 @@ FROM       (
                          CASE TRIM(metric_name)
                                 WHEN 'User Transaction Per Sec' THEN CAST(TRIM(a.perc100) AS INT64)
                          END AS transac_per_sec_max
-                  FROM   mydataset.awrhistsysmetrichist a ) a
-inner join mydataset.vinstsummary b
+                  FROM   ${dataset}.awrhistsysmetrichist a ) a
+inner join ${dataset}.vinstsummary b
 ON         a.ckey = b.ckey
 AND        a.instance_number = b.inst_id
 GROUP BY   b.hostname,

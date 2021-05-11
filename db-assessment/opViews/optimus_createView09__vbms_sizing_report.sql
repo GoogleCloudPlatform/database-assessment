@@ -11,7 +11,7 @@ SELECT 'BMS Sizing Per Database (All Instances Included)' bms_sizing_description
        a.bms_database_memory_gb,
        a.bms_db_tb_disk_for_iops,
        a.bms_est_monthly_storage_bill
-FROM   mydataset.vbms_sizing_bmsserverperdb a
+FROM   ${dataset}.vbms_sizing_bmsserverperdb a
        INNER JOIN (SELECT b.db_name,
                           b.dbversion,
                           b.dbid,
@@ -21,7 +21,7 @@ FROM   mydataset.vbms_sizing_bmsserverperdb a
                          max_source_db_cpu_utilization_perc,
                           MAX(b.source_host_cpu_utilization_perc)
                          max_source_host_cpu_utilization_perc
-                   FROM   mydataset.vbms_sizing_detailperdb b
+                   FROM   ${dataset}.vbms_sizing_detailperdb b
                    GROUP  BY b.db_name,
                              b.dbversion,
                              b.dbid) c
@@ -41,12 +41,12 @@ SELECT 'BMS Sizing Per Host (All Databases Included)',
        b.bms_database_memory_gb,
        b.bms_db_tb_disk_for_iops,
        b.bms_est_monthly_storage_bill
-FROM   mydataset.vbms_sizing_bmsserverperhost b
+FROM   ${dataset}.vbms_sizing_bmsserverperhost b
        INNER JOIN (SELECT b.hostname,
                           MAX(b.source_num_cpu_cores)
               max_source_num_cpu_cores,
                           MAX(b.source_host_cpu_utilization_perc)
                          max_source_host_cpu_utilization_perc
-                   FROM   mydataset.vbms_sizing_detailperhost b
+                   FROM   ${dataset}.vbms_sizing_detailperhost b
                    GROUP  BY b.hostname) d
                ON b.hostname = d.hostname; 

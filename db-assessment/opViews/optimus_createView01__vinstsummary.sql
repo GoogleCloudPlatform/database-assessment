@@ -6,4 +6,4 @@ SELECT TRIM(a.pkey)            ckey,
        TRIM(a.status)          status,
        TRIM(a.database_status) database_status,
        TRIM(a.instance_role)   instance_role
-FROM   mydataset.dbinstances a; 
+FROM   ${dataset}.dbinstances a; 

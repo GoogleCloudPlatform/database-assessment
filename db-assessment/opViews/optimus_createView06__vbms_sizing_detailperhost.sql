@@ -11,7 +11,7 @@ SELECT hostname,
        SUM(bms_database_memory_gb)       bms_total_database_memory_gb,
        SUM(bms_db_tb_disk_for_iops)      bms_total_db_tb_disk_for_iops,
        SUM(bms_est_monthly_storage_bill) bms_est_monthly_total_storage_bill
-FROM   mydataset.vbms_sizing_detailperpdb
+FROM   ${dataset}.vbms_sizing_detailperpdb
 GROUP  BY hostname,
           hour,
           source_num_cpu_cores,

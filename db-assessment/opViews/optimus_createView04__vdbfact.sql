@@ -30,11 +30,11 @@ SELECT c.ckey            ckey_,
        a.host_sys_cpu_utilization_perc,
        a.host_load_avg,
        a.host_swap_bytes_perc
-FROM   mydataset.vosstat_metrics a
-       INNER JOIN mydataset.vsysmetric_hist b
+FROM   ${dataset}.vosstat_metrics a
+       INNER JOIN ${dataset}.vsysmetric_hist b
                ON a.ckey = b.ckey
                   AND a.dbid = b.dbid
                   AND a.instance_number = b.instance_number
                   AND a.hour = b.hour
-       INNER JOIN mydataset.vdbsummary c
+       INNER JOIN ${dataset}.vdbsummary c
                ON a.ckey = c.ckey; 
