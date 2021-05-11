@@ -1,6 +1,14 @@
-select a.ckey, a.db_name, a.dbversion, a.dbid,  
-        max(bms_host_machine_cores) bms_host_machine_cores, max(bms_database_cores) bms_database_cores,
-        max(bms_database_memory_gb) bms_database_memory_gb, max(bms_db_tb_disk_for_iops) bms_db_tb_disk_for_iops,
-        max(bms_est_monthly_storage_bill) bms_est_monthly_storage_bill
-from `MYDATASET.vbms_sizing_detailperdb` a
-group by a.ckey, a.db_name, a.dbversion, a.dbid;
+SELECT a.ckey,
+       a.db_name,
+       a.dbversion,
+       a.dbid,
+       MAX(bms_host_machine_cores)       bms_host_machine_cores,
+       MAX(bms_database_cores)           bms_database_cores,
+       MAX(bms_database_memory_gb)       bms_database_memory_gb,
+       MAX(bms_db_tb_disk_for_iops)      bms_db_tb_disk_for_iops,
+       MAX(bms_est_monthly_storage_bill) bms_est_monthly_storage_bill
+FROM   mydataset.vbms_sizing_detailperdb a
+GROUP  BY a.ckey,
+          a.db_name,
+          a.dbversion,
+          a.dbid; 

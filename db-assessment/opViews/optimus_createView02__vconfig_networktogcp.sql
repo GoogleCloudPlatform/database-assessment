@@ -1,4 +1,4 @@
-select  trim(network_to_gcp) network_to_gcp,
-        cast(trim(gbytes_per_sec) as numeric) gbytes_per_sec,
-        cast(trim(mbytes_per_sec) as numeric) mbytes_per_sec
-from `MYDATASET.optimusconfig_network_to_gcp`;
+SELECT TRIM(network_to_gcp)                  network_to_gcp,
+       CAST(TRIM(gbytes_per_sec) AS NUMERIC) gbytes_per_sec,
+       CAST(TRIM(mbytes_per_sec) AS NUMERIC) mbytes_per_sec
+FROM   mydataset.optimusconfig_network_to_gcp;

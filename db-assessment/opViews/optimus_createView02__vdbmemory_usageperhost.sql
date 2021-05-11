@@ -1,35 +1,46 @@
-select  a.hostname, 
-        a.memory_max_target_gb, a.memory_target_gb, a.sga_max_size_gb, a.sga_target_gb, a.pga_aggregate_target_gb,
-        case memory_max_target_gb
-            when 0.0 then sga_max_size_gb+pga_aggregate_target_gb
-            else memory_max_target_gb
-        end db_total_memory_gb
-from (
-select b.hostname,  
-        round(sum(a.memory_max_target)/1024/1024/1024,1) memory_max_target_gb, round(sum(a.memory_target)/1024/1024/1024,1) memory_target_gb,
-        round(sum(a.sga_max_size)/1024/1024/1024,1) sga_max_size_gb, round(sum(a.sga_target)/1024/1024/1024,1) sga_target_gb,
-        round(sum(a.pga_aggregate_target)/1024/1024/1024,1) pga_aggregate_target_gb
-from (
-select trim(a.pkey) ckey, trim(a.inst_id) inst_id, trim(a.con_id) con_id,
-        case trim(name)
-                when 'memory_max_target' then cast(trim(a.value) as int64)
-            end as memory_max_target,
-        case trim(name)
-                when 'memory_target' then cast(trim(a.value) as int64)
-            end as memory_target,
-        case trim(name)
-                when 'sga_max_size' then cast(trim(a.value) as int64)
-            end as sga_max_size,
-        case trim(name)
-                when 'sga_target' then cast(trim(a.value) as int64)
-            end as sga_target,
-        case trim(name)
-                when 'pga_aggregate_target' then cast(trim(a.value) as int64)
-            end as pga_aggregate_target
-from `MYDATASET.dbparameters` a
-where trim(name) in ('memory_max_target','memory_target','sga_max_size','sga_target','pga_aggregate_target')
-) a
-inner join `MYDATASET.vinstsummary` b
-on a.ckey = b.ckey and a.inst_id = b.inst_id
-group by b.hostname
-) a;
+SELECT a.hostname,
+       a.memory_max_target_gb,
+       a.memory_target_gb,
+       a.sga_max_size_gb,
+       a.sga_target_gb,
+       a.pga_aggregate_target_gb,
+       CASE memory_max_target_gb
+              WHEN 0.0 THEN sga_max_size_gb+pga_aggregate_target_gb
+              ELSE memory_max_target_gb
+       END db_total_memory_gb
+FROM   (
+                  SELECT     b.hostname,
+                             ROUND(SUM(a.memory_max_target)   /1024/1024/1024,1) memory_max_target_gb,
+                             ROUND(SUM(a.memory_target)       /1024/1024/1024,1) memory_target_gb,
+                             ROUND(SUM(a.sga_max_size)        /1024/1024/1024,1) sga_max_size_gb,
+                             ROUND(SUM(a.sga_target)          /1024/1024/1024,1) sga_target_gb,
+                             ROUND(SUM(a.pga_aggregate_target)/1024/1024/1024,1) pga_aggregate_target_gb
+                  FROM       (
+                                    SELECT TRIM(a.pkey)    ckey,
+                                           TRIM(a.inst_id) inst_id,
+                                           TRIM(a.con_id)  con_id,
+                                           CASE TRIM(name)
+                                                  WHEN 'memory_max_target' THEN CAST(TRIM(a.value) AS INT64)
+                                           END AS memory_max_target,
+                                           CASE TRIM(name)
+                                                  WHEN 'memory_target' THEN CAST(TRIM(a.value) AS INT64)
+                                           END AS memory_target,
+                                           CASE TRIM(name)
+                                                  WHEN 'sga_max_size' THEN CAST(TRIM(a.value) AS INT64)
+                                           END AS sga_max_size,
+                                           CASE TRIM(name)
+                                                  WHEN 'sga_target' THEN CAST(TRIM(a.value) AS INT64)
+                                           END AS sga_target,
+                                           CASE TRIM(name)
+                                                  WHEN 'pga_aggregate_target' THEN CAST(TRIM(a.value) AS INT64)
+                                           END AS pga_aggregate_target
+                                    FROM   mydataset.dbparameters a
+                                    WHERE  trim(name) IN ('memory_max_target',
+                                                          'memory_target',
+                                                          'sga_max_size',
+                                                          'sga_target',
+                                                          'pga_aggregate_target') ) a
+                  inner join mydataset.vinstsummary b
+                  ON         a.ckey = b.ckey
+                  AND        a.inst_id = b.inst_id
+                  GROUP BY   b.hostname ) a;
