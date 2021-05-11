@@ -50,7 +50,7 @@ FROM     (
                                                                          (
                                                                                 SELECT network_to_gcp,
                                                                                        gbytes_per_sec
-                                                                                FROM   `mydataset.vconfig_networktogcp`
+                                                                                FROM   mydataset.vconfig_networktogcp
                                                                                 WHERE  network_to_gcp = 'To SSD') c ) a ) a ) a ) a
 WHERE    a.network_to_gcp != 'To SSD'
 ORDER BY ckey,

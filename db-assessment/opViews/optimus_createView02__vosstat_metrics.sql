@@ -20,6 +20,6 @@ SELECT a.ckey,
 ROUND(( a.vm_in_bytes + a.vm_out_bytes ) / a.physical_memory_bytes * 100, 0)
        host_swap_bytes_perc
 FROM   mydataset.vosstat a
-       INNER JOIN `mydataset.vinstsummary` b
+       INNER JOIN mydataset.vinstsummary b
                ON a.ckey = b.ckey
                   AND a.instance_number = b.inst_id; 

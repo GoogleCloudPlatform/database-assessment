@@ -113,7 +113,7 @@ FROM     (
                        CASE TRIM(metric_name)
                               WHEN 'User Transaction Per Sec' THEN Cast(TRIM(a.perc100) AS INT64)
                        END AS transac_per_sec_max
-                FROM   `mydataset.awrhistsysmetrichist` a )
+                FROM   mydataset.awrhistsysmetrichist a )
 GROUP BY ckey,
          con_id,
          dbid,
