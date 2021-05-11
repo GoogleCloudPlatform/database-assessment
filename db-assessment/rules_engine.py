@@ -6,24 +6,30 @@ import json
 import import_db_assessment
 
 def createTransformersVariable(transformerRule):
+# Convert the JSON fields into variables like dictionaries, lists, string and numbers and return it
 
     if str(transformerRule['action_details']['datatype']).upper() == 'DICTIONARY':
+    # For dictionaries
 
         return json.loads(str(transformerRule['action_details']['value']).strip())
 
     elif str(transformerRule['action_details']['datatype']).upper() == 'LIST':
+    # For Lists it is expected to be separated by comma
 
         return str(transformerRule['action_details']['value']).split(',')
 
     elif str(transformerRule['action_details']['datatype']).upper() == 'STRING':
+    # For strings we just need to carry out the content
 
         return str(transformerRule['action_details']['value'])
 
     elif str(transformerRule['action_details']['datatype']).upper() == 'NUMBER':
+    # For number we are casting it to float
 
         return float(transformerRule['action_details']['value'])
 
     else:
+    # If the JSON file has any value not expected
 
         return None
 
@@ -32,34 +38,56 @@ def runRules(transformerRules, dataFrames):
     # Variable to keep track of rules executed and its results and status
     transformerResults = {}
     # Variable to keep track and make available all the variables from the JSON file
-    transformerVariables = {}
+    transformersParameters = {}
 
     # Standardize Statuses
     # Executed
     EXECUTEDSTATUS = 'EXECUTED'
     FAILEDSTATUS = 'FAILED'
 
-    # Looping on ALL rules from transformers.json
-    for ruleItem in transformerRules['rules']:
+    # Getting ordered list of keys by priority to iterate over the dictionary
+    sorted_keys = sorted(transformerRules, key=lambda x: (transformerRules[x]['priority']))
 
-        if str(transformerRules['rules'][ruleItem]['type']).upper() == "VARIABLE" and str(transformerRules['rules'][ruleItem]['action']).upper() == "CREATE":
+
+    # Looping on ALL rules from transformers.json
+    for ruleItem in sorted_keys:
+
+        stringExpression = getParsedRuleExpr(transformerRules[ruleItem]['expr1'])
+        iferrorExpression = getParsedRuleExpr(transformerRules[ruleItem]['iferror'])
+
+        if str(transformerRules[ruleItem]['type']).upper() == "VARIABLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATE" and str(transformerRules[ruleItem]['status']).upper() == "ENABLED":
         # transformers.json asking to create a variable which is a dictionary
 
             try:
-                transformerResults[ruleItem] = {'Status': EXECUTEDSTATUS, 'Result Value': createTransformersVariable(transformerRules['rules'][ruleItem])}
-                transformerVariables[transformerRules['rules'][ruleItem]['action_details']['varname']] = transformerResults[ruleItem]['Result Value']
+                transformerResults[ruleItem] = {'Status': EXECUTEDSTATUS, 'Result Value': createTransformersVariable(transformerRules[ruleItem])}
+                transformersParameters[transformerRules[ruleItem]['action_details']['varname']] = transformerResults[ruleItem]['Result Value']
 
             # In case of any issue the rule will be marked as FAILEDSTATUS
             except:
                 transformerResults[ruleItem] = {'Status': FAILEDSTATUS, 'Result Value': None}
-                transformerVariables[transformerRules['rules'][ruleItem]['action_details']['varname']] = None
+                transformersParameters[transformerRules[ruleItem]['action_details']['varname']] = None
 
-        elif str(transformerRules['rules'][ruleItem]['type']).upper() == "NUMBER" and str(transformerRules['rules'][ruleItem]['action']).upper() == "ADD_COLUMN":
+        elif str(transformerRules[ruleItem]['type']).upper() in ("NUMBER","FREESTYLE") and str(transformerRules[ruleItem]['action']).upper() == "ADD_COLUMN":
         # transformers.json asking to add a column that is type number meaning it can be a calculation and the column to be added is NUMBER too
 
-            None
+            dataFrames[transformerRules[ruleItem]['action_details']['dataframe_name']][transformerRules[ruleItem]['action_details']['column_name']] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
 
-    return transformerResults, transformerVariables
+        elif str(transformerRules[ruleItem]['type']).upper() == "FREESTYLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATENEWDATAFRAME":
+
+            dataFrames[transformerRules[ruleItem]['action_details']['dataframe_name']] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
+
+
+    return transformerResults, transformersParameters
+
+def execStringExpression(stringExpression,iferrorExpression, dataFrames):
+
+    try:
+        res = eval (stringExpression
+    except:
+        res = eval (iferrorExpression)
+
+
+    return res
 
 def getParsedRuleExpr(ruleExpr):
 # Function to get a clean string to be executed in eval function. The input is a string with many components separated by ; coming from transformers.json
@@ -90,13 +118,18 @@ def getRulesFromJSON(jsonFileName):
 def getDataFrameFromCSV(csvFileName,skipRows):
 # Read CSV files from OS and turn it into a dataframe
 
-    df = pd.read_csv(csvFileName, skiprows=skipRows)
+    try:
+        df = pd.read_csv(csvFileName, skiprows=skipRows)
+    except:
+        print ('\n\n\n\nThe filename {} is empty.'.format(csvFileName))
+        return False
 
     return df
 
 
 def getAllDataFrames(fileList, skipRows):
 # Fuction to read from CSVs and store the data into a dataframe. The dataframe is placed then into a Hash Table.
+# This function returns a dictionary with dataframes from CSVs
 
     # Hash table to store dataframes after being loaded from CSVs
     dataFrames = {}
@@ -108,8 +141,11 @@ def getAllDataFrames(fileList, skipRows):
 
         # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
         df = getDataFrameFromCSV(fileName,skipRows)
-        # Trimming the data before storing it
-        dataFrames[tableName] = trimDataframe(df)
+        
+        # Checking if no error was found during loading CSV from OS
+        if df is not False:
+            # Trimming the data before storing it
+            dataFrames[str(tableName).upper()] = trimDataframe(df)
 
 
     return dataFrames
@@ -117,20 +153,44 @@ def getAllDataFrames(fileList, skipRows):
 def trimDataframe(df):
 
     # Removing spaces (TRIM/Strip) for ALL columns
+    df.columns = df.columns.str.replace(' ', '')
     cols = list(df.columns)
-    df[cols] = df[cols].apply(lambda x: x.str.strip())
+    #df[cols] = df[cols].apply(lambda x: x.str.strip())
+    #df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+
+    for column in cols:
+        try:
+            df[column] = df[column].str.strip()
+        except:
+            None
 
     # trimmed dataframe
     return df
 
-def getAllReShapedDataframes(dataFrames, targetTableNames):
+def getAllReShapedDataframes(dataFrames, transformersParameters):
     # Function to iterate on getReShapedDataframe to reShape some dataframes accordingly with targetTableNames
     # dataFrames is expected to be a Hash Table of dataframes
     # targetTableNames is expected to be a list with the right keys from the Hash table dataFrames
 
-    for tableName in targetTableNames:
+    for tableName in transformersParameters['LIST_TO_RESHAPE']:
 
-        getReShapedDataframe(dataFrames[tableName], )
+        if dataFrames.get(str(tableName)) is not None:
+
+            if transformersParameters.get(str(tableName)) is not None:
+
+                dataFrames[str(tableName) + '_RESHAPED'] = getReShapedDataframe(dataFrames[str(tableName)], transformersParameters[str(tableName)])
+            
+            else:
+
+                print ('\n\nThere is not parameter set to define the reshape process for: {}'.format(str(tableName)))
+                print ('This is all valid reshape configurations found: {}'.format(str(transformersParameters.keys())))
+
+        else:
+
+            print ('\n\nThere is no data parsed from CSVs named {}'.format(str(tableName)))
+            print ('This is all valid CSVs names {}'.format(str(dataFrames.keys())))
+
+    return dataFrames
 
 def getReShapedDataframe(df, transformersParameters):
 # Function to get a dataframe in one format and reshape it to another one that would make a lot simpler to create rules on.
@@ -155,11 +215,12 @@ def getReShapedDataframe(df, transformersParameters):
 #   1	2	18	18	390	400
 
 
-    hours = df.drop_duplicates(subset=['HO'])['HO'].tolist()
-    metrics = {'User Transaction Per Sec': 'USPS','SQL Service Response Time': 'SQLRT','Redo Generated Per Sec': 'RGPS'}
+    hours = df.drop_duplicates(subset=[transformersParameters['CLUSTER_COLUMN']])[transformersParameters['CLUSTER_COLUMN']].tolist()
+    metrics = transformersParameters['FROM_TO_ROWS_TO_COLUMNS']
 
-    newShapeDataframe = df[['PKEY', 'CON_ID', 'DBID','INSTANCE_NUMBER','HO']].copy()
+    newShapeDataframe = df[transformersParameters['KEEP_COLUMNS']].copy()
     newBaseShapeDataframe = newShapeDataframe.drop_duplicates()
+    newBaseShapeDataframe.reset_index()
 
     results = {}
 
@@ -171,8 +232,8 @@ def getReShapedDataframe(df, transformersParameters):
     # PKEY + CON_ID + INITORA_PARAMETER = UNIQUE (UK)
     for hour in hours:
 
-        df_by_hour = df[(df['HO'] == hour)]
-        newBaseShapeDataframe_by_hour = newBaseShapeDataframe[(newBaseShapeDataframe['HO'] == hour)]
+        df_by_hour = df[(df[transformersParameters['CLUSTER_COLUMN']] == hour)]
+        newBaseShapeDataframe_by_hour = newBaseShapeDataframe[(newBaseShapeDataframe[transformersParameters['CLUSTER_COLUMN']] == hour)]
 
         results[hour] = {}
 
@@ -184,7 +245,7 @@ def getReShapedDataframe(df, transformersParameters):
       
 
             # Filterting dataframe per metric which means 1 line per database collection
-            df_by_hour_by_metric = df_by_hour[(df_by_hour['METRIC_NAME'] == metric)]
+            df_by_hour_by_metric = df_by_hour[(df_by_hour[transformersParameters['TARGET_COLUMN']] == metric)]
 
       
             # Looping all lines for the given hour and metric (it will only have multiple lines if there are multiple collections, otherwise, it will be always 1 row)
@@ -209,38 +270,42 @@ def getReShapedDataframe(df, transformersParameters):
     return finalDF
 
 
-def appendListOfDataframes(dataframesList):
+def appendListOfDataframes(dataframesDict):
 
-    for dfIndex in len(dataframesList):
+    count = 0
+    for dfIndex in dataframesDict:
 
-        if dfIndex == 0:
+        if count == 0:
 
-            df = dataframesList[dfIndex]
+            df = dataframesDict[dfIndex]
+            count = count + 1
             continue
 
-        df.append(dataframesList[dfIndex])
+        df.append(dataframesDict[dfIndex])
+        count = count + 1
 
     return df
 
 if __name__ == '__main__':
 
-    # Call main function
-    transformerRules = getRulesFromJSON('transformers.json')
+    # Getting parameters and rules from transformers.json
+    transformerConfiguration = getRulesFromJSON('db-assessment/transformers.json')
 
-    transformerResults = {}
-    transformerVariables = {}
-    transformerResults, transformerVariables = runRules(transformerRules, None)
+    transformerRulesConfig = transformerConfiguration['rules']
+    transformersParametersConfig = transformerConfiguration['parameters']
 
-    print (transformerResults)
-    print (transformerVariables)
+    transformerParameterResults = {}
+    transformersParameters = {}
+    transformerParameterResults, transformersParameters = runRules(transformersParametersConfig, None)
 
     fileList = import_db_assessment.getAllFilesByPattern('/Users/erisantos/cloud-source-repo/optimus-prime-db-assessment/dbResults/opalldb*log')
+    
     dbAssessmentDataframes = {}
     dbAssessmentDataframes = getAllDataFrames(fileList, 1)
 
-    colsDataframeShort = ['PKEY','CON_ID','DBID','INSTANCE_NUMBER']
-    swapRowsToColumns = {"I/O Megabytes per Second": "IOMBPS", "I/O Requests per Second": "IOPS"}
-    swapColumns = ['PERC90','PERC95','PERC100']
-    #swapDbAssessmentRowsToColumns(dbAssessmentDataframes['awrhistsysmetrichist']['dataframe'], swapRowsToColumns, colsDataframeShort, swapColumns)
+    dbAssessmentDataframes = getAllReShapedDataframes(dbAssessmentDataframes, transformersParameters)
 
+    print(dbAssessmentDataframes.keys())
+
+    transformerParameterResults, transformersParameters = runRules(transformerRulesConfig, dbAssessmentDataframes)
 
