@@ -19,7 +19,7 @@ SELECT a.ckey,
        d.db_total_memory_gb
        source_database_memory_gb,
        a.io_req_per_sec_perc95                            source_io_rep_per_sec,
-       ROUND(( c.num_cpu_cores / 100 ) * c.host_cpu_utilization_perc *. 8, 0)
+       ROUND(( c.num_cpu_cores / 100 ) * c.host_cpu_utilization_perc *0.8, 0)
                                                           bms_host_machine_cores
        ,
        ROUND(( c.num_cpu_cores / 100 ) * (
@@ -29,7 +29,7 @@ SELECT a.ckey,
                    /
                    ROUND(
                    a.host_cpu_usage_per_sec_perc95 /
-       c.host_cpu_utilization_perc, 1), 0) ) *. 8, 0)     bms_database_cores,
+       c.host_cpu_utilization_perc, 1), 0) ) *0.8, 0)     bms_database_cores,
        d.db_total_memory_gb                               bms_database_memory_gb
        ,
        ROUND(( a.io_req_per_sec_perc95 * 1.2 ) / 6000, 0)
