@@ -1416,3 +1416,4 @@ GROUP  BY '&&v_host'
           b.command_type; 
 
 spool off
+
