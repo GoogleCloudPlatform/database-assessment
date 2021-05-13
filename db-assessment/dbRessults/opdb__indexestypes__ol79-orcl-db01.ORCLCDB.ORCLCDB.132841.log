@@ -1,0 +1,11 @@
+
+PKEY                         ,    CON_ID,OWNER                         ,INDEX_TYPE                 ,  COUNT(1)
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL             ,IOT - TOP                  ,         4
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL             ,LOB                        ,         8
+ol79-orcl-db01_ORCLCDB_132841,         1,DVSYS                         ,NORMAL                     ,        77
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL             ,NORMAL                     ,        38
+ol79-orcl-db01_ORCLCDB_132841,         1,OJVMSYS                       ,NORMAL                     ,         6
+ol79-orcl-db01_ORCLCDB_132841,         1,DVSYS                         ,LOB                        ,         1
+ol79-orcl-db01_ORCLCDB_132841,         1,AUDSYS                        ,LOB                        ,         3
+ol79-orcl-db01_ORCLCDB_132841,         1,OJVMSYS                       ,LOB                        ,         1
+ol79-orcl-db01_ORCLCDB_132841,         1,DBSFWUSER                     ,NORMAL                     ,         3

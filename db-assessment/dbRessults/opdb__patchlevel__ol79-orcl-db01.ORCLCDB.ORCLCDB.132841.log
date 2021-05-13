@@ -1,0 +1,4 @@
+
+PKEY                         ,Time          ,Action                        ,Namespace                     ,Version                       ,        ID,Comments
+ol79-orcl-db01_ORCLCDB_132841,01/15/21 18:46,RU_APPLY                      ,SERVER                        ,19.0.0.0.0                    ,          ,Patch applied on 19.3.0.0.0: Release_Update - 190410122720
+ol79-orcl-db01_ORCLCDB_132841,              ,BOOTSTRAP                     ,DATAPATCH                     ,19                            ,          ,RDBMS_19.3.0.0.0DBRU_LINUX.X64_190417

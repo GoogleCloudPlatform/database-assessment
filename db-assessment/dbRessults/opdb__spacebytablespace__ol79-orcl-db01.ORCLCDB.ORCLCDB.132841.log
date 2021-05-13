@@ -1,0 +1,4 @@
+
+PKEY                         ,TABLESPACE_NAME                    ,EXTENT_MANAGEMENT   ,ALLOCATION,SEGMENT_SPACE_MANAGE,ESTD_GANHO_MB
+ol79-orcl-db01_ORCLCDB_132841,SYSTEM                             ,LOCAL               ,SYSTEM    ,MANUAL              ,            0
+ol79-orcl-db01_ORCLCDB_132841,SYSAUX                             ,LOCAL               ,SYSTEM    ,AUTO                ,            0
