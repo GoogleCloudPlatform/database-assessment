@@ -164,9 +164,9 @@ def createOptimusPrimeViews(gcpProjectName,bqDataset):
             # Creating the JOB to create view in Big Query
             view = bigquery.Table(view_id)
 
-            # Extracting the view text and replacing the string MYDATASET by the proper dataset
+            # Extracting the view text and replacing the string ${dataset} by the proper dataset
             with open(viewFileName, "r") as view_content:
-                view.view_query = view_content.read().replace('MYDATASET',str(bqDataset))
+                view.view_query = view_content.read().replace('${dataset}',str(bqDataset))
 
             try:
                 # Make an API request to create the view.

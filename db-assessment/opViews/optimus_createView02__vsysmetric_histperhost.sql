@@ -1,98 +1,118 @@
-select b.hostname, a.hour,
-       sum(average_active_session_perc95) average_active_session_perc95, sum(average_active_session_max) average_active_session_max,
-       sum(cpu_usage_per_sec_perc95) cpu_usage_per_sec_perc95, sum(cpu_usage_per_sec_max) cpu_usage_per_sec_max,
-       sum(bkgr_cpu_usage_per_sec_perc95) bkgr_cpu_usage_per_sec_perc95, max(bkgr_cpu_usage_per_sec_max) bkgr_cpu_usage_per_sec_max,
-       sum(host_cpu_usage_per_sec_perc95) host_cpu_usage_per_sec_perc95, sum(host_cpu_usage_per_sec_max) host_cpu_usage_per_sec_max,
-       sum(executions_per_sec_perc95) executions_per_sec_perc95, sum(executions_per_sec_max) executions_per_sec_max,
-       sum(io_mbytes_per_sec_perc95) io_mbytes_per_sec_perc95, sum(io_mbytes_per_sec_max) io_mbytes_per_sec_max,
-       sum(io_req_per_sec_perc95) io_req_per_sec_perc95, sum(io_req_per_sec_max) io_req_per_sec_max,
-       sum(logons_per_sec_perc95) logons_per_sec_perc95, sum(logons_per_sec_max) logons_per_sec_max,
-       sum(phy_rds_per_sec_perc95) phy_rds_per_sec_perc95, sum(phy_rds_per_sec_max) phy_rds_per_sec_max,
-       sum(phy_wts_per_sec_perc95) phy_wts_per_sec_perc95, sum(phy_wts_per_sec_max) phy_wts_per_sec_max,
-       sum(redo_per_sec_perc95) redo_per_sec_perc95, sum(redo_per_sec_max) redo_per_sec_max,
-       sum(sql_rt_per_sec_perc95) sql_rt_per_sec_perc95, sum(sql_rt_per_sec_max) sql_rt_per_sec_max,
-       sum(transac_per_sec_perc95) transac_per_sec_perc95, sum(transac_per_sec_max) transac_per_sec_max
-from (
-SELECT trim(pkey) ckey, trim(con_id) con_id, trim(dbid) dbid, trim(instance_number) instance_number, trim(hour) hour, 
-     case trim(metric_name)
-        when 'Average Active Sessions' then cast(trim(a.perc95) as int64)
-    end as average_active_session_perc95,
-     case trim(metric_name)
-        when 'Average Active Sessions' then cast(trim(a.perc100) as int64)
-    end as average_active_session_max,
-    case trim(metric_name)
-        when 'CPU Usage Per Sec' then cast(trim(a.perc95) as int64)
-    end as cpu_usage_per_sec_perc95,
-    case trim(metric_name)
-        when 'CPU Usage Per Sec' then cast(trim(a.perc100) as int64)
-    end as cpu_usage_per_sec_max,
-    case trim(metric_name)
-        when 'Background CPU Usage Per Sec' then cast(trim(a.perc95) as int64)
-    end as bkgr_cpu_usage_per_sec_perc95,
-    case trim(metric_name)
-        when 'Background CPU Usage Per Sec' then cast(trim(a.perc100) as int64)
-    end as bkgr_cpu_usage_per_sec_max,
-    case trim(metric_name)
-        when 'Host CPU Usage Per Sec' then cast(trim(a.perc95) as int64)
-    end as host_cpu_usage_per_sec_perc95,
-    case trim(metric_name)
-        when 'Host CPU Usage Per Sec' then cast(trim(a.perc100) as int64)
-    end as host_cpu_usage_per_sec_max,
-    case trim(metric_name)
-        when 'Executions Per Sec' then cast(trim(a.perc95) as int64)
-    end as executions_per_sec_perc95,
-    case trim(metric_name)
-        when 'Executions Per Sec' then cast(trim(a.perc100) as int64)
-    end as executions_per_sec_max,
-    case trim(metric_name)
-        when 'I/O Megabytes per Second' then cast(trim(a.perc95) as int64)
-    end as io_mbytes_per_sec_perc95,
-    case trim(metric_name)
-        when 'I/O Megabytes per Second' then cast(trim(a.perc100) as int64)
-    end as io_mbytes_per_sec_max,
-    case trim(metric_name)
-        when 'I/O Requests per Second' then cast(trim(a.perc95) as int64)
-    end as io_req_per_sec_perc95,
-    case trim(metric_name)
-        when 'I/O Requests per Second' then cast(trim(a.perc100) as int64)
-    end as io_req_per_sec_max,
-    case trim(metric_name)
-        when 'Logons Per Sec' then cast(trim(a.perc95) as int64)
-    end as logons_per_sec_perc95,
-    case trim(metric_name)
-        when 'Logons Per Sec' then cast(trim(a.perc100) as int64)
-    end as logons_per_sec_max,
-    case trim(metric_name)
-        when 'Physical Reads Per Sec' then cast(trim(a.perc95) as int64)
-    end as phy_rds_per_sec_perc95,
-    case trim(metric_name)
-        when 'Physical Reads Per Sec' then cast(trim(a.perc100) as int64)
-    end as phy_rds_per_sec_max,
-    case trim(metric_name)
-        when 'Physical Writes Per Sec' then cast(trim(a.perc95) as int64)
-    end as phy_wts_per_sec_perc95,
-    case trim(metric_name)
-        when 'Physical Writes Per Sec' then cast(trim(a.perc100) as int64)
-    end as phy_wts_per_sec_max,
-    case trim(metric_name)
-        when 'Redo Generated Per Sec' then cast(trim(a.perc95) as int64)
-    end as redo_per_sec_perc95,
-    case trim(metric_name)
-        when 'Redo Generated Per Sec' then cast(trim(a.perc100) as int64)
-    end as redo_per_sec_max,
-    case trim(metric_name)
-        when 'SQL Service Response Time' then cast(trim(a.perc95) as int64)
-    end as sql_rt_per_sec_perc95,
-    case trim(metric_name)
-        when 'SQL Service Response Time' then cast(trim(a.perc100) as int64)
-    end as sql_rt_per_sec_max,
-    case trim(metric_name)
-        when 'User Transaction Per Sec' then cast(trim(a.perc95) as int64)
-    end as transac_per_sec_perc95,
-    case trim(metric_name)
-        when 'User Transaction Per Sec' then cast(trim(a.perc100) as int64)
-    end as transac_per_sec_max
-FROM `MYDATASET.awrhistsysmetrichist` a
-) a inner join `MYDATASET.vinstsummary` b
-on a.ckey = b.ckey and a.instance_number = b.inst_id
-group by b.hostname, a.hour;
+SELECT     b.hostname,
+           a.hour,
+           SUM(average_active_session_perc95) average_active_session_perc95,
+           SUM(average_active_session_max)    average_active_session_max,
+           SUM(cpu_usage_per_sec_perc95)      cpu_usage_per_sec_perc95,
+           SUM(cpu_usage_per_sec_max)         cpu_usage_per_sec_max,
+           SUM(bkgr_cpu_usage_per_sec_perc95) bkgr_cpu_usage_per_sec_perc95,
+           MAX(bkgr_cpu_usage_per_sec_max)    bkgr_cpu_usage_per_sec_max,
+           SUM(host_cpu_usage_per_sec_perc95) host_cpu_usage_per_sec_perc95,
+           SUM(host_cpu_usage_per_sec_max)    host_cpu_usage_per_sec_max,
+           SUM(executions_per_sec_perc95)     executions_per_sec_perc95,
+           SUM(executions_per_sec_max)        executions_per_sec_max,
+           SUM(io_mbytes_per_sec_perc95)      io_mbytes_per_sec_perc95,
+           SUM(io_mbytes_per_sec_max)         io_mbytes_per_sec_max,
+           SUM(io_req_per_sec_perc95)         io_req_per_sec_perc95,
+           SUM(io_req_per_sec_max)            io_req_per_sec_max,
+           SUM(logons_per_sec_perc95)         logons_per_sec_perc95,
+           SUM(logons_per_sec_max)            logons_per_sec_max,
+           SUM(phy_rds_per_sec_perc95)        phy_rds_per_sec_perc95,
+           SUM(phy_rds_per_sec_max)           phy_rds_per_sec_max,
+           SUM(phy_wts_per_sec_perc95)        phy_wts_per_sec_perc95,
+           SUM(phy_wts_per_sec_max)           phy_wts_per_sec_max,
+           SUM(redo_per_sec_perc95)           redo_per_sec_perc95,
+           SUM(redo_per_sec_max)              redo_per_sec_max,
+           SUM(sql_rt_per_sec_perc95)         sql_rt_per_sec_perc95,
+           SUM(sql_rt_per_sec_max)            sql_rt_per_sec_max,
+           SUM(transac_per_sec_perc95)        transac_per_sec_perc95,
+           SUM(transac_per_sec_max)           transac_per_sec_max
+FROM       (
+                  SELECT TRIM(pkey)            ckey,
+                         TRIM(con_id)          con_id,
+                         TRIM(dbid)            dbid,
+                         TRIM(instance_number) instance_number,
+                         TRIM(hour)            hour,
+                         CASE TRIM(metric_name)
+                                WHEN 'Average Active Sessions' THEN CAST(TRIM(a.perc95) AS INT64)
+                         END AS average_active_session_perc95,
+                         CASE TRIM(metric_name)
+                                WHEN 'Average Active Sessions' THEN CAST(TRIM(a.perc100) AS INT64)
+                         END AS average_active_session_max,
+                         CASE TRIM(metric_name)
+                                WHEN 'CPU Usage Per Sec' THEN CAST(TRIM(a.perc95) AS INT64)
+                         END AS cpu_usage_per_sec_perc95,
+                         CASE TRIM(metric_name)
+                                WHEN 'CPU Usage Per Sec' THEN CAST(TRIM(a.perc100) AS INT64)
+                         END AS cpu_usage_per_sec_max,
+                         CASE TRIM(metric_name)
+                                WHEN 'Background CPU Usage Per Sec' THEN CAST(TRIM(a.perc95) AS INT64)
+                         END AS bkgr_cpu_usage_per_sec_perc95,
+                         CASE TRIM(metric_name)
+                                WHEN 'Background CPU Usage Per Sec' THEN CAST(TRIM(a.perc100) AS INT64)
+                         END AS bkgr_cpu_usage_per_sec_max,
+                         CASE TRIM(metric_name)
+                                WHEN 'Host CPU Usage Per Sec' THEN CAST(TRIM(a.perc95) AS INT64)
+                         END AS host_cpu_usage_per_sec_perc95,
+                         CASE TRIM(metric_name)
+                                WHEN 'Host CPU Usage Per Sec' THEN CAST(TRIM(a.perc100) AS INT64)
+                         END AS host_cpu_usage_per_sec_max,
+                         CASE TRIM(metric_name)
+                                WHEN 'Executions Per Sec' THEN CAST(TRIM(a.perc95) AS INT64)
+                         END AS executions_per_sec_perc95,
+                         CASE TRIM(metric_name)
+                                WHEN 'Executions Per Sec' THEN CAST(TRIM(a.perc100) AS INT64)
+                         END AS executions_per_sec_max,
+                         CASE TRIM(metric_name)
+                                WHEN 'I/O Megabytes per Second' THEN CAST(TRIM(a.perc95) AS INT64)
+                         END AS io_mbytes_per_sec_perc95,
+                         CASE TRIM(metric_name)
+                                WHEN 'I/O Megabytes per Second' THEN CAST(TRIM(a.perc100) AS INT64)
+                         END AS io_mbytes_per_sec_max,
+                         CASE TRIM(metric_name)
+                                WHEN 'I/O Requests per Second' THEN CAST(TRIM(a.perc95) AS INT64)
+                         END AS io_req_per_sec_perc95,
+                         CASE TRIM(metric_name)
+                                WHEN 'I/O Requests per Second' THEN CAST(TRIM(a.perc100) AS INT64)
+                         END AS io_req_per_sec_max,
+                         CASE TRIM(metric_name)
+                                WHEN 'Logons Per Sec' THEN CAST(TRIM(a.perc95) AS INT64)
+                         END AS logons_per_sec_perc95,
+                         CASE TRIM(metric_name)
+                                WHEN 'Logons Per Sec' THEN CAST(TRIM(a.perc100) AS INT64)
+                         END AS logons_per_sec_max,
+                         CASE TRIM(metric_name)
+                                WHEN 'Physical Reads Per Sec' THEN CAST(TRIM(a.perc95) AS INT64)
+                         END AS phy_rds_per_sec_perc95,
+                         CASE TRIM(metric_name)
+                                WHEN 'Physical Reads Per Sec' THEN CAST(TRIM(a.perc100) AS INT64)
+                         END AS phy_rds_per_sec_max,
+                         CASE TRIM(metric_name)
+                                WHEN 'Physical Writes Per Sec' THEN CAST(TRIM(a.perc95) AS INT64)
+                         END AS phy_wts_per_sec_perc95,
+                         CASE TRIM(metric_name)
+                                WHEN 'Physical Writes Per Sec' THEN CAST(TRIM(a.perc100) AS INT64)
+                         END AS phy_wts_per_sec_max,
+                         CASE TRIM(metric_name)
+                                WHEN 'Redo Generated Per Sec' THEN CAST(TRIM(a.perc95) AS INT64)
+                         END AS redo_per_sec_perc95,
+                         CASE TRIM(metric_name)
+                                WHEN 'Redo Generated Per Sec' THEN CAST(TRIM(a.perc100) AS INT64)
+                         END AS redo_per_sec_max,
+                         CASE TRIM(metric_name)
+                                WHEN 'SQL Service Response Time' THEN CAST(TRIM(a.perc95) AS INT64)
+                         END AS sql_rt_per_sec_perc95,
+                         CASE TRIM(metric_name)
+                                WHEN 'SQL Service Response Time' THEN CAST(TRIM(a.perc100) AS INT64)
+                         END AS sql_rt_per_sec_max,
+                         CASE TRIM(metric_name)
+                                WHEN 'User Transaction Per Sec' THEN CAST(TRIM(a.perc95) AS INT64)
+                         END AS transac_per_sec_perc95,
+                         CASE TRIM(metric_name)
+                                WHEN 'User Transaction Per Sec' THEN CAST(TRIM(a.perc100) AS INT64)
+                         END AS transac_per_sec_max
+                  FROM   ${dataset}.awrhistsysmetrichist a ) a
+inner join ${dataset}.vinstsummary b
+ON         a.ckey = b.ckey
+AND        a.instance_number = b.inst_id
+GROUP BY   b.hostname,
+           a.hour;
