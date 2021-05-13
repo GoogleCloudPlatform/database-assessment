@@ -1195,14 +1195,13 @@ WHERE  begin_interval_time > ( SYSDATE - 30 )
 
 col MESSAGE_TIME for a25
 col message_text for a200
-col host_id for a30
-col con_id for a5
+col host_id for a50
 col component_id for a15
-col message_type for a25
-col message_level for a10
+col message_type for a55
+col message_level for a40
 col message_id for a30
-col message_group for a15
-col container_name for a20
+col message_group for a35
+col container_name for a40
 
 spool opdb__alertlog__&v_host..&v_dbname..&v_inst..&v_hora..log
 
