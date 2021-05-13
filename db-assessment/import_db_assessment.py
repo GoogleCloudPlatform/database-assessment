@@ -28,6 +28,9 @@ from google.api_core.exceptions import Conflict
 # Setting client info for Google APIs
 import set_client_info
 
+# Rules engine
+import rules_engine
+
 # Information for analytics and tool improvement
 __version__='0.1.0'
 
@@ -757,18 +760,57 @@ def runMain(args):
         # Create the dataset to import the CSV data
         createDataSet(bqDataset,gcpProjectName)
 
+        # STEP: Readin JSON file configuration (rules and parameters)
+
+        # Import Json with parameters and rules
+        transformerConfiguration = rules_engine.getRulesFromJSON(str(getattr(args,'transformersconfig')))
+
+        # Assigning the rules and parameter {} variables
+        transformerRulesConfig = {}
+        transformerRulesConfig = transformerConfiguration['rules']
+        transformersParametersConfig = {}
+        transformersParametersConfig = transformerConfiguration['parameters']
+
+        # STEP: Processing parameters which create internal variables(transformersParameters) to be used in later stages
+
+        transformerParameterResults, transformersParameters = rules_engine.runRules(transformersParametersConfig, None)
+
+        # STEP: Loading all CSV files in memory into dataframes
+
+        dbAssessmentDataframes = {}
+        dbAssessmentDataframes = rules_engine.getAllDataFrames(fileList, 1)
+
+        # STEP: Reshape Dataframes when necessary based on the transformersParameters
+
+        dbAssessmentDataframes = rules_engine.getAllReShapedDataframes(dbAssessmentDataframes, transformersParameters, args)
+
+        # STEP: Run rules engine
+
+        transformerParameterResults, transformersParameters = rules_engine.runRules(transformerRulesConfig, dbAssessmentDataframes)
+
+
+        # STEP: Import ALL data to Big Query
+
         # Import the CSV data found in the OS
         importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,2)
 
 
-        # STEP 2: Import Optimus Prime Configuration Files
 
+        # STEP 2: Get all 
 
         # Getting file pattern for find config files in the OS to be imported
         csvFilesLocationPattern = 'opConfig/*.csv'
 
         # Getting a list of files from OS based on the pattern provided
         fileList = getAllFilesByPattern(csvFilesLocationPattern)
+
+
+        # STEP 2: Import Optimus Prime Configuration Files
+
+
+
+
+
 
         # Import all Optimus Prime CSV configutation
         importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,1)
@@ -794,6 +836,9 @@ def argumentsParser():
 
     # OS csv files location to be imported to Big Query
     parser.add_argument("-fileslocation", type=str, default='dbResults', help="optimus prime files location to be imported")
+
+    # OS csv files location to be imported to Big Query
+    parser.add_argument("-transformersconfig", type=str, default='opConfig/transformers.json', help="location of transformers.json file with all parameters and rules")
 
     # Optimus collection ID is the number in the final part of the generated CSV files. For example: dbResults/opdb_dbfeatures_ol79-orcl-db02.ORCLCDB.ORCLCDB.180603.log. Collection ID is: 180603
     parser.add_argument("-optimuscollectionid", type=str, default=None, help="optimus prime collection id from CSV files OR 'consolidate' for consolidated logs")

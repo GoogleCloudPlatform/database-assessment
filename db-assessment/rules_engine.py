@@ -80,6 +80,7 @@ def runRules(transformerRules, dataFrames):
             dataFrames[transformerRules[ruleItem]['action_details']['dataframe_name']] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
 
 
+
     return transformerResults, transformersParameters
 
 def execStringExpression(stringExpression,iferrorExpression, dataFrames):
@@ -170,7 +171,7 @@ def trimDataframe(df):
     # trimmed dataframe
     return df
 
-def getAllReShapedDataframes(dataFrames, transformersParameters):
+def getAllReShapedDataframes(dataFrames, transformersParameters, args):
     # Function to iterate on getReShapedDataframe to reShape some dataframes accordingly with targetTableNames
     # dataFrames is expected to be a Hash Table of dataframes
     # targetTableNames is expected to be a list with the right keys from the Hash table dataFrames
@@ -182,7 +183,12 @@ def getAllReShapedDataframes(dataFrames, transformersParameters):
             if transformersParameters.get(str(tableName)) is not None:
 
                 dataFrames[str(tableName) + '_RESHAPED'] = getReShapedDataframe(dataFrames[str(tableName)], transformersParameters[str(tableName)])
-            
+
+                fileName = str(getattr(args,'fileslocation')) + '/' + str(tableName) + '_RESHAPED' + '.csv'
+
+                # Writes CSVs from Dataframes when parameter store in CSV_ONLY or BIGQUERY
+                createCSVFromDataframe(dataFrames[str(tableName) + '_RESHAPED'], transformersParameters[str(tableName)], args, fileName)
+
             else:
 
                 print ('\n\nThere is not parameter set to define the reshape process for: {}'.format(str(tableName)))
@@ -194,6 +200,14 @@ def getAllReShapedDataframes(dataFrames, transformersParameters):
             print ('This is all valid CSVs names {}'.format(str(dataFrames.keys())))
 
     return dataFrames
+
+def createCSVFromDataframe(df, transformersParameters, args, fileName):
+
+    if transformersParameters['STORE'] in ('CSV_ONLY', 'BIGQUERY'):
+
+        df.to_csv(fileName, header=True, index=False)
+
+    return True
 
 def getReShapedDataframe(df, transformersParameters):
 # Function to get a dataframe in one format and reshape it to another one that would make a lot simpler to create rules on.
@@ -269,12 +283,15 @@ def getNewNamesFromMultiColumns(newNamesMapping, multiIndex):
 
 if __name__ == '__main__':
 
+    '''
+
     # Getting parameters and rules from transformers.json
     transformerConfiguration = getRulesFromJSON('db-assessment/transformers.json')
 
     transformerRulesConfig = transformerConfiguration['rules']
     transformersParametersConfig = transformerConfiguration['parameters']
 
+    # 
     transformerParameterResults = {}
     transformersParameters = {}
     transformerParameterResults, transformersParameters = runRules(transformersParametersConfig, None)
@@ -284,9 +301,12 @@ if __name__ == '__main__':
     dbAssessmentDataframes = {}
     dbAssessmentDataframes = getAllDataFrames(fileList, 1)
 
-    dbAssessmentDataframes = getAllReShapedDataframes(dbAssessmentDataframes, transformersParameters)
+    dbAssessmentDataframes = getAllReShapedDataframes(dbAssessmentDataframes, transformersParameters, None)
 
     print(dbAssessmentDataframes.keys())
 
     transformerParameterResults, transformersParameters = runRules(transformerRulesConfig, dbAssessmentDataframes)
+
+'''
+
 
