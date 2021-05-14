@@ -1,5 +1,7 @@
 
 import pandas as pd
+import numpy as np
+
 
 import json
 
@@ -184,7 +186,7 @@ def getAllReShapedDataframes(dataFrames, transformersParameters, args):
 
                 dataFrames[str(tableName) + '_RESHAPED'] = getReShapedDataframe(dataFrames[str(tableName)], transformersParameters[str(tableName)])
 
-                fileName = str(getattr(args,'fileslocation')) + '/' + str(tableName) + '_RESHAPED' + '.csv'
+                fileName = str(getattr(args,'fileslocation')) + '/' + str(tableName) + '_RESHAPED' + '.h5'
 
                 # Writes CSVs from Dataframes when parameter store in CSV_ONLY or BIGQUERY
                 createCSVFromDataframe(dataFrames[str(tableName) + '_RESHAPED'], transformersParameters[str(tableName)], args, fileName)
@@ -205,7 +207,8 @@ def createCSVFromDataframe(df, transformersParameters, args, fileName):
 
     if transformersParameters['STORE'] in ('CSV_ONLY', 'BIGQUERY'):
 
-        df.to_csv(fileName, header=True, index=False)
+        #df.to_csv(fileName, header=True, index=False)
+        df.to_hdf(fileName, key='optimus')
 
     return True
 
@@ -244,6 +247,15 @@ def getReShapedDataframe(df, transformersParameters):
     # For example: TARGET_COLUMN = 'IOPS' & TARGET_STATS_COLUMNS = 'AVG' THEN it means that we will get AVG IOPs
     targetStatsColumn = []
     targetStatsColumn = transformersParameters['TARGET_STATS_COLUMNS']
+
+    # Check if dataframe needs to be filtered
+    if str(transformersParameters['FILTERROWS']).upper() == "YES":
+
+        # Using the keys from the dictionary which are the affected rows to be pivoted to columns as filters
+        filterLIst = transformersParameters['FROM_TO_ROWS_TO_COLUMNS'].keys()
+        booleanFilteredSeries = df[targetColumn].isin(filterLIst)
+        df = df[booleanFilteredSeries]
+        
 
     # Pivoting daframe following the parameters given
     pivoted_df = df.pivot(index=frozenIndex, columns=targetColumn, values=targetStatsColumn)
