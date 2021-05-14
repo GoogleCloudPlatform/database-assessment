@@ -68,117 +68,83 @@ col force_logging for a20
 spool opdb__dbsummary__&v_host..&v_dbname..&v_inst..&v_hora..log
 
 SELECT '&&v_host'
-              || '_'
-              || '&&v_dbname'
-              || '_'
-              || '&&v_hora' AS pkey,
-       (
-              SELECT dbid
-              FROM   v$database) AS dbid,
-       (
-              SELECT name
-              FROM   v$database) AS db_name,
-       (
-              SELECT cdb
-              FROM   v$database) AS cdb,
-       (
-              SELECT version
-              FROM   v$instance) AS dbversion,
-       (
-              SELECT banner
-              FROM   v$version
-              WHERE  ROWNUM < 2) AS dbfullversion,
-       (
-              SELECT log_mode
-              FROM   v$database) AS log_mode,
-       (
-              SELECT force_logging
-              FROM   v$database) AS force_logging,
-       (
-              SELECT ( TRUNC(AVG(conta) * AVG(bytes) / 1024 / 1024 / 1024) )
-              FROM   (
-                              SELECT   TRUNC(first_time) dia,
-                                       COUNT(*)          conta
-                              FROM     v$log_history
-                              WHERE    first_time >= TRUNC(SYSDATE) - 7
-                              AND      first_time < TRUNC(SYSDATE)
-                              GROUP BY TRUNC(first_time)),
-                     v$log) AS redo_gb_per_day,
-       (
-              SELECT COUNT(1)
-              FROM   gv$instance) AS rac_dbinstaces,
-       (
-              SELECT value
-              FROM   nls_database_parameters a
-              WHERE  a.parameter = 'NLS_LANGUAGE')
-              || '_'
-              ||
-       (
-              SELECT value
-              FROM   nls_database_parameters a
-              WHERE  a.parameter = 'NLS_TERRITORY')
-              || '.'
-              ||
-       (
-              SELECT value
-              FROM   nls_database_parameters a
-              WHERE  a.parameter = 'NLS_CHARACTERSET') AS characterset,
-       (
-              SELECT platform_name
-              FROM   v$database) AS platform_name,
-       (
-              SELECT TO_CHAR(startup_time, 'mm/dd/rr hh24:mi:ss')
-              FROM   v$instance) AS startup_time,
-       (
-              SELECT COUNT(1)
-              FROM   cdb_users
-              WHERE  username NOT IN
-                     (
-                            SELECT name
-                            FROM   SYSTEM.logstdby$skip_support
-                            WHERE  action=0) as user_schemas,
-                     (
-                            SELECT trunc(SUM(bytes / 1024 / 1024))
-                            FROM   v$sgastat
-                            WHERE  name = 'buffer_cache') buffer_cache_mb,
-                     (
-                            SELECT trunc(SUM(bytes / 1024 / 1024))
-                            FROM   v$sgastat
-                            WHERE  pool = 'shared pool') shared_pool_mb,
-                     (
-                            SELECT round(value / 1024 / 1024, 0)
-                            FROM   v$pgastat
-                            WHERE  name = 'total PGA allocated') AS total_pga_allocated_mb,
-                     (
-                            SELECT ( trunc(SUM(bytes) / 1024 / 1024 / 1024) )
-                            FROM   cdb_data_files) db_size_allocated_gb,
-                     (
-                            SELECT ( trunc(SUM(bytes) / 1024 / 1024 / 1024) )
-                            FROM   cdb_segments
-                            WHERE  owner NOT IN ( 'SYS',
-                                                 'SYSTEM' )) AS db_size_in_use_gb,
-                     (
-                            SELECT ( trunc(SUM(bytes) / 1024 / 1024 / 1024) )
-                            FROM   cdb_segments
-                            WHERE  owner NOT IN ( 'SYS',
-                                                 'SYSTEM' )
-                            AND    (
-                                          owner, segment_name ) IN
-                                   (
-                                          SELECT owner,
-                                                 table_name
-                                          FROM   cdb_tab_columns
-                                          WHERE  data_type LIKE '%LONG%')) AS db_long_size_gb,
-                     (
-                            SELECT database_role
-                            FROM   v$database) AS dg_database_role,
-                     (
-                            SELECT protection_mode
-                            FROM   v$database) AS dg_protection_mode,
-                     (
-                            SELECT protection_level
-                            FROM   v$database) AS dg_protection_level
-              FROM   dual;
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora'                                                            AS pkey,
+       (SELECT dbid
+        FROM   v$database)                                                      AS dbid,
+       (SELECT name
+        FROM   v$database)                                                      AS db_name,
+       (SELECT cdb
+        FROM   v$database)                                                      AS cdb,
+       (SELECT version
+        FROM   v$instance)                                                      AS dbversion,
+       (SELECT banner
+        FROM   v$version
+        WHERE  ROWNUM < 2)                                                      AS dbfullversion,
+       (SELECT log_mode
+        FROM   v$database)                                                      AS log_mode,
+       (SELECT force_logging
+        FROM   v$database)                                                      AS force_logging,
+       (SELECT ( TRUNC(AVG(conta) * AVG(bytes) / 1024 / 1024 / 1024) )
+        FROM   (SELECT TRUNC(first_time) dia,
+                       COUNT(*)          conta
+                FROM   v$log_history
+                WHERE  first_time >= TRUNC(SYSDATE) - 7
+                       AND first_time < TRUNC(SYSDATE)
+                GROUP  BY TRUNC(first_time)),
+               v$log)                                                           AS redo_gb_per_day,
+       (SELECT COUNT(1)
+        FROM   gv$instance)                                                     AS rac_dbinstaces,
+       (SELECT value
+        FROM   nls_database_parameters a
+        WHERE  a.parameter = 'NLS_LANGUAGE')
+       || '_'
+       || (SELECT value
+           FROM   nls_database_parameters a
+           WHERE  a.parameter = 'NLS_TERRITORY')
+       || '.'
+       || (SELECT value
+           FROM   nls_database_parameters a
+           WHERE  a.parameter = 'NLS_CHARACTERSET')                             AS characterset,
+       (SELECT platform_name
+        FROM   v$database)                                                      AS platform_name,
+       (SELECT TO_CHAR(startup_time, 'mm/dd/rr hh24:mi:ss')
+        FROM   v$instance)                                                      AS startup_time,
+       (SELECT COUNT(1)
+        FROM   cdb_users
+        WHERE  username NOT IN (SELECT name
+                                FROM   SYSTEM.logstdby$skip_support
+                                WHERE  action = 0))                             AS user_schemas,
+       (SELECT TRUNC(SUM(bytes / 1024 / 1024))
+        FROM   v$sgastat
+        WHERE  name = 'buffer_cache')                                           buffer_cache_mb,
+       (SELECT TRUNC(SUM(bytes / 1024 / 1024))
+        FROM   v$sgastat
+        WHERE  pool = 'shared pool')                                            shared_pool_mb,
+       (SELECT ROUND(value / 1024 / 1024, 0)
+        FROM   v$pgastat
+        WHERE  name = 'total PGA allocated')                                    AS total_pga_allocated_mb,
+       (SELECT ( TRUNC(SUM(bytes) / 1024 / 1024 / 1024) )
+        FROM   cdb_data_files)                                                  db_size_allocated_gb,
+       (SELECT ( TRUNC(SUM(bytes) / 1024 / 1024 / 1024) )
+        FROM   cdb_segments
+        WHERE  owner NOT IN ( 'SYS', 'SYSTEM' ))                                AS db_size_in_use_gb,
+       (SELECT ( TRUNC(SUM(bytes) / 1024 / 1024 / 1024) )
+        FROM   cdb_segments
+        WHERE  owner NOT IN ( 'SYS', 'SYSTEM' )
+               AND ( owner, segment_name ) IN (SELECT owner,
+                                                      table_name
+                                               FROM   cdb_tab_columns
+                                               WHERE  data_type LIKE '%LONG%')) AS db_long_size_gb,
+       (SELECT database_role
+        FROM   v$database)                                                      AS dg_database_role,
+       (SELECT protection_mode
+        FROM   v$database)                                                      AS dg_protection_mode,
+       (SELECT protection_level
+        FROM   v$database)                                                      AS dg_protection_level
+FROM   dual; 
 
 spool off
 
