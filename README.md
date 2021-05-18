@@ -10,7 +10,7 @@ NOTE: The script to collect data only runs SELECT statements against Oracle dict
 
 ## How to use this tool
 
-Part 1 - Collecting the data from an Oracle database (source)
+Part 1 - Collecting data from an Oracle database (source)
 
 1. Create an Oracle database user -or- choose an existing user account .
 	* If you decide to use an existing database user with all the privileges already assigned please go to Step 3.
