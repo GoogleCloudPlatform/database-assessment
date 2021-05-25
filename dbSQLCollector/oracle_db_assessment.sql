@@ -1016,7 +1016,12 @@ FROM   sys.aux_stats$;
 
 spool off
 
-col Comments for a60
+COLUMN action_time FORMAT A20
+COLUMN action FORMAT A10
+COLUMN status FORMAT A10
+COLUMN description FORMAT A80
+COLUMN version FORMAT A10
+COLUMN bundle_series FORMAT A10
 
 spool opdb__patchlevel__&v_host..&v_dbname..&v_inst..&v_hora..log
 
@@ -1025,14 +1030,15 @@ SELECT '&&v_host'
        || '&&v_dbname'
        || '_'
        || '&&v_hora'                            AS pkey,
-       TO_CHAR(action_time, 'mm/dd/rr hh24:mi') AS "Time",
-       action                                   AS "Action",
-       namespace                                AS "Namespace",
-       version                                  AS "Version",
-       id                                       AS "ID",
-       comments                                 AS "Comments"
-FROM   sys.registry$history
-ORDER  BY action_time; 
+       TO_CHAR(action_time, 'DD-MON-YYYY HH24:MI:SS') AS action_time,
+       action,
+       status,
+       description,
+       version,
+       patch_id,
+       bundle_series
+FROM   sys.dba_registry_sqlpatch
+ORDER by action_time;
 
 spool off
 
