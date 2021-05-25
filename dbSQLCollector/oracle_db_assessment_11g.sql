@@ -169,6 +169,8 @@ col OWNER for a30
 col TABLESPACE_NAME for a20
 set lines 340
 
+-- Column INMEMORY removed.
+-- Not exists in 11g
 SELECT '&&v_host'
        || '_'
        || '&&v_dbname'
@@ -179,12 +181,10 @@ FROM   (SELECT owner,
                segment_type,
                tablespace_name,
                flash_cache,
-               inmemory,
                GROUPING(owner)                           IN_OWNER,
                GROUPING(segment_type)                    IN_SEGMENT_TYPE,
                GROUPING(tablespace_name)                 IN_TABLESPACE_NAME,
                GROUPING(flash_cache)                     IN_FLASH_CACHE,
-               GROUPING(inmemory)                        IN_INMEMORY,
                ROUND(SUM(bytes) / 1024 / 1024 / 1024, 0) GB
         FROM   dba_segments
         WHERE  owner NOT IN 
@@ -193,7 +193,7 @@ FROM   (SELECT owner,
                             FROM   SYSTEM.logstdby$skip_support
                             WHERE  action=0)
         GROUP  BY grouping sets( ( ), ( owner ), ( segment_type ),
-                    ( tablespace_name ), ( flash_cache ), ( inmemory ), ( owner, flash_cache, inmemory ) )) a; 
+                    ( tablespace_name ), ( flash_cache ), ( owner, flash_cache ) )) a; 
 
 
 spool off
@@ -606,6 +606,8 @@ col value for a60
 col DEFAULT_VALUE for a30
 col ISDEFAULT for a6
 set lines 300
+-- Column DEFAULT_VALUE removed.
+-- Not exists in 11g
 
 spool opdb__dbparameters__&v_host..&v_dbname..&v_inst..&v_hora..log
 
@@ -617,7 +619,6 @@ SELECT '&&v_host'
        inst_id,
        REPLACE(name, ',', '/')                         name,
        REPLACE(SUBSTR(value, 1, 60), ',', '/')         value,
-       REPLACE(SUBSTR(default_value, 1, 30), ',', '/') DEFAULT_VALUE,
        isdefault
 FROM   gv$parameter
 ORDER  BY 2; 
@@ -683,6 +684,9 @@ col owner for a40
 
 spool opdb__dbobjects__&v_host..&v_dbname..&v_inst..&v_hora..log
 
+-- Column EDITIONABLE removed.
+-- Not exists in 11g
+
 SELECT '&&v_host'
        || '_'
        || '&&v_dbname'
@@ -691,11 +695,9 @@ SELECT '&&v_host'
        a.*
 FROM   (SELECT owner,
                object_type,
-               editionable,
                COUNT(1)              count,
                GROUPING(owner)       in_owner,
-               GROUPING(object_type) in_OBJECT_TYPE,
-               GROUPING(editionable) in_EDITIONABLE
+               GROUPING(object_type) in_OBJECT_TYPE
         FROM   dba_objects
         WHERE  owner NOT IN 
                             (
@@ -703,7 +705,7 @@ FROM   (SELECT owner,
                             FROM   SYSTEM.logstdby$skip_support
                             WHERE  action=0)
         GROUP  BY grouping sets ( ( object_type ), 
-		                          ( owner, editionable, object_type ) )) a; 
+		                          ( owner, object_type ) )) a; 
 
 spool off
 
@@ -970,6 +972,8 @@ col container_name for a40
 
 spool opdb__alertlog__&v_host..&v_dbname..&v_inst..&v_hora..log
 
+-- ORA-00600 [17147] ORA-48216 When Querying V$DIAG_ALERT_EXT View (Doc ID 2119059.1)
+-- Order By removed because of Unpublished Bug 21266522 - (this issue only exists in 11.2.0.4)
 SELECT *
 FROM   (SELECT TO_CHAR(A.originating_timestamp, 'dd/mm/yyyy hh24:mi:ss')               MESSAGE_TIME,
                REPLACE(REPLACE(SUBSTR(a.message_text, 0, 180), ',', ';'), '\n', '   ') message_text,
@@ -979,8 +983,7 @@ FROM   (SELECT TO_CHAR(A.originating_timestamp, 'dd/mm/yyyy hh24:mi:ss')        
                a.message_level,
                SUBSTR(a.message_id, 0, 30)                                             message_id,
                a.message_group
-        FROM   v$diag_alert_ext A
-        ORDER  BY A.originating_timestamp DESC)
+        FROM   v$diag_alert_ext A)
 WHERE  ROWNUM < 5001;
 
 spool off
