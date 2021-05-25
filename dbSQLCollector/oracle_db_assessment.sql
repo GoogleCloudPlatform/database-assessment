@@ -1066,7 +1066,6 @@ col message_type for a55
 col message_level for a40
 col message_id for a30
 col message_group for a35
-col container_name for a40
 
 spool opdb__alertlog__&v_host..&v_dbname..&v_inst..&v_hora..log
 
@@ -1079,8 +1078,7 @@ FROM   (SELECT TO_CHAR(A.originating_timestamp, 'dd/mm/yyyy hh24:mi:ss')        
                a.message_type,
                a.message_level,
                SUBSTR(a.message_id, 0, 30)                                             message_id,
-               a.message_group,
-               a.container_name
+               a.message_group
         FROM   v$diag_alert_ext A
         ORDER  BY A.originating_timestamp DESC)
 WHERE  ROWNUM < 5001;
