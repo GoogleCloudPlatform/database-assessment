@@ -1280,3 +1280,149 @@ GROUP  BY '&&v_host'
 
 spool off
 
+
+--SQL WAIT EVENTS
+spool opdb__ashsqlwaits__&v_host..&v_dbname..&v_inst..&v_hora..log
+
+SELECT
+    '&&v_host'
+    || '_'
+    || '&&v_dbname'
+    || '_'
+    || '&&v_hora'   AS pkey,
+    sql_id,
+    sql_opname,
+    sql_plan_hash_value,
+    event,
+    COUNT(*)        total_waits
+FROM
+    dba_hist_active_sess_history
+WHERE
+        session_type != 'BACKGROUND'
+    AND snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+GROUP BY
+    '&&v_host'
+    || '_'
+    || '&&v_dbname'
+    || '_'
+    || '&&v_hora',
+    sql_id,
+    sql_opname,
+    sql_plan_hash_value,
+    event;
+
+spool off
+
+--DISTINCT PROGRAMS, MACHINES
+spool opdb__ashprograms__&v_host..&v_dbname..&v_inst..&v_hora..log
+
+select '&&v_host'
+    || '_'
+    || '&&v_dbname'
+    || '_'
+    || '&&v_hora'   AS pkey,PROGRAM, MODULE, MACHINE,COUNT(*) COUNTS from DBA_HIST_ACTIVE_SESS_HISTORY
+where session_type!='BACKGROUND' AND snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+GROUP BY '&&v_host'
+    || '_'
+    || '&&v_dbname'
+    || '_'
+    || '&&v_hora', PROGRAM, MODULE, MACHINE;
+
+spool off
+
+--TOP 100 SEGMENTS
+spool opdb__topsegments__&v_host..&v_dbname..&v_inst..&v_hora..log
+
+SELECT
+    '&&v_host'
+    || '_'
+    || '&&v_dbname'
+    || '_'
+    || '&&v_hora' AS pkey,
+    object_id,
+    owner,
+    object_name,
+    object_type,
+    logical_reads_total,
+    db_block_changes_total,
+    buffer_busy_waits_total,
+    physical_reads_total,
+    physical_writes_total,
+    row_lock_waits_total,
+    table_scans_total
+FROM
+    (
+        SELECT
+            o.object_id,
+            o.owner,
+            o.object_name,
+            o.object_type,
+            MAX(logical_reads_total)         logical_reads_total,
+            MAX(db_block_changes_total)      db_block_changes_total,
+            MAX(buffer_busy_waits_total)     buffer_busy_waits_total,
+            MAX(physical_reads_total)        physical_reads_total,
+            MAX(physical_writes_total)       physical_writes_total,
+            MAX(row_lock_waits_total)        row_lock_waits_total,
+            MAX(table_scans_total)           table_scans_total
+        FROM
+            dba_hist_seg_stat
+            LEFT JOIN dba_objects o ON obj# = object_id
+        WHERE
+            snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+        GROUP BY
+            o.object_id,
+            o.owner,
+            o.object_name,
+            o.object_type
+        ORDER BY
+            logical_reads_total + physical_writes_total DESC
+    )
+WHERE
+    ROWNUM <= 100
+    
+spool off
+
+--TOP OBJECT ACCESS
+spool opdb__topaccess__&v_host..&v_dbname..&v_inst..&v_hora..log
+
+SELECT
+    '&&v_host'
+    || '_'
+    || '&&v_dbname'
+    || '_'
+    || '&&v_hora' AS pkey,
+    operation,
+    options,
+    object#,
+    object_owner,
+    object_name,
+    object_type,
+    count_access
+FROM
+    (
+        SELECT
+            operation,
+            options,
+            object#,
+            object_owner,
+            object_name,
+            object_type,
+            COUNT(*) count_access
+        FROM
+            dba_hist_sql_plan
+        WHERE
+            operation IN ( 'INDEX', 'TABLE ACCESS' )
+        GROUP BY
+            operation,
+            options,
+            object#,
+            object_owner,
+            object_name,
+            object_type
+        ORDER BY
+            count_access DESC
+    )
+WHERE
+    ROWNUM <= 100
+    
+spool off
