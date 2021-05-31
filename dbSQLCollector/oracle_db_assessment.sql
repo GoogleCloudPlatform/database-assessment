@@ -1378,7 +1378,7 @@ FROM
             logical_reads_total + physical_writes_total DESC
     )
 WHERE
-    ROWNUM <= 100
+    ROWNUM <= 100;
     
 spool off
 
@@ -1423,6 +1423,6 @@ FROM
             count_access DESC
     )
 WHERE
-    ROWNUM <= 100
+    ROWNUM <= 100;
     
 spool off
