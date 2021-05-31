@@ -40,12 +40,12 @@ def getVersion():
 
     return __version__
 
-def consolidateLos(args):
+def consolidateLos(args, transformersTablesSchema):
 # This function intents to consolidate the collected files into a single large file to facilidate importing the data to Big Query
 
     # Creating Hash Table with all expected tableName schemas to be imported
     tableSchemas = {}
-    tableSchemas = getBQJobConfig()
+    tableSchemas = getBQJobConfig(transformersTablesSchema)
 
     # Counting all processed files
     fileCounter = 0
@@ -194,14 +194,14 @@ def getAllFilesByPattern(filePattern):
     
     return fileList
 
-def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,skipLeadingRows):
+def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,skipLeadingRows):
 # This function receives a list of files to import to Big Query, then it calls importCSVToBQ to import table/file by table/file
 
     print ('\nPreparing to upload CSV files\n')
 
     # Creating Hash Table with all expected table schemas to be imported
     tableSchemas = {}
-    tableSchemas = getBQJobConfig()
+    tableSchemas = getBQJobConfig(transformersTablesSchema)
 
     # Getting the name of the target table_name to import the data based on the filename from OS
     for fileName in fileList:
@@ -272,7 +272,7 @@ def getObjNameFromFiles(fileName,splitterChar,pos):
 
     return fileName.split(splitterChar)[pos]
 
-def getBQJobConfig():
+def getBQJobConfig2(nottobeused):
 # Stores in a hash table all table schema configuration
 # If multi database version schema is needed in the future we can include a key for the Dbversion. 
 # In future this is best implemented if coming from a configuration file like a JSON file
@@ -692,6 +692,21 @@ def getBQJobConfig():
     # Returns hash table with all expected table schemas
     return bqTablesJobConfig
 
+def getBQJobConfig(tableSchemas):
+    
+    bqTablesJobConfig = {}
+
+    for tableName in tableSchemas:
+
+        bqTablesJobConfig[tableName] =  []
+
+        for schemaField in tableSchemas[tableName]:
+        
+            bqTablesJobConfig[tableName].append(bigquery.SchemaField(str(schemaField[0]), str(schemaField[1])))
+
+    
+    return bqTablesJobConfig
+
 
 def createDataSet(datasetName,gcpProjectName):
 # Always try to create the dataset
@@ -730,10 +745,23 @@ def runMain(args):
 
     # Pre-Tasks before trying to import any data
 
+    # STEP: Readin JSON file configuration (rules and parameters)
+
+    # Import Json with parameters and rules
+    transformerConfiguration = rules_engine.getRulesFromJSON(str(getattr(args,'transformersconfig')))
+
+    # Assigning the rules and parameter {} variables
+    transformerRulesConfig = {}
+    transformerRulesConfig = transformerConfiguration['rules']
+    transformersParametersConfig = {}
+    transformersParametersConfig = transformerConfiguration['parameters']
+    transformersTablesSchema = {}
+    transformersTablesSchema = transformerConfiguration['tableschemas']
+
     if getattr(args,'consolidatelogs'):
 
         # It is True if no fatal errors were found
-        resConsolidation = consolidateLos(args)
+        resConsolidation = consolidateLos(args,transformersTablesSchema)
     
     # For all cases in which those attributes are <> None it means the user wants to import data to Big Query
     # No need to further messaging for mandatory options because this is being done in argumentsParser function
@@ -760,16 +788,6 @@ def runMain(args):
         # Create the dataset to import the CSV data
         createDataSet(bqDataset,gcpProjectName)
 
-        # STEP: Readin JSON file configuration (rules and parameters)
-
-        # Import Json with parameters and rules
-        transformerConfiguration = rules_engine.getRulesFromJSON(str(getattr(args,'transformersconfig')))
-
-        # Assigning the rules and parameter {} variables
-        transformerRulesConfig = {}
-        transformerRulesConfig = transformerConfiguration['rules']
-        transformersParametersConfig = {}
-        transformersParametersConfig = transformerConfiguration['parameters']
 
         # STEP: Processing parameters which create internal variables(transformersParameters) to be used in later stages
 
@@ -792,7 +810,7 @@ def runMain(args):
         # STEP: Import ALL data to Big Query
 
         # Import the CSV data found in the OS
-        importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,2)
+        importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,2)
 
 
 
@@ -813,7 +831,7 @@ def runMain(args):
 
 
         # Import all Optimus Prime CSV configutation
-        importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,1)
+        importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,1)
 
 
         # STEP 3: Create Optimus Prime Views

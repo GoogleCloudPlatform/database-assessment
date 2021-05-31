@@ -186,7 +186,7 @@ def getAllReShapedDataframes(dataFrames, transformersParameters, args):
 
                 dataFrames[str(tableName) + '_RESHAPED'] = getReShapedDataframe(dataFrames[str(tableName)], transformersParameters[str(tableName)])
 
-                fileName = str(getattr(args,'fileslocation')) + '/' + str(tableName) + '_RESHAPED' + '.h5'
+                fileName = str(getattr(args,'fileslocation')) + '/' + str(tableName) + '_RESHAPED' + '.csv'
 
                 # Writes CSVs from Dataframes when parameter store in CSV_ONLY or BIGQUERY
                 createCSVFromDataframe(dataFrames[str(tableName) + '_RESHAPED'], transformersParameters[str(tableName)], args, fileName)
@@ -207,8 +207,11 @@ def createCSVFromDataframe(df, transformersParameters, args, fileName):
 
     if transformersParameters['STORE'] in ('CSV_ONLY', 'BIGQUERY'):
 
-        #df.to_csv(fileName, header=True, index=False)
-        df.to_hdf(fileName, key='optimus')
+        multiIndexColumns = df.columns
+        df.columns = getNewNamesFromMultiColumns(transformersParameters['FROM_TO_ROWS_TO_COLUMNS'], multiIndexColumns, True)
+
+        df.to_csv(fileName, header=True, index=False)
+        #df.to_hdf(fileName, key='optimus')
 
     return True
 
@@ -229,7 +232,7 @@ def getReShapedDataframe(df, transformersParameters):
 #   1	2	Physical Reads	1120	1400	1450
 #
 # TO: (Using a from/to: Active Sessions == AAS, User Transaction Per Sec == UT)
-#   DBID	HOUR	AAS_PERC90	AAS_PERC95	UT_PERC90	UT_PER95
+#   DBID	HOUR	AAS_PERC90  UT_PERC90   AAS_PERC95    UT_PER95
 #   1	0	20	22	450	460
 #   1	1	18	19	400	420
 #   1	2	18	18	390	400
@@ -264,7 +267,7 @@ def getReShapedDataframe(df, transformersParameters):
     multiIndexColumns = pivoted_df.columns
 
     # Function to change dataframe column names accordingly with the parameters in transformersParameters['FROM_TO_ROWS_TO_COLUMNS']
-    multiIndexColumns = getNewNamesFromMultiColumns(transformersParameters['FROM_TO_ROWS_TO_COLUMNS'], multiIndexColumns)
+    multiIndexColumns = getNewNamesFromMultiColumns(transformersParameters['FROM_TO_ROWS_TO_COLUMNS'], multiIndexColumns, False)
 
     # Changing columns and its levels
     pivoted_df.columns = multiIndexColumns
@@ -274,23 +277,67 @@ def getReShapedDataframe(df, transformersParameters):
 
     return pivoted_df
 
-def getNewNamesFromMultiColumns(newNamesMapping, multiIndex):
+def getNewNamesFromMultiColumns(newNamesMapping, multiIndex, convertColumns):
+# Function to change the column names for a multi index / hirerarrical columns dataframe based on a hash table with from/to names
+# Example of multiIndex:
+#MultiIndex([('PERC90',                       'Average Active Sessions'),
+#            ('PERC90', 'Average Synchronous Single-Block Read Latency'),
+#            ('PERC90',                  'Background CPU Usage Per Sec'),
+#            ('PERC90',                             'CPU Usage Per Sec'),
+#            ('PERC90',                      'DB Block Changes Per Txn'),
+#            ('PERC90',                      'Enqueue Requests Per Txn'),],
+#           )
 
     # Turning a tuple into a list in order to be changed
     multiIndex = list(multiIndex)
 
+    # Converted list from hirerarrical columns
+    normalizedColumnsList = []
+
+    # Variable to be used in the return accordingly with parameter convertColumns
+    resultColumns = None
+
+
     for index in range(len(multiIndex)):
 
+        
         if newNamesMapping.get(multiIndex[index][1]) is not None:
+        # If the column name in the database (coming from multiIndex) exists in the hash table, then it means we need to change current column name.
 
             # Turning a tuple into a list in order to be changed
             tempList = list(multiIndex[index])
+
+            # Getting new column name
             tempList[1] = newNamesMapping.get(multiIndex[index][1])
+
             # After the change tuning it back into a tuple
             multiIndex[index] = tuple(tempList)
 
-    # Retuning a tuple again
-    return tuple(multiIndex)
+            # Creates the normalized dataframe column names. Using new column name
+            normalizedColumnsList.append(str(tempList[1]) + '_' + str(multiIndex[index][1]))
+
+        else:
+        # Nothing to do related to changing the column names and we use the current dataframe column names to create a non hirerarrical columns
+
+            # Creates the normalized dataframe column names
+            normalizedColumnsList.append(str(multiIndex[index][1]) + '_' + str(multiIndex[index][0]))
+
+
+    # Processing conversion of columns
+    if convertColumns:
+    # If convering from hirerarrical columns to non hirerarrical
+
+        resultColumns = normalizedColumnsList
+
+    else: 
+    # if keeping it hirerarrical columns
+
+        # Retuning a tuple again
+        resultColumns = tuple(multiIndex)
+    
+
+    # To be used as dataframe columns. I.E: newdf.columns = resultColumns
+    return resultColumns
 
 
 if __name__ == '__main__':
