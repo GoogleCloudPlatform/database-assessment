@@ -17,7 +17,7 @@ limitations under the License.
 --accept envtype char prompt "Please enter PROD if this is a PRODUCTION environment. Otherwise enter NON-PROD: "
 
 --#Block for generating CSV
-set colsep ,
+set colsep ||
 set headsep off
 set trimspool on
 set pagesize 0
@@ -1062,8 +1062,6 @@ col MESSAGE_TIME for a25
 col message_text for a200
 col host_id for a50
 col component_id for a15
-col message_type for a55
-col message_level for a40
 col message_id for a30
 col message_group for a35
 
@@ -1426,3 +1424,54 @@ WHERE
     ROWNUM <= 100;
     
 spool off
+
+
+set lines 2000 pages 9999
+col SERVICE_ID format 999999999
+col CON_ID format 999999999
+col PDB format A30
+col NAME format A30
+col CREATION_DATE format A30
+col NETWORK_NAME format A45
+col FAILOVER_METHOD format A30
+col FAILOVER_TYPE format A30
+
+spool opdb__dbservicesinfo__&v_host..&v_dbname..&v_inst..&v_hora..log
+
+SELECT con_id,
+       pdb,
+       service_id,
+       name service_name,
+       network_name,
+       TO_CHAR(creation_date, 'dd/mm/yyyy hh24:mi:ss') creation_date,
+       failover_method,
+       failover_type,
+       failover_retries,
+       failover_delay,
+       goal
+FROM cdb_services 
+ORDER BY NAME;
+
+spool off
+
+col owner format a40
+col segment_name format a40
+col segment_type format a20
+col tablespace_name format a40
+
+spool opdb__usrsegatt__&v_host..&v_dbname..&v_inst..&v_hora..log
+
+ SELECT con_id,
+        owner,
+        segment_name,
+        segment_type,
+        tablespace_name
+ FROM cdb_segments
+ WHERE tablespace_name IN ('SYS', 'SYSTEM')
+ AND owner NOT IN
+ (SELECT name
+  FROM system.logstdby$skip_support
+  WHERE action=0);
+
+spool off
+
