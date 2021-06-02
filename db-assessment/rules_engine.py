@@ -57,6 +57,8 @@ def runRules(transformerRules, dataFrames):
         stringExpression = getParsedRuleExpr(transformerRules[ruleItem]['expr1'])
         iferrorExpression = getParsedRuleExpr(transformerRules[ruleItem]['iferror'])
 
+        # Promote STATUS=ENABLED to first check
+
         if str(transformerRules[ruleItem]['type']).upper() == "VARIABLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATE" and str(transformerRules[ruleItem]['status']).upper() == "ENABLED":
         # transformers.json asking to create a variable which is a dictionary
 
@@ -133,7 +135,7 @@ def getDataFrameFromCSV(csvFileName,skipRows):
     return df
 
 
-def getAllDataFrames(fileList, skipRows):
+def getAllDataFrames(fileList, skipRows, collectionKey):
 # Fuction to read from CSVs and store the data into a dataframe. The dataframe is placed then into a Hash Table.
 # This function returns a dictionary with dataframes from CSVs
 
@@ -141,6 +143,15 @@ def getAllDataFrames(fileList, skipRows):
     dataFrames = {}
 
     for fileName in fileList:
+
+        # Verifying if the file is a file that came from the SQL Script or is this is a result of a previous execution from transformers.json in which a file had been saved. I.E: Reshaped Dataframes
+        collectionType = import_db_assessment.getObjNameFromFiles(str(fileName),'__',0)
+        collectionType = collectionType.split('/')[-1]
+
+        if collectionType == 'opdbt':
+        # This file is not from SQL Script. Skipping CSV files that are result of a previous transformation execution
+            
+            continue
 
         # Final table name from the CSV file names
         tableName = import_db_assessment.getObjNameFromFiles(fileName,'__',1)
@@ -173,7 +184,7 @@ def trimDataframe(df):
     # trimmed dataframe
     return df
 
-def getAllReShapedDataframes(dataFrames, transformersParameters, args):
+def getAllReShapedDataframes(dataFrames, transformersParameters, args, collectionKey, fileList):
     # Function to iterate on getReShapedDataframe to reShape some dataframes accordingly with targetTableNames
     # dataFrames is expected to be a Hash Table of dataframes
     # targetTableNames is expected to be a list with the right keys from the Hash table dataFrames
@@ -186,10 +197,16 @@ def getAllReShapedDataframes(dataFrames, transformersParameters, args):
 
                 dataFrames[str(tableName) + '_RESHAPED'] = getReShapedDataframe(dataFrames[str(tableName)], transformersParameters[str(tableName)])
 
-                fileName = str(getattr(args,'fileslocation')) + '/' + str(tableName) + '_RESHAPED' + '.csv'
+                # collectionKey already contains .log
+                fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + str(tableName).lower() + '_rs__' + str(collectionKey)
 
                 # Writes CSVs from Dataframes when parameter store in CSV_ONLY or BIGQUERY
-                createCSVFromDataframe(dataFrames[str(tableName) + '_RESHAPED'], transformersParameters[str(tableName)], args, fileName)
+                resCSVCreation = createCSVFromDataframe(dataFrames[str(tableName) + '_RESHAPED'], transformersParameters[str(tableName)], args, fileName)
+                
+                if resCSVCreation:
+                # If CSV creation was successfully then we will add this to the list of files to be imported
+
+                    fileList.append(fileName)
 
             else:
 
@@ -201,19 +218,32 @@ def getAllReShapedDataframes(dataFrames, transformersParameters, args):
             print ('\n\nThere is no data parsed from CSVs named {}'.format(str(tableName)))
             print ('This is all valid CSVs names {}'.format(str(dataFrames.keys())))
 
-    return dataFrames
+    return dataFrames, fileList
 
 def createCSVFromDataframe(df, transformersParameters, args, fileName):
 
+
     if transformersParameters['STORE'] in ('CSV_ONLY', 'BIGQUERY'):
+
+        #STEP: Creating 1 row empty in the file
+
+        # Make sure file will have same format (skipping first line as others)
+        df1 = pd.DataFrame({'a':[np.nan] * 1})
+        df1.to_csv(fileName, index=False, header=None)
+
+        #STEP: Transform a multi-index/column (hierarchical columns) into regular columns
 
         multiIndexColumns = df.columns
         df.columns = getNewNamesFromMultiColumns(transformersParameters['FROM_TO_ROWS_TO_COLUMNS'], multiIndexColumns, True)
 
-        df.to_csv(fileName, header=True, index=False)
+        # STEP: Writing dataframe to CSV in append mode
+
+        df.to_csv(fileName, header=True, index=False, mode='a')
         #df.to_hdf(fileName, key='optimus')
 
-    return True
+        return True
+
+    return False
 
 def getReShapedDataframe(df, transformersParameters):
 # Function to get a dataframe in one format and reshape it to another one that would make a lot simpler to create rules on.
@@ -236,6 +266,7 @@ def getReShapedDataframe(df, transformersParameters):
 #   1	0	20	22	450	460
 #   1	1	18	19	400	420
 #   1	2	18	18	390	400
+
 
     # Columns that will remain in a row format as indexes
     frozenIndex = []
@@ -287,6 +318,7 @@ def getNewNamesFromMultiColumns(newNamesMapping, multiIndex, convertColumns):
 #            ('PERC90',                      'DB Block Changes Per Txn'),
 #            ('PERC90',                      'Enqueue Requests Per Txn'),],
 #           )
+# If convertColumns == TRUE we are writing to CSV else we are manopulating a dataframe
 
     # Turning a tuple into a list in order to be changed
     multiIndex = list(multiIndex)
@@ -296,7 +328,6 @@ def getNewNamesFromMultiColumns(newNamesMapping, multiIndex, convertColumns):
 
     # Variable to be used in the return accordingly with parameter convertColumns
     resultColumns = None
-
 
     for index in range(len(multiIndex)):
 
@@ -314,13 +345,19 @@ def getNewNamesFromMultiColumns(newNamesMapping, multiIndex, convertColumns):
             multiIndex[index] = tuple(tempList)
 
             # Creates the normalized dataframe column names. Using new column name
-            normalizedColumnsList.append(str(tempList[1]) + '_' + str(multiIndex[index][1]))
+            normalizedColumnsList.append(str(tempList[1]) + '_' + str(multiIndex[index][0]))
 
         else:
         # Nothing to do related to changing the column names and we use the current dataframe column names to create a non hirerarrical columns
 
-            # Creates the normalized dataframe column names
+            #if str(multiIndex[index][1]) != '':
+            #str(multiIndex[index][1]) == '' then the column used to be index for the dataframe and therefore not part of the hirerarrical columns structure
+
+            # Creates the normalized dataframe column names. For columns that are hirerarrical
             normalizedColumnsList.append(str(multiIndex[index][1]) + '_' + str(multiIndex[index][0]))
+            #else:
+                # Creates the normalized dataframe column names. For columns that are NON hirerarrical (Used to be dataframe index)
+                #normalizedColumnsList.append(str(multiIndex[index][0]))
 
 
     # Processing conversion of columns
@@ -334,7 +371,7 @@ def getNewNamesFromMultiColumns(newNamesMapping, multiIndex, convertColumns):
 
         # Retuning a tuple again
         resultColumns = tuple(multiIndex)
-    
+
 
     # To be used as dataframe columns. I.E: newdf.columns = resultColumns
     return resultColumns
