@@ -15,8 +15,11 @@
 # Handwritten HTTP clients
 from google.api_core import client_info as http_client_info
 
+# Importing Optimus Prime Version
+import version
+
 # Information for analytics and tool improvement
-__version__='0.1.0'
+__version__= version.__version__
 
 APPLICATION_NAME = "google-pso-tool/optimus-prime-db-assessment"
 USER_AGENT = "{}/{}".format(APPLICATION_NAME, __version__)

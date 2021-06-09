@@ -16,6 +16,9 @@ import os
 
 import setuptools
 
+# Importing Optimus Prime Version
+import db-assessment.version
+
 name = "oracle-db-assessment"
 description = "A tool to enable collection of data from Oracle datases for homogeneous and heterogeneous database migration assessment"
 version = "0.1.0"
@@ -24,13 +27,15 @@ release_status = "Development Status :: 4 - Beta"
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-dependencies = open("requirements.txt").read().strip().split("\n")
-dependencies = [v for v in dependencies if not v.startswith("#")]  # Remove comments
+dependencies = []
+with open("requirements.txt", "r") as fp:
+    for line in fp.readlines():
+        if not line.strip().startswith("#"):
+            dependencies.append(line.strip())
 
 extras_require = {}
 
-packages = ['db-assessment',
-]
+packages = setuptools.find_packages()
 
 packages += []
 
@@ -53,7 +58,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.9",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=2.7",
+    python_requires=">=3.6",
     install_requires=dependencies,
     extras_require=extras_require,
     entry_points={    
