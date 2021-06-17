@@ -1,0 +1,26 @@
+SELECT     TRIM(pkey)                                  ckey,
+           TRIM(db_name)                               db_name,
+           TRIM(cdb)                                   cdb,
+           TRIM(dbversion)                             dbversion,
+           TRIM(dbfullversion)                         dbfullversion,
+           TRIM(log_mode)                              log_mode,
+           TRIM(force_logging)                         force_logging,
+           CAST(TRIM(redo_gb_per_day) AS INT64)        redo_gb_per_day,
+           CAST(TRIM(rac_dbinstaces) AS INT64)         rac_dbinstaces,
+           TRIM(characterset)                          characterset,
+           TRIM(platform_name)                         platform_name,
+           TRIM(startup_time)                          startup_time,
+           CAST(TRIM(user_schemas) AS INT64)           user_schemas,
+           CAST(TRIM(buffer_cache_mb) AS INT64)        buffer_cache_mb,
+           CAST(TRIM(shared_pool_mb) AS INT64)         shared_pool_mb,
+           CAST(TRIM(total_pga_allocated_mb) AS INT64) total_pga_allocated_mb,
+           d.db_total_memory_gb,
+           CAST(TRIM(db_size_allocated_gb) AS INT64) db_size_allocated_gb,
+           CAST(TRIM(db_size_in_use_gb) AS INT64)    db_size_in_use_gb,
+           TRIM(db_long_size_gb)                     db_long_size_gb,
+           TRIM(dg_database_role)                    dg_database_role,
+           TRIM(dg_protection_mode)                  dg_protection_mode,
+           TRIM(dg_protection_level)                 dg_protection_level
+FROM       ${dataset}.dbsummary a
+inner join ${dataset}.vdbmemory_usageperpdb d
+ON         trim(a.pkey) = d.ckey;
