@@ -25,22 +25,40 @@ import argparse
 from google.cloud import bigquery
 from google.api_core.exceptions import Conflict
 
+client = None # Declare this at the top after import statements
+
 # Setting client info for Google APIs
 import set_client_info
 
 # Rules engine
 import rules_engine
 
+# Importing Optimus Prime Version
+import version
+
 # Information for analytics and tool improvement
-__version__='0.1.0'
+__version__= version.__version__
+
+# Messages handling
+import logging
+logging.getLogger().setLevel(level=logging.INFO)
 
 
+
+
+def get_bigqueryClient():
+    global client
+    if not client:
+        client = bigquery.Client(client_info=set_client_info.get_http_client_info())
+    return client
 
 def getVersion():
 
     return __version__
 
+
 def consolidateLos(args, transformersTablesSchema):
+
 # This function intents to consolidate the collected files into a single large file to facilidate importing the data to Big Query
 
     # Creating Hash Table with all expected tableName schemas to be imported
@@ -186,13 +204,8 @@ def createOptimusPrimeViews(gcpProjectName,bqDataset):
 def getAllFilesByPattern(filePattern):
 # This function intends to get the name of all files in the OS and return a list of strings
 
-    # Store all files found in the OS
-    fileList = []
-
-    # Get all matching files and creates a list
-    fileList = glob.glob(filePattern)
-    
-    return fileList
+    # Get all matching files and creates a list returning it   
+    return glob.glob(filePattern)
 
 def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,skipLeadingRows):
 # This function receives a list of files to import to Big Query, then it calls importCSVToBQ to import table/file by table/file
@@ -223,6 +236,15 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
 # This function will import the CSV file into the Big Query using the proper project.dataset.tablename
 # A Big Query Job is created for it
 
+    # Getting table schema
+    try:
+        schema = tableSchemas[tableName]
+    except KeyError:
+        # In case there is not expected table schema found in getBQJobConfig function
+        print ('\nWARNING: The filename {} could not be imported to Big Query.'.format(fileName))
+        print ('The table name {} cannot be imported because it does not have table schema in Optimus Prime configuration. So, it will be skipped.\n')
+        return False
+
     # Construct a BigQuery client object.
     client = bigquery.Client(client_info=set_client_info.get_http_client_info())
 
@@ -238,14 +260,6 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
     # table schema
     schema = []
 
-    # Getting table schema
-    try:
-        schema = tableSchemas[tableName]
-    except KeyError:
-        # In case there is not expected table schema found in getBQJobConfig function
-        print ('\nWARNING: The filename {} could not be imported to Big Query.'.format(fileName))
-        print ('The table name {} cannot be imported because it does not have table schema in Optimus Prime configuration. So, it will be skipped.\n'.format(tableName))
-        return False
 
     job_config = bigquery.LoadJobConfig(
         schema=schema,
@@ -266,6 +280,13 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
     # returns True if processing is successfully
     return True
 
+
+def getTableRef(dataset,tableName,projectName):
+    
+    if projectName:
+        return f"{projectName}.{dataset}.{tableName}"
+
+    return  f"{client.project}.{dataset}.{tableName}"
 
 def getObjNameFromFiles(fileName,splitterChar,pos):
     # This function returns a string based on a string splitted(Created a list) by a given character. Then, it returns the desired index position of the list.
@@ -431,19 +452,19 @@ def argumentsParser():
     parser = argparse.ArgumentParser()
 
     # Name of dataset to be created and have the data imported
-    parser.add_argument("-dataset", type=str, default=None, help="name of the Big Query dataset to import all CSV files. If do not exists it will be created if exists the data is appended")
+    parser.add_argument("-ds","-dataset", type=str, default=None, help="name of the Big Query dataset to import all CSV files. If do not exists it will be created if exists the data is appended")
 
     # GCP project name to be used with the dataset
-    parser.add_argument("-projectname", type=str, default=None, help="name of the Google Cloud project name used for the Big Query dataset")
+    parser.add_argument("-pn","-projectname", type=str, default=None, help="name of the Google Cloud project name used for the Big Query dataset")
 
     # OS csv files location to be imported to Big Query
-    parser.add_argument("-fileslocation", type=str, default='dbResults', help="optimus prime files location to be imported")
+    parser.add_argument("-fl","-fileslocation", type=str, default='dbResults', help="optimus prime files location to be imported")
 
     # OS csv files location to be imported to Big Query
     parser.add_argument("-transformersconfig", type=str, default='opConfig/transformers.json', help="location of transformers.json file with all parameters and rules")
 
     # Optimus collection ID is the number in the final part of the generated CSV files. For example: dbResults/opdb_dbfeatures_ol79-orcl-db02.ORCLCDB.ORCLCDB.180603.log. Collection ID is: 180603
-    parser.add_argument("-optimuscollectionid", type=str, default=None, help="optimus prime collection id from CSV files OR 'consolidate' for consolidated logs")
+    parser.add_argument("-ocid","-optimuscollectionid", type=str, default=None, help="optimus prime collection id from CSV files OR 'consolidate' for consolidated logs")
 
     # Consolidates different collection IDs found in the OS (dbResults/*log) into a single CSV per file type. 
     # For example: dbResults has 52 files. Meaning, 2 collection IDs (each one has 26 different file types). 
@@ -456,17 +477,20 @@ def argumentsParser():
     # Execute the parse_args() method. Variable args is a namespace type
     args = parser.parse_args()
 
-    # In case there is not dataset parameter set or with valid content in the arguments
-    if (args.dataset is None or args.dataset == '') and args.consolidatelogs == False:
-        sys.exit('\nERROR: The parameter -dataset cannot be omitted and it must have a valid name.\n')
-    
-    # In case project name/project id is not provided
-    elif args.projectname is None and args.consolidatelogs == False:
-        print ('\nWARNING: Google Cloud project name not provided. Optimus Prime will try to get it automatically from Google Big Query API call.\n')
+    # If not using -cl flag
+    if args.consolidatelogs == False:
 
-    # In case optimus collection id is omitted
-    elif args.optimuscollectionid is None and args.consolidatelogs == False:
-        sys.exit('\nERROR: The parameter -optimuscollectionid cannot be omitted. Please provide the collection id from CSV files.\n')
+        # In case there is not dataset parameter set or with valid content in the arguments
+        if (args.dataset is None or args.dataset == ''):
+            sys.exit('\nERROR: The parameter -dataset cannot be omitted and it must have a valid name.\n')
+        
+        # In case project name/project id is not provided
+        elif args.projectname is None:
+            print ('\nWARNING: Google Cloud project name not provided. Optimus Prime will try to get it automatically from Google Big Query API call.\n')
+
+        # In case optimus collection id is omitted
+        elif args.optimuscollectionid is None:
+            sys.exit('\nERROR: The parameter -optimuscollectionid cannot be omitted. Please provide the collection id from CSV files.\n')
 
     # Returns a namespace object with all arguments and its values
     return args

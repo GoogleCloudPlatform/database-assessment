@@ -1,0 +1,2 @@
+google-api-core==1.26.3
+google-cloud-bigquery==2.13.1
