@@ -33,12 +33,18 @@
                 "optimusconfig_bms_machinesizes": [["cores","STRING"],["ram_gb","STRING"],["machine_size","STRING"],["machine_size_short","STRING"],["processor","STRING"],["est_price","STRING"]],
                 "optimusconfig_network_to_gcp": [["network_to_gcp","STRING"],["gbytes_per_sec","STRING"],["mbytes_per_sec","STRING"]],
                 "awrhistsysmetrichist_rs": [["pkey","STRING"],["con_id","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["AAS_PERC90","STRING"],["BKGRCPU_PER_SEC_PERC90","STRING"],["CPU_PER_SEC_PERC90","STRING"],["EXEC_PER_SEC_PERC90","STRING"],["HOST_CPU_PER_SEC_PERC90","STRING"],["IOMBPS_PERC90","STRING"],["IOPS_PERC90","STRING"],["LOG_READS_PER_TXN_PERC90","STRING"],["LOGONS_PER_SEC_PERC90","STRING"],["PHY_READS_PER_SEC_PERC90","STRING"],["PHY_WRITES_PER_SEC_PERC90","STRING"],["REDO_GEN_PER_SEC_PERC90","STRING"],["SQL_RT_PERC90","STRING"],["USERCALLS_PER_SEC_PERC90","STRING"],["USER_TX_PER_SEC_PERC90","STRING"],["AAS_PERC95","STRING"],["BKGRCPU_PER_SEC_PERC95","STRING"],["CPU_PER_SEC_PERC95","STRING"],["EXEC_PER_SEC_PERC95","STRING"],["HOST_CPU_PER_SEC_PERC95","STRING"],["IOMBPS_PERC95","STRING"],["IOPS_PERC95","STRING"],["LOG_READS_PER_TXN_PERC95","STRING"],["LOGONS_PER_SEC_PERC95","STRING"],["PHY_READS_PER_SEC_PERC95","STRING"],["PHY_WRITES_PER_SEC_PERC95","STRING"],["REDO_GEN_PER_SEC_PERC95","STRING"],["SQL_RT_PERC95","STRING"],["USERCALLS_PER_SEC_PERC95","STRING"],["USER_TX_PER_SEC_PERC95","STRING"]],
-                "awrhistosstat_rs": [["pkey","STRING"],["con_id","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["BUSY_TIME_PERC90","STRING"],["FREE_MEMORY_BYTES_PERC90","STRING"],["IDLE_TIME_PERC90","STRING"],["INACTIVE_MEMORY_BYTES_PERC90","STRING"],["IOWAIT_TIME_PERC90","STRING"],["LOAD_PERC90","STRING"],["NICE_TIME_PERC90","STRING"],["NUM_CPUS_PERC90","STRING"],["NUM_CPU_CORES_PERC90","STRING"],["NUM_CPU_SOCKETS_PERC90","STRING"],["PHYSICAL_MEMORY_BYTES_PERC90","STRING"],["RSRC_MGR_CPU_WAIT_TIME_PERC90","STRING"],["SWAP_FREE_BYTES_PERC90","STRING"],["SYS_TIME_PERC90","STRING"],["USER_TIME_PERC90","STRING"],["VM_IN_BYTES_PERC90","STRING"],["VM_OUT_BYTES_PERC90","STRING"],["BUSY_TIME_PERC95","STRING"],["FREE_MEMORY_BYTES_PERC95","STRING"],["IDLE_TIME_PERC95","STRING"],["INACTIVE_MEMORY_BYTES_PERC95","STRING"],["IOWAIT_TIME_PERC95","STRING"],["LOAD_PERC95","STRING"],["NICE_TIME_PERC95","STRING"],["NUM_CPUS_PERC95","STRING"],["NUM_CPU_CORES_PERC95","STRING"],["NUM_CPU_SOCKETS_PERC95","STRING"],["PHYSICAL_MEMORY_BYTES_PERC95","STRING"],["RSRC_MGR_CPU_WAIT_TIME_PERC95","STRING"],["SWAP_FREE_BYTES_PERC95","STRING"],["SYS_TIME_PERC95","STRING"],["USER_TIME_PERC95","STRING"],["VM_IN_BYTES_PERC95","STRING"],["VM_OUT_BYTES_PERC95","STRING"]]
+                "awrhistosstat_rs": [["pkey","STRING"],["con_id","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["BUSY_TIME_PERC90","STRING"],["FREE_MEMORY_BYTES_PERC90","STRING"],["IDLE_TIME_PERC90","STRING"],["INACTIVE_MEMORY_BYTES_PERC90","STRING"],["IOWAIT_TIME_PERC90","STRING"],["LOAD_PERC90","STRING"],["NICE_TIME_PERC90","STRING"],["NUM_CPUS_PERC90","STRING"],["NUM_CPU_CORES_PERC90","STRING"],["NUM_CPU_SOCKETS_PERC90","STRING"],["PHYSICAL_MEMORY_BYTES_PERC90","STRING"],["RSRC_MGR_CPU_WAIT_TIME_PERC90","STRING"],["SWAP_FREE_BYTES_PERC90","STRING"],["SYS_TIME_PERC90","STRING"],["USER_TIME_PERC90","STRING"],["VM_IN_BYTES_PERC90","STRING"],["VM_OUT_BYTES_PERC90","STRING"],["BUSY_TIME_PERC95","STRING"],["FREE_MEMORY_BYTES_PERC95","STRING"],["IDLE_TIME_PERC95","STRING"],["INACTIVE_MEMORY_BYTES_PERC95","STRING"],["IOWAIT_TIME_PERC95","STRING"],["LOAD_PERC95","STRING"],["NICE_TIME_PERC95","STRING"],["NUM_CPUS_PERC95","STRING"],["NUM_CPU_CORES_PERC95","STRING"],["NUM_CPU_SOCKETS_PERC95","STRING"],["PHYSICAL_MEMORY_BYTES_PERC95","STRING"],["RSRC_MGR_CPU_WAIT_TIME_PERC95","STRING"],["SWAP_FREE_BYTES_PERC95","STRING"],["SYS_TIME_PERC95","STRING"],["USER_TIME_PERC95","STRING"],["VM_IN_BYTES_PERC95","STRING"],["VM_OUT_BYTES_PERC95","STRING"]],
+                "dbparameters_rs": [["pkey","STRING"],["inst_id","STRING"],["con_id","STRING"],["buffer_pool_keep_value","STRING"],["buffer_pool_recycle_value","STRING"],["cluster_database_value","STRING"],["compatible_value","STRING"],["cpu_count_value","STRING"],["db_16k_cache_size_value","STRING"],["db_2k_cache_size_value","STRING"],["db_32k_cache_size_value","STRING"],["db_4k_cache_size_value","STRING"],["db_8k_cache_size_value","STRING"],["db_block_size_value","STRING"],["db_cache_size_value","STRING"],["db_domain_value","STRING"],["db_flash_cache_file_value","STRING"],["db_flash_cache_size_value","STRING"],["db_flashback_retention_target_value","STRING"],["db_keep_cache_size_value","STRING"],["db_name_value","STRING"],["db_recycle_cache_size_value","STRING"],["db_unique_name_value","STRING"],["enable_goldengate_replication_value","STRING"],["fal_client_value","STRING"],["fal_server_value","STRING"],["forward_listener_value","STRING"],["inmemory_size_value","STRING"],["instance_name_value","STRING"],["java_pool_size_value","STRING"],["large_pool_size_value","STRING"],["local_listener_value","STRING"],["max_iops_value","STRING"],["max_mbps_value","STRING"],["memory_max_target_value","STRING"],["memory_target_value","STRING"],["optimizer_features_enable_value","STRING"],["parallel_instance_group_value","STRING"],["parallel_max_servers_value","STRING"],["parallel_min_servers_value","STRING"],["pga_aggregate_limit_value","STRING"],["pga_aggregate_target_value","STRING"],["remote_listener_value","STRING"],["resource_manager_plan_value","STRING"],["sga_max_size_value","STRING"],["sga_min_size_value","STRING"],["sga_target_value","STRING"],["shared_pool_size_value","STRING"],["spfile_value","STRING"],["buffer_pool_keep_default_value","STRING"],["buffer_pool_recycle_default_value","STRING"],["cluster_database_default_value","STRING"],["compatible_default_value","STRING"],["cpu_count_default_value","STRING"],["db_16k_cache_size_default_value","STRING"],["db_2k_cache_size_default_value","STRING"],["db_32k_cache_size_default_value","STRING"],["db_4k_cache_size_default_value","STRING"],["db_8k_cache_size_default_value","STRING"],["db_block_size_default_value","STRING"],["db_cache_size_default_value","STRING"],["db_domain_default_value","STRING"],["db_flash_cache_file_default_value","STRING"],["db_flash_cache_size_default_value","STRING"],["db_flashback_retention_target_default_value","STRING"],["db_keep_cache_size_default_value","STRING"],["db_name_default_value","STRING"],["db_recycle_cache_size_default_value","STRING"],["db_unique_name_default_value","STRING"],["enable_goldengate_replication_default_value","STRING"],["fal_client_default_value","STRING"],["fal_server_default_value","STRING"],["forward_listener_default_value","STRING"],["inmemory_size_default_value","STRING"],["instance_name_default_value","STRING"],["java_pool_size_default_value","STRING"],["large_pool_size_default_value","STRING"],["local_listener_default_value","STRING"],["max_iops_default_value","STRING"],["max_mbps_default_value","STRING"],["memory_max_target_default_value","STRING"],["memory_target_default_value","STRING"],["optimizer_features_enable_default_value","STRING"],["parallel_instance_group_default_value","STRING"],["parallel_max_servers_default_value","STRING"],["parallel_min_servers_default_value","STRING"],["pga_aggregate_limit_default_value","STRING"],["pga_aggregate_target_default_value","STRING"],["remote_listener_default_value","STRING"],["resource_manager_plan_default_value","STRING"],["sga_max_size_default_value","STRING"],["sga_min_size_default_value","STRING"],["sga_target_default_value","STRING"],["shared_pool_size_default_value","STRING"],["spfile_default_value","STRING"]]
             },
 
     "parameters":
             {
-                "parameter1":
+                "op_enable_reshape_for": "AWRHISTSYSMETRICHIST:rule0,AWRHISTOSSTAT:rule1,DBPARAMETERS:rule2"
+            },
+    "rules":
+
+            {
+                "rule0":
                             {
                                 "id": 1,
                                 "name": "DATAFRAME_RESHAPE",
@@ -52,7 +58,7 @@
                                 "iferror": "IGNORE",
                                 "description": "This parameter indicates that CSV for AWRHISTSYSMETRICHIST tablename needs to have its dataframe reshaped."
                             },
-                "parameter2":
+                "rule1":
                             {
                                 "id": 2,
                                 "name": "DATAFRAME_RESHAPE",
@@ -66,9 +72,23 @@
                                 "iferror": "IGNORE",
                                 "description": "This parameter indicates that CSV for AWRHISTOSSTAT tablename needs to have its dataframe reshaped."
                             },
-                "parameter3":
+                "rule2":
                             {
                                 "id": 3,
+                                "name": "DATAFRAME_RESHAPE",
+                                "type": "VARIABLE",
+                                "priority": 0,
+                                "action": "CREATE",
+                                "action_details": {"varname": "DBPARAMETERS","value": "{\"FROM_TO_ROWS_TO_COLUMNS\": {\"cpu_count\": \"CPU_COUNT\", \"sga_target\": \"SGA_TARGET\", \"memory_target\": \"MEMORY_TARGET\", \"memory_max_target\": \"MEMORY_MAX_TARGET\", \"sga_max_size\": \"SGA_MAX_SIZE\", \"sga_min_size\": \"SGA_MIN_SIZE\", \"shared_pool_size\": \"SHARED_POOL_SIZE\", \"large_pool_size\": \"LARGE_POOL_SIZE\", \"java_pool_size\": \"JAVA_POOL_SIZE\", \"db_cache_size\": \"DB_CACHE_SIZE\", \"db_2k_cache_size\": \"DB_2K_CACHE_SIZE\", \"db_4k_cache_size\": \"DB_4K_CACHE_SIZE\", \"db_8k_cache_size\": \"DB_8K_CACHE_SIZE\", \"db_16k_cache_size\": \"DB_16K_CACHE_SIZE\", \"db_32k_cache_size\": \"DB_32K_CACHE_SIZE\", \"db_keep_cache_size\": \"DB_KEEP_CACHE_SIZE\", \"db_recycle_cache_size\": \"DB_RECYCLE_CACHE_SIZE\", \"buffer_pool_keep\": \"BUFFER_POOL_KEEP\", \"buffer_pool_recycle\": \"BUFFER_POOL_RECYCLE\", \"db_flash_cache_file\": \"DB_FLASH_CACHE_FILE\", \"db_flash_cache_size\": \"DB_FLASH_CACHE_SIZE\", \"pga_aggregate_limit\": \"PGA_AGGREGATE_LIMIT\", \"pga_aggregate_target\": \"PGA_AGGREGATE_TARGET\", \"inmemory_size\": \"INMEMORY_SIZE\", \"spfile\": \"SPFILE\", \"cluster_database\": \"CLUSTER_DATABASE\", \"resource_manager_plan\": \"RESOURCE_MANAGER_PLAN\", \"max_iops\": \"MAX_IOPS\", \"max_mbps\": \"MAX_MBPS\", \"db_block_size\": \"DB_BLOCK_SIZE\", \"compatible\": \"COMPATIBLE\", \"optimizer_features_enable\": \"OPTIMIZER_FEATURES_ENABLE\", \"fal_client\": \"FAL_CLIENT\", \"fal_server\": \"FAL_SERVER\", \"enable_goldengate_replication\": \"ENABLE_GOLDENGATE_REPLICATION\", \"db_flashback_retention_target\": \"DB_FLASHBACK_RETENTION_TARGET\", \"db_name\": \"DB_NAME\", \"db_unique_name\": \"DB_UNIQUE_NAME\", \"db_domain\": \"DB_DOMAIN\", \"instance_name\": \"INSTANCE_NAME\", \"local_listener\": \"LOCAL_LISTENER\", \"forward_listener\": \"FORWARD_LISTENER\", \"remote_listener\": \"REMOTE_LISTENER\", \"parallel_min_servers\": \"PARALLEL_MIN_SERVERS\", \"parallel_max_servers\": \"PARALLEL_MAX_SERVERS\", \"parallel_instance_group\": \"PARALLEL_INSTANCE_GROUP\"}, \"TARGET_COLUMN\": \"NAME\", \"TARGET_STATS_COLUMNS\": [\"VALUE\",\"DEFAULT_VALUE\"], \"INDEX_COLUMNS\": [\"PKEY\", \"INST_ID\", \"CON_ID\"], \"STORE\": \"BIGQUERY\", \"FILTERROWS\": \"YES\"}", "store": "BIGQUERY", "datatype": "DICTIONARY"},
+                                "status": "ENABLED",
+                                "tags": ["DATAFRAMERESHAPE","DBPARAMETERS"],
+                                "expr1": "",
+                                "iferror": "IGNORE",
+                                "description": "This parameter indicates that CSV for DBPARAMETERS tablename needs to have its dataframe reshaped."
+                            },
+                "rule3":
+                            {
+                                "id": 4,
                                 "name": "DATAFRAME_RESHAPE_TABLELIST",
                                 "type": "VARIABLE",
                                 "priority": 0,
@@ -79,14 +99,10 @@
                                 "expr1": "",
                                 "iferror": "IGNORE",
                                 "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
-                            }
-            },
-    "rules":
-
-            {
-                "rule1":
+                            },
+                "rule4":
                         {
-                            "id": 1,
+                            "id": 5,
                             "name": "RULE 01",
                             "type": "NUMBER",
                             "priority": 100,
@@ -98,9 +114,9 @@
                             "iferror": "None",
                             "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
                         },
-                "rule2":
+                "rule5":
                         {
-                            "id": 2,
+                            "id": 5,
                             "name": "RULE 02",
                             "type": "FREESTYLE",
                             "priority": 200,
@@ -112,9 +128,9 @@
                             "iferror": "None",
                             "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
                         },
-                "rule3":
+                "rule6":
                         {
-                            "id": 3,
+                            "id":6,
                             "name": "RULE 03",
                             "type": "FREESTYLE",
                             "priority": 300,
@@ -126,12 +142,12 @@
                             "iferror": "None",
                             "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
                         },
-                "rule4":
+                "rule7":
                         {
-                            "id": 4,
+                            "id": 7,
                             "name": "RULE 04",
                             "type": "VARIABLE",
-                            "priority": 0,
+                            "priority": 10,
                             "action": "CREATE",
                             "action_details": {"varname": "MERGED_DFS"},
                             "status": "DISABLED",

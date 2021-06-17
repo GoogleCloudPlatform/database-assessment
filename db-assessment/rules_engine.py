@@ -35,21 +35,25 @@ def createTransformersVariable(transformerRule):
 
         return None
 
-def runRules(transformerRules, dataFrames):
+def runRules(transformerRules, dataFrames, singleRule):
 
     # Variable to keep track of rules executed and its results and status
     transformerResults = {}
     # Variable to keep track and make available all the variables from the JSON file
-    transformersParameters = {}
+    transformersRulesVariables = {}
 
     # Standardize Statuses
     # Executed
     EXECUTEDSTATUS = 'EXECUTED'
     FAILEDSTATUS = 'FAILED'
 
-    # Getting ordered list of keys by priority to iterate over the dictionary
-    sorted_keys = sorted(transformerRules, key=lambda x: (transformerRules[x]['priority']))
-
+    if singleRule:
+    # If parameter is set then we will run only 1 rule
+        sorted_keys = []
+        sorted_keys.append(singleRule)
+    else:
+        # Getting ordered list of keys by priority to iterate over the dictionary
+        sorted_keys = sorted(transformerRules, key=lambda x: (transformerRules[x]['priority']))
 
     # Looping on ALL rules from transformers.json
     for ruleItem in sorted_keys:
@@ -64,12 +68,12 @@ def runRules(transformerRules, dataFrames):
 
             try:
                 transformerResults[ruleItem] = {'Status': EXECUTEDSTATUS, 'Result Value': createTransformersVariable(transformerRules[ruleItem])}
-                transformersParameters[transformerRules[ruleItem]['action_details']['varname']] = transformerResults[ruleItem]['Result Value']
+                transformersRulesVariables[transformerRules[ruleItem]['action_details']['varname']] = transformerResults[ruleItem]['Result Value']
 
             except:
                 # In case of any issue the rule will be marked as FAILEDSTATUS
                 transformerResults[ruleItem] = {'Status': FAILEDSTATUS, 'Result Value': None}
-                transformersParameters[transformerRules[ruleItem]['action_details']['varname']] = None
+                transformersRulesVariables[transformerRules[ruleItem]['action_details']['varname']] = None
 
         elif str(transformerRules[ruleItem]['type']).upper() in ("NUMBER","FREESTYLE") and str(transformerRules[ruleItem]['action']).upper() == "ADD_COLUMN":
         # transformers.json asking to add a column that is type number meaning it can be a calculation and the column to be added is NUMBER too
@@ -85,7 +89,7 @@ def runRules(transformerRules, dataFrames):
 
 
 
-    return transformerResults, transformersParameters
+    return transformerResults, transformersRulesVariables
 
 def execStringExpression(stringExpression,iferrorExpression, dataFrames):
 
@@ -184,39 +188,48 @@ def trimDataframe(df):
     # trimmed dataframe
     return df
 
-def getAllReShapedDataframes(dataFrames, transformersParameters, args, collectionKey, fileList):
+def getAllReShapedDataframes(dataFrames, transformersParameters, transformerRulesConfig, args, collectionKey, fileList):
     # Function to iterate on getReShapedDataframe to reShape some dataframes accordingly with targetTableNames
     # dataFrames is expected to be a Hash Table of dataframes
     # targetTableNames is expected to be a list with the right keys from the Hash table dataFrames
 
-    for tableName in transformersParameters['LIST_TO_RESHAPE']:
+    if transformersParameters.get('op_enable_reshape_for') is not None:
+    # if the parameter is set to any value
 
-        if dataFrames.get(str(tableName)) is not None:
+        for tableName_RuleID in transformersParameters.get('op_enable_reshape_for').split(','):
+        # This parameter accepted multiple values
 
-            if transformersParameters.get(str(tableName)) is not None:
+            tableName = str(tableName_RuleID).split(':')[0]
+            ruleID = str(tableName_RuleID).split(':')[1]
 
-                dataFrames[str(tableName) + '_RESHAPED'] = getReShapedDataframe(dataFrames[str(tableName)], transformersParameters[str(tableName)])
+            transformerParameterResults, transformersResults = runRules(transformerRulesConfig, None, ruleID)
 
-                # collectionKey already contains .log
-                fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + str(tableName).lower() + '_rs__' + str(collectionKey)
+            if dataFrames.get(str(tableName)) is not None:
 
-                # Writes CSVs from Dataframes when parameter store in CSV_ONLY or BIGQUERY
-                resCSVCreation = createCSVFromDataframe(dataFrames[str(tableName) + '_RESHAPED'], transformersParameters[str(tableName)], args, fileName)
-                
-                if resCSVCreation:
-                # If CSV creation was successfully then we will add this to the list of files to be imported
+                if transformersResults.get(str(tableName)) is not None:
 
-                    fileList.append(fileName)
+                    dataFrames[str(tableName) + '_RESHAPED'] = getReShapedDataframe(dataFrames[str(tableName)], transformersResults[str(tableName)])
+
+                    # collectionKey already contains .log
+                    fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + str(tableName).lower() + '_rs__' + str(collectionKey)
+
+                    # Writes CSVs from Dataframes when parameter store in CSV_ONLY or BIGQUERY
+                    resCSVCreation = createCSVFromDataframe(dataFrames[str(tableName) + '_RESHAPED'], transformersResults[str(tableName)], args, fileName)
+                    
+                    if resCSVCreation:
+                    # If CSV creation was successfully then we will add this to the list of files to be imported
+
+                        fileList.append(fileName)
+
+                else:
+
+                    print ('\n\nThere is not parameter set to define the reshape process for: {}'.format(str(tableName)))
+                    print ('This is all valid reshape configurations found: {}'.format(str(transformersParameters.keys())))
 
             else:
 
-                print ('\n\nThere is not parameter set to define the reshape process for: {}'.format(str(tableName)))
-                print ('This is all valid reshape configurations found: {}'.format(str(transformersParameters.keys())))
-
-        else:
-
-            print ('\n\nThere is no data parsed from CSVs named {}'.format(str(tableName)))
-            print ('This is all valid CSVs names {}'.format(str(dataFrames.keys())))
+                print ('\n\nThere is no data parsed from CSVs named {}'.format(str(tableName)))
+                print ('This is all valid CSVs names {}'.format(str(dataFrames.keys())))
 
     return dataFrames, fileList
 
@@ -267,6 +280,8 @@ def getReShapedDataframe(df, transformersParameters):
 #   1	1	18	19	400	420
 #   1	2	18	18	390	400
 
+    if df.empty:
+        return df
 
     # Columns that will remain in a row format as indexes
     frozenIndex = []
@@ -289,6 +304,9 @@ def getReShapedDataframe(df, transformersParameters):
         filterLIst = transformersParameters['FROM_TO_ROWS_TO_COLUMNS'].keys()
         booleanFilteredSeries = df[targetColumn].isin(filterLIst)
         df = df[booleanFilteredSeries]
+
+        if df.empty:
+            print('\nWARNING: After filtering the dataframe using: \n {} \n The dataframe became empty. Check parameter FROM_TO_ROWS_TO_COLUMNS from transformers.json.'.format(str(transformersParameters['FROM_TO_ROWS_TO_COLUMNS'].keys())))
         
 
     # Pivoting daframe following the parameters given

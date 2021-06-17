@@ -334,8 +334,8 @@ def runMain(args):
     # Assigning the rules and parameter {} variables
     transformerRulesConfig = {}
     transformerRulesConfig = transformerConfiguration['rules']
-    transformersParametersConfig = {}
-    transformersParametersConfig = transformerConfiguration['parameters']
+    transformersParameters = {}
+    transformersParameters = transformerConfiguration['parameters']
     transformersTablesSchema = {}
     transformersTablesSchema = transformerConfiguration['tableschemas']
 
@@ -375,7 +375,7 @@ def runMain(args):
 
         # STEP: Processing parameters which create internal variables(transformersParameters) to be used in later stages
 
-        transformerParameterResults, transformersParameters = rules_engine.runRules(transformersParametersConfig, None)
+        #####transformerParameterResults, transformersParameters = rules_engine.runRules(transformerRulesConfig, None, None)
 
         # STEP: Loading all CSV files in memory into dataframes
 
@@ -384,11 +384,11 @@ def runMain(args):
 
         # STEP: Reshape Dataframes when necessary based on the transformersParameters
 
-        dbAssessmentDataframes, fileList = rules_engine.getAllReShapedDataframes(dbAssessmentDataframes, transformersParameters, args, collectionKey, fileList)
+        dbAssessmentDataframes, fileList = rules_engine.getAllReShapedDataframes(dbAssessmentDataframes, transformersParameters, transformerRulesConfig, args, collectionKey, fileList)
 
         # STEP: Run rules engine
 
-        transformerParameterResults, transformersParameters = rules_engine.runRules(transformerRulesConfig, dbAssessmentDataframes)
+        transformerParameterResults, transformersRulesVariables = rules_engine.runRules(transformerRulesConfig, dbAssessmentDataframes, None)
 
 
         # STEP: Import ALL data to Big Query
