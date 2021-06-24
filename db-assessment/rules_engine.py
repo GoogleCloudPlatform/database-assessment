@@ -127,10 +127,11 @@ def getRulesFromJSON(jsonFileName):
 
     return transformerRules
 
-def getDataFrameFromCSV(csvFileName,skipRows):
+def getDataFrameFromCSV(csvFileName,skipRows, separatorString):
 # Read CSV files from OS and turn it into a dataframe
 
     try:
+        #df = pd.read_csv(csvFileName, skiprows=skipRows, sep=separatorString, engine = 'python')
         df = pd.read_csv(csvFileName, skiprows=skipRows)
     except:
         print ('\n\n\n\nThe filename {} is empty.\n\n'.format(csvFileName))
@@ -139,9 +140,11 @@ def getDataFrameFromCSV(csvFileName,skipRows):
     return df
 
 
-def getAllDataFrames(fileList, skipRows, collectionKey):
+def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTablesSchema):
 # Fuction to read from CSVs and store the data into a dataframe. The dataframe is placed then into a Hash Table.
 # This function returns a dictionary with dataframes from CSVs
+
+    separatorString = args.sep
 
     # Hash table to store dataframes after being loaded from CSVs
     dataFrames = {}
@@ -161,15 +164,42 @@ def getAllDataFrames(fileList, skipRows, collectionKey):
         tableName = import_db_assessment.getObjNameFromFiles(fileName,'__',1)
 
         # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
-        df = getDataFrameFromCSV(fileName,skipRows)
+        df = getDataFrameFromCSV(fileName,skipRows, separatorString)
         
         # Checking if no error was found during loading CSV from OS
         if df is not False:
             # Trimming the data before storing it
             dataFrames[str(tableName).upper()] = trimDataframe(df)
+            
+            transformersTablesSchema = processSchemaDetection(args.schemadetection,transformersTablesSchema, tableName, df)
 
+    return dataFrames, transformersTablesSchema
 
-    return dataFrames
+def processSchemaDetection(schemadetection,transformersTablesSchema, tableName, df):
+
+    if str(schemadetection).upper() == 'AUTO':
+    # In the arguments if we want to use AUTO schema detection
+
+        transformersTablesSchema[tableName] = addBQDataType(list(df.columns), 'STRING')
+        
+    elif str(schemadetection).upper() == 'FILLGAP':
+    # In the arguments if we want to try to only use it when the configuration file do not have it already
+
+        if transformersTablesSchema.get(str(tableName).lower()) is None:
+
+            transformersTablesSchema[str(tableName).lower()] = addBQDataType(list(df.columns), 'STRING')
+            print('WARNING: Optimus Prime is filling the gap in the transformers.json schema definition for {} table.'.format(tableName))
+    
+    return transformersTablesSchema
+
+def addBQDataType(columList, dataType):
+
+    newColumnList = []
+
+    for column in columList:
+        newColumnList.append([column,dataType])
+    
+    return newColumnList
 
 def trimDataframe(df):
 
@@ -188,7 +218,7 @@ def trimDataframe(df):
     # trimmed dataframe
     return df
 
-def getAllReShapedDataframes(dataFrames, transformersParameters, transformerRulesConfig, args, collectionKey, fileList):
+def getAllReShapedDataframes(dataFrames, transformersTablesSchema, transformersParameters, transformerRulesConfig, args, collectionKey, fileList):
     # Function to iterate on getReShapedDataframe to reShape some dataframes accordingly with targetTableNames
     # dataFrames is expected to be a Hash Table of dataframes
     # targetTableNames is expected to be a list with the right keys from the Hash table dataFrames
@@ -208,13 +238,14 @@ def getAllReShapedDataframes(dataFrames, transformersParameters, transformerRule
 
                 if transformersResults.get(str(tableName)) is not None:
 
-                    dataFrames[str(tableName) + '_RESHAPED'] = getReShapedDataframe(dataFrames[str(tableName)], transformersResults[str(tableName)])
+                    df = getReShapedDataframe(dataFrames[str(tableName)], transformersResults[str(tableName)])
+                    dataFrames[str(tableName) + '_RESHAPED'] = df
 
                     # collectionKey already contains .log
                     fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + str(tableName).lower() + '_rs__' + str(collectionKey)
 
                     # Writes CSVs from Dataframes when parameter store in CSV_ONLY or BIGQUERY
-                    resCSVCreation = createCSVFromDataframe(dataFrames[str(tableName) + '_RESHAPED'], transformersResults[str(tableName)], args, fileName)
+                    resCSVCreation, transformersTablesSchema = createCSVFromDataframe(dataFrames[str(tableName) + '_RESHAPED'], transformersResults[str(tableName)], args, fileName, transformersTablesSchema, str(tableName).lower())
                     
                     if resCSVCreation:
                     # If CSV creation was successfully then we will add this to the list of files to be imported
@@ -231,9 +262,9 @@ def getAllReShapedDataframes(dataFrames, transformersParameters, transformerRule
                 print ('\n\nThere is no data parsed from CSVs named {}'.format(str(tableName)))
                 print ('This is all valid CSVs names {}'.format(str(dataFrames.keys())))
 
-    return dataFrames, fileList
+    return dataFrames, fileList, transformersTablesSchema
 
-def createCSVFromDataframe(df, transformersParameters, args, fileName):
+def createCSVFromDataframe(df, transformersParameters, args, fileName, transformersTablesSchema, tableName):
 
 
     if transformersParameters['STORE'] in ('CSV_ONLY', 'BIGQUERY'):
@@ -249,14 +280,20 @@ def createCSVFromDataframe(df, transformersParameters, args, fileName):
         multiIndexColumns = df.columns
         df.columns = getNewNamesFromMultiColumns(transformersParameters['FROM_TO_ROWS_TO_COLUMNS'], multiIndexColumns, True)
 
+        df.reset_index(inplace=True)
+
+        print(list(df.columns))
+
+        transformersTablesSchema = processSchemaDetection('AUTO',transformersTablesSchema, str(tableName).lower() + '_rs', df)
+
         # STEP: Writing dataframe to CSV in append mode
 
         df.to_csv(fileName, header=True, index=False, mode='a')
         #df.to_hdf(fileName, key='optimus')
 
-        return True
+        return True, transformersTablesSchema
 
-    return False
+    return False, transformersTablesSchema
 
 def getReShapedDataframe(df, transformersParameters):
 # Function to get a dataframe in one format and reshape it to another one that would make a lot simpler to create rules on.

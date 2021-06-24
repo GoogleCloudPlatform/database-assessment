@@ -258,7 +258,7 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
         table_id = str(client.project) + '.' + str(bqDataset) + '.' + str(tableName)
 
     # table schema
-    schema = []
+    #schema = []
 
 
     job_config = bigquery.LoadJobConfig(
@@ -267,8 +267,10 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
         # The source format defaults to CSV, so the line below is optional.
         source_format=bigquery.SourceFormat.CSV,
     )
+    
 
     with open(fileName, "rb") as source_file:
+        
         load_job = client.load_table_from_file(source_file, table_id, job_config=job_config)
 
     load_job.result()  # Waits for the job to complete.
@@ -360,6 +362,13 @@ def runMain(args):
     transformersTablesSchema = {}
     transformersTablesSchema = transformerConfiguration['tableschemas']
 
+    # Adjusting the tableschemas from transformers.json accordingly with the database version
+    for dbVersion in transformersTablesSchema.keys():
+
+        if args.dbversion in dbVersion:
+            transformersTablesSchema = transformersTablesSchema[dbVersion]
+
+
     if getattr(args,'consolidatelogs'):
 
         # It is True if no fatal errors were found
@@ -401,11 +410,11 @@ def runMain(args):
         # STEP: Loading all CSV files in memory into dataframes
 
         dbAssessmentDataframes = {}
-        dbAssessmentDataframes = rules_engine.getAllDataFrames(fileList, 1, collectionKey)
+        dbAssessmentDataframes, transformersTablesSchema = rules_engine.getAllDataFrames(fileList, 1, collectionKey, args, transformersTablesSchema)
 
         # STEP: Reshape Dataframes when necessary based on the transformersParameters
 
-        dbAssessmentDataframes, fileList = rules_engine.getAllReShapedDataframes(dbAssessmentDataframes, transformersParameters, transformerRulesConfig, args, collectionKey, fileList)
+        dbAssessmentDataframes, fileList, transformersTablesSchema = rules_engine.getAllReShapedDataframes(dbAssessmentDataframes, transformersTablesSchema, transformersParameters, transformerRulesConfig, args, collectionKey, fileList)
 
         # STEP: Run rules engine
 
@@ -427,6 +436,7 @@ def runMain(args):
         # Getting a list of files from OS based on the pattern provided
         fileList = getAllFilesByPattern(csvFilesLocationPattern)
 
+        
 
         # STEP 2: Import Optimus Prime Configuration Files
 
@@ -452,19 +462,29 @@ def argumentsParser():
     parser = argparse.ArgumentParser()
 
     # Name of dataset to be created and have the data imported
-    parser.add_argument("-ds","-dataset", type=str, default=None, help="name of the Big Query dataset to import all CSV files. If do not exists it will be created if exists the data is appended")
+    parser.add_argument("-dataset", type=str, default=None, help="name of the Big Query dataset to import all CSV files. If do not exists it will be created if exists the data is appended")
 
     # GCP project name to be used with the dataset
-    parser.add_argument("-pn","-projectname", type=str, default=None, help="name of the Google Cloud project name used for the Big Query dataset")
+    parser.add_argument("-projectname", type=str, default=None, help="name of the Google Cloud project name used for the Big Query dataset")
 
     # OS csv files location to be imported to Big Query
-    parser.add_argument("-fl","-fileslocation", type=str, default='dbResults', help="optimus prime files location to be imported")
+    parser.add_argument("-fileslocation", type=str, default='dbResults', help="optimus prime files location to be imported")
 
     # OS csv files location to be imported to Big Query
     parser.add_argument("-transformersconfig", type=str, default='opConfig/transformers.json', help="location of transformers.json file with all parameters and rules")
 
     # Optimus collection ID is the number in the final part of the generated CSV files. For example: dbResults/opdb_dbfeatures_ol79-orcl-db02.ORCLCDB.ORCLCDB.180603.log. Collection ID is: 180603
-    parser.add_argument("-ocid","-optimuscollectionid", type=str, default=None, help="optimus prime collection id from CSV files OR 'consolidate' for consolidated logs")
+    parser.add_argument("-optimuscollectionid", type=str, default=None, help="optimus prime collection id from CSV files OR 'consolidate' for consolidated logs")
+
+    # Separator for the logs being processed
+    parser.add_argument("-sep","-separator", type=str, default=',', help="separator string in the files to be processed")
+
+    parser.add_argument("-dbversion", type=str, default='12c', help="database version to be processed")
+
+    parser.add_argument("-schemadetection", type=str, default='FILLGAP', help="How Optimus Prime will handle table schemas to be imported to Big Query")
+    # Auto: Uses the columns found in the CSV file to import the data to BQ
+    # Manual: Uses the configuration file from JSON
+    # FillGaps: Uses manual and whenever a schema is missing then we use Auto for that
 
     # Consolidates different collection IDs found in the OS (dbResults/*log) into a single CSV per file type. 
     # For example: dbResults has 52 files. Meaning, 2 collection IDs (each one has 26 different file types). 
