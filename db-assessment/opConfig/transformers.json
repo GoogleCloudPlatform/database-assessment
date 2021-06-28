@@ -146,6 +146,21 @@
                 "rule3":
                             {
                                 "id": 4,
+                                "name": "DATAFRAME_RESHAPE",
+                                "type": "VARIABLE",
+                                "priority": 0,
+                                "action": "CREATE",
+                                "comment_action_details": {"varname": "DBAHISTSYSSTAT","value": "{\"FROM_TO_ROWS_TO_COLUMNS\": {\"CPU used by this session\": \"CPU_used_by_this_session\", \"DB time  \": \"DBtime\", \"cell IO uncompressed bytes\": \"cell_IO_uncompressed_bytes\", \"cell physical IO bytes eligible for predicate offload \": \"cell_physical_IO_bytes_eligible_for_predicate_offload \", \"cell physical IO bytes saved by storage index  \": \"cell_physical_IO_bytes_saved_by_storage_index\", \"cell physical IO interconnect bytes\": \"cell_physical_IO_interconnect_bytes\", \"cell physical IO interconnect bytes returned by smart scan\": \"cell_physical_IO_interconnect_bytes_returned_by_smart_scan\", \"parse time cpu\": \"parse_time_cpu\", \"physical read IO requests\": \"physical_read_IO_requests\", \"physical read total IO requests\": \"physical_read_total_IO_requests\"}, \"TARGET_COLUMN\": \"STAT_NAME\", \"TARGET_STATS_COLUMNS\": [\"VALUE\",\"DELTA\"], \"INDEX_COLUMNS\": [\"SNAP_ID\", \"INSTANCE_NUMBER\", \"BEGIN_INTERVAL_TIME\"], \"STORE\": \"BIGQUERY\", \"FILTERROWS\": \"YES\"}", "store": "BIGQUERY", "datatype": "DICTIONARY"},
+                                "action_details": {"varname": "DBAHISTSYSSTAT","value": "{\"FROM_TO_ROWS_TO_COLUMNS\": {\"CPU used by this session\": \"CPU_used_by_this_session\", \"DB time  \": \"DBtime\", \"cell IO uncompressed bytes\": \"cell_IO_uncompressed_bytes\", \"cell physical IO bytes eligible for predicate offload \": \"cell_physical_IO_bytes_eligible_for_predicate_offload \", \"cell physical IO bytes saved by storage index  \": \"cell_physical_IO_bytes_saved_by_storage_index\", \"cell physical IO interconnect bytes\": \"cell_physical_IO_interconnect_bytes\", \"cell physical IO interconnect bytes returned by smart scan\": \"cell_physical_IO_interconnect_bytes_returned_by_smart_scan\", \"parse time cpu\": \"parse_time_cpu\", \"physical read IO requests\": \"physical_read_IO_requests\", \"physical read total IO requests\": \"physical_read_total_IO_requests\"}, \"TARGET_COLUMN\": \"STAT_NAME\", \"TARGET_STATS_COLUMNS\": [\"VALUE\",\"DELTA\"], \"INDEX_COLUMNS\": [\"SNAP_ID\", \"INSTANCE_NUMBER\", \"BEGIN_INTERVAL_TIME\"], \"STORE\": \"BIGQUERY\", \"FILTERROWS\": \"YES\"}", "store": "BIGQUERY", "datatype": "DICTIONARY"},
+                                "status": "ENABLED",
+                                "tags": ["DATAFRAMERESHAPE","DBAHISTSYSSTAT"],
+                                "expr1": "",
+                                "iferror": "IGNORE",
+                                "description": "This parameter indicates that CSV for DBAHISTSYSSTAT tablename needs to have its dataframe reshaped."
+                            },
+                "rule30":
+                            {
+                                "id": 31,
                                 "name": "DATAFRAME_RESHAPE_TABLELIST",
                                 "type": "VARIABLE",
                                 "priority": 0,
@@ -157,9 +172,9 @@
                                 "iferror": "IGNORE",
                                 "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
                             },
-                "rule4":
+                "rule31":
                         {
-                            "id": 5,
+                            "id": 32,
                             "name": "RULE 01",
                             "type": "NUMBER",
                             "priority": 100,
@@ -171,9 +186,9 @@
                             "iferror": "None",
                             "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
                         },
-                "rule5":
+                "rule33":
                         {
-                            "id": 5,
+                            "id": 34,
                             "name": "RULE 02",
                             "type": "FREESTYLE",
                             "priority": 200,
@@ -185,9 +200,9 @@
                             "iferror": "None",
                             "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
                         },
-                "rule6":
+                "rule34":
                         {
-                            "id":6,
+                            "id": 35,
                             "name": "RULE 03",
                             "type": "FREESTYLE",
                             "priority": 300,
@@ -199,9 +214,9 @@
                             "iferror": "None",
                             "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
                         },
-                "rule7":
+                "rule35":
                         {
-                            "id": 7,
+                            "id": 36,
                             "name": "RULE 04",
                             "type": "VARIABLE",
                             "priority": 10,
