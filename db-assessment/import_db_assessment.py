@@ -145,7 +145,7 @@ def createOptimusPrimeViews(gcpProjectName,bqDataset):
 
     print ('\nPreparing to create Optimus Prime SQL Views\n')
     
-    # Store all files found in the OS
+    # store all files found in the OS
     fileList = []
 
     # Searching for all matching files in the default views location
@@ -342,7 +342,37 @@ def createDataSet(datasetName,gcpProjectName):
     except Conflict as error:
         # If dataset already exists
         print('Dataset {} already exists.'.format(dataset_id))
-    
+
+def deleteDataSet(datasetName,gcpProjectName):
+
+    # Construct a BigQuery client object.
+    client = bigquery.Client(client_info=set_client_info.get_http_client_info())
+
+    # Set dataset_id=datasetName to the ID of the dataset to create.
+    if gcpProjectName is None:
+        # In case the user did NOT pass the project name in the arguments
+        dataset_id = "{}.{}".format(client.project,datasetName)
+    else:
+        # In case tge use DID pass the project name in the arguments
+        dataset_id = "{}.{}".format(gcpProjectName,datasetName)
+
+    # Construct a full Dataset object to send to the API.
+    dataset = bigquery.Dataset(dataset_id)
+
+    # TODO(developer): Specify the geographic location where the dataset should reside.
+    dataset.location =  client.location
+
+    # Send the dataset to the API for creation, with an explicit timeout.
+    # Raises google.api_core.exceptions.Conflict if the Dataset already
+    # exists within the project.
+    try:
+        dataset = client.delete_dataset(dataset_id, delete_contents=True, not_found_ok=True)  # Make an API request.
+        print("Deleted dataset {}".format(dataset_id))
+        
+    except Conflict as error:
+        # If dataset already exists
+        print('Failed to delete dataset {}.'.format(dataset_id))
+
 
 def runMain(args):
 # Main function
@@ -394,13 +424,23 @@ def runMain(args):
 
         # Variable to track the collection id. To be used mostly when new CSV files are generated from processing rules
         collectionKey = getObjNameFromFiles(str(fileList[0]),'__',2)
+        transformersParameters['collectionKey'] = collectionKey
 
         # Import the CSV files into Big Query
         gcpProjectName = getattr(args,'projectname')
         bqDataset = str(getattr(args,'dataset'))
         
+        # Delete the dataset before importing new data
+        if args.deletedataset:
+            if args.projectname is not None:
+                deleteDataSet(bqDataset,gcpProjectName)
+            else:
+                sys.exit('\nWARNING: The database {} will not be deleted because the option -projectname is omitted. \nPlease try again either providing -projectname OR removing -deletedataset.\n\n'.format(args.deletedataset))
+        
         # Create the dataset to import the CSV data
         createDataSet(bqDataset,gcpProjectName)
+
+        
 
 
         # STEP: Processing parameters which create internal variables(transformersParameters) to be used in later stages
@@ -414,11 +454,11 @@ def runMain(args):
 
         # STEP: Reshape Dataframes when necessary based on the transformersParameters
 
-        dbAssessmentDataframes, fileList, transformersTablesSchema = rules_engine.getAllReShapedDataframes(dbAssessmentDataframes, transformersTablesSchema, transformersParameters, transformerRulesConfig, args, collectionKey, fileList)
+        dbAssessmentDataframes, fileList, transformersTablesSchema, rulesAlreadyExecuted = rules_engine.getAllReShapedDataframes(dbAssessmentDataframes, transformersTablesSchema, transformersParameters, transformerRulesConfig, args, collectionKey, fileList)
 
         # STEP: Run rules engine
 
-        transformerParameterResults, transformersRulesVariables = rules_engine.runRules(transformerRulesConfig, dbAssessmentDataframes, None)
+        transformerParameterResults, transformersRulesVariables, fileList = rules_engine.runRules(transformerRulesConfig, dbAssessmentDataframes, None, args, collectionKey, transformersTablesSchema, fileList, rulesAlreadyExecuted)
 
 
         # STEP: Import ALL data to Big Query
@@ -485,6 +525,10 @@ def argumentsParser():
     # Auto: Uses the columns found in the CSV file to import the data to BQ
     # Manual: Uses the configuration file from JSON
     # FillGaps: Uses manual and whenever a schema is missing then we use Auto for that
+
+    # If this is present in the command line it will take value as true otherwise it will always be false
+    parser.add_argument("-deletedataset", default=False, help="Delete dataset before importing new data. WARNING: It will delete all data in the dataset!", action="store_true")
+
 
     # Consolidates different collection IDs found in the OS (dbResults/*log) into a single CSV per file type. 
     # For example: dbResults has 52 files. Meaning, 2 collection IDs (each one has 26 different file types). 

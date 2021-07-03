@@ -35,7 +35,7 @@ def createTransformersVariable(transformerRule):
 
         return None
 
-def runRules(transformerRules, dataFrames, singleRule):
+def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, transformersTablesSchema, fileList, rulesAlreadyExecuted):
 
     # Variable to keep track of rules executed and its results and status
     transformerResults = {}
@@ -61,35 +61,51 @@ def runRules(transformerRules, dataFrames, singleRule):
         stringExpression = getParsedRuleExpr(transformerRules[ruleItem]['expr1'])
         iferrorExpression = getParsedRuleExpr(transformerRules[ruleItem]['iferror'])
 
-        # Promote STATUS=ENABLED to first check
+        if str(transformerRules[ruleItem]['status']).upper() == "ENABLED":
 
-        if str(transformerRules[ruleItem]['type']).upper() == "VARIABLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATE" and str(transformerRules[ruleItem]['status']).upper() == "ENABLED":
-        # transformers.json asking to create a variable which is a dictionary
+            if ruleItem not in rulesAlreadyExecuted:
 
-            try:
-                transformerResults[ruleItem] = {'Status': EXECUTEDSTATUS, 'Result Value': createTransformersVariable(transformerRules[ruleItem])}
-                transformersRulesVariables[transformerRules[ruleItem]['action_details']['varname']] = transformerResults[ruleItem]['Result Value']
+                print('Processing rule item: {}'.format(ruleItem))
 
-            except:
-                # In case of any issue the rule will be marked as FAILEDSTATUS
-                transformerResults[ruleItem] = {'Status': FAILEDSTATUS, 'Result Value': None}
-                transformersRulesVariables[transformerRules[ruleItem]['action_details']['varname']] = None
+                if str(transformerRules[ruleItem]['type']).upper() == "VARIABLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATE":
+                # transformers.json asking to create a variable which is a dictionary
 
-        elif str(transformerRules[ruleItem]['type']).upper() in ("NUMBER","FREESTYLE") and str(transformerRules[ruleItem]['action']).upper() == "ADD_COLUMN":
-        # transformers.json asking to add a column that is type number meaning it can be a calculation and the column to be added is NUMBER too
+                    try:
+                        transformerResults[ruleItem] = {'Status': EXECUTEDSTATUS, 'Result Value': createTransformersVariable(transformerRules[ruleItem])}
+                        transformersRulesVariables[transformerRules[ruleItem]['action_details']['varname']] = transformerResults[ruleItem]['Result Value']
 
-            print ('\nProcessing NUMBER/FREESTYLE and ADD_COLUMN.\n')
-            dataFrames[transformerRules[ruleItem]['action_details']['dataframe_name']][transformerRules[ruleItem]['action_details']['column_name']] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
+                    except:
+                        # In case of any issue the rule will be marked as FAILEDSTATUS
+                        transformerResults[ruleItem] = {'Status': FAILEDSTATUS, 'Result Value': None}
+                        transformersRulesVariables[transformerRules[ruleItem]['action_details']['varname']] = None
 
-        elif str(transformerRules[ruleItem]['type']).upper() == "FREESTYLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATENEWDATAFRAME":
-        # 
+                elif str(transformerRules[ruleItem]['type']).upper() in ("NUMBER","FREESTYLE") and str(transformerRules[ruleItem]['action']).upper() == "ADD_COLUMN":
+                # transformers.json asking to add a column that is type number meaning it can be a calculation and the column to be added is NUMBER too
 
-            print ('\nProcessing FREESTYLE and CREATENEWDATAFRAME.\n')
-            dataFrames[transformerRules[ruleItem]['action_details']['dataframe_name']] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
+                    dfTargetName = transformerRules[ruleItem]['action_details']['dataframe_name']
+                    columnTargetName = transformerRules[ruleItem]['action_details']['column_name']
+                    dataFrames[str(dfTargetName).upper()][str(columnTargetName).upper()] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
+
+                    
+                    df = dataFrames[str(dfTargetName).upper()]
+
+                    newTableName = str(transformerRules[ruleItem]['action_details']['target_dataframe_name']).lower()
+                    fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + newTableName + '__' + collectionKey
+
+                    resCSVCreation, transformersTablesSchema = createCSVFromDataframe(df, transformerRules[ruleItem]['action_details'], args, fileName, transformersTablesSchema, newTableName, False)
+
+                    if resCSVCreation:
+                    # If CSV creation was successfully then we will add this to the list of files to be imported
+                        fileList.append(fileName)
+
+                elif str(transformerRules[ruleItem]['type']).upper() == "FREESTYLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATENEWDATAFRAME":
+                # 
+
+                    dataFrames[transformerRules[ruleItem]['action_details']['dataframe_name']] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
 
 
 
-    return transformerResults, transformersRulesVariables
+    return transformerResults, transformersRulesVariables, fileList
 
 def execStringExpression(stringExpression,iferrorExpression, dataFrames):
 
@@ -226,26 +242,35 @@ def getAllReShapedDataframes(dataFrames, transformersTablesSchema, transformersP
     if transformersParameters.get('op_enable_reshape_for') is not None:
     # if the parameter is set to any value
 
+        executedRulesList = []
+
         for tableName_RuleID in transformersParameters.get('op_enable_reshape_for').split(','):
         # This parameter accepted multiple values
 
             tableName = str(tableName_RuleID).split(':')[0]
             ruleID = str(tableName_RuleID).split(':')[1]
 
-            transformerParameterResults, transformersResults = runRules(transformerRulesConfig, None, ruleID)
+            
+            transformerParameterResults, transformersResults, fileList = runRules(transformerRulesConfig, None, ruleID, args, None, transformersTablesSchema, fileList, executedRulesList)
+            print('Reshaping Rule Executed: {} for the table name {}'.format(ruleID,tableName))
+
+            # Including runes already executed to be avoided
+            executedRulesList.append(ruleID)
 
             if dataFrames.get(str(tableName)) is not None:
 
                 if transformersResults.get(str(tableName)) is not None:
 
+                    reshapedTableName = str(tableName).lower() + '_rs'
+
                     df = getReShapedDataframe(dataFrames[str(tableName)], transformersResults[str(tableName)])
-                    dataFrames[str(tableName) + '_RESHAPED'] = df
+                    dataFrames[reshapedTableName.upper()] = df
 
                     # collectionKey already contains .log
-                    fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + str(tableName).lower() + '_rs__' + str(collectionKey)
+                    fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + reshapedTableName + '__' + str(collectionKey)
 
                     # Writes CSVs from Dataframes when parameter store in CSV_ONLY or BIGQUERY
-                    resCSVCreation, transformersTablesSchema = createCSVFromDataframe(dataFrames[str(tableName) + '_RESHAPED'], transformersResults[str(tableName)], args, fileName, transformersTablesSchema, str(tableName).lower())
+                    resCSVCreation, transformersTablesSchema = createCSVFromDataframe(dataFrames[reshapedTableName.upper()], transformersResults[str(tableName)], args, fileName, transformersTablesSchema, str(reshapedTableName).lower(), True)
                     
                     if resCSVCreation:
                     # If CSV creation was successfully then we will add this to the list of files to be imported
@@ -262,29 +287,25 @@ def getAllReShapedDataframes(dataFrames, transformersTablesSchema, transformersP
                 print ('\n\nThere is no data parsed from CSVs named {}'.format(str(tableName)))
                 print ('This is all valid CSVs names {}'.format(str(dataFrames.keys())))
 
-    return dataFrames, fileList, transformersTablesSchema
+    return dataFrames, fileList, transformersTablesSchema, executedRulesList
 
-def createCSVFromDataframe(df, transformersParameters, args, fileName, transformersTablesSchema, tableName):
+def createCSVFromDataframe(df, transformersParameters, args, fileName, transformersTablesSchema, tableName, fixDataframeColumns):
 
-
-    if transformersParameters['STORE'] in ('CSV_ONLY', 'BIGQUERY'):
+    if transformersParameters['store'] in ('CSV_ONLY', 'BIGQUERY'):
 
         #STEP: Creating 1 row empty in the file
 
-        # Make sure file will have same format (skipping first line as others)
+        # Make sure file will have same format (skipping first line as others) as the ones coming from oracle_db_assessment.sql
         df1 = pd.DataFrame({'a':[np.nan] * 1})
         df1.to_csv(fileName, index=False, header=None)
 
         #STEP: Transform a multi-index/column (hierarchical columns) into regular columns
+        if fixDataframeColumns:
+            multiIndexColumns = df.columns
+            df.columns = getNewNamesFromMultiColumns(transformersParameters['from_to_rows_to_columns'], multiIndexColumns, True)
+            df.reset_index(inplace=True)
 
-        multiIndexColumns = df.columns
-        df.columns = getNewNamesFromMultiColumns(transformersParameters['FROM_TO_ROWS_TO_COLUMNS'], multiIndexColumns, True)
-
-        df.reset_index(inplace=True)
-
-        print(list(df.columns))
-
-        transformersTablesSchema = processSchemaDetection('AUTO',transformersTablesSchema, str(tableName).lower() + '_rs', df)
+        transformersTablesSchema = processSchemaDetection('AUTO',transformersTablesSchema, str(tableName).lower(), df)
 
         # STEP: Writing dataframe to CSV in append mode
 
@@ -292,6 +313,7 @@ def createCSVFromDataframe(df, transformersParameters, args, fileName, transform
         #df.to_hdf(fileName, key='optimus')
 
         return True, transformersTablesSchema
+
 
     return False, transformersTablesSchema
 
@@ -335,15 +357,15 @@ def getReShapedDataframe(df, transformersParameters):
     targetStatsColumn = transformersParameters['TARGET_STATS_COLUMNS']
 
     # Check if dataframe needs to be filtered
-    if str(transformersParameters['FILTERROWS']).upper() == "YES":
+    if str(transformersParameters['filterrows']).upper() == "YES":
 
         # Using the keys from the dictionary which are the affected rows to be pivoted to columns as filters
-        filterLIst = transformersParameters['FROM_TO_ROWS_TO_COLUMNS'].keys()
+        filterLIst = transformersParameters['from_to_rows_to_columns'].keys()
         booleanFilteredSeries = df[targetColumn].isin(filterLIst)
         df = df[booleanFilteredSeries]
 
         if df.empty:
-            print('\nWARNING: After filtering the dataframe using: \n {} \n The dataframe became empty. Check parameter FROM_TO_ROWS_TO_COLUMNS from transformers.json.'.format(str(transformersParameters['FROM_TO_ROWS_TO_COLUMNS'].keys())))
+            print('\nWARNING: After filtering the dataframe using: \n {} \n The dataframe became empty. Check parameter from_to_rows_to_columns from transformers.json.'.format(str(transformersParameters['from_to_rows_to_columns'].keys())))
         
 
     # Pivoting daframe following the parameters given
@@ -352,8 +374,8 @@ def getReShapedDataframe(df, transformersParameters):
     # Getting Columns names and levels to change it
     multiIndexColumns = pivoted_df.columns
 
-    # Function to change dataframe column names accordingly with the parameters in transformersParameters['FROM_TO_ROWS_TO_COLUMNS']
-    multiIndexColumns = getNewNamesFromMultiColumns(transformersParameters['FROM_TO_ROWS_TO_COLUMNS'], multiIndexColumns, False)
+    # Function to change dataframe column names accordingly with the parameters in transformersParameters['from_to_rows_to_columns']
+    multiIndexColumns = getNewNamesFromMultiColumns(transformersParameters['from_to_rows_to_columns'], multiIndexColumns, False)
 
     # Changing columns and its levels
     pivoted_df.columns = multiIndexColumns
