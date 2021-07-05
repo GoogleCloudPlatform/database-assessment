@@ -35,7 +35,7 @@ def createTransformersVariable(transformerRule):
 
         return None
 
-def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, transformersTablesSchema, fileList, rulesAlreadyExecuted):
+def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, transformersTablesSchema, fileList, rulesAlreadyExecuted, transformersParameters):
 
     # Variable to keep track of rules executed and its results and status
     transformerResults = {}
@@ -82,17 +82,21 @@ def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, tran
                 elif str(transformerRules[ruleItem]['type']).upper() in ("NUMBER","FREESTYLE") and str(transformerRules[ruleItem]['action']).upper() == "ADD_COLUMN":
                 # transformers.json asking to add a column that is type number meaning it can be a calculation and the column to be added is NUMBER too
 
+                    # Where the result of expr1 will be saved initially
                     dfTargetName = transformerRules[ruleItem]['action_details']['dataframe_name']
                     columnTargetName = transformerRules[ruleItem]['action_details']['column_name']
-                    dataFrames[str(dfTargetName).upper()][str(columnTargetName).upper()] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
 
-                    
+
+                    dataFrames[str(dfTargetName).upper()][str(columnTargetName).upper()] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
                     df = dataFrames[str(dfTargetName).upper()]
 
                     newTableName = str(transformerRules[ruleItem]['action_details']['target_dataframe_name']).lower()
                     fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + newTableName + '__' + collectionKey
 
                     resCSVCreation, transformersTablesSchema = createCSVFromDataframe(df, transformerRules[ruleItem]['action_details'], args, fileName, transformersTablesSchema, newTableName, False)
+
+                    # Creating the new dataframe
+                    dataFrames[str(newTableName).upper()] = df
 
                     if resCSVCreation:
                     # If CSV creation was successfully then we will add this to the list of files to be imported
@@ -101,8 +105,19 @@ def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, tran
                 elif str(transformerRules[ruleItem]['type']).upper() == "FREESTYLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATENEWDATAFRAME":
                 # 
 
-                    dataFrames[transformerRules[ruleItem]['action_details']['dataframe_name']] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
+                    df = execStringExpression(stringExpression,iferrorExpression, dataFrames)
 
+                    newTableName = str(transformerRules[ruleItem]['action_details']['dataframe_name']).lower()
+                    fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + newTableName + '__' + collectionKey
+
+                    resCSVCreation, transformersTablesSchema = createCSVFromDataframe(df, transformerRules[ruleItem]['action_details'], args, fileName, transformersTablesSchema, newTableName, False)
+
+                    # Creating the new dataframe
+                    dataFrames[str(transformerRules[ruleItem]['action_details']['dataframe_name']).upper()] = df
+
+                    if resCSVCreation:
+                    # If CSV creation was successfully then we will add this to the list of files to be imported
+                        fileList.append(fileName)
 
 
     return transformerResults, transformersRulesVariables, fileList
@@ -150,7 +165,7 @@ def getDataFrameFromCSV(csvFileName,skipRows, separatorString):
         #df = pd.read_csv(csvFileName, skiprows=skipRows, sep=separatorString, engine = 'python')
         df = pd.read_csv(csvFileName, skiprows=skipRows)
     except:
-        print ('\n\n\n\nThe filename {} is empty.\n\n'.format(csvFileName))
+        print ('\nThe filename {} is empty.\n'.format(csvFileName))
         return False
 
     return df
@@ -196,6 +211,7 @@ def processSchemaDetection(schemadetection,transformersTablesSchema, tableName, 
     if str(schemadetection).upper() == 'AUTO':
     # In the arguments if we want to use AUTO schema detection
 
+        # Replaces whatever is in there
         transformersTablesSchema[tableName] = addBQDataType(list(df.columns), 'STRING')
         
     elif str(schemadetection).upper() == 'FILLGAP':
@@ -203,6 +219,7 @@ def processSchemaDetection(schemadetection,transformersTablesSchema, tableName, 
 
         if transformersTablesSchema.get(str(tableName).lower()) is None:
 
+            # Adds configuration whenever this is not present
             transformersTablesSchema[str(tableName).lower()] = addBQDataType(list(df.columns), 'STRING')
             print('WARNING: Optimus Prime is filling the gap in the transformers.json schema definition for {} table.'.format(tableName))
     
@@ -251,7 +268,7 @@ def getAllReShapedDataframes(dataFrames, transformersTablesSchema, transformersP
             ruleID = str(tableName_RuleID).split(':')[1]
 
             
-            transformerParameterResults, transformersResults, fileList = runRules(transformerRulesConfig, None, ruleID, args, None, transformersTablesSchema, fileList, executedRulesList)
+            transformerParameterResults, transformersResults, fileList = runRules(transformerRulesConfig, None, ruleID, args, None, transformersTablesSchema, fileList, executedRulesList, transformersParameters)
             print('Reshaping Rule Executed: {} for the table name {}'.format(ruleID,tableName))
 
             # Including runes already executed to be avoided
@@ -305,6 +322,7 @@ def createCSVFromDataframe(df, transformersParameters, args, fileName, transform
             df.columns = getNewNamesFromMultiColumns(transformersParameters['from_to_rows_to_columns'], multiIndexColumns, True)
             df.reset_index(inplace=True)
 
+        # Always AUTO because we never know the column order in which the dataframe will be
         transformersTablesSchema = processSchemaDetection('AUTO',transformersTablesSchema, str(tableName).lower(), df)
 
         # STEP: Writing dataframe to CSV in append mode

@@ -458,7 +458,7 @@ def runMain(args):
 
         # STEP: Run rules engine
 
-        transformerParameterResults, transformersRulesVariables, fileList = rules_engine.runRules(transformerRulesConfig, dbAssessmentDataframes, None, args, collectionKey, transformersTablesSchema, fileList, rulesAlreadyExecuted)
+        transformerParameterResults, transformersRulesVariables, fileList = rules_engine.runRules(transformerRulesConfig, dbAssessmentDataframes, None, args, collectionKey, transformersTablesSchema, fileList, rulesAlreadyExecuted, transformersParameters)
 
 
         # STEP: Import ALL data to Big Query
