@@ -472,32 +472,4 @@ def getNewNamesFromMultiColumns(newNamesMapping, multiIndex, convertColumns):
     return resultColumns
 
 
-if __name__ == '__main__':
-
-    '''
-
-    # Getting parameters and rules from transformers.json
-    transformerConfiguration = getRulesFromJSON('db-assessment/transformers.json')
-
-    transformerRulesConfig = transformerConfiguration['rules']
-    transformersParametersConfig = transformerConfiguration['parameters']
-
-    # 
-    transformerParameterResults = {}
-    transformersParameters = {}
-    transformerParameterResults, transformersParameters = runRules(transformersParametersConfig, None)
-
-    fileList = import_db_assessment.getAllFilesByPattern('/Users/erisantos/cloud-source-repo/optimus-prime-db-assessment/dbResults/opalldb*log')
-    
-    dbAssessmentDataframes = {}
-    dbAssessmentDataframes = getAllDataFrames(fileList, 1)
-
-    dbAssessmentDataframes = getAllReShapedDataframes(dbAssessmentDataframes, transformersParameters, None)
-
-    print(dbAssessmentDataframes.keys())
-
-    transformerParameterResults, transformersParameters = runRules(transformerRulesConfig, dbAssessmentDataframes)
-
-'''
-
 
