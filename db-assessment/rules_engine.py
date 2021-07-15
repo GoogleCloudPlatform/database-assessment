@@ -85,10 +85,34 @@ def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, tran
                     # Where the result of expr1 will be saved initially
                     dfTargetName = transformerRules[ruleItem]['action_details']['dataframe_name']
                     columnTargetName = transformerRules[ruleItem]['action_details']['column_name']
+                    ruleCondition = True
 
+                    try:
+                        ruleConditionString = str(transformerRules[ruleItem]['ifcondition1'])
+                    except KeyError:
+                        ruleConditionString = None
 
-                    dataFrames[str(dfTargetName).upper()][str(columnTargetName).upper()] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
-                    df = dataFrames[str(dfTargetName).upper()]
+                    if ruleConditionString is not None and ruleConditionString != "":
+
+                        try:
+                            ruleCondition = eval (ruleConditionString)
+                            print ('ruleCondition = {}'.format(ruleCondition))
+                        except:
+                            print ('\n Error processing ifcondition1 "{}" for rule "{}". So, this rule will be skipped.\n'.format(ruleConditionString,ruleItem))
+                            continue
+                    
+                    if ruleCondition:
+                        print ('WARNING: Can be executed!!!')
+                    else:
+                        print ('WARNING: CanNOT be executed!!!')
+                        continue
+
+                    try:
+                        dataFrames[str(dfTargetName).upper()][str(columnTargetName).upper()] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
+                        df = dataFrames[str(dfTargetName).upper()]
+                    except KeyError:
+                        print ('\n WARNING: The rule "{}" could not be executed because the variable "{}" used in the transformers.json could not be found.\n'.format(ruleItem, str(dfTargetName).upper()))
+                        continue
 
                     newTableName = str(transformerRules[ruleItem]['action_details']['target_dataframe_name']).lower()
                     fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + newTableName + '__' + collectionKey
@@ -105,7 +129,11 @@ def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, tran
                 elif str(transformerRules[ruleItem]['type']).upper() == "FREESTYLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATENEWDATAFRAME":
                 # 
 
-                    df = execStringExpression(stringExpression,iferrorExpression, dataFrames)
+                    df = execStringExpression(stringExpression,iferrorExpression,dataFrames)
+
+                    if df is None:
+                        print('\n WARNING: The rule "{}" could not be executed because the expression "{}" used in the transformers.json could not be executed.\n'.format(ruleItem,stringExpression))
+                        continue
 
                     newTableName = str(transformerRules[ruleItem]['action_details']['dataframe_name']).lower()
                     fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + newTableName + '__' + collectionKey
@@ -119,6 +147,25 @@ def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, tran
                     # If CSV creation was successfully then we will add this to the list of files to be imported
                         fileList.append(fileName)
 
+                elif str(transformerRules[ruleItem]['type']).upper() == "FREESTYLE" and str(transformerRules[ruleItem]['action']).upper() == "FREESTYLE":
+
+                    try:
+                        eval (stringExpression)
+                    except KeyError:
+                        print ('\n WARNING: The rule "{}" could not be executed because the expr1 "{}" used in the transformers.json could not be executed.\n'.format(ruleItem, stringExpression))
+                        continue
+
+                    newTableName = str(transformerRules[ruleItem]['action_details']['target_dataframe_name']).lower()
+                    fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + newTableName + '__' + collectionKey
+
+                    resCSVCreation, transformersTablesSchema = createCSVFromDataframe(df, transformerRules[ruleItem]['action_details'], args, fileName, transformersTablesSchema, newTableName, False)
+
+                    # Creating the new dataframe
+                    dataFrames[str(newTableName).upper()] = df
+
+                    if resCSVCreation:
+                    # If CSV creation was successfully then we will add this to the list of files to be imported
+                        fileList.append(fileName)
 
     return transformerResults, transformersRulesVariables, fileList
 
@@ -171,14 +218,14 @@ def getDataFrameFromCSV(csvFileName,skipRows, separatorString):
     return df
 
 
-def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTablesSchema):
+def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters):
 # Fuction to read from CSVs and store the data into a dataframe. The dataframe is placed then into a Hash Table.
 # This function returns a dictionary with dataframes from CSVs
 
     separatorString = args.sep
 
     # Hash table to store dataframes after being loaded from CSVs
-    dataFrames = {}
+    dataFrames = dbAssessmentDataframes
 
     for fileName in fileList:
 
@@ -202,11 +249,11 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
             # Trimming the data before storing it
             dataFrames[str(tableName).upper()] = trimDataframe(df)
             
-            transformersTablesSchema = processSchemaDetection(args.schemadetection,transformersTablesSchema, tableName, df)
+            transformersTablesSchema = processSchemaDetection(args.schemadetection,transformersTablesSchema, transformersParameters, tableName, df)
 
     return dataFrames, transformersTablesSchema
 
-def processSchemaDetection(schemadetection,transformersTablesSchema, tableName, df):
+def processSchemaDetection(schemadetection,transformersTablesSchema, transformersParameters, tableName, df):
 
     if str(schemadetection).upper() == 'AUTO':
     # In the arguments if we want to use AUTO schema detection
@@ -296,13 +343,13 @@ def getAllReShapedDataframes(dataFrames, transformersTablesSchema, transformersP
 
                 else:
 
-                    print ('\n\nThere is not parameter set to define the reshape process for: {}'.format(str(tableName)))
-                    print ('This is all valid reshape configurations found: {}'.format(str(transformersParameters.keys())))
+                    print ('\nThere is not parameter set to define the reshape process for: {}'.format(str(tableName)))
+                    print ('This is all valid reshape configurations found: {}\n'.format(str(transformersParameters.keys())))
 
             else:
 
-                print ('\n\nThere is no data parsed from CSVs named {}'.format(str(tableName)))
-                print ('This is all valid CSVs names {}'.format(str(dataFrames.keys())))
+                print ('\nWARNING: There is no data parsed from CSVs named {}'.format(str(tableName)))
+                print ('WARNING: This is all valid CSVs names {}\n'.format(str(dataFrames.keys())))
 
     return dataFrames, fileList, transformersTablesSchema, executedRulesList
 
@@ -323,12 +370,14 @@ def createCSVFromDataframe(df, transformersParameters, args, fileName, transform
             df.reset_index(inplace=True)
 
         # Always AUTO because we never know the column order in which the dataframe will be
-        transformersTablesSchema = processSchemaDetection('AUTO',transformersTablesSchema, str(tableName).lower(), df)
+        transformersTablesSchema = processSchemaDetection('AUTO',transformersTablesSchema, transformersParameters, str(tableName).lower(), df)
 
         # STEP: Writing dataframe to CSV in append mode
 
         df.to_csv(fileName, header=True, index=False, mode='a')
         #df.to_hdf(fileName, key='optimus')
+
+        print('\n Sucessfully created filename "{}" for table name "{}".\n'.format(fileName,tableName))
 
         return True, transformersTablesSchema
 

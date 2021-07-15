@@ -241,8 +241,8 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
         schema = tableSchemas[tableName]
     except KeyError:
         # In case there is not expected table schema found in getBQJobConfig function
-        print ('\nWARNING: The filename {} could not be imported to Big Query.'.format(fileName))
-        print ('The table name {} cannot be imported because it does not have table schema in Optimus Prime configuration. So, it will be skipped.\n')
+        print ('\nWARNING: The filename "{}" could not be imported to Big Query.'.format(fileName))
+        print ('The table name "{}" cannot be imported because it does not have table schema in transformers.json. So, it will be skipped.\n'.format(tableName))
         return False
 
     # Construct a BigQuery client object.
@@ -273,7 +273,11 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
         
         load_job = client.load_table_from_file(source_file, table_id, job_config=job_config)
 
-    load_job.result()  # Waits for the job to complete.
+    try:
+        load_job.result()  # Waits for the job to complete.
+    except:
+        print ('\n FAILED: Optimus Prime could not import the filename "{}" into "{}".\n'.format(fileName,table_id))
+        return False
 
     destination_table = client.get_table(table_id)  # Make an API request.
     print("Loaded {} rows into: {}".format(destination_table.num_rows,destination_table.reference))
