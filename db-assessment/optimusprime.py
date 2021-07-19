@@ -160,7 +160,7 @@ def runMain(args):
 
         # STEP: Run rules engine
 
-        transformerParameterResults, transformersRulesVariables, fileList = rules_engine.runRules(transformerRulesConfig, dbAssessmentDataframes, None, args, collectionKey, transformersTablesSchema, fileList, rulesAlreadyExecuted, transformersParameters)
+        transformerParameterResults, transformersRulesVariables, fileList, dbAssessmentDataframes = rules_engine.runRules(transformerRulesConfig, dbAssessmentDataframes, None, args, collectionKey, transformersTablesSchema, fileList, rulesAlreadyExecuted, transformersParameters)
 
 
         # STEP: Import ALL data to Big Query
@@ -168,8 +168,14 @@ def runMain(args):
         # Eliminating duplicated entries from transformers.json processing
         fileList = list(set(fileList))
 
-        # Import the CSV data found in the OS
-        import_db_assessment.importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,2)
+        if args.fromdataframe:
+
+            sucessImported, tablesImported = import_db_assessment.importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchema,dbAssessmentDataframes)
+
+        else:
+
+            # Import the CSV data found in the OS
+            import_db_assessment.importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,2)
 
 
 
@@ -232,6 +238,8 @@ def argumentsParser():
     # If this is present in the command line it will take value as true otherwise it will always be false
     parser.add_argument("-deletedataset", default=False, help="Delete dataset before importing new data. WARNING: It will delete all data in the dataset!", action="store_true")
 
+    parser.add_argument("-fromdataframe", default=False, help="Import dataframes to Big Query instead of CSV files.", action="store_true")
+    
 
     # Consolidates different collection IDs found in the OS (dbResults/*log) into a single CSV per file type. 
     # For example: dbResults has 52 files. Meaning, 2 collection IDs (each one has 26 different file types). 

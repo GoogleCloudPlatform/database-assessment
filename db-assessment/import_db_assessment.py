@@ -63,7 +63,7 @@ def consolidateLos(args, transformersTablesSchema):
 
     # Creating Hash Table with all expected tableName schemas to be imported
     tableSchemas = {}
-    tableSchemas = getBQJobConfig(transformersTablesSchema)
+    tableSchemas = getBQJobConfig(transformersTablesSchema, 'REGULAR')
 
     # Counting all processed files
     fileCounter = 0
@@ -207,6 +207,122 @@ def getAllFilesByPattern(filePattern):
     # Get all matching files and creates a list returning it   
     return glob.glob(filePattern)
 
+def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchema,dbAssessmentDataframes):
+
+    # Tracking tableNames Imported to Big Query
+    tablesImported = {}
+
+    if args.fromdataframe:
+
+        print ('\nPreparing to import DATAFRAMES to BigQuery\n')
+
+        # Creating Hash Table with all expected table schemas to be imported
+        tableSchemas = {}
+        
+        # Always AUTO because we never know the column order in which the dataframe will be
+        #transformersTablesSchema = rules_engine.processSchemaDetection('AUTO',transformersTablesSchema, None, str(tableName).lower(), df)
+        
+        #tableSchemas = getBQJobConfig(transformersTablesSchema,'DATAFRAME')
+
+
+
+        for tableName in dbAssessmentDataframes:
+
+            print ('\nThe dataframe {} is being imported to Big Query.'.format(tableName))
+
+            # Import the given CSV fileName into 
+            sucessImport = importDataframeToBQ(gcpProjectName,bqDataset,str(tableName).lower(),tableSchemas,dbAssessmentDataframes[tableName])
+
+            if sucessImport:
+                tablesImported[str(tableName).lower()] = "IMPORTED_FROM_DATAFRAME"
+
+        return True, tablesImported
+
+    else:
+
+        return False, tablesImported
+
+
+def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df):
+
+    # Getting table schema
+    try:
+
+        # Creating Hash Table with all expected table schemas to be imported
+        tableSchemas = {}
+        transformersTablesSchemaDataframe = {}
+        
+
+        dfColumns = df.columns
+        dfNewColumns = []
+
+        # Changing column names that are not supported in Big Query.
+        # Ideally this fix should be in the collection script
+        for column in dfColumns:
+
+            column = column.replace('(1)','')
+            column = column.replace('(X=5%)','')
+
+            dfNewColumns.append(column)
+
+        df.columns = dfNewColumns
+
+        # Always AUTO because we never know the column order in which the dataframe will be
+        transformersTablesSchemaDataframe = rules_engine.processSchemaDetection('AUTO',transformersTablesSchemaDataframe, None, str(tableName).lower(), df)
+        
+        tableSchemas = getBQJobConfig(transformersTablesSchemaDataframe,'DATAFRAME')
+
+
+        schema = tableSchemas[str(tableName).lower()]
+
+    except KeyError:
+        # In case there is not expected table schema found in getBQJobConfig function
+        print ('\nWARNING: The dataframe "{}" could not be imported to Big Query.'.format(tableName))
+        print ('The table name "{}" cannot be imported because it does not have table schema in transformers.json. So, it will be skipped.\n'.format(tableName))
+        return False
+
+    try:
+        df = df.astype(str)
+    except:
+        print ('\nWARNING: The dataframe "{}" could not be converted to STRING.'.format(tableName))
+
+    # Construct a BigQuery client object.
+    client = bigquery.Client(client_info=set_client_info.get_http_client_info())
+
+    # Adding Project and Dataset based on arguments 
+    # table_id to the ID of the table to create.
+    if gcpProjectName is not None:
+        table_id = str(gcpProjectName) + '.' + str(bqDataset) + '.' + str(tableName)
+    
+    # In case projectname was passed as argument. Then, it tries to get the default project for the [service] account being used
+    else:
+        table_id = str(client.project) + '.' + str(bqDataset) + '.' + str(tableName)
+
+    job_config = bigquery.LoadJobConfig(
+        # Specify a (partial) schema. All columns are always written to the
+        # table. The schema is used to assist in data type definitions.
+        schema=schema,
+        # Optionally, set the write disposition. BigQuery appends loaded rows
+        # to an existing table by default, but with WRITE_TRUNCATE write
+        # disposition it replaces the table with the loaded data.
+        write_disposition="WRITE_TRUNCATE",
+    )
+
+    job = client.load_table_from_dataframe(
+        df, table_id, job_config=job_config
+    )  # Make an API request.
+    job.result()  # Wait for the job to complete.
+
+    table = client.get_table(table_id)  # Make an API request.
+    print(
+        "Loaded {} rows and {} columns to {}".format(
+            table.num_rows, len(table.schema), table_id
+        )
+    )
+
+    # Returns True if sucessfull 
+    return True
+
 def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,skipLeadingRows):
 # This function receives a list of files to import to Big Query, then it calls importCSVToBQ to import table/file by table/file
 
@@ -214,7 +330,7 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
 
     # Creating Hash Table with all expected table schemas to be imported
     tableSchemas = {}
-    tableSchemas = getBQJobConfig(transformersTablesSchema)
+    tableSchemas = getBQJobConfig(transformersTablesSchema, 'REGULAR')
 
     # Getting the name of the target table_name to import the data based on the filename from OS
     for fileName in fileList:
@@ -300,7 +416,7 @@ def getObjNameFromFiles(fileName,splitterChar,pos):
     return fileName.split(splitterChar)[pos]
 
 
-def getBQJobConfig(tableSchemas):
+def getBQJobConfig(tableSchemas,jobType):
     
     bqTablesJobConfig = {}
 
@@ -310,8 +426,14 @@ def getBQJobConfig(tableSchemas):
 
         for schemaField in tableSchemas[tableName]:
         
-            bqTablesJobConfig[tableName].append(bigquery.SchemaField(str(schemaField[0]), str(schemaField[1])))
+            if jobType == 'REGULAR':
+                
+                bqTablesJobConfig[tableName].append(bigquery.SchemaField(str(schemaField[0]), str(schemaField[1])))
 
+            elif jobType == 'DATAFRAME':
+                
+                #bqTablesJobConfig[tableName].append(bigquery.SchemaField(str(schemaField[0]).upper(), 'bigquery.enums.SqlTypeNames.' + str(schemaField[1])))
+                bqTablesJobConfig[tableName].append(bigquery.SchemaField(str(schemaField[0]).upper(), str(schemaField[1])))
     
     return bqTablesJobConfig
 

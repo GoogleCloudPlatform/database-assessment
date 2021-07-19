@@ -1,4 +1,4 @@
-network_to_gcp,gbytes_per_sec,mbytes_per_sec
+NETWORK_TO_GCP,GBYTES_PER_SEC,MBYTES_PER_SEC
 10 Mbps,0.001220703125,1.25
 100 Mbps,0.01220703125,12.5
 1 Gbps,0.1220703125,125
