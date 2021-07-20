@@ -176,27 +176,8 @@ def runMain(args):
 
             # Import the CSV data found in the OS
             import_db_assessment.importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,2)
-
-
-
-        # STEP 2: Get all 
-
-
-        
-
-        # STEP 2: Import Optimus Prime Configuration Files
-
-
-
-
-
-
-        # Import all Optimus Prime CSV configutation
-        import_db_assessment.importAllCSVsToBQ(gcpProjectName,bqDataset,fileListOPConfig,transformersTablesSchema,1)
-
-
-        # STEP 3: Create Optimus Prime Views
-
+            # Import all Optimus Prime CSV configutation
+            import_db_assessment.importAllCSVsToBQ(gcpProjectName,bqDataset,fileListOPConfig,transformersTablesSchema,1)
 
         # Create Optimus Prime Views
         import_db_assessment.createOptimusPrimeViews(gcpProjectName,bqDataset)

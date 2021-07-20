@@ -262,6 +262,7 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df):
 
             column = column.replace('(1)','')
             column = column.replace('(X=5%)','')
+            column = column.replace('#','')
 
             dfNewColumns.append(column)
 

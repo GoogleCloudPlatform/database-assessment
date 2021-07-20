@@ -619,13 +619,13 @@
                             "type": "FREESTYLE",
                             "priority": 355,
                             "action": "ADD_OR_UPDATE_COLUMN",
-                            "action_details": {"dataframe_name": "DBSUMMARY","target_dataframe_name": "DBSUMMARY","column_name": "DB_SIZE_ALLOCATED_GB", "store": "BIGQUERY"},
+                            "action_details": {"dataframe_name": "DBSIZING_FACTS","target_dataframe_name": "DBSIZING_FACTS","column_name": "DB_SIZE_ALLOCATED_GB", "store": "BIGQUERY"},
                             "status": "ENABLED",
                             "tags": ["DB_MIGRATION"], 
-                            "expr1": "dataFrames[\"DBSUMMARY\"][\"DB_SIZE_ALLOCATED_GB\"].str.strip()",
+                            "expr1": "dataFrames[\"DBSUMMARY\"][\"DB_SIZE_ALLOCATED_GB\"]",
                             "iferror": "None",
                             "description": "This rule adds a new column"
-                        },
+                        },  
                 "rule321":
                         {
                             "id": 32,
@@ -636,8 +636,7 @@
                             "action_details": {"dataframe_name": "DBSIZING_FACTS","target_dataframe_name": "DBSIZING_FACTS","column_name": "DB_STORAGE_TB_BMS", "store": "BIGQUERY"},
                             "status": "ENABLED",
                             "tags": ["DB_MIGRATION"], 
-                            "expr2": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == 'RMAN_BACKUP_RESTORE'),dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_TRANSFER_BACKUP_OVER_NETWORK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_BACKUP_HOUR\"],dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"])",
-                            "expr1": "np.where((dataFrames[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"] > (1024*dataFrames[\"DBSUMMARY\"][\"DB_SIZE_ALLOCATED_GB\"])),dataFrames[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"],1024*dataFrames[\"DBSUMMARY\"][\"DB_SIZE_ALLOCATED_GB\"].str.strip())",
+                            "expr1": "np.where((dataFrames[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"].astype(int64) > (1024*dataFrames[\"DBSIZING_FACTS\"][\"DB_SIZE_ALLOCATED_GB\"].astype(int64))),dataFrames[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"].astype(int64),1024*dataFrames[\"DBSIZING_FACTS\"][\"DB_SIZE_ALLOCATED_GB\"].astype(int64))",
                             "iferror": "None",
                             "description": "This rule adds a new column"
                         },

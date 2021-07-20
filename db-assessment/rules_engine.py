@@ -87,9 +87,6 @@ def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, tran
                     columnTargetName = transformerRules[ruleItem]['action_details']['column_name']
                     ruleCondition = True
 
-                    if ruleItem == "rule321":
-                        print('*****************TESTING')
-
                     try:
                         ruleConditionString = str(transformerRules[ruleItem]['ifcondition1'])
                     except KeyError:
@@ -108,6 +105,9 @@ def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, tran
                     if not ruleCondition:
                         print ('WARNING: This rule "{}" will be skipped because of "ifcondition1" from transformers.json is FALSE.'.format(ruleItem))
                         continue
+
+                    if ruleItem in ["rule115","rule321"]:
+                        print ('..DEBUGGING..')
 
                     try:
                         dataFrames[str(dfTargetName).upper()][str(columnTargetName).upper()] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
@@ -213,6 +213,8 @@ def getDataFrameFromCSV(csvFileName,skipRows, separatorString):
     try:
         #df = pd.read_csv(csvFileName, skiprows=skipRows, sep=separatorString, engine = 'python')
         df = pd.read_csv(csvFileName, skiprows=skipRows)
+        #df.reset_index(drop=True)
+
     except:
         print ('\nThe filename {} is empty.\n'.format(csvFileName))
         return False
