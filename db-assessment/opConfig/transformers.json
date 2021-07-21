@@ -193,8 +193,6 @@
             {
                 "dataframe_reshape_awrhistsysmetrichist":
                             {
-                                "id": 1,
-                                "name": "DATAFRAME_RESHAPE",
                                 "type": "VARIABLE",
                                 "priority": 0,
                                 "action": "CREATE",
@@ -207,8 +205,6 @@
                             },
                 "dataframe_reshape_awrhistosstat":
                             {
-                                "id": 2,
-                                "name": "DATAFRAME_RESHAPE",
                                 "type": "VARIABLE",
                                 "priority": 0,
                                 "action": "CREATE",
@@ -221,8 +217,6 @@
                             },
                 "dataframe_reshape_dbparameters":
                             {
-                                "id": 3,
-                                "name": "DATAFRAME_RESHAPE",
                                 "type": "VARIABLE",
                                 "priority": 0,
                                 "action": "CREATE",
@@ -235,8 +229,6 @@
                             },
                 "dataframe_reshape_dbahistsysstat":
                             {
-                                "id": 4,
-                                "name": "DATAFRAME_RESHAPE",
                                 "type": "VARIABLE",
                                 "priority": 0,
                                 "action": "CREATE",
@@ -250,8 +242,6 @@
                             },
                 "rule300":
                             {
-                                "id": 31,
-                                "name": "RENAME_COLUMNS",
                                 "type": "NUMBER",
                                 "priority": 100,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -264,8 +254,6 @@
                             },
                 "rule101":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "FREESTYLE",
                                 "priority": 100,
                                 "action": "CREATENEWDATAFRAME",
@@ -278,8 +266,6 @@
                             },
                 "rule111":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "FREESTYLE",
                                 "priority": 200,
                                 "action": "CREATENEWDATAFRAME",
@@ -292,8 +278,6 @@
                             },
                 "rule211":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "NUMBER",
                                 "priority": 210,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -306,8 +290,6 @@
                             },
                 "rule311":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "NUMBER",
                                 "priority": 210,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -320,8 +302,6 @@
                             },
                 "rule312":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "NUMBER",
                                 "priority": 210,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -334,8 +314,6 @@
                             },
                 "rule313":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "NUMBER",
                                 "priority": 210,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -348,8 +326,6 @@
                             },
                 "rule314":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "NUMBER",
                                 "priority": 210,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -362,8 +338,6 @@
                             },
                 "rule315":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "NUMBER",
                                 "priority": 210,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -376,8 +350,6 @@
                             },
                 "rule316":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "NUMBER",
                                 "priority": 210,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -390,8 +362,6 @@
                             },
                 "rule317":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "NUMBER",
                                 "priority": 210,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -404,8 +374,6 @@
                             },
                 "rule318":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "NUMBER",
                                 "priority": 210,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -418,8 +386,6 @@
                             },
                 "rule320":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "FREESTYLE",
                                 "priority": 250,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -432,8 +398,6 @@
                             },
                 "rule322":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "FREESTYLE",
                                 "priority": 255,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -446,8 +410,6 @@
                             },
                 "rule323":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "FREESTYLE",
                                 "priority": 260,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -460,8 +422,6 @@
                             },
                 "rule325":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "FREESTYLE",
                                 "priority": 265,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -474,8 +434,6 @@
                             },
                 "rule330":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "FREESTYLE",
                                 "priority": 270,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -488,8 +446,6 @@
                             },
                 "rule31":
                             {
-                                "id": 32,
-                                "name": "RULE 01",
                                 "type": "NUMBER",
                                 "priority": 100,
                                 "action": "ADD_OR_UPDATE_COLUMN",
@@ -502,8 +458,6 @@
                             },
                 "rule51":
                         {
-                            "id": 35,
-                            "name": "RULE 03",
                             "type": "FREESTYLE",
                             "priority": 270,
                             "action": "CREATENEWDATAFRAME",
@@ -516,8 +470,6 @@
                         },
                 "rule60":
                         {
-                            "id": 34,
-                            "name": "RULE 02",
                             "type": "FREESTYLE",
                             "priority": 300,
                             "action": "ADD_OR_UPDATE_COLUMN",
@@ -530,8 +482,6 @@
                         },
                 "rule70":
                         {
-                            "id": 34,
-                            "name": "RULE 02",
                             "type": "FREESTYLE",
                             "priority": 300,
                             "action": "ADD_OR_UPDATE_COLUMN",
@@ -544,8 +494,6 @@
                         },
                 "rule80":
                         {
-                            "id": 34,
-                            "name": "RULE 02",
                             "type": "FREESTYLE",
                             "priority": 300,
                             "action": "ADD_OR_UPDATE_COLUMN",
@@ -558,8 +506,6 @@
                         },
                 "rule90":
                         {
-                            "id": 34,
-                            "name": "RULE 02",
                             "type": "FREESTYLE",
                             "priority": 310,
                             "action": "ADD_OR_UPDATE_COLUMN",
@@ -572,8 +518,6 @@
                         },
                 "rule91":
                         {
-                            "id": 34,
-                            "name": "RULE 02",
                             "type": "FREESTYLE",
                             "priority": 315,
                             "action": "ADD_OR_UPDATE_COLUMN",
@@ -586,8 +530,6 @@
                         },
                 "rule100":
                         {
-                            "id": 34,
-                            "name": "RULE 02",
                             "type": "FREESTYLE",
                             "priority": 300,
                             "action": "ADD_OR_UPDATE_COLUMN",
@@ -600,8 +542,6 @@
                         },
                 "rule110":
                         {
-                            "id": 32,
-                            "name": "RULE 01",
                             "type": "FREESTYLE",
                             "priority": 350,
                             "action": "CREATENEWDATAFRAME",
@@ -614,8 +554,6 @@
                         },
                 "rule115":
                         {
-                            "id": 32,
-                            "name": "RULE 01",
                             "type": "FREESTYLE",
                             "priority": 355,
                             "action": "ADD_OR_UPDATE_COLUMN",
@@ -628,8 +566,6 @@
                         },  
                 "rule321":
                         {
-                            "id": 32,
-                            "name": "RULE 01",
                             "type": "FREESTYLE",
                             "priority": 360,
                             "action": "ADD_OR_UPDATE_COLUMN",
@@ -642,8 +578,6 @@
                         },
                 "rule30":
                         {
-                            "id": 31,
-                            "name": "RENAME_COLUMNS",
                             "type": "NUMBER",
                             "priority": 250,
                             "action": "ADD_OR_UPDATE_COLUMN",
@@ -656,8 +590,6 @@
                         },
                 "rule33":
                         {
-                            "id": 34,
-                            "name": "RULE 02",
                             "type": "FREESTYLE",
                             "priority": 200,
                             "action": "ADD_OR_UPDATE_COLUMN",
@@ -670,8 +602,6 @@
                         },
                 "rule34":
                         {
-                            "id": 35,
-                            "name": "RULE 03",
                             "type": "FREESTYLE",
                             "priority": 300,
                             "action": "CREATENEWDATAFRAME",
@@ -684,8 +614,6 @@
                         },
                 "rule52":
                         {
-                            "id": 32,
-                            "name": "RULE 01",
                             "type": "NUMBER",
                             "priority": 300,
                             "action": "ADD_OR_UPDATE_COLUMN",
@@ -698,8 +626,6 @@
                         },
                 "rule41":
                         {
-                            "id": 32,
-                            "name": "RULE 01",
                             "type": "NUMBER",
                             "priority": 400,
                             "action": "ADD_OR_UPDATE_COLUMN",
@@ -712,8 +638,6 @@
                         },
                 "rule35":
                         {
-                            "id": 36,
-                            "name": "RULE 04",
                             "type": "VARIABLE",
                             "priority": 10,
                             "action": "CREATE",
