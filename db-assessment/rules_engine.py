@@ -106,8 +106,6 @@ def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, tran
                         print ('WARNING: This rule "{}" will be skipped because of "ifcondition1" from transformers.json is FALSE.'.format(ruleItem))
                         continue
 
-                    if ruleItem in ["rule115","rule321"]:
-                        print ('..DEBUGGING..')
 
                     try:
                         dataFrames[str(dfTargetName).upper()][str(columnTargetName).upper()] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
@@ -128,8 +126,9 @@ def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, tran
                     # If CSV creation was successfully then we will add this to the list of files to be imported
                         fileList.append(fileName)
 
-                elif str(transformerRules[ruleItem]['type']).upper() == "FREESTYLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATENEWDATAFRAME":
+                elif str(transformerRules[ruleItem]['type']).upper() == "FREESTYLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATE_OR_REPLACE_DATAFRAME":
                 # 
+
 
                     df = execStringExpression(stringExpression,iferrorExpression,dataFrames)
 
