@@ -240,7 +240,7 @@
                                 "iferror": "IGNORE",
                                 "description": "This parameter indicates that CSV for DBAHISTSYSSTAT tablename needs to have its dataframe reshaped."
                             },
-                "rule300":
+                "db_migration-rule00-1":
                             {
                                 "type": "NUMBER",
                                 "priority": 100,
@@ -250,9 +250,9 @@
                                 "tags": ["DATAFRAMERESHAPE"],
                                 "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS\"][\"_HO\"]",
                                 "iferror": "None",
-                                "description": ""
+                                "description": "Creating a new column to standardize the column name."
                             },
-                "rule101":
+                "db_migration-rule00":
                             {
                                 "type": "FREESTYLE",
                                 "priority": 100,
@@ -262,7 +262,7 @@
                                 "tags": ["DB_MIGRATION"],
                                 "expr1": "dataFrames[\"DBSUMMARY\"][['PKEY', 'DBID', 'DB_NAME','DBVERSION','LOG_MODE','REDO_GB_PER_DAY','PLATFORM_NAME','DB_SIZE_ALLOCATED_GB','DB_SIZE_IN_USE_GB']]",
                                 "iferror": "None",
-                                "description": "This rule creates a new dataframe"
+                                "description": "Creating a new dataframe out of some columns from DBSUMMARY."
                             },
                 "db_migration-rule01":
                             {
@@ -286,7 +286,7 @@
                                 "tags": ["DB_MIGRATION"],
                                 "expr1": "'1 Gbps'",
                                 "iferror": "None",
-                                "description": "This rule adds a new column"
+                                "description": "Creating new column DBMIGRATION_DETAILS.NETWORK_TO_GCP. For now hard coded 1 Gbps"
                             },
                 "db_migration-rule03":
                             {
@@ -298,7 +298,7 @@
                                 "tags": ["DB_MIGRATION"],
                                 "expr1": "0.1220703125",
                                 "iferror": "None",
-                                "description": "This rule adds a new column"
+                                "description": "Creating new column DBMIGRATION_DETAILS.NETWORK_TRANSFER_RATE_GBYTESPS. For now hard coded 0.1220703125."
                             },
                 "db_migration-rule04":
                             {
@@ -310,7 +310,7 @@
                                 "tags": ["DB_MIGRATION"],
                                 "expr1": "125",
                                 "iferror": "None",
-                                "description": "This rule adds a new column"
+                                "description": "Creating new column DBMIGRATION_DETAILS.NETWORK_TRANSFER_RATE_MBYTESPS. For now hard coded 125."
                             },
                 "db_migration-rule05":
                             {
@@ -322,7 +322,7 @@
                                 "tags": ["DB_MIGRATION"],
                                 "expr1": "0.36",
                                 "iferror": "None",
-                                "description": "This rule adds a new column"
+                                "description": "Creating new column DBMIGRATION_DETAILS.SSD_DISK_WRITE_RATE_GBYTESPS. For now hard coded 0.36."
                             },
                 "db_migration-rule06":
                             {
@@ -334,7 +334,7 @@
                                 "tags": ["DB_MIGRATION"],
                                 "expr1": "360",
                                 "iferror": "None",
-                                "description": "This rule adds a new column"
+                                "description": "Creating new column DBMIGRATION_DETAILS.SSD_DISK_WRITE_RATE_MBYTESPS. For now hard coded 360."
                             },
                 "db_migration-rule07":
                             {
@@ -346,7 +346,7 @@
                                 "tags": ["DB_MIGRATION"],
                                 "expr1": "dataFrames[\"DBMIGRATION_DETAILS\"][\"DB_SIZE_ALLOCATED_GB\"];/;dataFrames[\"DBMIGRATION_DETAILS\"][\"SSD_DISK_WRITE_RATE_GBYTESPS\"];/;60;/;60",
                                 "iferror": "None",
-                                "description": "This rule adds a new column"
+                                "description": "Creating column DBMIGRATION_DETAILS.TIME_TO_BACKUP_TO_DISK_HOUR. This is DATABASE SIZE ALLOCATED / Time to Write to SSD (0.36 gbytes). Converted from seconds to hour."
                             },
                 "db_migration-rule08":
                             {
@@ -358,7 +358,7 @@
                                 "tags": ["DB_MIGRATION"],
                                 "expr1": "(;dataFrames[\"DBMIGRATION_DETAILS\"][\"DB_SIZE_ALLOCATED_GB\"];*;0.7;);/;dataFrames[\"DBMIGRATION_DETAILS\"][\"NETWORK_TRANSFER_RATE_GBYTESPS\"];/;60;/;60",
                                 "iferror": "None",
-                                "description": "This rule adds a new column"
+                                "description": "Creating column DBMIGRATION_DETAILS.TIME_TO_TRANSFER_BACKUP_OVER_NETWORK_HOUR. This is based on (DATABASE SIZE ALLOCATED * 0.7)/(1 Gbps Network throughput(0.1220 gbytes per sec)) DBMIGRATION_DETAILS.NETWORK_TRANSFER_RATE_GBYTESPS. Then, converted from seconds to hour."
                             },
                 "db_migration-rule09":
                             {
@@ -370,7 +370,7 @@
                                 "tags": ["DB_MIGRATION"],
                                 "expr1": "(;dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"];*;2.5;)",
                                 "iferror": "None",
-                                "description": "This rule adds a new column"
+                                "description": "Creating a new column DBMIGRATION_DETAILS.TIME_TO_RESTORE_BACKUP_HOUR. This columns will follow the rule of thumb of taking 2.5 times from backup to disk time."
                             },
                 "db_migration-rule10":
                             {
@@ -382,7 +382,7 @@
                                 "tags": ["DB_MIGRATION"],
                                 "expr1": "(;dataFrames[\"DBMIGRATION_DETAILS\"][\"REDO_GB_PER_DAY\"];*;7;);/;0.36;/;60;/;60",
                                 "iferror": "None",
-                                "description": "This rule adds a new column"
+                                "description": "Creating column DBMIGRATION_DETAILS.TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR. This column will reflect the time to restore from local disk 7 days worth of redo. We are using time to write to disk as 0.36 gigas per second. Converting it to day."
                             },
                 "db_migration-rule11":
                             {
@@ -394,7 +394,7 @@
                                 "tags": ["DB_MIGRATION"], 
                                 "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == 'RMAN_BACKUP_RESTORE'),dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_TRANSFER_BACKUP_OVER_NETWORK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_BACKUP_HOUR\"],dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"])",
                                 "iferror": "None",
-                                "description": "This rule adds a new column"
+                                "description": "Creating a new column DBMIGRATION_DETAILS.REQUIRED_DB_DOWNTIME_HOURS. If the technique is RMAN_BACKUP_RESTORE, then, downtime formula is (time to backup the database to disk + time transfer backup of database + time to restore the database) in hours"
                             },
                 "db_migration-rule12":
                             {
@@ -406,7 +406,7 @@
                                 "tags": ["DB_MIGRATION"], 
                                 "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == 'EXP_FULL'),(dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_TRANSFER_BACKUP_OVER_NETWORK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_BACKUP_HOUR\"])*1.2,dataFrames[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
                                 "iferror": "None",
-                                "description": "This rule adds a new column"
+                                "description": "Creating a new column DBMIGRATION_DETAILS.REQUIRED_DB_DOWNTIME_HOURS. If the technique is EXP_FULL, then, downtime formula is (time to backup the database to disk + time transfer backup of database + time to restore the database) * 1.2 (20%) in hours (for validations)"
                             },
                 "db_migration-rule13":
                             {
@@ -418,7 +418,7 @@
                                 "tags": ["DB_MIGRATION"], 
                                 "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == 'XTTS_INCREMENTAL'),dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR\"]+2,dataFrames[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
                                 "iferror": "None",
-                                "description": "This rule adds a new column"
+                                "description": "Creating a new column DBMIGRATION_DETAILS.REQUIRED_DB_DOWNTIME_HOURS. If the technique is XTTS_INCREMENTAL, then, downtime formula is time to restore 7 Day worth of redo for this database (TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR) + 2 hours (for validations)"
                             },
                 "db_migration-rule14":
                             {
@@ -430,7 +430,7 @@
                                 "tags": ["DB_MIGRATION"], 
                                 "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == 'DATA_GUARD'),dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR\"]/7,dataFrames[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
                                 "iferror": "None",
-                                "description": "This rule adds a new column"
+                                "description": "Creating a new column DBMIGRATION_DETAILS.REQUIRED_DB_DOWNTIME_HOURS. If the technique is DATA_GUARD, then, downtime formula is time to restore 1 Day worth of redo for this database (TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR/7). 1 day is usually a lot of out of sync for a Data Guard, but we are considering worse case scenario."
                             },
                 "db_migration-rule15":
                             {
@@ -442,7 +442,7 @@
                                 "tags": ["DB_MIGRATION"], 
                                 "expr1": "'To Be Developed'",
                                 "iferror": "None",
-                                "description": "This rule adds a new column"
+                                "description": "Adds a new column to DBMIGRATION_DETAILS.LEVEL_OF_EFFORT_HOURS = 'To Be Developed'"
                             },
                 "bms_sizing-rule01":
                             {
@@ -466,7 +466,7 @@
                             "tags": ["BMS_SIZING"],
                             "expr1": "pd.merge(dataFrames[\"AWRHISTSYSMETRICHIST_RS\"], dataFrames[\"AWRHISTOSSTAT_RS\"], on=[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\", \"_HH\"])",
                             "iferror": "None",
-                            "description": ""
+                            "description": "Create a new dataframe out of joining AWRHISTSYSMETRICHIST_RS(database metrics) and AWRHISTOSSTAT_RS(os metrics)"
                         },
                 "bms_sizing-rule03":
                         {
@@ -550,7 +550,7 @@
                             "tags": ["BMS_SIZING"],
                             "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][['_PKEY', '_DBID', '_INSTANCE_NUMBER','_HO','AAS_PERC95','IOMBPS_PERC95','IOPS_PERC95','PHY_READS_PER_SEC_PERC95','PHY_WRITES_PER_SEC_PERC95','CPUDB95_PERC','CPUDB95_CORES','FREE_MEMORY_BYTES_PERC95','LOAD_PERC95','HOST_CPU_UTILIZATION','CPUHOST95_CORES','VM_IN_BYTES_PERC95','VM_OUT_BYTES_PERC95','PHYSICAL_MEMORY_BYTES_PERC95','NUM_CPUS_PERC95','NUM_CPU_CORES_PERC95','NUM_CPU_SOCKETS_PERC95','IOPS95_TB_BMS','BMSCORES95_DB','BMSCORES95_HOST']]",
                             "iferror": "None",
-                            "description": "This rule creates a new dataframe"
+                            "description": "This rule creates a new dataframe out of a selected list of columns from AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS dataframe."
                         },
                 "bms_sizing-rule10":
                         {
@@ -562,7 +562,7 @@
                             "tags": ["BMS_SIZING"], 
                             "expr1": "pd.merge(dataFrames[\"DBSIZING_FACTS\"], dataFrames[\"DBSUMMARY\"], left_on=[\"_PKEY\", \"_DBID\"], right_on=[\"PKEY\", \"DBID\"], how=\"inner\")",                            
                             "iferror": "None",
-                            "description": "This rule adds a new column"
+                            "description": "Creating new dataframe out of joining DBSIZING_FACTS and DBSUMMARY."
                         },  
                 "bms_sizing-rule11":
                         {
@@ -574,7 +574,7 @@
                             "tags": ["BMS_SIZING"], 
                             "expr1": "np.where((dataFrames[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"] > (dataFrames[\"DBSIZING_FACTS\"][\"DB_SIZE_ALLOCATED_GB\"]/1024)),np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"]),np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"DB_SIZE_ALLOCATED_GB\"]/1024))",
                             "iferror": "None",
-                            "description": "This rule adds a new column"
+                            "description": "Creating new column DBSIZING_FACTS.BMSSTORAGE_TB_DB. This columns checks what would be the storage requirements in BMS. It considers two sources. 1) Database Size Allocated 2) IOPs. Whichever produces the highest storage size in TB will be used. Rounding it up."
                         },
                 "bms_sizing-rule12":
                         {
@@ -586,7 +586,7 @@
                             "tags": ["BMS_SIZING"], 
                             "expr1": "np.ceil((dataFrames[\"DBSIZING_FACTS\"][\"BUFFER_CACHE_MB\"]+dataFrames[\"DBSIZING_FACTS\"][\"SHARED_POOL_MB\"]+dataFrames[\"DBSIZING_FACTS\"][\"TOTAL_PGA_ALLOCATED_MB\"])/1024*1.2)",
                             "iferror": "None",
-                            "description": "This rule adds a new column"
+                            "description": "Creating new column DBSIZING_FACTS.BMSMEMORY_GB_DB to reflect DATABASE MEMORY ALLOCATED in Gigabytes PLUS 20% room for grownth. Rounding it up."
                         },
                 "bms_sizing-rule13":
                         {
@@ -598,7 +598,7 @@
                             "tags": ["BMS_SIZING"], 
                             "expr1": "np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"PHYSICAL_MEMORY_BYTES_PERC95\"]/1024/1024/1024)",
                             "iferror": "None",
-                            "description": "This rule adds a new column"
+                            "description": "Transforming column DBSIZING_FACTS.PHYSICAL_MEMORY_BYTES_PERC95 from bytes to GigaBytes. Rounding it up."
                         },
                 "bms_sizing-rule14":
                         {
@@ -610,7 +610,7 @@
                             "tags": ["BMS_SIZING"], 
                             "expr1": "dataFrames[\"DBSIZING_FACTS\"].groupby(['PKEY','_DBID','_INSTANCE_NUMBER'])['PKEY','_DBID','DB_NAME','DBVERSION','_INSTANCE_NUMBER','BMSSTORAGE_TB_DB','BMSCORES95_DB','BMSCORES95_HOST','BMSMEMORY_GB_DB','BMSMEMORY_GB_HOST'].agg('max')",                            
                             "iferror": "None",
-                            "description": "This rule adds a new column"
+                            "description": "Creating dataframe. Getting the MAX CPU Cores Percentil 95% and Memory per environment per hour."
                         },
                 "bms_sizing-rule15":
                         {
