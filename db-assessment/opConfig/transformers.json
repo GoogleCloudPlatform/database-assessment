@@ -264,7 +264,7 @@
                                 "iferror": "None",
                                 "description": "This rule creates a new dataframe"
                             },
-                "rule111":
+                "db_migration-rule01":
                             {
                                 "type": "FREESTYLE",
                                 "priority": 200,
@@ -276,7 +276,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column dataFrames['OPTIMUSCONFIG_NETWORK_TO_GCP'].loc[dataFrames['OPTIMUSCONFIG_NETWORK_TO_GCP']['network_to_gcp'] == transformersParameters['network_to_gcp']]"
                             },
-                "rule211":
+                "db_migration-rule02":
                             {
                                 "type": "NUMBER",
                                 "priority": 210,
@@ -288,7 +288,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column"
                             },
-                "rule311":
+                "db_migration-rule03":
                             {
                                 "type": "NUMBER",
                                 "priority": 210,
@@ -300,7 +300,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column"
                             },
-                "rule312":
+                "db_migration-rule04":
                             {
                                 "type": "NUMBER",
                                 "priority": 210,
@@ -312,7 +312,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column"
                             },
-                "rule313":
+                "db_migration-rule05":
                             {
                                 "type": "NUMBER",
                                 "priority": 210,
@@ -324,7 +324,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column"
                             },
-                "rule314":
+                "db_migration-rule06":
                             {
                                 "type": "NUMBER",
                                 "priority": 210,
@@ -336,7 +336,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column"
                             },
-                "rule315":
+                "db_migration-rule07":
                             {
                                 "type": "NUMBER",
                                 "priority": 210,
@@ -348,7 +348,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column"
                             },
-                "rule316":
+                "db_migration-rule08":
                             {
                                 "type": "NUMBER",
                                 "priority": 210,
@@ -360,7 +360,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column"
                             },
-                "rule317":
+                "db_migration-rule09":
                             {
                                 "type": "NUMBER",
                                 "priority": 210,
@@ -372,7 +372,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column"
                             },
-                "rule318":
+                "db_migration-rule10":
                             {
                                 "type": "NUMBER",
                                 "priority": 210,
@@ -384,7 +384,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column"
                             },
-                "rule320":
+                "db_migration-rule11":
                             {
                                 "type": "FREESTYLE",
                                 "priority": 250,
@@ -396,7 +396,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column"
                             },
-                "rule322":
+                "db_migration-rule12":
                             {
                                 "type": "FREESTYLE",
                                 "priority": 255,
@@ -408,7 +408,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column"
                             },
-                "rule323":
+                "db_migration-rule13":
                             {
                                 "type": "FREESTYLE",
                                 "priority": 260,
@@ -420,7 +420,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column"
                             },
-                "rule325":
+                "db_migration-rule14":
                             {
                                 "type": "FREESTYLE",
                                 "priority": 265,
@@ -432,7 +432,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column"
                             },
-                "rule330":
+                "db_migration-rule15":
                             {
                                 "type": "FREESTYLE",
                                 "priority": 270,
@@ -444,7 +444,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column"
                             },
-                "rule31":
+                "bms_sizing-rule01":
                             {
                                 "type": "NUMBER",
                                 "priority": 100,
@@ -456,7 +456,7 @@
                                 "iferror": "None",
                                 "description": "This rule adds a new column calculating the host cpu consumption using total busy / (busy+idle) * 100"
                             },
-                "rule51":
+                "bms_sizing-rule02":
                         {
                             "type": "FREESTYLE",
                             "priority": 270,
@@ -468,7 +468,7 @@
                             "iferror": "None",
                             "description": ""
                         },
-                "rule60":
+                "bms_sizing-rule03":
                         {
                             "type": "FREESTYLE",
                             "priority": 300,
@@ -480,7 +480,7 @@
                             "iferror": "None",
                             "description": "This rule adds a new column calculating the database cpu consumption using (cpu_usage_per_sec_perc95 + bkgr_cpu_usage_per_sec_perc95) / (host_cpu_per_sec_perc95 / host_cpu_utilization). First () adds up all CPU consumed in secs in the db. Second () calculates how many secs is 1%. Then, we divide first part by second part."
                         },
-                "rule70":
+                "bms_sizing-rule04":
                         {
                             "type": "FREESTYLE",
                             "priority": 300,
@@ -492,7 +492,7 @@
                             "iferror": "None",
                             "description": "This rule adds a new column calculating the database cpu consumption using (num_cpu_cores_perc95 / 100) / * cpudb95_perc."
                         },
-                "rule80":
+                "bms_sizing-rule05":
                         {
                             "type": "FREESTYLE",
                             "priority": 300,
@@ -504,31 +504,31 @@
                             "iferror": "None",
                             "description": "This rule adds a new column calculating the database cpu consumption using (num_cpu_cores_perc95 / 100) / * host_cpu_utilization."
                         },
-                "rule90":
+                "bms_sizing-rule06":
                         {
                             "type": "FREESTYLE",
                             "priority": 310,
                             "action": "ADD_OR_UPDATE_COLUMN",
-                            "action_details": {"dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS","target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS","column_name": "CPUDB95_CORES_BMS", "store": "BIGQUERY"},
+                            "action_details": {"dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS","target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS","column_name": "BMSCORES95_DB", "store": "BIGQUERY"},
                             "status": "ENABLED",
                             "tags": ["BMS_SIZING"],
                             "expr1": "(;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPUDB95_CORES\"];*;0.8;)",
                             "iferror": "None",
                             "description": "This rule adds a new column calculating the database cpu consumption using (num_cpu_cores_perc95 / 100) / * host_cpu_utilization."
                         },
-                "rule91":
+                "bms_sizing-rule07":
                         {
                             "type": "FREESTYLE",
                             "priority": 315,
                             "action": "ADD_OR_UPDATE_COLUMN",
-                            "action_details": {"dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS","target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS","column_name": "CPUHOST95_CORES_BMS", "store": "BIGQUERY"},
+                            "action_details": {"dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS","target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS","column_name": "BMSCORES95_HOST", "store": "BIGQUERY"},
                             "status": "ENABLED",
                             "tags": ["BMS_SIZING"],
                             "expr1": "(dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPUHOST95_CORES\"];*;0.8)",
                             "iferror": "None",
                             "description": "This rule adds a new column calculating the database cpu consumption using (num_cpu_cores_perc95 / 100) / * host_cpu_utilization."
                         },
-                "rule100":
+                "bms_sizing-rule08":
                         {
                             "type": "FREESTYLE",
                             "priority": 300,
@@ -540,113 +540,103 @@
                             "iferror": "None",
                             "description": "This rule adds a new column calculating the necessary storage to meed the requireed IOPs for the database."
                         },
-                "rule110":
+                "bms_sizing-rule09":
                         {
                             "type": "FREESTYLE",
                             "priority": 350,
                             "action": "CREATE_OR_REPLACE_DATAFRAME",
                             "action_details": {"dataframe_name": "DBSIZING_FACTS", "store": "BIGQUERY"},
                             "status": "ENABLED",
-                            "tags": ["DB_MIGRATION"],
-                            "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][['_PKEY', '_DBID', '_INSTANCE_NUMBER','_HO','AAS_PERC95','IOMBPS_PERC95','IOPS_PERC95','PHY_READS_PER_SEC_PERC95','PHY_WRITES_PER_SEC_PERC95','CPUDB95_PERC','CPUDB95_CORES','FREE_MEMORY_BYTES_PERC95','LOAD_PERC95','HOST_CPU_UTILIZATION','CPUHOST95_CORES','VM_IN_BYTES_PERC95','VM_OUT_BYTES_PERC95','PHYSICAL_MEMORY_BYTES_PERC95','NUM_CPUS_PERC95','NUM_CPU_CORES_PERC95','NUM_CPU_SOCKETS_PERC95','IOPS95_TB_BMS','CPUDB95_CORES_BMS','CPUHOST95_CORES_BMS']]",
+                            "tags": ["BMS_SIZING"],
+                            "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][['_PKEY', '_DBID', '_INSTANCE_NUMBER','_HO','AAS_PERC95','IOMBPS_PERC95','IOPS_PERC95','PHY_READS_PER_SEC_PERC95','PHY_WRITES_PER_SEC_PERC95','CPUDB95_PERC','CPUDB95_CORES','FREE_MEMORY_BYTES_PERC95','LOAD_PERC95','HOST_CPU_UTILIZATION','CPUHOST95_CORES','VM_IN_BYTES_PERC95','VM_OUT_BYTES_PERC95','PHYSICAL_MEMORY_BYTES_PERC95','NUM_CPUS_PERC95','NUM_CPU_CORES_PERC95','NUM_CPU_SOCKETS_PERC95','IOPS95_TB_BMS','BMSCORES95_DB','BMSCORES95_HOST']]",
                             "iferror": "None",
                             "description": "This rule creates a new dataframe"
                         },
-                "rule115":
+                "bms_sizing-rule10":
                         {
                             "type": "FREESTYLE",
                             "priority": 355,
                             "action": "CREATE_OR_REPLACE_DATAFRAME",
                             "action_details": {"dataframe_name": "DBSIZING_FACTS", "store": "BIGQUERY"},
                             "status": "ENABLED",
-                            "tags": ["DB_MIGRATION"], 
+                            "tags": ["BMS_SIZING"], 
                             "expr1": "pd.merge(dataFrames[\"DBSIZING_FACTS\"], dataFrames[\"DBSUMMARY\"], left_on=[\"_PKEY\", \"_DBID\"], right_on=[\"PKEY\", \"DBID\"], how=\"inner\")",                            
                             "iferror": "None",
                             "description": "This rule adds a new column"
                         },  
-                "rule321":
+                "bms_sizing-rule11":
                         {
                             "type": "FREESTYLE",
                             "priority": 360,
                             "action": "ADD_OR_UPDATE_COLUMN",
-                            "action_details": {"dataframe_name": "DBSIZING_FACTS","target_dataframe_name": "DBSIZING_FACTS","column_name": "DB_STORAGE_TB_BMS", "store": "BIGQUERY"},
+                            "action_details": {"dataframe_name": "DBSIZING_FACTS","target_dataframe_name": "DBSIZING_FACTS","column_name": "BMSSTORAGE_TB_DB", "store": "BIGQUERY"},
                             "status": "ENABLED",
-                            "tags": ["DB_MIGRATION"], 
+                            "tags": ["BMS_SIZING"], 
                             "expr1": "np.where((dataFrames[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"] > (dataFrames[\"DBSIZING_FACTS\"][\"DB_SIZE_ALLOCATED_GB\"]/1024)),np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"]),np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"DB_SIZE_ALLOCATED_GB\"]/1024))",
                             "iferror": "None",
                             "description": "This rule adds a new column"
                         },
-                "rule30":
-                        {
-                            "type": "NUMBER",
-                            "priority": 250,
-                            "action": "ADD_OR_UPDATE_COLUMN",
-                            "action_details": {"dataframe_name": "AWRHISTSYSMETRICHIST_RS_METRICS","target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_METRICS", "column_name": "_HH", "store": "BIGQUERY"},
-                            "status": "DISABLED",
-                            "tags": ["DATAFRAMERESHAPE"],
-                            "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_METRICS\"][\"_HO\"]",
-                            "iferror": "None",
-                            "description": "This rule adds a new column based on the value of an existent one"
-                        },
-                "rule33":
+                "bms_sizing-rule12":
                         {
                             "type": "FREESTYLE",
-                            "priority": 200,
+                            "priority": 370,
                             "action": "ADD_OR_UPDATE_COLUMN",
-                            "action_details": {"dataframe_name": "AWRHISTSYSMETRICHIST_RS","target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_METRICS","column_name": "DBCPU95_FORE_BACK", "store": "BIGQUERY"},
-                            "status": "DISABLED",
-                            "tags": ["MIGRATIONTECHIQUE","DATAGUARD"],
-                            "expr1": "(;dataFrames[\"AWRHISTSYSMETRICHIST_RS\"][\"CPU_PER_SEC_PERC95\"];+;dataFrames[\"AWRHISTSYSMETRICHIST_RS\"][\"BKGRCPU_PER_SEC_PERC95\"];);*;100",
+                            "action_details": {"dataframe_name": "DBSIZING_FACTS","target_dataframe_name": "DBSIZING_FACTS","column_name": "BMSMEMORY_GB_DB", "store": "BIGQUERY"},
+                            "status": "ENABLED",
+                            "tags": ["BMS_SIZING"], 
+                            "expr1": "np.ceil((dataFrames[\"DBSIZING_FACTS\"][\"BUFFER_CACHE_MB\"]+dataFrames[\"DBSIZING_FACTS\"][\"SHARED_POOL_MB\"]+dataFrames[\"DBSIZING_FACTS\"][\"TOTAL_PGA_ALLOCATED_MB\"])/1024*1.2)",
                             "iferror": "None",
-                            "description": "This rule adds a new column calculating the database cpu consumption using cpu_usage_per_sec_perc95 + bkgr_cpu_usage_per_sec_perc95 from SYSMETRICHIST"
+                            "description": "This rule adds a new column"
                         },
-                "rule34":
+                "bms_sizing-rule13":
                         {
                             "type": "FREESTYLE",
-                            "priority": 300,
+                            "priority": 380,
+                            "action": "ADD_OR_UPDATE_COLUMN",
+                            "action_details": {"dataframe_name": "DBSIZING_FACTS","target_dataframe_name": "DBSIZING_FACTS","column_name": "BMSMEMORY_GB_HOST", "store": "BIGQUERY"},
+                            "status": "ENABLED",
+                            "tags": ["BMS_SIZING"], 
+                            "expr1": "np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"PHYSICAL_MEMORY_BYTES_PERC95\"]/1024/1024/1024)",
+                            "iferror": "None",
+                            "description": "This rule adds a new column"
+                        },
+                "bms_sizing-rule14":
+                        {
+                            "type": "FREESTYLE",
+                            "priority": 390,
                             "action": "CREATE_OR_REPLACE_DATAFRAME",
-                            "action_details": {"dataframe_name": "AWRHISTSYSMETRICHIST_RS_METRICS_AWRHISTOSSTAT_RS_METRICS", "store": "BIGQUERY"},
-                            "status": "DISABLED",
-                            "tags": ["MIGRATIONTECHIQUE","DATAGUARD"],
-                            "expr1": "pd.merge(dataFrames[\"AWRHISTSYSMETRICHIST_RS_METRICS\"], dataFrames[\"AWRHISTOSSTAT_RS_METRICS\"], on=[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\", \"_HH\"])",
+                            "action_details": {"dataframe_name": "DBSIZING_SUMMARY", "store": "BIGQUERY"},
+                            "status": "ENABLED",
+                            "tags": ["BMS_SIZING"], 
+                            "expr1": "dataFrames[\"DBSIZING_FACTS\"].groupby(['PKEY','_DBID','_INSTANCE_NUMBER'])['PKEY','_DBID','DB_NAME','DBVERSION','_INSTANCE_NUMBER','BMSSTORAGE_TB_DB','BMSCORES95_DB','BMSCORES95_HOST','BMSMEMORY_GB_DB','BMSMEMORY_GB_HOST'].agg('max')",                            
                             "iferror": "None",
-                            "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
+                            "description": "This rule adds a new column"
                         },
-                "rule52":
+                "bms_sizing-rule15":
                         {
-                            "type": "NUMBER",
-                            "priority": 300,
-                            "action": "ADD_OR_UPDATE_COLUMN",
-                            "action_details": {"dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS","target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS","column_name": "DB_CPU_UTILIZATION2", "store": "BIGQUERY"},
-                            "status": "DISABLED",
-                            "tags": ["SIZING","EFFORT_ESTIMATE"],
-                            "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_METRICS_AWRHISTOSSTAT_RS_METRICS\"][\"DBCPU95_FORE_BACK\"];/;(;dataFrames[\"AWRHISTSYSMETRICHIST_RS_METRICS_AWRHISTOSSTAT_RS_METRICS\"][\"HOST_CPU_PER_SEC_PERC95\"];/;dataFrames[\"AWRHISTSYSMETRICHIST_RS_METRICS_AWRHISTOSSTAT_RS_METRICS\"][\"HOST_CPU_UTILIZATION\"];)",
-                            "iferror": "None",
-                            "description": "This rule adds a new column calculating the database cpu consumption using (db cpu foreground secs + db cpu background secs) / (host cpu secs + host cpu utilization) * 100"
-                        },
-                "rule41":
-                        {
-                            "type": "NUMBER",
+                            "type": "FREESTYLE",
                             "priority": 400,
                             "action": "ADD_OR_UPDATE_COLUMN",
-                            "action_details": {"dataframe_name": "AWRHISTSYSMETRICHIST_RS_METRICS_AWRHISTOSSTAT_RS_METRICS","target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_METRICS_AWRHISTOSSTAT_RS_METRICS","column_name": "DB_CPU_UTILIZATION", "store": "BIGQUERY"},
-                            "status": "DISABLED",
-                            "tags": ["SIZING","EFFORT_ESTIMATE"],
-                            "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_METRICS_AWRHISTOSSTAT_RS_METRICS\"][\"DBCPU95_FORE_BACK\"];/;(;dataFrames[\"AWRHISTSYSMETRICHIST_RS_METRICS_AWRHISTOSSTAT_RS_METRICS\"][\"HOST_CPU_PER_SEC_PERC95\"];/;dataFrames[\"AWRHISTSYSMETRICHIST_RS_METRICS_AWRHISTOSSTAT_RS_METRICS\"][\"HOST_CPU_UTILIZATION\"];)",
+                            "action_details": {"dataframe_name": "DBSIZING_SUMMARY","target_dataframe_name": "DBSIZING_SUMMARY","column_name": "BMSCORES95_DB", "store": "BIGQUERY"},
+                            "status": "ENABLED",
+                            "tags": ["BMS_SIZING"], 
+                            "expr1": "np.ceil(dataFrames[\"DBSIZING_SUMMARY\"][\"BMSCORES95_DB\"]*1.3)",
                             "iferror": "None",
-                            "description": "This rule adds a new column calculating the database cpu consumption using (db cpu foreground secs + db cpu background secs) / (host cpu secs + host cpu utilization) * 100"
+                            "description": "Final BMS cores DATABASE sizing for Percentil 95%. Round up number. With 30% room for grownth."
                         },
-                "rule35":
+                "bms_sizing-rule16":
                         {
-                            "type": "VARIABLE",
-                            "priority": 10,
-                            "action": "CREATE",
-                            "action_details": {"varname": "MERGED_DFS"},
-                            "status": "DISABLED",
-                            "tags": ["PREPROCESS"],
-                            "expr1": "",
-                            "iferror": "IGNORE",
-                            "description": "This rule adds a new column calculating the db cpu consumption using total cpu used / total cpu"
+                            "type": "FREESTYLE",
+                            "priority": 400,
+                            "action": "ADD_OR_UPDATE_COLUMN",
+                            "action_details": {"dataframe_name": "DBSIZING_SUMMARY","target_dataframe_name": "DBSIZING_SUMMARY","column_name": "BMSCORES95_HOST", "store": "BIGQUERY"},
+                            "status": "ENABLED",
+                            "tags": ["BMS_SIZING"], 
+                            "expr1": "np.ceil(dataFrames[\"DBSIZING_SUMMARY\"][\"BMSCORES95_HOST\"]*1.3)",
+                            "iferror": "None",
+                            "description": "Final BMS cores HOST sizing for Percentil 95%. Round up number. With 30% room for grownth."
                         }
             }
 }
+
+

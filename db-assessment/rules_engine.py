@@ -65,7 +65,7 @@ def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, tran
 
             if ruleItem not in rulesAlreadyExecuted:
 
-                print('Processing rule item: {}'.format(ruleItem))
+                print('Processing rule item: "{}"\nPriority: "{}"'.format(ruleItem,transformerRules[ruleItem]['priority']))
 
                 if str(transformerRules[ruleItem]['type']).upper() == "VARIABLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATE":
                 # transformers.json asking to create a variable which is a dictionary
