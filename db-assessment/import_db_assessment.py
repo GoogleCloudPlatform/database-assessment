@@ -1,4 +1,4 @@
-# Copyright 2020 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -414,7 +414,14 @@ def getTableRef(dataset,tableName,projectName):
 def getObjNameFromFiles(fileName,splitterChar,pos):
     # This function returns a string based on a string splitted(Created a list) by a given character. Then, it returns the desired index position of the list.
 
-    return fileName.split(splitterChar)[pos]
+    #return fileName.split(splitterChar)[pos]
+    splits = fileName.split(splitterChar)
+
+    if len(splits) >= pos:
+        
+        return splits[pos]
+    
+    return None    
 
 
 def getBQJobConfig(tableSchemas,jobType):
