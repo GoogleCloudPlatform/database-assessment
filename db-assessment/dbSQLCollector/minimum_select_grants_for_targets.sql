@@ -57,3 +57,6 @@ grant select on sys.dba_hist_sqltext to &&dbusername;
 grant select on sys.dba_hist_osstat to &&dbusername;
 grant select on sys.dba_hist_sysmetric_history to &&dbusername;
 grant select on sys.v_$diag_alert_ext to &&dbusername;
+grant select on sys.cdb_services to &&dbusername;
+grant select on sys.dba_hist_sqlstat to &&dbusername;
+grant select on system.logstdby$skip_support to &&dbusername;
