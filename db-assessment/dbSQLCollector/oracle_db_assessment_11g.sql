@@ -1,23 +1,34 @@
 /*
 Copyright 2021 Google LLC
+
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
+
     https://www.apache.org/licenses/LICENSE-2.0
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
 */
 
---accept envtype char prompt "Please enter PROD if this is a PRODUCTION environment. Otherwise enter NON-PROD: "
 
---#Block for generating CSV
-set colsep ||
+/*
+
+Version: 0.1.0
+Date: 2021-06-25
+
+*/
+
+define version = '0.1.0'
+
+set colsep ,
 set headsep off
 set trimspool on
-set pagesize 0
+set pagesize 50000
 set feed off
 set underline off
 
@@ -29,12 +40,14 @@ ttitle off
 btitle off
 set termout off
 set termout on
+set appinfo 'OPTIMUS_PRIME'
 clear col comp brea
 
 column instnc new_value v_inst noprint
 column hostnc new_value v_host noprint
 column horanc new_value v_hora noprint
 column dbname new_value v_dbname noprint
+column dbversion new_value v_dbversion noprint
 
 
 SELECT host_name     hostnc,
@@ -46,10 +59,15 @@ SELECT name dbname
 FROM   v$database
 /
 
-SELECT TO_CHAR(SYSDATE, 'hh24miss') horanc
+SELECT TO_CHAR(SYSDATE, 'mmddrrhh24miss') horanc
 FROM   dual
 / 
 
+SELECT substr(replace(version,'.',''),0,3) dbversion
+from v$instance
+/
+
+define v_tag = &v_dbversion._&version._&v_host..&v_dbname..&v_inst..&v_hora..log
 
 set lines 600
 set pages 200
@@ -62,7 +80,7 @@ col dbversion for a10
 col characterset for a30
 col force_logging for a20
 
-spool opdb__dbsummary__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dbsummary__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -145,7 +163,7 @@ spool off
 
 set lines 300
 
-spool opdb__dbinstances__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dbinstances__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -163,10 +181,10 @@ FROM   gv$instance;
 
 spool off
 
-spool opdb__usedspacedetails__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__usedspacedetails__&v_tag
 
 col OWNER for a30
-col TABLESPACE_NAME for a20
+col TABLESPACE_NAME for a80
 set lines 340
 
 -- Column INMEMORY removed.
@@ -200,7 +218,7 @@ spool off
 
 
 set underline off
-spool opdb__compressbytable__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__compressbytable__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -282,7 +300,7 @@ ORDER  BY 9 DESC;
 
 spool off
 
-spool opdb__compressbytype__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__compressbytype__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -364,7 +382,7 @@ clear break
 clear compute
 
 
-spool opdb__spacebyownersegtype__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__spacebyownersegtype__&v_tag
 
 column owner format a30
 column segment_type format a30
@@ -416,12 +434,13 @@ ORDER  BY total_gb DESC;
 
 spool off
 
-col tablespace_name FOR a35
+col tablespace_name FOR a80
 col extent_management FOR a20
 col allocation_type FOR a10
 col segment_space_management FOR a20
+col status FOR a10
 
-spool opdb__spacebytablespace__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__spacebytablespace__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -433,11 +452,13 @@ FROM   (SELECT b.tablespace_name,
                b.extent_management,
                b.allocation_type,
                b.segment_space_management,
+               b.status,
                SUM(estd_ganho_mb) estd_ganho_mb
         FROM   (SELECT b.tablespace_name,
                        b.extent_management,
                        b.allocation_type,
                        b.segment_space_management,
+                       b.status,
                        a.initial_extent / 1024                                                                                        inital_kb,
                        a.owner,
                        a.segment_name,
@@ -458,17 +479,20 @@ FROM   (SELECT b.tablespace_name,
         GROUP  BY b.tablespace_name,
                   b.extent_management,
                   b.allocation_type,
-                  b.segment_space_management
+                  b.segment_space_management,
+                  b.status
         UNION ALL
         SELECT b.tablespace_name,
                b.extent_management,
                b.allocation_type,
                b.segment_space_management,
+               b.status,
                SUM(estd_ganho_mb) estd_ganho_mb
         FROM   (SELECT b.tablespace_name,
                        b.extent_management,
                        b.allocation_type,
                        b.segment_space_management,
+                       b.status,
                        a.initial_extent / 1024                                                                                        inital_kb,
                        a.owner,
                        a.segment_name,
@@ -488,7 +512,8 @@ FROM   (SELECT b.tablespace_name,
         GROUP  BY b.tablespace_name,
                   b.extent_management,
                   b.allocation_type,
-                  b.segment_space_management) a; 
+                  b.segment_space_management,
+                  b.status) a; 
 
 spool off
 
@@ -510,7 +535,7 @@ column value format 999999999999999
 SET pages 100 lines 390
 col high_value FOR a10
 
-spool opdb__freespaces__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__freespaces__&v_tag
 
 column tablespace format a30
 column pct_used format 999.99
@@ -575,12 +600,12 @@ spool off
 
 set pages 9000 
 
-spool opdb__dblinks__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dblinks__&v_tag
 
 col owner for a20
 col DB_LINK for a50
 col USERNAME for a20
-col HOST for a30
+col HOST for a300
 set lines 340
 
 SELECT '&&v_host'
@@ -609,7 +634,7 @@ set lines 300
 -- Column DEFAULT_VALUE removed.
 -- Not exists in 11g
 
-spool opdb__dbparameters__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dbparameters__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -625,7 +650,7 @@ ORDER  BY 2;
 
 spool off
 
-spool opdb__dbfeatures__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dbfeatures__&v_tag
 
 set lines 320 
 col name for a70
@@ -648,7 +673,7 @@ ORDER  BY name;
 
 spool off
 
-spool opdb__dbhwmarkstatistics__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dbhwmarkstatistics__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -663,7 +688,7 @@ ORDER  BY description;
 
 spool off
 
-spool opdb__cpucoresusage__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__cpucoresusage__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -682,7 +707,7 @@ spool off
 col object_type for a20
 col owner for a40
 
-spool opdb__dbobjects__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dbobjects__&v_tag
 
 -- Column EDITIONABLE removed.
 -- Not exists in 11g
@@ -714,7 +739,7 @@ col NAME for a40
 col TYPE for a40
 set lines 400
 
-spool opdb__sourcecode__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__sourcecode__&v_tag
 
 SELECT pkey,
        owner,
@@ -775,7 +800,7 @@ spool off
 
 
 
-spool opdb__partsubparttypes__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__partsubparttypes__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -803,7 +828,7 @@ GROUP  BY '&&v_host'
 
 spool off
 
-spool opdb__indexestypes__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__indexestypes__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -832,7 +857,7 @@ spool off
 col owner for a50
 col data_type for a60
 
-spool opdb__datatypes__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__datatypes__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -858,7 +883,7 @@ GROUP  BY '&&v_host'
 
 spool off
 
-spool opdb__tablesnopk__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__tablesnopk__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -909,7 +934,7 @@ GROUP  BY '&&v_host'
 
 spool off
 
-spool opdb__systemstats__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__systemstats__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -926,7 +951,7 @@ spool off
 
 col Comments for a60
 
-spool opdb__patchlevel__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__patchlevel__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -968,7 +993,7 @@ col message_id for a30
 col message_group for a35
 col container_name for a40
 
-spool opdb__alertlog__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__alertlog__&v_tag
 
 -- ORA-00600 [17147] ORA-48216 When Querying V$DIAG_ALERT_EXT View (Doc ID 2119059.1)
 -- Order By removed because of Unpublished Bug 21266522 - (this issue only exists in 11.2.0.4)
@@ -1007,7 +1032,7 @@ col count for 99999999999999999999
 col coun for 99999999999999999999
 
 
-spool opdb__awrhistsysmetrichist__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__awrhistsysmetrichist__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -1059,7 +1084,7 @@ ORDER  BY hsm.dbid,
 spool off
 
 
-spool opdb__awrhistosstat__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__awrhistosstat__&v_tag
 
 WITH v_osstat_all
      AS (SELECT os.dbid,
@@ -1138,7 +1163,7 @@ spool off
 
 set pages 50000
 
-spool opdb__awrhistcmdtypes__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__awrhistcmdtypes__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -1183,9 +1208,14 @@ col NETWORK_NAME format A45
 col FAILOVER_METHOD format A30
 col FAILOVER_TYPE format A30
 
-spool opdb__dbservicesinfo__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dbservicesinfo__&v_tag
 
-SELECT service_id,
+SELECT '&&v_host'
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora' AS pkey,
+       service_id,
        name service_name,
        network_name,
        TO_CHAR(creation_date, 'dd/mm/yyyy hh24:mi:ss') creation_date,
@@ -1204,9 +1234,14 @@ col segment_name format a40
 col segment_type format a20
 col tablespace_name format a40
 
-spool opdb__usrsegatt__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__usrsegatt__&v_tag
 
-SELECT owner,
+SELECT '&&v_host'
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora' AS pkey,
+       owner,
        segment_name,
        segment_type,
        tablespace_name

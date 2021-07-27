@@ -12,15 +12,23 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
 */
 
---accept envtype char prompt "Please enter PROD if this is a PRODUCTION environment. Otherwise enter NON-PROD: "
 
---#Block for generating CSV
+/*
+
+Version: 0.1.0
+Date: 2021-06-25
+
+*/
+
+define version = '0.1.0'
+
 set colsep ,
 set headsep off
 set trimspool on
-set pagesize 0
+set pagesize 50000
 set feed off
 set underline off
 
@@ -32,12 +40,14 @@ ttitle off
 btitle off
 set termout off
 set termout on
+set appinfo 'OPTIMUS_PRIME'
 clear col comp brea
 
 column instnc new_value v_inst noprint
 column hostnc new_value v_host noprint
 column horanc new_value v_hora noprint
 column dbname new_value v_dbname noprint
+column dbversion new_value v_dbversion noprint
 
 
 SELECT host_name     hostnc,
@@ -49,10 +59,15 @@ SELECT name dbname
 FROM   v$database
 /
 
-SELECT TO_CHAR(SYSDATE, 'hh24miss') horanc
+SELECT TO_CHAR(SYSDATE, 'mmddrrhh24miss') horanc
 FROM   dual
 / 
 
+SELECT substr(replace(version,'.',''),0,3) dbversion
+from v$instance
+/
+
+define v_tag = &v_dbversion._&version._&v_host..&v_dbname..&v_inst..&v_hora..log
 
 set lines 600
 set pages 200
@@ -65,126 +80,92 @@ col dbversion for a10
 col characterset for a30
 col force_logging for a20
 
-spool opdb__dbsummary__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dbsummary__&v_tag
 
 SELECT '&&v_host'
-              || '_'
-              || '&&v_dbname'
-              || '_'
-              || '&&v_hora' AS pkey,
-       (
-              SELECT dbid
-              FROM   v$database) AS dbid,
-       (
-              SELECT name
-              FROM   v$database) AS db_name,
-       (
-              SELECT cdb
-              FROM   v$database) AS cdb,
-       (
-              SELECT version
-              FROM   v$instance) AS dbversion,
-       (
-              SELECT banner
-              FROM   v$version
-              WHERE  ROWNUM < 2) AS dbfullversion,
-       (
-              SELECT log_mode
-              FROM   v$database) AS log_mode,
-       (
-              SELECT force_logging
-              FROM   v$database) AS force_logging,
-       (
-              SELECT ( TRUNC(AVG(conta) * AVG(bytes) / 1024 / 1024 / 1024) )
-              FROM   (
-                              SELECT   TRUNC(first_time) dia,
-                                       COUNT(*)          conta
-                              FROM     v$log_history
-                              WHERE    first_time >= TRUNC(SYSDATE) - 7
-                              AND      first_time < TRUNC(SYSDATE)
-                              GROUP BY TRUNC(first_time)),
-                     v$log) AS redo_gb_per_day,
-       (
-              SELECT COUNT(1)
-              FROM   gv$instance) AS rac_dbinstaces,
-       (
-              SELECT value
-              FROM   nls_database_parameters a
-              WHERE  a.parameter = 'NLS_LANGUAGE')
-              || '_'
-              ||
-       (
-              SELECT value
-              FROM   nls_database_parameters a
-              WHERE  a.parameter = 'NLS_TERRITORY')
-              || '.'
-              ||
-       (
-              SELECT value
-              FROM   nls_database_parameters a
-              WHERE  a.parameter = 'NLS_CHARACTERSET') AS characterset,
-       (
-              SELECT platform_name
-              FROM   v$database) AS platform_name,
-       (
-              SELECT TO_CHAR(startup_time, 'mm/dd/rr hh24:mi:ss')
-              FROM   v$instance) AS startup_time,
-       (
-              SELECT COUNT(1)
-              FROM   cdb_users
-              WHERE  username NOT IN
-                     (
-                            SELECT name
-                            FROM   SYSTEM.logstdby$skip_support
-                            WHERE  action=0) as user_schemas,
-                     (
-                            SELECT trunc(SUM(bytes / 1024 / 1024))
-                            FROM   v$sgastat
-                            WHERE  name = 'buffer_cache') buffer_cache_mb,
-                     (
-                            SELECT trunc(SUM(bytes / 1024 / 1024))
-                            FROM   v$sgastat
-                            WHERE  pool = 'shared pool') shared_pool_mb,
-                     (
-                            SELECT round(value / 1024 / 1024, 0)
-                            FROM   v$pgastat
-                            WHERE  name = 'total PGA allocated') AS total_pga_allocated_mb,
-                     (
-                            SELECT ( trunc(SUM(bytes) / 1024 / 1024 / 1024) )
-                            FROM   cdb_data_files) db_size_allocated_gb,
-                     (
-                            SELECT ( trunc(SUM(bytes) / 1024 / 1024 / 1024) )
-                            FROM   cdb_segments
-                            WHERE  owner NOT IN ( 'SYS',
-                                                 'SYSTEM' )) AS db_size_in_use_gb,
-                     (
-                            SELECT ( trunc(SUM(bytes) / 1024 / 1024 / 1024) )
-                            FROM   cdb_segments
-                            WHERE  owner NOT IN ( 'SYS',
-                                                 'SYSTEM' )
-                            AND    (
-                                          owner, segment_name ) IN
-                                   (
-                                          SELECT owner,
-                                                 table_name
-                                          FROM   cdb_tab_columns
-                                          WHERE  data_type LIKE '%LONG%')) AS db_long_size_gb,
-                     (
-                            SELECT database_role
-                            FROM   v$database) AS dg_database_role,
-                     (
-                            SELECT protection_mode
-                            FROM   v$database) AS dg_protection_mode,
-                     (
-                            SELECT protection_level
-                            FROM   v$database) AS dg_protection_level
-              FROM   dual;
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora'                                                            AS pkey,
+       (SELECT dbid
+        FROM   v$database)                                                      AS dbid,
+       (SELECT name
+        FROM   v$database)                                                      AS db_name,
+       (SELECT cdb
+        FROM   v$database)                                                      AS cdb,
+       (SELECT version
+        FROM   v$instance)                                                      AS dbversion,
+       (SELECT banner
+        FROM   v$version
+        WHERE  ROWNUM < 2)                                                      AS dbfullversion,
+       (SELECT log_mode
+        FROM   v$database)                                                      AS log_mode,
+       (SELECT force_logging
+        FROM   v$database)                                                      AS force_logging,
+       (SELECT ( TRUNC(AVG(conta) * AVG(bytes) / 1024 / 1024 / 1024) )
+        FROM   (SELECT TRUNC(first_time) dia,
+                       COUNT(*)          conta
+                FROM   v$log_history
+                WHERE  first_time >= TRUNC(SYSDATE) - 7
+                       AND first_time < TRUNC(SYSDATE)
+                GROUP  BY TRUNC(first_time)),
+               v$log)                                                           AS redo_gb_per_day,
+       (SELECT COUNT(1)
+        FROM   gv$instance)                                                     AS rac_dbinstaces,
+       (SELECT value
+        FROM   nls_database_parameters a
+        WHERE  a.parameter = 'NLS_LANGUAGE')
+       || '_'
+       || (SELECT value
+           FROM   nls_database_parameters a
+           WHERE  a.parameter = 'NLS_TERRITORY')
+       || '.'
+       || (SELECT value
+           FROM   nls_database_parameters a
+           WHERE  a.parameter = 'NLS_CHARACTERSET')                             AS characterset,
+       (SELECT platform_name
+        FROM   v$database)                                                      AS platform_name,
+       (SELECT TO_CHAR(startup_time, 'mm/dd/rr hh24:mi:ss')
+        FROM   v$instance)                                                      AS startup_time,
+       (SELECT COUNT(1)
+        FROM   cdb_users
+        WHERE  username NOT IN (SELECT name
+                                FROM   SYSTEM.logstdby$skip_support
+                                WHERE  action = 0))                             AS user_schemas,
+       (SELECT TRUNC(SUM(bytes / 1024 / 1024))
+        FROM   v$sgastat
+        WHERE  name = 'buffer_cache')                                           buffer_cache_mb,
+       (SELECT TRUNC(SUM(bytes / 1024 / 1024))
+        FROM   v$sgastat
+        WHERE  pool = 'shared pool')                                            shared_pool_mb,
+       (SELECT ROUND(value / 1024 / 1024, 0)
+        FROM   v$pgastat
+        WHERE  name = 'total PGA allocated')                                    AS total_pga_allocated_mb,
+       (SELECT ( TRUNC(SUM(bytes) / 1024 / 1024 / 1024) )
+        FROM   cdb_data_files)                                                  db_size_allocated_gb,
+       (SELECT ( TRUNC(SUM(bytes) / 1024 / 1024 / 1024) )
+        FROM   cdb_segments
+        WHERE  owner NOT IN ( 'SYS', 'SYSTEM' ))                                AS db_size_in_use_gb,
+       (SELECT ( TRUNC(SUM(bytes) / 1024 / 1024 / 1024) )
+        FROM   cdb_segments
+        WHERE  owner NOT IN ( 'SYS', 'SYSTEM' )
+               AND ( owner, segment_name ) IN (SELECT owner,
+                                                      table_name
+                                               FROM   cdb_tab_columns
+                                               WHERE  data_type LIKE '%LONG%')) AS db_long_size_gb,
+       (SELECT database_role
+        FROM   v$database)                                                      AS dg_database_role,
+       (SELECT protection_mode
+        FROM   v$database)                                                      AS dg_protection_mode,
+       (SELECT protection_level
+        FROM   v$database)                                                      AS dg_protection_level
+FROM   dual; 
 
 spool off
 
 set lines 300
 
-spool opdb__pdbsinfo__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__pdbsinfo__&v_tag
 
 col PDB_NAME for a30
 
@@ -202,7 +183,7 @@ FROM   cdb_pdbs;
 
 spool off
 
-spool opdb__pdbsopenmode__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__pdbsopenmode__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -217,7 +198,7 @@ FROM   v$pdbs;
 
 spool off
 
-spool opdb__dbinstances__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dbinstances__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -235,10 +216,10 @@ FROM   gv$instance;
 
 spool off
 
-spool opdb__usedspacedetails__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__usedspacedetails__&v_tag
 
 col OWNER for a30
-col TABLESPACE_NAME for a20
+col TABLESPACE_NAME for a80
 set lines 340
 
 SELECT '&&v_host'
@@ -274,7 +255,7 @@ spool off
 
 
 set underline off
-spool opdb__compressbytable__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__compressbytable__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -367,7 +348,7 @@ ORDER  BY 10 DESC;
 
 spool off
 
-spool opdb__compressbytype__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__compressbytype__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -460,7 +441,7 @@ clear break
 clear compute
 
 
-spool opdb__spacebyownersegtype__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__spacebyownersegtype__&v_tag
 
 column owner format a30
 column segment_type format a30
@@ -514,12 +495,13 @@ ORDER  BY total_gb DESC;
 
 spool off
 
-col tablespace_name FOR a35
+col tablespace_name FOR a80
 col extent_management FOR a20
 col allocation_type FOR a10
 col segment_space_management FOR a20
+col status FOR a10
 
-spool opdb__spacebytablespace__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__spacebytablespace__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -531,11 +513,13 @@ FROM   (SELECT b.tablespace_name,
                b.extent_management,
                b.allocation_type,
                b.segment_space_management,
+               b.status,
                SUM(estd_ganho_mb) estd_ganho_mb
         FROM   (SELECT b.tablespace_name,
                        b.extent_management,
                        b.allocation_type,
                        b.segment_space_management,
+                       b.status,
                        a.initial_extent / 1024                                                                                        inital_kb,
                        a.owner,
                        a.segment_name,
@@ -556,17 +540,20 @@ FROM   (SELECT b.tablespace_name,
         GROUP  BY b.tablespace_name,
                   b.extent_management,
                   b.allocation_type,
-                  b.segment_space_management
+                  b.segment_space_management,
+                  b.status
         UNION ALL
         SELECT b.tablespace_name,
                b.extent_management,
                b.allocation_type,
                b.segment_space_management,
+               b.status,
                SUM(estd_ganho_mb) estd_ganho_mb
         FROM   (SELECT b.tablespace_name,
                        b.extent_management,
                        b.allocation_type,
                        b.segment_space_management,
+                       b.status,
                        a.initial_extent / 1024                                                                                        inital_kb,
                        a.owner,
                        a.segment_name,
@@ -586,7 +573,8 @@ FROM   (SELECT b.tablespace_name,
         GROUP  BY b.tablespace_name,
                   b.extent_management,
                   b.allocation_type,
-                  b.segment_space_management) a; 
+                  b.segment_space_management,
+                  b.status) a; 
 
 spool off
 
@@ -608,7 +596,7 @@ column value format 999999999999999
 SET pages 100 lines 390
 col high_value FOR a10
 
-spool opdb__freespaces__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__freespaces__&v_tag
 
 column tablespace format a30
 column pct_used format 999.99
@@ -682,12 +670,12 @@ spool off
 
 set pages 9000 
 
-spool opdb__dblinks__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dblinks__&v_tag
 
 col owner for a20
 col DB_LINK for a50
 col USERNAME for a20
-col HOST for a30
+col HOST for a300
 set lines 340
 
 SELECT '&&v_host'
@@ -715,7 +703,7 @@ col DEFAULT_VALUE for a30
 col ISDEFAULT for a6
 set lines 300
 
-spool opdb__dbparameters__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dbparameters__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -734,7 +722,7 @@ ORDER  BY 2,
 
 spool off
 
-spool opdb__dbfeatures__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dbfeatures__&v_tag
 
 set lines 320 
 col name for a70
@@ -758,7 +746,7 @@ ORDER  BY name;
 
 spool off
 
-spool opdb__dbhwmarkstatistics__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dbhwmarkstatistics__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -773,7 +761,7 @@ ORDER  BY description;
 
 spool off
 
-spool opdb__cpucoresusage__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__cpucoresusage__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -792,7 +780,7 @@ spool off
 col object_type for a20
 col owner for a40
 
-spool opdb__dbobjects__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__dbobjects__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -826,7 +814,7 @@ col NAME for a40
 col TYPE for a40
 set lines 400
 
-spool opdb__sourcecode__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__sourcecode__&v_tag
 
 SELECT pkey,
        con_id,
@@ -891,7 +879,7 @@ spool off
 
 
 
-spool opdb__partsubparttypes__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__partsubparttypes__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -921,7 +909,7 @@ GROUP  BY '&&v_host'
 
 spool off
 
-spool opdb__indexestypes__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__indexestypes__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -952,7 +940,7 @@ spool off
 col owner for a50
 col data_type for a60
 
-spool opdb__datatypes__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__datatypes__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -980,7 +968,7 @@ GROUP  BY '&&v_host'
 
 spool off
 
-spool opdb__tablesnopk__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__tablesnopk__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -1035,7 +1023,7 @@ GROUP  BY '&&v_host'
 
 spool off
 
-spool opdb__systemstats__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__systemstats__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -1050,23 +1038,27 @@ FROM   sys.aux_stats$;
 
 spool off
 
-col Comments for a60
+COLUMN action_time FORMAT A20
+COLUMN action FORMAT A10
+COLUMN status FORMAT A10
+COLUMN description FORMAT A80
+COLUMN version FORMAT A10
+COLUMN bundle_series FORMAT A10
 
-spool opdb__patchlevel__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__patchlevel__&v_tag
 
 SELECT '&&v_host'
        || '_'
        || '&&v_dbname'
        || '_'
        || '&&v_hora'                            AS pkey,
-       TO_CHAR(action_time, 'mm/dd/rr hh24:mi') AS "Time",
-       action                                   AS "Action",
-       namespace                                AS "Namespace",
-       version                                  AS "Version",
-       id                                       AS "ID",
-       comments                                 AS "Comments"
-FROM   sys.registry$history
-ORDER  BY action_time; 
+       TO_CHAR(action_time, 'DD-MON-YYYY HH24:MI:SS') AS action_time,
+       action,
+       status,
+       description,
+       patch_id
+FROM   sys.dba_registry_sqlpatch
+ORDER by action_time;
 
 spool off
 
@@ -1090,13 +1082,10 @@ col MESSAGE_TIME for a25
 col message_text for a200
 col host_id for a50
 col component_id for a15
-col message_type for a55
-col message_level for a40
 col message_id for a30
 col message_group for a35
-col container_name for a40
 
-spool opdb__alertlog__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__alertlog__&v_tag
 
 SELECT *
 FROM   (SELECT TO_CHAR(A.originating_timestamp, 'dd/mm/yyyy hh24:mi:ss')               MESSAGE_TIME,
@@ -1107,8 +1096,7 @@ FROM   (SELECT TO_CHAR(A.originating_timestamp, 'dd/mm/yyyy hh24:mi:ss')        
                a.message_type,
                a.message_level,
                SUBSTR(a.message_id, 0, 30)                                             message_id,
-               a.message_group,
-               a.container_name
+               a.message_group
         FROM   v$diag_alert_ext A
         ORDER  BY A.originating_timestamp DESC)
 WHERE  ROWNUM < 5001;
@@ -1136,7 +1124,7 @@ col count for 99999999999999999999
 col coun for 99999999999999999999
 
 
-spool opdb__awrhistsysmetrichist__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__awrhistsysmetrichist__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -1191,7 +1179,7 @@ ORDER  BY hsm.con_id,
 spool off
 
 
-spool opdb__awrhistosstat__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__awrhistosstat__&v_tag
 
 WITH v_osstat_all
      AS (SELECT os.con_id,
@@ -1273,7 +1261,7 @@ spool off
 
 set pages 50000
 
-spool opdb__awrhistcmdtypes__&v_host..&v_dbname..&v_inst..&v_hora..log
+spool opdb__awrhistcmdtypes__&v_tag
 
 SELECT '&&v_host'
        || '_'
@@ -1310,3 +1298,62 @@ GROUP  BY '&&v_host'
 
 spool off
 
+
+set lines 2000 pages 9999
+col SERVICE_ID format 999999999
+col CON_ID format 999999999
+col PDB format A30
+col NAME format A30
+col CREATION_DATE format A30
+col NETWORK_NAME format A45
+col FAILOVER_METHOD format A30
+col FAILOVER_TYPE format A30
+
+spool opdb__dbservicesinfo__&v_tag
+
+SELECT '&&v_host'	
+       || '_'	
+       || '&&v_dbname'	
+       || '_'	
+       || '&&v_hora'                          AS pkey,
+       con_id,
+       pdb,
+       service_id,
+       name service_name,
+       network_name,
+       TO_CHAR(creation_date, 'dd/mm/yyyy hh24:mi:ss') creation_date,
+       failover_method,
+       failover_type,
+       failover_retries,
+       failover_delay,
+       goal
+FROM cdb_services 
+ORDER BY NAME;
+
+spool off
+
+col owner format a40
+col segment_name format a40
+col segment_type format a20
+col tablespace_name format a40
+
+spool opdb__usrsegatt__&v_tag
+
+ SELECT '&&v_host'	
+       || '_'	
+       || '&&v_dbname'	
+       || '_'	
+       || '&&v_hora'                          AS pkey,
+        con_id,
+        owner,
+        segment_name,
+        segment_type,
+        tablespace_name
+ FROM cdb_segments
+ WHERE tablespace_name IN ('SYS', 'SYSTEM')
+ AND owner NOT IN
+ (SELECT name
+  FROM system.logstdby$skip_support
+  WHERE action=0);
+
+spool off
