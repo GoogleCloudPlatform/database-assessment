@@ -993,7 +993,7 @@ col message_id for a30
 col message_group for a35
 col container_name for a40
 
-spool opdb__alertlog__&v_tag
+spool manual__alertlog__&v_tag
 
 -- ORA-00600 [17147] ORA-48216 When Querying V$DIAG_ALERT_EXT View (Doc ID 2119059.1)
 -- Order By removed because of Unpublished Bug 21266522 - (this issue only exists in 11.2.0.4)

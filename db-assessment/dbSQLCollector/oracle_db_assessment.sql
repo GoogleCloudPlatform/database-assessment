@@ -1085,7 +1085,7 @@ col component_id for a15
 col message_id for a30
 col message_group for a35
 
-spool opdb__alertlog__&v_tag
+spool manual__alertlog__&v_tag
 
 SELECT *
 FROM   (SELECT TO_CHAR(A.originating_timestamp, 'dd/mm/yyyy hh24:mi:ss')               MESSAGE_TIME,
