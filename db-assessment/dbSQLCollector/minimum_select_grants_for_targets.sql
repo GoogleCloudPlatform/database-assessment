@@ -60,3 +60,7 @@ grant select on sys.v_$diag_alert_ext to &&dbusername;
 grant select on sys.cdb_services to &&dbusername;
 grant select on sys.dba_hist_sqlstat to &&dbusername;
 grant select on system.logstdby$skip_support to &&dbusername;
+grant select on cdb_db_links to C##optimusprime;
+grant select on sys.dba_registry_sqlpatch to C##optimusprime;
+
+
