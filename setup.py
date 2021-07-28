@@ -17,7 +17,8 @@ import os
 import setuptools
 
 # Importing Optimus Prime Version
-__version__= db_assessment/version.__version__
+from db_assessment import version
+__version__= version.__version__
 
 name = "oracle-db-assessment"
 description = "A tool to enable collection of data from Oracle datases for homogeneous and heterogeneous database migration assessment"
