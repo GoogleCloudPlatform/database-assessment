@@ -1,5 +1,0 @@
-
-PKEY                         ,      DBID,    PDB_ID,PDB_NAME                      ,STATUS    ,LOGGING
-ol79-orcl-db01_ORCLCDB_132841,3290629295,         3,ORCLPDB1                      ,NORMAL    ,LOGGING
-ol79-orcl-db01_ORCLCDB_132841,1861233037,         2,PDB$SEED                      ,NORMAL    ,LOGGING
-ol79-orcl-db01_ORCLCDB_132841,2299176322,         4,ORCLPDBSDD1                   ,NORMAL    ,LOGGING

@@ -1,7 +1,0 @@
-
-PKEY                         ,    CON_ID,TABLESPACE                    ,STATUS    ,  TOTAL_GB,   USED_GB,   FREE_GB,PCT_USED,GRAPH (X=5%)
-ol79-orcl-db01_ORCLCDB_132841,         1,UNDOTBS1                      ,ONLINE    ,         0,         0,         0,    4.28,[--------------------]
-ol79-orcl-db01_ORCLCDB_132841,         1,SYSAUX                        ,ONLINE    ,         2,         1,         1,   46.15,[XXXXXXXXX-----------]
-ol79-orcl-db01_ORCLCDB_132841,         1,USERS                         ,ONLINE    ,         0,         0,         0,   53.75,[XXXXXXXXXX----------]
-ol79-orcl-db01_ORCLCDB_132841,         1,SYSTEM                        ,ONLINE    ,         0,         0,         0,   99.46,[XXXXXXXXXXXXXXXXXXX-]
-ol79-orcl-db01_ORCLCDB_132841,         1,TEMP                          ,TEMP      ,       128,       128,         0,  100.00,[XXXXXXXXXXXXXXXXXXXX]

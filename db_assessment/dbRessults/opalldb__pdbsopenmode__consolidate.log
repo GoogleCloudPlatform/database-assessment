@@ -1,5 +1,0 @@
-
-PKEY                         ,    CON_ID,NAME                                                                                                ,OPEN_MODE ,  TOTAL_GB
-ol79-orcl-db01_ORCLCDB_132841,         2,PDB$SEED                                                                                            ,READ ONLY ,    .71875
-ol79-orcl-db01_ORCLCDB_132841,         3,ORCLPDB1                                                                                            ,MOUNTED   ,61.3027344
-ol79-orcl-db01_ORCLCDB_132841,         4,ORCLPDBSDD1                                                                                         ,MOUNTED   ,  30.71875
