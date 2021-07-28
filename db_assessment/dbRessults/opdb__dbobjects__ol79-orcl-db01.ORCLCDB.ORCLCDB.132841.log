@@ -1,0 +1,79 @@
+
+PKEY                         ,    CON_ID,OWNER                                   ,OBJECT_TYPE         ,E,     COUNT, IN_CON_ID,  IN_OWNER,IN_OBJECT_TYPE,IN_EDITIONABLE
+ol79-orcl-db01_ORCLCDB_132841,         1,DVSYS                                   ,LOB                 , ,         1,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,AUDSYS                                  ,LOB                 , ,         3,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,OJVMSYS                                 ,LOB                 , ,         1,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,LOB                 , ,         8,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,LOB                 , ,        13,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,DVSYS                                   ,TYPE                ,N,        75,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,TYPE                ,N,        45,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,TYPE                , ,       120,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,DVSYS                                   ,VIEW                ,N,       119,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,AUDSYS                                  ,VIEW                ,N,         6,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,VIEW                ,N,         9,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,VIEW                , ,       134,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,DVSYS                                   ,INDEX               , ,        78,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,AUDSYS                                  ,INDEX               , ,         3,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,OJVMSYS                                 ,INDEX               , ,         7,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,DBSFWUSER                               ,INDEX               , ,         3,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,INDEX               , ,        50,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,INDEX               , ,       141,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,QUEUE               , ,         2,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,QUEUE               , ,         2,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,DVSYS                                   ,TABLE               , ,        44,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,AUDSYS                                  ,TABLE               , ,         1,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,OJVMSYS                                 ,TABLE               , ,         6,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,DBSFWUSER                               ,TABLE               , ,         3,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,TABLE               , ,        42,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,TABLE               , ,        96,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,DVSYS                                   ,LIBRARY             ,N,         5,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,AUDSYS                                  ,LIBRARY             ,N,         1,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,LIBRARY             ,N,         4,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,LIBRARY             , ,        10,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,DVF                                     ,PACKAGE             ,N,         1,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,DVSYS                                   ,PACKAGE             ,N,        11,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,AUDSYS                                  ,PACKAGE             ,N,         2,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,DBSFWUSER                               ,PACKAGE             ,N,         1,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,PACKAGE             ,N,         9,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,PACKAGE             , ,        24,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,DVSYS                                   ,SYNONYM             ,N,         2,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,PUBLIC                                  ,SYNONYM             ,N,     11521,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,SYNONYM             ,N,         2,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,SYNONYM             , ,     11525,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,TRIGGER             ,N,         5,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,TRIGGER             , ,         5,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,DVF                                     ,FUNCTION            ,N,        20,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,DVSYS                                   ,FUNCTION            ,N,        33,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,FUNCTION            ,N,         1,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,REMOTE_SCHEDULER_AGENT                  ,FUNCTION            ,N,         1,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,FUNCTION            , ,        55,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,RULE SET            , ,         2,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,RULE SET            , ,         2,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,DVSYS                                   ,SEQUENCE            , ,        22,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,OJVMSYS                                 ,SEQUENCE            , ,         2,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,SEQUENCE            , ,        16,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,SEQUENCE            , ,        40,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,OJVMSYS                                 ,JAVA DATA           , ,         5,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,JAVA DATA           , ,         5,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,DVSYS                                   ,PROCEDURE           ,N,         3,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,PROCEDURE           ,N,         2,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,REMOTE_SCHEDULER_AGENT                  ,PROCEDURE           ,N,        12,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,PROCEDURE           , ,        17,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,TYPE BODY           ,N,         3,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,TYPE BODY           , ,         3,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,DVF                                     ,PACKAGE BODY        ,N,         1,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,DVSYS                                   ,PACKAGE BODY        ,N,        11,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,AUDSYS                                  ,PACKAGE BODY        ,N,         2,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,DBSFWUSER                               ,PACKAGE BODY        ,N,         1,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,PACKAGE BODY        ,N,         9,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,PACKAGE BODY        , ,        24,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,AUDSYS                                  ,LOB PARTITION       , ,        15,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,LOB PARTITION       , ,        15,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,AUDSYS                                  ,INDEX PARTITION     , ,        15,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,INDEX PARTITION     , ,        15,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,AUDSYS                                  ,TABLE PARTITION     , ,         5,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,TABLE PARTITION     , ,         5,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,PUBLIC                                  ,LOCKDOWN PROFILE    , ,         3,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,LOCKDOWN PROFILE    , ,         3,         0,         1,             0,             1
+ol79-orcl-db01_ORCLCDB_132841,         1,GSMADMIN_INTERNAL                       ,EVALUATION CONTEXT  , ,         1,         0,         0,             0,             0
+ol79-orcl-db01_ORCLCDB_132841,         1,                                        ,EVALUATION CONTEXT  , ,         1,         0,         1,             0,             1

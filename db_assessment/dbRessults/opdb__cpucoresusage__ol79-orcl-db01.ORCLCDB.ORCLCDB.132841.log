@@ -1,0 +1,5 @@
+
+PKEY                         ,DT            , CPU_COUNT,CPU_CORE_COUNT,CPU_SOCKET_COUNT
+ol79-orcl-db01_ORCLCDB_132841,04/17/19 01:56,         4,             4,               1
+ol79-orcl-db01_ORCLCDB_132841,01/15/21 19:56,        16,             8,               1
+ol79-orcl-db01_ORCLCDB_132841,04/23/21 08:11,        32,            16,               2

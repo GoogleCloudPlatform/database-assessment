@@ -1,0 +1,23 @@
+
+PKEY                         ,DESCRIPTION                                                                                                                     , HIGHWATER,LAST_VALUE
+ol79-orcl-db01_ORCLCDB_132841,Maximum Average Active Sessions - estimated                                                                                     ,123.988704,         0
+ol79-orcl-db01_ORCLCDB_132841,Maximum Number of CPUs                                                                                                          ,        32,        32
+ol79-orcl-db01_ORCLCDB_132841,Maximum Number of Concurrent Sessions seen in the database                                                                      ,       330,        32
+ol79-orcl-db01_ORCLCDB_132841,Maximum Number of Datafiles                                                                                                     ,         4,         4
+ol79-orcl-db01_ORCLCDB_132841,Maximum Number of Materialized Views (User)                                                                                     ,         0,         0
+ol79-orcl-db01_ORCLCDB_132841,Maximum Number of Partitions belonging to an User Index                                                                         ,   1048575,   1048575
+ol79-orcl-db01_ORCLCDB_132841,Maximum Number of Partitions belonging to an User Table                                                                         ,   1048575,   1048575
+ol79-orcl-db01_ORCLCDB_132841,Maximum Number of SQL NCHAR Columns                                                                                             ,       100,       100
+ol79-orcl-db01_ORCLCDB_132841,Maximum Number of Tablespaces                                                                                                   ,         5,         5
+ol79-orcl-db01_ORCLCDB_132841,Maximum Query Length                                                                                                            ,      1949,      1852
+ol79-orcl-db01_ORCLCDB_132841,Maximum Size of the Database (Bytes)                                                                                            ,4257218560,4257218560
+ol79-orcl-db01_ORCLCDB_132841,Number of User Indexes                                                                                                          ,      1040,      1040
+ol79-orcl-db01_ORCLCDB_132841,Number of User Tables                                                                                                           ,       513,       513
+ol79-orcl-db01_ORCLCDB_132841,Number of completed and successful failovers                                                                                    ,         0,         0
+ol79-orcl-db01_ORCLCDB_132841,Number of deployed primary shards in catalog                                                                                    ,         0,         0
+ol79-orcl-db01_ORCLCDB_132841,Number of deployed shards in catalog                                                                                            ,         0,         0
+ol79-orcl-db01_ORCLCDB_132841,Number of global services                                                                                                       ,         0,         0
+ol79-orcl-db01_ORCLCDB_132841,Number of job runs per day                                                                                                      ,       232,        42
+ol79-orcl-db01_ORCLCDB_132841,Number of physical disks                                                                                                        ,          ,
+ol79-orcl-db01_ORCLCDB_132841,Oracle Database instances                                                                                                       ,         1,         1
+ol79-orcl-db01_ORCLCDB_132841,Size of Largest Segment (Bytes)                                                                                                 , 411041792, 411041792

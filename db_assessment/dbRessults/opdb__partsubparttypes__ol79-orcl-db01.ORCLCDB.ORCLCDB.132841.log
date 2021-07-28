@@ -1,0 +1,3 @@
+
+PKEY                         ,    CON_ID,OWNER                         ,PARTITION,SUBPARTIT,  COUNT(1)
+ol79-orcl-db01_ORCLCDB_132841,         1,AUDSYS                        ,RANGE    ,NONE     ,         1
