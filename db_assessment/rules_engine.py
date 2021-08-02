@@ -142,8 +142,6 @@ def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, tran
 
                 elif str(transformerRules[ruleItem]['type']).upper() == "FREESTYLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATE_OR_REPLACE_DATAFRAME":
                 # 
-                    if ruleItem == "db_migration-rule00":
-                        print('Debugging')
 
                     df = execStringExpression(stringExpression,iferrorExpression,dataFrames)
 
