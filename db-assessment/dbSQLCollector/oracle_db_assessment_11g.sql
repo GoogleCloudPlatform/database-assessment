@@ -1200,6 +1200,85 @@ GROUP  BY '&&v_host'
 spool off
 
 
+spool opdb__dbahistsystimemodel__&v_tag
+
+SELECT '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora' as pkey,
+       s.snap_id,
+       s.dbid,
+       s.instance_number,
+       s.begin_interval_time,
+       to_char(s.begin_interval_time,'hh24') hour,
+       g.stat_name,
+       g.value,
+       NVL(DECODE(GREATEST(value, NVL(LAG(value)
+                                        over (
+                                          PARTITION BY s.dbid, s.instance_number, g.stat_name
+                                          ORDER BY s.snap_id), 0)), value, value - LAG(value)
+                                                                                     over (
+                                                                                       PARTITION BY s.dbid, s.instance_number, g.stat_name
+                                                                                       ORDER BY s.snap_id),
+                                                                    0), 0) AS DELTA
+FROM   dba_hist_snapshot s,
+       dba_hist_sys_time_model g
+WHERE  s.snap_id = g.snap_id
+       AND s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+       AND s.instance_number = g.instance_number
+       AND s.dbid = g.dbid
+ORDER  BY 1; 
+
+spool off
+
+spool opdb__dbahistsysstat__&v_tag
+
+SELECT '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora' as pkey,
+       s.snap_id,
+       s.dbid,
+       s.instance_number,
+       s.begin_interval_time,
+       to_char(s.begin_interval_time,'hh24') hour,
+       g.stat_name,
+       g.value,
+       NVL(DECODE(GREATEST(value, NVL(LAG(value)
+                                        over (
+                                          PARTITION BY s.dbid, s.instance_number, g.stat_name
+                                          ORDER BY s.snap_id), 0)), value, value - LAG(value)
+                                                                                     over (
+                                                                                       PARTITION BY s.dbid, s.instance_number, g.stat_name
+                                                                                       ORDER BY s.snap_id),
+                                                                    0), 0) AS DELTA
+FROM   dba_hist_snapshot s,
+       dba_hist_sysstat g
+WHERE  s.snap_id = g.snap_id
+       AND s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+       AND g.stat_name IN ( 'CPU used by this session', 'DB time', 'Effective IO time', 'HCC DML conventional',
+                            'HCC load conventional CUs', 'HCC load direct CUs', 'HCC scan cell bytes compressed', 'HCC scan cell bytes decompressed',
+                            'HCC scan rdbms bytes compressed', 'HCC scan rdbms bytes decompressed', 'HCC usage ZFS', 'HCC usage cloud',
+                            'HCC usage pillar', 'IM populate rows', 'IM scan bytes in-memory', 'IM scan bytes uncompressed',
+                            'IM scan rows', 'IM scan rows delta', 'OLAP Engine Calls', 'Parallel operations not downgraded',
+                            'cell IO uncompressed bytes', 'cell interconnect bytes returned by XT smart scan',
+                            'cell persistent memory IO read requests - local',
+                                               'cell persistent memory IO read requests - remote',
+                            'cell persistent memory IO read requests - smart IO', 'cell physical IO bytes eligible for predicate offload',
+                                               'cell physical IO bytes eligible for smart IOs', 'cell physical IO bytes saved by columnar cache',
+                            'cell physical IO bytes saved by storage index', 'cell physical IO interconnect bytes',
+                                'cell physical IO interconnect bytes returned by smart scan'
+                                               , 'cell physical write IO bytes eligible for offload',
+                            'cell pmem cache read hits', 'consistent gets', 'data warehousing scanned blocks', 'data warehousing scanned objects',
+                            'db block changes', 'db block gets', 'execute count', 'lob reads',
+                            'lob writes', 'logons cumulative', 'parse time cpu', 'physical read IO requests',
+                            'physical read bytes', 'physical read flash cache hits', 'physical read requests optimized',
+                            'physical read total IO requests',
+                            'physical read total bytes', 'physical read total bytes optimized', 'physical read total multi block requests',
+                            'physical reads',
+                            'physical writes', 'redo size', 'redo writes', 'redo write time',
+                            'securefile direct read bytes', 'securefile direct write bytes', 'table scan rows gotten', 'user I/O wait time',
+                            'user commits', 'user calls', 'user rollbacks' )
+       AND s.instance_number = g.instance_number
+       AND s.dbid = g.dbid
+ORDER  BY 1; 
+
+spool off
+
 set lines 2000 pages 9999
 col SERVICE_ID format 999999999
 col NAME format A30
