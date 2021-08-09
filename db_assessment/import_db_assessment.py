@@ -387,10 +387,8 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
     
 
     with open(fileName, "rb") as source_file:
-        
 
         load_job = client.load_table_from_file(source_file, table_id, job_config=job_config)
-
 
 
     try:
