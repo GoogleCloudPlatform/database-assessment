@@ -30,30 +30,38 @@ create user optimusprime identified by "mysecretPa33w0rd";
 
 ```
 
-2. Run the script called `minimum_select_grants_for_targets.sql` to grant privileges to the user created in Step 1.
+2. Clone *optimus prime* into your work directory in a client machine that has connectivity to your databases
+```
+cd <work-directory>
+git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
+
+```
+
+4. Run the script called `minimum_select_grants_for_targets.sql` to grant privileges to the user created in Step 1.
 	
 ```
-@/home/oracle/oracle-database-assessment/db_assessment/dbSQLCollector/minimum_select_grants_for_targets.sql
+@/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/minimum_select_grants_for_targets.sql
 Please enter the DB Local Username(Or CDB Username) to receive all required grants: [C##]optimusprime
 
 ```
 
 3. Execute the SQL script called `oracle_db_assessment.sql` for Oracle Database Version 12c and above OR `oracle_db_assessment__11g.sql` for Oracle Database Version 11g.
 	* Use SQLPLUS to execute the script
+	* Execute this from a system that can access your database via sqlplus
 	* NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
 
 ```
-mkdir -p /home/oracle/oracle-database-assessment-output
-cd /home/oracle/oracle-database-assessment-output
+mkdir -p /<work-directory>/oracle-database-assessment-output
+cd /<work-directory>/oracle-database-assessment-output
 
 sqlplus optimusprime/mysecretPa33w0rd@//<serverhost>/<servicename>
 
-SQL> @/home/oracle/oracle-database-assessment/db_assessment/dbSQLCollector/oracle_db_assessment.sql
+SQL> @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/oracle_db_assessment.sql
 
 ```
 
 
-4. Once the script is executed you should see many opdb*log output files generated. It is recommended to zip/tar these files.
+4. Once the script is executed you should see many opdb\*.log output files generated. It is recommended to zip/tar these files.
 	*  All the generated files follow this standard opdb__<queryname>__<dbversion>_<scriptversion>_<hostname>_<dbname>_<instancename>_<datetime>.log.
 	*  Use meaningful names when zip/tar the files. 
 
@@ -87,12 +95,14 @@ Part 2 - Importing the data collected into Google Big Query for analysis
     *  create a python virtual environment to install dependencies and execute the `optimusprime.py` script
 
 ```
-	python3 -m venv /home/oracle/op-venv
-	source /home/oracle/op-env/bin/activate
+	python3 -m venv /<work-directory>/op-venv
+	source /<work-directory>/op-env/bin/activate
+	cd /<work-directory>/oracle-database-assessment/
 	pip install .
+	
+	cd /<work-directory>/oracle-database-assessment/db_assessment/
 
-	cd /home/oracle/oracle-database-assessment/db_assessment/
-	python optimusprime.py -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /home/oracle/oracle-database-assessment-output -projectname my-awesome-gcp-project
+	python optimusprime.py -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project
 
 ```
 
