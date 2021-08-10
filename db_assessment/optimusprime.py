@@ -103,14 +103,22 @@ def runMain(args):
         transformersParameters['collectionKey'] = collectionKey
 
         # Verify if the script has any version on it (only old script versions should not have 3 parts)
-        if len(collectionKey.split('_')) == 3:
+        if args.dbversion is not  None:
+            transformersParameters['dbversion'] = str(args.dbversion)
+        elif len(collectionKey.split('_')) == 3 and args.dbversion is None:
             transformersParameters['dbversion'] = import_db_assessment.getObjNameFromFiles(collectionKey,'_',0)
             transformersParameters['optimuscollectionversion'] = import_db_assessment.getObjNameFromFiles(collectionKey,'_',1)
-        else:
-            transformersParameters['dbversion'] = str(args.dbversion)
-            # If this is being set in the arguments to any value different than 0.0.0 which is the default one
+        elif len(collectionKey.split('_')) == 3 and args.dbversion is not None:
+            transformersParameters['optimuscollectionversion'] = import_db_assessment.getObjNameFromFiles(collectionKey,'_',1)
+        elif len(collectionKey.split('_')) != 3:
             transformersParameters['optimuscollectionversion'] = args.collectionversion
- 
+        else:
+            print ('\nFATAL ERRROR: Please use -dbversion and -collectionversion.\n')
+            sys.exit()
+
+        # If this valus is set it has precende over everything else
+        if args.collectionversion != '0.0.0':
+            transformersParameters['optimuscollectionversion'] = args.collectionversion
 
         try:
             # Adjusting the tableschemas from transformers.json accordingly with the database version
@@ -206,7 +214,7 @@ def argumentsParser():
     # Separator for the logs being processed
     parser.add_argument("-sep","-separator", type=str, default=',', help="separator string in the files to be processed")
 
-    parser.add_argument("-dbversion", type=str, default='122', help="database version to be processed")
+    parser.add_argument("-dbversion", type=str, default=None, help="database version to be processed")
 
     parser.add_argument("-collectionversion", type=str, default='0.0.0', help="script collection version used")
     
