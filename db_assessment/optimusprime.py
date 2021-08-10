@@ -103,22 +103,24 @@ def runMain(args):
         transformersParameters['collectionKey'] = collectionKey
 
         # Verify if the script has any version on it (only old script versions should not have 3 parts)
-        if args.dbversion is not  None:
+        if args.dbversion is not None:
             transformersParameters['dbversion'] = str(args.dbversion)
         elif len(collectionKey.split('_')) == 3 and args.dbversion is None:
             transformersParameters['dbversion'] = import_db_assessment.getObjNameFromFiles(collectionKey,'_',0)
-            transformersParameters['optimuscollectionversion'] = import_db_assessment.getObjNameFromFiles(collectionKey,'_',1)
-        elif len(collectionKey.split('_')) == 3 and args.dbversion is not None:
-            transformersParameters['optimuscollectionversion'] = import_db_assessment.getObjNameFromFiles(collectionKey,'_',1)
-        elif len(collectionKey.split('_')) != 3:
-            transformersParameters['optimuscollectionversion'] = args.collectionversion
         else:
-            print ('\nFATAL ERRROR: Please use -dbversion and -collectionversion.\n')
+            print ('\nFATAL ERRROR: Please use -dbversion.\n')
             sys.exit()
+
+        if len(collectionKey.split('_')) == 3:
+            transformersParameters['optimuscollectionversion'] = import_db_assessment.getObjNameFromFiles(collectionKey,'_',1)
+        else:
+            transformersParameters['optimuscollectionversion'] = args.collectionversion
 
         # If this valus is set it has precende over everything else
         if args.collectionversion != '0.0.0':
             transformersParameters['optimuscollectionversion'] = args.collectionversion
+
+        print('\nSource Database Version: {} \nCollection Script Version: {}\n'.format(transformersParameters['dbversion'],transformersParameters['optimuscollectionversion']))
 
         try:
             # Adjusting the tableschemas from transformers.json accordingly with the database version
