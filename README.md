@@ -10,7 +10,7 @@ NOTE: The script to collect data only runs SELECT statements against Oracle dict
 
 # How to use this tool
 
-##Step 1 - Collecting data from an Oracle database (source)
+## Step 1 - Collecting data from an Oracle database (source)
 
 1. Create an Oracle database user -or- choose an existing user account .
 	* If you decide to use an existing database user with all the privileges already assigned please go to Step 3.
@@ -86,7 +86,7 @@ opdb__dbservicesinfo__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 
 5. Repeat step 3 for all Oracle databases that you want to assess.
 
-##Step 2 - Importing the data collected into Google Big Query for analysis 	
+## Step 2 - Importing the data collected into Google Big Query for analysis 	
 	*  This step can be skipped if using Google Cloud Shell
 		* create a service account and download the key. 
 		* set GOOGLE_APPLICATION_CREDENTIALS to point to the downloaded key. Make sure the service account has BigQuery Admin privelege. 
@@ -116,7 +116,7 @@ opdb__dbservicesinfo__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 	*  WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
 
 
-##Part 3 - Analyzing imported data
+## Step 3 - Analyzing imported data
 
 1. Open the dataset used in the step 2 of Part 2 in Google Big Query
 	*  Query the tables and views for further analysis
