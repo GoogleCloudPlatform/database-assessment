@@ -87,11 +87,12 @@ opdb__dbservicesinfo__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 5. Repeat step 3 for all Oracle databases that you want to assess.
 
 ## Step 2 - Importing the data collected into Google Big Query for analysis 	
-	*  This step can be skipped if using Google Cloud Shell
-		* create a service account and download the key. 
-		* set GOOGLE_APPLICATION_CREDENTIALS to point to the downloaded key. Make sure the service account has BigQuery Admin privelege. 
-		* [GCP documentation](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin ) has more details on how to create and use service accounts.    	
-	* create a python virtual environment to install dependencies and execute the `optimusprime.py` script
+	
+1. [Create a service account and download the key](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin ) . 
+	* Set GOOGLE_APPLICATION_CREDENTIALS to point to the downloaded key. Make sure the service account has BigQuery Admin privelege. 
+	* NOTE: This step can be skipped if using [Cloud Shell](https://ssh.cloud.google.com/cloudshell/)
+
+2. Create a python virtual environment to install dependencies and execute the `optimusprime.py` script
 
 ```
 	python3 -m venv /<work-directory>/op-venv
