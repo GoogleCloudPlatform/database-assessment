@@ -96,8 +96,10 @@ Part 2 - Importing the data collected into Google Big Query for analysis
 
 ```
 	python3 -m venv /<work-directory>/op-venv
-	source /<work-directory>/op-env/bin/activate
+	source /<work-directory>/op-venv/bin/activate
 	cd /<work-directory>/oracle-database-assessment/
+	
+	pip install pip --upgrade
 	pip install .
 	
 	cd /<work-directory>/oracle-database-assessment/db_assessment/
