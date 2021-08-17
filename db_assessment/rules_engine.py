@@ -188,7 +188,10 @@ def execStringExpression(stringExpression,iferrorExpression, dataFrames):
     try:
         res = eval (stringExpression)
     except:
-        res = eval (iferrorExpression)
+        try:
+            res = eval (iferrorExpression)
+        except:
+            res = None
 
 
     return res
@@ -353,7 +356,7 @@ def getAllReShapedDataframes(dataFrames, transformersTablesSchema, transformersP
 
             tableName = str(tableName_RuleID).split(':')[0]
             ruleID = str(tableName_RuleID).split(':')[1]
-
+            resCSVCreation = False
             
             transformerParameterResults, transformersResults, fileList, dataFrames = runRules(transformerRulesConfig, dataFrames, ruleID, args, None, transformersTablesSchema, fileList, executedRulesList, transformersParameters)
             print('Reshaping Rule Executed: {} for the table name {}'.format(ruleID,tableName))
@@ -367,14 +370,21 @@ def getAllReShapedDataframes(dataFrames, transformersTablesSchema, transformersP
 
                     reshapedTableName = str(tableName).lower() + '_rs'
 
-                    df = getReShapedDataframe(dataFrames[str(tableName)], transformersResults[str(tableName)])
-                    dataFrames[reshapedTableName.upper()] = df
+                    try:
+                        df = getReShapedDataframe(dataFrames[str(tableName)], transformersResults[str(tableName)])
+                        dataFrames[reshapedTableName.upper()] = df
+                    except:
+                        df = None
+                        print('WARNING: Optimus Prime could not ReShape the table {} due to a fatal error.'.format(tableName))
+
+                    
 
                     # collectionKey already contains .log
                     fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + reshapedTableName + '__' + str(collectionKey)
 
-                    # Writes CSVs from Dataframes when parameter store in CSV_ONLY or BIGQUERY
-                    resCSVCreation, transformersTablesSchema = createCSVFromDataframe(dataFrames[reshapedTableName.upper()], transformersResults[str(tableName)], args, fileName, transformersTablesSchema, str(reshapedTableName).lower(), True)
+                    if df is not None:
+                        # Writes CSVs from Dataframes when parameter store in CSV_ONLY or BIGQUERY
+                        resCSVCreation, transformersTablesSchema = createCSVFromDataframe(dataFrames[reshapedTableName.upper()], transformersResults[str(tableName)], args, fileName, transformersTablesSchema, str(reshapedTableName).lower(), True)
                     
                     if resCSVCreation:
                     # If CSV creation was successfully then we will add this to the list of files to be imported

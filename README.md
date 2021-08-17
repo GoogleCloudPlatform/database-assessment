@@ -8,9 +8,9 @@ The Optimus Prime Database Assessment tool is used to assess homogenous and hete
 
 NOTE: The script to collect data only runs SELECT statements against Oracle dictionary and requires read permissions. No application data is accessed, nor is any data changed or deleted.
 
-## How to use this tool
+# How to use this tool
 
-Part 1 - Collecting data from an Oracle database (source)
+## Step 1 - Collecting data from an Oracle database (source)
 
 1. Create an Oracle database user -or- choose an existing user account .
 	* If you decide to use an existing database user with all the privileges already assigned please go to Step 3.
@@ -22,40 +22,44 @@ select * from v$system_parameter where name='common_user_prefix';
 --C##
 create user C##optimusprime identified by "mysecretPa33w0rd";
 
-```
-
-```
  if creating a application user within a PDB create a regular user
 create user optimusprime identified by "mysecretPa33w0rd";
 
 ```
 
-2. Run the script called `minimum_select_grants_for_targets.sql` to grant privileges to the user created in Step 1.
+2. Clone *optimus prime* into your work directory in a client machine that has connectivity to your databases
+```
+cd <work-directory>
+git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
+
+```
+
+4. Run the script called `minimum_select_grants_for_targets.sql` to grant privileges to the user created in Step 1.
 	
 ```
-@/home/oracle/oracle-database-assessment/db_assessment/dbSQLCollector/minimum_select_grants_for_targets.sql
+@/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/minimum_select_grants_for_targets.sql
 Please enter the DB Local Username(Or CDB Username) to receive all required grants: [C##]optimusprime
 
 ```
 
 3. Execute the SQL script called `oracle_db_assessment.sql` for Oracle Database Version 12c and above OR `oracle_db_assessment__11g.sql` for Oracle Database Version 11g.
 	* Use SQLPLUS to execute the script
+	* Execute this from a system that can access your database via sqlplus
 	* NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
 
 ```
-mkdir -p /home/oracle/oracle-database-assessment-output
-cd /home/oracle/oracle-database-assessment-output
+mkdir -p /<work-directory>/oracle-database-assessment-output
+cd /<work-directory>/oracle-database-assessment-output
 
 sqlplus optimusprime/mysecretPa33w0rd@//<serverhost>/<servicename>
 
-SQL> @/home/oracle/oracle-database-assessment/db_assessment/dbSQLCollector/oracle_db_assessment.sql
+SQL> @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/oracle_db_assessment.sql
 
 ```
 
-
-4. Once the script is executed you should see many opdb*log output files generated. It is recommended to zip/tar these files.
-	*  All the generated files follow this standard opdb__<queryname>__<dbversion>_<scriptversion>_<hostname>_<dbname>_<instancename>_<datetime>.log.
-	*  Use meaningful names when zip/tar the files. 
+4. Once the script is executed you should see many opdb\*.log output files generated. It is recommended to zip/tar these files.
+	* All the generated files follow this standard  `opdb__<queryname>__<dbversion>_<scriptversion>_<hostname>_<dbname>_<instancename>_<datetime>.log`
+	* Use meaningful names when zip/tar the files.
 
 ```
 Example output:
@@ -79,33 +83,41 @@ opdb__dbservicesinfo__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 
 ```
 
+
 5. Repeat step 3 for all Oracle databases that you want to assess.
 
-Part 2 - Importing the data collected into Google Big Query for analysis
+## Step 2 - Importing the data collected into Google Big Query for analysis 	
+	
+1. [Create a service account and download the key](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin ) . 
+	* Set GOOGLE_APPLICATION_CREDENTIALS to point to the downloaded key. Make sure the service account has BigQuery Admin privelege. 
+	* NOTE: This step can be skipped if using [Cloud Shell](https://ssh.cloud.google.com/cloudshell/)
 
-	*  create a service account and download the key. set GOOGLE_APPLICATION_CREDENTIALS to point to the downloaded key. Make sure the service account has BigQuery Admin privelege. [GCP documentation](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin ) has more details on how to create and use service accounts.`
-    *  create a python virtual environment to install dependencies and execute the `optimusprime.py` script
+2. Create a python virtual environment to install dependencies and execute the `optimusprime.py` script
 
 ```
-	python3 -m venv /home/oracle/op-venv
-	source /home/oracle/op-env/bin/activate
+	python3 -m venv /<work-directory>/op-venv
+	source /<work-directory>/op-venv/bin/activate
+	cd /<work-directory>/oracle-database-assessment/
+	
+	pip install pip --upgrade
 	pip install .
+	
+	cd /<work-directory>/oracle-database-assessment/db_assessment/
 
-	cd /home/oracle/oracle-database-assessment/db_assessment/
-	python optimusprime.py -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /home/oracle/oracle-database-assessment-output -projectname my-awesome-gcp-project
+	python optimusprime.py -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project
 
 ```
 
-	*  `-dataset`: is the name of the dataset in Google Big Query. It is created if it does not exists. If it does already nothing to do then.
-	*  `-collectionid`: is the file identification which last numbers in the filename which represents <datetime> (mmddrrhh24miss).
-		*  In this example of a filename `opdb__usedspacedetails__121_0.1.0_mydbhost.mycompany.com.ORCLDB.orcl1.071621111714.log` the file identification is `071621111714`.
-	*  `-fileslocation`: The location in which the opdb*log were saved.
-	*  `-projectname`: The GCP project in which the data will be loaded.
-	*  `-deletedataset`: This an optinal. In case you want to delete the whole existing dataset before importing the data. 
-		*  WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
+*  `-dataset`: is the name of the dataset in Google Big Query. It is created if it does not exists. If it does already nothing to do then.
+*  `-collectionid`: is the file identification which last numbers in the filename which represents `<datetime> (mmddrrhh24miss)`.
+*  In this example of a filename `opdb__usedspacedetails__121_0.1.0_mydbhost.mycompany.com.ORCLDB.orcl1.071621111714.log` the file identification is `071621111714`.
+*  `-fileslocation`: The location in which the opdb*log were saved.
+*  `-projectname`: The GCP project in which the data will be loaded.
+*  `-deletedataset`: This an optinal. In case you want to delete the whole existing dataset before importing the data. 
+	*  WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
 
 
-Part 3 - Analyzing imported data
+## Step 3 - Analyzing imported data
 
 1. Open the dataset used in the step 2 of Part 2 in Google Big Query
 	*  Query the tables and views for further analysis
