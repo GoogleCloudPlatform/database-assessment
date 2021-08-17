@@ -121,7 +121,7 @@ opdb__dbservicesinfo__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 
 1. Open the dataset used in the step 2 of Part 2 in Google Big Query
 	*  Query the tables and views for further analysis
-	*  Sample queries are listed in report/report.sql, they provide
+	*  Sample queries are listed in [report.sql](report/report.sql), they provide
 		*  Source DB Summary
 		*  Source Host details
 		*  Google Bare Metal Sizing
