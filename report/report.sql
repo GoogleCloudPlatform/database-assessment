@@ -11,7 +11,7 @@ SELECT
   a.dg_database_role,
   a.dg_protection_level,
 FROM
-  `eri-dbs-migration-test.celiaALL.dbsummary` a ;
+  `<project_id>.<dataset_name>.dbsummary` a ;
   
   -- migration details and recommendations
 SELECT
@@ -25,7 +25,7 @@ SELECT
   ROUND( CAST(a.TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR AS DECIMAL)) AS TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR,
   ROUND( CAST(a.REQUIRED_DB_DOWNTIME_HOURS AS DECIMAL)) AS REQUIRED_DB_DOWNTIME_HOURS
 FROM
-  `eri-dbs-migration-test.celiaALL.dbmigration_details` a ; 
+  `<project_id>.<dataset_name>.dbmigration_details` a ; 
 
   -- Source Database and Host Sizing information
 WITH
@@ -40,8 +40,8 @@ WITH
     MAX(CAST(a.HOST_CPU_UTILIZATION AS DECIMAL)) AS maxHOSTCPUUtilizationPercentage,
     AVG(CAST(a.HOST_CPU_UTILIZATION AS DECIMAL)) AS avgHOSTCPUUtilizationPercentage,
   FROM
-    `eri-dbs-migration-test.celiaALL.awrhistosstat_rs_metrics` a,
-    `eri-dbs-migration-test.celiaALL.dbinstances` b
+    `<project_id>.<dataset_name>.awrhistosstat_rs_metrics` a,
+    `<project_id>.<dataset_name>.dbinstances` b
   WHERE
     a._PKEY=b.pkey
     AND CAST(a._INSTANCE_NUMBER AS INT64)= CAST(b.inst_id AS INT64)
@@ -62,7 +62,7 @@ WITH
     a.dg_database_role,
     a.dg_protection_level
   FROM
-    `eri-dbs-migration-test.celiaALL.dbsummary` a ),
+    `<project_id>.<dataset_name>.dbsummary` a ),
   sourceSizing AS (
   SELECT
     a.PKEY,
@@ -89,16 +89,7 @@ WITH
   WHERE
     a.PKEY=b.pkey
   GROUP BY
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    7,
-    8,
-    9,
-    10 ),
+    1,    2,    3,    4,    5,    6,    7,    8,    9,    10 ),
 
   --Bare Metal Server Sizing and cost analysis by Host
   
@@ -131,7 +122,7 @@ WITH
         ROUND(MAX(CAST(BMSCORES95_HOST AS NUMERIC))) hostCPU,
         ROUND(MAX(CAST(BMSMEMORY_GB_DB AS NUMERIC))) dbMemory
       FROM
-        `eri-dbs-migration-test.celiaALL.dbsizing_facts`
+        `<project_id>.<dataset_name>.dbsizing_facts`
       GROUP BY
         _PKEY,
         _DBID,
