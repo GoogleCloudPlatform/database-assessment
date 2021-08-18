@@ -127,6 +127,7 @@ opdb__dbservicesinfo__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 		*  Google Bare Metal Sizing
 		*  Google Bare Metal Pricing
 		*  Migration Recommendations
+	*  Sample [Assessment Report](report/Optimus_Prime_-_dashboard.pdf), was created in DataStudio. A similar report can be generated using the queries in [report.sql](report/report.sql) for your datasets as part of the assessment readout.
 
 ## Contributing to the project
 
