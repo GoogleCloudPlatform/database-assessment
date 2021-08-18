@@ -1,4 +1,4 @@
-  -- database summary overall
+  -- database overall
 SELECT
   DISTINCT a.pkey,
   a.db_name,
@@ -12,10 +12,10 @@ SELECT
   a.dg_protection_level,
 FROM
   `<project_id>.<dataset_name>.dbsummary` a ;
-  
-  -- migration details and recommendations
+
+  -- migration details
 SELECT
-  a.pkey,
+  distinct a.pkey,
   a.db_name,
   a.TECHNIQUE,
   a.NETWORK_TO_GCP,
@@ -27,7 +27,7 @@ SELECT
 FROM
   `<project_id>.<dataset_name>.dbmigration_details` a ; 
 
-  -- Source Database and Host Sizing information
+  -- Source Sizing
 WITH
   hostdetails AS (
   SELECT
@@ -89,10 +89,17 @@ WITH
   WHERE
     a.PKEY=b.pkey
   GROUP BY
-    1,    2,    3,    4,    5,    6,    7,    8,    9,    10 ),
-
-  --Bare Metal Server Sizing and cost analysis by Host
-  
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10 ),
+  --BMS Sizing by Host
   BMSSizing AS (
   SELECT
     *
@@ -156,6 +163,9 @@ WITH
     AND a.instanceNumber = b.instanceNumber
   ORDER BY
     b.host_name )
+
+
+      select * from sourceSizing order by host_name;
 SELECT
   *,
 IF
@@ -196,8 +206,8 @@ FROM (
   FROM (
     SELECT
       host_name,
-      SUM(db_size_allocated_gb) AS totalStotageTB,
-      SUM(db_size_in_use_gb) AS totalUsedStorageTB,
+      SUM(db_size_allocated_gb) AS totalStotageGB,
+      SUM(db_size_in_use_gb) AS totalUsedStorageGB,
       MAX(sourceCores) AS totalSourceCores,
       MAX(totalMemory) AS totalMemory,
       SUM(usedmemory) AS totalusedmemory,
@@ -210,4 +220,4 @@ FROM (
       sizingSummary
     GROUP BY
       host_name
-      order by host_name ) )
+      order by host_name ) );
