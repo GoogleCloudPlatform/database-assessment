@@ -295,6 +295,9 @@ def addBQDataType(columList, dataType):
 
     newColumnList = []
 
+    # Cleaning header
+    columList = str(columList).replace("'||","").replace("||'","").replace("'","").replace('"','').replace("[","").replace("]","").replace(" ","").strip().split(',')
+
     for column in columList:
         newColumnList.append([column,dataType])
     
