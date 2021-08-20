@@ -17,7 +17,8 @@ import os
 import setuptools
 
 # Importing Optimus Prime Version
-import db-assessment.version
+from db_assessment import version
+__version__= version.__version__
 
 name = "oracle-db-assessment"
 description = "A tool to enable collection of data from Oracle datases for homogeneous and heterogeneous database migration assessment"
@@ -36,8 +37,6 @@ with open("requirements.txt", "r") as fp:
 extras_require = {}
 
 packages = setuptools.find_packages()
-
-packages += []
 
 setuptools.setup(
     name=name,

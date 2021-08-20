@@ -14,10 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/*
+
+Version: 2.0.0
+Date: 2021-08-19
+
+*/
+
 set verify off
 
 accept dbusername char prompt "Please enter the DB Local Username(Or CDB Username) to receive all required grants: "
 
+grant create session to &&dbusername;
+grant execute on sys.DBMS_SPACE_ADMIN to &&dbusername;
 grant select on sys.v_$database to &&dbusername;
 grant select on sys.v_$instance to &&dbusername;
 grant select on sys.cdb_users to &&dbusername;
@@ -62,3 +71,23 @@ grant select on sys.dba_hist_sqlstat to &&dbusername;
 grant select on system.logstdby$skip_support to &&dbusername;
 grant select on cdb_db_links to &&dbusername;
 grant select on sys.dba_registry_sqlpatch to &&dbusername;
+<<<<<<< HEAD:db_assessment/dbSQLCollector/minimum_select_grants_for_targets_ONLY_FOR_11g.sql
+grant select on sys.dba_users to &&dbusername;
+grant select on sys.dba_segments to &&dbusername;
+grant select on sys.dba_tablespaces to &&dbusername;
+grant select on sys.dba_free_space to &&dbusername;
+grant select on sys.dba_db_links to &&dbusername;
+grant select on sys.dba_feature_usage_statistics to &&dbusername;
+grant select on sys.dba_objects to &&dbusername;
+grant select on sys.dba_source to &&dbusername;
+grant select on sys.dba_part_tables to &&dbusername;
+grant select on sys.dba_indexes to &&dbusername;
+grant select on sys.dba_tab_columns to &&dbusername;
+grant select on sys.dba_constraints  to &&dbusername;
+grant select on sys.dba_services  to &&dbusername;
+grant select on sys.dba_data_files  to &&dbusername;
+grant select on sys.dba_tables  to &&dbusername;
+grant select on sys.dba_tab_partitions to &&dbusername;
+grant select on sys.dba_tab_subpartitions to &&dbusername;
+=======
+>>>>>>> main:db-assessment/dbSQLCollector/minimum_select_grants_for_targets.sql
