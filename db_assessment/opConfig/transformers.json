@@ -809,9 +809,9 @@
                             "action_details": {"dataframe_name": "DBSIZING_SUMMARY","target_dataframe_name": "DBSIZING_SUMMARY","column_name": "BMSCORES95_DB", "store": "BIGQUERY"},
                             "status": "ENABLED",
                             "tags": ["BMS_SIZING"], 
-                            "expr1": "np.ceil(dataFrames[\"DBSIZING_SUMMARY\"][\"BMSCORES95_DB\"]*1.3)",
+                            "expr1": "np.ceil(dataFrames[\"DBSIZING_SUMMARY\"][\"BMSCORES95_DB\"])",
                             "iferror": "None",
-                            "description": "Final BMS cores DATABASE sizing for Percentil 95%. Round up number. With 30% room for grownth."
+                            "description": "Final BMS cores DATABASE sizing for Percentil 95%. Round up number. REMOVED 30% room for grownth on 08/19 per discussion with Ashok."
                         },
                 "bms_sizing-rule16":
                         {
@@ -821,9 +821,9 @@
                             "action_details": {"dataframe_name": "DBSIZING_SUMMARY","target_dataframe_name": "DBSIZING_SUMMARY","column_name": "BMSCORES95_HOST", "store": "BIGQUERY"},
                             "status": "ENABLED",
                             "tags": ["BMS_SIZING"], 
-                            "expr1": "np.ceil(dataFrames[\"DBSIZING_SUMMARY\"][\"BMSCORES95_HOST\"]*1.3)",
+                            "expr1": "np.ceil(dataFrames[\"DBSIZING_SUMMARY\"][\"BMSCORES95_HOST\"])",
                             "iferror": "None",
-                            "description": "Final BMS cores HOST sizing for Percentil 95%. Round up number. With 30% room for grownth."
+                            "description": "Final BMS cores HOST sizing for Percentil 95%. Round up number. REMOVED 30% room for grownth on 08/19 per discussion with Ashok."
                         }
             }
 }
