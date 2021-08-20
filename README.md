@@ -34,15 +34,15 @@ git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
 
 ```
 
-4. Run the script called `minimum_select_grants_for_targets.sql` to grant privileges to the user created in Step 1.
+4. Run the script called `minimum_select_grants_for_targets_12c_AND_ABOVE.sql` for Oracle Database Version 12c and above OR `minimum_select_grants_for_targets_ONLY_FOR_11g.sql` for Oracle Database Version 11g to grant privileges to the user created in Step 1.
 	
 ```
-@/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/minimum_select_grants_for_targets.sql
+@/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/minimum_select_grants_for_targets_12c_AND_ABOVE.sql
 Please enter the DB Local Username(Or CDB Username) to receive all required grants: [C##]optimusprime
 
 ```
 
-3. Execute the SQL script called `oracle_db_assessment.sql` for Oracle Database Version 12c and above OR `oracle_db_assessment__11g.sql` for Oracle Database Version 11g.
+3. Execute the SQL script called `oracle_db_assessment_12c_AND_ABOVE.sql` for Oracle Database Version 12c and above OR `oracle_db_assessment_ONLY_FOR_11g.sql` for Oracle Database Version 11g.
 	* Use SQLPLUS to execute the script
 	* Execute this from a system that can access your database via sqlplus
 	* NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
@@ -53,7 +53,7 @@ cd /<work-directory>/oracle-database-assessment-output
 
 sqlplus optimusprime/mysecretPa33w0rd@//<serverhost>/<servicename>
 
-SQL> @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/oracle_db_assessment.sql
+SQL> @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/oracle_db_assessment_12c_AND_ABOVE.sql
 
 ```
 
