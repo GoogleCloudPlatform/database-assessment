@@ -71,7 +71,6 @@ grant select on sys.dba_hist_sqlstat to &&dbusername;
 grant select on system.logstdby$skip_support to &&dbusername;
 grant select on cdb_db_links to &&dbusername;
 grant select on sys.dba_registry_sqlpatch to &&dbusername;
-<<<<<<< HEAD:db_assessment/dbSQLCollector/minimum_select_grants_for_targets_ONLY_FOR_11g.sql
 grant select on sys.dba_users to &&dbusername;
 grant select on sys.dba_segments to &&dbusername;
 grant select on sys.dba_tablespaces to &&dbusername;
@@ -89,5 +88,3 @@ grant select on sys.dba_data_files  to &&dbusername;
 grant select on sys.dba_tables  to &&dbusername;
 grant select on sys.dba_tab_partitions to &&dbusername;
 grant select on sys.dba_tab_subpartitions to &&dbusername;
-=======
->>>>>>> main:db-assessment/dbSQLCollector/minimum_select_grants_for_targets.sql
