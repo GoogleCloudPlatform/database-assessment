@@ -375,7 +375,8 @@
     "parameters":
             {
                 "op_enable_reshape_for": "AWRHISTSYSMETRICHIST:dataframe_reshape_awrhistsysmetrichist,AWRHISTOSSTAT:dataframe_reshape_awrhistosstat,DBPARAMETERS:dataframe_reshape_dbparameters",
-                "network_to_gcp": "1 Gbps"
+                "network_to_gcp": "1 Gbps",
+                "do_not_import": ["alertlog","patchlevel"]
             },
     "rules":
 

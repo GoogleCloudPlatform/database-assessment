@@ -324,7 +324,7 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df):
     # Returns True if sucessfull 
     return True
 
-def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,skipLeadingRows):
+def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,skipLeadingRows,transformersParameters):
 # This function receives a list of files to import to Big Query, then it calls importCSVToBQ to import table/file by table/file
 
     print ('\nPreparing to upload CSV files\n')
@@ -344,10 +344,19 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
         # Final table name from the CSV file names
         tableName = getObjNameFromFiles(fileName,'__',1)
 
-        print ('\nThe filename {} is being imported to Big Query.'.format(fileName))
+        importTable = True
+        doNotImportList = [table.strip().lower() for table in transformersParameters['do_not_import']]
 
-        # Import the given CSV fileName into 
-        importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas)
+        if tableName.lower() not in doNotImportList:
+
+            # Import the given CSV fileName into 
+            print ('\nThe filename {} is being imported to Big Query.'.format(fileName))
+            importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas)
+        
+        else:
+
+            print ('\nThe filename {} is being SKIPPED accordingly with parameter {} from transformers.json.'.format(fileName,'do_not_import'))
+            
 
     return True
 
@@ -375,10 +384,6 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
     # In case projectname was passed as argument. Then, it tries to get the default project for the [service] account being used
     else:
         table_id = str(client.project) + '.' + str(bqDataset) + '.' + str(tableName)
-
-    # table schema
-    #schema = []
-
 
     job_config = bigquery.LoadJobConfig(
         schema=schema,
