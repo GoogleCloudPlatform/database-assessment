@@ -333,6 +333,8 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
     tableSchemas = {}
     tableSchemas = getBQJobConfig(transformersTablesSchema, 'REGULAR')
 
+    fileList.sort()
+
     # Getting the name of the target table_name to import the data based on the filename from OS
     for fileName in fileList:
         

@@ -237,6 +237,7 @@ def getDataFrameFromCSV(csvFileName,tableName,skipRows,separatorString,transform
                 try:
 
                     tableHeaders = getDFHeadersFromTransformers(tableName,transformersTablesSchema)
+                    tableHeaders = [header.upper() for header in tableHeaders]
                     df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders)
 
                 except Exception as dataframeHeaderErr:
@@ -323,7 +324,7 @@ def processSchemaDetection(schemadetection,transformersTablesSchema, transformer
 
             # Adds configuration whenever this is not present
             transformersTablesSchema[str(tableName).lower()] = addBQDataType(list(df.columns), 'STRING')
-            print('WARNING: Optimus Prime is filling the gap in the transformers.json schema definition for {} table.'.format(tableName))
+            print('WARNING: Optimus Prime is filling the gap in the transformers.json schema definition for {} table.\n'.format(tableName))
     
     return transformersTablesSchema
 
