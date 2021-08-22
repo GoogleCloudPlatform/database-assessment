@@ -222,26 +222,56 @@ def getRulesFromJSON(jsonFileName):
 
     return transformerRules
 
-def getDataFrameFromCSV(csvFileName,skipRows, separatorString):
+def getDataFrameFromCSV(csvFileName,tableName,skipRows,separatorString,transformersTablesSchema):
 # Read CSV files from OS and turn it into a dataframe
 
+    paramCleanDFHeaders = False
+    paramGetHeadersFromConfig = True
+
     try:
-        #df = pd.read_csv(csvFileName, skiprows=skipRows, sep=separatorString, engine = 'python')
-        df = pd.read_csv(csvFileName, skiprows=skipRows)
-        #df.reset_index(drop=True)
+        
+        if paramGetHeadersFromConfig:
+            
+            if transformersTablesSchema.get(tableName):
+                
+                try:
 
-        columList = df.columns.values.tolist()
-        columList = cleanCSVHeaders(columList)
-        columList = str(columList).split(',')
-        df.columns = columList
+                    tableHeaders = getDFHeadersFromTransformers(tableName,transformersTablesSchema)
+                    tableHeaders = [header.upper() for header in tableHeaders]
+                    df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders)
 
-    except:
-        print ('\nThe filename {} is empty.\n'.format(csvFileName))
+                except Exception as dataframeHeaderErr:
+                    
+                    print ('\nThe filename {} for the table {} could not be imported using the column names {}.\n'.format(csvFileName,tableName,tableHeaders))
+                    paramCleanDFHeaders = True
+                    df = pd.read_csv(csvFileName, skiprows=skipRows)
+
+            else:
+            
+                df = pd.read_csv(csvFileName, skiprows=skipRows)
+
+        # In case we need to clean some headers from dataframe
+        if paramCleanDFHeaders:
+            columList = df.columns.values.tolist()
+            columList = cleanCSVHeaders(columList)
+            columList = str(columList).strip().split(',')
+            columList = [column.strip() for column in columList]
+            df.columns = columList
+
+    except Exception as generalErr:
+        print ('\nThe filename {} is most likely empty.\n'.format(csvFileName))
         return False
 
     return df
 
+def getDFHeadersFromTransformers(tableName,transformersTablesSchema):
 
+    tableConfig = transformersTablesSchema.get(tableName)
+
+    tableHeaders = [header[0] for header in tableConfig]
+
+    return tableHeaders
+    
 def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters):
 # Fuction to read from CSVs and store the data into a dataframe. The dataframe is placed then into a Hash Table.
 # This function returns a dictionary with dataframes from CSVs
@@ -250,6 +280,8 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
 
     # Hash table to store dataframes after being loaded from CSVs
     dataFrames = dbAssessmentDataframes
+
+    fileList.sort()
 
     for fileName in fileList:
 
@@ -266,7 +298,7 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
         tableName = import_db_assessment.getObjNameFromFiles(fileName,'__',1)
 
         # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
-        df = getDataFrameFromCSV(fileName,skipRows, separatorString)
+        df = getDataFrameFromCSV(fileName,tableName,skipRows,separatorString,transformersTablesSchema)
         
         # Checking if no error was found during loading CSV from OS
         if df is not False:
@@ -292,7 +324,7 @@ def processSchemaDetection(schemadetection,transformersTablesSchema, transformer
 
             # Adds configuration whenever this is not present
             transformersTablesSchema[str(tableName).lower()] = addBQDataType(list(df.columns), 'STRING')
-            print('WARNING: Optimus Prime is filling the gap in the transformers.json schema definition for {} table.'.format(tableName))
+            print('WARNING: Optimus Prime is filling the gap in the transformers.json schema definition for {} table.\n'.format(tableName))
     
     return transformersTablesSchema
 

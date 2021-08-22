@@ -375,7 +375,8 @@
     "parameters":
             {
                 "op_enable_reshape_for": "AWRHISTSYSMETRICHIST:dataframe_reshape_awrhistsysmetrichist,AWRHISTOSSTAT:dataframe_reshape_awrhistosstat,DBPARAMETERS:dataframe_reshape_dbparameters",
-                "network_to_gcp": "1 Gbps"
+                "network_to_gcp": "1 Gbps",
+                "do_not_import": ["alertlog","patchlevel"]
             },
     "rules":
 
@@ -385,7 +386,7 @@
                                 "type": "VARIABLE",
                                 "priority": 0,
                                 "action": "CREATE",
-                                "action_details": {"varname": "AWRHISTSYSMETRICHIST","value": "{\"from_to_rows_to_columns\": {\"Average Active Sessions\": \"AAS\", \"Background CPU Usage Per Sec\": \"BKGRCPU_PER_SEC\", \"CPU Usage Per Sec\": \"CPU_PER_SEC\", \"DB Block Changes Per Txn \": \"DBBLKSCHANGES_PER_SEC\", \"Executions Per Sec\": \"EXEC_PER_SEC\", \"Host CPU Usage Per Sec\": \"HOST_CPU_PER_SEC\", \"I/O Megabytes per Second\": \"IOMBPS\", \"I/O Requests per Second\": \"IOPS\", \"Logical Reads Per Txn\": \"LOG_READS_PER_TXN\", \"Logons Per Sec\": \"LOGONS_PER_SEC\",  \"Physical Reads Per Sec\": \"PHY_READS_PER_SEC\",  \"Physical Writes Per Sec\": \"PHY_WRITES_PER_SEC\", \"Redo Generated Per Sec\": \"REDO_GEN_PER_SEC\", \"SQL Service Response Time\": \"SQL_RT\", \"User Calls Per Sec\": \"USERCALLS_PER_SEC\", \"User Transaction Per Sec\": \"USER_TX_PER_SEC\"}, \"TARGET_COLUMN\": \"METRIC_NAME\", \"TARGET_STATS_COLUMNS\": [\"PERC90\",\"PERC95\"], \"INDEX_COLUMNS\": [\"PKEY\", \"DBID\",\"INSTANCE_NUMBER\",\"HO\"], \"store\": \"BIGQUERY\", \"filterrows\": \"YES\"}", "datatype": "DICTIONARY"},
+                                "action_details": {"varname": "AWRHISTSYSMETRICHIST","value": "{\"from_to_rows_to_columns\": {\"Average Active Sessions\": \"AAS\", \"Background CPU Usage Per Sec\": \"BKGRCPU_PER_SEC\", \"CPU Usage Per Sec\": \"CPU_PER_SEC\", \"DB Block Changes Per Txn \": \"DBBLKSCHANGES_PER_SEC\", \"Executions Per Sec\": \"EXEC_PER_SEC\", \"Host CPU Usage Per Sec\": \"HOST_CPU_PER_SEC\", \"I/O Megabytes per Second\": \"IOMBPS\", \"I/O Requests per Second\": \"IOPS\", \"Logical Reads Per Txn\": \"LOG_READS_PER_TXN\", \"Logons Per Sec\": \"LOGONS_PER_SEC\",  \"Physical Reads Per Sec\": \"PHY_READS_PER_SEC\",  \"Physical Writes Per Sec\": \"PHY_WRITES_PER_SEC\", \"Redo Generated Per Sec\": \"REDO_GEN_PER_SEC\", \"SQL Service Response Time\": \"SQL_RT\", \"User Calls Per Sec\": \"USERCALLS_PER_SEC\", \"User Transaction Per Sec\": \"USER_TX_PER_SEC\"}, \"TARGET_COLUMN\": \"METRIC_NAME\", \"TARGET_STATS_COLUMNS\": [\"PERC90\",\"PERC95\"], \"INDEX_COLUMNS\": [\"PKEY\", \"DBID\",\"INSTANCE_NUMBER\",\"HOUR\"], \"store\": \"BIGQUERY\", \"filterrows\": \"YES\"}", "datatype": "DICTIONARY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE","AWRHISTSYSMETRICHIST"],
                                 "expr1": "",
@@ -397,7 +398,7 @@
                                 "type": "VARIABLE",
                                 "priority": 0,
                                 "action": "CREATE",
-                                "action_details": {"varname": "AWRHISTOSSTAT","value": "{\"from_to_rows_to_columns\": {\"LOAD\": \"LOAD\", \"NUM_CPUS\": \"NUM_CPUS\", \"SYS_TIME\": \"SYS_TIME\", \"BUSY_TIME\": \"BUSY_TIME\", \"IDLE_TIME\": \"IDLE_TIME\", \"NICE_TIME\": \"NICE_TIME\", \"USER_TIME\": \"USER_TIME\", \"IOWAIT_TIME\": \"IOWAIT_TIME\", \"VM_IN_BYTES\": \"VM_IN_BYTES\", \"VM_OUT_BYTES\": \"VM_OUT_BYTES\", \"NUM_CPU_CORES\": \"NUM_CPU_CORES\", \"NUM_CPU_SOCKETS\": \"NUM_CPU_SOCKETS\", \"SWAP_FREE_BYTES\": \"SWAP_FREE_BYTES\", \"FREE_MEMORY_BYTES\": \"FREE_MEMORY_BYTES\", \"PHYSICAL_MEMORY_BYTES\": \"PHYSICAL_MEMORY_BYTES\", \"RSRC_MGR_CPU_WAIT_TIME\": \"RSRC_MGR_CPU_WAIT_TIME\", \"INACTIVE_MEMORY_BYTES\": \"INACTIVE_MEMORY_BYTES\"}, \"TARGET_COLUMN\": \"STAT_NAME\", \"TARGET_STATS_COLUMNS\": [\"PERC90\",\"PERC95\"], \"INDEX_COLUMNS\": [\"PKEY\", \"DBID\",\"INSTANCE_NUMBER\",\"HH\"], \"store\": \"BIGQUERY\", \"filterrows\": \"YES\"}", "datatype": "DICTIONARY"},
+                                "action_details": {"varname": "AWRHISTOSSTAT","value": "{\"from_to_rows_to_columns\": {\"LOAD\": \"LOAD\", \"NUM_CPUS\": \"NUM_CPUS\", \"SYS_TIME\": \"SYS_TIME\", \"BUSY_TIME\": \"BUSY_TIME\", \"IDLE_TIME\": \"IDLE_TIME\", \"NICE_TIME\": \"NICE_TIME\", \"USER_TIME\": \"USER_TIME\", \"IOWAIT_TIME\": \"IOWAIT_TIME\", \"VM_IN_BYTES\": \"VM_IN_BYTES\", \"VM_OUT_BYTES\": \"VM_OUT_BYTES\", \"NUM_CPU_CORES\": \"NUM_CPU_CORES\", \"NUM_CPU_SOCKETS\": \"NUM_CPU_SOCKETS\", \"SWAP_FREE_BYTES\": \"SWAP_FREE_BYTES\", \"FREE_MEMORY_BYTES\": \"FREE_MEMORY_BYTES\", \"PHYSICAL_MEMORY_BYTES\": \"PHYSICAL_MEMORY_BYTES\", \"RSRC_MGR_CPU_WAIT_TIME\": \"RSRC_MGR_CPU_WAIT_TIME\", \"INACTIVE_MEMORY_BYTES\": \"INACTIVE_MEMORY_BYTES\"}, \"TARGET_COLUMN\": \"STAT_NAME\", \"TARGET_STATS_COLUMNS\": [\"PERC90\",\"PERC95\"], \"INDEX_COLUMNS\": [\"PKEY\", \"DBID\",\"INSTANCE_NUMBER\",\"HOUR\"], \"store\": \"BIGQUERY\", \"filterrows\": \"YES\"}", "datatype": "DICTIONARY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE","AWRHISTOSSTAT"],
                                 "expr1": "",
@@ -434,10 +435,10 @@
                                 "type": "NUMBER",
                                 "priority": 100,
                                 "action": "ADD_OR_UPDATE_COLUMN",
-                                "action_details": {"dataframe_name": "AWRHISTSYSMETRICHIST_RS","target_dataframe_name": "AWRHISTSYSMETRICHIST_RS", "column_name": "_HH", "store": "BIGQUERY"},
+                                "action_details": {"dataframe_name": "AWRHISTSYSMETRICHIST_RS","target_dataframe_name": "AWRHISTSYSMETRICHIST_RS", "column_name": "_HOUR", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
-                                "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS\"][\"_HO\"]",
+                                "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS\"][\"_HOUR\"]",
                                 "iferror": "None",
                                 "description": "Creating a new column to standardize the column name."
                             },
@@ -653,7 +654,7 @@
                             "action_details": {"dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS", "store": "BIGQUERY"},
                             "status": "ENABLED",
                             "tags": ["BMS_SIZING"],
-                            "expr1": "pd.merge(dataFrames[\"AWRHISTSYSMETRICHIST_RS\"], dataFrames[\"AWRHISTOSSTAT_RS\"], on=[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\", \"_HH\"])",
+                            "expr1": "pd.merge(dataFrames[\"AWRHISTSYSMETRICHIST_RS\"], dataFrames[\"AWRHISTOSSTAT_RS\"], on=[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\", \"_HOUR\"])",
                             "iferror": "None",
                             "description": "Create a new dataframe out of joining AWRHISTSYSMETRICHIST_RS(database metrics) and AWRHISTOSSTAT_RS(os metrics)"
                         },
@@ -737,8 +738,8 @@
                             "action_details": {"dataframe_name": "DBSIZING_FACTS", "store": "BIGQUERY"},
                             "status": "ENABLED",
                             "tags": ["BMS_SIZING"],
-                            "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HO\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"FREE_MEMORY_BYTES_PERC95\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"NUM_CPU_SOCKETS_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
-                            "iferror": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HO\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"NUM_CPU_SOCKETS_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
+                            "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"FREE_MEMORY_BYTES_PERC95\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"NUM_CPU_SOCKETS_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
+                            "iferror": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"NUM_CPU_SOCKETS_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
                             "description": "This rule creates a new dataframe out of a selected list of columns from AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS dataframe."
                         },
                 "bms_sizing-rule10":
