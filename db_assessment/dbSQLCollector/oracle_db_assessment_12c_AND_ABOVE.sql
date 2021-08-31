@@ -1382,7 +1382,7 @@ SELECT
          within GROUP (ORDER BY value DESC) AS "PERC75",
        PERCENTILE_CONT(0.10)
          within GROUP (ORDER BY value DESC) AS "PERC90",
-       PERCENTILE_CONT(0.05)x
+       PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY value DESC) AS "PERC95",
        PERCENTILE_CONT(0)
          within GROUP (ORDER BY value DESC) AS "PERC100"
