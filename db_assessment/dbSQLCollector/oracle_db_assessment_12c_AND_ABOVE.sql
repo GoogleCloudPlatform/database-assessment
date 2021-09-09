@@ -1178,42 +1178,52 @@ spool opdb__awrhistosstat__&v_tag
 
 WITH v_osstat_all
      AS (SELECT os.dbid,
-                os.instance_number,
-                TO_CHAR(snap.begin_interval_time, 'hh24')
-                   hh24,
-                os.stat_name,
-                value,
-                ( TO_NUMBER(CAST(end_interval_time AS DATE) - CAST(begin_interval_time AS DATE)) * 60 * 60 * 24 )
-                   snap_total_secs,
-                PERCENTILE_CONT(0.5)
-                  within GROUP (ORDER BY value DESC) over (
-                    PARTITION BY os.dbid, os.instance_number,
-                  TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
-                "PERC50",
-                PERCENTILE_CONT(0.25)
-                  within GROUP (ORDER BY value DESC) over (
-                    PARTITION BY os.dbid, os.instance_number,
-                  TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
-                "PERC75",
-                PERCENTILE_CONT(0.1)
-                  within GROUP (ORDER BY value DESC) over (
-                    PARTITION BY os.dbid, os.instance_number,
-                  TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
-                "PERC90",
-                PERCENTILE_CONT(0.05)
-                  within GROUP (ORDER BY value DESC) over (
-                    PARTITION BY os.dbid, os.instance_number,
-                  TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
-                "PERC95",
-                PERCENTILE_CONT(0)
-                  within GROUP (ORDER BY value DESC) over (
-                    PARTITION BY os.dbid, os.instance_number,
-                  TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
-                "PERC100"
-         FROM   dba_hist_osstat os
-                inner join dba_hist_snapshot snap
-                        ON os.snap_id = snap.snap_id
-         WHERE  os.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'),
+                     os.instance_number,
+                     TO_CHAR(snap.begin_interval_time, 'hh24') hh24,
+                     os.stat_name,
+                     os.delta_value,
+                     ( TO_NUMBER(CAST(end_interval_time AS DATE) - CAST(begin_interval_time AS DATE)) * 60 * 60 * 24 )
+                        snap_total_secs,
+                     PERCENTILE_CONT(0.5)
+                       within GROUP (ORDER BY os.delta_value DESC) over (
+                         PARTITION BY os.dbid, os.instance_number,
+                       TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
+                     "PERC50",
+                     PERCENTILE_CONT(0.25)
+                       within GROUP (ORDER BY os.delta_value DESC) over (
+                         PARTITION BY os.dbid, os.instance_number,
+                       TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
+                     "PERC75",
+                     PERCENTILE_CONT(0.1)
+                       within GROUP (ORDER BY os.delta_value DESC) over (
+                         PARTITION BY os.dbid, os.instance_number,
+                       TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
+                     "PERC90",
+                     PERCENTILE_CONT(0.05)
+                       within GROUP (ORDER BY os.delta_value DESC) over (
+                         PARTITION BY os.dbid, os.instance_number,
+                       TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
+                     "PERC95",
+                     PERCENTILE_CONT(0)
+                       within GROUP (ORDER BY os.delta_value DESC) over (
+                         PARTITION BY os.dbid, os.instance_number,
+                       TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
+                     "PERC100"
+              FROM (SELECT s.*,
+                    NVL(DECODE(GREATEST(value, NVL(LAG(value)
+                    OVER (
+                    PARTITION BY s.dbid, s.instance_number, s.stat_name
+                    ORDER BY s.snap_id), 0)), value, value - LAG(value)
+                       OVER (
+                       PARTITION BY s.dbid, s.instance_number, s.stat_name
+                       ORDER BY s.snap_id),
+                    0), 0) AS delta_value
+                    FROM dba_hist_osstat s
+                    WHERE s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+                    ORDER BY snap_id) os
+                     inner join dba_hist_snapshot snap
+                             ON os.snap_id = snap.snap_id
+              WHERE  os.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'),
 vossummary AS (
 SELECT '&&v_host'
        || '_'
@@ -1225,17 +1235,17 @@ SELECT '&&v_host'
        hh24,
        stat_name,
        SUM(snap_total_secs) hh24_total_secs,
-       AVG(value)           avg_value,
-       STATS_MODE(value)    mode_value,
-       MEDIAN(value)        median_value,
+       AVG(delta_value)           avg_value,
+       STATS_MODE(delta_value)    mode_value,
+       MEDIAN(delta_value)        median_value,
        AVG(perc50)          PERC50,
        AVG(perc75)          PERC75,
        AVG(perc90)          PERC90,
        AVG(perc95)          PERC95,
        AVG(perc100)         PERC100,
-       MIN(value)           min_value,
-       MAX(value)           max_value,
-       SUM(value)           sum_value,
+       MIN(delta_value)           min_value,
+       MAX(delta_value)           max_value,
+       SUM(delta_value)           sum_value,
        COUNT(1)             count
 FROM   v_osstat_all
 GROUP  BY '&&v_host'
