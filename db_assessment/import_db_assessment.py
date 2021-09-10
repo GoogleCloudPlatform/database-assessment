@@ -404,7 +404,7 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
 
     try:
         load_job.result()  # Waits for the job to complete.
-    except:
+    except Exception as genericLoadErr:
         print ('\n FAILED: Optimus Prime could not import the filename "{}" into "{}".\n'.format(fileName,table_id))
         return False
 
