@@ -23,7 +23,7 @@ Date: 2021-08-19
 
 */
 
-define version = '2.0.0'
+define version = '2.0.1'
 
 clear col comp brea
 set headsep off
