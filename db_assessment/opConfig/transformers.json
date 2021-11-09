@@ -1,7 +1,7 @@
 {
     "tableschemas":
             {
-                "0.0.0": 
+                "0.0.0":
                         {
                             "121,122,180,181,190,191,210,211":
                                     {
@@ -91,7 +91,7 @@
                                         "usrsegatt": [["pkey","STRING"],["owner","STRING"],["segmen_name","STRING"],["segment_type","STRING"],["tablespace_name","STRING"]]
                                     }
                         },
-                "0.1.0": 
+                "0.1.0":
                         {
                             "121,122,180,181,190,191,210,211":
                                     {
@@ -184,7 +184,7 @@
                                         "dbahistsystimemodel": [["pkey","STRING"],["snap_id","STRING"],["dbid","STRING"],["instance_number","STRING"],["begin_interval_time","STRING"],["hour","STRING"],["stat_name","STRING"],["value","STRING"],["delta","STRING"]]
                                     }
                         },
-                    "0.1.1": 
+                    "0.1.1":
                         {
                             "121,122,180,181,190,191,210,211":
                                     {
@@ -276,7 +276,7 @@
                                         "dbahistsystimemodel": [["pkey","STRING"],["snap_id","STRING"],["dbid","STRING"],["instance_number","STRING"],["begin_interval_time","STRING"],["hour","STRING"],["stat_name","STRING"],["value","STRING"],["delta","STRING"]]
                                     }
                         },
-                        "2.0.0": 
+                        "2.0.0":
                             {
                                 "121,122,180,181,190,191,210,211":
                                         {
@@ -370,7 +370,7 @@
                                             "awrsnapdetails": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["min_snapid","STRING"],["max_snapid","STRING"],["min_begin_interval_time","STRING"],["max_begin_interval_time","STRING"],["cnt","STRING"],["sum_snaps_diff_secs","STRING"],["avg_snaps_diff_secs","STRING"],["median_snaps_diff_secs","STRING"],["mode_snaps_diff_secs","STRING"],["min_snaps_diff_secs","STRING"],["max_snaps_diff_secs","STRING"]]
                                         }
                             },
-                            "2.0.1": 
+                            "2.0.1":
                                 {
                                     "121,122,180,181,190,191,210,211":
                                             {
@@ -463,7 +463,101 @@
                                                 "dbahistsystimemodel": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["stat_name","STRING"],["cnt","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"]],
                                                 "awrsnapdetails": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["min_snapid","STRING"],["max_snapid","STRING"],["min_begin_interval_time","STRING"],["max_begin_interval_time","STRING"],["cnt","STRING"],["sum_snaps_diff_secs","STRING"],["avg_snaps_diff_secs","STRING"],["median_snaps_diff_secs","STRING"],["mode_snaps_diff_secs","STRING"],["min_snaps_diff_secs","STRING"],["max_snaps_diff_secs","STRING"]]
                                             }
-                                }
+                                },
+                                "2.0.2":
+                                    {
+                                        "121,122,180,181,190,191,210,211":
+                                                {
+                                                    "dbsummary": [["pkey","STRING"],["dbid","STRING"],["db_name","STRING"],["cdb","STRING"],["dbversion","STRING"],["dbfullversion","STRING"],["log_mode","STRING"],["force_logging","STRING"],["redo_gb_per_day","STRING"],["rac_dbinstaces","STRING"],["characterset","STRING"],["platform_name","STRING"],["startup_time","STRING"],["user_schemas","STRING"],["buffer_cache_mb","STRING"],["shared_pool_mb","STRING"],["total_pga_allocated_mb","STRING"],["db_size_allocated_gb","STRING"],["db_size_in_use_gb","STRING"],["db_long_size_gb","STRING"],["dg_database_role","STRING"],["dg_protection_mode","STRING"],["dg_protection_level","STRING"]],
+                                                    "dboverview": [["pkey","STRING"],["metric","STRING"],["value","STRING"]],
+                                                    "pdbsinfo": [["pkey","STRING"],["dbid","STRING"],["pdb_id","STRING"],["pdb_name","STRING"],["status","STRING"],["logging","STRING"]],
+                                                    "pdbsopenmode": [["pkey","STRING"],["con_id","STRING"],["name","STRING"],["open_mode","STRING"],["total_gb","STRING"]],
+                                                    "dbinstances": [["pkey","STRING"],["inst_id","STRING"],["instance_name","STRING"],["host_name","STRING"],["version","STRING"],["status","STRING"],["database_status","STRING"],["instance_role","STRING"]],
+                                                    "usedspacedetails": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["segment_type","STRING"],["tablespace_name","STRING"],["flash_cache","STRING"],["inmemory","STRING"],["in_con_id","STRING"],["in_owner","STRING"],["in_segment_type","STRING"],["in_tablespace_name","STRING"],["in_flash_cache","STRING"],["in_inmemory","STRING"],["size_gb","STRING"]],
+                                                    "compressbytable": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["number_tables","STRING"],["table_gb","STRING"],["number_parts","STRING"],["part_gb","STRING"],["number_subparts","STRING"],["subpart_gb","STRING"],["total_gb","STRING"]],
+                                                    "compressbytype": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["basic","STRING"],["oltp","STRING"],["query_low","STRING"],["query_high","STRING"],["archive_low","STRING"],["archive_high","STRING"],["total_gb","STRING"]],
+                                                    "spacebyownersegtype": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["segment_type","STRING"],["total_gb","STRING"]],
+                                                    "spacebytablespace": [["pkey","STRING"],["tablespace_name","STRING"],["extent_management","STRING"],["allocation","STRING"],["segment_space_manage","STRING"],["status","STRING"],["est_gain_mb","STRING"]],
+                                                    "freespaces": [["pkey","STRING"],["con_id","STRING"],["tablespace","STRING"],["status","STRING"],["total_gb","STRING"],["used_gb","STRING"],["free_gb","STRING"],["pct_used","STRING"],["graph","STRING"]],
+                                                    "dblinks": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["db_link","STRING"],["username","STRING"],["host","STRING"],["created","STRING"]],
+                                                    "dbparameters": [["pkey","STRING"],["inst_id","STRING"],["con_id","STRING"],["name","STRING"],["value","STRING"],["default_value","STRING"],["isdefault_value","STRING"]],
+                                                    "dbfeatures": [["pkey","STRING"],["con_id","STRING"],["name","STRING"],["current_usage","STRING"],["detected_usage","STRING"],["total_samples","STRING"],["first_usage","STRING"],["last_usage","STRING"],["aux_count","STRING"]],
+                                                    "dbhwmarkstatistics": [["pkey","STRING"],["description","STRING"],["highwater","STRING"],["last_value","STRING"]],
+                                                    "dbobjects": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["objecttype","STRING"],["editionable","STRING"],["coun","STRING"],["in_con_id","STRING"],["in_owner","STRING"],["in_object_type","STRING"],["in_editionable","STRING"]],
+                                                    "sourcecode": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["type","STRING"],["nr_lines","STRING"],["qt_objs","STRING"],["nr_lines_w_utl","STRING"],["nr_lines_w_dbms","STRING"],["nr_lines_w_exec_im","STRING"],["nr_lines_w_dbms_sql","STRING"],["nr_lines_w_dbms_utl","STRING"],["nr_lines_total","STRING"]],
+                                                    "partsubparttypes": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["partition","STRING"],["subpartition","STRING"],["coun","STRING"]],
+                                                    "indexestypes": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["index_type","STRING"],["coun","STRING"]],
+                                                    "datatypes": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["data_type","STRING"],["coun","STRING"]],
+                                                    "cpucoresusage": [["pkey","STRING"],["dt","STRING"],["cpu_count","STRING"],["cpu_core_count","STRING"],["cpu_socket_count","STRING"]],
+                                                    "tablesnopk": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["pk","STRING"],["uk","STRING"],["ck","STRING"],["ri","STRING"],["vwck","STRING"],["vmro","STRING"],["hashexpr","STRING"],["suplog","STRING"],["num_tables","STRING"],["total_cons","STRING"]],
+                                                    "systemstats": [["pkey","STRING"],["stat_type","STRING"],["stat_name","STRING"],["value1","STRING"],["value2","STRING"]],
+                                                    "patchlevel": [["pkey","STRING"],["time","STRING"],["action","STRING"],["namespace","STRING"],["version","STRING"],["id","STRING"],["comments","STRING"]],
+                                                    "awrhistsysmetrichist": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["metric_name","STRING"],["metric_unit","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"]],
+                                                    "awrhistsystimemodel": [["pkey","STRING"],["total_awr_secs","STRING"],["con_id","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["stat_name","STRING"],["hour_total_secs","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["coun","STRING"]],
+                                                    "awrhistosstat": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["stat_name","STRING"],["hour_total_secs","STRING"],["cumulative_value","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["cnt","STRING"]],
+                                                    "awrhistcmdtypes": [["pkey","STRING"],["con_id","STRING"],["hour","STRING"],["command_type","STRING"],["coun","STRING"],["avg_buffer_gets","STRING"],["avg_elapsed_time","STRING"],["avg_rows_processed","STRING"],["avg_executions","STRING"],["avg_cpu_time","STRING"],["avg_iowait","STRING"],["avg_clwait","STRING"],["avg_apwait","STRING"],["avg_ccwait","STRING"],["avg_plsexec_time","STRING"]],
+                                                    "alertlog2": [["pkey","STRING"],["message_time","STRING"],["message_text","STRING"],["host_id","STRING"],["con_id","STRING"],["component_id","STRING"],["message_type","STRING"],["message_level","STRING"],["message_id","STRING"],["message_group","STRING"],["container_name","STRING"]],
+                                                    "optimusconfig_bms_machinesizes": [["cores","STRING"],["ram_gb","STRING"],["machine_size","STRING"],["machine_size_short","STRING"],["processor","STRING"],["est_price","STRING"]],
+                                                    "optimusconfig_network_to_gcp": [["network_to_gcp","STRING"],["gbytes_per_sec","STRING"],["mbytes_per_sec","STRING"]],
+                                                    "awrhistsysmetrichist_rs": [["pkey","STRING"],["con_id","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["AAS_PERC90","STRING"],["BKGRCPU_PER_SEC_PERC90","STRING"],["CPU_PER_SEC_PERC90","STRING"],["EXEC_PER_SEC_PERC90","STRING"],["HOST_CPU_PER_SEC_PERC90","STRING"],["IOMBPS_PERC90","STRING"],["IOPS_PERC90","STRING"],["LOG_READS_PER_TXN_PERC90","STRING"],["LOGONS_PER_SEC_PERC90","STRING"],["PHY_READS_PER_SEC_PERC90","STRING"],["PHY_WRITES_PER_SEC_PERC90","STRING"],["REDO_GEN_PER_SEC_PERC90","STRING"],["SQL_RT_PERC90","STRING"],["USERCALLS_PER_SEC_PERC90","STRING"],["USER_TX_PER_SEC_PERC90","STRING"],["AAS_PERC95","STRING"],["BKGRCPU_PER_SEC_PERC95","STRING"],["CPU_PER_SEC_PERC95","STRING"],["EXEC_PER_SEC_PERC95","STRING"],["HOST_CPU_PER_SEC_PERC95","STRING"],["IOMBPS_PERC95","STRING"],["IOPS_PERC95","STRING"],["LOG_READS_PER_TXN_PERC95","STRING"],["LOGONS_PER_SEC_PERC95","STRING"],["PHY_READS_PER_SEC_PERC95","STRING"],["PHY_WRITES_PER_SEC_PERC95","STRING"],["REDO_GEN_PER_SEC_PERC95","STRING"],["SQL_RT_PERC95","STRING"],["USERCALLS_PER_SEC_PERC95","STRING"],["USER_TX_PER_SEC_PERC95","STRING"]],
+                                                    "awrhistosstat_rs": [["pkey","STRING"],["con_id","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["BUSY_TIME_PERC90","STRING"],["FREE_MEMORY_BYTES_PERC90","STRING"],["IDLE_TIME_PERC90","STRING"],["INACTIVE_MEMORY_BYTES_PERC90","STRING"],["IOWAIT_TIME_PERC90","STRING"],["LOAD_PERC90","STRING"],["NICE_TIME_PERC90","STRING"],["NUM_CPUS_PERC90","STRING"],["NUM_CPU_CORES_PERC90","STRING"],["NUM_CPU_SOCKETS_PERC90","STRING"],["PHYSICAL_MEMORY_BYTES_PERC90","STRING"],["RSRC_MGR_CPU_WAIT_TIME_PERC90","STRING"],["SWAP_FREE_BYTES_PERC90","STRING"],["SYS_TIME_PERC90","STRING"],["USER_TIME_PERC90","STRING"],["VM_IN_BYTES_PERC90","STRING"],["VM_OUT_BYTES_PERC90","STRING"],["BUSY_TIME_PERC95","STRING"],["FREE_MEMORY_BYTES_PERC95","STRING"],["IDLE_TIME_PERC95","STRING"],["INACTIVE_MEMORY_BYTES_PERC95","STRING"],["IOWAIT_TIME_PERC95","STRING"],["LOAD_PERC95","STRING"],["NICE_TIME_PERC95","STRING"],["NUM_CPUS_PERC95","STRING"],["NUM_CPU_CORES_PERC95","STRING"],["NUM_CPU_SOCKETS_PERC95","STRING"],["PHYSICAL_MEMORY_BYTES_PERC95","STRING"],["RSRC_MGR_CPU_WAIT_TIME_PERC95","STRING"],["SWAP_FREE_BYTES_PERC95","STRING"],["SYS_TIME_PERC95","STRING"],["USER_TIME_PERC95","STRING"],["VM_IN_BYTES_PERC95","STRING"],["VM_OUT_BYTES_PERC95","STRING"]],
+                                                    "dbparameters_rs": [["pkey","STRING"],["inst_id","STRING"],["con_id","STRING"],["buffer_pool_keep_value","STRING"],["buffer_pool_recycle_value","STRING"],["cluster_database_value","STRING"],["compatible_value","STRING"],["cpu_count_value","STRING"],["db_16k_cache_size_value","STRING"],["db_2k_cache_size_value","STRING"],["db_32k_cache_size_value","STRING"],["db_4k_cache_size_value","STRING"],["db_8k_cache_size_value","STRING"],["db_block_size_value","STRING"],["db_cache_size_value","STRING"],["db_domain_value","STRING"],["db_flash_cache_file_value","STRING"],["db_flash_cache_size_value","STRING"],["db_flashback_retention_target_value","STRING"],["db_keep_cache_size_value","STRING"],["db_name_value","STRING"],["db_recycle_cache_size_value","STRING"],["db_unique_name_value","STRING"],["enable_goldengate_replication_value","STRING"],["fal_client_value","STRING"],["fal_server_value","STRING"],["forward_listener_value","STRING"],["inmemory_size_value","STRING"],["instance_name_value","STRING"],["java_pool_size_value","STRING"],["large_pool_size_value","STRING"],["local_listener_value","STRING"],["max_iops_value","STRING"],["max_mbps_value","STRING"],["memory_max_target_value","STRING"],["memory_target_value","STRING"],["optimizer_features_enable_value","STRING"],["parallel_instance_group_value","STRING"],["parallel_max_servers_value","STRING"],["parallel_min_servers_value","STRING"],["pga_aggregate_limit_value","STRING"],["pga_aggregate_target_value","STRING"],["remote_listener_value","STRING"],["resource_manager_plan_value","STRING"],["sga_max_size_value","STRING"],["sga_min_size_value","STRING"],["sga_target_value","STRING"],["shared_pool_size_value","STRING"],["spfile_value","STRING"],["buffer_pool_keep_default_value","STRING"],["buffer_pool_recycle_default_value","STRING"],["cluster_database_default_value","STRING"],["compatible_default_value","STRING"],["cpu_count_default_value","STRING"],["db_16k_cache_size_default_value","STRING"],["db_2k_cache_size_default_value","STRING"],["db_32k_cache_size_default_value","STRING"],["db_4k_cache_size_default_value","STRING"],["db_8k_cache_size_default_value","STRING"],["db_block_size_default_value","STRING"],["db_cache_size_default_value","STRING"],["db_domain_default_value","STRING"],["db_flash_cache_file_default_value","STRING"],["db_flash_cache_size_default_value","STRING"],["db_flashback_retention_target_default_value","STRING"],["db_keep_cache_size_default_value","STRING"],["db_name_default_value","STRING"],["db_recycle_cache_size_default_value","STRING"],["db_unique_name_default_value","STRING"],["enable_goldengate_replication_default_value","STRING"],["fal_client_default_value","STRING"],["fal_server_default_value","STRING"],["forward_listener_default_value","STRING"],["inmemory_size_default_value","STRING"],["instance_name_default_value","STRING"],["java_pool_size_default_value","STRING"],["large_pool_size_default_value","STRING"],["local_listener_default_value","STRING"],["max_iops_default_value","STRING"],["max_mbps_default_value","STRING"],["memory_max_target_default_value","STRING"],["memory_target_default_value","STRING"],["optimizer_features_enable_default_value","STRING"],["parallel_instance_group_default_value","STRING"],["parallel_max_servers_default_value","STRING"],["parallel_min_servers_default_value","STRING"],["pga_aggregate_limit_default_value","STRING"],["pga_aggregate_target_default_value","STRING"],["remote_listener_default_value","STRING"],["resource_manager_plan_default_value","STRING"],["sga_max_size_default_value","STRING"],["sga_min_size_default_value","STRING"],["sga_target_default_value","STRING"],["shared_pool_size_default_value","STRING"],["spfile_default_value","STRING"]],
+                                                    "ashprograms": [["pkey","STRING"],["program","STRING"],["module","STRING"],["machine","STRING"],["coun","STRING"]],
+                                                    "ashsqlwaits": [["pkey","STRING"],["sql_id","STRING"],["sql_opname","STRING"],["sql_plan_hash_value","STRING"],["event","STRING"],["total_waits","STRING"]],
+                                                    "dbservicesinfo": [["pkey","STRING"],["con_id","STRING"],["pdbname","STRING"],["service_id","STRING"],["service_name","STRING"],["network_name","STRING"],["creation_date","STRING"],["failover_method","STRING"],["failover_type","STRING"],["failover_retries","STRING"],["failover_delay","STRING"],["goal","STRING"]],
+                                                    "topaccess": [["pkey","STRING"],["operation","STRING"],["options","STRING"],["object","STRING"],["object_owner","STRING"],["object_name","STRING"],["object_type","STRING"],["count_access","STRING"]],
+                                                    "topsegments": [["pkey","STRING"],["object_id","STRING"],["owner","STRING"],["object_name","STRING"],["logical_reads_total","STRING"],["db_block_changes_total","STRING"],["buffer_busy","STRING"],["buffer_busy_waits_total","STRING"],["physical_reads_total","STRING"],["physical_writes_total","STRING"],["row_lock_waits_total","STRING"],["table_scans_total","STRING"]],
+                                                    "topsqls": [["pkey","STRING"],["snap_id","STRING"],["inst_id","STRING"],["con_id","STRING"],["end_time","STRING"],["hour","STRING"],["sql_id","STRING"],["phv","STRING"],["module","STRING"],["rows_per_exec","STRING"],["rank_rows_buff","STRING"],["rows_per_buffer","STRING"],["rank_exec_elap","STRING"],["et_secs_per_sec","STRING"],["cpu_secs_per_exec","STRING"],["io_secs_per_exec","STRING"],["cl_secs_per_exec","STRING"],["ap_secs_per_exec","STRING"],["cc_secs_per_exec","STRING"],["pl_secs_per_exec","STRING"]],
+                                                    "usrsegatt": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["segmen_name","STRING"],["segment_type","STRING"],["tablespace_name","STRING"]],
+                                                    "dbahistsysstat": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["stat_name","STRING"],["cnt","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"]],
+                                                    "dbahistsystimemodel": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["stat_name","STRING"],["cnt","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"]],
+                                                    "awrsnapdetails": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["min_snapid","STRING"],["max_snapid","STRING"],["min_begin_interval_time","STRING"],["max_begin_interval_time","STRING"],["cnt","STRING"],["sum_snaps_diff_secs","STRING"],["avg_snaps_diff_secs","STRING"],["median_snaps_diff_secs","STRING"],["mode_snaps_diff_secs","STRING"],["min_snaps_diff_secs","STRING"],["max_snaps_diff_secs","STRING"]]
+                                                },
+                                        "111,112":
+                                                {
+                                                    "dbsummary": [["pkey","STRING"],["dbid","STRING"],["db_name","STRING"],["cdb","STRING"],["dbversion","STRING"],["dbfullversion","STRING"],["log_mode","STRING"],["force_logging","STRING"],["redo_gb_per_day","STRING"],["rac_dbinstaces","STRING"],["characterset","STRING"],["platform_name","STRING"],["startup_time","STRING"],["user_schemas","STRING"],["buffer_cache_mb","STRING"],["shared_pool_mb","STRING"],["total_pga_allocated_mb","STRING"],["db_size_allocated_gb","STRING"],["db_size_in_use_gb","STRING"],["db_long_size_gb","STRING"],["dg_database_role","STRING"],["dg_protection_mode","STRING"],["dg_protection_level","STRING"]],
+                                                    "dboverview": [["pkey","STRING"],["metric","STRING"],["value","STRING"]],
+                                                    "pdbsinfo": [["pkey","STRING"],["dbid","STRING"],["pdb_id","STRING"],["pdb_name","STRING"],["status","STRING"],["logging","STRING"]],
+                                                    "pdbsopenmode": [["pkey","STRING"],["name","STRING"],["open_mode","STRING"],["total_gb","STRING"]],
+                                                    "dbinstances": [["pkey","STRING"],["inst_id","STRING"],["instance_name","STRING"],["host_name","STRING"],["version","STRING"],["status","STRING"],["database_status","STRING"],["instance_role","STRING"]],
+                                                    "usedspacedetails": [["pkey","STRING"],["owner","STRING"],["segment_type","STRING"],["tablespace_name","STRING"],["flash_cache","STRING"],["in_owner","STRING"],["in_segment_type","STRING"],["in_tablespace_name","STRING"],["in_flash_cache","STRING"],["size_gb","STRING"]],
+                                                    "compressbytable": [["pkey","STRING"],["owner","STRING"],["number_tables","STRING"],["table_gb","STRING"],["number_parts","STRING"],["part_gb","STRING"],["number_subparts","STRING"],["subpart_gb","STRING"],["total_gb","STRING"]],
+                                                    "compressbytype": [["pkey","STRING"],["owner","STRING"],["basic","STRING"],["oltp","STRING"],["query_low","STRING"],["query_high","STRING"],["archive_low","STRING"],["archive_high","STRING"],["total_gb","STRING"]],
+                                                    "spacebyownersegtype": [["pkey","STRING"],["owner","STRING"],["segment_type","STRING"],["total_gb","STRING"]],
+                                                    "spacebytablespace": [["pkey","STRING"],["tablespace_name","STRING"],["extent_management","STRING"],["allocation","STRING"],["segment_space_manage","STRING"],["status","STRING"],["est_gain_mb","STRING"]],
+                                                    "freespaces": [["pkey","STRING"],["tablespace","STRING"],["status","STRING"],["total_gb","STRING"],["used_gb","STRING"],["free_gb","STRING"],["pct_used","STRING"],["graph","STRING"]],
+                                                    "dblinks": [["pkey","STRING"],["owner","STRING"],["db_link","STRING"],["host","STRING"],["created","STRING"]],
+                                                    "dbparameters": [["pkey","STRING"],["inst_id","STRING"],["name","STRING"],["value","STRING"],["isdefault_value","STRING"]],
+                                                    "dbfeatures": [["pkey","STRING"],["name","STRING"],["current_usage","STRING"],["detected_usage","STRING"],["total_samples","STRING"],["first_usage","STRING"],["last_usage","STRING"],["aux_count","STRING"]],
+                                                    "dbhwmarkstatistics": [["pkey","STRING"],["description","STRING"],["highwater","STRING"],["last_value","STRING"]],
+                                                    "dbobjects": [["pkey","STRING"],["owner","STRING"],["objecttype","STRING"],["coun","STRING"],["in_owner","STRING"],["in_object_type","STRING"]],
+                                                    "sourcecode": [["pkey","STRING"],["owner","STRING"],["type","STRING"],["nr_lines","STRING"],["qt_objs","STRING"],["nr_lines_w_utl","STRING"],["nr_lines_w_dbms","STRING"],["nr_lines_w_exec_im","STRING"],["nr_lines_w_dbms_sql","STRING"],["nr_lines_w_dbms_utl","STRING"],["nr_lines_total","STRING"]],
+                                                    "partsubparttypes": [["pkey","STRING"],["owner","STRING"],["partition","STRING"],["subpartition","STRING"],["coun","STRING"]],
+                                                    "indexestypes": [["pkey","STRING"],["owner","STRING"],["index_type","STRING"],["coun","STRING"]],
+                                                    "datatypes": [["pkey","STRING"],["owner","STRING"],["data_type","STRING"],["coun","STRING"]],
+                                                    "cpucoresusage": [["pkey","STRING"],["dt","STRING"],["cpu_count","STRING"],["cpu_core_count","STRING"],["cpu_socket_count","STRING"]],
+                                                    "tablesnopk": [["pkey","STRING"],["owner","STRING"],["pk","STRING"],["uk","STRING"],["ck","STRING"],["ri","STRING"],["vwck","STRING"],["vmro","STRING"],["hashexpr","STRING"],["suplog","STRING"],["num_tables","STRING"],["total_cons","STRING"]],
+                                                    "systemstats": [["pkey","STRING"],["stat_type","STRING"],["stat_name","STRING"],["value1","STRING"],["value2","STRING"]],
+                                                    "patchlevel": [["pkey","STRING"],["time","STRING"],["action","STRING"],["namespace","STRING"],["version","STRING"],["id","STRING"],["comments","STRING"]],
+                                                    "awrhistsysmetrichist": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["metric_name","STRING"],["metric_unit","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"]],
+                                                    "awrhistsystimemodel": [["pkey","STRING"],["total_awr_secs","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["stat_name","STRING"],["hour_total_secs","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["coun","STRING"]],
+                                                    "awrhistosstat": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["stat_name","STRING"],["hour_total_secs","STRING"],["cumulative_value","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["cnt","STRING"]],
+                                                    "awrhistcmdtypes": [["pkey","STRING"],["hour","STRING"],["command_type","STRING"],["coun","STRING"],["avg_buffer_gets","STRING"],["avg_elapsed_time","STRING"],["avg_rows_processed","STRING"],["avg_executions","STRING"],["avg_cpu_time","STRING"],["avg_iowait","STRING"],["avg_clwait","STRING"],["avg_apwait","STRING"],["avg_ccwait","STRING"],["avg_plsexec_time","STRING"]],
+                                                    "alertlog2": [["pkey","STRING"],["message_time","STRING"],["message_text","STRING"],["host_id","STRING"],["component_id","STRING"],["message_type","STRING"],["message_level","STRING"],["message_id","STRING"],["message_group","STRING"],["container_name","STRING"]],
+                                                    "optimusconfig_bms_machinesizes": [["cores","STRING"],["ram_gb","STRING"],["machine_size","STRING"],["machine_size_short","STRING"],["processor","STRING"],["est_price","STRING"]],
+                                                    "optimusconfig_network_to_gcp": [["network_to_gcp","STRING"],["gbytes_per_sec","STRING"],["mbytes_per_sec","STRING"]],
+                                                    "ashprograms": [["pkey","STRING"],["program","STRING"],["module","STRING"],["machine","STRING"],["coun","STRING"]],
+                                                    "ashsqlwaits": [["pkey","STRING"],["sql_id","STRING"],["sql_opname","STRING"],["sql_plan_hash_value","STRING"],["event","STRING"],["total_waits","STRING"]],
+                                                    "dbservicesinfo": [["pkey","STRING"],["service_id","STRING"],["service_name","STRING"],["network_name","STRING"],["creation_date","STRING"],["failover_method","STRING"],["failover_type","STRING"],["failover_retries","STRING"],["failover_delay","STRING"],["goal","STRING"]],
+                                                    "topaccess": [["pkey","STRING"],["operation","STRING"],["options","STRING"],["object","STRING"],["object_owner","STRING"],["object_name","STRING"],["object_type","STRING"],["count_access","STRING"]],
+                                                    "topsegments": [["pkey","STRING"],["object_id","STRING"],["owner","STRING"],["object_name","STRING"],["logical_reads_total","STRING"],["db_block_changes_total","STRING"],["buffer_busy","STRING"],["buffer_busy_waits_total","STRING"],["physical_reads_total","STRING"],["physical_writes_total","STRING"],["row_lock_waits_total","STRING"],["table_scans_total","STRING"]],
+                                                    "topsqls": [["pkey","STRING"],["snap_id","STRING"],["inst_id","STRING"],["end_time","STRING"],["hour","STRING"],["sql_id","STRING"],["phv","STRING"],["module","STRING"],["rank_exec","STRING"],["exec_delta","STRING"],["rank_elap","STRING"],["elaped_time_delta","STRING"],["rank_rows_exec","STRING"],["rows_per_exec","STRING"],["rank_rows_buff","STRING"],["rows_per_buffer","STRING"],["rank_exec_elap","STRING"],["et_secs_per_sec","STRING"],["cpu_secs_per_exec","STRING"],["io_secs_per_exec","STRING"],["cl_secs_per_exec","STRING"],["ap_secs_per_exec","STRING"],["cc_secs_per_exec","STRING"],["pl_secs_per_exec","STRING"]],
+                                                    "dbahistsysstat": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["stat_name","STRING"],["cnt","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"]],
+                                                    "usrsegatt": [["pkey","STRING"],["owner","STRING"],["segmen_name","STRING"],["segment_type","STRING"],["tablespace_name","STRING"]],
+                                                    "dbahistsystimemodel": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["stat_name","STRING"],["cnt","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"]],
+                                                    "awrsnapdetails": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["min_snapid","STRING"],["max_snapid","STRING"],["min_begin_interval_time","STRING"],["max_begin_interval_time","STRING"],["cnt","STRING"],["sum_snaps_diff_secs","STRING"],["avg_snaps_diff_secs","STRING"],["median_snaps_diff_secs","STRING"],["mode_snaps_diff_secs","STRING"],["min_snaps_diff_secs","STRING"],["max_snaps_diff_secs","STRING"]]
+                                                }
+                                    }
 
             },
     "parameters":
@@ -675,7 +769,7 @@
                                 "action": "ADD_OR_UPDATE_COLUMN",
                                 "action_details": {"dataframe_name": "DBMIGRATION_DETAILS","target_dataframe_name": "DBMIGRATION_DETAILS","column_name": "REQUIRED_DB_DOWNTIME_HOURS", "store": "BIGQUERY"},
                                 "status": "ENABLED",
-                                "tags": ["DB_MIGRATION"], 
+                                "tags": ["DB_MIGRATION"],
                                 "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"RMAN_BACKUP_RESTORE\"),dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_TRANSFER_BACKUP_OVER_NETWORK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_BACKUP_HOUR\"],dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"])",
                                 "iferror": "None",
                                 "description": "Creating a new column DBMIGRATION_DETAILS.REQUIRED_DB_DOWNTIME_HOURS. If the technique is RMAN_BACKUP_RESTORE, then, downtime formula is (time to backup the database to disk + time transfer backup of database + time to restore the database) in hours"
@@ -687,7 +781,7 @@
                                 "action": "ADD_OR_UPDATE_COLUMN",
                                 "action_details": {"dataframe_name": "DBMIGRATION_DETAILS","target_dataframe_name": "DBMIGRATION_DETAILS","column_name": "REQUIRED_DB_DOWNTIME_HOURS", "store": "BIGQUERY"},
                                 "status": "ENABLED",
-                                "tags": ["DB_MIGRATION"], 
+                                "tags": ["DB_MIGRATION"],
                                 "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"EXP_FULL\"),(dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_TRANSFER_BACKUP_OVER_NETWORK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_BACKUP_HOUR\"])*1.2,dataFrames[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
                                 "iferror": "None",
                                 "description": "Creating a new column DBMIGRATION_DETAILS.REQUIRED_DB_DOWNTIME_HOURS. If the technique is EXP_FULL, then, downtime formula is (time to backup the database to disk + time transfer backup of database + time to restore the database) * 1.2 (20%) in hours (for validations)"
@@ -699,7 +793,7 @@
                                 "action": "ADD_OR_UPDATE_COLUMN",
                                 "action_details": {"dataframe_name": "DBMIGRATION_DETAILS","target_dataframe_name": "DBMIGRATION_DETAILS","column_name": "REQUIRED_DB_DOWNTIME_HOURS", "store": "BIGQUERY"},
                                 "status": "ENABLED",
-                                "tags": ["DB_MIGRATION"], 
+                                "tags": ["DB_MIGRATION"],
                                 "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"XTTS_INCREMENTAL\"),dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR\"]+2,dataFrames[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
                                 "iferror": "None",
                                 "description": "Creating a new column DBMIGRATION_DETAILS.REQUIRED_DB_DOWNTIME_HOURS. If the technique is XTTS_INCREMENTAL, then, downtime formula is time to restore 7 Day worth of redo for this database (TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR) + 2 hours (for validations)"
@@ -711,7 +805,7 @@
                                 "action": "ADD_OR_UPDATE_COLUMN",
                                 "action_details": {"dataframe_name": "DBMIGRATION_DETAILS","target_dataframe_name": "DBMIGRATION_DETAILS","column_name": "REQUIRED_DB_DOWNTIME_HOURS", "store": "BIGQUERY"},
                                 "status": "ENABLED",
-                                "tags": ["DB_MIGRATION"], 
+                                "tags": ["DB_MIGRATION"],
                                 "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"DATA_GUARD\"),dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR\"]/7,dataFrames[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
                                 "iferror": "None",
                                 "description": "Creating a new column DBMIGRATION_DETAILS.REQUIRED_DB_DOWNTIME_HOURS. If the technique is DATA_GUARD, then, downtime formula is time to restore 1 Day worth of redo for this database (TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR/7). 1 day is usually a lot of out of sync for a Data Guard, but we are considering worse case scenario."
@@ -723,7 +817,7 @@
                                 "action": "ADD_OR_UPDATE_COLUMN",
                                 "action_details": {"dataframe_name": "DBMIGRATION_DETAILS","target_dataframe_name": "DBMIGRATION_DETAILS","column_name": "LEVEL_OF_EFFORT_HOURS", "store": "BIGQUERY"},
                                 "status": "ENABLED",
-                                "tags": ["DB_MIGRATION"], 
+                                "tags": ["DB_MIGRATION"],
                                 "expr1": "'To Be Developed'",
                                 "iferror": "None",
                                 "description": "Adds a new column to DBMIGRATION_DETAILS.LEVEL_OF_EFFORT_HOURS = 'To Be Developed'"
@@ -843,11 +937,11 @@
                             "action": "CREATE_OR_REPLACE_DATAFRAME",
                             "action_details": {"dataframe_name": "DBSIZING_FACTS", "store": "BIGQUERY"},
                             "status": "ENABLED",
-                            "tags": ["BMS_SIZING"], 
-                            "expr1": "pd.merge(dataFrames[\"DBSIZING_FACTS\"], dataFrames[\"DBSUMMARY\"], left_on=[\"_PKEY\", \"_DBID\"], right_on=[\"PKEY\", \"DBID\"], how=\"inner\")",                            
+                            "tags": ["BMS_SIZING"],
+                            "expr1": "pd.merge(dataFrames[\"DBSIZING_FACTS\"], dataFrames[\"DBSUMMARY\"], left_on=[\"_PKEY\", \"_DBID\"], right_on=[\"PKEY\", \"DBID\"], how=\"inner\")",
                             "iferror": "None",
                             "description": "Creating new dataframe out of joining DBSIZING_FACTS and DBSUMMARY."
-                        },  
+                        },
                 "bms_sizing-rule11":
                         {
                             "type": "FREESTYLE",
@@ -855,7 +949,7 @@
                             "action": "ADD_OR_UPDATE_COLUMN",
                             "action_details": {"dataframe_name": "DBSIZING_FACTS","target_dataframe_name": "DBSIZING_FACTS","column_name": "BMSSTORAGE_TB_DB", "store": "BIGQUERY"},
                             "status": "ENABLED",
-                            "tags": ["BMS_SIZING"], 
+                            "tags": ["BMS_SIZING"],
                             "expr1": "np.where((dataFrames[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"] > (dataFrames[\"DBSIZING_FACTS\"][\"DB_SIZE_ALLOCATED_GB\"]/1024)),np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"]),np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"DB_SIZE_ALLOCATED_GB\"]/1024))",
                             "iferror": "None",
                             "description": "Creating new column DBSIZING_FACTS.BMSSTORAGE_TB_DB. This columns checks what would be the storage requirements in BMS. It considers two sources. 1) Database Size Allocated 2) IOPs. Whichever produces the highest storage size in TB will be used. Rounding it up."
@@ -867,7 +961,7 @@
                             "action": "ADD_OR_UPDATE_COLUMN",
                             "action_details": {"dataframe_name": "DBSIZING_FACTS","target_dataframe_name": "DBSIZING_FACTS","column_name": "BMSMEMORY_GB_DB", "store": "BIGQUERY"},
                             "status": "ENABLED",
-                            "tags": ["BMS_SIZING"], 
+                            "tags": ["BMS_SIZING"],
                             "expr1": "np.ceil((dataFrames[\"DBSIZING_FACTS\"][\"BUFFER_CACHE_MB\"]+dataFrames[\"DBSIZING_FACTS\"][\"SHARED_POOL_MB\"]+dataFrames[\"DBSIZING_FACTS\"][\"TOTAL_PGA_ALLOCATED_MB\"])/1024*1.2)",
                             "iferror": "None",
                             "description": "Creating new column DBSIZING_FACTS.BMSMEMORY_GB_DB to reflect DATABASE MEMORY ALLOCATED in Gigabytes PLUS 20% room for grownth. Rounding it up."
@@ -879,7 +973,7 @@
                             "action": "ADD_OR_UPDATE_COLUMN",
                             "action_details": {"dataframe_name": "DBSIZING_FACTS","target_dataframe_name": "DBSIZING_FACTS","column_name": "BMSMEMORY_GB_HOST", "store": "BIGQUERY"},
                             "status": "ENABLED",
-                            "tags": ["BMS_SIZING"], 
+                            "tags": ["BMS_SIZING"],
                             "expr1": "np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"PHYSICAL_MEMORY_BYTES_PERC95\"]/1024/1024/1024)",
                             "iferror": "None",
                             "description": "Transforming column DBSIZING_FACTS.PHYSICAL_MEMORY_BYTES_PERC95 from bytes to GigaBytes. Rounding it up."
@@ -891,8 +985,8 @@
                             "action": "CREATE_OR_REPLACE_DATAFRAME",
                             "action_details": {"dataframe_name": "DBSIZING_SUMMARY", "store": "BIGQUERY"},
                             "status": "ENABLED",
-                            "tags": ["BMS_SIZING"], 
-                            "expr1": "dataFrames[\"DBSIZING_FACTS\"].groupby([\"PKEY\",\"_DBID\",\"_INSTANCE_NUMBER\"])[\"PKEY\",\"_DBID\",\"DB_NAME\",\"DBFULLVERSION\",\"_INSTANCE_NUMBER\",\"BMSSTORAGE_TB_DB\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\",\"BMSMEMORY_GB_DB\",\"BMSMEMORY_GB_HOST\"].agg(\"max\")",                            
+                            "tags": ["BMS_SIZING"],
+                            "expr1": "dataFrames[\"DBSIZING_FACTS\"].groupby([\"PKEY\",\"_DBID\",\"_INSTANCE_NUMBER\"])[\"PKEY\",\"_DBID\",\"DB_NAME\",\"DBFULLVERSION\",\"_INSTANCE_NUMBER\",\"BMSSTORAGE_TB_DB\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\",\"BMSMEMORY_GB_DB\",\"BMSMEMORY_GB_HOST\"].agg(\"max\")",
                             "iferror": "None",
                             "description": "Creating dataframe. Getting the MAX CPU Cores Percentil 95% and Memory per environment per hour."
                         },
@@ -903,7 +997,7 @@
                             "action": "ADD_OR_UPDATE_COLUMN",
                             "action_details": {"dataframe_name": "DBSIZING_SUMMARY","target_dataframe_name": "DBSIZING_SUMMARY","column_name": "BMSCORES95_DB", "store": "BIGQUERY"},
                             "status": "ENABLED",
-                            "tags": ["BMS_SIZING"], 
+                            "tags": ["BMS_SIZING"],
                             "expr1": "np.ceil(dataFrames[\"DBSIZING_SUMMARY\"][\"BMSCORES95_DB\"])",
                             "iferror": "None",
                             "description": "Final BMS cores DATABASE sizing for Percentil 95%. Round up number. REMOVED 30% room for grownth on 08/19 per discussion with Ashok."
@@ -915,12 +1009,10 @@
                             "action": "ADD_OR_UPDATE_COLUMN",
                             "action_details": {"dataframe_name": "DBSIZING_SUMMARY","target_dataframe_name": "DBSIZING_SUMMARY","column_name": "BMSCORES95_HOST", "store": "BIGQUERY"},
                             "status": "ENABLED",
-                            "tags": ["BMS_SIZING"], 
+                            "tags": ["BMS_SIZING"],
                             "expr1": "np.ceil(dataFrames[\"DBSIZING_SUMMARY\"][\"BMSCORES95_HOST\"])",
                             "iferror": "None",
                             "description": "Final BMS cores HOST sizing for Percentil 95%. Round up number. REMOVED 30% room for grownth on 08/19 per discussion with Ashok."
                         }
             }
 }
-
-
