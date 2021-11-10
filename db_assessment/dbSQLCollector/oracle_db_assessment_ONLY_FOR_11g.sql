@@ -18,12 +18,12 @@ limitations under the License.
 
 /*
 
-Version: 2.0.0
-Date: 2021-08-19
+Version: 2.0.2
+Date: 2021-11-09
 
 */
 
-define version = '2.0.1'
+define version = '2.0.2'
 
 clear col comp brea
 set headsep off
@@ -1080,6 +1080,7 @@ WITH v_osstat_all
                      os.instance_number,
                      TO_CHAR(snap.begin_interval_time, 'hh24') hh24,
                      os.stat_name,
+                     os.value cumulative_value,
                      os.delta_value,
                      ( TO_NUMBER(CAST(end_interval_time AS DATE) - CAST(begin_interval_time AS DATE)) * 60 * 60 * 24 )
                         snap_total_secs,
@@ -1134,6 +1135,7 @@ SELECT '&&v_host'
        hh24,
        stat_name,
        SUM(snap_total_secs) hh24_total_secs,
+       AVG(cumulative_value) cumulative_value,
        AVG(delta_value)           avg_value,
        STATS_MODE(delta_value)    mode_value,
        MEDIAN(delta_value)        median_value,
@@ -1157,8 +1159,8 @@ GROUP  BY '&&v_host'
           hh24,
           stat_name)
 SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| hh24 ||' , '|| stat_name ||' , '|| hh24_total_secs ||' , '||
-       avg_value ||' , '|| mode_value ||' , '|| median_value ||' , '|| PERC50 ||' , '|| PERC75 ||' , '|| PERC90 ||' , '|| PERC95 ||' , '|| PERC100 ||' , '||
-	   min_value ||' , '|| max_value ||' , '|| sum_value ||' , '|| count
+       cumulative_value ||' , '|| avg_value ||' , '|| mode_value ||' , '|| median_value ||' , '|| PERC50 ||' , '|| PERC75 ||' , '|| PERC90 ||' , '|| PERC95 ||' , '|| PERC100 ||' , '||
+	     min_value ||' , '|| max_value ||' , '|| sum_value ||' , '|| count
 FROM vossummary;
 
 spool off
