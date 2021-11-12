@@ -180,7 +180,7 @@ def runMain(args):
 
         if args.fromdataframe:
 
-            sucessImported, tablesImported = import_db_assessment.importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchema,dbAssessmentDataframes)
+            sucessImported, tablesImported = import_db_assessment.importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchema,dbAssessmentDataframes,transformersParameters)
 
         else:
 
@@ -231,6 +231,8 @@ def argumentsParser():
 
     parser.add_argument("-fromdataframe", default=False, help="Import dataframes to Big Query instead of CSV files.", action="store_true")
     
+    parser.add_argument("-consolidatedataframes", default=False, help="Consolidate CSV files before importing.", action="store_true")
+
 
     # Consolidates different collection IDs found in the OS (dbResults/*log) into a single CSV per file type. 
     # For example: dbResults has 52 files. Meaning, 2 collection IDs (each one has 26 different file types). 

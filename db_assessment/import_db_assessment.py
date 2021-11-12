@@ -207,7 +207,7 @@ def getAllFilesByPattern(filePattern):
     # Get all matching files and creates a list returning it   
     return glob.glob(filePattern)
 
-def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchema,dbAssessmentDataframes):
+def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchema,dbAssessmentDataframes,transformersParameters):
 
     # Tracking tableNames Imported to Big Query
     tablesImported = {}
@@ -230,8 +230,14 @@ def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchem
 
             print ('\nThe dataframe {} is being imported to Big Query.'.format(tableName))
 
+            if str(tableName).lower() in transformersParameters["do_not_import"]:
+
+                print ('Table name {} is being SKPIPED accordingly with transformers.json do_not_import parameter')
+
+                continue
+
             # Import the given CSV fileName into 
-            sucessImport = importDataframeToBQ(gcpProjectName,bqDataset,str(tableName).lower(),tableSchemas,dbAssessmentDataframes[tableName])
+            sucessImport = importDataframeToBQ(gcpProjectName,bqDataset,str(tableName).lower(),tableSchemas,dbAssessmentDataframes[tableName],transformersParameters)
 
             if sucessImport:
                 tablesImported[str(tableName).lower()] = "IMPORTED_FROM_DATAFRAME"
@@ -243,10 +249,15 @@ def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchem
         return False, tablesImported
 
 
-def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df):
+def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,transformersParameters):
 
     # Getting table schema
     try:
+
+        # in case there is nothing to be imported
+        if str(tableName).lower() in transformersParameters["do_not_import"]:
+
+            return True
 
         # Creating Hash Table with all expected table schemas to be imported
         tableSchemas = {}
@@ -269,7 +280,7 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df):
         df.columns = dfNewColumns
 
         # Always AUTO because we never know the column order in which the dataframe will be
-        transformersTablesSchemaDataframe = rules_engine.processSchemaDetection('AUTO',transformersTablesSchemaDataframe, None, str(tableName).lower(), df)
+        transformersTablesSchemaDataframe = rules_engine.processSchemaDetection('FILLGAP',transformersTablesSchemaDataframe, None, str(tableName).lower(), df)
         
         tableSchemas = getBQJobConfig(transformersTablesSchemaDataframe,'DATAFRAME')
 
