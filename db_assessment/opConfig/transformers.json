@@ -515,7 +515,7 @@
                                                 },
                                         "111,112":
                                                 {
-                                                    "dbsummary": [["pkey","STRING"],["dbid","STRING"],["db_name","STRING"],["cdb","STRING"],["dbversion","STRING"],["dbfullversion","STRING"],["log_mode","STRING"],["force_logging","STRING"],["redo_gb_per_day","STRING"],["rac_dbinstaces","STRING"],["characterset","STRING"],["platform_name","STRING"],["startup_time","STRING"],["user_schemas","STRING"],["buffer_cache_mb","STRING"],["shared_pool_mb","STRING"],["total_pga_allocated_mb","STRING"],["db_size_allocated_gb","STRING"],["db_size_in_use_gb","STRING"],["db_long_size_gb","STRING"],["dg_database_role","STRING"],["dg_protection_mode","STRING"],["dg_protection_level","STRING"]],
+                                                    "dbsummary": [["pkey","STRING"],["dbid","STRING"],["db_name","STRING"],["dbversion","STRING"],["dbfullversion","STRING"],["log_mode","STRING"],["force_logging","STRING"],["redo_gb_per_day","STRING"],["rac_dbinstaces","STRING"],["characterset","STRING"],["platform_name","STRING"],["startup_time","STRING"],["user_schemas","STRING"],["buffer_cache_mb","STRING"],["shared_pool_mb","STRING"],["total_pga_allocated_mb","STRING"],["db_size_allocated_gb","STRING"],["db_size_in_use_gb","STRING"],["db_long_size_gb","STRING"],["dg_database_role","STRING"],["dg_protection_mode","STRING"],["dg_protection_level","STRING"]],
                                                     "dboverview": [["pkey","STRING"],["metric","STRING"],["value","STRING"]],
                                                     "pdbsinfo": [["pkey","STRING"],["dbid","STRING"],["pdb_id","STRING"],["pdb_name","STRING"],["status","STRING"],["logging","STRING"]],
                                                     "pdbsopenmode": [["pkey","STRING"],["name","STRING"],["open_mode","STRING"],["total_gb","STRING"]],
@@ -587,7 +587,7 @@
                                 "type": "VARIABLE",
                                 "priority": 0,
                                 "action": "CREATE",
-                                "action_details": {"varname": "AWRHISTOSSTAT","value": "{\"from_to_rows_to_columns\": {\"LOAD\": \"LOAD\", \"NUM_CPUS\": \"NUM_CPUS\", \"SYS_TIME\": \"SYS_TIME\", \"BUSY_TIME\": \"BUSY_TIME\", \"IDLE_TIME\": \"IDLE_TIME\", \"NICE_TIME\": \"NICE_TIME\", \"USER_TIME\": \"USER_TIME\", \"IOWAIT_TIME\": \"IOWAIT_TIME\", \"VM_IN_BYTES\": \"VM_IN_BYTES\", \"VM_OUT_BYTES\": \"VM_OUT_BYTES\", \"NUM_CPU_CORES\": \"NUM_CPU_CORES\", \"NUM_CPU_SOCKETS\": \"NUM_CPU_SOCKETS\", \"SWAP_FREE_BYTES\": \"SWAP_FREE_BYTES\", \"FREE_MEMORY_BYTES\": \"FREE_MEMORY_BYTES\", \"PHYSICAL_MEMORY_BYTES\": \"PHYSICAL_MEMORY_BYTES\", \"RSRC_MGR_CPU_WAIT_TIME\": \"RSRC_MGR_CPU_WAIT_TIME\", \"INACTIVE_MEMORY_BYTES\": \"INACTIVE_MEMORY_BYTES\"}, \"TARGET_COLUMN\": \"STAT_NAME\", \"TARGET_STATS_COLUMNS\": [\"PERC90\",\"PERC95\"], \"INDEX_COLUMNS\": [\"PKEY\", \"DBID\",\"INSTANCE_NUMBER\",\"HOUR\"], \"store\": \"BIGQUERY\", \"filterrows\": \"YES\"}", "datatype": "DICTIONARY"},
+                                "action_details": {"varname": "AWRHISTOSSTAT","value": "{\"from_to_rows_to_columns\": {\"LOAD\": \"LOAD\", \"NUM_CPUS\": \"NUM_CPUS\", \"SYS_TIME\": \"SYS_TIME\", \"BUSY_TIME\": \"BUSY_TIME\", \"IDLE_TIME\": \"IDLE_TIME\", \"NICE_TIME\": \"NICE_TIME\", \"USER_TIME\": \"USER_TIME\", \"IOWAIT_TIME\": \"IOWAIT_TIME\", \"VM_IN_BYTES\": \"VM_IN_BYTES\", \"VM_OUT_BYTES\": \"VM_OUT_BYTES\", \"NUM_CPU_CORES\": \"NUM_CPU_CORES\", \"NUM_CPU_SOCKETS\": \"NUM_CPU_SOCKETS\", \"SWAP_FREE_BYTES\": \"SWAP_FREE_BYTES\", \"FREE_MEMORY_BYTES\": \"FREE_MEMORY_BYTES\", \"PHYSICAL_MEMORY_BYTES\": \"PHYSICAL_MEMORY_BYTES\", \"RSRC_MGR_CPU_WAIT_TIME\": \"RSRC_MGR_CPU_WAIT_TIME\", \"INACTIVE_MEMORY_BYTES\": \"INACTIVE_MEMORY_BYTES\"}, \"TARGET_COLUMN\": \"STAT_NAME\", \"TARGET_STATS_COLUMNS\": [\"CUMULATIVE_VALUE\",\"PERC90\",\"PERC95\"], \"INDEX_COLUMNS\": [\"PKEY\", \"DBID\",\"INSTANCE_NUMBER\",\"HOUR\"], \"store\": \"BIGQUERY\", \"filterrows\": \"YES\"}", "datatype": "DICTIONARY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE","AWRHISTOSSTAT"],
                                 "expr1": "",
@@ -867,7 +867,7 @@
                             "action_details": {"dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS","target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS","column_name": "CPUDB95_CORES", "store": "BIGQUERY"},
                             "status": "ENABLED",
                             "tags": ["BMS_SIZING"],
-                            "expr1": "(dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"NUM_CPU_CORES_PERC95\"];/;100);*;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPUDB95_PERC\"]",
+                            "expr1": "(dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"NUM_CPU_CORES_CUMULATIVE_VALUE\"];/;100);*;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPUDB95_PERC\"]",
                             "iferror": "None",
                             "description": "This rule adds a new column calculating the database cpu consumption using (num_cpu_cores_perc95 / 100) / * cpudb95_perc."
                         },
@@ -879,7 +879,7 @@
                             "action_details": {"dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS","target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS","column_name": "CPUHOST95_CORES", "store": "BIGQUERY"},
                             "status": "ENABLED",
                             "tags": ["BMS_SIZING"],
-                            "expr1": "(dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"NUM_CPU_CORES_PERC95\"];/;100);*;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"HOST_CPU_UTILIZATION\"]",
+                            "expr1": "(dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"NUM_CPU_CORES_CUMULATIVE_VALUE\"];/;100);*;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"HOST_CPU_UTILIZATION\"]",
                             "iferror": "None",
                             "description": "This rule adds a new column calculating the database cpu consumption using (num_cpu_cores_perc95 / 100) / * host_cpu_utilization."
                         },
@@ -927,9 +927,57 @@
                             "action_details": {"dataframe_name": "DBSIZING_FACTS", "store": "BIGQUERY"},
                             "status": "ENABLED",
                             "tags": ["BMS_SIZING"],
-                            "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"FREE_MEMORY_BYTES_PERC95\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"NUM_CPU_SOCKETS_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
-                            "iferror": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"NUM_CPU_SOCKETS_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
+                            "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"FREE_MEMORY_BYTES_PERC95\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\",\"NUM_CPUS_CUMULATIVE_VALUE\",\"NUM_CPU_CORES_CUMULATIVE_VALUE\",\"NUM_CPU_SOCKETS_CUMULATIVE_VALUE\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"NUM_CPU_SOCKETS_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
+                            "iferror": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\",\"NUM_CPUS_CUMULATIVE_VALUE\",\"NUM_CPU_CORES_CUMULATIVE_VALUE\",\"NUM_CPU_SOCKETS_CUMULATIVE_VALUE\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"NUM_CPU_SOCKETS_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
                             "description": "This rule creates a new dataframe out of a selected list of columns from AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS dataframe."
+                        },
+                "bms_sizing-rule09a":
+                        {
+                            "type": "FREESTYLE",
+                            "priority": 350,
+                            "action": "ADD_OR_UPDATE_COLUMN",
+                            "action_details": {"dataframe_name": "DBSIZING_FACTS","target_dataframe_name": "DBSIZING_FACTS","column_name": "NUM_CPUS_PERC95", "store": "BIGQUERY"},
+                            "status": "ENABLED",
+                            "tags": ["BMS_SIZING"],
+                            "expr1": "(;dataFrames[\"DBSIZING_FACTS\"][\"NUM_CPUS_CUMULATIVE_VALUE\"])",
+                            "iferror": "0",
+                            "description": "This rule creates updates the value of NUM_CPUS_PERC95 to NUM_CPUS_CUMULATIVE_VALUE because NUM_CPUS_PERC95 is delta value therefore always 0."
+                        },
+                "bms_sizing-rule09b":
+                        {
+                            "type": "FREESTYLE",
+                            "priority": 350,
+                            "action": "ADD_OR_UPDATE_COLUMN",
+                            "action_details": {"dataframe_name": "DBSIZING_FACTS","target_dataframe_name": "DBSIZING_FACTS","column_name": "NUM_CPU_CORES_PERC95", "store": "BIGQUERY"},
+                            "status": "ENABLED",
+                            "tags": ["BMS_SIZING"],
+                            "expr1": "(;dataFrames[\"DBSIZING_FACTS\"][\"NUM_CPU_CORES_CUMULATIVE_VALUE\"])",
+                            "iferror": "0",
+                            "description": "This rule creates updates the value of NUM_CPU_CORES_PERC95 to NUM_CPU_CORES_CUMULATIVE_VALUE because NUM_CPU_CORES_PERC95 is delta value therefore always 0."
+                        },
+                "bms_sizing-rule09c":
+                        {
+                            "type": "FREESTYLE",
+                            "priority": 350,
+                            "action": "ADD_OR_UPDATE_COLUMN",
+                            "action_details": {"dataframe_name": "DBSIZING_FACTS","target_dataframe_name": "DBSIZING_FACTS","column_name": "NUM_CPU_SOCKETS_PERC95", "store": "BIGQUERY"},
+                            "status": "ENABLED",
+                            "tags": ["BMS_SIZING"],
+                            "expr1": "(;dataFrames[\"DBSIZING_FACTS\"][\"NUM_CPU_SOCKETS_CUMULATIVE_VALUE\"])",
+                            "iferror": "0",
+                            "description": "This rule creates updates the value of NUM_CPU_SOCKETS_PERC95 to NUM_CPU_SOCKETS_CUMULATIVE_VALUE because NUM_CPU_SOCKETS_PERC95 is delta value therefore always 0."
+                        },
+                "bms_sizing-rule09d":
+                        {
+                            "type": "FREESTYLE",
+                            "priority": 350,
+                            "action": "ADD_OR_UPDATE_COLUMN",
+                            "action_details": {"dataframe_name": "DBSIZING_FACTS","target_dataframe_name": "DBSIZING_FACTS","column_name": "PHYSICAL_MEMORY_BYTES_PERC95", "store": "BIGQUERY"},
+                            "status": "ENABLED",
+                            "tags": ["BMS_SIZING"],
+                            "expr1": "(;dataFrames[\"DBSIZING_FACTS\"][\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\"])",
+                            "iferror": "0",
+                            "description": "This rule creates updates the value of PHYSICAL_MEMORY_BYTES_PERC95 to PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE because NUM_CPU_CORES_PERC95 is delta value therefore always 0."
                         },
                 "bms_sizing-rule10":
                         {
