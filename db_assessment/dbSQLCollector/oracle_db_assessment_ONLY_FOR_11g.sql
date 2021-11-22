@@ -18,12 +18,12 @@ limitations under the License.
 
 /*
 
-Version: 2.0.2
-Date: 2021-11-09
+Version: 2.0.3
+Date: 2021-11-18
 
 */
 
-define version = '2.0.2'
+define version = '2.0.3'
 
 clear col comp brea
 set headsep off
@@ -196,7 +196,7 @@ SELECT '&&v_host'
        (SELECT protection_level
         FROM   v$database)                                                      AS dg_protection_level
 FROM   dual)
-SELECT pkey ||' , '|| dbid ||' , '|| db_name ||' , '|| dbversion ||' , '|| dbfullversion ||' , '|| log_mode ||' , '|| force_logging ||' , '||
+SELECT pkey ||' , '|| dbid ||' , '|| db_name ||' , '|| 'N/A' ||' , '|| dbversion ||' , '|| dbfullversion ||' , '|| log_mode ||' , '|| force_logging ||' , '||
        redo_gb_per_day ||' , '|| rac_dbinstaces ||' , '|| characterset ||' , '|| platform_name ||' , '|| startup_time ||' , '|| user_schemas ||' , '||
 	   buffer_cache_mb ||' , '|| shared_pool_mb ||' , '|| total_pga_allocated_mb ||' , '|| db_size_allocated_gb ||' , '|| db_size_in_use_gb ||' , '||
 	   db_long_size_gb ||' , '|| dg_database_role ||' , '|| dg_protection_mode ||' , '|| dg_protection_level
@@ -251,8 +251,8 @@ WITH vused AS (
                             WHERE  action=0)
         GROUP  BY grouping sets( ( ), ( owner ), ( segment_type ),
                     ( tablespace_name ), ( flash_cache ), ( owner, flash_cache ) ))
-SELECT pkey ||' , '|| owner ||' , '|| segment_type ||' , '|| tablespace_name ||' , '|| flash_cache ||' , '||
-       IN_OWNER ||' , '|| IN_SEGMENT_TYPE ||' , '|| IN_TABLESPACE_NAME ||' , '|| IN_FLASH_CACHE ||' , '|| GB
+SELECT pkey ||' , '|| 'N/A' ||' , '|| owner ||' , '|| segment_type ||' , '|| tablespace_name ||' , '|| flash_cache ||' , '||
+       'N/A' ||' , '|| 'N/A' ||' , '|| IN_OWNER ||' , '|| IN_SEGMENT_TYPE ||' , '|| IN_TABLESPACE_NAME ||' , '|| IN_FLASH_CACHE ||' , '|| GB
 FROM vused;
 
 spool off
@@ -335,7 +335,7 @@ WITH vtbcompress AS (
         GROUP  BY owner
         HAVING TRUNC(SUM(table_gbytes) + SUM(partition_gbytes)
                      + SUM(subpartition_gbytes)) > 0)
-SELECT pkey ||' , '|| owner ||' , '|| tab ||' , '|| table_gb ||' , '|| part ||' , '|| part_gb ||' , '||
+SELECT pkey ||' , '|| 'N/A' ||' , '|| owner ||' , '|| tab ||' , '|| table_gb ||' , '|| part ||' , '|| part_gb ||' , '||
        subpart ||' , '|| subpart_gb ||' , '|| total_gbytes
 FROM vtbcompress
 ORDER  BY total_gbytes DESC;
@@ -417,7 +417,7 @@ WITH vcompresstype AS (
                           t.compress_for)
         GROUP  BY owner
         HAVING TRUNC(SUM(gbytes)) > 0)
-SELECT pkey ||' , '|| owner ||' , '|| basic ||' , '|| oltp ||' , '|| query_low ||' , '|| query_high ||' , '||
+SELECT pkey ||' , '|| 'N/A' ||' , '|| owner ||' , '|| basic ||' , '|| oltp ||' , '|| query_low ||' , '|| query_high ||' , '||
        archive_low ||' , '|| archive_high ||' , '|| total_gb
 FROM vcompresstype
 ORDER BY total_gb DESC;
@@ -464,7 +464,7 @@ WITH vspaceow AS (
                                          'LOBINDEX', 'LOB',
                                          'OTHERS')
         HAVING TRUNC(SUM(a.bytes) / 1024 / 1024 / 1024) >= 1)
-SELECT pkey,owner,segment_type,total_gb
+SELECT pkey ||' , '|| 'N/A' ||' , '|| owner ||' , '|| segment_type ||' , '|| total_gb
 FROM vspaceow
 ORDER  BY total_gb DESC;
 
@@ -610,7 +610,7 @@ WITH vfreespace AS (
                ||']'
         FROM   v$temp_space_header sh
         GROUP  BY tablespace_name)
-SELECT pkey ||' , ' || tablespace_name ||' , '|| status ||' , '|| total_gb ||' , '||
+SELECT pkey ||' , '|| 'N/A' ||' , ' || tablespace_name ||' , '|| status ||' , '|| total_gb ||' , '||
        used_gb ||' , '|| free_gb ||' , '|| pct_used ||' , '|| GRAPH
 FROM vfreespace
 ORDER  BY graph;
@@ -635,7 +635,7 @@ WHERE  owner NOT IN
                      SELECT name
                      FROM   SYSTEM.logstdby$skip_support
                      WHERE  action=0))
-SELECT pkey ||' , '|| owner ||' , '|| db_link ||' , '|| host ||' , '|| created
+SELECT pkey ||' , '|| 'N/A' ||' , '|| owner ||' , '|| db_link ||' , '|| host ||' , '|| created
 FROM vdbl;
 
 spool off
@@ -654,7 +654,7 @@ SELECT '&&v_host'
        isdefault
 FROM   gv$parameter
 ORDER  BY 2)
-SELECT pkey ||' , '|| inst_id ||' , '|| name ||' , '|| value ||' , '|| isdefault
+SELECT pkey ||' , '|| inst_id ||' , '|| 'N/A' ||' , '|| name ||' , '|| value ||' , '|| 'N/A' ||' , '|| isdefault
 FROM vparam;
 
 spool off
@@ -676,7 +676,7 @@ SELECT '&&v_host'
        aux_count
 FROM   dba_feature_usage_statistics
 ORDER  BY name)
-SELECT pkey ||' , '|| name ||' , '|| currently_used ||' , '|| detected_usages ||' , '||
+SELECT pkey ||' , '|| 'N/A' ||' , '|| name ||' , '|| currently_used ||' , '|| detected_usages ||' , '||
        total_samples ||' , '|| first_usage ||' , '|| last_usage ||' , '|| aux_count
 FROM vdbf;
 
@@ -740,7 +740,8 @@ WITH vdbobj AS (
                             WHERE  action=0)
         GROUP  BY grouping sets ( ( object_type ),
 		                          ( owner, object_type ) ))
-SELECT pkey ||' , '|| owner ||' , '|| object_type ||' , '|| count ||' , '|| in_owner ||' , '|| in_object_type
+SELECT pkey ||' , '|| 'N/A' ||' , '|| owner ||' , '|| object_type ||' , '|| 'N/A' ||' , '||
+       count ||' , '|| 'N/A' ||' , '|| in_owner ||' , '|| in_object_type ||' , '|| 'N/A'
 FROM vdbobj;
 
 spool off
@@ -802,7 +803,7 @@ FROM   (SELECT '&&v_host'
 GROUP  BY pkey,
           owner,
           TYPE)
-SELECT pkey ||' , '|| owner ||' , '|| type ||' , '|| sum_nr_lines ||' , '|| qt_objs ||' , '|| sum_nr_lines_w_utl ||' , '||
+SELECT pkey ||' , '|| 'N/A' ||' , '|| owner ||' , '|| type ||' , '|| sum_nr_lines ||' , '|| qt_objs ||' , '|| sum_nr_lines_w_utl ||' , '||
        sum_nr_lines_w_dbms ||' , '|| count_exec_im ||' , '|| count_dbms_sql ||' , '|| sum_nr_lines_w_dbms_utl ||' , '|| sum_count_total
 FROM vsrc;
 
@@ -834,7 +835,7 @@ GROUP  BY '&&v_host'
           owner,
           partitioning_type,
           subpartitioning_type)
-SELECT pkey ||' , '|| owner ||' , '|| partitioning_type ||' , '|| subpartitioning_type ||' , '|| cnt
+SELECT pkey ||' , '|| 'N/A' ||' , '|| owner ||' , '|| partitioning_type ||' , '|| subpartitioning_type ||' , '|| cnt
 FROM vpart;
 
 spool off
@@ -863,7 +864,7 @@ GROUP  BY '&&v_host'
           || '&&v_hora',
           owner,
           index_type)
-SELECT pkey ||' , '|| owner ||' , '|| index_type ||' , '|| cnt
+SELECT pkey ||' , '|| 'N/A'  ||' , '|| owner ||' , '|| index_type ||' , '|| cnt
 FROM vidxtype;
 
 spool off
@@ -892,7 +893,7 @@ GROUP  BY '&&v_host'
           || '&&v_hora',
           owner,
           data_type)
-SELECT pkey ||' , '|| owner ||' , '|| data_type ||' , '|| cnt
+SELECT pkey ||' , '|| 'N/A' ||' , '|| owner ||' , '|| data_type ||' , '|| cnt
 FROM vdtype;
 
 spool off
@@ -946,7 +947,7 @@ GROUP  BY '&&v_host'
           || '_'
           || '&&v_hora',
           owner)
-SELECT pkey ||' , '|| owner ||' , '|| pk ||' , '|| uk ||' , '|| ck ||' , '||
+SELECT pkey ||' , '|| 'N/A' ||' , '|| owner ||' , '|| pk ||' , '|| uk ||' , '|| ck ||' , '||
        ri ||' , '|| vwck ||' , '|| vwro ||' , '|| hashexpr ||' , '|| suplog ||' , '|| num_tables ||' , '|| total_cons
 FROM vnopk;
 
@@ -986,7 +987,7 @@ SELECT '&&v_host'
        comments
 FROM   sys.registry$history
 ORDER  BY action_time)
-SELECT pkey ||' , '|| time ||' , '|| action ||' , '|| namespace ||' , '|| version ||' , '|| id ||' , '|| comments
+SELECT pkey ||' , '|| '11g' ||' , '|| time ||' , '|| action ||' , '|| namespace ||' , '|| version ||' , '|| id ||' , '|| comments
 FROM vpatch;
 
 spool off
@@ -1010,7 +1011,7 @@ WITH valert AS (
                SUBSTR(a.message_id, 0, 30)                                             message_id,
                a.message_group
         FROM   v$diag_alert_ext A)
-SELECT pkey ||' , '|| MESSAGE_TIME ||' , '|| message_text ||' , '|| host_id ||' , '|| component_id ||' , '||
+SELECT pkey ||' , '|| MESSAGE_TIME ||' , '|| message_text ||' , '|| host_id ||' , '|| 'N/A' ||' , '|| component_id ||' , '||
        message_type ||' , '|| message_level ||' , '|| message_id ||' , '|| message_group
 FROM valert
 WHERE  ROWNUM < 5001;
@@ -1199,7 +1200,7 @@ GROUP  BY '&&v_host'
           || '&&v_hora',
           TO_CHAR(c.begin_interval_time, 'hh24'),
           b.command_type)
-SELECT pkey ||' , '|| hh24 ||' , '|| command_type ||' , '|| cnt ||' , '|| avg_buffer_gets ||' , '|| avg_elasped_time ||' , '||
+SELECT pkey ||' , '|| 'N/A' ||' , '|| hh24 ||' , '|| command_type ||' , '|| cnt ||' , '|| avg_buffer_gets ||' , '|| avg_elasped_time ||' , '||
        avg_rows_processed ||' , '|| avg_executions ||' , '|| avg_cpu_time ||' , '|| avg_iowait ||' , '|| avg_clwait ||' , '||
 	   avg_apwait ||' , '|| avg_ccwait ||' , '|| avg_plsexec_time
 FROM vcmdtype;
@@ -1363,7 +1364,7 @@ SELECT '&&v_host'
        goal
 FROM dba_services
 ORDER BY NAME)
-SELECT pkey ||' , '|| service_id ||' , '|| service_name ||' , '|| network_name ||' , '|| creation_date ||' , '||
+SELECT pkey ||' , '|| 'N/A' ||' , '|| 'N/A' ||' , '|| service_id ||' , '|| service_name ||' , '|| network_name ||' , '|| creation_date ||' , '||
        failover_method ||' , '|| failover_type ||' , '|| failover_retries ||' , '|| failover_delay ||' , '|| goal
 FROM vservices;
 
@@ -1387,7 +1388,7 @@ AND owner NOT IN
 (SELECT name
  FROM system.logstdby$skip_support
  WHERE action=0))
- SELECT pkey ||' , '|| owner ||' , '|| segment_name ||' , '|| segment_type ||' , '|| tablespace_name
+ SELECT pkey ||' , '|| 'N/A' ||' , '|| owner ||' , '|| segment_name ||' , '|| segment_type ||' , '|| tablespace_name
 FROM vuseg;
 
 spool off

@@ -18,12 +18,12 @@ limitations under the License.
 
 /*
 
-Version: 2.0.2
-Date: 2021-11-09
+Version: 2.0.3
+Date: 2021-11-18
 
 */
 
-define version = '2.0.2'
+define version = '2.0.3'
 
 clear col comp brea
 set headsep off
@@ -663,9 +663,9 @@ WITH vfreespace AS (
                 GROUP  BY con_id,
                           tablespace_name) free,
                cdb_tablespaces dbat
-        WHERE  total.ts = free.ts(+)
+        WHERE  total.ts = free.ts (+)
                AND total.ts = dbat.tablespace_name
-               AND total.con_id = free.con_id
+               AND total.con_id = free.con_id (+)
                AND total.con_id = dbat.con_id
         UNION ALL
         SELECT '&&v_host'
@@ -1087,7 +1087,7 @@ SELECT '&&v_host'
        patch_id
 FROM   sys.dba_registry_sqlpatch
 ORDER by action_time)
-SELECT pkey ||' , '|| action_time ||' , '|| action ||' , '|| status ||' , '|| description ||' , '|| patch_id
+SELECT pkey ||' , '|| '12c+' ||' , '|| action_time ||' , '|| action ||' , '|| status ||' , '|| description ||' , '|| patch_id ||' , '|| 'N/A'
 FROM vpatch;
 
 spool off
