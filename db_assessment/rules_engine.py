@@ -238,17 +238,20 @@ def getDataFrameFromCSV(csvFileName,tableName,skipRows,separatorString,transform
 
                     tableHeaders = getDFHeadersFromTransformers(tableName,transformersTablesSchema)
                     tableHeaders = [header.upper() for header in tableHeaders]
-                    df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders)
+                    #df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders, keep_default_na=False, na_filter= False)
+                    df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders, na_values='n/a', keep_default_na=True, skipinitialspace = True)
 
                 except Exception as dataframeHeaderErr:
                     
                     print ('\nThe filename {} for the table {} could not be imported using the column names {}.\n'.format(csvFileName,tableName,tableHeaders))
                     paramCleanDFHeaders = True
-                    df = pd.read_csv(csvFileName, skiprows=skipRows)
+                    #df = pd.read_csv(csvFileName, skiprows=skipRows, keep_default_na=False, na_filter= False)
+                    df = pd.read_csv(csvFileName, skiprows=skipRows, na_values='n/a', keep_default_na=True, skipinitialspace = True)
 
             else:
             
-                df = pd.read_csv(csvFileName, skiprows=skipRows)
+                #df = pd.read_csv(csvFileName, skiprows=skipRows, keep_default_na=False, na_filter= False)
+                df = pd.read_csv(csvFileName, skiprows=skipRows, na_values='n/a', keep_default_na=True, skipinitialspace = True)
 
         # Removing index from dataframe
         df.reset_index(drop=True, inplace=True)
@@ -301,11 +304,21 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
         # Final table name from the CSV file names
         tableName = import_db_assessment.getObjNameFromFiles(fileName,'__',1)
 
-        print ('\n Processing {} into a dataframe'.format(fileName))
+        if str(tableName).lower() in transformersParameters["do_not_import"]:
+
+            print ('\n This table name {} for filename {} is being SKIPPED due to do_not_import parameter in transformers.json configuration file'.format(tableName,fileName))
+
+            continue
+
+        print ('\n Processing {} into a dataframe {}'.format(fileName,tableName))
+
+        if str(tableName).upper() == 'DBSUMMARY' and '110421164538' in fileName:
+            print ('')
 
         # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
         df = getDataFrameFromCSV(fileName,tableName,skipRows,separatorString,transformersTablesSchema)
         
+
         # Checking if no error was found during loading CSV from OS
         if df is not False:
             
@@ -316,8 +329,7 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
                     # Trimming the data before storing it
                     dataFrames[str(tableName).upper()] = trimDataframe(df_concat)
                     print (' Concatenated into an existing dataframe for table name {}'.format(tableName))
-                    #if str(tableName).upper() != 'ALERTLOG':
-                    #    print('')
+
                 except:
                     # Trimming the data before storing it
                     dataFrames[str(tableName).upper()] = trimDataframe(df)
@@ -461,7 +473,7 @@ def getAllReShapedDataframes(dataFrames, transformersTablesSchema, transformersP
 
                 else:
 
-                    print ('\nThere is not parameter set to define the reshape process for: {}'.format(str(tableName)))
+                    print ('\nThere is no parameter set to define the reshape process for: {}'.format(str(tableName)))
                     print ('This is all valid reshape configurations found: {}\n'.format(str(transformersParameters.keys())))
 
             else:

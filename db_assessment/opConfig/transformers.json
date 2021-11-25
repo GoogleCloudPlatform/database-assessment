@@ -856,7 +856,7 @@
                             "status": "ENABLED",
                             "tags": ["BMS_SIZING"],
                             "expr1": "(;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPU_PER_SEC_PERC95\"];+;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"BKGRCPU_PER_SEC_PERC95\"];);/;(;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"HOST_CPU_PER_SEC_PERC95\"];/;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"HOST_CPU_UTILIZATION\"];)",
-                            "iferror": "None",
+                            "iferror": "999",
                             "description": "This rule adds a new column calculating the database cpu consumption using (cpu_usage_per_sec_perc95 + bkgr_cpu_usage_per_sec_perc95) / (host_cpu_per_sec_perc95 / host_cpu_utilization). First () adds up all CPU consumed in secs in the db. Second () calculates how many secs is 1%. Then, we divide first part by second part."
                         },
                 "bms_sizing-rule04":
