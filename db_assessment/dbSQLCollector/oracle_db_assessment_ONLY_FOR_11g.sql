@@ -117,6 +117,16 @@ FROM vawrsnap;
 
 spool off
 
+spool opdb__optimusprime_log__&v_tag
+
+with vop as ()
+select '&&v_tag' pkey, '&&version' opscriptversion, '&&v_dbversion' dbversion, '&&v_host' hostname,
+'&&v_dbname' dbname, '&&v_inst' instance_number, '&&v_hora' collection_time
+from dual)
+select pkey ||' , '|| opscriptversion ||' , '|| dbversion ||' , '|| hostname
+       ||' , '|| dbname ||' , '|| instance_number ||' , '|| collection_time
+from vop;
+
 spool opdb__dbsummary__&v_tag
 
 WITH vdbsummary AS (
