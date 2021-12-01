@@ -42,18 +42,15 @@ Please enter the DB Local Username(Or CDB Username) to receive all required gran
 
 ```
 
-3. Execute the SQL script called `oracle_db_assessment_12c_AND_ABOVE.sql` for Oracle Database Version 12c and above OR `oracle_db_assessment_ONLY_FOR_11g.sql` for Oracle Database Version 11g.
-	* Use SQLPLUS to execute the script
+3. Execute /home/oracle/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh to start collecting the data.
 	* Execute this from a system that can access your database via sqlplus
+	* Pass connect string as input to this script (see below for example)
 	* NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
 
 ```
 mkdir -p /<work-directory>/oracle-database-assessment-output
 cd /<work-directory>/oracle-database-assessment-output
-
-sqlplus optimusprime/mysecretPa33w0rd@//<serverhost>/<servicename>
-
-SQL> @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/oracle_db_assessment_12c_AND_ABOVE.sql
+/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh optimusprime/mysecretPa33w0rd@//<serverhost>/<servicename>
 
 ```
 
