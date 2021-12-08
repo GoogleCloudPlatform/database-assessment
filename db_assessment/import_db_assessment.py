@@ -21,6 +21,9 @@ import sys
 # Manages command line flags and arguments
 import argparse
 
+# Regular expression
+import re
+
 # Big Query Library Used to Import CSV files
 from google.cloud import bigquery
 from google.api_core.exceptions import Conflict
@@ -140,7 +143,45 @@ def consolidateLos(args, transformersTablesSchema):
 
     return True
 
-def createOptimusPrimeViews(gcpProjectName,bqDataset):
+
+def createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_query):
+# This function intents to create all views found in the opViews directory. The views creation must follow opConfig/transformers.json
+
+    client = bigquery.Client(client_info=set_client_info.get_http_client_info())
+
+    if gcpProjectName is None:
+        # In case projectname is not provided in the arguments
+        view_id = str(client.project) + '.' + str(bqDataset) + '.' + view_name
+        gcpProjectName = str(client.project)
+    else:
+        # If projectname is provided in the arguments
+        view_id = str(gcpProjectName) + '.' + str(bqDataset) + '.' + view_name
+    
+    # Creating the JOB to create view in Big Query
+    view = bigquery.Table(view_id)
+
+    # Extracting the view text and replacing the string ${dataset}/${projectname} by the proper dataset independent of case sensitive
+    pattern = re.compile(re.escape('${dataset}'), re.IGNORECASE)
+    view_query = pattern.sub(str(bqDataset), view_query)
+    pattern = re.compile(re.escape('${projectname}'), re.IGNORECASE)
+    view_query = pattern.sub(str(gcpProjectName), view_query)
+    #source_id = 'optimusprime-migrations.consolidate_test.dbsummary'
+    #view_query = f"SELECT pkey, dbid FROM `{source_id}`"
+
+    view.view_query = view_query
+
+    try:
+        # Make an API request to create the view.
+        view = client.create_table(view)
+        print("Created {}: {}".format(view.table_type,str(view.reference)))
+        print("\n")
+    except Conflict as error:
+        print("View {} already exists.\n".format(str(view.reference)))
+        return False
+
+    return True
+
+def createOptimusPrimeViewsFromOS(gcpProjectName,bqDataset):
 # This function intents to create all views found in the opViews directory. The views creation must follow opViews/<filename> order
 
     print ('\nPreparing to create Optimus Prime SQL Views\n')
