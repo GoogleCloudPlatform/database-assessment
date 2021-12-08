@@ -184,7 +184,7 @@ def createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_
 def createOptimusPrimeViewsFromOS(gcpProjectName,bqDataset):
 # This function intents to create all views found in the opViews directory. The views creation must follow opViews/<filename> order
 
-    print ('\nPreparing to create Optimus Prime SQL Views\n')
+    #print ('\nPreparing to create Optimus Prime SQL Views\n')
     
     # store all files found in the OS
     fileList = []
@@ -196,7 +196,7 @@ def createOptimusPrimeViewsFromOS(gcpProjectName,bqDataset):
     fileList = getAllFilesByPattern(filePattern)
     
     if len(fileList) == 0:
-        print('\nWARNING: No views found to be created at expected location: {}. Please make sure you the location is correct.'.format(filePattern))
+        #print('\nWARNING: No views found to be created at expected location: {}. Please make sure you the location is correct.'.format(filePattern))
         # Returns False if cannot create views    
         return False
     
