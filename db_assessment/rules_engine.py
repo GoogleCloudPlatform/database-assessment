@@ -193,6 +193,7 @@ def runRules(executionGroup,transformerRules, dataFrames, singleRule, args, coll
 
                                 view_name = transformerRules[ruleItem]['action_details']['target_object_name']
                                 view_sql_query = transformerRules[ruleItem]['action_details']['expr1']
+                                view_sql_query = ''.join(view_sql_query)
 
 
                                 import_db_assessment.createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_sql_query)

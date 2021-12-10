@@ -194,6 +194,8 @@ def runMain(args):
         # Create Optimus Prime Views
         import_db_assessment.createOptimusPrimeViewsFromOS(gcpProjectName,bqDataset)
 
+        print ('\n\n Thank YOU for using Optimus Prime!\n\n')
+
 def argumentsParser():
 # function to handle all arguments to be used in cli mode for this code and enforces mandatory options
 
