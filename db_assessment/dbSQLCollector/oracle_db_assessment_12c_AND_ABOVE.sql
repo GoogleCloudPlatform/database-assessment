@@ -118,7 +118,7 @@ spool off
 
 spool opdb__opkeylog__&v_tag
 
-with vop as ()
+with vop as (
 select '&&v_tag' pkey, '&&version' opscriptversion, '&&v_dbversion' dbversion, '&&v_host' hostname,
 '&&v_dbname' dbname, '&&v_inst' instance_number, '&&v_hora' collection_time
 from dual)

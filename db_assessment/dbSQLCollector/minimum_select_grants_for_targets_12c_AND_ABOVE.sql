@@ -16,8 +16,8 @@ limitations under the License.
 
 /*
 
-Version: 2.0.0
-Date: 2021-08-19
+Version: 2.0.3
+Date: 2021-11-18
 
 */
 
@@ -88,4 +88,5 @@ grant select on sys.dba_data_files  to &&dbusername  container = all;
 grant select on sys.dba_tables  to &&dbusername  container = all;
 grant select on sys.dba_tab_partitions to &&dbusername  container = all;
 grant select on sys.dba_tab_subpartitions to &&dbusername  container = all;
+grant select on sys.nls_database_parameters to &&dbusername  container = all;
 ALTER USER &&dbusername SET CONTAINER_DATA=ALL CONTAINER=CURRENT;
