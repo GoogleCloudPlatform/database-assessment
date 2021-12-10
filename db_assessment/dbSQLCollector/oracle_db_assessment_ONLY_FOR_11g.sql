@@ -117,7 +117,7 @@ FROM vawrsnap;
 
 spool off
 
-spool opdb__optimusprime_log__&v_tag
+spool opdb__opkeylog__&v_tag
 
 with vop as ()
 select '&&v_tag' pkey, '&&version' opscriptversion, '&&v_dbversion' dbversion, '&&v_host' hostname,
