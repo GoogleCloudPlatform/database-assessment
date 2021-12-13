@@ -104,7 +104,13 @@ opdb__dbservicesinfo__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 	
 	cd /<work-directory>/oracle-database-assessment/db_assessment/
 
+	If you want to import one single Optimus Prime file collection (From 1 single database), please follow the below step:
+
 	python optimusprime.py -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project
+
+	If you want to import various Optimus Prime file collections (From various databases) that are stored under the same directory being used for -fileslocation. Then, you can add to your command two additional flags (-fromdataframe -consolidatedataframes) and pass only "" to -collectionid. See example below:
+
+	python optimusprime.py -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes
 
 ```
 
