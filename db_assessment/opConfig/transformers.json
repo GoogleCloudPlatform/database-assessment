@@ -1279,8 +1279,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "1",
-                                "action_details": {"action": "ADD_OR_UPDATE_COLUMN", "expr1": "dataFrames[\"
-                                    \"][\"BUSY_TIME_PERC95\"];/;(;dataFrames[\"AWRHISTOSSTAT_RS\"][\"BUSY_TIME_PERC95\"];+;dataFrames[\"AWRHISTOSSTAT_RS\"][\"IDLE_TIME_PERC95\"];);*;100", "iferror": "None", "type": "NUMBER", "dataframe_name": "AWRHISTOSSTAT_RS","target_dataframe_name": "AWRHISTOSSTAT_RS_METRICS","column_name": "HOST_CPU_UTILIZATION", "store": "BIGQUERY"},
+                                "action_details": {"action": "ADD_OR_UPDATE_COLUMN", "expr1": "dataFrames[\"AWRHISTOSSTAT_RS\"][\"BUSY_TIME_PERC95\"];/;(;dataFrames[\"AWRHISTOSSTAT_RS\"][\"BUSY_TIME_PERC95\"];+;dataFrames[\"AWRHISTOSSTAT_RS\"][\"IDLE_TIME_PERC95\"];);*;100", "iferror": "None", "type": "NUMBER", "dataframe_name": "AWRHISTOSSTAT_RS","target_dataframe_name": "AWRHISTOSSTAT_RS_METRICS","column_name": "HOST_CPU_UTILIZATION", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["BMS_SIZING"],
                                 "description": "This rule adds a new column calculating the host cpu consumption using total busy / (busy+idle) * 100"
