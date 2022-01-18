@@ -49,7 +49,7 @@ def createTransformersVariable(transformerRule):
 
         return None
 
-def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, transformersTablesSchema, fileList, rulesAlreadyExecuted, transformersParameters):
+def runRules(executionGroup,transformerRules, dataFrames, singleRule, args, collectionKey, transformersTablesSchema, fileList, rulesAlreadyExecuted, transformersParameters, gcpProjectName, bqDataset):
 
     # Variable to keep track of rules executed and its results and status
     transformerResults = {}
@@ -60,6 +60,7 @@ def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, tran
     # Executed
     EXECUTEDSTATUS = 'EXECUTED'
     FAILEDSTATUS = 'FAILED'
+    SKIPPEDSTATUS = 'SKIPPED'
 
     if singleRule:
     # If parameter is set then we will run only 1 rule
@@ -71,115 +72,149 @@ def runRules(transformerRules, dataFrames, singleRule, args, collectionKey, tran
 
     # Looping on ALL rules from transformers.json
     for ruleItem in sorted_keys:
-
-        stringExpression = getParsedRuleExpr(transformerRules[ruleItem]['expr1'])
-        iferrorExpression = getParsedRuleExpr(transformerRules[ruleItem]['iferror'])
+        
+        stringExpression = getParsedRuleExpr(transformerRules[ruleItem]['action_details']['expr1'])
+        iferrorExpression = getParsedRuleExpr(transformerRules[ruleItem]['action_details']['iferror'])
 
         if str(transformerRules[ruleItem]['status']).upper() == "ENABLED":
 
-            if ruleItem not in rulesAlreadyExecuted:
+            if str(transformerRules[ruleItem]['execution_group']).upper() == str(executionGroup).upper():
 
-                print('Processing rule item: "{}"\nPriority: "{}"'.format(ruleItem,transformerRules[ruleItem]['priority']))
-
-                if str(transformerRules[ruleItem]['type']).upper() == "VARIABLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATE":
-                # transformers.json asking to create a variable which is a dictionary
-
-                    try:
-                        transformerResults[ruleItem] = {'Status': EXECUTEDSTATUS, 'Result Value': createTransformersVariable(transformerRules[ruleItem])}
-                        transformersRulesVariables[transformerRules[ruleItem]['action_details']['varname']] = transformerResults[ruleItem]['Result Value']
-
-                    except:
-                        # In case of any issue the rule will be marked as FAILEDSTATUS
-                        transformerResults[ruleItem] = {'Status': FAILEDSTATUS, 'Result Value': None}
-                        transformersRulesVariables[transformerRules[ruleItem]['action_details']['varname']] = None
-
-                elif str(transformerRules[ruleItem]['type']).upper() in ("NUMBER","FREESTYLE") and str(transformerRules[ruleItem]['action']).upper() == "ADD_OR_UPDATE_COLUMN":
-                # transformers.json asking to add a column that is type number meaning it can be a calculation and the column to be added is NUMBER too
-
-                    # Where the result of expr1 will be saved initially
-                    dfTargetName = transformerRules[ruleItem]['action_details']['dataframe_name']
-                    columnTargetName = transformerRules[ruleItem]['action_details']['column_name']
-                    ruleCondition = True
-
-                    try:
-                        ruleConditionString = str(transformerRules[ruleItem]['ifcondition1'])
-                    except KeyError:
-                        ruleConditionString = None
-
-                    # In case ifcondition1 (transformers.json) is set for the rule
-                    if ruleConditionString is not None and ruleConditionString != "":
-
-                        try:
-                            ruleCondition = eval (ruleConditionString)
-                            print ('ruleCondition = {}'.format(ruleCondition))
-                        except:
-                            print ('\n Error processing ifcondition1 "{}" for rule "{}". So, this rule will be skipped.\n'.format(ruleConditionString,ruleItem))
-                            continue
-                    
-                    if not ruleCondition:
-                        print ('WARNING: This rule "{}" will be skipped because of "ifcondition1" from transformers.json is FALSE.'.format(ruleItem))
-                        continue
+                if int(str(transformersParameters['dbversion']).replace('.','')[:3]) in range(int(str(transformerRules[ruleItem]['mindbversion']).replace('.','')[:3]),int(str(transformerRules[ruleItem]['maxdbversion']).replace('.','')[:3])+1): 
 
 
-                    try:
-                        dataFrames[str(dfTargetName).upper()][str(columnTargetName).upper()] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
-                        df = dataFrames[str(dfTargetName).upper()]
-                    except KeyError:
-                        print ('\n WARNING: The rule "{}" could not be executed because the variable "{}" used in the transformers.json could not be found.\n'.format(ruleItem, str(dfTargetName).upper()))
-                        continue
+                    if int(str(transformersParameters['optimuscollectionversion']).replace('.','')[:3]) in range(int(str(transformerRules[ruleItem]['minsqlscriptversion']).replace('.','')[:3]),int(str(transformerRules[ruleItem]['maxsqlscriptversion']).replace('.','')[:3])+1): 
 
-                    newTableName = str(transformerRules[ruleItem]['action_details']['target_dataframe_name']).lower()
-                    fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + newTableName + '__' + collectionKey
+                        if ruleItem not in rulesAlreadyExecuted:
 
-                    resCSVCreation, transformersTablesSchema = createCSVFromDataframe(df, transformerRules[ruleItem]['action_details'], args, fileName, transformersTablesSchema, newTableName, False)
+                            print('\nProcessing rule item: "{}"\nPriority: "{}"'.format(ruleItem,transformerRules[ruleItem]['priority']))
 
-                    # Creating the new dataframe
-                    dataFrames[str(newTableName).upper()] = df
+                            if str(transformerRules[ruleItem]['action_details']['type']).upper() == "VARIABLE" and str(transformerRules[ruleItem]['action_details']['action']).upper() == "CREATE":
+                            # transformers.json asking to create a variable which is a dictionary
 
-                    if resCSVCreation:
-                    # If CSV creation was successfully then we will add this to the list of files to be imported
-                        fileList.append(fileName)
+                                try:
+                                    transformerResults[ruleItem] = {'Status': EXECUTEDSTATUS, 'Result Value': createTransformersVariable(transformerRules[ruleItem])}
+                                    transformersRulesVariables[transformerRules[ruleItem]['action_details']['varname']] = transformerResults[ruleItem]['Result Value']
 
-                elif str(transformerRules[ruleItem]['type']).upper() == "FREESTYLE" and str(transformerRules[ruleItem]['action']).upper() == "CREATE_OR_REPLACE_DATAFRAME":
-                # 
+                                except:
+                                    # In case of any issue the rule will be marked as FAILEDSTATUS
+                                    transformerResults[ruleItem] = {'Status': FAILEDSTATUS, 'Result Value': None}
+                                    transformersRulesVariables[transformerRules[ruleItem]['action_details']['varname']] = None
 
-                    df = execStringExpression(stringExpression,iferrorExpression,dataFrames)
+                            elif str(transformerRules[ruleItem]['action_details']['type']).upper() in ("NUMBER","FREESTYLE") and str(transformerRules[ruleItem]['action_details']['action']).upper() == "ADD_OR_UPDATE_COLUMN":
+                            # transformers.json asking to add a column that is type number meaning it can be a calculation and the column to be added is NUMBER too
 
-                    if df is None:
-                        print('\n WARNING: The rule "{}" could not be executed because the expression "{}" used in the transformers.json could not be executed.\n'.format(ruleItem,stringExpression))
-                        continue
+                                # Where the result of expr1 will be saved initially
+                                dfTargetName = transformerRules[ruleItem]['action_details']['dataframe_name']
+                                columnTargetName = transformerRules[ruleItem]['action_details']['column_name']
+                                ruleCondition = True
 
-                    newTableName = str(transformerRules[ruleItem]['action_details']['dataframe_name']).lower()
-                    fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + newTableName + '__' + collectionKey
+                                try:
+                                    ruleConditionString = str(transformerRules[ruleItem]['action_details']['ifcondition1'])
+                                except KeyError:
+                                    ruleConditionString = None
 
-                    resCSVCreation, transformersTablesSchema = createCSVFromDataframe(df, transformerRules[ruleItem]['action_details'], args, fileName, transformersTablesSchema, newTableName, False)
+                                # In case ifcondition1 (transformers.json) is set for the rule
+                                if ruleConditionString is not None and ruleConditionString != "":
 
-                    # Creating the new dataframe
-                    dataFrames[str(transformerRules[ruleItem]['action_details']['dataframe_name']).upper()] = df
+                                    try:
+                                        ruleCondition = eval (ruleConditionString)
+                                        print ('ruleCondition = {}'.format(ruleCondition))
+                                    except:
+                                        print ('\n Error processing ifcondition1 "{}" for rule "{}". So, this rule will be skipped.\n'.format(ruleConditionString,ruleItem))
+                                        continue
+                                
+                                if not ruleCondition:
+                                    print ('WARNING: This rule "{}" will be skipped because of "ifcondition1" from transformers.json is FALSE.'.format(ruleItem))
+                                    continue
 
-                    if resCSVCreation:
-                    # If CSV creation was successfully then we will add this to the list of files to be imported
-                        fileList.append(fileName)
 
-                elif str(transformerRules[ruleItem]['type']).upper() == "FREESTYLE" and str(transformerRules[ruleItem]['action']).upper() == "FREESTYLE":
+                                try:
+                                    dataFrames[str(dfTargetName).upper()][str(columnTargetName).upper()] = execStringExpression(stringExpression,iferrorExpression, dataFrames)
+                                    df = dataFrames[str(dfTargetName).upper()]
+                                except KeyError:
+                                    print ('\n WARNING: The rule "{}" could not be executed because the variable "{}" used in the transformers.json could not be found.\n'.format(ruleItem, str(dfTargetName).upper()))
+                                    continue
 
-                    try:
-                        eval (stringExpression)
-                    except KeyError:
-                        print ('\n WARNING: The rule "{}" could not be executed because the expr1 "{}" used in the transformers.json could not be executed.\n'.format(ruleItem, stringExpression))
-                        continue
+                                newTableName = str(transformerRules[ruleItem]['action_details']['target_dataframe_name']).lower()
+                                fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + newTableName + '__' + collectionKey
 
-                    newTableName = str(transformerRules[ruleItem]['action_details']['target_dataframe_name']).lower()
-                    fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + newTableName + '__' + collectionKey
+                                resCSVCreation, transformersTablesSchema = createCSVFromDataframe(df, transformerRules[ruleItem]['action_details'], args, fileName, transformersTablesSchema, newTableName, False)
 
-                    resCSVCreation, transformersTablesSchema = createCSVFromDataframe(df, transformerRules[ruleItem]['action_details'], args, fileName, transformersTablesSchema, newTableName, False)
+                                # Creating the new dataframe
+                                dataFrames[str(newTableName).upper()] = df
 
-                    # Creating the new dataframe
-                    dataFrames[str(newTableName).upper()] = df
+                                if resCSVCreation:
+                                # If CSV creation was successfully then we will add this to the list of files to be imported
+                                    fileList.append(fileName)
 
-                    if resCSVCreation:
-                    # If CSV creation was successfully then we will add this to the list of files to be imported
-                        fileList.append(fileName)
+                            elif str(transformerRules[ruleItem]['action_details']['type']).upper() == "FREESTYLE" and str(transformerRules[ruleItem]['action_details']['action']).upper() == "CREATE_OR_REPLACE_DATAFRAME":
+                            # 
+
+                                df = execStringExpression(stringExpression,iferrorExpression,dataFrames)
+
+                                if df is None:
+                                    print('\n WARNING: The rule "{}" could not be executed because the expression "{}" used in the transformers.json could not be executed.\n'.format(ruleItem,stringExpression))
+                                    continue
+
+                                newTableName = str(transformerRules[ruleItem]['action_details']['dataframe_name']).lower()
+                                fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + newTableName + '__' + collectionKey
+
+                                resCSVCreation, transformersTablesSchema = createCSVFromDataframe(df, transformerRules[ruleItem]['action_details'], args, fileName, transformersTablesSchema, newTableName, False)
+
+                                # Creating the new dataframe
+                                dataFrames[str(transformerRules[ruleItem]['action_details']['dataframe_name']).upper()] = df
+
+                                if resCSVCreation:
+                                # If CSV creation was successfully then we will add this to the list of files to be imported
+                                    fileList.append(fileName)
+
+                            elif str(transformerRules[ruleItem]['action_details']['type']).upper() == "FREESTYLE" and str(transformerRules[ruleItem]['action_details']['action']).upper() == "FREESTYLE":
+
+                                try:
+                                    eval (stringExpression)
+                                except KeyError:
+                                    print ('\n WARNING: The rule "{}" could not be executed because the expr1 "{}" used in the transformers.json could not be executed.\n'.format(ruleItem, stringExpression))
+                                    continue
+
+                                newTableName = str(transformerRules[ruleItem]['action_details']['target_dataframe_name']).lower()
+                                fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + newTableName + '__' + collectionKey
+
+                                resCSVCreation, transformersTablesSchema = createCSVFromDataframe(df, transformerRules[ruleItem]['action_details'], args, fileName, transformersTablesSchema, newTableName, False)
+
+                                # Creating the new dataframe
+                                dataFrames[str(newTableName).upper()] = df
+
+                                if resCSVCreation:
+                                # If CSV creation was successfully then we will add this to the list of files to be imported
+                                    fileList.append(fileName)
+
+                            elif str(transformerRules[ruleItem]['action_details']['type']).upper() == "CREATE VIEW" and str(transformerRules[ruleItem]['action_details']['action']).upper() == "EXECUTE_SQL":
+
+                                view_name = transformerRules[ruleItem]['action_details']['target_object_name']
+                                view_sql_query = transformerRules[ruleItem]['action_details']['expr1']
+                                view_sql_query = ''.join(view_sql_query)
+
+
+                                import_db_assessment.createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_sql_query)
+
+                                
+                    else:
+
+                        print ('\n    The rule "{}" is being skipped because of the Optimus Prime SQL Version is {} and not eligible for this rule based on transformers.json configuration file.\n'.format(str(ruleItem),str(transformersParameters['optimuscollectionversion']).replace('.','')[:3]))
+                        transformerResults[ruleItem] = {'Status': SKIPPEDSTATUS, 'Result Value': 'Due to Optimus Prime SQL Version configurarion on transformers.json'}
+
+                else:
+
+                    print ('\n    The rule "{}" is being skipped because of the Database Version is {} and not eligible for this rule based on transformers.json configuration file.\n'.format(str(ruleItem),str(transformersParameters['dbversion']).replace('.','')[:3]))
+                    transformerResults[ruleItem] = {'Status': SKIPPEDSTATUS, 'Result Value': 'Due to the Database Version configurarion on transformers.json'}
+            else:
+                print ('\n    The rule "{}" is being skipped because it belongs to a different EXECUTION GROUP based on transformers.json configuration file.\n'.format(str(ruleItem)))
+                transformerResults[ruleItem] = {'Status': SKIPPEDSTATUS, 'Result Value': 'Due to the EXECUTION GROUP configurarion on transformers.json'}
+
+        else:
+            print ('\n    The rule "{}" is being skipped because it is NOT ENABLED based on transformers.json configuration file.\n'.format(str(ruleItem)))
+            transformerResults[ruleItem] = {'Status': SKIPPEDSTATUS, 'Result Value': 'Due to the STATUS configurarion on transformers.json'}
 
     return transformerResults, transformersRulesVariables, fileList, dataFrames
 
@@ -238,17 +273,23 @@ def getDataFrameFromCSV(csvFileName,tableName,skipRows,separatorString,transform
 
                     tableHeaders = getDFHeadersFromTransformers(tableName,transformersTablesSchema)
                     tableHeaders = [header.upper() for header in tableHeaders]
-                    df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders)
+                    #df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders, keep_default_na=False, na_filter= False)
+                    df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders, na_values='n/a', keep_default_na=True, skipinitialspace = True)
 
                 except Exception as dataframeHeaderErr:
                     
                     print ('\nThe filename {} for the table {} could not be imported using the column names {}.\n'.format(csvFileName,tableName,tableHeaders))
                     paramCleanDFHeaders = True
-                    df = pd.read_csv(csvFileName, skiprows=skipRows)
+                    #df = pd.read_csv(csvFileName, skiprows=skipRows, keep_default_na=False, na_filter= False)
+                    df = pd.read_csv(csvFileName, skiprows=skipRows, na_values='n/a', keep_default_na=True, skipinitialspace = True)
 
             else:
             
-                df = pd.read_csv(csvFileName, skiprows=skipRows)
+                #df = pd.read_csv(csvFileName, skiprows=skipRows, keep_default_na=False, na_filter= False)
+                df = pd.read_csv(csvFileName, skiprows=skipRows, na_values='n/a', keep_default_na=True, skipinitialspace = True)
+
+        # Removing index from dataframe
+        df.reset_index(drop=True, inplace=True)
 
         # In case we need to clean some headers from dataframe
         if paramCleanDFHeaders:
@@ -293,17 +334,44 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
         # This file is not from SQL Script. Meaning this is a file generated by Optimus Prime in a prior execution. Skipping CSV files that are result of a previous transformation execution
             
             continue
+        
 
         # Final table name from the CSV file names
         tableName = import_db_assessment.getObjNameFromFiles(fileName,'__',1)
 
+        if str(tableName).lower() in transformersParameters["do_not_import"]:
+
+            print ('\n This table name {} for filename {} is being SKIPPED due to do_not_import parameter in transformers.json configuration file'.format(tableName,fileName))
+
+            continue
+
+        print ('\n Processing {} into a dataframe {}'.format(fileName,tableName))
+
+        if str(tableName).upper() == 'DBSUMMARY' and '110421164538' in fileName:
+            print ('')
+
         # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
         df = getDataFrameFromCSV(fileName,tableName,skipRows,separatorString,transformersTablesSchema)
         
+
         # Checking if no error was found during loading CSV from OS
         if df is not False:
-            # Trimming the data before storing it
-            dataFrames[str(tableName).upper()] = trimDataframe(df)
+            
+            if args.consolidatedataframes:
+                
+                try:
+                    df_concat = pd.concat([dataFrames[str(tableName).upper()],df], axis=0)
+                    # Trimming the data before storing it
+                    dataFrames[str(tableName).upper()] = trimDataframe(df_concat)
+                    print (' Concatenated into an existing dataframe for table name {}'.format(tableName))
+
+                except:
+                    # Trimming the data before storing it
+                    dataFrames[str(tableName).upper()] = trimDataframe(df)
+
+            else:
+                # Trimming the data before storing it
+                dataFrames[str(tableName).upper()] = trimDataframe(df)
             
             transformersTablesSchema = processSchemaDetection(args.schemadetection,transformersTablesSchema, transformersParameters, tableName, df)
 
@@ -324,7 +392,7 @@ def processSchemaDetection(schemadetection,transformersTablesSchema, transformer
 
             # Adds configuration whenever this is not present
             transformersTablesSchema[str(tableName).lower()] = addBQDataType(list(df.columns), 'STRING')
-            print('WARNING: Optimus Prime is filling the gap in the transformers.json schema definition for {} table.\n'.format(tableName))
+            print('INFO: Optimus Prime is filling the gap in the transformers.json schema definition for {} table.\n'.format(tableName))
     
     return transformersTablesSchema
 
@@ -405,44 +473,60 @@ def getAllReShapedDataframes(dataFrames, transformersTablesSchema, transformersP
             ruleID = str(tableName_RuleID).split(':')[1]
             resCSVCreation = False
             
-            transformerParameterResults, transformersResults, fileList, dataFrames = runRules(transformerRulesConfig, dataFrames, ruleID, args, None, transformersTablesSchema, fileList, executedRulesList, transformersParameters)
-            print('Reshaping Rule Executed: {} for the table name {}'.format(ruleID,tableName))
+            transformerParameterResults, transformersResults, fileList, dataFrames = runRules("0",transformerRulesConfig, dataFrames, ruleID, args, None, transformersTablesSchema, fileList, executedRulesList, transformersParameters, None, None)
+            print('Reshaping Rule Processed: {} for the table name {}'.format(ruleID,tableName))
 
-            # Including runes already executed to be avoided
+            # Including rules already executed to be avoided
             executedRulesList.append(ruleID)
 
             if dataFrames.get(str(tableName)) is not None:
 
-                if transformersResults.get(str(tableName)) is not None:
+                if transformerParameterResults[ruleID]['Status'] == 'EXECUTED':
 
-                    reshapedTableName = str(tableName).lower() + '_rs'
+                    if transformersResults.get(str(tableName)) is not None:
 
-                    try:
-                        df = getReShapedDataframe(dataFrames[str(tableName)], transformersResults[str(tableName)])
-                        dataFrames[reshapedTableName.upper()] = df
-                    except:
-                        df = None
-                        print('WARNING: Optimus Prime could not ReShape the table {} due to a fatal error.\n'.format(tableName))
+                        reshapedTableName = str(tableName).lower() + '_rs'
 
-                    
+                        try:
+                            df = getReShapedDataframe(dataFrames[str(tableName)], transformersResults[str(tableName)])
+                            dataFrames[reshapedTableName.upper()] = df
+                        except:
+                            df = None
+                            print('WARNING: Optimus Prime could not ReShape the table {} due to a fatal error.\n'.format(tableName))
 
-                    # collectionKey already contains .log
-                    fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + reshapedTableName + '__' + str(collectionKey)
+                        
 
-                    if df is not None:
-                        # Writes CSVs from Dataframes when parameter store in CSV_ONLY or BIGQUERY
-                        resCSVCreation, transformersTablesSchema = createCSVFromDataframe(dataFrames[reshapedTableName.upper()], transformersResults[str(tableName)], args, fileName, transformersTablesSchema, str(reshapedTableName).lower(), True)
-                    
-                    if resCSVCreation:
-                    # If CSV creation was successfully then we will add this to the list of files to be imported
+                        # collectionKey already contains .log
+                        fileName = str(getattr(args,'fileslocation')) + '/opdbt__' + reshapedTableName + '__' + str(collectionKey)
 
-                        fileList.append(fileName)
+                        if df is not None:
+                            # Writes CSVs from Dataframes when parameter store in CSV_ONLY or BIGQUERY
+                            resCSVCreation, transformersTablesSchema = createCSVFromDataframe(dataFrames[reshapedTableName.upper()], transformersResults[str(tableName)], args, fileName, transformersTablesSchema, str(reshapedTableName).lower(), True)
+                        
+                        if resCSVCreation:
+                        # If CSV creation was successfully then we will add this to the list of files to be imported
 
+                            fileList.append(fileName)
+
+                    # For cases in which we are trying to reshape a variable that does not exist
+                    else:
+
+                        print ('\nThere is no parameter set to define the reshape process for: {}'.format(str(tableName)))
+                        print ('This is all valid reshape configurations found: {}\n'.format(str(transformersParameters.keys())))
+
+                # For rules that were not executed sucessfully
                 else:
 
-                    print ('\nThere is not parameter set to define the reshape process for: {}'.format(str(tableName)))
-                    print ('This is all valid reshape configurations found: {}\n'.format(str(transformersParameters.keys())))
+                    if transformerParameterResults[ruleID]['Status'] == 'SKIPPED':
 
+                        print ('The rule {} was SKIPPED due to transfomers.json')
+
+                    elif transformerParameterResults[ruleID]['Status'] == 'FAILED':
+
+                        print ('The rule {} FAILED during execution')
+
+            
+            # For cases in which we are trying to reshape a CSV/tablename that does not exist
             else:
 
                 print ('\nWARNING: There is no data parsed from CSVs named {}'.format(str(tableName)))

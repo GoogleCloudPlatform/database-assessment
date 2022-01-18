@@ -21,6 +21,9 @@ import sys
 # Manages command line flags and arguments
 import argparse
 
+# Regular expression
+import re
+
 # Big Query Library Used to Import CSV files
 from google.cloud import bigquery
 from google.api_core.exceptions import Conflict
@@ -140,10 +143,48 @@ def consolidateLos(args, transformersTablesSchema):
 
     return True
 
-def createOptimusPrimeViews(gcpProjectName,bqDataset):
+
+def createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_query):
+# This function intents to create all views found in the opViews directory. The views creation must follow opConfig/transformers.json
+
+    client = bigquery.Client(client_info=set_client_info.get_http_client_info())
+
+    if gcpProjectName is None:
+        # In case projectname is not provided in the arguments
+        view_id = str(client.project) + '.' + str(bqDataset) + '.' + view_name
+        gcpProjectName = str(client.project)
+    else:
+        # If projectname is provided in the arguments
+        view_id = str(gcpProjectName) + '.' + str(bqDataset) + '.' + view_name
+    
+    # Creating the JOB to create view in Big Query
+    view = bigquery.Table(view_id)
+
+    # Extracting the view text and replacing the string ${dataset}/${projectname} by the proper dataset independent of case sensitive
+    pattern = re.compile(re.escape('${dataset}'), re.IGNORECASE)
+    view_query = pattern.sub(str(bqDataset), view_query)
+    pattern = re.compile(re.escape('${projectname}'), re.IGNORECASE)
+    view_query = pattern.sub(str(gcpProjectName), view_query)
+    #source_id = 'optimusprime-migrations.consolidate_test.dbsummary'
+    #view_query = f"SELECT pkey, dbid FROM `{source_id}`"
+
+    view.view_query = view_query
+
+    try:
+        # Make an API request to create the view.
+        view = client.create_table(view)
+        print("Created {}: {}".format(view.table_type,str(view.reference)))
+        print("\n")
+    except Conflict as error:
+        print("View {} already exists.\n".format(str(view.reference)))
+        return False
+
+    return True
+
+def createOptimusPrimeViewsFromOS(gcpProjectName,bqDataset):
 # This function intents to create all views found in the opViews directory. The views creation must follow opViews/<filename> order
 
-    print ('\nPreparing to create Optimus Prime SQL Views\n')
+    #print ('\nPreparing to create Optimus Prime SQL Views\n')
     
     # store all files found in the OS
     fileList = []
@@ -155,7 +196,7 @@ def createOptimusPrimeViews(gcpProjectName,bqDataset):
     fileList = getAllFilesByPattern(filePattern)
     
     if len(fileList) == 0:
-        print('\nWARNING: No views found to be created at expected location: {}. Please make sure you the location is correct.'.format(filePattern))
+        #print('\nWARNING: No views found to be created at expected location: {}. Please make sure you the location is correct.'.format(filePattern))
         # Returns False if cannot create views    
         return False
     
@@ -207,7 +248,7 @@ def getAllFilesByPattern(filePattern):
     # Get all matching files and creates a list returning it   
     return glob.glob(filePattern)
 
-def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchema,dbAssessmentDataframes):
+def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchema,dbAssessmentDataframes,transformersParameters):
 
     # Tracking tableNames Imported to Big Query
     tablesImported = {}
@@ -230,8 +271,14 @@ def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchem
 
             print ('\nThe dataframe {} is being imported to Big Query.'.format(tableName))
 
+            if str(tableName).lower() in transformersParameters["do_not_import"]:
+
+                print ('Table name {} is being SKPIPED accordingly with transformers.json do_not_import parameter')
+
+                continue
+
             # Import the given CSV fileName into 
-            sucessImport = importDataframeToBQ(gcpProjectName,bqDataset,str(tableName).lower(),tableSchemas,dbAssessmentDataframes[tableName])
+            sucessImport = importDataframeToBQ(gcpProjectName,bqDataset,str(tableName).lower(),tableSchemas,dbAssessmentDataframes[tableName],transformersParameters)
 
             if sucessImport:
                 tablesImported[str(tableName).lower()] = "IMPORTED_FROM_DATAFRAME"
@@ -243,10 +290,15 @@ def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchem
         return False, tablesImported
 
 
-def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df):
+def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,transformersParameters):
 
     # Getting table schema
     try:
+
+        # in case there is nothing to be imported
+        if str(tableName).lower() in transformersParameters["do_not_import"]:
+
+            return True
 
         # Creating Hash Table with all expected table schemas to be imported
         tableSchemas = {}
@@ -269,7 +321,7 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df):
         df.columns = dfNewColumns
 
         # Always AUTO because we never know the column order in which the dataframe will be
-        transformersTablesSchemaDataframe = rules_engine.processSchemaDetection('AUTO',transformersTablesSchemaDataframe, None, str(tableName).lower(), df)
+        transformersTablesSchemaDataframe = rules_engine.processSchemaDetection('FILLGAP',transformersTablesSchemaDataframe, None, str(tableName).lower(), df)
         
         tableSchemas = getBQJobConfig(transformersTablesSchemaDataframe,'DATAFRAME')
 

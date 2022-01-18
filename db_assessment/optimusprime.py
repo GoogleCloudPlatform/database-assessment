@@ -108,7 +108,7 @@ def runMain(args):
         elif len(collectionKey.split('_')) == 3 and args.dbversion is None:
             transformersParameters['dbversion'] = import_db_assessment.getObjNameFromFiles(collectionKey,'_',0)
         else:
-            print ('\nFATAL ERRROR: Please use -dbversion.\n')
+            print ('\nFATAL ERRROR: Please use -dbversion and -optimuscollectionversion. \nI.E -dbversion 122 -optimuscollectionversion 2.0.3\n')
             sys.exit()
 
         if len(collectionKey.split('_')) == 3:
@@ -170,7 +170,7 @@ def runMain(args):
 
         # STEP: Run rules engine
 
-        transformerParameterResults, transformersRulesVariables, fileList, dbAssessmentDataframes = rules_engine.runRules(transformerRulesConfig, dbAssessmentDataframes, None, args, collectionKey, transformersTablesSchema, fileList, rulesAlreadyExecuted, transformersParameters)
+        transformerParameterResults, transformersRulesVariables, fileList, dbAssessmentDataframes = rules_engine.runRules("1",transformerRulesConfig, dbAssessmentDataframes, None, args, collectionKey, transformersTablesSchema, fileList, rulesAlreadyExecuted, transformersParameters, gcpProjectName, bqDataset)
 
 
         # STEP: Import ALL data to Big Query
@@ -180,7 +180,7 @@ def runMain(args):
 
         if args.fromdataframe:
 
-            sucessImported, tablesImported = import_db_assessment.importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchema,dbAssessmentDataframes)
+            sucessImported, tablesImported = import_db_assessment.importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchema,dbAssessmentDataframes,transformersParameters)
 
         else:
 
@@ -189,8 +189,12 @@ def runMain(args):
             # Import all Optimus Prime CSV configutation
             import_db_assessment.importAllCSVsToBQ(gcpProjectName,bqDataset,fileListOPConfig,transformersTablesSchema,1,transformersParameters)
 
+        transformerParameterResults, transformersRulesVariables, fileList, dbAssessmentDataframes = rules_engine.runRules("2",transformerRulesConfig, dbAssessmentDataframes, None, args, collectionKey, transformersTablesSchema, fileList, rulesAlreadyExecuted, transformersParameters, gcpProjectName, bqDataset)
+
         # Create Optimus Prime Views
-        import_db_assessment.createOptimusPrimeViews(gcpProjectName,bqDataset)
+        import_db_assessment.createOptimusPrimeViewsFromOS(gcpProjectName,bqDataset)
+
+        print ('\n\n Thank YOU for using Optimus Prime!\n\n')
 
 def argumentsParser():
 # function to handle all arguments to be used in cli mode for this code and enforces mandatory options
@@ -231,6 +235,8 @@ def argumentsParser():
 
     parser.add_argument("-fromdataframe", default=False, help="Import dataframes to Big Query instead of CSV files.", action="store_true")
     
+    parser.add_argument("-consolidatedataframes", default=False, help="Consolidate CSV files before importing.", action="store_true")
+
 
     # Consolidates different collection IDs found in the OS (dbResults/*log) into a single CSV per file type. 
     # For example: dbResults has 52 files. Meaning, 2 collection IDs (each one has 26 different file types). 
