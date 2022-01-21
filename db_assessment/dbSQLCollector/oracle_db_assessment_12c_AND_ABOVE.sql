@@ -19,7 +19,7 @@ limitations under the License.
 /*
 
 Version: 2.0.3
-Date: 2021-11-18
+Date: 2022-01-21
 
 */
 
@@ -155,7 +155,7 @@ SELECT '&&v_host'
         FROM   (SELECT TRUNC(first_time) dia,
                        COUNT(*)          conta
                 FROM   v$log_history
-                WHERE  first_time >= TRUNC(SYSDATE) - 7
+                WHERE  first_time >= TRUNC(SYSDATE) - 30
                        AND first_time < TRUNC(SYSDATE)
                 GROUP  BY TRUNC(first_time)),
                v$log)                                                           AS redo_gb_per_day,
@@ -1183,6 +1183,39 @@ SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| hour ||' , '|| me
        metric_unit ||' , '|| avg_value ||' , '|| mode_value ||' , '|| median_value ||' , '|| min_value ||' , '|| max_value ||' , '||
 	   sum_value ||' , '|| PERC50 ||' , '|| PERC75 ||' , '|| PERC90 ||' , '|| PERC95 ||' , '|| PERC100
 FROM vsysmetric;
+
+spool off
+
+spool opdb__awrhistsysmetricsumm__&v_tag
+
+WITH vsysmetricsumm AS (
+SELECT '&&v_host'
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora'                            AS pkey,
+       hsm.dbid,
+       hsm.instance_number,
+       TO_CHAR(hsm.begin_time, 'hh24')          hour,
+       hsm.metric_name,
+       hsm.metric_unit,
+       hsm.AVERAGE                           avg_value,
+       null                                  mode_value,
+       null                                  median_value,
+       MINVAL                                min_value,
+       MAXVAL                                max_value,
+       null                                  sum_value,
+       null                                  "PERC50",
+       null                                  "PERC75",
+       null                                  "PERC90",
+       hsm.AVERAGE+(2*hsm.STANDARD_DEVIATION) "PERC95",
+       MAXVAL                                 "PERC100"
+FROM   DBA_HIST_SYSMETRIC_SUMMARY hsm
+WHERE  hsm.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid')
+SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| hour ||' , '|| metric_name ||' , '||
+       metric_unit ||' , '|| avg_value ||' , '|| mode_value ||' , '|| median_value ||' , '|| min_value ||' , '|| max_value ||' , '||
+	   sum_value ||' , '|| PERC50 ||' , '|| PERC75 ||' , '|| PERC90 ||' , '|| PERC95 ||' , '|| PERC100
+FROM vsysmetricsumm;
 
 spool off
 
