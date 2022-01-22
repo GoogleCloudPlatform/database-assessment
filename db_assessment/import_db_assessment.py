@@ -426,7 +426,7 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
         return False
 
     # Construct a BigQuery client object.
-    client = bigquery.Client(client_info=set_client_info.get_http_client_info())
+    client = bigquery.Client(client_info=set_client_info.get_http_client_info(), project=gcpProjectName)
 
     # Adding Project and Dataset based on arguments 
     # table_id to the ID of the table to create.
@@ -514,9 +514,7 @@ def createDataSet(datasetName,gcpProjectName):
 # Always try to create the dataset
 
     # Construct a BigQuery client object.
-    client = bigquery.Client(client_info=set_client_info.get_http_client_info())
-
-    # Set dataset_id=datasetName to the ID of the dataset to create.
+    client = bigquery.Client(client_info=set_client_info.get_http_client_info(), project=gcpProjectName)
     if gcpProjectName is None:
         # In case the user did NOT pass the project name in the arguments
         dataset_id = "{}.{}".format(client.project,datasetName)
