@@ -178,6 +178,10 @@ def createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_
     except Conflict as error:
         print("View {} already exists.\n".format(str(view.reference)))
         return False
+    except:
+        print("View {} count not be created. See DDL below:\n".format(str(view.reference)))
+        print(view_query)
+        return False
 
     return True
 

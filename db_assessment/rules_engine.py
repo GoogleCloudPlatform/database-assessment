@@ -195,7 +195,7 @@ def runRules(executionGroup,transformerRules, dataFrames, singleRule, args, coll
                                 view_sql_query = transformerRules[ruleItem]['action_details']['expr1']
                                 view_sql_query = ''.join(view_sql_query)
 
-
+                                
                                 import_db_assessment.createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_sql_query)
 
                                 
@@ -209,7 +209,7 @@ def runRules(executionGroup,transformerRules, dataFrames, singleRule, args, coll
                     print ('\n    The rule "{}" is being skipped because of the Database Version is {} and not eligible for this rule based on transformers.json configuration file.\n'.format(str(ruleItem),str(transformersParameters['dbversion']).replace('.','')[:3]))
                     transformerResults[ruleItem] = {'Status': SKIPPEDSTATUS, 'Result Value': 'Due to the Database Version configurarion on transformers.json'}
             else:
-                print ('\n    The rule "{}" is being skipped because it belongs to a different EXECUTION GROUP based on transformers.json configuration file.\n'.format(str(ruleItem)))
+                #print ('\n    The rule "{}" is being skipped because it belongs to a different EXECUTION GROUP based on transformers.json configuration file.\n'.format(str(ruleItem)))
                 transformerResults[ruleItem] = {'Status': SKIPPEDSTATUS, 'Result Value': 'Due to the EXECUTION GROUP configurarion on transformers.json'}
 
         else:
