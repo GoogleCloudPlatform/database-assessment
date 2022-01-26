@@ -347,9 +347,6 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
 
         print ('\n Processing {} into a dataframe {}'.format(fileName,tableName))
 
-        if str(tableName).upper() == 'DBSUMMARY' and '110421164538' in fileName:
-            print ('')
-
         # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
         df = getDataFrameFromCSV(fileName,tableName,skipRows,separatorString,transformersTablesSchema)
         
