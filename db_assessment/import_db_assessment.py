@@ -466,7 +466,7 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
 
     destination_table = client.get_table(table_id)  # Make an API request.
     print("Loaded {} rows into: {}".format(destination_table.num_rows,destination_table.reference))
-    print ('The filename {} is successfully imported to Big Query.\n'.format(fileName))
+    #print ('The filename {} is successfully imported to Big Query.\n'.format(fileName))
 
     # returns True if processing is successfully
     return True
