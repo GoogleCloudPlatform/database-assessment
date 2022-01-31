@@ -44,3 +44,4 @@ class UserConfig:
     deletedataset = False
     fromdataframe = False
     consolidatelogs = False
+    consolidatedataframes = False

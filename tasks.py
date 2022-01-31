@@ -22,31 +22,18 @@ def push(ctx, tag="latest"):
 
 
 @task
-def test(ctx, base_url=None, retrieve_token=False, local=False):
+def test(ctx, base_url=None, local=False):
     if not base_url:
         base_url = get_beta_url(ctx)
-
-    headers = {"Authorization": f"Bearer {authenticate(ctx, local)}"} if retrieve_token else None
-    config = {
-        "projectId": ctx.project,
-        "dataset":  ctx.dataset,
-        "collectionId": ctx.collection_id
-    }
-    files = get_test_files(ctx)
-    result = requests.post(f"{base_url}/api/loadAssesment", files=files, data=config, headers=headers)
-    result.raise_for_status()
+    print(base_url)
+    id_token = authenticate(ctx, local)
+    with ctx.cd('./db_assessment'):
+        ctx.run(f"python optimusprime.py -remote -fileslocation ../sample/datacollection/ -dataset {ctx.dataset} -project {ctx.project} -collectionid {ctx.collection_id}", env={"ID_TOKEN":id_token })
 
 
 @task
 def deploy(ctx, tag="latest"):
     ctx.run(f"gcloud run deploy {ctx.service} --image {ctx.image}:{tag} --region {ctx.region} --project {ctx.project} --no-traffic --tag beta")
-
-
-def get_test_files(c, testDir="sample/datacollection"):
-    with c.cd(testDir):
-        c.run("tar -xvf samplefiles_190_2.0.1.tar.gz")
-        files = c.run('ls').stdout.split("\n")[0:-1]
-        return {f"log-{i}": (f, open(f"{testDir}/{f}", 'rb')) for i, f in enumerate(files)}
 
 
 @task(autoprint=True)
