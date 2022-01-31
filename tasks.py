@@ -70,11 +70,11 @@ def authenticate(ctx, local=False):
         access_token_request = requests.get(METADATA_SERVER_URL, headers=METADATA_REQUEST_HEADERS)
         access_token = access_token_request.json()['access_token']
         print('Got access token')
-        identity_token_request = requests.post(
+        identity_token_resp = requests.post(
             ID_TOKEN_URL,
             headers={'Authorization': 'Bearer {}'.format(access_token), 'content-type': 'application/json'},
             data=json.dumps({'audience': ctx.api_audience, 'includeEmail': True}))
-        identity_token = identity_token_request.json()['token']
+        identity_token = identity_token_resp.json()['token']
         print('Got identity token')
         return identity_token
 
