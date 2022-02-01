@@ -177,6 +177,11 @@ def createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_
         print("\n")
     except Conflict as error:
         print("View {} already exists.\n".format(str(view.reference)))
+        #view = client.update_table(view, ['view_query'])
+        return False
+    except:
+        print("View {} count not be created. See DDL below:\n".format(str(view.reference)))
+        print(view_query)
         return False
 
     return True
@@ -462,7 +467,7 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
 
     destination_table = client.get_table(table_id)  # Make an API request.
     print("Loaded {} rows into: {}".format(destination_table.num_rows,destination_table.reference))
-    print ('The filename {} is successfully imported to Big Query.\n'.format(fileName))
+    #print ('The filename {} is successfully imported to Big Query.\n'.format(fileName))
 
     # returns True if processing is successfully
     return True
