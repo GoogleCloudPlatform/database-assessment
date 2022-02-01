@@ -19,11 +19,12 @@ limitations under the License.
 /*
 
 Version: 2.0.3
-Date: 2022-01-21
+Date: 2022-02-01
 
 */
 
 define version = '2.0.3'
+define dtrange = 30
 
 clear col comp brea
 set headsep off
@@ -49,6 +50,9 @@ column hostnc new_value v_host noprint
 column horanc new_value v_hora noprint
 column dbname new_value v_dbname noprint
 column dbversion new_value v_dbversion noprint
+column min_snapid new_value v_min_snapid noprint
+column max_snapid new_value v_max_snapid noprint
+column dbid new_value v_dbid noprint
 
 SELECT host_name     hostnc,
        instance_name instnc
@@ -67,13 +71,15 @@ SELECT substr(replace(version,'.',''),0,3) dbversion
 from v$instance
 /
 
-column min_snapid new_value v_min_snapid noprint
-column max_snapid new_value v_max_snapid noprint
+SELECT dbid dbid
+FROM   v$database
+/
 
 SELECT MIN(snap_id) min_snapid,
        MAX(snap_id) max_snapid
 FROM   dba_hist_snapshot
-WHERE  begin_interval_time > ( SYSDATE - 30 )
+WHERE  begin_interval_time > ( SYSDATE - '&&dtrange' )
+AND dbid = '&&v_dbid'
 /
 
 define v_tag = &v_dbversion._&version._&v_host..&v_dbname..&v_inst..&v_hora..log
@@ -107,6 +113,7 @@ SELECT
                      (begin_interval_time) AS DATE)) * 60 * 60 * 24 ) snaps_diff_secs
 FROM   dba_hist_snapshot s
 WHERE  s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+AND dbid = '&&v_dbid'
 )
 GROUP BY '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora', dbid, instance_number, hour)
 SELECT pkey ||','|| dbid ||','|| instance_number ||','|| hour ||','|| min_snapid ||','|| max_snapid ||','|| min_begin_interval_time ||','||
@@ -120,10 +127,10 @@ spool opdb__opkeylog__&v_tag
 
 with vop as (
 select '&&v_tag' pkey, '&&version' opscriptversion, '&&v_dbversion' dbversion, '&&v_host' hostname,
-'&&v_dbname' dbname, '&&v_inst' instance_number, '&&v_hora' collection_time
+'&&v_dbname' dbname, '&&v_inst' instance_name, '&&v_hora' collection_time, &&v_dbid dbid, NULL comment
 from dual)
 select pkey ||' , '|| opscriptversion ||' , '|| dbversion ||' , '|| hostname
-       ||' , '|| dbname ||' , '|| instance_number ||' , '|| collection_time
+       ||' , '|| dbname ||' , '|| instance_name ||' , '|| collection_time ||' , '|| dbid ||' , '|| comment
 from vop;
 
 spool off
@@ -155,7 +162,7 @@ SELECT '&&v_host'
         FROM   (SELECT TRUNC(first_time) dia,
                        COUNT(*)          conta
                 FROM   v$log_history
-                WHERE  first_time >= TRUNC(SYSDATE) - 30
+                WHERE  first_time >= TRUNC(SYSDATE) - dtrange
                        AND first_time < TRUNC(SYSDATE)
                 GROUP  BY TRUNC(first_time)),
                v$log)                                                           AS redo_gb_per_day,
@@ -1165,6 +1172,7 @@ FROM   dba_hist_sysmetric_history hsm
                   AND hsm.instance_number = dhsnap.instance_number
                   AND hsm.dbid = dhsnap.dbid
 WHERE  hsm.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+AND hsm.dbid = '&&v_dbid'
 GROUP  BY '&&v_host'
           || '_'
           || '&&v_dbname'
@@ -1211,11 +1219,47 @@ SELECT '&&v_host'
        hsm.AVERAGE+(2*hsm.STANDARD_DEVIATION) "PERC95",
        MAXVAL                                 "PERC100"
 FROM   DBA_HIST_SYSMETRIC_SUMMARY hsm
-WHERE  hsm.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid')
+       inner join dba_hist_snapshot dhsnap
+               ON hsm.snap_id = dhsnap.snap_id
+                  AND hsm.instance_number = dhsnap.instance_number
+                  AND hsm.dbid = dhsnap.dbid
+WHERE  hsm.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+AND hsm.dbid = '&&v_dbid'),
+vsysmetricsummperhour as (
+    SELECT pkey,
+       hsm.dbid,
+       hsm.instance_number,
+       hour,
+       hsm.metric_name,
+       hsm.metric_unit,
+       AVG(hsm.PERC95)                           avg_value,
+       STATS_MODE(hsm.PERC95)                    mode_value,
+       MEDIAN(hsm.PERC95)                        median_value,
+       MIN(hsm.PERC95)                           min_value,
+       MAX(hsm.PERC95)                           max_value,
+       SUM(hsm.PERC95)                           sum_value,
+       PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY hsm.PERC95 DESC) AS "PERC50",
+       PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY hsm.PERC95 DESC) AS "PERC75",
+       PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY hsm.PERC95 DESC) AS "PERC90",
+       PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY hsm.PERC95 DESC) AS "PERC95",
+       PERCENTILE_CONT(0)
+         within GROUP (ORDER BY hsm.PERC95 DESC) AS "PERC100"
+    FROM vsysmetricsumm hsm
+    GROUP  BY pkey,
+            hsm.dbid,
+            hsm.instance_number,
+            hour,
+            hsm.metric_name,
+            hsm.metric_unit--, dhsnap.STARTUP_TIME
+)
 SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| hour ||' , '|| metric_name ||' , '||
        metric_unit ||' , '|| avg_value ||' , '|| mode_value ||' , '|| median_value ||' , '|| min_value ||' , '|| max_value ||' , '||
 	   sum_value ||' , '|| PERC50 ||' , '|| PERC75 ||' , '|| PERC90 ||' , '|| PERC95 ||' , '|| PERC100
-FROM vsysmetricsumm;
+FROM vsysmetricsummperhour; 
 
 spool off
 
@@ -1224,38 +1268,38 @@ spool opdb__awrhistosstat__&v_tag
 WITH v_osstat_all
      AS (SELECT os.dbid,
                      os.instance_number,
-                     TO_CHAR(snap.begin_interval_time, 'hh24') hh24,
+                     TO_CHAR(os.begin_interval_time, 'hh24') hh24,
                      os.stat_name,
                      os.value cumulative_value,
                      os.delta_value,
-                     ( TO_NUMBER(CAST(end_interval_time AS DATE) - CAST(begin_interval_time AS DATE)) * 60 * 60 * 24 )
+                     ( TO_NUMBER(CAST(os.end_interval_time AS DATE) - CAST(os.begin_interval_time AS DATE)) * 60 * 60 * 24 )
                         snap_total_secs,
                      PERCENTILE_CONT(0.5)
                        within GROUP (ORDER BY os.delta_value DESC) over (
                          PARTITION BY os.dbid, os.instance_number,
-                       TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
+                       TO_CHAR(os.begin_interval_time, 'hh24'), os.stat_name) AS
                      "PERC50",
                      PERCENTILE_CONT(0.25)
                        within GROUP (ORDER BY os.delta_value DESC) over (
                          PARTITION BY os.dbid, os.instance_number,
-                       TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
+                       TO_CHAR(os.begin_interval_time, 'hh24'), os.stat_name) AS
                      "PERC75",
                      PERCENTILE_CONT(0.1)
                        within GROUP (ORDER BY os.delta_value DESC) over (
                          PARTITION BY os.dbid, os.instance_number,
-                       TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
+                       TO_CHAR(os.begin_interval_time, 'hh24'), os.stat_name) AS
                      "PERC90",
                      PERCENTILE_CONT(0.05)
                        within GROUP (ORDER BY os.delta_value DESC) over (
                          PARTITION BY os.dbid, os.instance_number,
-                       TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
+                       TO_CHAR(os.begin_interval_time, 'hh24'), os.stat_name) AS
                      "PERC95",
                      PERCENTILE_CONT(0)
                        within GROUP (ORDER BY os.delta_value DESC) over (
                          PARTITION BY os.dbid, os.instance_number,
-                       TO_CHAR(snap.begin_interval_time, 'hh24'), os.stat_name) AS
+                       TO_CHAR(os.begin_interval_time, 'hh24'), os.stat_name) AS
                      "PERC100"
-              FROM (SELECT s.*,
+              FROM (SELECT snap.begin_interval_time, snap.end_interval_time, s.*,
                     NVL(DECODE(GREATEST(value, NVL(LAG(value)
                     OVER (
                     PARTITION BY s.dbid, s.instance_number, s.stat_name
@@ -1265,11 +1309,12 @@ WITH v_osstat_all
                        ORDER BY s.snap_id),
                     0), 0) AS delta_value
                     FROM dba_hist_osstat s
+                         inner join dba_hist_snapshot snap
+                         ON s.snap_id = snap.snap_id
+                         AND s.instance_number = snap.instance_number
+                         AND s.dbid = snap.dbid
                     WHERE s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
-                    ORDER BY snap_id) os
-                     inner join dba_hist_snapshot snap
-                             ON os.snap_id = snap.snap_id
-              WHERE  os.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'),
+                    AND s.dbid = '&&v_dbid') os ) , 
 vossummary AS (
 SELECT '&&v_host'
        || '_'
@@ -1336,10 +1381,14 @@ SELECT '&&v_host'
 FROM   dba_hist_sqlstat a
        inner join dba_hist_sqltext b
                ON ( a.con_id = b.con_id
-                    AND a.sql_id = b.sql_id )
+                    AND a.sql_id = b.sql_id 
+                    AND a.dbid = b.dbid)
        inner join dba_hist_snapshot c
-               ON ( a.snap_id = c.snap_id )
+               ON ( a.snap_id = c.snap_id 
+               AND a.dbid = c.dbid
+               AND a.instance_number = c.instance_number)
 WHERE  a.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+AND a.dbid = '&&v_dbid' 
 GROUP  BY '&&v_host'
           || '_'
           || '&&v_dbname'
@@ -1400,9 +1449,10 @@ SELECT
 FROM   dba_hist_snapshot s,
        dba_hist_sys_time_model g
 WHERE  s.snap_id = g.snap_id
-       AND s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
        AND s.instance_number = g.instance_number
        AND s.dbid = g.dbid
+       AND s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+       AND s.dbid = '&&v_dbid'
 )
 GROUP BY
       '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora',
@@ -1463,6 +1513,7 @@ FROM   dba_hist_snapshot s,
        dba_hist_sysstat g
 WHERE  s.snap_id = g.snap_id
        AND s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+       AND s.db_id = '&&v_dbid'
        AND s.instance_number = g.instance_number
        AND s.dbid = g.dbid
        AND (LOWER(stat_name) LIKE '%db%time%'
