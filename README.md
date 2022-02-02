@@ -116,7 +116,7 @@ opdb__dbservicesinfo__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 *  In this example of a filename `opdb__usedspacedetails__121_0.1.0_mydbhost.mycompany.com.ORCLDB.orcl1.071621111714.log` the file identification is `071621111714`.
 *  `-fileslocation`: The location in which the opdb*log were saved.
 *  `-projectname`: The GCP project in which the data will be loaded.
-*  `-deletedataset`: This an optinal. In case you want to delete the whole existing dataset before importing the data. 
+*  `-deletedataset`: This an optional. In case you want to delete the whole existing dataset before importing the data. 
 	*  WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
 
 
