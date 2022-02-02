@@ -16,8 +16,8 @@ limitations under the License.
 
 /*
 
-Version: 2.0.0
-Date: 2021-08-19
+Version: 2.0.3
+Date: 2022-02-01
 
 */
 
@@ -29,34 +29,32 @@ grant create session to &&dbusername;
 grant execute on sys.DBMS_SPACE_ADMIN to &&dbusername;
 grant select on sys.v_$database to &&dbusername;
 grant select on sys.v_$instance to &&dbusername;
-grant select on sys.cdb_users to &&dbusername;
+grant select on sys.dba_users to &&dbusername;
 grant select on sys.v_$version to &&dbusername;
 grant select on sys.v_$log_history to &&dbusername;
 grant select on sys.v_$log to &&dbusername;
 grant select on sys.v_$sgastat to &&dbusername;
 grant select on sys.v_$pgastat to &&dbusername;
-grant select on sys.cdb_data_files to &&dbusername;
-grant select on sys.cdb_segments to &&dbusername;
-grant select on sys.cdb_pdbs to &&dbusername;
-grant select on sys.v_$pdbs to &&dbusername;
+grant select on sys.dba_data_files to &&dbusername;
+grant select on sys.dba_segments to &&dbusername;
 grant select on sys.gv_$instance to &&dbusername;
-grant select on sys.cdb_tables to &&dbusername;
-grant select on sys.cdb_tab_partitions to &&dbusername;
-grant select on sys.cdb_tab_subpartitions to &&dbusername;
-grant select on sys.cdb_tablespaces to &&dbusername;
-grant select on sys.cdb_data_files to &&dbusername;
-grant select on sys.cdb_free_space to &&dbusername;
+grant select on sys.dba_tables to &&dbusername;
+grant select on sys.dba_tab_partitions to &&dbusername;
+grant select on sys.dba_tab_subpartitions to &&dbusername;
+grant select on sys.dba_tablespaces to &&dbusername;
+grant select on sys.dba_data_files to &&dbusername;
+grant select on sys.dba_free_space to &&dbusername;
 grant select on sys.v_$temp_space_header to &&dbusername;
 grant select on sys.gv_$parameter to &&dbusername;
-grant select on sys.cdb_feature_usage_statistics to &&dbusername;
+grant select on sys.dba_feature_usage_statistics to &&dbusername;
 grant select on sys.dba_high_water_mark_statistics to &&dbusername;
 grant select on sys.dba_cpu_usage_statistics to &&dbusername;
-grant select on sys.cdb_objects to &&dbusername;
-grant select on sys.cdb_source to &&dbusername;
-grant select on sys.cdb_part_tables to &&dbusername;
-grant select on sys.cdb_indexes to &&dbusername;
-grant select on sys.cdb_tab_columns to &&dbusername;
-grant select on sys.cdb_constraints to &&dbusername;
+grant select on sys.dba_objects to &&dbusername;
+grant select on sys.dba_source to &&dbusername;
+grant select on sys.dba_part_tables to &&dbusername;
+grant select on sys.dba_indexes to &&dbusername;
+grant select on sys.dba_tab_columns to &&dbusername;
+grant select on sys.dba_constraints to &&dbusername;
 grant select on sys.aux_stats$ to &&dbusername;
 grant select on sys.registry$history to &&dbusername;
 grant select on sys.dba_hist_snapshot to &&dbusername;
@@ -65,12 +63,12 @@ grant select on sys.dba_hist_sys_time_model to &&dbusername;
 grant select on sys.dba_hist_sqltext to &&dbusername;
 grant select on sys.dba_hist_osstat to &&dbusername;
 grant select on sys.dba_hist_sysmetric_history to &&dbusername;
+grant select on sys.dba_hist_sysmetric_summary to &&dbusername;
 grant select on sys.v_$diag_alert_ext to &&dbusername;
-grant select on sys.cdb_services to &&dbusername;
+grant select on sys.dba_services to &&dbusername;
 grant select on sys.dba_hist_sqlstat to &&dbusername;
 grant select on system.logstdby$skip_support to &&dbusername;
-grant select on cdb_db_links to &&dbusername;
-grant select on sys.dba_registry_sqlpatch to &&dbusername;
+grant select on sys.dba_db_links to &&dbusername;
 grant select on sys.dba_users to &&dbusername;
 grant select on sys.dba_segments to &&dbusername;
 grant select on sys.dba_tablespaces to &&dbusername;
@@ -88,3 +86,4 @@ grant select on sys.dba_data_files  to &&dbusername;
 grant select on sys.dba_tables  to &&dbusername;
 grant select on sys.dba_tab_partitions to &&dbusername;
 grant select on sys.dba_tab_subpartitions to &&dbusername;
+grant select on sys.nls_database_parameters to &&dbusername;

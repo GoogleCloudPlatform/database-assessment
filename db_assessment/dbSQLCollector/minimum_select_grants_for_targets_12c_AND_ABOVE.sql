@@ -16,8 +16,8 @@ limitations under the License.
 
 /*
 
-Version: 2.0.0
-Date: 2021-08-19
+Version: 2.0.3
+Date: 2022-02-01
 
 */
 
@@ -65,6 +65,7 @@ grant select on sys.dba_hist_sys_time_model to &&dbusername  container = all;
 grant select on sys.dba_hist_sqltext to &&dbusername  container = all;
 grant select on sys.dba_hist_osstat to &&dbusername  container = all;
 grant select on sys.dba_hist_sysmetric_history to &&dbusername  container = all;
+grant select on sys.dba_hist_sysmetric_summary to &&dbusername  container = all;
 grant select on sys.v_$diag_alert_ext to &&dbusername  container = all;
 grant select on sys.cdb_services to &&dbusername  container = all;
 grant select on sys.dba_hist_sqlstat to &&dbusername  container = all;
@@ -88,4 +89,5 @@ grant select on sys.dba_data_files  to &&dbusername  container = all;
 grant select on sys.dba_tables  to &&dbusername  container = all;
 grant select on sys.dba_tab_partitions to &&dbusername  container = all;
 grant select on sys.dba_tab_subpartitions to &&dbusername  container = all;
+grant select on sys.nls_database_parameters to &&dbusername  container = all;
 ALTER USER &&dbusername SET CONTAINER_DATA=ALL CONTAINER=CURRENT;
