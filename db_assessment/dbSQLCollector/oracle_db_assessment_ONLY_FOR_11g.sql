@@ -127,10 +127,10 @@ spool opdb__opkeylog__&v_tag
 
 with vop as (
 select '&&v_tag' pkey, '&&version' opscriptversion, '&&v_dbversion' dbversion, '&&v_host' hostname,
-'&&v_dbname' dbname, '&&v_inst' instance_name, '&&v_hora' collection_time, &&v_dbid dbid, NULL comment
+'&&v_dbname' dbname, '&&v_inst' instance_name, '&&v_hora' collection_time, '&&v_dbid' dbid, null "CMNT"
 from dual)
 select pkey ||' , '|| opscriptversion ||' , '|| dbversion ||' , '|| hostname
-       ||' , '|| dbname ||' , '|| instance_name ||' , '|| collection_time ||' , '|| dbid ||' , '|| comment
+       ||' , '|| dbname ||' , '|| instance_name ||' , '|| collection_time ||' , '|| dbid ||' , '|| CMNT
 from vop;
 
 spool opdb__dbsummary__&v_tag
@@ -158,7 +158,7 @@ SELECT '&&v_host'
         FROM   (SELECT TRUNC(first_time) dia,
                        COUNT(*)          conta
                 FROM   v$log_history
-                WHERE  first_time >= TRUNC(SYSDATE) - dtrange
+                WHERE  first_time >= TRUNC(SYSDATE) - '&&dtrange'
                        AND first_time < TRUNC(SYSDATE)
                 GROUP  BY TRUNC(first_time)),
                v$log)                                                           AS redo_gb_per_day,
@@ -1407,7 +1407,7 @@ FROM   dba_hist_snapshot s,
        dba_hist_sysstat g
 WHERE  s.snap_id = g.snap_id
        AND s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
-       AND s.db_id = '&&v_dbid'
+       AND s.dbid = '&&v_dbid'
        AND s.instance_number = g.instance_number
        AND s.dbid = g.dbid
        AND (LOWER(stat_name) LIKE '%db%time%'

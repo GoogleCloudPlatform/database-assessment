@@ -1,0 +1,20 @@
+steps:
+# Build the container image
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-api:latest', '.']
+# Push the container image to Container Registry
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-api:latest']
+# Deploy container image to Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: pip
+  args: ['install', '-r', 'build-requirements.txt', '--user']
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: python3
+  args: ['-m', 'invoke', 'pull-config']
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: python3
+  args: ['-m', 'invoke', 'deploy']
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: python3
+  args: ['-m', 'invoke', 'test', '--retrieve-token']
