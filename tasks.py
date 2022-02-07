@@ -12,7 +12,7 @@ def build(ctx, tag="latest"):
 def run(ctx, tag="latest"):
     local_cred_file = "${HOME}/.config/gcloud/application_default_credentials.json"
     docker_cred_file = "/tmp/creds/creds.json"
-    cmd = f"docker run -e GOOGLE_APPLICATION_CREDENTIALS={docker_cred_file} -v {local_cred_file}:{docker_cred_file} -p 8080:8080 {ctx.image}:{tag}"
+    cmd = f"docker run -e FLASK_ENV=development -e GOOGLE_APPLICATION_CREDENTIALS={docker_cred_file} -v {local_cred_file}:{docker_cred_file} -p 8080:8080 {ctx.image}:{tag}"
     ctx.run(cmd)
 
 
@@ -23,12 +23,16 @@ def push(ctx, tag="latest"):
 
 @task
 def test(ctx, base_url=None, local=False):
+    with ctx.cd('./sample/datacollection'):
+        ctx.run(f"tar -xvf {ctx.test_file}")
     if not base_url:
         base_url = get_beta_url(ctx)
     print(base_url)
     id_token = authenticate(ctx, local)
     with ctx.cd('./db_assessment'):
-        ctx.run(f"python optimusprime.py -remote -fileslocation ../sample/datacollection/ -dataset {ctx.dataset} -project {ctx.project} -collectionid {ctx.collection_id}", env={"ID_TOKEN":id_token })
+        cmd = f"python optimusprime.py -remote -fileslocation ../sample/datacollection/ -dataset {ctx.dataset} -project {ctx.project} -collectionid {ctx.collection_id} -remoteurl {base_url}"
+        print(cmd)
+        ctx.run(cmd, env={"ID_TOKEN":id_token })
 
 
 @task

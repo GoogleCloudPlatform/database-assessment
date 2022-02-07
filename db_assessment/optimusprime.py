@@ -277,13 +277,13 @@ def argumentsParser():
 
     parser.add_argument("-remote", default=False, help="Leverage remote API", action="store_true")
 
-    parser.add_argument("-remoteurl", default="https://op-api-3qhhvv7zvq-uc.a.run.app", help="Leverage remote API", action="store_true")
+    parser.add_argument("-remoteurl", type=str, default="https://op-api-3qhhvv7zvq-uc.a.run.app", help="Leverage remote API")
     
 
     # Consolidates different collection IDs found in the OS (dbResults/*log) into a single CSV per file type. 
     # For example: dbResults has 52 files. Meaning, 2 collection IDs (each one has 26 different file types). 
     # After the consolidation it produces 26 *consolidatedlogs.log which would have data from both collection IDs 
-    parser.add_argument("-cl", "--consolidatelogs", default=False, help="consolidate all CSV files opdb*log found in dbResults/ directory", action="store_true")
+    parser.add_argument("-cl", "--consolidatelogs", default=False, help="consolidate all CSV files opdb*log found in dbResults/ directory")
 
     # Increase logging output level
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
