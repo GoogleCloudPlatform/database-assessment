@@ -8,7 +8,7 @@ steps:
 # Deploy container image to Cloud Run
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: pip
-  args: ['install', '-r', 'build-requirements.txt', '--user']
+  args: ['install', '-r', 'build-requirements.txt', '-r', 'requirements.txt', '--user']
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: python3
   args: ['-m', 'invoke', 'pull-config']
@@ -17,4 +17,4 @@ steps:
   args: ['-m', 'invoke', 'deploy', '--tag=$BUILD_ID']
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
   entrypoint: python3
-  args: ['-m', 'invoke', 'test', '--retrieve-token']
+  args: ['-m', 'invoke', 'test']

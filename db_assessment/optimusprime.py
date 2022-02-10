@@ -55,7 +55,7 @@ def get_id_token():
 
 def runRemote(args):
     import requests
-    id_token = os.getenv("ID_TOKEN", get_id_token())
+    id_token = os.getenv("ID_TOKEN") if os.getenv("ID_TOKEN") else get_id_token()
     headers = {"Authorization": f"Bearer {id_token}"}
     config = {
         "projectId": args.projectname,
@@ -70,6 +70,7 @@ def runRemote(args):
     files = {file_name: file_name for file_name in files}
     result = requests.post(f"{args.remoteurl}/api/loadAssesment", files=files, data=config, headers=headers)
     result.raise_for_status()
+    print(result.text)
 
 
 def runMain(args):

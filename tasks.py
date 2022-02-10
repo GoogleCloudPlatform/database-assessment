@@ -30,7 +30,7 @@ def test(ctx, base_url=None, local=False):
     print(base_url)
     id_token = authenticate(ctx, local)
     with ctx.cd('./db_assessment'):
-        cmd = f"python optimusprime.py -remote -fileslocation ../sample/datacollection/ -dataset {ctx.dataset} -project {ctx.project} -collectionid {ctx.collection_id} -remoteurl {base_url}"
+        cmd = f"python3 optimusprime.py -remote -fileslocation ../sample/datacollection/ -dataset {ctx.dataset} -project {ctx.project} -collectionid {ctx.collection_id} -remoteurl {base_url}"
         print(cmd)
         ctx.run(cmd, env={"ID_TOKEN":id_token })
 
