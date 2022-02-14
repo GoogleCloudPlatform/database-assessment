@@ -3057,7 +3057,7 @@
                                         "     from vsysstat_part1 b",
                                         "     group by b.info_source, b.pkey, b.dbid, b.instance_number, b.hour",
                                         " )",
-                                        " select d.dbversion, c.* ",
+                                        " select d.dbversion, 'All Metrics are Per Second' metric_unit, c.* ",
                                         " from vsysstat_part2 c",
                                         " inner join ${projectname}.${dataset}.vdbsummary d",
                                         " on c.pkey = d.pkey and c.dbid = d.dbid"],                                                 
