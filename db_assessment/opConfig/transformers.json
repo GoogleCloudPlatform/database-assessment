@@ -1312,7 +1312,7 @@
                 "2-0-create-view-vawrhistsysmetricumm":
                             {
                                 "priority": 0,
-                                "minsqlscriptversion": "2.0.0",
+                                "minsqlscriptversion": "2.0.3",
                                 "maxsqlscriptversion": "2.0.3",
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
@@ -1621,6 +1621,31 @@
                                 "tags": ["DATAFRAMERESHAPE"],
                                 "description": ""
                             },
+                "2-0-create-view-vdbparameters-11g202":
+                            {
+                                "priority": 0,
+                                "minsqlscriptversion": "2.0.0",
+                                "maxsqlscriptversion": "2.0.2",
+                                "mindbversion": "111",
+                                "maxdbversion": "112",
+                                "execution_group": "2",
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                    ["select distinct trim(pkey) pkey,",
+                                        "        cast(inst_id as numeric) inst_id,",
+                                        "        cast(inst_id as numeric) instance_number,",
+                                        "        trim(name) name,",
+                                        "        trim(value) value,",
+                                        "        trim(default_value) default_value,",
+                                        "        trim(isdefault_value) isdefault_value",
+                                        " FROM ${projectname}.${dataset}.dbparameters a",
+                                        " where trim(a.pkey) in",
+                                        "      ( select trim(pkey)",
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vdbparameters", "store": "BIGQUERY"},
+                                "status": "ENABLED",
+                                "tags": ["DATAFRAMERESHAPE"],
+                                "description": ""
+                            },
                 "2-0-create-view-vdbservicesinfo":
                             {
                                 "priority": 0,
@@ -1908,9 +1933,9 @@
                 "2-100-create-view-vsysmetric":
                             {
                                 "priority": 100,
-                                "minsqlscriptversion": "2.0.0",
+                                "minsqlscriptversion": "2.0.3",
                                 "maxsqlscriptversion": "2.0.3",
-                                "mindbversion": "111",
+                                "mindbversion": "121",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
                                 "action_details": {"action": "EXECUTE_SQL",  "expr1": 
@@ -1919,6 +1944,22 @@
                                         " union all ",
                                         "select 'SYSMETRIC_SUMMARY', b.*",
                                         " from ${projectname}.${dataset}.vawrhistsysmetricsumm b"],                                                 
+                                "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vsysmetric", "store": "BIGQUERY"},
+                                "status": "ENABLED",
+                                "tags": ["DATAFRAMERESHAPE"],
+                                "description": ""
+                            },
+                "2-100-create-view-vsysmetric-202":
+                            {
+                                "priority": 100,
+                                "minsqlscriptversion": "2.0.0",
+                                "maxsqlscriptversion": "2.0.2",
+                                "mindbversion": "121",
+                                "maxdbversion": "194",
+                                "execution_group": "2",
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                    ["select 'SYSMETRIC_HISTORY' info_source, a.*",
+                                        " from ${projectname}.${dataset}.vawrhistsysmetrichist a"],                                                 
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vsysmetric", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -2094,7 +2135,7 @@
                                 "priority": 200,
                                 "minsqlscriptversion": "2.0.0",
                                 "maxsqlscriptversion": "2.0.3",
-                                "mindbversion": "111",
+                                "mindbversion": "121",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
                                 "action_details": {"action": "EXECUTE_SQL",  "expr1": 
@@ -2115,7 +2156,7 @@
                                 "priority": 300,
                                 "minsqlscriptversion": "2.0.0",
                                 "maxsqlscriptversion": "2.0.3",
-                                "mindbversion": "111",
+                                "mindbversion": "121",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
                                 "action_details": {"action": "EXECUTE_SQL",  "expr1": 
@@ -2548,9 +2589,9 @@
                 "2-500-create-view-vsysmetric_io_facts":
                             {
                                 "priority": 500,
-                                "minsqlscriptversion": "2.0.0",
+                                "minsqlscriptversion": "2.0.3",
                                 "maxsqlscriptversion": "2.0.3",
-                                "mindbversion": "111",
+                                "mindbversion": "121",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
                                 "action_details": {"action": "EXECUTE_SQL",  "expr1": 
@@ -2575,12 +2616,41 @@
                                 "tags": ["DATAFRAMERESHAPE"],
                                 "description": ""
                             },
-                "2-500-create-view-vsysmetric_cpu_facts":
+                "2-500-create-view-vsysmetric_io_facts-202":
                             {
                                 "priority": 500,
                                 "minsqlscriptversion": "2.0.0",
+                                "maxsqlscriptversion": "2.0.2",
+                                "mindbversion": "121",
+                                "maxdbversion": "194",
+                                "execution_group": "2",
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                    [" select a.info_source, a.pkey, a.dbid, a.instance_number, a.hour,",
+                                        "        a.cell_phy_io_int_bytes_perc50, a.cell_phy_io_int_bytes_perc75, a.cell_phy_io_int_bytes_perc95, a.cell_phy_io_int_bytes_perc100, 'Indicates the number of byes transferred from exadata storage server to the database. For non-Exadata environments it might be equal to physical reads.' cell_phy_io_int_bytes_comments,",
+                                        "        a.io_mbps_perc50, a.io_mbps_perc75, a.io_mbps_perc95, a.io_mbps_perc100, 'I/O MegaBytes per Second' io_mbps_comments,",
+                                        "        a.phy_read_bytes_perc50, a.phy_read_bytes_perc75, a.phy_read_bytes_perc95, a.phy_read_bytes_perc100, 'Physical Read Bytes Per Second indicates the number of bytes read by FOREGROUND processess - in other words only by user application workload.' phy_read_bytes_comments,",
+                                        "        a.phy_read_iops_perc50, a.phy_read_iops_perc75, a.phy_read_iops_perc95, a.phy_read_iops_perc100, 'Physical Read IO Per Second indicates the number of IOPs read by FOREGROUND processess - in other words only by user application workload.' phy_read_iops_comments,",
+                                        "        a.phy_read_total_bytes_perc50, a.phy_read_total_bytes_perc75, a.phy_read_total_bytes_perc95, a.phy_read_total_bytes_perc100, 'Physical Read Total Bytes Per Second indicates the number of bytes read by FOREGROUND and BACKGROUND processess - on other words not only user application workload but also ASM Mirroring, ASM Rebalance, RMAN Backups, etc.' phy_read_total_bytes_comments,",
+                                        "        a.phy_read_total_iops_perc50, a.phy_read_total_iops_perc75, a.phy_read_total_iops_perc95, a.phy_read_total_iops_perc100, 'Physical Read Total IO Per Second indicates the number of IOPs read by FOREGROUND and BACKGROUND processess - on other words not only user application workload but also ASM Mirroring, ASM Rebalance, RMAN Backups, etc.' phy_read_total_iops_comments,",
+                                        "        a.phy_read_direct_lobs_perc50, a.phy_read_direct_lobs_perc75, a.phy_read_direct_lobs_perc95, a.phy_read_direct_lobs_perc100, 'Physical Read Direct Lobs indicates the number of database blocks read by FOREGROUND processess to server Lob related queries - in other words only by user application Lob workload.' phy_read_direct_lobs_comments,",
+                                        "        a.phy_reads_perc50, a.phy_reads_perc75, a.phy_reads_perc95, a.phy_reads_perc100, 'Physical Reads indicates the number of database blocks read by FOREGROUND processess - in other words only by user application workload.' phy_reads_comments,",
+                                        "        a.phy_writes_bytes_perc50, a.phy_writes_bytes_perc75, a.phy_writes_bytes_perc95, a.phy_writes_bytes_perc100, 'Physical Write Bytes Per Second indicates the number of bytes written by FOREGROUND processess - in other words only by user application workload.' phy_writes_bytes_comments,",
+                                        "        a.phy_write_iops_perc50, a.phy_write_iops_perc75, a.phy_write_iops_perc95, a.phy_write_iops_perc100, 'Physical Write IO Per Second indicates the number of IOPs write by FOREGROUND processess - in other words only by user application workload.' phy_write_iops_comments,",
+                                        "        a.phy_write_total_bytes_perc50, a.phy_write_total_bytes_perc75, a.phy_write_total_bytes_perc95, a.phy_write_total_bytes_perc100, 'Physical Write Total Bytes Per Second indicates the number of bytes written by FOREGROUND and BACKGROUND processess - on other words not only user application workload but also ASM Mirroring, ASM Rebalance, RMAN Backups, etc.' phy_write_total_bytes_comments,",
+                                        "        a.phy_write_total_iops_perc50, a.phy_write_total_iops_perc75, a.phy_write_total_iops_perc95, a.phy_write_total_iops_perc100, 'Physical Write Total IO Per Second indicates the number of IOPs written by FOREGROUND and BACKGROUND processess - on other words not only user application workload but also ASM Mirroring, ASM Rebalance, RMAN Backups, etc.' phy_write_total_iops_comments,",
+                                        "        a.phy_writes_direct_lobs_perc50, a.phy_writes_direct_lobs_perc75, a.phy_writes_direct_lobs_perc95, a.phy_writes_direct_lobs_perc100, 'Physical Read Direct Lobs indicates the number of database blocks written by FOREGROUND processess to server Lob related queries - in other words only by user application Lob workload.' phy_write_direct_lobs_comments,",
+                                        " from ${projectname}.${dataset}.vsysmetric_columnar a"],                                       
+                                "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vsysmetric_io_facts", "store": "BIGQUERY"},
+                                "status": "ENABLED",
+                                "tags": ["DATAFRAMERESHAPE"],
+                                "description": ""
+                            },
+                "2-500-create-view-vsysmetric_cpu_facts":
+                            {
+                                "priority": 500,
+                                "minsqlscriptversion": "2.0.3",
                                 "maxsqlscriptversion": "2.0.3",
-                                "mindbversion": "111",
+                                "mindbversion": "121",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
                                 "action_details": {"action": "EXECUTE_SQL",  "expr1": 
@@ -2605,6 +2675,40 @@
                                         " left outer join ${projectname}.${dataset}.vosstat_columnar b" ,
                                         " on a.pkey = b.pkey and a.dbid = b.dbid and a.instance_number = b.instance_number and a.hour = b.hour" ,
                                         " where a.info_source = 'SYSMETRIC_SUMMARY'"],                                                 
+                                "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vsysmetric_cpu_facts", "store": "BIGQUERY"},
+                                "status": "ENABLED",
+                                "tags": ["DATAFRAMERESHAPE"],
+                                "description": ""
+                            },
+                "2-500-create-view-vsysmetric_cpu_facts-202":
+                            {
+                                "priority": 500,
+                                "minsqlscriptversion": "2.0.0",
+                                "maxsqlscriptversion": "2.0.2",
+                                "mindbversion": "121",
+                                "maxdbversion": "194",
+                                "execution_group": "2",
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                    [" select a.info_source, a.pkey, a.dbid, a.instance_number, a.hour," ,
+                                        "        b.num_cpu_sockets, b.num_cpu_cores, b.num_cpus, b.load, 'Source: OSSTAT. num_cpu_sockets(total physical sockets), num_cpu_cores(total cores regardless to the sockets), num_cpus (cpu threads), load' osstat_comments," ,
+                                        "        round( b.busy_time_perc50 / (b.busy_time_perc50 + b.user_time_perc50) * 100,1) osstat_host_cpu_utilization_perc50," ,
+                                        "        round( b.busy_time_perc75 / (b.busy_time_perc75 + b.user_time_perc75) * 100,1) osstat_host_cpu_utilization_perc75," ,
+                                        "        round( b.busy_time_perc95 / (b.busy_time_perc95 + b.user_time_perc95) * 100,1) osstat_host_cpu_utilization_perc95," ,
+                                        "        round( b.busy_time_perc100 / (b.busy_time_perc100 + b.user_time_perc100) * 100,1) osstat_host_cpu_utilization_perc100,  'Source: OSSTAT. CPU utilization at host level. Includes root and user cpu usage.' osstat_host_cpu_utilization_comments," ,
+                                        "        round( b.user_time_perc50 / (b.busy_time_perc50 + b.user_time_perc50) * 100,1) osstat_user_host_cpu_utilization_perc50," ,
+                                        "        round( b.user_time_perc75 / (b.busy_time_perc75 + b.user_time_perc75) * 100,1) osstat_user_host_cpu_utilization_perc75," ,
+                                        "        round( b.user_time_perc95 / (b.busy_time_perc95 + b.user_time_perc95) * 100,1) osstat_user_host_cpu_utilization_perc95," ,
+                                        "        round( b.user_time_perc100 / (b.busy_time_perc100 + b.user_time_perc100) * 100,1) osstat_user_host_cpu_utilization_perc100, 'Source: OSSTAT. CPU utilization at host level. Includes ONLY user(non-root) cpu usage.' osstat_user_host_cpu_utilization_comments," ,
+                                        "        a.avg_active_sess_perc50, a.avg_active_sess_perc75, a.avg_active_sess_perc95, a.avg_active_sess_perc100, 'Average Active Sessions (AAS) Per Second indicates the ratio of the change in Database Time (time in the database in seconds spent using CPU, IO, waiting) divided by the clock time. It is not a measure of how many sessions exist in the system at a given time, but rather how busy the database is.' avg_active_sess_comments," ,
+                                        "        a.bkgr_cpu_usage_perc50, a.bkgr_cpu_usage_perc75, a.bkgr_cpu_usage_perc95, a.bkgr_cpu_usage_perc100, '' bkgr_cpu_usage_comments," ,
+                                        "        a.cpu_usage_perc50, a.cpu_usage_perc75, a.cpu_usage_perc95, a.cpu_usage_perc100, 'CPU Usage Per Second indicates CPU Usage accounted for BACKGROUND processes (non application workload).' cpu_usage_comments," ,
+                                        "        a.dbcpu_time_ratio_perc50, a.dbcpu_time_ratio_perc75, a.dbcpu_time_ratio_perc95, a.dbcpu_time_ratio_perc100, 'The Database CPU Time Ratio is computed by dividing the amount of CPU used in the database by the amount of total database time.   Total database time is the time spent by the database on user-level calls (without instance background process activity).' dbcpu_time_ratio_comments," ,
+                                        "        a.host_cpu_usage_time_perc50, a.host_cpu_usage_time_perc75, a.host_cpu_usage_time_perc95, a.host_cpu_usage_time_perc100, 'Source: DBA_HIST*SYSMETRIC*. Host CPU Usage Per Sec is how much TIME the database estimates the host has spent to serve FOREGROUND and BACKGROUND.' host_cpu_usage_time_comments," ,
+                                        "        a.host_cpu_utilization_perc50, a.host_cpu_utilization_perc75, a.host_cpu_utilization_perc95, a.host_cpu_utilization_perc100, 'Source: DBA_HIST*SYSMETRIC*. Host CPU Usage Per Sec is the PERCENTAGE the database estimates the host has spent to serve FOREGROUND and BACKGROUND.' host_cpu_utilization_comments," ,
+                                        "        a.logical_reads_perc50, a.logical_reads_perc75, a.logical_reads_perc95, a.logical_reads_perc100, 'Logical Reads Per Second is usually the sole responsible for driving CPU consumption.' logical_reads_comments" ,
+                                        " from  ${projectname}.${dataset}.vsysmetric_columnar a" ,
+                                        " left outer join ${projectname}.${dataset}.vosstat_columnar b" ,
+                                        " on a.pkey = b.pkey and a.dbid = b.dbid and a.instance_number = b.instance_number and a.hour = b.hour"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vsysmetric_cpu_facts", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
