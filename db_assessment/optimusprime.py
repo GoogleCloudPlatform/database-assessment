@@ -108,7 +108,7 @@ def runMain(args):
         elif len(collectionKey.split('_')) == 3 and args.dbversion is None:
             transformersParameters['dbversion'] = import_db_assessment.getObjNameFromFiles(collectionKey,'_',0)
         else:
-            print ('\nFATAL ERRROR: Please use -dbversion and -optimuscollectionversion. \nI.E -dbversion 122 -optimuscollectionversion 2.0.3\n')
+            print ('\nFATAL ERRROR: Please use -dbversion and -collectionversion. \nI.E -dbversion 122 -collectionversion 2.0.3\n')
             sys.exit()
 
         if len(collectionKey.split('_')) == 3:
