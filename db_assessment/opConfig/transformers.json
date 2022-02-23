@@ -2949,7 +2949,7 @@
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "V_DS_BMSsizing_summary", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
-                                "description": ""
+                                "description": " "
                             },
                 "2-700-create-view-V_DS_dbsummary":
                             {
