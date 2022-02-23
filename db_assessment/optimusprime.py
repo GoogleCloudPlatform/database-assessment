@@ -111,6 +111,9 @@ def runMain(args):
             print ('\nFATAL ERRROR: Please use -dbversion and -optimuscollectionversion. \nI.E -dbversion 122 -optimuscollectionversion 2.0.3\n')
             sys.exit()
 
+        if args.importcomment is not None:
+            transformersParameters['importcomment'] = str(args.importcomment)
+
         if len(collectionKey.split('_')) == 3:
             transformersParameters['optimuscollectionversion'] = import_db_assessment.getObjNameFromFiles(collectionKey,'_',1)
         else:
@@ -245,6 +248,8 @@ def argumentsParser():
 
     # Increase logging output level
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
+
+    parser.add_argument("-importcomment", type=str, default='', help="Comment for the Import")
 
     # Execute the parse_args() method. Variable args is a namespace type
     args = parser.parse_args()
