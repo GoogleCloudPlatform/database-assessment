@@ -14,7 +14,7 @@
 
 
 # Basic python built-in libraries to enable read, write and manipulate files in the OS
-import os,csv
+import os
 import glob
 import sys
 import pandas as pd
