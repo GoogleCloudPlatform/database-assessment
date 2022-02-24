@@ -387,27 +387,9 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
     return True
 
 def addcomment(fileName,comment):
-    df = pd.read_csv(fileName)
+    df = pd.read_csv(fileName, index_col=False)
     df["CMNT"] = comment
     df.to_csv(fileName,index=False)
-    # csvfile = open(fileName)
-    # reader = csv.reader(csvfile)
-    # all=[]
-    # row0 = next(reader)
-    # all.append(row0)
-    # row1 = next(reader)
-    # row1.append('CMNT')
-    # all.append(row1)
-    # row2 = next(reader)
-    # print(row2)
-    # row2.append(comment)
-    # print(row2)
-    # all.append(row2)
-    #
-    # with open(fileName, 'w') as csvoutput:
-    #     writer = csv.writer(csvoutput, lineterminator='\n')
-    #     writer.writerows(all)
-
 
 def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,skipLeadingRows,transformersParameters):
 # This function receives a list of files to import to Big Query, then it calls importCSVToBQ to import table/file by table/file
