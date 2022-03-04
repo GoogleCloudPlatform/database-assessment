@@ -610,7 +610,66 @@
                                                         "awrsnapdetails": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["min_snapid","STRING"],["max_snapid","STRING"],["min_begin_interval_time","STRING"],["max_begin_interval_time","STRING"],["cnt","STRING"],["sum_snaps_diff_secs","STRING"],["avg_snaps_diff_secs","STRING"],["median_snaps_diff_secs","STRING"],["mode_snaps_diff_secs","STRING"],["min_snaps_diff_secs","STRING"],["max_snaps_diff_secs","STRING"]],
                                                         "opkeylog":[["pkey","STRING"],["opscriptversion","STRING"],["dbversion","STRING"],["hostname","STRING"],["dbname","STRING"],["instance_number","STRING"],["collection_time","STRING"]]
                                                     }
-                                        }
+                                        },
+                                        "2.0.4":
+                                            {
+                                                "111,112,121,122,180,181,190,191,210,211":
+                                                        {
+                                                            "opkeylog": [["pkey","STRING"],["opscriptversion","STRING"],["dbversion","STRING"],["hostname","STRING"],["dbname","STRING"],["instance_name","STRING"],["collection_time","STRING"],["dbid","STRING"],["cmnt","STRING"]],
+                                                            "dbsummary": [["pkey","STRING"],["dbid","STRING"],["db_name","STRING"],["cdb","STRING"],["dbversion","STRING"],["dbfullversion","STRING"],["log_mode","STRING"],["force_logging","STRING"],["redo_gb_per_day","STRING"],["rac_dbinstaces","STRING"],["characterset","STRING"],["platform_name","STRING"],["startup_time","STRING"],["user_schemas","STRING"],["buffer_cache_mb","STRING"],["shared_pool_mb","STRING"],["total_pga_allocated_mb","STRING"],["db_size_allocated_gb","STRING"],["db_size_in_use_gb","STRING"],["db_long_size_gb","STRING"],["dg_database_role","STRING"],["dg_protection_mode","STRING"],["dg_protection_level","STRING"]],
+                                                            "dboverview": [["pkey","STRING"],["metric","STRING"],["value","STRING"]],
+                                                            "pdbsinfo": [["pkey","STRING"],["dbid","STRING"],["pdb_id","STRING"],["pdb_name","STRING"],["status","STRING"],["logging","STRING"]],
+                                                            "pdbsopenmode": [["pkey","STRING"],["con_id","STRING"],["name","STRING"],["open_mode","STRING"],["total_gb","STRING"]],
+                                                            "dbinstances": [["pkey","STRING"],["inst_id","STRING"],["instance_name","STRING"],["host_name","STRING"],["version","STRING"],["status","STRING"],["database_status","STRING"],["instance_role","STRING"]],
+                                                            "usedspacedetails": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["segment_type","STRING"],["tablespace_name","STRING"],["flash_cache","STRING"],["inmemory","STRING"],["in_con_id","STRING"],["in_owner","STRING"],["in_segment_type","STRING"],["in_tablespace_name","STRING"],["in_flash_cache","STRING"],["size_gb","STRING"]],
+                                                            "compressbytable": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["number_tables","STRING"],["table_gb","STRING"],["number_parts","STRING"],["part_gb","STRING"],["number_subparts","STRING"],["subpart_gb","STRING"],["total_gb","STRING"]],
+                                                            "compressbytype": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["basic","STRING"],["oltp","STRING"],["query_low","STRING"],["query_high","STRING"],["archive_low","STRING"],["archive_high","STRING"],["total_gb","STRING"]],
+                                                            "spacebyownersegtype": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["segment_type","STRING"],["total_gb","STRING"]],
+                                                            "spacebytablespace": [["pkey","STRING"],["tablespace_name","STRING"],["extent_management","STRING"],["allocation","STRING"],["segment_space_manage","STRING"],["status","STRING"],["est_gain_mb","STRING"]],
+                                                            "freespaces": [["pkey","STRING"],["con_id","STRING"],["tablespace","STRING"],["status","STRING"],["total_gb","STRING"],["used_gb","STRING"],["free_gb","STRING"],["pct_used","STRING"],["graph","STRING"]],
+                                                            "dblinks": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["db_link","STRING"],["username","STRING"],["host","STRING"],["created","STRING"]],
+                                                            "dbparameters": [["pkey","STRING"],["inst_id","STRING"],["con_id","STRING"],["name","STRING"],["value","STRING"],["default_value","STRING"],["isdefault_value","STRING"]],
+                                                            "dbfeatures": [["pkey","STRING"],["con_id","STRING"],["name","STRING"],["current_usage","STRING"],["detected_usage","STRING"],["total_samples","STRING"],["first_usage","STRING"],["last_usage","STRING"],["aux_count","STRING"]],
+                                                            "dbhwmarkstatistics": [["pkey","STRING"],["description","STRING"],["highwater","STRING"],["last_value","STRING"]],
+                                                            "dbobjects": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["objecttype","STRING"],["editionable","STRING"],["coun","STRING"],["in_con_id","STRING"],["in_owner","STRING"],["in_object_type","STRING"],["in_editionable","STRING"]],
+                                                            "sourcecode": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["type","STRING"],["nr_lines","STRING"],["qt_objs","STRING"],["nr_lines_w_utl","STRING"],["nr_lines_w_dbms","STRING"],["nr_lines_w_exec_im","STRING"],["nr_lines_w_dbms_sql","STRING"],["nr_lines_w_dbms_utl","STRING"],["nr_lines_total","STRING"]],
+                                                            "partsubparttypes": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["partition","STRING"],["subpartition","STRING"],["coun","STRING"]],
+                                                            "indexestypes": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["index_type","STRING"],["coun","STRING"]],
+                                                            "datatypes": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["data_type","STRING"],["coun","STRING"]],
+                                                            "cpucoresusage": [["pkey","STRING"],["dt","STRING"],["cpu_count","STRING"],["cpu_core_count","STRING"],["cpu_socket_count","STRING"]],
+                                                            "tablesnopk": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["pk","STRING"],["uk","STRING"],["ck","STRING"],["ri","STRING"],["vwck","STRING"],["vmro","STRING"],["hashexpr","STRING"],["suplog","STRING"],["num_tables","STRING"],["total_cons","STRING"]],
+                                                            "systemstats": [["pkey","STRING"],["stat_type","STRING"],["stat_name","STRING"],["value1","STRING"],["value2","STRING"]],
+                                                            "patchlevel": [["pkey","STRING"],["script_dbversion","STRING"],["time","STRING"],["action","STRING"],["namespace","STRING"],["version","STRING"],["id","STRING"],["comments","STRING"]],
+                                                            "awrhistsysmetrichist": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["metric_name","STRING"],["metric_unit","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"]],
+                                                            "awrhistsysmetricsumm": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["metric_name","STRING"],["metric_unit","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"]],
+                                                            "awrhistsystimemodel":[["pkey","STRING"],["total_awr_secs","STRING"],["con_id","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["stat_name","STRING"],["hour_total_secs","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRG"],["coun","STRING"]],
+                                                            "awrhistosstat": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["stat_name","STRING"],["hour_total_secs","STRING"],["cumulative_value","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["cnt","STRING"]],
+                                                            "awrhistcmdtypes": [["pkey","STRING"],["con_id","STRING"],["hour","STRING"],["command_type","STRING"],["coun","STRING"],["avg_buffer_gets","STRING"],["avg_elapsed_time","STRING"],["avg_rows_processed","STRING"],["avg_executions","STRING"],["avg_cpu_time","STRING"],["avg_iowait","STRING"],["avg_clwait","STRING"],["avg_apwait","STRING"],["avg_ccwait","STRING"],["avg_plsexec_time","STRING"]],
+                                                            "alertlog2": [["pkey","STRING"],["message_time","STRING"],["message_text","STRING"],["host_id","STRING"],["con_id","STRING"],["component_id","STRING"],["message_type","STRING"],["message_level","STRING"],["message_id","STRING"],["message_group","STRING"],["container_name","STRING"]],
+                                                            "optimusconfig_bms_machinesizes": [["cores","STRING"],["ram_gb","STRING"],["machine_size","STRING"],["machine_size_short","STRING"],["processor","STRING"],["est_price","STRING"]],
+                                                            "optimusconfig_network_to_gcp": [["network_to_gcp","STRING"],["gbytes_per_sec","STRING"],["mbytes_per_sec","STRING"]],
+                                                            "awrhistsysmetrichist_rs": [["pkey","STRING"],["con_id","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["AAS_PERC90","STRING"],["BKGRCPU_PER_SEC_PERC90","STRING"],["CPU_PER_SEC_PERC90","STRING"],["EXEC_PER_SEC_PERC90","STRING"],["HOST_CPU_PER_SEC_PERC90","STRING"],["IOMBPS_PERC90","STRING"],["IOPS_PERC90","STRING"],["LOG_READS_PER_TXN_PERC90","STRING"],["LOGONS_PER_SEC_PERC90","STRING"],["PHY_READS_PER_SEC_PERC90","STRING"],["PHY_WRITES_PER_SEC_PERC90","STRING"],["REDO_GEN_PER_SEC_PERC90","STRING"],["SQL_RT_PERC90","STRING"],["USERCALLS_PER_SEC_PERC90","STRING"],["USER_TX_PER_SEC_PERC90","STRING"],["AAS_PERC95","STRING"],["BKGRCPU_PER_SEC_PERC95","STRING"],["CPU_PER_SEC_PERC95","STRING"],["EXEC_PER_SEC_PERC95","STRING"],["HOST_CPU_PER_SEC_PERC95","STRING"],["IOMBPS_PERC95","STRING"],["IOPS_PERC95","STRING"],["LOG_READS_PER_TXN_PERC95","STRING"],["LOGONS_PER_SEC_PERC95","STRING"],["PHY_READS_PER_SEC_PERC95","STRING"],["PHY_WRITES_PER_SEC_PERC95","STRING"],["REDO_GEN_PER_SEC_PERC95","STRING"],["SQL_RT_PERC95","STRING"],["USERCALLS_PER_SEC_PERC95","STRING"],["USER_TX_PER_SEC_PERC95","STRING"]],
+                                                            "awrhistosstat_rs": [["pkey","STRING"],["con_id","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["BUSY_TIME_PERC90","STRING"],["FREE_MEMORY_BYTES_PERC90","STRING"],["IDLE_TIME_PERC90","STRING"],["INACTIVE_MEMORY_BYTES_PERC90","STRING"],["IOWAIT_TIME_PERC90","STRING"],["LOAD_PERC90","STRING"],["NICE_TIME_PERC90","STRING"],["NUM_CPUS_PERC90","STRING"],["NUM_CPU_CORES_PERC90","STRING"],["NUM_CPU_SOCKETS_PERC90","STRING"],["PHYSICAL_MEMORY_BYTES_PERC90","STRING"],["RSRC_MGR_CPU_WAIT_TIME_PERC90","STRING"],["SWAP_FREE_BYTES_PERC90","STRING"],["SYS_TIME_PERC90","STRING"],["USER_TIME_PERC90","STRING"],["VM_IN_BYTES_PERC90","STRING"],["VM_OUT_BYTES_PERC90","STRING"],["BUSY_TIME_PERC95","STRING"],["FREE_MEMORY_BYTES_PERC95","STRING"],["IDLE_TIME_PERC95","STRING"],["INACTIVE_MEMORY_BYTES_PERC95","STRING"],["IOWAIT_TIME_PERC95","STRING"],["LOAD_PERC95","STRING"],["NICE_TIME_PERC95","STRING"],["NUM_CPUS_PERC95","STRING"],["NUM_CPU_CORES_PERC95","STRING"],["NUM_CPU_SOCKETS_PERC95","STRING"],["PHYSICAL_MEMORY_BYTES_PERC95","STRING"],["RSRC_MGR_CPU_WAIT_TIME_PERC95","STRING"],["SWAP_FREE_BYTES_PERC95","STRING"],["SYS_TIME_PERC95","STRING"],["USER_TIME_PERC95","STRING"],["VM_IN_BYTES_PERC95","STRING"],["VM_OUT_BYTES_PERC95","STRING"]],
+                                                            "dbparameters_rs": [["pkey","STRING"],["inst_id","STRING"],["con_id","STRING"],["buffer_pool_keep_value","STRING"],["buffer_pool_recycle_value","STRING"],["cluster_database_value","STRING"],["compatible_value","STRING"],["cpu_count_value","STRING"],["db_16k_cache_size_value","STRING"],["db_2k_cache_size_value","STRING"],["db_32k_cache_size_value","STRING"],["db_4k_cache_size_value","STRING"],["db_8k_cache_size_value","STRING"],["db_block_size_value","STRING"],["db_cache_size_value","STRING"],["db_domain_value","STRING"],["db_flash_cache_file_value","STRING"],["db_flash_cache_size_value","STRING"],["db_flashback_retention_target_value","STRING"],["db_keep_cache_size_value","STRING"],["db_name_value","STRING"],["db_recycle_cache_size_value","STRING"],["db_unique_name_value","STRING"],["enable_goldengate_replication_value","STRING"],["fal_client_value","STRING"],["fal_server_value","STRING"],["forward_listener_value","STRING"],["inmemory_size_value","STRING"],["instance_name_value","STRING"],["java_pool_size_value","STRING"],["large_pool_size_value","STRING"],["local_listener_value","STRING"],["max_iops_value","STRING"],["max_mbps_value","STRING"],["memory_max_target_value","STRING"],["memory_target_value","STRING"],["optimizer_features_enable_value","STRING"],["parallel_instance_group_value","STRING"],["parallel_max_servers_value","STRING"],["parallel_min_servers_value","STRING"],["pga_aggregate_limit_value","STRING"],["pga_aggregate_target_value","STRING"],["remote_listener_value","STRING"],["resource_manager_plan_value","STRING"],["sga_max_size_value","STRING"],["sga_min_size_value","STRING"],["sga_target_value","STRING"],["shared_pool_size_value","STRING"],["spfile_value","STRING"],["buffer_pool_keep_default_value","STRING"],["buffer_pool_recycle_default_value","STRING"],["cluster_database_default_value","STRING"],["compatible_default_value","STRING"],["cpu_count_default_value","STRING"],["db_16k_cache_size_default_value","STRING"],["db_2k_cache_size_default_value","STRING"],["db_32k_cache_size_default_value","STRING"],["db_4k_cache_size_default_value","STRING"],["db_8k_cache_size_default_value","STRING"],["db_block_size_default_value","STRING"],["db_cache_size_default_value","STRING"],["db_domain_default_value","STRING"],["db_flash_cache_file_default_value","STRING"],["db_flash_cache_size_default_value","STRING"],["db_flashback_retention_target_default_value","STRING"],["db_keep_cache_size_default_value","STRING"],["db_name_default_value","STRING"],["db_recycle_cache_size_default_value","STRING"],["db_unique_name_default_value","STRING"],["enable_goldengate_replication_default_value","STRING"],["fal_client_default_value","STRING"],["fal_server_default_value","STRING"],["forward_listener_default_value","STRING"],["inmemory_size_default_value","STRING"],["instance_name_default_value","STRING"],["java_pool_size_default_value","STRING"],["large_pool_size_default_value","STRING"],["local_listener_default_value","STRING"],["max_iops_default_value","STRING"],["max_mbps_default_value","STRING"],["memory_max_target_default_value","STRING"],["memory_target_default_value","STRING"],["optimizer_features_enable_default_value","STRING"],["parallel_instance_group_default_value","STRING"],["parallel_max_servers_default_value","STRING"],["parallel_min_servers_default_value","STRING"],["pga_aggregate_limit_default_value","STRING"],["pga_aggregate_target_default_value","STRING"],["remote_listener_default_value","STRING"],["resource_manager_plan_default_value","STRING"],["sga_max_size_default_value","STRING"],["sga_min_size_default_value","STRING"],["sga_target_default_value","STRING"],["shared_pool_size_default_value","STRING"],["spfile_default_value","STRING"]],
+                                                            "ashprograms": [["pkey","STRING"],["program","STRING"],["module","STRING"],["machine","STRING"],["coun","STRING"]],
+                                                            "ashsqlwaits": [["pkey","STRING"],["sql_id","STRING"],["sql_opname","STRING"],["sql_plan_hash_value","STRING"],["event","STRING"],["total_waits","STRING"]],
+                                                            "dbservicesinfo": [["pkey","STRING"],["con_id","STRING"],["pdbname","STRING"],["service_id","STRING"],["service_name","STRING"],["network_name","STRING"],["creation_date","STRING"],["failover_method","STRING"],["failover_type","STRING"],["failover_retries","STRING"],["failover_delay","STRING"],["goal","STRING"]],
+                                                            "topaccess": [["pkey","STRING"],["operation","STRING"],["options","STRING"],["object","STRING"],["object_owner","STRING"],["object_name","STRING"],["object_type","STRING"],["count_access","STRING"]],
+                                                            "topsegments": [["pkey","STRING"],["object_id","STRING"],["owner","STRING"],["object_name","STRING"],["logical_reads_total","STRING"],["db_block_changes_total","STRING"],["buffer_busy","STRING"],["buffer_busy_waits_total","STRING"],["physical_reads_total","STRING"],["physical_writes_total","STRING"],["row_lock_waits_total","STRING"],["table_scans_total","STRING"]],
+                                                            "topsqls": [["pkey","STRING"],["snap_id","STRING"],["inst_id","STRING"],["con_id","STRING"],["end_time","STRING"],["hour","STRING"],["sql_id","STRING"],["phv","STRING"],["module","STRING"],["rows_per_exec","STRING"],["rank_rows_buff","STRING"],["rows_per_buffer","STRING"],["rank_exec_elap","STRING"],["et_secs_per_sec","STRING"],["cpu_secs_per_exec","STRING"],["io_secs_per_exec","STRING"],["cl_secs_per_exec","STRING"],["ap_secs_per_exec","STRING"],["cc_secs_per_exec","STRING"],["pl_secs_per_exec","STRING"]],
+                                                            "usrsegatt": [["pkey","STRING"],["con_id","STRING"],["owner","STRING"],["segmen_name","STRING"],["segment_type","STRING"],["tablespace_name","STRING"]],
+                                                            "dbahistsysstat": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["stat_name","STRING"],["cnt","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"]],
+                                                            "dbahistsystimemodel": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["stat_name","STRING"],["cnt","STRING"],["avg_value","STRING"],["mode_value","STRING"],["median_value","STRING"],["min_value","STRING"],["max_value","STRING"],["sum_value","STRING"],["perc50","STRING"],["perc75","STRING"],["perc90","STRING"],["perc95","STRING"],["perc100","STRING"]],
+                                                            "awrsnapdetails": [["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["min_snapid","STRING"],["max_snapid","STRING"],["min_begin_interval_time","STRING"],["max_begin_interval_time","STRING"],["cnt","STRING"],["sum_snaps_diff_secs","STRING"],["avg_snaps_diff_secs","STRING"],["median_snaps_diff_secs","STRING"],["mode_snaps_diff_secs","STRING"],["min_snaps_diff_secs","STRING"],["max_snaps_diff_secs","STRING"]],
+                                                            "opkeylog":[["pkey","STRING"],["opscriptversion","STRING"],["dbversion","STRING"],["hostname","STRING"],["dbname","STRING"],["instance_number","STRING"],["collection_time","STRING"]],
+                                                            "sourceconn":[["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["program","STRING"],["module","STRING"],["machine","STRING"],["command_name","STRING"],["cnt","STRING"]],
+                                                            "exttab":[["pkey","STRING"],["owner","STRING"],["table_name","STRING"],["type_owner","STRING"],["type_name","STRING"],["default_directory_owner","STRING"],["default_directory_name","STRING"],["reject_limit","STRING"],["access_type","STRING"],["access_parameters","STRING"],["property","STRING"]],
+                                                            "iofunction":[["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hh24","STRING"],["function_name","STRING"],["sm_read_mb_delta_value_P50","STRING"],["sm_read_mb_delta_value_P75","STRING"],["sm_read_mb_delta_value_P90","STRING"],["sm_read_mb_delta_value_P95","STRING"],["sm_read_mb_delta_value_P100","STRING"],["sm_write_mb_delta_value_P50","STRING"],["sm_write_mb_delta_value_P75","STRING"],["sm_write_mb_delta_value_P90","STRING"],["sm_write_mb_delta_value_P95","STRING"],["sm_write_mb_delta_value_P100","STRING"],["sm_read_rq_delta_value_P50","STRING"],["sm_read_rq_delta_value_P75","STRING"],["sm_read_rq_delta_value_P90","STRING"],["sm_read_rq_delta_value_P95","STRING"],["sm_read_rq_delta_value_P100","STRING"],["sm_write_rq_delta_value_P50","STRING"],["sm_write_rq_delta_value_P75","STRING"],["sm_write_rq_delta_value_P90","STRING"],["sm_write_rq_delta_value_P95","STRING"],["sm_write_rq_delta_value_P100","STRING"],["lg_read_mb_delta_value_P50","STRING"],["lg_read_mb_delta_value_P75","STRING"],["lg_read_mb_delta_value_P90","STRING"],["lg_read_mb_delta_value_P95","STRING"],["lg_read_mb_delta_value_P100","STRING"],["lg_write_mb_delta_value_P50","STRING"],["lg_write_mb_delta_value_P75","STRING"],["lg_write_mb_delta_value_P90","STRING"],["lg_write_mb_delta_value_P95","STRING"],["lg_write_mb_delta_value_P100","STRING"],["lg_read_rq_delta_value_P50","STRING"],["lg_read_rq_delta_value_P75","STRING"],["lg_read_rq_delta_value_P90","STRING"],["lg_read_rq_delta_value_P95","STRING"],["lg_read_rq_delta_value_P100","STRING"],["lg_write_rq_delta_value_P50","STRING"],["lg_write_rq_delta_value_P75","STRING"],["lg_write_rq_delta_value_P90","STRING"],["lg_write_rq_delta_value_P95","STRING"],["lg_write_rq_delta_value_P100","STRING"],["no_iowait_delta_value_P50","STRING"],["no_iowait_delta_value_P75","STRING"],["no_iowait_delta_value_P90","STRING"],["no_iowait_delta_value_P95","STRING"],["no_iowait_delta_value_P100","STRING"],["tot_watime_delta_value_P50","STRING"],["tot_watime_delta_value_P50","STRING"],["tot_watime_delta_value_P50","STRING"],["tot_watime_delta_value_P50","STRING"],["tot_watime_delta_value_P50","STRING"],["total_reads_mb_P95","STRING"],["small_read_share_P95","STRING"],["total_reads_req_P95","STRING"],["total_writes_mb_P95","STRING"],["total_write_req_P95","STRING"],["avg_wait_time_ms_P95","STRING"]],
+                                                            "ioevents":[["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["hour","STRING"],["wait_class","STRING"],["event_name","STRING"],["tot_waits_delta_value_P50","STRING"],["tot_waits_delta_value_P75","STRING"],["tot_waits_delta_value_P90","STRING"],["tot_waits_delta_value_P95","STRING"],["tot_waits_delta_value_P100","STRING"],["tot_tout_delta_value_P50","STRING"],["tot_tout_delta_value_P75","STRING"],["tot_tout_delta_value_P90","STRING"],["tot_tout_delta_value_P95","STRING"],["tot_tout_delta_value_P100","STRING"],["time_wa_us_delta_value_P50","STRING"],["time_wa_us_delta_value_P75","STRING"],["time_wa_us_delta_value_P90","STRING"],["time_wa_us_delta_value_P95","STRING"],["time_wa_us_delta_value_P100","STRING"],["timeout_share_P95","STRING"],["avg_wait_time_us_P95","STRING"]],
+                                                            "topsql":[["pkey","STRING"],["dbid","STRING"],["instance_number","STRING"],["force_matching_signature","STRING"],["sql_id","STRING"],["total_executions","STRING"],["total_px_servers_execs","STRING"],["elapsed_time_total","STRING"],["disk_reads_total","STRING"],["physical_read_bytes_total","STRING"],["physical_write_bytes_total","STRING"],["io_offload_elig_bytes_total","STRING"],["io_interconnect_bytes_total","STRING"],["optimized_physical_reads_total","STRING"],["cell_uncompressed_bytes_total","STRING"],["io_offload_return_bytes_total","STRING"],["direct_writes_total","STRING"],["perc_exec_finished","STRING"],["avg_rows","STRING"],["avg_disk_reads","STRING"],["avg_buffer_gets","STRING"],["avg_cpu_time_us","STRING"],["avg_elapsed_us","STRING"],["avg_iowait_us","STRING"],["avg_clwait_us","STRING"],["avg_clwait_us","STRING"],["avg_apwait_us","STRING"],["avg_ccwait_us","STRING"],["avg_plsexec_us","STRING"],["avg_javexec_us","STRING"]],
+                                                            "idxpertable":[["pkey","STRING"],["con_id","STRING"],["tab_count","STRING"],["idx_cnt","STRING"],["idx_perc","STRING"]]
+                                                        }
+                                            }
             },
     "parameters":
             {
@@ -675,7 +734,7 @@
                                 "description": "This parameter indicates that CSV for DBPARAMETERS tablename needs to have its dataframe reshaped."
                             },
                 "dataframe_reshape_dbahistsysstat":
-                            {   
+                            {
                                 "priority": 0,
                                 "minsqlscriptversion": "2.0.0",
                                 "maxsqlscriptversion": "2.0.3",
@@ -696,7 +755,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["SELECT distinct TRIM(pkey)                                    pkey,",
                                     "       cast(dbid as numeric)                                    dbid,",
                                     "       TRIM(cdb)                                     cdb,",
@@ -718,7 +777,7 @@
                                     "       TRIM(dg_database_role)                        dg_database_role,",
                                     "       TRIM(dg_protection_mode)                      dg_protection_mode,",
                                     "       TRIM(dg_protection_level)                     dg_protection_level",
-                                    " FROM   ${projectname}.${dataset}.dbsummary a"],                                                                                                       
+                                    " FROM   ${projectname}.${dataset}.dbsummary a"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vdbsummary", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -732,7 +791,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "cast(dbid as numeric) dbid,",
                                         "cast(instance_number as numeric) instance_number,",
@@ -747,7 +806,7 @@
                                  " from ${projectname}.${dataset}.awrsnapdetails a",
                                  " where trim(a.pkey) in",
                                  "      ( select trim(pkey)",
-                                 "      FROM ${projectname}.${dataset}.dbsummary )"],                                                                                                       
+                                 "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vawrsnapdetails", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -761,7 +820,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "cast(con_id as numeric) con_id,",
                                         "cast(hour as numeric) hour,",
@@ -781,7 +840,7 @@
                                 " from ${projectname}.${dataset}.awrhistcmdtypes a",
                                 " where trim(a.pkey) in",
                                 "      ( select trim(pkey)",
-                                "      FROM ${projectname}.${dataset}.dbsummary )"],                                                                                                       
+                                "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vawrhistcmdtypes", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -795,7 +854,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "cast(con_id as numeric) con_id,",
                                         "trim(owner) owner,",
@@ -808,7 +867,7 @@
                                 " from ${projectname}.${dataset}.compressbytype a",
                                 " where trim(a.pkey) in",
                                 "      ( select trim(pkey)",
-                                "      FROM ${projectname}.${dataset}.dbsummary )"],                                                                                                       
+                                "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vcompressbytype", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -822,7 +881,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "trim(dt) dt,",
                                         "cast(cpu_count as numeric) cpu_count,",
@@ -831,7 +890,7 @@
                                 " from ${projectname}.${dataset}.cpucoresusage a",
                                 " where trim(a.pkey) in",
                                 "      ( select trim(pkey)",
-                                "      FROM ${projectname}.${dataset}.dbsummary )"],                                                                                                       
+                                "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vcpucoresusage", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -845,7 +904,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "cast(replace(trim(con_id),'N/A','-1') as numeric) con_id,",
                                         "trim(owner) owner,",
@@ -855,7 +914,7 @@
                                 " from ${projectname}.${dataset}.datatypes a",
                                 " where trim(a.pkey) in",
                                 "      ( select trim(pkey)",
-                                "      FROM ${projectname}.${dataset}.dbsummary )"],                                                                                                       
+                                "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vdatatypes", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -869,7 +928,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "trim(con_id) con_id,",
                                         "trim(name) name,",
@@ -882,7 +941,7 @@
                                 " from ${projectname}.${dataset}.dbfeatures a",
                                 " where trim(a.pkey) in",
                                 "      ( select trim(pkey)",
-                                "      FROM ${projectname}.${dataset}.dbsummary )"],                                                                                                       
+                                "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vdbfeatures", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -896,7 +955,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "cast(inst_id as numeric) inst_id,",
                                         "trim(instance_name) instance_name,",
@@ -908,7 +967,7 @@
                                 " from ${projectname}.${dataset}.dbinstances a",
                                 " where trim(a.pkey) in",
                                 "      ( select trim(pkey)",
-                                "      FROM ${projectname}.${dataset}.dbsummary )"],                                                                                                       
+                                "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vdbinstances", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -922,7 +981,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "cast(replace(trim(con_id),'N/A','-1') as numeric) con_id,",
                                         "trim(owner) owner,",
@@ -938,7 +997,7 @@
                                 " from ${projectname}.${dataset}.sourcecode a",
                                 " where trim(a.pkey) in",
                                 "      ( select trim(pkey)",
-                                "      FROM ${projectname}.${dataset}.dbsummary )"],                                                                                                       
+                                "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vsourcecode", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -952,7 +1011,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "cast(con_id as numeric) con_id,",
                                         "trim(owner) owner,",
@@ -969,7 +1028,7 @@
                                 " from ${projectname}.${dataset}.tablesnopk a",
                                 " where trim(a.pkey) in",
                                 "      ( select trim(pkey)",
-                                "      FROM ${projectname}.${dataset}.dbsummary )"],                                                                                                       
+                                "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vtablesnopk", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -983,7 +1042,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select  distinct trim(_pkey) pkey,",
                                         "trim(_dbid) dbid,",
                                         "cast(_instance_number as numeric) instance_number,",
@@ -1010,7 +1069,7 @@
                                 " from ${projectname}.${dataset}.awrhistosstat_rs_metrics a",
                                 " where trim(a._pkey) in",
                                 "      ( select trim(pkey)",
-                                "      FROM ${projectname}.${dataset}.dbsummary )"],                                                                                                       
+                                "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vawrhistosstat_rs_metrics", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1024,7 +1083,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select  distinct trim(_pkey) pkey,",
                                         "        trim(_dbid) dbid,",
                                         "        cast(_instance_number as numeric) instance_number,",
@@ -1078,7 +1137,7 @@
                                         " from ${projectname}.${dataset}.awrhistsysmetrichist_rs_awrhistosstat_rs a",
                                         " where trim(a._pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                                                                       
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vawrhistsysmetrichist_rs_awrhistosstat_rs", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1092,7 +1151,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "112",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select  distinct trim(_pkey) pkey,",
                                         "        trim(_dbid) dbid,",
                                         "        cast(_instance_number as numeric) instance_number,",
@@ -1140,7 +1199,7 @@
                                         " from ${projectname}.${dataset}.awrhistsysmetrichist_rs_awrhistosstat_rs a",
                                         " where trim(a._pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                                                                       
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vawrhistsysmetrichist_rs_awrhistosstat_rs", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1154,7 +1213,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select  distinct trim(_pkey) pkey,",
                                         "        trim(_dbid) dbid,",
                                         "        cast(_instance_number as numeric) instance_number,",
@@ -1195,7 +1254,7 @@
                                         " from ${projectname}.${dataset}.dbsizing_facts a",
                                         " where trim(a._pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                                                                       
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vdbsizing_facts", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1209,7 +1268,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["SELECT distinct trim(pkey) pkey,",
                                     "        cast(dbid as numeric) dbid,",
                                     "        cast(instance_number as numeric) instance_number,",
@@ -1232,7 +1291,7 @@
                                     " FROM ${projectname}.${dataset}.awrhistosstat a",
                                     " where trim(a.pkey) in",
                                     "      ( select trim(pkey)",
-                                    "      FROM ${projectname}.${dataset}.dbsummary )"],                                                                                                       
+                                    "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vawrhistosstat", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1246,7 +1305,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["SELECT distinct trim(pkey) pkey,",
                                         "        cast(dbid as numeric) dbid,",
                                         "        cast(instance_number as numeric) instance_number,",
@@ -1269,7 +1328,7 @@
                                         " FROM ${projectname}.${dataset}.awrhistosstat a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vawrhistosstat", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1283,7 +1342,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        cast(dbid as numeric) dbid,",
                                         "        cast(INSTANCE_NUMBER as numeric) instance_number,",
@@ -1303,7 +1362,7 @@
                                         " FROM ${projectname}.${dataset}.awrhistsysmetrichist a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vawrhistsysmetrichist", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1317,7 +1376,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        cast(dbid as numeric) dbid,",
                                         "        cast(INSTANCE_NUMBER as numeric) instance_number,",
@@ -1337,7 +1396,7 @@
                                         " FROM ${projectname}.${dataset}.awrhistsysmetricsumm a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vawrhistsysmetricsumm", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1351,7 +1410,7 @@
                                 "mindbversion": "121",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(_pkey) pkey,",
                                         "      cast(_dbid as numeric) dbid,",
                                         "      cast(_INSTANCE_NUMBER as numeric) instance_number,",
@@ -1392,7 +1451,7 @@
                                         " FROM ${projectname}.${dataset}.awrhistsysmetrichist_rs a",
                                         " where trim(a._pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vawrhistsysmetrichist_rs", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1406,7 +1465,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "112",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(_pkey) pkey,",
                                         "      cast(_dbid as numeric) dbid,",
                                         "      cast(_INSTANCE_NUMBER as numeric) instance_number,",
@@ -1441,7 +1500,7 @@
                                         " FROM ${projectname}.${dataset}.awrhistsysmetrichist_rs a",
                                         " where trim(a._pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vawrhistsysmetrichist_rs", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1455,7 +1514,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        cast(con_id as numeric) con_id,",
                                         "        trim(owner) owner,",
@@ -1469,7 +1528,7 @@
                                         " FROM ${projectname}.${dataset}.compressbytable a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vcompressbytable", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1483,7 +1542,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select  distinct trim(pkey) pkey,",
                                         "        cast(dbid as numeric) dbid,",
                                         "        cast(instance_number as numeric) instance_number,",
@@ -1504,7 +1563,7 @@
                                         " FROM ${projectname}.${dataset}.dbahistsysstat a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vdbahistsysstat", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1518,7 +1577,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        cast(dbid as numeric) dbid,",
                                         "        cast(instance_number as numeric) instance_number,",
@@ -1539,7 +1598,7 @@
                                         " FROM ${projectname}.${dataset}.dbahistsystimemodel a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vdbahistsystimemodel", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1553,7 +1612,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        trim(description) description,",
                                         "        cast(highwater as numeric) highwater,",
@@ -1561,7 +1620,7 @@
                                         " FROM ${projectname}.${dataset}.dbhwmarkstatistics a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vdbhwmarkstatistics", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1575,7 +1634,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        cast(replace(trim(con_id),'N/A','-1') as numeric) con_id,",
                                         "        trim(owner) owner,",
@@ -1589,7 +1648,7 @@
                                         " FROM ${projectname}.${dataset}.dbobjects a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vdbobjects", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1603,7 +1662,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        cast(inst_id as numeric) inst_id,",
                                         "        cast(inst_id as numeric) instance_number,",
@@ -1615,7 +1674,7 @@
                                         " FROM ${projectname}.${dataset}.dbparameters a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vdbparameters", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1629,7 +1688,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        cast(con_id as numeric) con_id,",
                                         "        trim(pdbname) pdbname,",
@@ -1645,7 +1704,7 @@
                                         " FROM ${projectname}.${dataset}.dbservicesinfo a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vdbservicesinfo", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1659,7 +1718,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        cast(con_id as numeric) con_id,",
                                         "        trim(tablespace) tablespace,",
@@ -1672,7 +1731,7 @@
                                         " FROM ${projectname}.${dataset}.freespaces a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vfreespaces", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1686,7 +1745,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        cast(con_id as numeric) con_id,",
                                         "        trim(owner) owner,",
@@ -1695,7 +1754,7 @@
                                         " FROM ${projectname}.${dataset}.indexestypes a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vindexestypes", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1709,13 +1768,13 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct cast(cores as numeric) cores,",
                                         "        cast(ram_gb as numeric) ram_gb,",
                                         "        trim(machine_size) machine_size,",
                                         "        trim(processor) processor,",
                                         "        cast(est_price as numeric) est_price",
-                                        " FROM ${projectname}.${dataset}.optimusconfig_bms_machinesizes a"],                                                 
+                                        " FROM ${projectname}.${dataset}.optimusconfig_bms_machinesizes a"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "voptimusconfig_bms_machinesizes", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1729,11 +1788,11 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(network_to_gcp) network_to_gcp,",
                                         "        cast(gbytes_per_sec as numeric) gbytes_per_sec,",
                                         "        cast(mbytes_per_sec as numeric) mbytes_per_sec",
-                                        " FROM ${projectname}.${dataset}.optimusconfig_network_to_gcp a"],                                                 
+                                        " FROM ${projectname}.${dataset}.optimusconfig_network_to_gcp a"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "voptimusconfig_network_to_gcp", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1747,7 +1806,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        cast(con_id as numeric) con_id,",
                                         "        trim(owner) owner,",
@@ -1757,7 +1816,7 @@
                                         " FROM ${projectname}.${dataset}.partsubparttypes a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vpartsubparttypes", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1771,7 +1830,7 @@
                                 "mindbversion": "121",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        cast(dbid as numeric) dbid,",
                                         "        cast(pdb_id as numeric) pdb_id,",
@@ -1781,7 +1840,7 @@
                                         " FROM ${projectname}.${dataset}.pdbsinfo a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vpdbsinfo", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1795,7 +1854,7 @@
                                 "mindbversion": "121",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        cast(con_id as numeric) con_id,",
                                         "        trim(name) name,",
@@ -1804,7 +1863,7 @@
                                         " FROM ${projectname}.${dataset}.pdbsopenmode a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vpdbsopenmode", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1818,7 +1877,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        cast(con_id as numeric) con_id,",
                                         "        trim(owner) owner,",
@@ -1827,7 +1886,7 @@
                                         " FROM ${projectname}.${dataset}.spacebyownersegtype a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vspacebyownersegtype", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1841,7 +1900,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        trim(tablespace_name) tablespace_name,",
                                         "        trim(extent_management) extent_management,",
@@ -1852,7 +1911,7 @@
                                         " FROM ${projectname}.${dataset}.spacebytablespace a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vspacebytablespace", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1866,7 +1925,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        trim(stat_type) stat_type,",
                                         "        trim(stat_name) stat_name,",
@@ -1875,7 +1934,7 @@
                                         " FROM ${projectname}.${dataset}.systemstats a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vsystemstats", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1889,7 +1948,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select distinct trim(pkey) pkey,",
                                         "        cast(con_id as numeric) con_id,",
                                         "        trim(owner) owner,",
@@ -1899,7 +1958,7 @@
                                         " FROM ${projectname}.${dataset}.usrsegatt a",
                                         " where trim(a.pkey) in",
                                         "      ( select trim(pkey)",
-                                        "      FROM ${projectname}.${dataset}.dbsummary )"],                                                 
+                                        "      FROM ${projectname}.${dataset}.dbsummary )"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vusrsegatt", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1913,12 +1972,12 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["select 'SYSMETRIC_HISTORY' info_source, a.*",
                                         " from ${projectname}.${dataset}.vawrhistsysmetrichist a",
                                         " union all ",
                                         "select 'SYSMETRIC_SUMMARY', b.*",
-                                        " from ${projectname}.${dataset}.vawrhistsysmetricsumm b"],                                                 
+                                        " from ${projectname}.${dataset}.vawrhistsysmetricsumm b"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vsysmetric", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -1932,7 +1991,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     ["   with vosstat_part1 as (",
                                         "   select pkey, dbid, instance_number, hour, ",
                                         "         case ",
@@ -2057,7 +2116,7 @@
                                         "     from  vosstat_part1",
                                         "     group by pkey, dbid, instance_number, hour",
                                         "   )",
-                                        "   select * from vosstat_part2"],                                                 
+                                        "   select * from vosstat_part2"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vosstat_columnar", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -2071,7 +2130,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     [" select 'HIST_SYSSTAT' info_source, a.*, ",
                                         "         round(a.avg_value / b.avg_snaps_diff_secs,1) avg_value_per_sec,",
                                         "         round(a.mode_value / b.avg_snaps_diff_secs,1) mode_value_per_sec,",
@@ -2083,7 +2142,7 @@
                                         "         round(a.perc100_value / b.avg_snaps_diff_secs,1) perc100_value_per_sec",
                                         " from ${projectname}.${dataset}.vdbahistsysstat a",
                                         " inner join ${projectname}.${dataset}.vawrsnapdetails b",
-                                        " on a.pkey = b.pkey and a.dbid = b.dbid and a.instance_number = b.instance_number and a.hour = b.hour"],                                                 
+                                        " on a.pkey = b.pkey and a.dbid = b.dbid and a.instance_number = b.instance_number and a.hour = b.hour"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vsysstat", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -2097,14 +2156,14 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     [   " select * from ${projectname}.${dataset}.vsysmetric",
                                         " union all ",
                                         " select info_source, pkey, dbid, instance_number, hour, stat_name metric_name,",
                                         "         avg_value_per_sec, mode_value_per_sec, median_value_per_sec,",
                                         "         perc50_value_per_sec, perc75_value_per_sec, perc90_value_per_sec,",
                                         "         perc95_value_per_sec, perc100_value_per_sec, 0 min_value, 0 max_value, 0 sum_value",
-                                        " from ${projectname}.${dataset}.vsysstat"],                                                 
+                                        " from ${projectname}.${dataset}.vsysstat"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vsysmetric_sysstat", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -2118,7 +2177,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     [" with vsysmetric_part1 as (",
                                         " select a.info_source, a.pkey, a.dbid, a.instance_number, a.hour,",
                                         "        case ",
@@ -2539,7 +2598,7 @@
                                         " group by b.info_source, b.pkey, b.dbid, b.instance_number, b.hour",
                                         " )",
                                         " select * from vsysmetric_part2",
-                                        " order by pkey, dbid, instance_number, hour"],                                                 
+                                        " order by pkey, dbid, instance_number, hour"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vsysmetric_columnar", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -2553,7 +2612,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     [" select a.info_source, a.pkey, a.dbid, a.instance_number, a.hour,",
                                         "        a.cell_phy_io_int_bytes_perc50, a.cell_phy_io_int_bytes_perc75, a.cell_phy_io_int_bytes_perc95, a.cell_phy_io_int_bytes_perc100, 'Indicates the number of byes transferred from exadata storage server to the database. For non-Exadata environments it might be equal to physical reads.' cell_phy_io_int_bytes_comments,",
                                         "        a.io_mbps_perc50, a.io_mbps_perc75, a.io_mbps_perc95, a.io_mbps_perc100, 'I/O MegaBytes per Second' io_mbps_comments,",
@@ -2569,7 +2628,7 @@
                                         "        a.phy_write_total_iops_perc50, a.phy_write_total_iops_perc75, a.phy_write_total_iops_perc95, a.phy_write_total_iops_perc100, 'Physical Write Total IO Per Second indicates the number of IOPs written by FOREGROUND and BACKGROUND processess - on other words not only user application workload but also ASM Mirroring, ASM Rebalance, RMAN Backups, etc.' phy_write_total_iops_comments,",
                                         "        a.phy_writes_direct_lobs_perc50, a.phy_writes_direct_lobs_perc75, a.phy_writes_direct_lobs_perc95, a.phy_writes_direct_lobs_perc100, 'Physical Read Direct Lobs indicates the number of database blocks written by FOREGROUND processess to server Lob related queries - in other words only by user application Lob workload.' phy_write_direct_lobs_comments,",
                                         " from ${projectname}.${dataset}.vsysmetric_columnar a",
-                                        " where a.info_source = 'SYSMETRIC_SUMMARY'"],                                                 
+                                        " where a.info_source = 'SYSMETRIC_SUMMARY'"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vsysmetric_io_facts", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -2583,7 +2642,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     [" select a.info_source, a.pkey, a.dbid, a.instance_number, a.hour," ,
                                         "        b.num_cpu_sockets, b.num_cpu_cores, b.num_cpus, b.load, 'Source: OSSTAT. num_cpu_sockets(total physical sockets), num_cpu_cores(total cores regardless to the sockets), num_cpus (cpu threads), load' osstat_comments," ,
                                         "        round( b.busy_time_perc50 / (b.busy_time_perc50 + b.user_time_perc50) * 100,1) osstat_host_cpu_utilization_perc50," ,
@@ -2604,7 +2663,7 @@
                                         " from  ${projectname}.${dataset}.vsysmetric_columnar a" ,
                                         " left outer join ${projectname}.${dataset}.vosstat_columnar b" ,
                                         " on a.pkey = b.pkey and a.dbid = b.dbid and a.instance_number = b.instance_number and a.hour = b.hour" ,
-                                        " where a.info_source = 'SYSMETRIC_SUMMARY'"],                                                 
+                                        " where a.info_source = 'SYSMETRIC_SUMMARY'"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vsysmetric_cpu_facts", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -2618,7 +2677,7 @@
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
-                                "action_details": {"action": "EXECUTE_SQL",  "expr1": 
+                                "action_details": {"action": "EXECUTE_SQL",  "expr1":
                                     [" with vsysstat_part1 as (",
                                         " select a.info_source, a.pkey, a.dbid, a.instance_number, a.hour,",
                                         "         case ",
@@ -3060,7 +3119,7 @@
                                         " select d.dbversion, 'All Metrics are Per Second' metric_unit, c.* ",
                                         " from vsysstat_part2 c",
                                         " inner join ${projectname}.${dataset}.vdbsummary d",
-                                        " on c.pkey = d.pkey and c.dbid = d.dbid"],                                                 
+                                        " on c.pkey = d.pkey and c.dbid = d.dbid"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "vsysstat_columnar", "store": "BIGQUERY"},
                                 "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
@@ -3515,7 +3574,7 @@
                             "maxsqlscriptversion": "2.0.3",
                             "mindbversion": "111",
                             "maxdbversion": "194",
-                            "execution_group": "1",   
+                            "execution_group": "1",
                             "action_details": {"action": "CREATE_OR_REPLACE_DATAFRAME", "expr1": "dataFrames[\"DBSIZING_FACTS\"].groupby([\"PKEY\",\"_DBID\",\"_INSTANCE_NUMBER\"])[\"PKEY\",\"_DBID\",\"DB_NAME\",\"DBFULLVERSION\",\"_INSTANCE_NUMBER\",\"BMSSTORAGE_TB_DB\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\",\"BMSMEMORY_GB_DB\",\"BMSMEMORY_GB_HOST\"].agg(\"max\")", "iferror": "None", "type": "FREESTYLE", "dataframe_name": "DBSIZING_SUMMARY", "store": "BIGQUERY"},
                             "status": "ENABLED",
                             "tags": ["BMS_SIZING"],

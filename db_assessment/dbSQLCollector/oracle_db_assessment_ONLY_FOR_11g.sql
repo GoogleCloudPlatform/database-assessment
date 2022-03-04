@@ -13,17 +13,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
+This script access Automatic Repository Workload (AWR) views in the database dictionary.
+Please ensure you have proper licensing. For more information consult Oracle Support Doc ID 1490798.1
+
 */
 
 
 /*
 
-Version: 2.0.3
-Date: 2022-02-01
+Version: 2.0.4
+Date: 2022-03-04
 
 */
 
-define version = '2.0.3'
+define version = '2.0.4'
 define dtrange = 30
 
 clear col comp brea
@@ -1156,7 +1159,7 @@ vsysmetricsummperhour as (
 SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| hour ||' , '|| metric_name ||' , '||
        metric_unit ||' , '|| avg_value ||' , '|| mode_value ||' , '|| median_value ||' , '|| min_value ||' , '|| max_value ||' , '||
 	   sum_value ||' , '|| PERC50 ||' , '|| PERC75 ||' , '|| PERC90 ||' , '|| PERC95 ||' , '|| PERC100
-FROM vsysmetricsummperhour; 
+FROM vsysmetricsummperhour;
 
 spool off
 
@@ -1211,7 +1214,7 @@ WITH v_osstat_all
                          AND s.instance_number = snap.instance_number
                          AND s.dbid = snap.dbid
                     WHERE s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
-                    AND s.dbid = '&&v_dbid') os ) , 
+                    AND s.dbid = '&&v_dbid') os ) ,
 vossummary AS (
 SELECT '&&v_host'
        || '_'
@@ -1276,14 +1279,14 @@ SELECT '&&v_host'
        AVG(plsexec_time_delta)                AVG_PLSEXEC_TIME
 FROM   dba_hist_sqlstat a
        inner join dba_hist_sqltext b
-               ON ( a.sql_id = b.sql_id 
+               ON ( a.sql_id = b.sql_id
                     AND a.dbid = b.dbid)
        inner join dba_hist_snapshot c
-               ON ( a.snap_id = c.snap_id 
+               ON ( a.snap_id = c.snap_id
                AND a.dbid = c.dbid
                AND a.instance_number = c.instance_number)
 WHERE  a.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
-AND a.dbid = '&&v_dbid' 
+AND a.dbid = '&&v_dbid'
 GROUP  BY '&&v_host'
           || '_'
           || '&&v_dbname'
@@ -1476,12 +1479,475 @@ SELECT '&&v_host'
        segment_type,
        tablespace_name
 FROM dba_segments
-WHERE tablespace_name IN ('SYS', 'SYSTEM')
+WHERE tablespace_name IN ('SYSAUX', 'SYSTEM')
 AND owner NOT IN
 (SELECT name
  FROM system.logstdby$skip_support
  WHERE action=0))
  SELECT pkey ||' , '|| 'N/A' ||' , '|| owner ||' , '|| segment_name ||' , '|| segment_type ||' , '|| tablespace_name
 FROM vuseg;
+
+spool off
+
+spool opdb__sourceconn__&v_tag
+
+WITH vsrcconn AS (
+SELECT '&&v_host'
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora' AS pkey,
+       has.dbid,
+       has.instance_number,
+       TO_CHAR(dhsnap.begin_interval_time, 'hh24') hour,
+       has.program,
+       has.module,
+       has.machine,
+       scmd.command_name,
+       count(1) cnt
+FROM DBA_HIST_ACTIVE_SESS_HISTORY has
+     INNER JOIN DBA_HIST_SNAPSHOT dhsnap
+     ON has.snap_id = dhsnap.snap_id
+     AND has.instance_number = dhsnap.instance_number
+     AND has.dbid = dhsnap.dbid
+        INNER JOIN V$SQLCOMMAND scmd
+        ON has.sql_opcode = scmd.COMMAND_TYPE
+WHERE  has.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+AND has.dbid = '&&v_dbid'
+AND has.session_type = 'FOREGROUND'
+group by '&&v_host'
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora',
+       TO_CHAR(dhsnap.begin_interval_time, 'hh24'),
+       has.dbid,
+       has.instance_number,
+       has.program,
+       has.module,
+       has.machine,
+       scmd.command_name)
+SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| hour ||' , '|| program ||' , '||
+       module ||' , '|| machine ||' , '|| command_name ||' , '|| cnt
+FROM vsrcconn
+order by hour;
+
+spool off
+
+spool opdb__exttab__&v_tag
+
+WITH vexttab AS (
+SELECT '&&v_host'
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora' AS pkey,
+       owner, table_name, type_owner, type_name, default_directory_owner, default_directory_name,
+       reject_limit, access_type, access_parameters, property
+FROM DBA_EXTERNAL_TABLES)
+SELECT pkey ||' , '|| owner ||' , '|| table_name ||' , '|| type_owner ||' , '|| type_name ||' , '|| default_directory_owner ||' , '||
+       default_directory_name ||' , '|| reject_limit ||' , '|| access_type ||' , '|| access_parameters ||' , '|| property
+FROM vexttab;
+
+spool off
+
+spool opdb__iofunction__&v_tag
+
+WITH vrawiof AS (
+SELECT '&&v_host'
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora' AS pkey,
+       snap.begin_interval_time, snap.end_interval_time,
+       TO_CHAR(snap.begin_interval_time, 'hh24') hh24,
+       iof.snap_id, iof.dbid, iof.instance_number, iof.function_id, iof.function_name,
+       NVL(DECODE(GREATEST(iof.small_read_megabytes, NVL(LAG(iof.small_read_megabytes)
+                                                         OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id), 0)),
+                  iof.small_read_megabytes, iof.small_read_megabytes - LAG(iof.small_read_megabytes)
+                                                                       OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id),0), 0) AS sm_read_mb_delta_value,
+       NVL(DECODE(GREATEST(iof.small_write_megabytes, NVL(LAG(iof.small_write_megabytes)
+                                                          OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id), 0)),
+                  iof.small_write_megabytes, iof.small_write_megabytes - LAG(iof.small_write_megabytes)
+                                                                         OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id),0), 0) AS sm_write_mb_delta_value,
+       NVL(DECODE(GREATEST(iof.small_read_reqs, NVL(LAG(iof.small_read_reqs)
+                                                    OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id), 0)),
+                  iof.small_read_reqs, iof.small_read_reqs - LAG(iof.small_read_reqs)
+                                                             OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id),0), 0) AS sm_read_rq_delta_value,
+       NVL(DECODE(GREATEST(iof.small_write_reqs, NVL(LAG(iof.small_write_reqs)
+                                                     OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id), 0)),
+                  iof.small_write_reqs, iof.small_write_reqs - LAG(iof.small_write_reqs)
+                                                               OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id),0), 0) AS sm_write_rq_delta_value,
+       NVL(DECODE(GREATEST(iof.large_read_megabytes, NVL(LAG(iof.large_read_megabytes)
+                                                         OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id), 0)),
+                  iof.large_read_megabytes, iof.large_read_megabytes - LAG(iof.large_read_megabytes)
+                                                                       OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id),0), 0) AS lg_read_mb_delta_value,
+       NVL(DECODE(GREATEST(iof.large_write_megabytes, NVL(LAG(iof.large_write_megabytes)
+                                                          OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id), 0)),
+                  iof.large_write_megabytes, iof.large_write_megabytes - LAG(iof.large_write_megabytes)
+                                                                         OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id),0), 0) AS lg_write_mb_delta_value,
+       NVL(DECODE(GREATEST(iof.large_read_reqs, NVL(LAG(iof.large_read_reqs)
+                                                    OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id), 0)),
+                  iof.large_read_reqs, iof.large_read_reqs - LAG(iof.large_read_reqs)
+                                                             OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id),0), 0) AS lg_read_rq_delta_value,
+       NVL(DECODE(GREATEST(iof.large_write_reqs, NVL(LAG(iof.large_write_reqs)
+                                                     OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id), 0)),
+                  iof.large_write_reqs, iof.large_write_reqs - LAG(iof.large_write_reqs)
+                                                               OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id),0), 0) AS lg_write_rq_delta_value,
+       NVL(DECODE(GREATEST(iof.number_of_waits, NVL(LAG(iof.number_of_waits)
+                                                    OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id), 0)),
+                  iof.number_of_waits, iof.number_of_waits - LAG(iof.number_of_waits)
+                                                             OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id),0), 0) AS no_iowait_delta_value,
+       NVL(DECODE(GREATEST(iof.wait_time, NVL(LAG(iof.wait_time)
+                                              OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id), 0)),
+                  iof.wait_time, iof.wait_time - LAG(iof.wait_time)
+                                                 OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id),0), 0) AS tot_watime_delta_value
+FROM DBA_HIST_IOSTAT_FUNCTION iof
+INNER JOIN DBA_HIST_SNAPSHOT snap
+ON iof.snap_id = snap.snap_id
+AND iof.instance_number = snap.instance_number
+AND iof.dbid = snap.dbid
+WHERE snap.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+AND snap.dbid = '&&v_dbid'),
+vperciof AS (
+SELECT pkey,
+       dbid,
+       instance_number,
+       hh24,
+       function_name,
+       PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY sm_read_mb_delta_value DESC) AS sm_read_mb_delta_value_P50,
+       PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY sm_read_mb_delta_value DESC) AS sm_read_mb_delta_value_P75,
+       PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY sm_read_mb_delta_value DESC) AS sm_read_mb_delta_value_P90,
+       PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY sm_read_mb_delta_value DESC) AS sm_read_mb_delta_value_P95,
+       PERCENTILE_CONT(0)
+         within GROUP (ORDER BY sm_read_mb_delta_value DESC) AS sm_read_mb_delta_value_P100,
+       PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY sm_write_mb_delta_value DESC) AS sm_write_mb_delta_value_P50,
+       PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY sm_write_mb_delta_value DESC) AS sm_write_mb_delta_value_P75,
+       PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY sm_write_mb_delta_value DESC) AS sm_write_mb_delta_value_P90,
+       PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY sm_write_mb_delta_value DESC) AS sm_write_mb_delta_value_P95,
+       PERCENTILE_CONT(0)
+         within GROUP (ORDER BY sm_write_mb_delta_value DESC) AS sm_write_mb_delta_value_P100,
+       PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY sm_read_rq_delta_value DESC) AS sm_read_rq_delta_value_P50,
+       PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY sm_read_rq_delta_value DESC) AS sm_read_rq_delta_value_P75,
+       PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY sm_read_rq_delta_value DESC) AS sm_read_rq_delta_value_P90,
+       PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY sm_read_rq_delta_value DESC) AS sm_read_rq_delta_value_P95,
+       PERCENTILE_CONT(0)
+         within GROUP (ORDER BY sm_read_rq_delta_value DESC) AS sm_read_rq_delta_value_P100,
+       PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY sm_write_rq_delta_value DESC) AS sm_write_rq_delta_value_P50,
+       PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY sm_write_rq_delta_value DESC) AS sm_write_rq_delta_value_P75,
+       PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY sm_write_rq_delta_value DESC) AS sm_write_rq_delta_value_P90,
+       PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY sm_write_rq_delta_value DESC) AS sm_write_rq_delta_value_P95,
+       PERCENTILE_CONT(0)
+         within GROUP (ORDER BY sm_write_rq_delta_value DESC) AS sm_write_rq_delta_value_P100,
+       PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY lg_read_mb_delta_value DESC) AS lg_read_mb_delta_value_P50,
+       PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY lg_read_mb_delta_value DESC) AS lg_read_mb_delta_value_P75,
+       PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY lg_read_mb_delta_value DESC) AS lg_read_mb_delta_value_P90,
+       PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY lg_read_mb_delta_value DESC) AS lg_read_mb_delta_value_P95,
+       PERCENTILE_CONT(0)
+         within GROUP (ORDER BY lg_read_mb_delta_value DESC) AS lg_read_mb_delta_value_P100,
+       PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY lg_write_mb_delta_value DESC) AS lg_write_mb_delta_value_P50,
+       PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY lg_write_mb_delta_value DESC) AS lg_write_mb_delta_value_P75,
+       PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY lg_write_mb_delta_value DESC) AS lg_write_mb_delta_value_P90,
+       PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY lg_write_mb_delta_value DESC) AS lg_write_mb_delta_value_P95,
+       PERCENTILE_CONT(0)
+         within GROUP (ORDER BY lg_write_mb_delta_value DESC) AS lg_write_mb_delta_value_P100,
+       PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY lg_read_rq_delta_value DESC) AS lg_read_rq_delta_value_P50,
+       PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY lg_read_rq_delta_value DESC) AS lg_read_rq_delta_value_P75,
+       PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY lg_read_rq_delta_value DESC) AS lg_read_rq_delta_value_P90,
+       PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY lg_read_rq_delta_value DESC) AS lg_read_rq_delta_value_P95,
+       PERCENTILE_CONT(0)
+         within GROUP (ORDER BY lg_read_rq_delta_value DESC) AS lg_read_rq_delta_value_P100,
+       PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY lg_write_rq_delta_value DESC) AS lg_write_rq_delta_value_P50,
+       PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY lg_write_rq_delta_value DESC) AS lg_write_rq_delta_value_P75,
+       PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY lg_write_rq_delta_value DESC) AS lg_write_rq_delta_value_P90,
+       PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY lg_write_rq_delta_value DESC) AS lg_write_rq_delta_value_P95,
+       PERCENTILE_CONT(0)
+         within GROUP (ORDER BY lg_write_rq_delta_value DESC) AS lg_write_rq_delta_value_P100,
+       PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P50,
+       PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P75,
+       PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P90,
+       PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P95,
+       PERCENTILE_CONT(0)
+         within GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P100,
+       PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P50,
+       PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P75,
+       PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P90,
+       PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P95,
+       PERCENTILE_CONT(0)
+         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P100
+FROM vrawiof
+GROUP BY pkey,
+         dbid,
+         instance_number,
+         hh24,
+         function_name),
+viof AS(
+SELECT pkey,
+       dbid,
+       instance_number,
+       hh24,
+       function_name,
+       sm_read_mb_delta_value_P50, sm_read_mb_delta_value_P75, sm_read_mb_delta_value_P90, sm_read_mb_delta_value_P95, sm_read_mb_delta_value_P100,
+       sm_write_mb_delta_value_P50, sm_write_mb_delta_value_P75, sm_write_mb_delta_value_P90, sm_write_mb_delta_value_P95, sm_write_mb_delta_value_P100,
+       sm_read_rq_delta_value_P50, sm_read_rq_delta_value_P75, sm_read_rq_delta_value_P90, sm_read_rq_delta_value_P95, sm_read_rq_delta_value_P100,
+       sm_write_rq_delta_value_P50, sm_write_rq_delta_value_P75, sm_write_rq_delta_value_P90, sm_write_rq_delta_value_P95, sm_write_rq_delta_value_P100,
+       lg_read_mb_delta_value_P50, lg_read_mb_delta_value_P75, lg_read_mb_delta_value_P90, lg_read_mb_delta_value_P95, lg_read_mb_delta_value_P100,
+       lg_write_mb_delta_value_P50, lg_write_mb_delta_value_P75, lg_write_mb_delta_value_P90, lg_write_mb_delta_value_P95, lg_write_mb_delta_value_P100,
+       lg_read_rq_delta_value_P50, lg_read_rq_delta_value_P75, lg_read_rq_delta_value_P90, lg_read_rq_delta_value_P95, lg_read_rq_delta_value_P100,
+       lg_write_rq_delta_value_P50, lg_write_rq_delta_value_P75, lg_write_rq_delta_value_P90, lg_write_rq_delta_value_P95, lg_write_rq_delta_value_P100,
+       no_iowait_delta_value_P50, no_iowait_delta_value_P75, no_iowait_delta_value_P90, no_iowait_delta_value_P95, no_iowait_delta_value_P100,
+       tot_watime_delta_value_P50, tot_watime_delta_value_P75, tot_watime_delta_value_P90, tot_watime_delta_value_P95, tot_watime_delta_value_P100,
+       sm_read_mb_delta_value_P95 + lg_read_mb_delta_value_P95 total_reads_mb_P95,
+       NVL(CEIL((sm_read_mb_delta_value_P95 * 100) / NULLIF((sm_read_mb_delta_value_P95 + lg_read_mb_delta_value_P95),0)),0) small_read_share_P95,
+       sm_read_rq_delta_value_P95 + lg_read_rq_delta_value_P95 total_reads_req_P95,
+       sm_write_mb_delta_value_P95 + lg_write_mb_delta_value_P95 total_writes_mb_P95,
+       sm_write_rq_delta_value_P95 + lg_write_rq_delta_value_P95 total_write_req_P95,
+       NVL(ROUND(tot_watime_delta_value_P95 / NULLIF(no_iowait_delta_value_P95,0),2),0) avg_wait_time_ms_P95
+FROM vperciof)
+SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| hh24 ||' , '|| function_name ||' , '||
+       sm_read_mb_delta_value_P50 ||' , '|| sm_read_mb_delta_value_P75 ||' , '|| sm_read_mb_delta_value_P90 ||' , '|| sm_read_mb_delta_value_P95 ||' , '|| sm_read_mb_delta_value_P100 ||' , '||
+       sm_write_mb_delta_value_P50 ||' , '|| sm_write_mb_delta_value_P75 ||' , '|| sm_write_mb_delta_value_P90 ||' , '|| sm_write_mb_delta_value_P95 ||' , '|| sm_write_mb_delta_value_P100 ||' , '||
+       sm_read_rq_delta_value_P50 ||' , '|| sm_read_rq_delta_value_P75 ||' , '|| sm_read_rq_delta_value_P90 ||' , '|| sm_read_rq_delta_value_P95 ||' , '|| sm_read_rq_delta_value_P100 ||' , '||
+       sm_write_rq_delta_value_P50 ||' , '|| sm_write_rq_delta_value_P75 ||' , '|| sm_write_rq_delta_value_P90 ||' , '|| sm_write_rq_delta_value_P95 ||' , '|| sm_write_rq_delta_value_P100 ||' , '||
+       lg_read_mb_delta_value_P50 ||' , '|| lg_read_mb_delta_value_P75 ||' , '|| lg_read_mb_delta_value_P90 ||' , '|| lg_read_mb_delta_value_P95 ||' , '|| lg_read_mb_delta_value_P100 ||' , '||
+       lg_write_mb_delta_value_P50 ||' , '|| lg_write_mb_delta_value_P75 ||' , '|| lg_write_mb_delta_value_P90 ||' , '|| lg_write_mb_delta_value_P95 ||' , '|| lg_write_mb_delta_value_P100 ||' , '||
+       lg_read_rq_delta_value_P50 ||' , '|| lg_read_rq_delta_value_P75 ||' , '|| lg_read_rq_delta_value_P90 ||' , '|| lg_read_rq_delta_value_P95 ||' , '|| lg_read_rq_delta_value_P100 ||' , '||
+       lg_write_rq_delta_value_P50 ||' , '|| lg_write_rq_delta_value_P75 ||' , '|| lg_write_rq_delta_value_P90 ||' , '|| lg_write_rq_delta_value_P95 ||' , '|| lg_write_rq_delta_value_P100 ||' , '||
+       no_iowait_delta_value_P50 ||' , '|| no_iowait_delta_value_P75 ||' , '|| no_iowait_delta_value_P90 ||' , '|| no_iowait_delta_value_P95 ||' , '|| no_iowait_delta_value_P100 ||' , '||
+       tot_watime_delta_value_P50 ||' , '|| tot_watime_delta_value_P75 ||' , '|| tot_watime_delta_value_P90 ||' , '|| tot_watime_delta_value_P95 ||' , '|| tot_watime_delta_value_P100 ||' , '||
+       total_reads_mb_P95 ||' , '|| small_read_share_P95 ||' , '|| total_reads_req_P95 ||' , '|| total_writes_mb_P95 ||' , '|| total_write_req_P95 ||' , '|| avg_wait_time_ms_P95
+FROM viof;
+
+spool off
+
+spool opdb__ioevents__&v_tag
+
+WITH vrawev AS (
+SELECT '&&v_host'
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora'                            AS pkey,
+       sev.dbid,
+       sev.instance_number,
+       dhsnap.begin_interval_time,
+       to_char(dhsnap.begin_interval_time,'hh24') hour,
+       sev.wait_class,
+       sev.event_name,
+       sev.total_waits,
+       NVL(DECODE(GREATEST(sev.total_waits, NVL(LAG(sev.total_waits)
+                                                         OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id), 0)),
+                  sev.total_waits, sev.total_waits - LAG(sev.total_waits)
+                                                                       OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id),0), 0) AS tot_waits_delta_value,
+       sev.total_timeouts,
+       NVL(DECODE(GREATEST(sev.total_timeouts, NVL(LAG(sev.total_timeouts)
+                                                        OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id), 0)),
+                  sev.total_timeouts, sev.total_timeouts - LAG(sev.total_timeouts)
+                                                                      OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id),0), 0) AS tot_tout_delta_value,
+       sev.time_waited_micro,
+       NVL(DECODE(GREATEST(sev.time_waited_micro, NVL(LAG(sev.time_waited_micro)
+                                                        OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id), 0)),
+                  sev.time_waited_micro, sev.time_waited_micro - LAG(sev.time_waited_micro)
+                                                                      OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id),0), 0) AS time_wa_us_delta_value
+FROM DBA_HIST_SYSTEM_EVENT sev
+     INNER JOIN DBA_HIST_SNAPSHOT dhsnap
+     ON sev.snap_id = dhsnap.snap_id
+     AND sev.instance_number = dhsnap.instance_number
+     AND sev.dbid = dhsnap.dbid
+WHERE  sev.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+AND sev.dbid = '&&v_dbid'
+AND sev.wait_class IN ('User I/O', 'System I/O', 'Commit')),
+vpercev AS(
+SELECT pkey,
+       dbid,
+       instance_number,
+       hour,
+       wait_class,
+       event_name,
+       PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY tot_waits_delta_value DESC) AS tot_waits_delta_value_P50,
+       PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY tot_waits_delta_value DESC) AS tot_waits_delta_value_P75,
+       PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY tot_waits_delta_value DESC) AS tot_waits_delta_value_P90,
+       PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY tot_waits_delta_value DESC) AS tot_waits_delta_value_P95,
+       PERCENTILE_CONT(0)
+         within GROUP (ORDER BY tot_waits_delta_value DESC) AS tot_waits_delta_value_P100,
+       PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY tot_tout_delta_value DESC) AS tot_tout_delta_value_P50,
+       PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY tot_tout_delta_value DESC) AS tot_tout_delta_value_P75,
+       PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY tot_tout_delta_value DESC) AS tot_tout_delta_value_P90,
+       PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY tot_tout_delta_value DESC) AS tot_tout_delta_value_P95,
+       PERCENTILE_CONT(0)
+         within GROUP (ORDER BY tot_tout_delta_value DESC) AS tot_tout_delta_value_P100,
+       PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P50,
+       PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P75,
+       PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P90,
+       PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P95,
+       PERCENTILE_CONT(0)
+        within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P100
+FROM vrawev
+GROUP BY pkey,
+         dbid,
+         instance_number,
+         hour,
+         wait_class,
+         event_name),
+vfev as(
+SELECT pkey,
+       dbid,
+       instance_number,
+       hour,
+       wait_class,
+       event_name,
+       tot_waits_delta_value_P50, tot_waits_delta_value_P75, tot_waits_delta_value_P90, tot_waits_delta_value_P95, tot_waits_delta_value_P100,
+       tot_tout_delta_value_P50, tot_tout_delta_value_P75, tot_tout_delta_value_P90, tot_tout_delta_value_P95, tot_tout_delta_value_P100,
+       time_wa_us_delta_value_P50, time_wa_us_delta_value_P75, time_wa_us_delta_value_P90, time_wa_us_delta_value_P95, time_wa_us_delta_value_P100,
+       NVL(CEIL((tot_tout_delta_value_P95 * 100) / NULLIF((tot_waits_delta_value_P95),0)),0) timeout_share_P95,
+       NVL(ROUND(time_wa_us_delta_value_P95 / NULLIF(tot_waits_delta_value_P95,0),2),0) avg_wait_time_us_P95
+FROM vpercev)
+SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| hour ||' , '|| wait_class ||' , '|| event_name ||' , '||
+       tot_waits_delta_value_P50 ||' , '|| tot_waits_delta_value_P75 ||' , '|| tot_waits_delta_value_P90 ||' , '|| tot_waits_delta_value_P95 ||' , '|| tot_waits_delta_value_P100 ||' , '||
+       tot_tout_delta_value_P50 ||' , '|| tot_tout_delta_value_P75 ||' , '|| tot_tout_delta_value_P90 ||' , '|| tot_tout_delta_value_P95 ||' , '|| tot_tout_delta_value_P100 ||' , '||
+       time_wa_us_delta_value_P50 ||' , '|| time_wa_us_delta_value_P75 ||' , '|| time_wa_us_delta_value_P90 ||' , '|| time_wa_us_delta_value_P95 ||' , '|| time_wa_us_delta_value_P100 ||' , '||
+       timeout_share_P95 ||' , '|| avg_wait_time_us_P95
+FROM vfev;
+
+spool off
+
+spool opdb__topsql__&v_tag
+
+WITH vsqlstat AS(
+SELECT '&&v_host'
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora' AS pkey,
+	     dhsnap.dbid,
+       dhsnap.instance_number,
+       to_char(force_matching_signature) force_matching_signature,
+       min(sql_id) sql_id,
+       sum(executions_delta) total_executions,
+       sum(px_servers_execs_delta) total_px_servers_execs,
+       sum(elapsed_time_total) elapsed_time_total,
+       sum(disk_reads_delta) disk_reads_total,
+       sum(physical_read_bytes_delta) physical_read_bytes_total,
+       sum(physical_write_bytes_delta) physical_write_bytes_total,
+       sum(io_offload_elig_bytes_delta) io_offload_elig_bytes_total,
+       sum(io_interconnect_bytes_delta) io_interconnect_bytes_total,
+       sum(optimized_physical_reads_delta) optimized_physical_reads_total,
+       sum(cell_uncompressed_bytes_delta) cell_uncompressed_bytes_total,
+       sum(io_offload_return_bytes_delta) io_offload_return_bytes_total,
+       sum(direct_writes_delta) direct_writes_total,
+       trunc(decode(sum(executions_delta), 0, 0, (sum(end_of_fetch_count_delta)*100)/sum(executions_delta))) perc_exec_finished,
+       trunc(decode(sum(executions_delta), 0, 0, sum(rows_processed_delta)/sum(executions_delta))) avg_rows,
+       trunc(decode(sum(executions_delta), 0, 0, sum(disk_reads_delta)/sum(executions_delta))) avg_disk_reads,
+       trunc(decode(sum(executions_delta), 0, 0, sum(buffer_gets_delta)/sum(executions_delta))) avg_buffer_gets,
+       trunc(decode(sum(executions_delta), 0, 0, sum(cpu_time_delta)/sum(executions_delta))) avg_cpu_time_us,
+       trunc(decode(sum(executions_delta), 0, 0, sum(elapsed_time_delta)/sum(executions_delta))) avg_elapsed_us,
+       trunc(decode(sum(executions_delta), 0, 0, sum(iowait_delta)/sum(executions_delta))) avg_iowait_us,
+       trunc(decode(sum(executions_delta), 0, 0, sum(clwait_delta)/sum(executions_delta))) avg_clwait_us,
+       trunc(decode(sum(executions_delta), 0, 0, sum(apwait_delta)/sum(executions_delta))) avg_apwait_us,
+       trunc(decode(sum(executions_delta), 0, 0, sum(ccwait_delta)/sum(executions_delta))) avg_ccwait_us,
+       trunc(decode(sum(executions_delta), 0, 0, sum(plsexec_time_delta)/sum(executions_delta))) avg_plsexec_us,
+       trunc(decode(sum(executions_delta), 0, 0, sum(javexec_time_delta)/sum(executions_delta))) avg_javexec_us
+FROM dba_hist_sqlstat sqs, dba_hist_snapshot dhsnap
+WHERE sqs.snap_id = dhsnap.snap_id
+AND sqs.instance_number = dhsnap.instance_number
+AND sqs.dbid = dhsnap.dbid
+AND dhsnap.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+AND dhsnap.dbid = '&&v_dbid'
+--and t.command_type <> 47
+-- and s.executions_total > 100
+GROUP BY '&&v_host'
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora',
+       dhsnap.dbid, dhsnap.instance_number, force_matching_signature
+ORDER BY elapsed_time_total DESC)
+SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| force_matching_signature ||' , '|| sql_id ||' , '||
+       total_executions ||' , '|| total_px_servers_execs ||' , '|| elapsed_time_total ||' , '|| disk_reads_total ||' , '||
+       physical_read_bytes_total ||' , '|| physical_write_bytes_total ||' , '|| io_offload_elig_bytes_total ||' , '|| io_interconnect_bytes_total ||' , '||
+       optimized_physical_reads_total ||' , '|| cell_uncompressed_bytes_total ||' , '|| io_offload_return_bytes_total ||' , '|| direct_writes_total ||' , '||
+       perc_exec_finished ||' , '|| avg_rows ||' , '|| avg_disk_reads ||' , '|| avg_buffer_gets ||' , '|| avg_cpu_time_us ||' , '|| avg_elapsed_us ||' , '|| avg_iowait_us ||' , '||
+       avg_clwait_us ||' , '|| avg_clwait_us ||' , '|| avg_apwait_us ||' , '|| avg_ccwait_us ||' , '|| avg_plsexec_us ||' , '|| avg_javexec_us
+FROM vsqlstat
+WHERE rownum < 300;
+
+spool off
+
+spool opdb__idxpertable__&v_tag
+
+WITH vrawidx AS(
+SELECT '&&v_host'
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora' AS pkey,
+       table_owner, table_name, table_type, index_type, count(1) idx_cnt
+FROM dba_indexes
+WHERE  owner NOT IN
+                    ( SELECT name
+                      FROM   SYSTEM.logstdby$skip_support
+                      WHERE  action=0)
+group by table_owner, table_name, table_type, index_type),
+vcidx AS (
+SELECT pkey,
+       count(table_name) tab_count,
+       idx_cnt,
+       round(100*ratio_to_report(count(table_name)) over (), 2) idx_perc
+FROM vrawidx
+GROUP BY pkey, idx_cnt)
+SELECT pkey ||' , '|| 'N/A' ||' , '|| tab_count ||','|| idx_cnt ||','|| idx_perc
+FROM vcidx;
 
 spool off

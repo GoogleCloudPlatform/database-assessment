@@ -16,8 +16,8 @@ limitations under the License.
 
 /*
 
-Version: 2.0.3
-Date: 2022-02-01
+Version: 2.0.4
+Date: 2022-03-04
 
 */
 
@@ -70,7 +70,7 @@ grant select on sys.v_$diag_alert_ext to &&dbusername  container = all;
 grant select on sys.cdb_services to &&dbusername  container = all;
 grant select on sys.dba_hist_sqlstat to &&dbusername  container = all;
 grant select on system.logstdby$skip_support to &&dbusername  container = all;
-grant select on cdb_db_links to &&dbusername  container = all;
+grant select on sys.cdb_db_links to &&dbusername  container = all;
 grant select on sys.dba_registry_sqlpatch to &&dbusername  container = all;
 grant select on sys.dba_users to &&dbusername  container = all;
 grant select on sys.dba_segments to &&dbusername  container = all;
@@ -90,4 +90,8 @@ grant select on sys.dba_tables  to &&dbusername  container = all;
 grant select on sys.dba_tab_partitions to &&dbusername  container = all;
 grant select on sys.dba_tab_subpartitions to &&dbusername  container = all;
 grant select on sys.nls_database_parameters to &&dbusername  container = all;
+grant select on sys.dba_hist_active_sess_history to &&dbusername  container = all;
+grant select on sys.dba_external_tables to &&dbusername  container = all;
+grant select on sys.dba_hist_iostat_function to &&dbusername  container = all;
+grant select on sys.dba_hist_system_event to &&dbusername  container = all;
 ALTER USER &&dbusername SET CONTAINER_DATA=ALL CONTAINER=CURRENT;
