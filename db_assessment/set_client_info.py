@@ -27,3 +27,4 @@ USER_AGENT = "{}/{}".format(APPLICATION_NAME, __version__)
 
 def get_http_client_info():
     return http_client_info.ClientInfo(user_agent=USER_AGENT)
+
