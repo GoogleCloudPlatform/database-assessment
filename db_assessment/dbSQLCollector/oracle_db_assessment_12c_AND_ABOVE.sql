@@ -1651,11 +1651,10 @@ SELECT '&&v_host'
        || '&&v_dbname'
        || '_'
        || '&&v_hora' AS pkey,
-       con_id, owner, table_name, type_owner, type_name, default_directory_owner, default_directory_name,
-       reject_limit, access_type, access_parameters, property
+       con_id, owner, table_name, type_owner, type_name, default_directory_owner, default_directory_name
 FROM CDB_EXTERNAL_TABLES)
-SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| table_name ||' , '|| type_owner ||' , '|| type_name ||' , '|| default_directory_owner ||' , '||
-       default_directory_name ||' , '|| reject_limit ||' , '|| access_type ||' , '|| access_parameters ||' , '|| property
+SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| table_name ||' , '|| type_owner ||' , '|| type_name ||' , '||
+       default_directory_owner ||' , '|| default_directory_name
 FROM vexttab;
 
 spool off
