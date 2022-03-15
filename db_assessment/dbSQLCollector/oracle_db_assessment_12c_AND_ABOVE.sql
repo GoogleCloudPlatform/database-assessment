@@ -1971,7 +1971,7 @@ FROM vfev;
 
 spool off
 
-spool opdb__topsql__&v_tag
+spool opdb__sqlstats__&v_tag
 
 WITH vsqlstat AS(
 SELECT '&&v_host'

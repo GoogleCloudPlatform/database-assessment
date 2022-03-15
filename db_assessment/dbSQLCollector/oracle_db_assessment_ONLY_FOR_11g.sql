@@ -1029,7 +1029,7 @@ WITH valert AS (
                a.message_level,
                SUBSTR(a.message_id, 0, 30)                                             message_id,
                a.message_group
-        FROM   v$diag_alert_ext A)
+        FROM   X$DBGALERTEXT A)
 SELECT pkey ||' , '|| MESSAGE_TIME ||' , '|| message_text ||' , '|| host_id ||' , '|| 'N/A' ||' , '|| component_id ||' , '||
        message_type ||' , '|| message_level ||' , '|| message_id ||' , '|| message_group
 FROM valert
@@ -1862,7 +1862,7 @@ FROM vfev;
 
 spool off
 
-spool opdb__topsql__&v_tag
+spool opdb__sqlstats__&v_tag
 
 WITH vsqlstat AS(
 SELECT '&&v_host'
