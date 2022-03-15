@@ -22,12 +22,13 @@ Please ensure you have proper licensing. For more information consult Oracle Sup
 /*
 
 Version: 2.0.4
-Date: 2022-03-04
+Date: 2022-03-15
 
 */
 
 define version = '2.0.4'
 define dtrange = 30
+define colspr = ','
 
 clear col comp brea
 set headsep off
@@ -44,6 +45,7 @@ set pause off
 set wrap on
 set echo off
 set appinfo 'OPTIMUS_PRIME'
+alter session set NLS_NUMERIC_CHARACTERS = ',.';
 
 whenever sqlerror continue
 whenever oserror continue
@@ -119,9 +121,9 @@ WHERE  s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
 AND dbid = '&&v_dbid'
 )
 GROUP BY '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora', dbid, instance_number, hour)
-SELECT pkey ||','|| dbid ||','|| instance_number ||','|| hour ||','|| min_snapid ||','|| max_snapid ||','|| min_begin_interval_time ||','||
-       max_begin_interval_time ||','|| cnt ||','|| sum_snaps_diff_secs ||','|| avg_snaps_diff_secs ||','|| median_snaps_diff_secs ||','||
-       mode_snaps_diff_secs ||','|| min_snaps_diff_secs ||','|| max_snaps_diff_secs
+SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || hour || '&&colspr' || min_snapid || '&&colspr' || max_snapid || '&&colspr' || min_begin_interval_time || '&&colspr' ||
+       max_begin_interval_time || '&&colspr' || cnt || '&&colspr' || sum_snaps_diff_secs || '&&colspr' || avg_snaps_diff_secs || '&&colspr' || median_snaps_diff_secs || '&&colspr' ||
+       mode_snaps_diff_secs || '&&colspr' || min_snaps_diff_secs || '&&colspr' || max_snaps_diff_secs
 FROM vawrsnap;
 
 spool off
@@ -132,8 +134,8 @@ with vop as (
 select '&&v_tag' pkey, '&&version' opscriptversion, '&&v_dbversion' dbversion, '&&v_host' hostname,
 '&&v_dbname' dbname, '&&v_inst' instance_name, '&&v_hora' collection_time, '&&v_dbid' dbid, null "CMNT"
 from dual)
-select pkey ||' , '|| opscriptversion ||' , '|| dbversion ||' , '|| hostname
-       ||' , '|| dbname ||' , '|| instance_name ||' , '|| collection_time ||' , '|| dbid ||' , '|| CMNT
+select pkey || '&&colspr' || opscriptversion || '&&colspr' || dbversion || '&&colspr' || hostname
+       || '&&colspr' || dbname || '&&colspr' || instance_name || '&&colspr' || collection_time || '&&colspr' || dbid || '&&colspr' || CMNT
 from vop;
 
 spool off
@@ -219,10 +221,10 @@ SELECT '&&v_host'
        (SELECT protection_level
         FROM   v$database)                                                      AS dg_protection_level
 FROM   dual)
-SELECT pkey ||' , '|| dbid ||' , '|| db_name ||' , '|| cdb ||' , '|| dbversion ||' , '|| dbfullversion ||' , '|| log_mode ||' , '|| force_logging ||' , '||
-       redo_gb_per_day ||' , '|| rac_dbinstaces ||' , '|| characterset ||' , '|| platform_name ||' , '|| startup_time ||' , '|| user_schemas ||' , '||
-	   buffer_cache_mb ||' , '|| shared_pool_mb ||' , '|| total_pga_allocated_mb ||' , '|| db_size_allocated_gb ||' , '|| db_size_in_use_gb ||' , '||
-	   db_long_size_gb ||' , '|| dg_database_role ||' , '|| dg_protection_mode ||' , '|| dg_protection_level
+SELECT pkey || '&&colspr' || dbid || '&&colspr' || db_name || '&&colspr' || cdb || '&&colspr' || dbversion || '&&colspr' || dbfullversion || '&&colspr' || log_mode || '&&colspr' || force_logging || '&&colspr' ||
+       redo_gb_per_day || '&&colspr' || rac_dbinstaces || '&&colspr' || characterset || '&&colspr' || platform_name || '&&colspr' || startup_time || '&&colspr' || user_schemas || '&&colspr' ||
+	   buffer_cache_mb || '&&colspr' || shared_pool_mb || '&&colspr' || total_pga_allocated_mb || '&&colspr' || db_size_allocated_gb || '&&colspr' || db_size_in_use_gb || '&&colspr' ||
+	   db_long_size_gb || '&&colspr' || dg_database_role || '&&colspr' || dg_protection_mode || '&&colspr' || dg_protection_level
 FROM vdbsummary;
 
 spool off
@@ -241,7 +243,7 @@ SELECT '&&v_host'
        status,
        logging
 FROM   cdb_pdbs )
-SELECT pkey ||' , '|| dbid ||' , '|| pdb_id ||' , '|| pdb_name ||' , '|| status ||' , '|| logging
+SELECT pkey || '&&colspr' || dbid || '&&colspr' || pdb_id || '&&colspr' || pdb_name || '&&colspr' || status || '&&colspr' || logging
 FROM  vpdbinfo;
 
 spool off
@@ -259,7 +261,7 @@ SELECT '&&v_host'
        open_mode,
        total_size / 1024 / 1024 / 1024 TOTAL_GB
 FROM   v$pdbs )
-SELECT pkey ||' , '|| con_id ||' , '|| name ||' , '|| open_mode ||' , '|| TOTAL_GB
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || name || '&&colspr' || open_mode || '&&colspr' || TOTAL_GB
 FROM vpdbmode;
 
 spool off
@@ -280,8 +282,8 @@ SELECT '&&v_host'
        database_status,
        instance_role
 FROM   gv$instance )
-SELECT pkey ||' , '|| inst_id ||' , '|| instance_name ||' , '|| host_name ||' , '||
-       version ||' , '|| status ||' , '|| database_status ||' , '|| instance_role
+SELECT pkey || '&&colspr' || inst_id || '&&colspr' || instance_name || '&&colspr' || host_name || '&&colspr' ||
+       version || '&&colspr' || status || '&&colspr' || database_status || '&&colspr' || instance_role
 FROM vdbinst;
 
 spool off
@@ -315,9 +317,9 @@ SELECT '&&v_host'
                           WHERE  action=0)
        GROUP  BY grouping sets( ( ), ( con_id ), ( owner ), ( segment_type ),
                     ( tablespace_name ), ( flash_cache ), ( inmemory ), ( con_id, owner ), ( con_id, owner, flash_cache, inmemory ) ))
-SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| segment_type ||' , '|| tablespace_name ||' , '||
-       flash_cache ||' , '|| inmemory ||' , '|| IN_CON_ID ||' , '|| IN_OWNER ||' , '|| IN_SEGMENT_TYPE ||' , '||
-	   IN_TABLESPACE_NAME ||' , '|| IN_FLASH_CACHE ||' , '|| GB
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || segment_type || '&&colspr' || tablespace_name || '&&colspr' ||
+       flash_cache || '&&colspr' || inmemory || '&&colspr' || IN_CON_ID || '&&colspr' || IN_OWNER || '&&colspr' || IN_SEGMENT_TYPE || '&&colspr' ||
+	   IN_TABLESPACE_NAME || '&&colspr' || IN_FLASH_CACHE || '&&colspr' || GB
 FROM vused;
 
 spool off
@@ -411,8 +413,8 @@ SELECT '&&v_host'
                   owner
         HAVING TRUNC(SUM(table_gbytes) + SUM(partition_gbytes)
                      + SUM(subpartition_gbytes)) > 0 )
-SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| tab ||' , '|| table_gb ||' , '|| part ||' , '||
-       part_gb ||' , '|| subpart ||' , '|| subpart_gb ||' , '|| total_gbytes
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || tab || '&&colspr' || table_gb || '&&colspr' || part || '&&colspr' ||
+       part_gb || '&&colspr' || subpart || '&&colspr' || subpart_gb || '&&colspr' || total_gbytes
 FROM vtbcompress
 ORDER  BY total_gbytes DESC;
 
@@ -504,8 +506,8 @@ WITH vcompresstype AS (
      GROUP  BY con_id,
                owner
      HAVING TRUNC(SUM(gbytes)) > 0)
-SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| basic ||' , '|| oltp ||' , '|| query_low ||' , '||
-       query_high ||' , '|| archive_low ||' , '|| archive_high ||' , '|| total_gb
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || basic || '&&colspr' || oltp || '&&colspr' || query_low || '&&colspr' ||
+       query_high || '&&colspr' || archive_low || '&&colspr' || archive_high || '&&colspr' || total_gb
 FROM vcompresstype
 ORDER BY total_gb DESC;
 
@@ -553,7 +555,7 @@ SELECT '&&v_host'
                                          'LOBINDEX', 'LOB',
                                          'OTHERS')
        HAVING TRUNC(SUM(a.bytes) / 1024 / 1024 / 1024) >= 1)
-SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| segment_type ||' , '|| total_gb
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || segment_type || '&&colspr' || total_gb
 FROM vspaceow
 ORDER  BY total_gb DESC;
 
@@ -639,8 +641,8 @@ WITH vspctbs AS (
                   b.allocation_type,
                   b.segment_space_management,
                   b.status)
-SELECT pkey ||' , '|| tablespace_name ||' , '|| extent_management ||' , '|| allocation_type ||' , '||
-       segment_space_management ||' , '|| status ||' , '|| estd_ganho_mb
+SELECT pkey || '&&colspr' || tablespace_name || '&&colspr' || extent_management || '&&colspr' || allocation_type || '&&colspr' ||
+       segment_space_management || '&&colspr' || status || '&&colspr' || estd_ganho_mb
 FROM vspctbs;
 
 
@@ -710,8 +712,8 @@ WITH vfreespace AS (
         FROM   v$temp_space_header sh
         GROUP  BY con_id,
                   tablespace_name)
-SELECT pkey ||' , '|| con_id ||' , '|| tablespace_name ||' , '|| status ||' , '|| total_gb ||' , '||
-       used_gb ||' , '|| free_gb ||' , '|| pct_used ||' , '|| GRAPH
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || tablespace_name || '&&colspr' || status || '&&colspr' || total_gb || '&&colspr' ||
+       used_gb || '&&colspr' || free_gb || '&&colspr' || pct_used || '&&colspr' || GRAPH
 FROM vfreespace
 ORDER  BY graph;
 
@@ -736,7 +738,7 @@ WHERE  owner NOT IN
                      SELECT name
                      FROM   SYSTEM.logstdby$skip_support
                      WHERE  action=0))
-SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| db_link ||' , '|| host ||' , '|| created
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || db_link || '&&colspr' || host || '&&colspr' || created
 FROM vdbl;
 
 spool off
@@ -757,7 +759,7 @@ SELECT '&&v_host'
        isdefault
 FROM   gv$parameter
 ORDER  BY 2,3 )
-SELECT pkey ||' , '|| inst_id ||' , '|| con_id ||' , '|| name ||' , '|| value ||' , '|| default_value ||' , '|| isdefault
+SELECT pkey || '&&colspr' || inst_id || '&&colspr' || con_id || '&&colspr' || name || '&&colspr' || value || '&&colspr' || default_value || '&&colspr' || isdefault
 FROM vparam;
 
 spool off
@@ -780,8 +782,8 @@ SELECT '&&v_host'
        aux_count
 FROM   cdb_feature_usage_statistics
 ORDER  BY name)
-SELECT pkey ||' , '|| con_id ||' , '|| name ||' , '|| currently_used ||' , '|| detected_usages ||' , '||
-       total_samples ||' , '|| first_usage ||' , '|| last_usage ||' , '|| aux_count
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || name || '&&colspr' || currently_used || '&&colspr' || detected_usages || '&&colspr' ||
+       total_samples || '&&colspr' || first_usage || '&&colspr' || last_usage || '&&colspr' || aux_count
 FROM vdbf;
 
 spool off
@@ -799,7 +801,7 @@ SELECT '&&v_host'
        last_value
 FROM   dba_high_water_mark_statistics
 ORDER  BY description)
-SELECT pkey ||' , '|| description ||' , '|| highwater ||' , '|| last_value
+SELECT pkey || '&&colspr' || description || '&&colspr' || highwater || '&&colspr' || last_value
 FROM vhwmst;
 
 spool off
@@ -818,7 +820,7 @@ SELECT '&&v_host'
        cpu_socket_count
 FROM   dba_cpu_usage_statistics
 ORDER  BY timestamp)
-SELECT pkey ||' , '|| dt ||' , '|| cpu_count ||' , '|| cpu_core_count ||' , '|| cpu_socket_count
+SELECT pkey || '&&colspr' || dt || '&&colspr' || cpu_count || '&&colspr' || cpu_core_count || '&&colspr' || cpu_socket_count
 FROM vcpursc;
 
 spool off
@@ -849,8 +851,8 @@ WITH vdbobj AS (
         GROUP  BY grouping sets ( ( con_id, object_type ), (
                                   con_id, owner, editionable,
                                              object_type ) ))
-SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| object_type ||' , '|| editionable ||' , '||
-       count ||' , '|| in_con_id ||' , '|| in_owner ||' , '|| in_object_type ||' , '|| in_editionable
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || object_type || '&&colspr' || editionable || '&&colspr' ||
+       count || '&&colspr' || in_con_id || '&&colspr' || in_owner || '&&colspr' || in_object_type || '&&colspr' || in_editionable
 FROM vdbobj;
 
 spool off
@@ -916,8 +918,8 @@ GROUP  BY pkey,
           con_id,
           owner,
           TYPE)
-SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| type ||' , '|| sum_nr_lines ||' , '|| qt_objs ||' , '||
-       sum_nr_lines_w_utl ||' , '|| sum_nr_lines_w_dbms ||' , '|| count_exec_im ||' , '|| count_dbms_sql ||' , '|| sum_nr_lines_w_dbms_utl ||' , '|| sum_count_total
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || type || '&&colspr' || sum_nr_lines || '&&colspr' || qt_objs || '&&colspr' ||
+       sum_nr_lines_w_utl || '&&colspr' || sum_nr_lines_w_dbms || '&&colspr' || count_exec_im || '&&colspr' || count_dbms_sql || '&&colspr' || sum_nr_lines_w_dbms_utl || '&&colspr' || sum_count_total
 FROM vsrc;
 
 spool off
@@ -950,7 +952,7 @@ GROUP  BY '&&v_host'
           owner,
           partitioning_type,
           subpartitioning_type)
-SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| partitioning_type ||' , '|| subpartitioning_type ||' , '|| cnt
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || partitioning_type || '&&colspr' || subpartitioning_type || '&&colspr' || cnt
 FROM vpart;
 
 spool off
@@ -981,7 +983,7 @@ GROUP  BY '&&v_host'
           con_id,
           owner,
           index_type)
-SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| index_type ||' , '|| cnt
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || index_type || '&&colspr' || cnt
 FROM vidxtype;
 
 spool off
@@ -1012,7 +1014,7 @@ GROUP  BY '&&v_host'
           con_id,
           owner,
           data_type)
-SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| data_type ||' , '|| cnt
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || data_type || '&&colspr' || cnt
 FROM vdtype;
 
 spool off
@@ -1070,8 +1072,8 @@ GROUP  BY '&&v_host'
           || '&&v_hora',
           con_id,
           owner)
-SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| pk ||' , '|| uk ||' , '|| ck ||' , '||
-       ri ||' , '|| vwck ||' , '|| vwro ||' , '|| hashexpr ||' , '|| suplog ||' , '|| num_tables ||' , '|| total_cons
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || pk || '&&colspr' || uk || '&&colspr' || ck || '&&colspr' ||
+       ri || '&&colspr' || vwck || '&&colspr' || vwro || '&&colspr' || hashexpr || '&&colspr' || suplog || '&&colspr' || num_tables || '&&colspr' || total_cons
 FROM vnopk;
 
 spool off
@@ -1089,7 +1091,7 @@ SELECT '&&v_host'
        pval1,
        pval2
 FROM   sys.aux_stats$)
-SELECT pkey ||' , '|| sname ||' , '|| pname ||' , '|| pval1 ||' , '|| pval2
+SELECT pkey || '&&colspr' || sname || '&&colspr' || pname || '&&colspr' || pval1 || '&&colspr' || pval2
 FROM vpsystat;
 
 spool off
@@ -1109,7 +1111,7 @@ SELECT '&&v_host'
        patch_id
 FROM   sys.dba_registry_sqlpatch
 ORDER by action_time)
-SELECT pkey ||' , '|| '12c+' ||' , '|| action_time ||' , '|| action ||' , '|| status ||' , '|| description ||' , '|| patch_id ||' , '|| 'N/A'
+SELECT pkey || '&&colspr' || '12c+' || '&&colspr' || action_time || '&&colspr' || action || '&&colspr' || status || '&&colspr' || description || '&&colspr' || patch_id || '&&colspr' || 'N/A'
 FROM vpatch;
 
 spool off
@@ -1133,8 +1135,8 @@ WITH valert AS (
                 a.message_group
          FROM   v$diag_alert_ext A
          ORDER  BY A.originating_timestamp DESC)
-SELECT pkey ||' , '|| MESSAGE_TIME ||' , '|| message_text ||' , '|| host_id ||' , '|| con_id ||' , '||
-       component_id ||' , '|| message_type ||' , '|| message_level ||' , '|| message_id ||' , '|| message_group
+SELECT pkey || '&&colspr' || MESSAGE_TIME || '&&colspr' || message_text || '&&colspr' || host_id || '&&colspr' || con_id || '&&colspr' ||
+       component_id || '&&colspr' || message_type || '&&colspr' || message_level || '&&colspr' || message_id || '&&colspr' || message_group
 FROM valert
 WHERE ROWNUM < 5001;
 
@@ -1190,9 +1192,9 @@ ORDER  BY hsm.dbid,
           hsm.instance_number,
           hsm.metric_name,
           TO_CHAR(hsm.begin_time, 'hh24'))
-SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| hour ||' , '|| metric_name ||' , '||
-       metric_unit ||' , '|| avg_value ||' , '|| mode_value ||' , '|| median_value ||' , '|| min_value ||' , '|| max_value ||' , '||
-	   sum_value ||' , '|| PERC50 ||' , '|| PERC75 ||' , '|| PERC90 ||' , '|| PERC95 ||' , '|| PERC100
+SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || hour || '&&colspr' || metric_name || '&&colspr' ||
+       metric_unit || '&&colspr' || avg_value || '&&colspr' || mode_value || '&&colspr' || median_value || '&&colspr' || min_value || '&&colspr' || max_value || '&&colspr' ||
+	   sum_value || '&&colspr' || PERC50 || '&&colspr' || PERC75 || '&&colspr' || PERC90 || '&&colspr' || PERC95 || '&&colspr' || PERC100
 FROM vsysmetric;
 
 spool off
@@ -1259,9 +1261,9 @@ vsysmetricsummperhour as (
             hsm.metric_name,
             hsm.metric_unit--, dhsnap.STARTUP_TIME
 )
-SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| hour ||' , '|| metric_name ||' , '||
-       metric_unit ||' , '|| avg_value ||' , '|| mode_value ||' , '|| median_value ||' , '|| min_value ||' , '|| max_value ||' , '||
-	   sum_value ||' , '|| PERC50 ||' , '|| PERC75 ||' , '|| PERC90 ||' , '|| PERC95 ||' , '|| PERC100
+SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || hour || '&&colspr' || metric_name || '&&colspr' ||
+       metric_unit || '&&colspr' || avg_value || '&&colspr' || mode_value || '&&colspr' || median_value || '&&colspr' || min_value || '&&colspr' || max_value || '&&colspr' ||
+	   sum_value || '&&colspr' || PERC50 || '&&colspr' || PERC75 || '&&colspr' || PERC90 || '&&colspr' || PERC95 || '&&colspr' || PERC100
 FROM vsysmetricsummperhour;
 
 spool off
@@ -1352,9 +1354,9 @@ GROUP  BY '&&v_host'
           instance_number,
           hh24,
           stat_name)
-SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| hh24 ||' , '|| stat_name ||' , '|| hh24_total_secs ||' , '||
-       cumulative_value ||' , '|| avg_value ||' , '|| mode_value ||' , '|| median_value ||' , '|| PERC50 ||' , '|| PERC75 ||' , '|| PERC90 ||' , '|| PERC95 ||' , '|| PERC100 ||' , '||
-	     min_value ||' , '|| max_value ||' , '|| sum_value ||' , '|| count
+SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || hh24 || '&&colspr' || stat_name || '&&colspr' || hh24_total_secs || '&&colspr' ||
+       cumulative_value || '&&colspr' || avg_value || '&&colspr' || mode_value || '&&colspr' || median_value || '&&colspr' || PERC50 || '&&colspr' || PERC75 || '&&colspr' || PERC90 || '&&colspr' || PERC95 || '&&colspr' || PERC100 || '&&colspr' ||
+	     min_value || '&&colspr' || max_value || '&&colspr' || sum_value || '&&colspr' || count
 FROM vossummary;
 
 spool off
@@ -1400,9 +1402,9 @@ GROUP  BY '&&v_host'
 		  a.con_id,
           TO_CHAR(c.begin_interval_time, 'hh24'),
           b.command_type)
-SELECT pkey ||' , '|| con_id ||' , '|| hh24 ||' , '|| command_type ||' , '|| cnt ||' , '|| avg_buffer_gets ||' , '|| avg_elasped_time ||' , '||
-       avg_rows_processed ||' , '|| avg_executions ||' , '|| avg_cpu_time ||' , '|| avg_iowait ||' , '|| avg_clwait ||' , '||
-	   avg_apwait ||' , '|| avg_ccwait ||' , '|| avg_plsexec_time
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || hh24 || '&&colspr' || command_type || '&&colspr' || cnt || '&&colspr' || avg_buffer_gets || '&&colspr' || avg_elasped_time || '&&colspr' ||
+       avg_rows_processed || '&&colspr' || avg_executions || '&&colspr' || avg_cpu_time || '&&colspr' || avg_iowait || '&&colspr' || avg_clwait || '&&colspr' ||
+	   avg_apwait || '&&colspr' || avg_ccwait || '&&colspr' || avg_plsexec_time
 FROM vcmdtype;
 
 spool off
@@ -1463,9 +1465,9 @@ GROUP BY
       instance_number,
       hour,
       stat_name)
-SELECT pkey ||','|| dbid ||','|| instance_number ||','|| hour ||','|| stat_name ||','|| cnt ||','||
-       avg_value ||','|| mode_value ||','|| median_value ||','|| min_value ||','|| max_value ||','||
-	   sum_value ||','|| perc50 ||','|| perc75 ||','|| perc90 ||','|| perc95 ||','|| perc100
+SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || hour || '&&colspr' || stat_name || '&&colspr' || cnt || '&&colspr' ||
+       avg_value || '&&colspr' || mode_value || '&&colspr' || median_value || '&&colspr' || min_value || '&&colspr' || max_value || '&&colspr' ||
+	   sum_value || '&&colspr' || perc50 || '&&colspr' || perc75 || '&&colspr' || perc90 || '&&colspr' || perc95 || '&&colspr' || perc100
 FROM vtimemodel;
 
 spool off
@@ -1540,9 +1542,9 @@ GROUP BY
           instance_number,
           hour,
           stat_name)
-SELECT pkey ||','|| dbid ||','|| instance_number ||','|| hour ||','|| stat_name ||','|| cnt ||','||
-       avg_value ||','|| mode_value ||','|| median_value ||','|| min_value ||','|| max_value ||','||
-	   sum_value ||','|| perc50 ||','|| perc75 ||','|| perc90 ||','|| perc95 ||','|| perc100
+SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || hour || '&&colspr' || stat_name || '&&colspr' || cnt || '&&colspr' ||
+       avg_value || '&&colspr' || mode_value || '&&colspr' || median_value || '&&colspr' || min_value || '&&colspr' || max_value || '&&colspr' ||
+	   sum_value || '&&colspr' || perc50 || '&&colspr' || perc75 || '&&colspr' || perc90 || '&&colspr' || perc95 || '&&colspr' || perc100
 FROM vsysstat;
 
 spool off
@@ -1568,8 +1570,8 @@ SELECT '&&v_host'
        goal
 FROM cdb_services
 ORDER BY NAME)
-SELECT pkey ||' , '|| con_id ||' , '|| pdb ||' , '|| service_id ||' , '|| service_name ||' , '|| network_name ||' , '|| creation_date ||' , '||
-       failover_method ||' , '|| failover_type ||' , '|| failover_retries ||' , '|| failover_delay ||' , '|| goal
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || pdb || '&&colspr' || service_id || '&&colspr' || service_name || '&&colspr' || network_name || '&&colspr' || creation_date || '&&colspr' ||
+       failover_method || '&&colspr' || failover_type || '&&colspr' || failover_retries || '&&colspr' || failover_delay || '&&colspr' || goal
 FROM vservices;
 
 spool off
@@ -1593,7 +1595,7 @@ WITH vuseg AS (
  (SELECT name
   FROM system.logstdby$skip_support
   WHERE action=0))
-SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| segment_name ||' , '|| segment_type ||' , '|| tablespace_name
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || segment_name || '&&colspr' || segment_type || '&&colspr' || tablespace_name
 FROM vuseg;
 
 spool off
@@ -1636,8 +1638,8 @@ group by '&&v_host'
        has.module,
        has.machine,
        scmd.command_name)
-SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| hour ||' , '|| program ||' , '||
-       module ||' , '|| machine ||' , '|| command_name ||' , '|| cnt
+SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || hour || '&&colspr' || program || '&&colspr' ||
+       module || '&&colspr' || machine || '&&colspr' || command_name || '&&colspr' || cnt
 FROM vsrcconn
 order by hour;
 
@@ -1653,8 +1655,8 @@ SELECT '&&v_host'
        || '&&v_hora' AS pkey,
        con_id, owner, table_name, type_owner, type_name, default_directory_owner, default_directory_name
 FROM CDB_EXTERNAL_TABLES)
-SELECT pkey ||' , '|| con_id ||' , '|| owner ||' , '|| table_name ||' , '|| type_owner ||' , '|| type_name ||' , '||
-       default_directory_owner ||' , '|| default_directory_name
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || table_name || '&&colspr' || type_owner || '&&colspr' || type_name || '&&colspr' ||
+       default_directory_owner || '&&colspr' || default_directory_name
 FROM vexttab;
 
 spool off
@@ -1852,18 +1854,18 @@ SELECT pkey,
        sm_write_rq_delta_value_P95 + lg_write_rq_delta_value_P95 total_write_req_P95,
        NVL(ROUND(tot_watime_delta_value_P95 / NULLIF(no_iowait_delta_value_P95,0),2),0) avg_wait_time_ms_P95
 FROM vperciof)
-SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| hh24 ||' , '|| function_name ||' , '||
-       sm_read_mb_delta_value_P50 ||' , '|| sm_read_mb_delta_value_P75 ||' , '|| sm_read_mb_delta_value_P90 ||' , '|| sm_read_mb_delta_value_P95 ||' , '|| sm_read_mb_delta_value_P100 ||' , '||
-       sm_write_mb_delta_value_P50 ||' , '|| sm_write_mb_delta_value_P75 ||' , '|| sm_write_mb_delta_value_P90 ||' , '|| sm_write_mb_delta_value_P95 ||' , '|| sm_write_mb_delta_value_P100 ||' , '||
-       sm_read_rq_delta_value_P50 ||' , '|| sm_read_rq_delta_value_P75 ||' , '|| sm_read_rq_delta_value_P90 ||' , '|| sm_read_rq_delta_value_P95 ||' , '|| sm_read_rq_delta_value_P100 ||' , '||
-       sm_write_rq_delta_value_P50 ||' , '|| sm_write_rq_delta_value_P75 ||' , '|| sm_write_rq_delta_value_P90 ||' , '|| sm_write_rq_delta_value_P95 ||' , '|| sm_write_rq_delta_value_P100 ||' , '||
-       lg_read_mb_delta_value_P50 ||' , '|| lg_read_mb_delta_value_P75 ||' , '|| lg_read_mb_delta_value_P90 ||' , '|| lg_read_mb_delta_value_P95 ||' , '|| lg_read_mb_delta_value_P100 ||' , '||
-       lg_write_mb_delta_value_P50 ||' , '|| lg_write_mb_delta_value_P75 ||' , '|| lg_write_mb_delta_value_P90 ||' , '|| lg_write_mb_delta_value_P95 ||' , '|| lg_write_mb_delta_value_P100 ||' , '||
-       lg_read_rq_delta_value_P50 ||' , '|| lg_read_rq_delta_value_P75 ||' , '|| lg_read_rq_delta_value_P90 ||' , '|| lg_read_rq_delta_value_P95 ||' , '|| lg_read_rq_delta_value_P100 ||' , '||
-       lg_write_rq_delta_value_P50 ||' , '|| lg_write_rq_delta_value_P75 ||' , '|| lg_write_rq_delta_value_P90 ||' , '|| lg_write_rq_delta_value_P95 ||' , '|| lg_write_rq_delta_value_P100 ||' , '||
-       no_iowait_delta_value_P50 ||' , '|| no_iowait_delta_value_P75 ||' , '|| no_iowait_delta_value_P90 ||' , '|| no_iowait_delta_value_P95 ||' , '|| no_iowait_delta_value_P100 ||' , '||
-       tot_watime_delta_value_P50 ||' , '|| tot_watime_delta_value_P75 ||' , '|| tot_watime_delta_value_P90 ||' , '|| tot_watime_delta_value_P95 ||' , '|| tot_watime_delta_value_P100 ||' , '||
-       total_reads_mb_P95 ||' , '|| small_read_share_P95 ||' , '|| total_reads_req_P95 ||' , '|| total_writes_mb_P95 ||' , '|| total_write_req_P95 ||' , '|| avg_wait_time_ms_P95
+SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || hh24 || '&&colspr' || function_name || '&&colspr' ||
+       sm_read_mb_delta_value_P50 || '&&colspr' || sm_read_mb_delta_value_P75 || '&&colspr' || sm_read_mb_delta_value_P90 || '&&colspr' || sm_read_mb_delta_value_P95 || '&&colspr' || sm_read_mb_delta_value_P100 || '&&colspr' ||
+       sm_write_mb_delta_value_P50 || '&&colspr' || sm_write_mb_delta_value_P75 || '&&colspr' || sm_write_mb_delta_value_P90 || '&&colspr' || sm_write_mb_delta_value_P95 || '&&colspr' || sm_write_mb_delta_value_P100 || '&&colspr' ||
+       sm_read_rq_delta_value_P50 || '&&colspr' || sm_read_rq_delta_value_P75 || '&&colspr' || sm_read_rq_delta_value_P90 || '&&colspr' || sm_read_rq_delta_value_P95 || '&&colspr' || sm_read_rq_delta_value_P100 || '&&colspr' ||
+       sm_write_rq_delta_value_P50 || '&&colspr' || sm_write_rq_delta_value_P75 || '&&colspr' || sm_write_rq_delta_value_P90 || '&&colspr' || sm_write_rq_delta_value_P95 || '&&colspr' || sm_write_rq_delta_value_P100 || '&&colspr' ||
+       lg_read_mb_delta_value_P50 || '&&colspr' || lg_read_mb_delta_value_P75 || '&&colspr' || lg_read_mb_delta_value_P90 || '&&colspr' || lg_read_mb_delta_value_P95 || '&&colspr' || lg_read_mb_delta_value_P100 || '&&colspr' ||
+       lg_write_mb_delta_value_P50 || '&&colspr' || lg_write_mb_delta_value_P75 || '&&colspr' || lg_write_mb_delta_value_P90 || '&&colspr' || lg_write_mb_delta_value_P95 || '&&colspr' || lg_write_mb_delta_value_P100 || '&&colspr' ||
+       lg_read_rq_delta_value_P50 || '&&colspr' || lg_read_rq_delta_value_P75 || '&&colspr' || lg_read_rq_delta_value_P90 || '&&colspr' || lg_read_rq_delta_value_P95 || '&&colspr' || lg_read_rq_delta_value_P100 || '&&colspr' ||
+       lg_write_rq_delta_value_P50 || '&&colspr' || lg_write_rq_delta_value_P75 || '&&colspr' || lg_write_rq_delta_value_P90 || '&&colspr' || lg_write_rq_delta_value_P95 || '&&colspr' || lg_write_rq_delta_value_P100 || '&&colspr' ||
+       no_iowait_delta_value_P50 || '&&colspr' || no_iowait_delta_value_P75 || '&&colspr' || no_iowait_delta_value_P90 || '&&colspr' || no_iowait_delta_value_P95 || '&&colspr' || no_iowait_delta_value_P100 || '&&colspr' ||
+       tot_watime_delta_value_P50 || '&&colspr' || tot_watime_delta_value_P75 || '&&colspr' || tot_watime_delta_value_P90 || '&&colspr' || tot_watime_delta_value_P95 || '&&colspr' || tot_watime_delta_value_P100 || '&&colspr' ||
+       total_reads_mb_P95 || '&&colspr' || small_read_share_P95 || '&&colspr' || total_reads_req_P95 || '&&colspr' || total_writes_mb_P95 || '&&colspr' || total_write_req_P95 || '&&colspr' || avg_wait_time_ms_P95
 FROM viof;
 
 spool off
@@ -1962,11 +1964,11 @@ SELECT pkey,
        NVL(CEIL((tot_tout_delta_value_P95 * 100) / NULLIF((tot_waits_delta_value_P95),0)),0) timeout_share_P95,
        NVL(ROUND(time_wa_us_delta_value_P95 / NULLIF(tot_waits_delta_value_P95,0),2),0) avg_wait_time_us_P95
 FROM vpercev)
-SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| hour ||' , '|| wait_class ||' , '|| event_name ||' , '||
-       tot_waits_delta_value_P50 ||' , '|| tot_waits_delta_value_P75 ||' , '|| tot_waits_delta_value_P90 ||' , '|| tot_waits_delta_value_P95 ||' , '|| tot_waits_delta_value_P100 ||' , '||
-       tot_tout_delta_value_P50 ||' , '|| tot_tout_delta_value_P75 ||' , '|| tot_tout_delta_value_P90 ||' , '|| tot_tout_delta_value_P95 ||' , '|| tot_tout_delta_value_P100 ||' , '||
-       time_wa_us_delta_value_P50 ||' , '|| time_wa_us_delta_value_P75 ||' , '|| time_wa_us_delta_value_P90 ||' , '|| time_wa_us_delta_value_P95 ||' , '|| time_wa_us_delta_value_P100 ||' , '||
-       timeout_share_P95 ||' , '|| avg_wait_time_us_P95
+SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || hour || '&&colspr' || wait_class || '&&colspr' || event_name || '&&colspr' ||
+       tot_waits_delta_value_P50 || '&&colspr' || tot_waits_delta_value_P75 || '&&colspr' || tot_waits_delta_value_P90 || '&&colspr' || tot_waits_delta_value_P95 || '&&colspr' || tot_waits_delta_value_P100 || '&&colspr' ||
+       tot_tout_delta_value_P50 || '&&colspr' || tot_tout_delta_value_P75 || '&&colspr' || tot_tout_delta_value_P90 || '&&colspr' || tot_tout_delta_value_P95 || '&&colspr' || tot_tout_delta_value_P100 || '&&colspr' ||
+       time_wa_us_delta_value_P50 || '&&colspr' || time_wa_us_delta_value_P75 || '&&colspr' || time_wa_us_delta_value_P90 || '&&colspr' || time_wa_us_delta_value_P95 || '&&colspr' || time_wa_us_delta_value_P100 || '&&colspr' ||
+       timeout_share_P95 || '&&colspr' || avg_wait_time_us_P95
 FROM vfev;
 
 spool off
@@ -2022,12 +2024,12 @@ GROUP BY '&&v_host'
        || '&&v_hora',
        dhsnap.dbid, dhsnap.instance_number, force_matching_signature
 ORDER BY elapsed_time_total DESC)
-SELECT pkey ||' , '|| dbid ||' , '|| instance_number ||' , '|| force_matching_signature ||' , '|| sql_id ||' , '||
-       total_executions ||' , '|| total_px_servers_execs ||' , '|| elapsed_time_total ||' , '|| disk_reads_total ||' , '||
-       physical_read_bytes_total ||' , '|| physical_write_bytes_total ||' , '|| io_offload_elig_bytes_total ||' , '|| io_interconnect_bytes_total ||' , '||
-       optimized_physical_reads_total ||' , '|| cell_uncompressed_bytes_total ||' , '|| io_offload_return_bytes_total ||' , '|| direct_writes_total ||' , '||
-       perc_exec_finished ||' , '|| avg_rows ||' , '|| avg_disk_reads ||' , '|| avg_buffer_gets ||' , '|| avg_cpu_time_us ||' , '|| avg_elapsed_us ||' , '|| avg_iowait_us ||' , '||
-       avg_clwait_us ||' , '|| avg_clwait_us ||' , '|| avg_apwait_us ||' , '|| avg_ccwait_us ||' , '|| avg_plsexec_us ||' , '|| avg_javexec_us
+SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || force_matching_signature || '&&colspr' || sql_id || '&&colspr' ||
+       total_executions || '&&colspr' || total_px_servers_execs || '&&colspr' || elapsed_time_total || '&&colspr' || disk_reads_total || '&&colspr' ||
+       physical_read_bytes_total || '&&colspr' || physical_write_bytes_total || '&&colspr' || io_offload_elig_bytes_total || '&&colspr' || io_interconnect_bytes_total || '&&colspr' ||
+       optimized_physical_reads_total || '&&colspr' || cell_uncompressed_bytes_total || '&&colspr' || io_offload_return_bytes_total || '&&colspr' || direct_writes_total || '&&colspr' ||
+       perc_exec_finished || '&&colspr' || avg_rows || '&&colspr' || avg_disk_reads || '&&colspr' || avg_buffer_gets || '&&colspr' || avg_cpu_time_us || '&&colspr' || avg_elapsed_us || '&&colspr' || avg_iowait_us || '&&colspr' ||
+       avg_clwait_us || '&&colspr' || avg_clwait_us || '&&colspr' || avg_apwait_us || '&&colspr' || avg_ccwait_us || '&&colspr' || avg_plsexec_us || '&&colspr' || avg_javexec_us
 FROM vsqlstat
 WHERE rownum < 300;
 
@@ -2056,7 +2058,7 @@ SELECT pkey,
        round(100*ratio_to_report(count(table_name)) over (), 2) idx_perc
 FROM vrawidx
 GROUP BY pkey, con_id, idx_cnt)
-SELECT pkey ||','|| con_id ||','|| tab_count ||','|| idx_cnt ||','|| idx_perc
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || tab_count || '&&colspr' || idx_cnt || '&&colspr' || idx_perc
 FROM vcidx;
 
 spool off

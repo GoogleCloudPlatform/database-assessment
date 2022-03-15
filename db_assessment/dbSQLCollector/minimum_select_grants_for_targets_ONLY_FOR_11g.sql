@@ -17,7 +17,7 @@ limitations under the License.
 /*
 
 Version: 2.0.4
-Date: 2022-03-04
+Date: 2022-03-15
 
 */
 
@@ -25,6 +25,7 @@ set verify off
 
 accept dbusername char prompt "Please enter the DB Local Username(Or CDB Username) to receive all required grants: "
 
+grant alter session to &&dbusername;
 grant create session to &&dbusername;
 grant execute on sys.DBMS_SPACE_ADMIN to &&dbusername;
 grant select on sys.v_$database to &&dbusername;
@@ -64,7 +65,7 @@ grant select on sys.dba_hist_sqltext to &&dbusername;
 grant select on sys.dba_hist_osstat to &&dbusername;
 grant select on sys.dba_hist_sysmetric_history to &&dbusername;
 grant select on sys.dba_hist_sysmetric_summary to &&dbusername;
-grant select on sys.X$DBGALERTEXT to &&dbusername;
+grant select on sys.v_$diag_alert_ext to &&dbusername;
 grant select on sys.dba_services to &&dbusername;
 grant select on sys.dba_hist_sqlstat to &&dbusername;
 grant select on system.logstdby$skip_support to &&dbusername;
@@ -87,6 +88,7 @@ grant select on sys.dba_tab_partitions to &&dbusername;
 grant select on sys.dba_tab_subpartitions to &&dbusername;
 grant select on sys.nls_database_parameters to &&dbusername;
 grant select on sys.dba_hist_active_sess_history to &&dbusername;
+grant select on sys.v_$SQLCOMMAND to &&dbusername;
 grant select on sys.dba_external_tables to &&dbusername;
 grant select on sys.dba_hist_iostat_function to &&dbusername;
 grant select on sys.dba_hist_system_event to &&dbusername;
