@@ -1542,7 +1542,7 @@ SELECT '&&v_host'
        || '&&v_dbname'
        || '_'
        || '&&v_hora' AS pkey,
-       owner, table_name, type_owner, type_name, default_directory_owner, default_directory_name,
+       owner, table_name, type_owner, type_name, default_directory_owner, default_directory_name
 FROM DBA_EXTERNAL_TABLES)
 SELECT pkey ||' , '|| 'N/A' ||' , '|| owner ||' , '|| table_name ||' , '|| type_owner ||' , '|| type_name ||' , '||
        default_directory_owner ||' , '|| default_directory_name
