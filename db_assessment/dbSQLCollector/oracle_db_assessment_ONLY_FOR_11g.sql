@@ -45,7 +45,6 @@ set pause off
 set wrap on
 set echo off
 set appinfo 'OPTIMUS_PRIME'
-alter session set NLS_NUMERIC_CHARACTERS = ',.';
 
 whenever sqlerror continue
 whenever oserror continue
