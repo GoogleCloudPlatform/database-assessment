@@ -3218,7 +3218,7 @@
                             {
                                 "priority": 700,
                                 "minsqlscriptversion": "2.0.0",
-                                "maxsqlscriptversion": "2.0.3",
+                                "maxsqlscriptversion": "2.0.4",
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
@@ -3258,7 +3258,7 @@
                             {
                                 "priority": 700,
                                 "minsqlscriptversion": "2.0.0",
-                                "maxsqlscriptversion": "2.0.3",
+                                "maxsqlscriptversion": "2.0.4",
                                 "mindbversion": "111",
                                 "maxdbversion": "194",
                                 "execution_group": "2",
