@@ -310,9 +310,6 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
 
             return True
 
-        if str(tableName).lower() == 'sqlstats':
-            print('I got it')
-
         # Creating Hash Table with all expected table schemas to be imported
         tableSchemas = {}
         transformersTablesSchemaDataframe = {}
