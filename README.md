@@ -1,6 +1,6 @@
 # Optimus Prime Database Assessment
 
-The Optimus Prime Database Assessment tool is used to assess homogenous and heterogenous migrations of Oracle databases. Assessment results are integrated with Google Big Query to support detailed reporting and analysis. The tool can be used for one or many Oracle databases, and includes the following components:
+The Optimus Prime Database Assessment tool is used to assess homogenous migrations of Oracle databases. Assessment results are integrated with Google Big Query to support detailed reporting and analysis. The tool can be used for one or many Oracle databases, and includes the following components:
 
 1. A SQL script (.sql) to collect data from Oracle Database(s)
 2. A python script (.py) to import data into Google Big Query
@@ -123,14 +123,14 @@ opdb__dbservicesinfo__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 ## Step 3 - Analyzing imported data
 
 3.1. Open the dataset used in the step 2 of Part 2 in Google Big Query
-	*  Query the tables and views for further analysis
-	*  Sample queries are listed in [report.sql](report/report.sql), they provide
+	*  Query the viewnames starting with vReport* for further analysis
+	*  Sample queries are listed, they provide
 		*  Source DB Summary
 		*  Source Host details
 		*  Google Bare Metal Sizing
 		*  Google Bare Metal Pricing
 		*  Migration Recommendations
-	*  Sample [Assessment Report](report/Optimus_Prime_-_dashboard.pdf), was created in DataStudio. A similar report can be generated using the queries in [report.sql](report/report.sql) for your datasets as part of the assessment readout.
+	*  Sample [Assessment Report](report/Optimus_Prime_-_dashboard.pdf), was created in DataStudio. A similar report can be generated using the queries for your datasets as part of the assessment readout.
 
 ## Contributing to the project
 
