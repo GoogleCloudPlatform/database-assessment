@@ -15,6 +15,7 @@
 
 import pandas as pd
 import numpy as np
+import csv
 
 
 import json
@@ -347,6 +348,11 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
 
         print ('\n Processing {} into a dataframe {}'.format(fileName,tableName))
 
+        # Validate the CSV file
+        toSkip = False
+        toSkip = validateInputcsv(fileName)
+        if toSkip:
+            continue
         # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
         df = getDataFrameFromCSV(fileName,tableName,skipRows,separatorString,transformersTablesSchema)
         
@@ -392,6 +398,25 @@ def processSchemaDetection(schemadetection,transformersTablesSchema, transformer
             print('INFO: Optimus Prime is filling the gap in the transformers.json schema definition for {} table.\n'.format(tableName))
     
     return transformersTablesSchema
+
+def validateInputcsv(fileName):
+    try:
+        df = pd.read_csv(fileName, skiprows=2, na_values='n/a', keep_default_na=True, skipinitialspace = True, nrows=10)
+        if df.empty:
+            with open(fileName,"r") as f:
+                if 'ORA-' in f.read():
+                    print('\nFile {} has ORA-Errors, so skipping"\n'.format(fileName))
+                    return True
+    except pd.errors.EmptyDataError:
+        print('\nFile {} is Empty, so skipping"\n'.format(fileName))
+        return True
+    except UnicodeDecodeError:
+        print('\nFile {} is of not proper format, so skipping"\n'.format(fileName))
+        return True
+    except Exception as otherErr:
+        print('\nFile {} faced other Errors {}, so skipping"\n'.format(fileName,otherErr))
+        return True
+    return False
 
 def addBQDataType(columList, dataType):
 
