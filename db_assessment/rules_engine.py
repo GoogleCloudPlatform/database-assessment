@@ -15,7 +15,7 @@
 
 import pandas as pd
 import numpy as np
-import csv
+import csv,os
 
 
 import json
@@ -314,7 +314,7 @@ def getDFHeadersFromTransformers(tableName,transformersTablesSchema):
 
     return tableHeaders
     
-def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters):
+def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles):
 # Fuction to read from CSVs and store the data into a dataframe. The dataframe is placed then into a Hash Table.
 # This function returns a dictionary with dataframes from CSVs
 
@@ -324,7 +324,6 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
     dataFrames = dbAssessmentDataframes
 
     fileList.sort()
-
     for fileName in fileList:
 
         # Verifying if the file is a file that came from the SQL Script or is this is a result of a previous execution from transformers.json in which a file had been saved. I.E: Reshaped Dataframes
@@ -349,9 +348,11 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
         print ('\n Processing {} into a dataframe {}'.format(fileName,tableName))
 
         # Validate the CSV file
-        toSkip = False
-        toSkip = validateInputcsv(fileName)
-        if toSkip:
+        fileError = validateInputcsv(fileName)
+        if fileError is not None:
+            basename = os.path.basename(fileName)
+            print("File {} is skipped because of error -> {} ".format(basename,fileError))
+            invalidfiles[fileName] = fileError
             continue
         # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
         df = getDataFrameFromCSV(fileName,tableName,skipRows,separatorString,transformersTablesSchema)
@@ -400,23 +401,20 @@ def processSchemaDetection(schemadetection,transformersTablesSchema, transformer
     return transformersTablesSchema
 
 def validateInputcsv(fileName):
+    fileerror = None
     try:
-        df = pd.read_csv(fileName, skiprows=2, na_values='n/a', keep_default_na=True, skipinitialspace = True, nrows=10)
-        if df.empty:
+        df = pd.read_csv(fileName, skiprows=2,na_values='n/a', keep_default_na=True, skipinitialspace = True, nrows=10)
+        if not df.empty:
             with open(fileName,"r") as f:
                 if 'ORA-' in f.read():
-                    print('\nFile {} has ORA-Errors, so skipping"\n'.format(fileName))
-                    return True
+                    fileerror = "File has ORA-Errors"
     except pd.errors.EmptyDataError:
-        print('\nFile {} is Empty, so skipping"\n'.format(fileName))
-        return True
+        fileerror = "File seems to be Empty"
     except UnicodeDecodeError:
-        print('\nFile {} is of not proper format, so skipping"\n'.format(fileName))
-        return True
+        fileerror = "File seems to be of improper format"
     except Exception as otherErr:
-        print('\nFile {} faced other Errors {}, so skipping"\n'.format(fileName,otherErr))
-        return True
-    return False
+        fileerror = "File has other Errors - {}".format(otherErr)
+    return fileerror
 
 def addBQDataType(columList, dataType):
 
