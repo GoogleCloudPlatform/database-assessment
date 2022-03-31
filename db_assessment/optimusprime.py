@@ -181,9 +181,10 @@ def runMain(args):
 
         # Eliminating duplicated entries from transformers.json processing
         fileList = list(set(fileList))
-        print("Below are Invalid Files \n")
-        [print(key,':',value) for key, value in invalidfiles.items()]
-        fileList  = [file for file in fileList if file not in invalidfiles.keys()]
+        if len(invalidfiles)>0:
+            print("Below are Invalid Files \n")
+            [print(key,':',value) for key, value in invalidfiles.items()]
+            fileList  = [file for file in fileList if file not in invalidfiles.keys()]
 
         if args.fromdataframe:
 

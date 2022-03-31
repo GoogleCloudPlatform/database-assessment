@@ -403,17 +403,16 @@ def processSchemaDetection(schemadetection,transformersTablesSchema, transformer
 def validateInputcsv(fileName):
     fileerror = None
     try:
-        df = pd.read_csv(fileName, skiprows=2,na_values='n/a', keep_default_na=True, skipinitialspace = True, nrows=10)
-        if not df.empty:
-            with open(fileName,"r") as f:
+        with open(fileName,"r") as f:
                 if 'ORA-' in f.read():
                     fileerror = "File has ORA-Errors"
+        df = pd.read_csv(fileName, skiprows=2,na_values='n/a', keep_default_na=True, skipinitialspace = True, nrows=10)
     except pd.errors.EmptyDataError:
         fileerror = "File seems to be Empty"
     except UnicodeDecodeError:
         fileerror = "File seems to be of improper format"
     except Exception as otherErr:
-        fileerror = "File has other Errors - {}".format(otherErr)
+        fileerror = "File has Errors - {}".format(otherErr)
     return fileerror
 
 def addBQDataType(columList, dataType):
