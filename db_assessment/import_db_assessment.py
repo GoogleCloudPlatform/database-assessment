@@ -17,6 +17,7 @@
 import os
 import glob
 import sys
+import pandas as pd
 
 # Manages command line flags and arguments
 import argparse
@@ -282,7 +283,11 @@ def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchem
 
                 continue
 
-            # Import the given CSV fileName into 
+            if str(tableName).lower()  =="opkeylog":
+                df = dbAssessmentDataframes[tableName]
+                df['CMNT']= transformersParameters['importcomment']
+
+            # Import the given CSV fileName into
             sucessImport = importDataframeToBQ(gcpProjectName,bqDataset,str(tableName).lower(),tableSchemas,dbAssessmentDataframes[tableName],transformersParameters)
 
             if sucessImport:
@@ -381,6 +386,11 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
     # Returns True if sucessfull 
     return True
 
+def addcomment(fileName,comment):
+    df = pd.read_csv(fileName, index_col=False)
+    df["CMNT"] = comment
+    df.to_csv(fileName,index=False)
+
 def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,skipLeadingRows,transformersParameters):
 # This function receives a list of files to import to Big Query, then it calls importCSVToBQ to import table/file by table/file
 
@@ -403,6 +413,10 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
 
         importTable = True
         doNotImportList = [table.strip().lower() for table in transformersParameters['do_not_import']]
+
+        if str(tableName).lower()  =="opkeylog" and transformersParameters['importcomment']:
+            skipLeadingRows=1
+            addcomment(fileName,transformersParameters['importcomment'])
 
         if tableName.lower() not in doNotImportList:
 
@@ -448,7 +462,7 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
         # The source format defaults to CSV, so the line below is optional.
         source_format=bigquery.SourceFormat.CSV,
     )
-    
+
 
     with open(fileName, "rb") as source_file:
 

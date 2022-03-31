@@ -1,6 +1,6 @@
 # Optimus Prime Database Assessment
 
-The Optimus Prime Database Assessment tool is used to assess homogenous and heterogenous migrations of Oracle databases. Assessment results are integrated with Google Big Query to support detailed reporting and analysis. The tool can be used for one or many Oracle databases, and includes the following components:
+The Optimus Prime Database Assessment tool is used to assess homogenous migrations of Oracle databases. Assessment results are integrated with Google Big Query to support detailed reporting and analysis. The tool can be used for one or many Oracle databases, and includes the following components:
 
 1. A SQL script (.sql) to collect data from Oracle Database(s)
 2. A python script (.py) to import data into Google Big Query
@@ -185,7 +185,7 @@ unzip <<zip files>>
 
 	If you want to import one single Optimus Prime file collection (From 1 single database), please follow the below step:
 
-	python optimusprime.py -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project
+	python optimusprime.py -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -importcomment "this is for prod"
 
 	If you want to import various Optimus Prime file collections (From various databases) that are stored under the same directory being used for -fileslocation. Then, you can add to your command two additional flags (-fromdataframe -consolidatedataframes) and pass only "" to -collectionid. See example below:
 
@@ -200,7 +200,8 @@ unzip <<zip files>>
 *  `-projectname`: The GCP project in which the data will be loaded.
 *  `-deletedataset`: This an optinal. In case you want to delete the whole existing dataset before importing the data. 
 	*  WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
-
+* `-importcomment`: This an optional. In case you want to store any comment about the load in opkeylog table. Eg: "This is for Production import"
+  
 * NOTE: If your file has elapsed time or any other string except data, fun following script to remove it
 
 ```
@@ -210,14 +211,14 @@ for i in `grep "Elapsed:" $OP_OUTPUT_DIR/*.log |  cut -d ":" -f 1`; do sed -i '$
 ## Step 3 - Analyzing imported data
 
 3.1. Open the dataset used in the step 2 of Part 2 in Google Big Query
-	*  Query the tables and views for further analysis
-	*  Sample queries are listed in [report.sql](report/report.sql), they provide
+	*  Query the viewnames starting with vReport* for further analysis
+	*  Sample queries are listed, they provide
 		*  Source DB Summary
 		*  Source Host details
 		*  Google Bare Metal Sizing
 		*  Google Bare Metal Pricing
 		*  Migration Recommendations
-	*  Sample [Assessment Report](report/Optimus_Prime_-_dashboard.pdf), was created in DataStudio. A similar report can be generated using the queries in [report.sql](report/report.sql) for your datasets as part of the assessment readout.
+	*  Sample [Assessment Report](report/Optimus_Prime_-_dashboard.pdf), was created in DataStudio. A similar report can be generated using the queries for your datasets as part of the assessment readout.
 
 ## Contributing to the project
 
