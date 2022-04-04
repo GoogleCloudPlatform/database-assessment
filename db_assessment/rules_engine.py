@@ -15,8 +15,8 @@
 
 import pandas as pd
 import numpy as np
-import csv,os
-
+import csv,os, warnings
+warnings.simplefilter('error', pd.errors.ParserWarning)
 
 import json
 
@@ -348,7 +348,9 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
         print ('\n Processing {} into a dataframe {}'.format(fileName,tableName))
 
         # Validate the CSV file
-        fileError = validateInputcsv(fileName)
+        tableHeaders = getDFHeadersFromTransformers(tableName,transformersTablesSchema)
+        tableHeader = [header.upper() for header in tableHeaders]
+        fileError = validateInputcsv(fileName,tableHeader)
         if fileError is not None:
             basename = os.path.basename(fileName)
             print("File {} is skipped because of error -> {} ".format(basename,fileError))
@@ -400,19 +402,24 @@ def processSchemaDetection(schemadetection,transformersTablesSchema, transformer
     
     return transformersTablesSchema
 
-def validateInputcsv(fileName):
+def validateInputcsv(fileName,tableHeader):
     fileerror = None
     try:
         with open(fileName,"r") as f:
                 if 'ORA-' in f.read():
                     fileerror = "File has ORA-Errors"
-        df = pd.read_csv(fileName, skiprows=2,na_values='n/a', keep_default_na=True, skipinitialspace = True, nrows=10)
+        df = pd.read_csv(fileName, skiprows=2,na_values='n/a', keep_default_na=True, skipinitialspace = True, nrows=10, names = tableHeader, index_col=False)
+        if df.empty:
+            ## If file has header but no rows
+            fileerror = "File seems to be Empty"
     except pd.errors.EmptyDataError:
+        ## If file has no records
         fileerror = "File seems to be Empty"
     except UnicodeDecodeError:
         fileerror = "File seems to be of improper format"
     except Exception as otherErr:
         fileerror = "File has Errors - {}".format(otherErr)
+
     return fileerror
 
 def addBQDataType(columList, dataType):
@@ -435,7 +442,6 @@ def cleanCSVHeaders(headerString):
     return headerString
 
 def trimDataframe(df):
-
     # Removing spaces (TRIM/Strip) for ALL columns
     df.columns = df.columns.str.replace(' ', '')
     cols = list(df.columns)
