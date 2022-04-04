@@ -468,15 +468,16 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
 
         try:
             load_job = client.load_table_from_file(source_file, table_id, job_config=job_config)
-        except:
-            print ('\n FAILED: Optimus Prime could not import the filename "{}" into "{}".\n'.format(fileName,table_id))
+        except Exception as importErr:
+            print ('\n FAILED: Optimus Prime could not import the filename "{}" into "{}" because of the error "{}".\n'.format(fileName,table_id,importErr))
+
             print ('   Table Schema = {}'.format(schema))
             return False
 
     try:
         load_job.result()  # Waits for the job to complete.
     except Exception as genericLoadErr:
-        print ('\n FAILED: Optimus Prime could not import the filename "{}" into "{}".\n'.format(fileName,table_id))
+        print ('\n FAILED: Optimus Prime could not import the filename "{}" into "{}" because of the error "{}".\n'.format(fileName,table_id,genericLoadErr))
         return False
 
     destination_table = client.get_table(table_id)  # Make an API request.

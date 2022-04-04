@@ -164,8 +164,9 @@ def runMain(args):
         # STEP: Loading all CSV files in memory into dataframes
 
         dbAssessmentDataframes = {}
-        dbAssessmentDataframes, transformersTablesSchema = rules_engine.getAllDataFrames(fileList, 1, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters)
-        dbAssessmentDataframes, transformersTablesSchema = rules_engine.getAllDataFrames(fileListOPConfig, 0, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters)
+        invalidfiles = {}
+        dbAssessmentDataframes, transformersTablesSchema = rules_engine.getAllDataFrames(fileList, 1, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles)
+        dbAssessmentDataframes, transformersTablesSchema = rules_engine.getAllDataFrames(fileListOPConfig, 0, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles)
 
         # STEP: Reshape Dataframes when necessary based on the transformersParameters
 
@@ -180,6 +181,10 @@ def runMain(args):
 
         # Eliminating duplicated entries from transformers.json processing
         fileList = list(set(fileList))
+        if len(invalidfiles)>0:
+            print("Below are Invalid Files \n")
+            [print(key,':',value) for key, value in invalidfiles.items()]
+            fileList  = [file for file in fileList if file not in invalidfiles.keys()]
 
         if args.fromdataframe:
 

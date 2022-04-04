@@ -15,7 +15,8 @@
 
 import pandas as pd
 import numpy as np
-
+import csv,os, warnings
+warnings.simplefilter('error', pd.errors.ParserWarning)
 
 import json
 
@@ -313,7 +314,7 @@ def getDFHeadersFromTransformers(tableName,transformersTablesSchema):
 
     return tableHeaders
     
-def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters):
+def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles):
 # Fuction to read from CSVs and store the data into a dataframe. The dataframe is placed then into a Hash Table.
 # This function returns a dictionary with dataframes from CSVs
 
@@ -323,7 +324,6 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
     dataFrames = dbAssessmentDataframes
 
     fileList.sort()
-
     for fileName in fileList:
 
         # Verifying if the file is a file that came from the SQL Script or is this is a result of a previous execution from transformers.json in which a file had been saved. I.E: Reshaped Dataframes
@@ -347,6 +347,15 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
 
         print ('\n Processing {} into a dataframe {}'.format(fileName,tableName))
 
+        # Validate the CSV file
+        tableHeaders = getDFHeadersFromTransformers(tableName,transformersTablesSchema)
+        tableHeader = [header.upper() for header in tableHeaders]
+        fileError = validateInputcsv(fileName,tableHeader)
+        if fileError is not None:
+            basename = os.path.basename(fileName)
+            print("File {} is skipped because of error -> {} ".format(basename,fileError))
+            invalidfiles[fileName] = fileError
+            continue
         # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
         df = getDataFrameFromCSV(fileName,tableName,skipRows,separatorString,transformersTablesSchema)
         
@@ -392,6 +401,26 @@ def processSchemaDetection(schemadetection,transformersTablesSchema, transformer
             print('INFO: Optimus Prime is filling the gap in the transformers.json schema definition for {} table.\n'.format(tableName))
     
     return transformersTablesSchema
+
+def validateInputcsv(fileName,tableHeader):
+    fileerror = None
+    try:
+        with open(fileName,"r") as f:
+                if 'ORA-' in f.read():
+                    fileerror = "File has ORA-Errors"
+        df = pd.read_csv(fileName, skiprows=2,na_values='n/a', keep_default_na=True, skipinitialspace = True, nrows=10, names = tableHeader, index_col=False)
+        if df.empty:
+            ## If file has header but no rows
+            fileerror = "File seems to be Empty"
+    except pd.errors.EmptyDataError:
+        ## If file has no records
+        fileerror = "File seems to be Empty"
+    except UnicodeDecodeError:
+        fileerror = "File seems to be of improper format"
+    except Exception as otherErr:
+        fileerror = "File has Errors - {}".format(otherErr)
+
+    return fileerror
 
 def addBQDataType(columList, dataType):
 
