@@ -442,6 +442,7 @@ def cleanCSVHeaders(headerString):
     return headerString
 
 def trimDataframe(df):
+
     # Removing spaces (TRIM/Strip) for ALL columns
     df.columns = df.columns.str.replace(' ', '')
     cols = list(df.columns)
