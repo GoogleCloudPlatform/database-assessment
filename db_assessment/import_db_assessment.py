@@ -14,10 +14,14 @@
 
 
 # Basic python built-in libraries to enable read, write and manipulate files in the OS
+import json
 import os
 import glob
 import sys
 import pandas as pd
+import datetime
+# ct stores current time
+ct = datetime.datetime.now()
 
 # Manages command line flags and arguments
 import argparse
@@ -588,5 +592,32 @@ def deleteDataSet(datasetName,gcpProjectName):
     except Conflict as error:
         # If dataset already exists
         print('Failed to delete dataset {}.'.format(dataset_id))
+
+def insertErrors(invalidfiles,op_df,gcpProjectName,bq_dataset):
+    from google.cloud.exceptions import NotFound
+    tableid = "operrors"
+    try:
+        pkey = op_df['PKEY'].iloc[0]
+        bq_client = bigquery.Client(client_info=set_client_info.get_http_client_info())
+        try:
+            table = bq_client.get_table("{}.{}.{}".format(gcpProjectName,bq_dataset,tableid))
+        except NotFound:
+            schema = [
+                bigquery.SchemaField("PKEY", "STRING", mode="REQUIRED"),
+                bigquery.SchemaField("LOADDATE", "STRING", mode="REQUIRED"),
+                bigquery.SchemaField("FILENAME", "STRING", mode="REQUIRED"),
+                bigquery.SchemaField("ERROR", "STRING", mode="REQUIRED"),
+            ]
+            table = bigquery.Table(gcpProjectName+"."+bq_dataset +"."+tableid , schema=schema)
+            table = bq_client.create_table(table)  # Make an API request.
+        rows =[]
+        for filename, error in invalidfiles.items():
+            basename =  os.path.basename(filename)
+            rows_to_insert = {u"PKEY": pkey, u"LOADDATE": str(ct), u"FILENAME": basename, u"ERROR": error}
+            rows.append(rows_to_insert)
+        errors = bq_client.insert_rows_json(table, rows)
+    except Exception as pushErr:
+        print ('\nWARNING: Issues while pusing Errors into operrors table with error ', pushErr)
+
 
 
