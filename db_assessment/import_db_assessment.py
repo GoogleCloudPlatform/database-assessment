@@ -289,6 +289,7 @@ def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchem
                 df = dbAssessmentDataframes[tableName]
                 df['CMNT']= transformersParameters['importcomment']
                 df['LOADTOBQDATE']= ct
+                df['JOBPARAMS'] = str(transformersParameters)
 
             # Import the given CSV fileName into
             sucessImport = importDataframeToBQ(gcpProjectName,bqDataset,str(tableName).lower(),tableSchemas,dbAssessmentDataframes[tableName],transformersParameters)
@@ -365,13 +366,17 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
         table_id = str(client.project) + '.' + str(bqDataset) + '.' + str(tableName)
 
     write_disposition="WRITE_TRUNCATE"
+    schema_updateOptions=[]
     if str(tableName).lower() =="opkeylog":
+        ## OpkeyLog is a load stats table so rows would be appended and if any schema change is there, the update of schema would be allowed
+        schema_updateOptions = [bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION]
         write_disposition="WRITE_APPEND"
 
     job_config = bigquery.LoadJobConfig(
         # Specify a (partial) schema. All columns are always written to the
         # table. The schema is used to assist in data type definitions.
         schema=schema,
+        schema_update_options = schema_updateOptions,
         # Optionally, set the write disposition. BigQuery appends loaded rows
         # to an existing table by default, but with WRITE_TRUNCATE write
         # disposition it replaces the table with the loaded data.
@@ -393,11 +398,12 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
     # Returns True if sucessfull 
     return True
 
-def adddetails(fileName,comment):
+def adddetails(fileName,params):
     df = pd.read_csv(fileName, index_col=False)
-    if comment:
-        df["CMNT"] = comment
+    if params['importcomment']:
+        df["CMNT"] = params['importcomment']
     df['LOADTOBQDATE']= ct
+    df['JOBPARAMS'] = str(params)
     df.to_csv(fileName,index=False)
 
 def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,skipLeadingRows,transformersParameters):
@@ -425,7 +431,7 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
 
         if str(tableName).lower()  =="opkeylog":
             skipLeadingRows=1
-            adddetails(fileName,transformersParameters['importcomment'])
+            adddetails(fileName,transformersParameters)
 
         if tableName.lower() not in doNotImportList:
 
