@@ -124,7 +124,7 @@ opdb__dbservicesinfo__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 ```
 gcloud auth list
 
-gcloud config set <<project id>
+gcloud config set project <<project id>
 
 ```
 
