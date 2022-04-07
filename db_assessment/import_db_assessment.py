@@ -18,7 +18,9 @@ import os
 import glob
 import sys
 import pandas as pd
-
+import datetime
+# ct stores current time
+ct = datetime.datetime.now()
 # Manages command line flags and arguments
 import argparse
 
@@ -286,6 +288,8 @@ def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchem
             if str(tableName).lower()  =="opkeylog":
                 df = dbAssessmentDataframes[tableName]
                 df['CMNT']= transformersParameters['importcomment']
+                df['LOADTOBQDATE']= ct
+                df['JOBPARAMS'] = str(vars(args))
 
             # Import the given CSV fileName into
             sucessImport = importDataframeToBQ(gcpProjectName,bqDataset,str(tableName).lower(),tableSchemas,dbAssessmentDataframes[tableName],transformersParameters)
@@ -361,14 +365,22 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
     else:
         table_id = str(client.project) + '.' + str(bqDataset) + '.' + str(tableName)
 
+    write_disposition="WRITE_TRUNCATE"
+    schema_updateOptions=[]
+    if str(tableName).lower() =="opkeylog":
+        ## OpkeyLog is a load stats table so rows would be appended and if any schema change is there, the update of schema would be allowed
+        schema_updateOptions = [bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION]
+        write_disposition="WRITE_APPEND"
+
     job_config = bigquery.LoadJobConfig(
         # Specify a (partial) schema. All columns are always written to the
         # table. The schema is used to assist in data type definitions.
         schema=schema,
+        schema_update_options = schema_updateOptions,
         # Optionally, set the write disposition. BigQuery appends loaded rows
         # to an existing table by default, but with WRITE_TRUNCATE write
         # disposition it replaces the table with the loaded data.
-        write_disposition="WRITE_TRUNCATE",
+        write_disposition=write_disposition,
     )
 
     job = client.load_table_from_dataframe(
@@ -386,12 +398,20 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
     # Returns True if sucessfull 
     return True
 
-def addcomment(fileName,comment):
+def adddetails(fileName,args,params):
     df = pd.read_csv(fileName, index_col=False)
-    df["CMNT"] = comment
+    if params['importcomment']:
+        df["CMNT"] = params['importcomment']
+    df['LOADTOBQDATE']= ct
+    df['JOBPARAMS'] = str(vars(args))
     df.to_csv(fileName,index=False)
+    line=""
+    with open(fileName, 'r+') as f:
+        content = f.read()
+        f.seek(0, 0)
+        f.write(line.rstrip('\r\n') + '\n' + content)
 
-def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,skipLeadingRows,transformersParameters):
+def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,skipLeadingRows,transformersParameters,args):
 # This function receives a list of files to import to Big Query, then it calls importCSVToBQ to import table/file by table/file
 
     print ('\nPreparing to upload CSV files\n')
@@ -414,16 +434,16 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
         importTable = True
         doNotImportList = [table.strip().lower() for table in transformersParameters['do_not_import']]
 
-        if str(tableName).lower()  =="opkeylog" and transformersParameters['importcomment']:
-            skipLeadingRows=1
-            addcomment(fileName,transformersParameters['importcomment'])
+        if str(tableName).lower()  =="opkeylog":
+            ##skipLeadingRows=1
+            adddetails(fileName,args,transformersParameters)
 
         if tableName.lower() not in doNotImportList:
 
             # Import the given CSV fileName into 
             print ('\nThe filename {} is being imported to Big Query.'.format(fileName))
             importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas)
-        
+
         else:
 
             print ('\nThe filename {} is being SKIPPED accordingly with parameter {} from transformers.json.'.format(fileName,'do_not_import'))
@@ -455,10 +475,15 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
     # In case projectname was passed as argument. Then, it tries to get the default project for the [service] account being used
     else:
         table_id = str(client.project) + '.' + str(bqDataset) + '.' + str(tableName)
+    schema_updateOptions=[]
+    if str(tableName).lower() =="opkeylog":
+        ## OpkeyLog is a load stats table so rows would be appended and if any schema change is there, the update of schema would be allowed
+        schema_updateOptions = [bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION]
 
     job_config = bigquery.LoadJobConfig(
         schema=schema,
         skip_leading_rows=skipLeadingRows,
+        schema_update_options = schema_updateOptions,
         # The source format defaults to CSV, so the line below is optional.
         source_format=bigquery.SourceFormat.CSV,
     )
