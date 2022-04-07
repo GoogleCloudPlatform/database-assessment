@@ -27,7 +27,7 @@ column script new_val EXEC_SCRIPT
 BEGIN
 SELECT 
     CASE 
-        WHEN banner LIKE '%12%' OR banner LIKE '%19.%' OR banner LIKE '%20.%' banner LIKE '%21%' 
+        WHEN banner LIKE '%12%' OR banner LIKE '%19.%' OR banner LIKE '%20.%' OR banner LIKE '%21%' 
         THEN '19C' 
         ELSE 'OLD' 
     END ver

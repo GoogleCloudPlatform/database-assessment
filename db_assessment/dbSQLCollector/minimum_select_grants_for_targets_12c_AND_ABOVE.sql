@@ -96,3 +96,4 @@ grant select on sys.v_$SQLCOMMAND to &&dbusername;
 grant select on sys.cdb_external_tables to &&dbusername;
 grant select on sys.dba_hist_iostat_function to &&dbusername;
 grant select on sys.dba_hist_system_event to &&dbusername;
+alter user  &&dbusername set container_data=all container = current;

@@ -44,12 +44,13 @@ column script new_val EXEC_SCRIPT
 BEGIN
 SELECT
     CASE
-        WHEN banner LIKE '%12%' OR banner LIKE '%19.%' OR banner LIKE '%20.%' banner LIKE '%21%'
+        WHEN banner LIKE '%12%' OR banner LIKE '%19.%' OR banner LIKE '%20.%' OR banner LIKE '%21%'
         THEN '19C'
         ELSE 'OLD'
     END ver
  INTO :db_version
- FROM v$version;
+ FROM v$version
+ WHERE ROWNUM=1;
 END;
 /
 print :db_version
@@ -58,7 +59,7 @@ print :db_version
 BEGIN
 SELECT
     CASE
-        WHEN (value LIKE 'DIAG' OR value LIKE 'TUNING' ) and '&db_awr_license'='Y'
+        WHEN (value LIKE 'DIAG' OR value LIKE 'TUNING' ) OR '&db_awr_license'='Y'
         THEN '19C'
         ELSE 'OLD'
     END ver
