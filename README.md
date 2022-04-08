@@ -193,7 +193,7 @@ unzip <<zip files>>
 	
 	If you want to import only specific db version or sql version from Optimus Prime file collections hat are stored under the same directory being used for -fileslocation.  
 
-    python optimusprime.py -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes -filterbydbversion 111 -filterbysqlversion 2.0.3
+    python optimusprime.py -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes -filterbydbversion 11.1 -filterbysqlversion 2.0.3
 	
 ```
 
@@ -206,7 +206,7 @@ unzip <<zip files>>
 	*  WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
 * `-importcomment`: This an optional. In case you want to store any comment about the load in opkeylog table. Eg: "This is for Production import"
 * `-filterbysqlversion`: This an optional. In case you have files from multiple sql versions in the folder and you want to load only specific sql version files
-* `-filterbydbversion`: This an optional. In case you have files from multiple sql versions in the folder and you want to load only specific db version files
+* `-filterbydbversion`: This an optional. In case you have files from multiple db versions in the folder and you want to load only specific db version files
 
 
 * NOTE: If your file has elapsed time or any other string except data, fun following script to remove it
