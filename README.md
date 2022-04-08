@@ -190,7 +190,11 @@ unzip <<zip files>>
 	If you want to import various Optimus Prime file collections (From various databases) that are stored under the same directory being used for -fileslocation. Then, you can add to your command two additional flags (-fromdataframe -consolidatedataframes) and pass only "" to -collectionid. See example below:
 
 	python optimusprime.py -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes
+	
+	If you want to import only specific db version or sql version from Optimus Prime file collections hat are stored under the same directory being used for -fileslocation.  
 
+    python optimusprime.py -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes -filterbydbversion 111 -filterbysqlversion 2.0.3
+	
 ```
 
 *  `-dataset`: is the name of the dataset in Google Big Query. It is created if it does not exists. If it does already nothing to do then.
@@ -201,7 +205,10 @@ unzip <<zip files>>
 *  `-deletedataset`: This an optinal. In case you want to delete the whole existing dataset before importing the data. 
 	*  WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
 * `-importcomment`: This an optional. In case you want to store any comment about the load in opkeylog table. Eg: "This is for Production import"
-  
+* `-filterbysqlversion`: This an optional. In case you have files from multiple sql versions in the folder and you want to load only specific sql version files
+* `-filterbydbversion`: This an optional. In case you have files from multiple sql versions in the folder and you want to load only specific db version files
+
+
 * NOTE: If your file has elapsed time or any other string except data, fun following script to remove it
 
 ```

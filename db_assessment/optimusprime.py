@@ -76,13 +76,19 @@ def runMain(args):
             # It is True if no fatal errors were found
             resConsolidation = import_db_assessment.consolidateLos(args,transformersTablesSchema)
 
-
-
         # STEP 1: Import customer database assessment data
 
         # Optimus Prime Search Pattern to find the target CSV files to be processed
         # The default location will be dbResults if not overwritten by the argument -fileslocation
         csvFilesLocationPattern = str(args.fileslocation) + '/*' + str(args.collectionid).replace(' ','') + '.log'
+
+        # Append csvFilesLocationPattern if there are filterbysqlversion and/or filterbydbversion flag
+        if args.filterbysqlversion and args.filterbysqlversion is not None:
+            csvFilesLocationPattern = csvFilesLocationPattern.replace(str(args.fileslocation) + '/*',str(args.fileslocation) + '/*_' + str(args.filterbysqlversion) + '*')
+        if args.filterbydbversion and args.filterbydbversion is not None:
+            csvFilesLocationPattern = csvFilesLocationPattern.replace(str(args.fileslocation) + '/*',str(args.fileslocation) + '/*__' + str(args.filterbydbversion) + '*')
+
+
 
         # Getting a list of files from OS based on the pattern provided
         # This is the default directory to have all customer database results from oracle_db_assessment.sql
@@ -259,6 +265,10 @@ def argumentsParser():
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
 
     parser.add_argument("-importcomment", type=str, default='', help="Comment for the Import")
+
+    parser.add_argument("-filterbydbversion", type=str, default='', help="To import only specific db version")
+    parser.add_argument("-filterbysqlversion", type=str, default='', help="To import only specific SQL version")
+
 
     # Execute the parse_args() method. Variable args is a namespace type
     args = parser.parse_args()
