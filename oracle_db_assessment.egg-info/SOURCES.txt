@@ -1,0 +1,15 @@
+LICENSE
+README.md
+setup.py
+db_assessment/__init__.py
+db_assessment/api.py
+db_assessment/import_db_assessment.py
+db_assessment/optimusprime.py
+db_assessment/rules_engine.py
+db_assessment/set_client_info.py
+db_assessment/version.py
+oracle_db_assessment.egg-info/PKG-INFO
+oracle_db_assessment.egg-info/SOURCES.txt
+oracle_db_assessment.egg-info/dependency_links.txt
+oracle_db_assessment.egg-info/requires.txt
+oracle_db_assessment.egg-info/top_level.txt
