@@ -185,6 +185,10 @@ def runMain(args):
             print("Below are Invalid Files \n")
             [print(key,':',value) for key, value in invalidfiles.items()]
             fileList  = [file for file in fileList if file not in invalidfiles.keys()]
+            ## Insert Invalid Files to BQ
+            if "OPKEYLOG" in dbAssessmentDataframes.keys():
+                op_df = dbAssessmentDataframes["OPKEYLOG"]
+                import_db_assessment.insertErrors(invalidfiles,op_df,gcpProjectName,bqDataset)
 
         if args.fromdataframe:
 
