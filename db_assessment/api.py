@@ -25,7 +25,7 @@ app = Flask(__name__)
 @app.route("/api/loadAssesment", methods=["POST"])
 def loadAssesment():
     print(f"{len(request.files)} files uploaded")
-    if len(request.files)<=  0:
+    if len(request.files) <= 0:
         return 'No files uploaded', 400
     with TemporaryDirectory() as tmpDir:
         for file in request.files.values():
@@ -61,3 +61,4 @@ class UserConfig:
     fromdataframe = False
     consolidatelogs = False
     consolidatedataframes = False
+    importcomment = ''
