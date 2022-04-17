@@ -51,6 +51,10 @@ __version__= version.__version__
 import logging
 logging.getLogger().setLevel(level=logging.INFO)
 
+# Beautiful table 
+from beautifultable import BeautifulTable
+btImportLogTable = BeautifulTable(maxwidth=300)
+btImportLogTable.columns.header = ["Target Table","Distinct Pkey","Import Status","Loaded rows"]
 
 
 
@@ -298,6 +302,8 @@ def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchem
 
             if sucessImport:
                 tablesImported[str(tableName).lower()] = "IMPORTED_FROM_DATAFRAME"
+                # btImportLogTable.rows.append([tableName,getPkeyFromFile(fileName),'SUCCESS',destination_table.num_rows])
+
 
         return True, tablesImported
 
@@ -348,6 +354,7 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
         # In case there is not expected table schema found in getBQJobConfig function
         print ('\nWARNING: The dataframe "{}" could not be imported to Big Query.'.format(tableName))
         print ('The table name "{}" cannot be imported because it does not have table schema in transformers.json. So, it will be skipped.\n'.format(tableName))
+        btImportLogTable.rows.append([tableName,'getPkeyFromFile(fileName)','FAILURE','0'])
         return False
 
     try:
@@ -396,6 +403,8 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
             table.num_rows, len(table.schema), table_id
         )
     )
+
+    populateBT(tableName,df,'importDataframeToBQ','isFile','fromimportDataframeToBQ',-1)
 
     # Returns True if sucessfull 
     return True
@@ -450,7 +459,9 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
 
             print ('\nThe filename {} is being SKIPPED accordingly with parameter {} from transformers.json.'.format(fileName,'do_not_import'))
             
-
+    # table.columns.header = ["FileName","Import Status","Loaded rowcount","Target Table "]
+    # btImportLogTable.columns.header = ["Target Table","Distinct Pkey","Import Status","Loaded rows"]
+    # table.rows.append(['NA','NA' 'NA','NA'])
     return True
 
 def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas):
@@ -499,16 +510,29 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
             print ('\n FAILED: Optimus Prime could not import the filename "{}" into "{}" because of the error "{}".\n'.format(fileName,table_id,importErr))
 
             print ('   Table Schema = {}'.format(schema))
+            #table.rows.append([getObjNameFromFiles(fileName, '/', -1), 'FAILED'])
+            if 'csv' not in fileName :
+                populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',-1)
+            # table.rows.append([getObjNameFromFiles(fileName, '/', -1), 'FAILED'])
             return False
 
     try:
         load_job.result()  # Waits for the job to complete.
     except Exception as genericLoadErr:
         print ('\n FAILED: Optimus Prime could not import the filename "{}" into "{}" because of the error "{}".\n'.format(fileName,table_id,genericLoadErr))
+        #table.rows.append([getObjNameFromFiles(fileName, '/', -1), 'FAILED***','NA','NA'])
+        if 'csv' not in fileName :
+            # btImportLogTable.rows.append([tableName,getPkeyFromFile(fileName), 'FAILED','0'])
+            populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',-1)
         return False
 
     destination_table = client.get_table(table_id)  # Make an API request.
     print("Loaded {} rows into: {}".format(destination_table.num_rows,destination_table.reference))
+    #table.rows.append([getObjNameFromFiles(fileName, '/', -1), 'SUCCESS',destination_table.num_rows,destination_table.reference])
+    if 'csv' not in fileName :
+        # btImportLogTable.rows.append([tableName,getPkeyFromFile(fileName),'SUCCESS',destination_table.num_rows])
+        populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',destination_table.num_rows)
+
     #print ('The filename {} is successfully imported to Big Query.\n'.format(fileName))
 
     # returns True if processing is successfully
@@ -534,6 +558,16 @@ def getObjNameFromFiles(fileName,splitterChar,pos):
     
     return None    
 
+def getPkeyFromFile(fileName):
+    # This function returns the pkey by reading the filename 
+
+    #filename = "opdb__awrsnapdetails__190_2.0.4_at-2811641-svr001.PSORACLE.psoracle1.041122023043.log"
+
+    filenameTabnameRemoved = fileName.split('__')[2].split('.')[2:]
+    #pkey=''.join((fileName.split('__')[2].split('.')[2:])[0].split('_')[1:]) + '_' + str((fileName.split('__')[2].split('.')[2:])[1]) + '_' + str((fileName.split('__')[2].split('.')[2:])[3])
+    pkey=''.join(filenameTabnameRemoved[0].split('_')[1:]) + '_' + str(filenameTabnameRemoved[1]) + '_' + str(filenameTabnameRemoved[3])
+
+    return pkey   
 
 def getBQJobConfig(tableSchemas,jobType):
     
@@ -643,4 +677,44 @@ def insertErrors(invalidfiles,op_df,gcpProjectName,bq_dataset):
         print ('\nWARNING: Issues while pusing Errors into operrors table with error ', pushErr)
 
 
+def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported):
+    # Fuction to print the populated   btImportLogTable
 
+    if btsource=='fromimportDataframeToBQ':
+
+        if dataframeornot is not None:
+            # df
+            if 'PKEY' in df.columns.to_list():
+                # df2.reset_index(inplace=True)
+                if 'dbsizing_summary' not in tableName: # Need to add code to support dbsizing_summary or fix the issue with it 
+                    pkeygroupby=df.groupby(['PKEY']).size()
+                    # pkeygroupby=df2.groupby(level=0).size()
+                    pkeycount=pkeygroupby.to_dict()
+                    for pkeyname,pkeyname_rowcount in pkeycount.items():
+                        if 'Elapsed' not in pkeyname:
+                            btImportLogTable.rows.append([tableName,pkeyname,'SUCCESS',pkeyname_rowcount])         
+    elif btsource=='fromimportCSVToBQ':
+        fileName=invalidfiles
+        if rowsimported >=0:
+            btImportLogTable.rows.append([tableName,getPkeyFromFile(fileName),'SUCCESS',rowsimported])
+        else:
+            btImportLogTable.rows.append([tableName,getPkeyFromFile(fileName),'FAILED',0])   
+    elif btsource=='invalidfiles':
+        for fileName, error in invalidfiles.items():
+            btImportLogTable.rows.append([getObjNameFromFiles(fileName,'__',1),getPkeyFromFile(fileName),'FAILED',0])
+
+
+
+
+def printBTResults():
+    # Fuction to print the import logs present in  btImportLogTable 
+    btImportLogTable.set_style(BeautifulTable.STYLE_BOX_ROUNDED)
+    # btImportLogTable.set_style(BeautifulTable.ALIGN_LEFT)
+    # table.columns.alignment['FileName'] = BeautifulTable.ALIGN_LEFT
+
+    print('\n\n Import Completed....\n')
+    print('\n Import Summary \n\n')
+    print(btImportLogTable)
+    # print('print the type now \n')
+    # print(type(btImportLogTable))
+    

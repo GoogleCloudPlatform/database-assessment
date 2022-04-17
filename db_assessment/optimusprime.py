@@ -189,6 +189,7 @@ def runMain(args):
             if "OPKEYLOG" in dbAssessmentDataframes.keys():
                 op_df = dbAssessmentDataframes["OPKEYLOG"]
                 import_db_assessment.insertErrors(invalidfiles,op_df,gcpProjectName,bqDataset)
+                import_db_assessment.populateBT('notabname','nodataframe','yes',invalidfiles,'invalidfiles',-1)
 
         if args.fromdataframe:
 
@@ -206,6 +207,7 @@ def runMain(args):
         # Create Optimus Prime Views
         import_db_assessment.createOptimusPrimeViewsFromOS(gcpProjectName,bqDataset)
 
+        import_db_assessment.printBTResults()
         print ('\n\n Thank YOU for using Optimus Prime!\n\n')
 
 def argumentsParser():
