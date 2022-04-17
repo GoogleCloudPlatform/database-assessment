@@ -459,9 +459,6 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
 
             print ('\nThe filename {} is being SKIPPED accordingly with parameter {} from transformers.json.'.format(fileName,'do_not_import'))
             
-    # table.columns.header = ["FileName","Import Status","Loaded rowcount","Target Table "]
-    # btImportLogTable.columns.header = ["Target Table","Distinct Pkey","Import Status","Loaded rows"]
-    # table.rows.append(['NA','NA' 'NA','NA'])
     return True
 
 def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas):
@@ -556,7 +553,7 @@ def getPkeyFromFile(fileName):
     # This function returns the pkey by reading the filename 
 
     filenameTabnameRemoved = fileName.split('__')[2].split('.')[2:]
-    
+
     pkey=''.join(filenameTabnameRemoved[0].split('_')[1:]) + '_' + str(filenameTabnameRemoved[1]) + '_' + str(filenameTabnameRemoved[3])
 
     return pkey   
@@ -693,8 +690,6 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported):
     elif btsource=='invalidfiles':
         for fileName, error in invalidfiles.items():
             btImportLogTable.rows.append([getObjNameFromFiles(fileName,'__',1),getPkeyFromFile(fileName),'FAILED',0])
-
-
 
 
 def printBTResults():
