@@ -510,27 +510,21 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
             print ('\n FAILED: Optimus Prime could not import the filename "{}" into "{}" because of the error "{}".\n'.format(fileName,table_id,importErr))
 
             print ('   Table Schema = {}'.format(schema))
-            #table.rows.append([getObjNameFromFiles(fileName, '/', -1), 'FAILED'])
             if 'csv' not in fileName :
                 populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',-1)
-            # table.rows.append([getObjNameFromFiles(fileName, '/', -1), 'FAILED'])
             return False
 
     try:
         load_job.result()  # Waits for the job to complete.
     except Exception as genericLoadErr:
         print ('\n FAILED: Optimus Prime could not import the filename "{}" into "{}" because of the error "{}".\n'.format(fileName,table_id,genericLoadErr))
-        #table.rows.append([getObjNameFromFiles(fileName, '/', -1), 'FAILED***','NA','NA'])
         if 'csv' not in fileName :
-            # btImportLogTable.rows.append([tableName,getPkeyFromFile(fileName), 'FAILED','0'])
             populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',-1)
         return False
 
     destination_table = client.get_table(table_id)  # Make an API request.
     print("Loaded {} rows into: {}".format(destination_table.num_rows,destination_table.reference))
-    #table.rows.append([getObjNameFromFiles(fileName, '/', -1), 'SUCCESS',destination_table.num_rows,destination_table.reference])
     if 'csv' not in fileName :
-        # btImportLogTable.rows.append([tableName,getPkeyFromFile(fileName),'SUCCESS',destination_table.num_rows])
         populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',destination_table.num_rows)
 
     #print ('The filename {} is successfully imported to Big Query.\n'.format(fileName))
@@ -561,10 +555,8 @@ def getObjNameFromFiles(fileName,splitterChar,pos):
 def getPkeyFromFile(fileName):
     # This function returns the pkey by reading the filename 
 
-    #filename = "opdb__awrsnapdetails__190_2.0.4_at-2811641-svr001.PSORACLE.psoracle1.041122023043.log"
-
     filenameTabnameRemoved = fileName.split('__')[2].split('.')[2:]
-    #pkey=''.join((fileName.split('__')[2].split('.')[2:])[0].split('_')[1:]) + '_' + str((fileName.split('__')[2].split('.')[2:])[1]) + '_' + str((fileName.split('__')[2].split('.')[2:])[3])
+    
     pkey=''.join(filenameTabnameRemoved[0].split('_')[1:]) + '_' + str(filenameTabnameRemoved[1]) + '_' + str(filenameTabnameRemoved[3])
 
     return pkey   
@@ -683,7 +675,6 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported):
     if btsource=='fromimportDataframeToBQ':
 
         if dataframeornot is not None:
-            # df
             if 'PKEY' in df.columns.to_list():
                 # df2.reset_index(inplace=True)
                 if 'dbsizing_summary' not in tableName: # Need to add code to support dbsizing_summary or fix the issue with it 
@@ -715,6 +706,4 @@ def printBTResults():
     print('\n\n Import Completed....\n')
     print('\n Import Summary \n\n')
     print(btImportLogTable)
-    # print('print the type now \n')
-    # print(type(btImportLogTable))
     

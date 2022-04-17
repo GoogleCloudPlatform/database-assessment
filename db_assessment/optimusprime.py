@@ -207,6 +207,7 @@ def runMain(args):
         # Create Optimus Prime Views
         import_db_assessment.createOptimusPrimeViewsFromOS(gcpProjectName,bqDataset)
 
+        # Call BT for import summary table
         import_db_assessment.printBTResults()
         print ('\n\n Thank YOU for using Optimus Prime!\n\n')
 
