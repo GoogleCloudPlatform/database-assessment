@@ -32,7 +32,20 @@ body:
       label: What oracle database version are you seeing the problem on?
       options:
         - 12c and above
-        - 11g or below
+        - 11g or below 
+        - All
+  - type: dropdown
+    id: sqlscriptversion
+    attributes:
+      label: Which sql script version ?
+      options:
+        - 0.1.0
+        - 2.0.0
+        - 2.0.1
+        - 2.0.2
+        - 2.0.3
+        - 2.0.4
+        - Other
   - type: textarea
     id: logs
     attributes:
