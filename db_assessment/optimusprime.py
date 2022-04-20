@@ -105,7 +105,7 @@ def runMain(args):
         # Verify if the script has any version on it (only old script versions should not have 3 parts)
         if args.dbversion is not None:
             transformersParameters['dbversion'] = str(args.dbversion)
-        elif len(collectionKey.split('_')) == 3 and args.dbversion is None:
+        elif len(collectionKey.split('_')) >= 3 and args.dbversion is None: # bug #23. Changed == to >=.
             transformersParameters['dbversion'] = import_db_assessment.getObjNameFromFiles(collectionKey,'_',0)
         else:
             print ('\nFATAL ERRROR: Please use -dbversion and -collectionversion. \nI.E -dbversion 122 -collectionversion 2.0.3\n')
@@ -114,7 +114,7 @@ def runMain(args):
         if args.importcomment is not None:
             transformersParameters['importcomment'] = str(args.importcomment)
 
-        if len(collectionKey.split('_')) == 3:
+        if len(collectionKey.split('_')) >= 3: # bug #23. Changed == to >=.
             transformersParameters['optimuscollectionversion'] = import_db_assessment.getObjNameFromFiles(collectionKey,'_',1)
         else:
             transformersParameters['optimuscollectionversion'] = args.collectionversion
