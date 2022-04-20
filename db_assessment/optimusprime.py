@@ -103,10 +103,14 @@ def runMain(args):
             sys.exit('\nERROR: There is not matching CSV file found to be processed using: {}\n'.format(csvFilesLocationPattern))
 
         #  Make sure there are not 11.2 or 11.1 database versions being imported along with other database versions.
-        versions = set([f.split("__")[2].split("_")[0] for f in fileList])
-        outliers = len([x for x in versions if x not in ['111','112']])
-        if ("111" in versions or "112" in versions) and outliers > 0:
+        dbversionslist = set([f.split("__")[2].split("_")[0] for f in fileList])
+        outliers = len([version for version in dbversionslist if version not in ['111','112']])
+        if ("111" in dbversionslist or "112" in dbversionslist) and outliers > 0:
             sys.exit('\nERROR:  Importing other versions along with 11.1 and 11.2 is not supported. Please use flag fileterbydbversion to filter database versions, For example: -filterbydbversion "12.1,12.2,18.0,19.1"\n'.format(csvFilesLocationPattern))
+
+        sqlversionslist = set([f.split("__")[2].split("_")[1] for f in fileList])
+        if len(sqlversionslist) > 1:
+            sys.exit('\nERROR:  Importing multiple SQL versions is not supported. Please use flag fileterbysqlversion to filter SQL versions, For example: -filterbysqlversion 2.0.3"\n'.format(csvFilesLocationPattern))
 
         # Getting file pattern for find config files in the OS to be imported
         csvFilesLocationPatternOPConfig = 'opConfig/*.csv'
