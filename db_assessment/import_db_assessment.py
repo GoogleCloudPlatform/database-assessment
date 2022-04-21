@@ -56,6 +56,9 @@ from beautifultable import BeautifulTable
 btImportLogTable = BeautifulTable(maxwidth=300)
 btImportLogTable.columns.header = ["Target Table","Distinct Pkey","Import Status","Loaded rows"]
 
+#For processing of Beautiful Table Data
+import sqlite3
+
 
 
 def get_bigqueryClient():
@@ -690,15 +693,60 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported):
     elif btsource=='invalidfiles':
         for fileName, error in invalidfiles.items():
             btImportLogTable.rows.append([getObjNameFromFiles(fileName,'__',1),getPkeyFromFile(fileName),'FAILED',0])
+    
 
+def processBTResults(btImportLogTable):
+
+    # btImportLogFinalTable=btImportLogTable
+    #Create a in-memory database and connection
+    conn=sqlite3.connect(':memory:')
+    c=conn.cursor()
+
+    # create the schema
+    c.execute("""CREATE TABLE importresults(
+            tableName text,
+            pkey text,
+            status text,
+            rowcount integer
+            )""")
+
+    # Load the data in the database table
+    numofrow2=len(btImportLogTable.rows)
+    numofrows=int(numofrow2 or 0)
+    rowiterator=0
+    while rowiterator < numofrows:
+        list2insert=(list(btImportLogTable.rows[rowiterator]))
+        c.execute("INSERT INTO importresults VALUES(?,?,?,?)",list2insert)
+        rowiterator=rowiterator+1
+
+    #Create and load the output bt table
+    btImportLogFinalTable = BeautifulTable()
+    btImportLogFinalTable = BeautifulTable(maxwidth=300)
+    btImportLogFinalTable.columns.header = ["Target Table","Distinct Pkey","Import Status","Loaded rows"]
+
+    c.execute("select tablename,DISTINCT_PKEY,STATUS,LOADED_ROWS from ( select tablename, status, count(distinct pkey) as distinct_pkey, sum(rowcount) loaded_rows from importresults group by tablename, status ORDER BY tablename,status) ")
+    items=c.fetchall()
+
+    for item in items:
+        btImportLogFinalTable.rows.append(item)
+        # print(item)
+    
+    #commit and close the database
+    conn.commit()
+    conn.close()
+
+    return btImportLogFinalTable
 
 def printBTResults():
-    # Fuction to print the import logs present in  btImportLogTable 
-    btImportLogTable.set_style(BeautifulTable.STYLE_BOX_ROUNDED)
-    # btImportLogTable.set_style(BeautifulTable.ALIGN_LEFT)
-    # table.columns.alignment['FileName'] = BeautifulTable.ALIGN_LEFT
+    # Fuction to print the import logs present in  btImportLogTable /btImportLogFinalTable
+    
+    # btImportLogFinalTable.set_style(BeautifulTable.ALIGN_LEFT)
+    # table.columns.alignment['FileName'] = btImportLogFinalTable.ALIGN_LEFT
 
+    #Call the function to process the BT results
+    btImportLogFinalTable=processBTResults(btImportLogTable)
+    btImportLogFinalTable.set_style(BeautifulTable.STYLE_BOX_ROUNDED)
     print('\n\n Import Completed....\n')
     print('\n Import Summary \n\n')
-    print(btImportLogTable)
+    print(btImportLogFinalTable)
     
