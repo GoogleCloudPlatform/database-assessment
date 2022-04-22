@@ -76,21 +76,41 @@ def runMain(args):
             # It is True if no fatal errors were found
             resConsolidation = import_db_assessment.consolidateLos(args,transformersTablesSchema)
 
-
-
         # STEP 1: Import customer database assessment data
 
         # Optimus Prime Search Pattern to find the target CSV files to be processed
         # The default location will be dbResults if not overwritten by the argument -fileslocation
         csvFilesLocationPattern = str(args.fileslocation) + '/*' + str(args.collectionid).replace(' ','') + '.log'
 
-        # Getting a list of files from OS based on the pattern provided
-        # This is the default directory to have all customer database results from oracle_db_assessment.sql
-        fileList = import_db_assessment.getAllFilesByPattern(csvFilesLocationPattern)
+        # Append csvFilesLocationPattern if there are filterbysqlversion and/or filterbydbversion flag
+        if args.filterbysqlversion and args.filterbysqlversion is not None:
+            csvFilesLocationPattern = csvFilesLocationPattern.replace(str(args.fileslocation) + '/*',str(args.fileslocation) + '/*_' + str(args.filterbysqlversion) + '*')
+
+        fileList = []
+        if args.filterbydbversion and args.filterbydbversion is not None:
+            for dbversion in args.filterbydbversion.split(","):
+                dbversion = dbversion.replace(".","")
+                newcsvFilesLocationPattern = csvFilesLocationPattern.replace(str(args.fileslocation) + '/*',str(args.fileslocation) + '/*__' + dbversion + '*')
+                fileListfordbversion = import_db_assessment.getAllFilesByPattern(newcsvFilesLocationPattern)
+                fileList.extend(fileListfordbversion)
+        else:
+            # Getting a list of files from OS based on the pattern provided
+            # This is the default directory to have all customer database results from oracle_db_assessment.sql
+            fileList = import_db_assessment.getAllFilesByPattern(csvFilesLocationPattern)
 
         # In case there is no matching file in the OS
         if len(fileList) == 0:
             sys.exit('\nERROR: There is not matching CSV file found to be processed using: {}\n'.format(csvFilesLocationPattern))
+
+        #  Make sure there are not 11.2 or 11.1 database versions being imported along with other database versions.
+        dbversionslist = set([f.split("__")[2].split("_")[0] for f in fileList])
+        outliers = len([version for version in dbversionslist if version not in ['111','112']])
+        if ("111" in dbversionslist or "112" in dbversionslist) and outliers > 0:
+            sys.exit('\nERROR:  Importing other versions along with 11.1 and 11.2 is not supported. Please use flag fileterbydbversion to filter database versions, For example: -filterbydbversion "12.1,12.2,18.0,19.1"\n')
+
+        sqlversionslist = set([f.split("__")[2].split("_")[1] for f in fileList])
+        if len(sqlversionslist) > 1:
+            sys.exit('\nERROR:  Importing multiple SQL versions is not supported. Please use flag fileterbysqlversion to filter SQL versions, For example: -filterbysqlversion 2.0.3"\n')
 
         # Getting file pattern for find config files in the OS to be imported
         csvFilesLocationPatternOPConfig = 'opConfig/*.csv'
@@ -259,6 +279,10 @@ def argumentsParser():
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
 
     parser.add_argument("-importcomment", type=str, default='', help="Comment for the Import")
+
+    parser.add_argument("-filterbydbversion", type=str, default='', help="To import only specific db version")
+    parser.add_argument("-filterbysqlversion", type=str, default='', help="To import only specific SQL version")
+
 
     # Execute the parse_args() method. Variable args is a namespace type
     args = parser.parse_args()
