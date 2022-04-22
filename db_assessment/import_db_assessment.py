@@ -22,7 +22,7 @@ import pandas as pd
 import datetime
 # ct stores current time
 ct = datetime.datetime.now()
-
+import rules_engine as rengine
 # Manages command line flags and arguments
 import argparse
 
@@ -400,8 +400,8 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
     # Returns True if sucessfull 
     return True
 
-def adddetails(fileName,args,params):
-    df = pd.read_csv(fileName, index_col=False)
+def adddetails(fileName,args,params,tableHeader):
+    df = pd.read_csv(fileName, skiprows=2,na_values='n/a', keep_default_na=True, skipinitialspace = True, names = tableHeader, index_col=False)
     if params['importcomment']:
         df["CMNT"] = params['importcomment']
     df['LOADTOBQDATE']= ct
@@ -438,7 +438,9 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
 
         if str(tableName).lower()  =="opkeylog":
             ##skipLeadingRows=1
-            adddetails(fileName,args,transformersParameters)
+            tableHeaders = rengine.getDFHeadersFromTransformers(str(tableName).lower(),transformersTablesSchema)
+            tableHeader = [header.upper() for header in tableHeaders]
+            adddetails(fileName,args,transformersParameters,tableHeader)
 
         if tableName.lower() not in doNotImportList:
 
