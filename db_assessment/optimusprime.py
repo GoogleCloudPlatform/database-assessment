@@ -14,8 +14,6 @@
 
 
 # Basic python built-in libraries to enable read, write and manipulate files in the OS
-import os
-import glob
 import sys
 
 # Manages command line flags and arguments
@@ -32,6 +30,9 @@ import rules_engine
 
 # Importing Optimus Prime Version
 import version
+
+# Import remote functionality
+from remote import runRemote
 
 # Information for analytics and tool improvement
 __version__= version.__version__
@@ -269,6 +270,10 @@ def argumentsParser():
     
     parser.add_argument("-consolidatedataframes", default=False, help="Consolidate CSV files before importing.", action="store_true")
 
+    parser.add_argument("-remote", default=False, help="Leverage remote API", action="store_true")
+
+    parser.add_argument("-remoteurl", type=str, default="https://op-api-3qhhvv7zvq-uc.a.run.app", help="Leverage remote API")
+    
 
     # Consolidates different collection IDs found in the OS (dbResults/*log) into a single CSV per file type. 
     # For example: dbResults has 52 files. Meaning, 2 collection IDs (each one has 26 different file types). 
@@ -310,5 +315,8 @@ if __name__ == '__main__':
     # Handling arguments
     args = argumentsParser()
 
-    # Call main function
-    runMain(args)
+    if(args.remote):
+        runRemote(args)
+    else:
+        # Call main function
+        runMain(args)

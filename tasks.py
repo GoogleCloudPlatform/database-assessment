@@ -12,7 +12,7 @@ def build(ctx, tag="latest"):
 def run(ctx, tag="latest"):
     local_cred_file = "${HOME}/.config/gcloud/application_default_credentials.json"
     docker_cred_file = "/tmp/creds/creds.json"
-    cmd = f"docker run -e GOOGLE_APPLICATION_CREDENTIALS={docker_cred_file} -v {local_cred_file}:{docker_cred_file} -p 8080:8080 {ctx.image}:{tag}"
+    cmd = f"docker run -e FLASK_ENV=development -e GOOGLE_APPLICATION_CREDENTIALS={docker_cred_file} -v {local_cred_file}:{docker_cred_file} -p 8080:8080 {ctx.image}:{tag}"
     ctx.run(cmd)
 
 
@@ -22,31 +22,22 @@ def push(ctx, tag="latest"):
 
 
 @task
-def test(ctx, base_url=None, retrieve_token=False, local=False):
+def test(ctx, base_url=None, local=False):
+    with ctx.cd('./sample/datacollection'):
+        ctx.run(f"tar -xvf {ctx.test_file}")
     if not base_url:
         base_url = get_beta_url(ctx)
-
-    headers = {"Authorization": f"Bearer {authenticate(ctx, local)}"} if retrieve_token else None
-    config = {
-        "projectId": ctx.project,
-        "dataset":  ctx.dataset,
-        "collectionId": ctx.collection_id
-    }
-    files = get_test_files(ctx)
-    result = requests.post(f"{base_url}/api/loadAssesment", files=files, data=config, headers=headers)
-    result.raise_for_status()
+    print(base_url)
+    id_token = authenticate(ctx, local)
+    with ctx.cd('./db_assessment'):
+        cmd = f"python3 optimusprime.py -remote -fileslocation ../sample/datacollection/ -dataset {ctx.dataset} -project {ctx.project} -collectionid {ctx.collection_id} -remoteurl {base_url}"
+        print(cmd)
+        ctx.run(cmd, env={"ID_TOKEN":id_token })
 
 
 @task
 def deploy(ctx, tag="latest"):
     ctx.run(f"gcloud run deploy {ctx.service} --image {ctx.image}:{tag} --region {ctx.region} --project {ctx.project} --no-traffic --tag beta")
-
-
-def get_test_files(c, testDir="sample/datacollection"):
-    with c.cd(testDir):
-        c.run("tar -xvf samplefiles_190_2.0.1.tar.gz")
-        files = c.run('ls').stdout.split("\n")[0:-1]
-        return {f"log-{i}": (f, open(f"{testDir}/{f}", 'rb')) for i, f in enumerate(files)}
 
 
 @task(autoprint=True)
@@ -70,11 +61,11 @@ def authenticate(ctx, local=False):
         access_token_request = requests.get(METADATA_SERVER_URL, headers=METADATA_REQUEST_HEADERS)
         access_token = access_token_request.json()['access_token']
         print('Got access token')
-        identity_token_request = requests.post(
+        identity_token_resp = requests.post(
             ID_TOKEN_URL,
             headers={'Authorization': 'Bearer {}'.format(access_token), 'content-type': 'application/json'},
             data=json.dumps({'audience': ctx.api_audience, 'includeEmail': True}))
-        identity_token = identity_token_request.json()['token']
+        identity_token = identity_token_resp.json()['token']
         print('Got identity token')
         return identity_token
 
