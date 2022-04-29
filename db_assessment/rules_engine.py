@@ -264,8 +264,6 @@ def getDataFrameFromCSV(csvFileName,tableName,skipRows,args,transformersTablesSc
     paramCleanDFHeaders = False
     paramGetHeadersFromConfig = True
 
-    if str(tableName) == 'awrhistosstat':
-        print('No Vacation for Sergio')
 
     try:
         
