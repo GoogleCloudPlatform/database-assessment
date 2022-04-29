@@ -266,6 +266,8 @@ def argumentsParser():
     # If this is present in the command line it will take value as true otherwise it will always be false
     parser.add_argument("-deletedataset", default=False, help="Delete dataset before importing new data. WARNING: It will delete all data in the dataset!", action="store_true")
 
+    parser.add_argument("-loadtype", type=str, default="WRITE_APPEND", help="Choose the BQ Load Type. Options are: WRITE_TRUNCATE, WRITE_APPEND and WRITE_EMPTY. The WRITE_APPEND is the default option.")
+
     parser.add_argument("-fromdataframe", default=False, help="Import dataframes to Big Query instead of CSV files.", action="store_true")
     
     parser.add_argument("-consolidatedataframes", default=False, help="Consolidate CSV files before importing.", action="store_true")

@@ -294,7 +294,7 @@ def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchem
                 df['JOBPARAMS'] = str(vars(args))
 
             # Import the given CSV fileName into
-            sucessImport = importDataframeToBQ(gcpProjectName,bqDataset,str(tableName).lower(),tableSchemas,dbAssessmentDataframes[tableName],transformersParameters)
+            sucessImport = importDataframeToBQ(gcpProjectName,bqDataset,str(tableName).lower(),tableSchemas,dbAssessmentDataframes[tableName],transformersParameters,args)
 
             if sucessImport:
                 tablesImported[str(tableName).lower()] = "IMPORTED_FROM_DATAFRAME"
@@ -306,7 +306,7 @@ def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchem
         return False, tablesImported
 
 
-def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,transformersParameters):
+def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,transformersParameters,args):
 
     # Getting table schema
     try:
@@ -367,8 +367,8 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
     else:
         table_id = str(client.project) + '.' + str(bqDataset) + '.' + str(tableName)
 
-    # Changed default to from WRITE_TRUNCATE to WRITE_APPEND. 
-    write_disposition="WRITE_APPEND"
+    # Changed default to from WRITE_TRUNCATE to WRITE_APPEND in args.loadtype. 
+    write_disposition=str(args.loadtype).upper()
     schema_updateOptions=[]
     file_format=bigquery.SourceFormat.CSV
     if str(tableName).lower() =="opkeylog":
@@ -451,7 +451,7 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
 
             # Import the given CSV fileName into 
             print ('\nThe filename {} is being imported to Big Query.'.format(fileName))
-            importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas)
+            importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas,args)
 
         else:
 
@@ -460,7 +460,7 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
 
     return True
 
-def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas):
+def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas,args):
 # This function will import the CSV file into the Big Query using the proper project.dataset.tablename
 # A Big Query Job is created for it
 
@@ -484,18 +484,29 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
     # In case projectname was passed as argument. Then, it tries to get the default project for the [service] account being used
     else:
         table_id = str(client.project) + '.' + str(bqDataset) + '.' + str(tableName)
+    
     schema_updateOptions=[]
-    if str(tableName).lower() =="opkeylog":
+    field_delimiter = str(args.sep)
+    write_disposition = str(args.loadtype).upper()
+    
+    if str(tableName).lower() == "opkeylog":
         ## OpkeyLog is a load stats table so rows would be appended and if any schema change is there, the update of schema would be allowed
         schema_updateOptions = [bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION]
+   
+   # OP Internal Configuration Files
+    elif str(tableName).lower() in ("optimusconfig_bms_machinesizes","optimusconfig_network_to_gcp"):
+        write_disposition = "WRITE_TRUNCATE"
+        field_delimiter = ","
 
+    
     job_config = bigquery.LoadJobConfig(
         schema=schema,
         skip_leading_rows=skipLeadingRows,
         schema_update_options = schema_updateOptions,
         # The source format defaults to CSV, so the line below is optional.
         source_format=bigquery.SourceFormat.CSV,
-        field_delimiter = ";"
+        field_delimiter = field_delimiter,
+        write_disposition = write_disposition
     )
 
 
