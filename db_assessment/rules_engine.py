@@ -276,8 +276,7 @@ def getDataFrameFromCSV(csvFileName,tableName,skipRows,args,transformersTablesSc
                     tableHeaders = getDFHeadersFromTransformers(tableName,transformersTablesSchema)
                     tableHeaders = [header.upper() for header in tableHeaders]
                     #df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders, keep_default_na=False, na_filter= False)
-                    ##df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders, na_values='n/a', keep_default_na=True, skipinitialspace = True)
-                    df = pd.read_csv(csvFileName, sep=str(args.sep), skiprows=skipRows, keep_default_na=False, na_filter= False)
+                    df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders, na_values='n/a', keep_default_na=True, skipinitialspace = True)
 
                 except Exception as dataframeHeaderErr:
                     
