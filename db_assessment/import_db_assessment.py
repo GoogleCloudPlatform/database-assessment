@@ -367,8 +367,10 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
     else:
         table_id = str(client.project) + '.' + str(bqDataset) + '.' + str(tableName)
 
-    write_disposition="WRITE_TRUNCATE"
+    # Changed default to from WRITE_TRUNCATE to WRITE_APPEND. 
+    write_disposition="WRITE_APPEND"
     schema_updateOptions=[]
+    file_format=bigquery.SourceFormat.CSV
     if str(tableName).lower() =="opkeylog":
         ## OpkeyLog is a load stats table so rows would be appended and if any schema change is there, the update of schema would be allowed
         schema_updateOptions = [bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION]
@@ -382,8 +384,10 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
         # Optionally, set the write disposition. BigQuery appends loaded rows
         # to an existing table by default, but with WRITE_TRUNCATE write
         # disposition it replaces the table with the loaded data.
-        write_disposition=write_disposition,
-        field_delimiter = ";"
+        write_disposition=write_disposition
+        #,
+        #field_delimiter = ";",
+        #source_format = file_format
     )
 
     job = client.load_table_from_dataframe(
