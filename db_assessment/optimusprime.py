@@ -144,6 +144,13 @@ def runMain(args):
         if args.collectionversion != '0.0.0':
             transformersParameters['optimuscollectionversion'] = args.collectionversion
 
+        try:
+            # Automatically try to select the right file separator accordingly with the SQL Script version
+            if int(str(transformersParameters['optimuscollectionversion']).replace('.','')) < 205:
+                args.sep = ","
+        except:
+            None
+
         print('\nSource Database Version: {} \nCollection Script Version: {}\n'.format(transformersParameters['dbversion'],transformersParameters['optimuscollectionversion']))
 
         try:
