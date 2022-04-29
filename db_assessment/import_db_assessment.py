@@ -383,6 +383,7 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
         # to an existing table by default, but with WRITE_TRUNCATE write
         # disposition it replaces the table with the loaded data.
         write_disposition=write_disposition,
+        field_delimiter = ";"
     )
 
     job = client.load_table_from_dataframe(
@@ -490,6 +491,7 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
         schema_update_options = schema_updateOptions,
         # The source format defaults to CSV, so the line below is optional.
         source_format=bigquery.SourceFormat.CSV,
+        field_delimiter = ";"
     )
 
 
