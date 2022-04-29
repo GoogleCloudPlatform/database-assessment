@@ -401,7 +401,7 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
     return True
 
 def adddetails(fileName,args,params,tableHeader):
-    df = pd.read_csv(fileName, skiprows=2,na_values='n/a', keep_default_na=True, skipinitialspace = True, names = tableHeader, index_col=False)
+    df = pd.read_csv(fileName, sep=str(args.sep), skiprows=2, na_values='n/a', keep_default_na=True, skipinitialspace = True, names = tableHeader, index_col=False)
     if params['importcomment']:
         df["CMNT"] = params['importcomment']
     df['LOADTOBQDATE']= ct

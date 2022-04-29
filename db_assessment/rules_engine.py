@@ -258,11 +258,14 @@ def getRulesFromJSON(jsonFileName):
 
     return transformerRules
 
-def getDataFrameFromCSV(csvFileName,tableName,skipRows,separatorString,transformersTablesSchema):
+def getDataFrameFromCSV(csvFileName,tableName,skipRows,args,transformersTablesSchema):
 # Read CSV files from OS and turn it into a dataframe
 
     paramCleanDFHeaders = False
     paramGetHeadersFromConfig = True
+
+    if str(tableName) == 'awrhistosstat':
+        print('No Vacation for Sergio')
 
     try:
         
@@ -275,19 +278,20 @@ def getDataFrameFromCSV(csvFileName,tableName,skipRows,separatorString,transform
                     tableHeaders = getDFHeadersFromTransformers(tableName,transformersTablesSchema)
                     tableHeaders = [header.upper() for header in tableHeaders]
                     #df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders, keep_default_na=False, na_filter= False)
-                    df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders, na_values='n/a', keep_default_na=True, skipinitialspace = True)
+                    ##df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders, na_values='n/a', keep_default_na=True, skipinitialspace = True)
+                    df = pd.read_csv(csvFileName, sep=str(args.sep), skiprows=skipRows, keep_default_na=False, na_filter= False)
 
                 except Exception as dataframeHeaderErr:
                     
                     print ('\nThe filename {} for the table {} could not be imported using the column names {}.\n'.format(csvFileName,tableName,tableHeaders))
                     paramCleanDFHeaders = True
                     #df = pd.read_csv(csvFileName, skiprows=skipRows, keep_default_na=False, na_filter= False)
-                    df = pd.read_csv(csvFileName, skiprows=skipRows, na_values='n/a', keep_default_na=True, skipinitialspace = True)
+                    df = pd.read_csv(csvFileName, sep=str(args.sep), skiprows=skipRows, na_values='n/a', keep_default_na=True, skipinitialspace = True)
 
             else:
             
                 #df = pd.read_csv(csvFileName, skiprows=skipRows, keep_default_na=False, na_filter= False)
-                df = pd.read_csv(csvFileName, skiprows=skipRows, na_values='n/a', keep_default_na=True, skipinitialspace = True)
+                df = pd.read_csv(csvFileName, sep=str(args.sep), skiprows=skipRows, na_values='n/a', keep_default_na=True, skipinitialspace = True)
 
         # Removing index from dataframe
         df.reset_index(drop=True, inplace=True)
@@ -350,14 +354,14 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
         # Validate the CSV file
         tableHeaders = getDFHeadersFromTransformers(tableName,transformersTablesSchema)
         tableHeader = [header.upper() for header in tableHeaders]
-        fileError = validateInputcsv(fileName,tableHeader)
+        fileError = validateInputcsv(fileName,tableHeader, args)
         if fileError is not None:
             basename = os.path.basename(fileName)
             print("File {} is skipped because of error -> {} ".format(basename,fileError))
             invalidfiles[fileName] = fileError
             continue
         # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
-        df = getDataFrameFromCSV(fileName,tableName,skipRows,separatorString,transformersTablesSchema)
+        df = getDataFrameFromCSV(fileName,tableName,skipRows,args,transformersTablesSchema)
         
 
         # Checking if no error was found during loading CSV from OS
@@ -402,13 +406,13 @@ def processSchemaDetection(schemadetection,transformersTablesSchema, transformer
     
     return transformersTablesSchema
 
-def validateInputcsv(fileName,tableHeader):
+def validateInputcsv(fileName,tableHeader,args):
     fileerror = None
     try:
         with open(fileName,"r") as f:
                 if 'ORA-' in f.read():
                     fileerror = "File has ORA-Errors"
-        df = pd.read_csv(fileName, skiprows=2,na_values='n/a', keep_default_na=True, skipinitialspace = True, nrows=10, names = tableHeader, index_col=False)
+        df = pd.read_csv(fileName, sep=str(args.sep), skiprows=2,na_values='n/a', keep_default_na=True, skipinitialspace = True, nrows=10, names = tableHeader, index_col=False)
         if df.empty:
             ## If file has header but no rows
             fileerror = "File seems to be Empty"
@@ -568,7 +572,7 @@ def createCSVFromDataframe(df, transformersParameters, args, fileName, transform
 
         # Make sure file will have same format (skipping first line as others) as the ones coming from oracle_db_assessment.sql
         df1 = pd.DataFrame({'a':[np.nan] * 1})
-        df1.to_csv(fileName, index=False, header=None)
+        df1.to_csv(fileName, sep=str(args.sep),index=False, header=None)
 
         #STEP: Transform a multi-index/column (hierarchical columns) into regular columns
         if fixDataframeColumns:
@@ -581,7 +585,7 @@ def createCSVFromDataframe(df, transformersParameters, args, fileName, transform
 
         # STEP: Writing dataframe to CSV in append mode
 
-        df.to_csv(fileName, header=True, index=False, mode='a')
+        df.to_csv(fileName, sep=str(args.sep), header=True, index=False, mode='a')
         #df.to_hdf(fileName, key='optimus')
 
         print('\n Sucessfully created filename "{}" for table name "{}".\n'.format(fileName,tableName))

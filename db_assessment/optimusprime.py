@@ -251,7 +251,7 @@ def argumentsParser():
     parser.add_argument("-collectionid", type=str, default=None, help="optimus prime collection id from CSV files OR 'consolidate' for consolidated logs")
 
     # Separator for the logs being processed
-    parser.add_argument("-sep","-separator", type=str, default=',', help="separator string in the files to be processed")
+    parser.add_argument("-sep", type=str, default=';', help="separator string in the files to be processed. The default is: ; (semicomma)")
 
     parser.add_argument("-dbversion", type=str, default=None, help="database version to be processed")
 
