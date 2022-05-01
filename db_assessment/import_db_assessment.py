@@ -23,7 +23,7 @@ import pandas as pd
 import datetime
 # ct stores current time
 ct = datetime.datetime.now()
-
+import rules_engine as rengine
 # Manages command line flags and arguments
 import argparse
 
@@ -304,7 +304,7 @@ def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchem
                 df['JOBPARAMS'] = str(vars(args))
 
             # Import the given CSV fileName into
-            sucessImport,importresults = importDataframeToBQ(gcpProjectName,bqDataset,str(tableName).lower(),tableSchemas,dbAssessmentDataframes[tableName],transformersParameters,importresults)
+            sucessImport,importresults = importDataframeToBQ(gcpProjectName,bqDataset,str(tableName).lower(),tableSchemas,dbAssessmentDataframes[tableName],transformersParameters,args,importresults)
             if sucessImport:
                 tablesImported[str(tableName).lower()] = "IMPORTED_FROM_DATAFRAME"
 
@@ -316,7 +316,7 @@ def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchem
         return False, tablesImported,importresults
 
 
-def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,transformersParameters,importresults):
+def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,transformersParameters,args,importresults):
 
     # Getting table schema
     try:
@@ -378,8 +378,10 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
     else:
         table_id = str(client.project) + '.' + str(bqDataset) + '.' + str(tableName)
 
-    write_disposition="WRITE_TRUNCATE"
+    # Changed default to from WRITE_TRUNCATE to WRITE_APPEND in args.loadtype. 
+    write_disposition=str(args.loadtype).upper()
     schema_updateOptions=[]
+    file_format=bigquery.SourceFormat.CSV
     if str(tableName).lower() =="opkeylog":
         ## OpkeyLog is a load stats table so rows would be appended and if any schema change is there, the update of schema would be allowed
         schema_updateOptions = [bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION]
@@ -393,7 +395,10 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
         # Optionally, set the write disposition. BigQuery appends loaded rows
         # to an existing table by default, but with WRITE_TRUNCATE write
         # disposition it replaces the table with the loaded data.
-        write_disposition=write_disposition,
+        write_disposition=write_disposition
+        #,
+        #field_delimiter = ";",
+        #source_format = file_format
     )
 
     job = client.load_table_from_dataframe(
@@ -413,8 +418,8 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
     # Returns True if sucessfull 
     return True,importresults
 
-def adddetails(fileName,args,params):
-    df = pd.read_csv(fileName, index_col=False)
+def adddetails(fileName,args,params,tableHeader):
+    df = pd.read_csv(fileName, sep=str(args.sep), skiprows=2, na_values='n/a', keep_default_na=True, skipinitialspace = True, names = tableHeader, index_col=False)
     if params['importcomment']:
         df["CMNT"] = params['importcomment']
     df['LOADTOBQDATE']= ct
@@ -451,14 +456,16 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
 
         if str(tableName).lower()  =="opkeylog":
             ##skipLeadingRows=1
-            adddetails(fileName,args,transformersParameters)
+            tableHeaders = rengine.getDFHeadersFromTransformers(str(tableName).lower(),transformersTablesSchema)
+            tableHeader = [header.upper() for header in tableHeaders]
+            adddetails(fileName,args,transformersParameters,tableHeader)
 
         if tableName.lower() not in doNotImportList:
 
             # Import the given CSV fileName into 
             print ('\nThe filename {} is being imported to Big Query.'.format(fileName))
 
-            sucessImport, tmpresultfromfn=importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas,importresults)
+            sucessImport, tmpresultfromfn=importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas,args,importresults)
             if sucessImport is True:
                 importresults=tmpresultfromfn
 
@@ -468,7 +475,7 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
             
     return True,importresults
 
-def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas,importresults):
+def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas,args,importresults):
 # This function will import the CSV file into the Big Query using the proper project.dataset.tablename
 # A Big Query Job is created for it
 
@@ -492,17 +499,29 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
     # In case projectname was passed as argument. Then, it tries to get the default project for the [service] account being used
     else:
         table_id = str(client.project) + '.' + str(bqDataset) + '.' + str(tableName)
+    
     schema_updateOptions=[]
-    if str(tableName).lower() =="opkeylog":
+    field_delimiter = str(args.sep)
+    write_disposition = str(args.loadtype).upper()
+    
+    if str(tableName).lower() == "opkeylog":
         ## OpkeyLog is a load stats table so rows would be appended and if any schema change is there, the update of schema would be allowed
         schema_updateOptions = [bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION]
+   
+   # OP Internal Configuration Files
+    elif str(tableName).lower() in ("optimusconfig_bms_machinesizes","optimusconfig_network_to_gcp"):
+        write_disposition = "WRITE_TRUNCATE"
+        field_delimiter = ","
 
+    
     job_config = bigquery.LoadJobConfig(
         schema=schema,
         skip_leading_rows=skipLeadingRows,
         schema_update_options = schema_updateOptions,
         # The source format defaults to CSV, so the line below is optional.
         source_format=bigquery.SourceFormat.CSV,
+        field_delimiter = field_delimiter,
+        write_disposition = write_disposition
     )
 
 
