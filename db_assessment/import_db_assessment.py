@@ -17,6 +17,7 @@
 import json
 import os
 import glob
+from sre_constants import SUCCESS
 import sys
 import pandas as pd
 import datetime
@@ -53,6 +54,10 @@ logging.getLogger().setLevel(level=logging.INFO)
 
 # Beautiful table 
 from beautifultable import BeautifulTable
+
+# pandas for dataframe 
+import pandas as pd
+import numpy as np 
 
 #For processing of Beautiful Table Data
 import sqlite3
@@ -263,7 +268,7 @@ def getAllFilesByPattern(filePattern):
     # Get all matching files and creates a list returning it   
     return glob.glob(filePattern)
 
-def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchema,dbAssessmentDataframes,transformersParameters,twoDimenlistToStoreImportResults):
+def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchema,dbAssessmentDataframes,transformersParameters,importresults):
 
     # Tracking tableNames Imported to Big Query
     tablesImported = {}
@@ -299,19 +304,19 @@ def importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchem
                 df['JOBPARAMS'] = str(vars(args))
 
             # Import the given CSV fileName into
-            sucessImport,twoDimenlistToStoreImportResults = importDataframeToBQ(gcpProjectName,bqDataset,str(tableName).lower(),tableSchemas,dbAssessmentDataframes[tableName],transformersParameters,twoDimenlistToStoreImportResults)
+            sucessImport,importresults = importDataframeToBQ(gcpProjectName,bqDataset,str(tableName).lower(),tableSchemas,dbAssessmentDataframes[tableName],transformersParameters,importresults)
             if sucessImport:
                 tablesImported[str(tableName).lower()] = "IMPORTED_FROM_DATAFRAME"
 
 
-        return True, tablesImported,twoDimenlistToStoreImportResults
+        return True, tablesImported,importresults
 
     else:
 
-        return False, tablesImported,twoDimenlistToStoreImportResults
+        return False, tablesImported,importresults
 
 
-def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,transformersParameters,twoDimenlistToStoreImportResults):
+def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,transformersParameters,importresults):
 
     # Getting table schema
     try:
@@ -353,8 +358,8 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
         # In case there is not expected table schema found in getBQJobConfig function
         print ('\nWARNING: The dataframe "{}" could not be imported to Big Query.'.format(tableName))
         print ('The table name "{}" cannot be imported because it does not have table schema in transformers.json. So, it will be skipped.\n'.format(tableName))
-        twoDimenlistToStoreImportResults=populateBT(tableName,df,'importDataframeToBQ','isFile','fromimportDataframeToBQ',-1,twoDimenlistToStoreImportResults)
-        return False,twoDimenlistToStoreImportResults
+        importresults=populateBT(tableName,df,'importDataframeToBQ','isFile','fromimportDataframeToBQ',-1,importresults)
+        return False,importresults
 
     try:
         df = df.astype(str)
@@ -403,10 +408,10 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
         )
     )
 
-    twoDimenlistToStoreImportResults=populateBT(tableName,df,'importDataframeToBQ','isFile','fromimportDataframeToBQ',-1,twoDimenlistToStoreImportResults)
+    importresults=populateBT(tableName,df,'importDataframeToBQ','isFile','fromimportDataframeToBQ',-1,importresults)
 
     # Returns True if sucessfull 
-    return True,twoDimenlistToStoreImportResults
+    return True,importresults
 
 def adddetails(fileName,args,params):
     df = pd.read_csv(fileName, index_col=False)
@@ -421,7 +426,7 @@ def adddetails(fileName,args,params):
         f.seek(0, 0)
         f.write(line.rstrip('\r\n') + '\n' + content)
 
-def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,skipLeadingRows,transformersParameters,args,twoDimenlistToStoreImportResults):
+def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,skipLeadingRows,transformersParameters,args,importresults):
 # This function receives a list of files to import to Big Query, then it calls importCSVToBQ to import table/file by table/file
 
     print ('\nPreparing to upload CSV files\n')
@@ -452,15 +457,18 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
 
             # Import the given CSV fileName into 
             print ('\nThe filename {} is being imported to Big Query.'.format(fileName))
-            twoDimenlistToStoreImportResults=importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas,twoDimenlistToStoreImportResults)
+
+            sucessImport, tmpresultfromfn=importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas,importresults)
+            if sucessImport is True:
+                importresults=tmpresultfromfn
 
         else:
 
             print ('\nThe filename {} is being SKIPPED accordingly with parameter {} from transformers.json.'.format(fileName,'do_not_import'))
             
-    return True,twoDimenlistToStoreImportResults
+    return True,importresults
 
-def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas,twoDimenlistToStoreImportResults):
+def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas,importresults):
 # This function will import the CSV file into the Big Query using the proper project.dataset.tablename
 # A Big Query Job is created for it
 
@@ -507,24 +515,24 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
 
             print ('   Table Schema = {}'.format(schema))
             if 'csv' not in fileName :
-                twoDimenlistToStoreImportResults=populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',-1,twoDimenlistToStoreImportResults)
-            return False
+                importresults=populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',-1,importresults)
+            return False,False
 
     try:
         load_job.result()  # Waits for the job to complete.
     except Exception as genericLoadErr:
         print ('\n FAILED: Optimus Prime could not import the filename "{}" into "{}" because of the error "{}".\n'.format(fileName,table_id,genericLoadErr))
         if 'csv' not in fileName :
-            twoDimenlistToStoreImportResults=populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',-1,twoDimenlistToStoreImportResults)
-        return False
+            importresults=populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',-1,importresults)
+        return False,False
 
     destination_table = client.get_table(table_id)  # Make an API request.
     print("Loaded {} rows into: {}".format(destination_table.num_rows,destination_table.reference))
     if 'csv' not in fileName :
-        twoDimenlistToStoreImportResults=populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',destination_table.num_rows,twoDimenlistToStoreImportResults)
+        importresults=populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',destination_table.num_rows,importresults)
 
     # returns True if processing is successfully
-    return True,twoDimenlistToStoreImportResults
+    return True,importresults
 
 
 def getTableRef(dataset,tableName,projectName):
@@ -663,10 +671,11 @@ def insertErrors(invalidfiles,op_df,gcpProjectName,bq_dataset):
         print ('\nWARNING: Issues while pusing Errors into operrors table with error ', pushErr)
 
 
-def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported,twoDimenlistToStoreImportResults):
-    # Fuction to populate the twoDimenlistToStoreImportResults list which will be used to print using Beautiful Table 
-
-    twoDimensionalList=[]
+def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported,importresults):
+    # Fuction to populate the importresults list which will be used to print using Beautiful Table 
+    # rowsimported of <0 is used to indicate a FAILED status 
+    # fileName='dummy'
+    tmpdataFrame=pd.DataFrame()
 
     if btsource=='fromimportDataframeToBQ':
 
@@ -679,25 +688,45 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported,tw
                     pkeycount=pkeygroupby.to_dict()
                     for pkeyname,pkeyname_rowcount in pkeycount.items():
                         if 'Elapsed' not in pkeyname:
-                            twoDimensionalList.append([tableName,pkeyname,'SUCCESS',pkeyname_rowcount])         
+                            # twoDimensionalList.append([tableName,pkeyname,'SUCCESS',pkeyname_rowcount])    
+                            tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":pkeyname,"Import Status":"SUCCESS","Loaded rows":pkeyname_rowcount}
+                            tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)  
+                            if len(tmpdataFrame) >0:
+                                importresults = pd.concat([importresults, tmpdataFrame], ignore_index = True, axis = 0)
+
     elif btsource=='fromimportCSVToBQ':
         fileName=invalidfiles
-        if rowsimported >=0:
-            twoDimensionalList.append([tableName,getPkeyFromFile(fileName),'SUCCESS',rowsimported])
-        else:
-            twoDimensionalList.append([tableName,getPkeyFromFile(fileName),'FAILED',0])   
+        if 'opdbt' not in fileName: # to go past the error seen during Demo to Eri on Apr 26, 2022
+            if rowsimported >=0:
+                tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":getPkeyFromFile(fileName),"Import Status":"SUCCESS","Loaded rows":rowsimported}
+                tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)  
+
+            else:
+                tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":getPkeyFromFile(fileName),"Import Status":"FAILED","Loaded rows":0}
+                tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)
+            if len(tmpdataFrame) >0:
+                importresults = pd.concat([importresults, tmpdataFrame], ignore_index = True, axis = 0)
+  
     elif btsource=='invalidfiles':
         for fileName, error in invalidfiles.items():
-            twoDimensionalList.append([getObjNameFromFiles(fileName,'__',1),getPkeyFromFile(fileName),'FAILED',0])
+            tmpdataFramedict = {"Target Table":getObjNameFromFiles(fileName,'__',1),"Distinct Pkey":getPkeyFromFile(fileName),"Import Status":"FAILED","Loaded rows":0}
+            tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)
+            if len(tmpdataFrame) >0:
+                importresults = pd.concat([importresults, tmpdataFrame], ignore_index = True, axis = 0)
+
     
+    # if 'opdbt'  in fileName:
+    #     importresults=importresults
+    # else:
+    #     if len(tmpdataFrame) >0:
+    #         importresults = pd.concat([importresults, tmpdataFrame], ignore_index = True, axis = 0)
 
-    twoDimenlistToStoreImportResults.append(twoDimensionalList)
+    return importresults
 
-    return twoDimenlistToStoreImportResults
-
-def processBTResults(twoDimenlistToStoreImportResults):
+def processBTResults(importresults):
 
     #Create a in-memory database and connection
+    #Database is used for 
     conn=sqlite3.connect(':memory:')
     c=conn.cursor()
 
@@ -709,11 +738,11 @@ def processBTResults(twoDimenlistToStoreImportResults):
             rowcount integer
             )""")
 
-    # Load the data in the database table
-    for record in twoDimenlistToStoreImportResults:
-        for nestedrecord in record:
-        # print(record)
-            c.execute("INSERT INTO importresults VALUES(?,?,?,?)",nestedrecord)
+    # insert dataframe data into the database table
+    record=0
+    while record < len(importresults):
+        c.execute("INSERT INTO importresults VALUES(?,?,?,?)",importresults.iloc[record])
+        record=record+1
 
     #Create and load the output bt table
     btImportLogFinalTable = BeautifulTable()
@@ -732,11 +761,11 @@ def processBTResults(twoDimenlistToStoreImportResults):
 
     return btImportLogFinalTable
 
-def printBTResults(twoDimenlistToStoreImportResults):
+def printBTResults(importresults):
     # Fuction to print the import logs present in  btImportLogTable /btImportLogFinalTable
 
     # Call the function to process the BT results
-    btImportLogFinalTable=processBTResults(twoDimenlistToStoreImportResults)
+    btImportLogFinalTable=processBTResults(importresults)
     btImportLogFinalTable.set_style(BeautifulTable.STYLE_BOX_ROUNDED)
     print('\n\n Import Completed....\n')
     print('\n Import Summary \n\n')
