@@ -71,20 +71,26 @@ def runMain(args):
 
         gcpProjectName = str(args.projectname)
         bqDataset = str(args.dataset)
-        transformersParameters['dbversion'] = str(args.dbversion)
-        transformersParameters['optimuscollectionversion'] = str(args.collectionversion)
-        transformersParameters['recreateviews'] = True # setting this as parameter to that we can handle recreation in import_db_assesment.createOptimusPrimeViewsTransformers. If already exists, it returns error by default
-        rulesAlreadyExecuted = [] # keeping it, since it is evaluated in rules engine. although keeping it blank for now as for recreate views this should not impact
-        print(transformersParameters)
-        print ('\n\n Recreating views from project {} and BigQuery dataset {}\n\n'.format(gcpProjectName, bqDataset))
 
-        viewTransformerConfiguration = {}
-        viewTransformerConfiguration = {rule:config for rule, config in transformerRulesConfig.items() if "create-view" in rule}
-        # Create Optimus Prime Views
-        # tested with vReport_sysstat_io_summary. added new column iops_total_perc100_2. Existing View: OK, New View: OK
-        transformerParameterResults, transformersRulesVariables, fileList, dbAssessmentDataframes = rules_engine.runRules("2",viewTransformerConfiguration, None, None, args, None, None, None, rulesAlreadyExecuted, transformersParameters, gcpProjectName, bqDataset)
+        if import_db_assessment.checkDataSetExists(bqDataset, gcpProjectName):
+            
+            transformersParameters['dbversion'] = str(args.dbversion)
+            transformersParameters['optimuscollectionversion'] = str(args.collectionversion)
+            transformersParameters['recreateviews'] = True # setting this as parameter to that we can handle recreation in import_db_assesment.createOptimusPrimeViewsTransformers. If already exists, it returns error by default
+            rulesAlreadyExecuted = [] # keeping it, since it is evaluated in rules engine. although keeping it blank for now as for recreate views this should not impact
+            print(transformersParameters)
+            print ('\n\n Recreating views from project {} and BigQuery dataset {}\n\n'.format(gcpProjectName, bqDataset))
 
-        print ('\n\n Views created. Thank YOU for using Optimus Prime!\n\n')
+            viewTransformerConfiguration = {}
+            viewTransformerConfiguration = {rule:config for rule, config in transformerRulesConfig.items() if "create-view" in rule}
+            # Create Optimus Prime Views
+            # tested with vReport_sysstat_io_summary. added new column iops_total_perc100_2. Existing View: OK, New View: OK
+            transformerParameterResults, transformersRulesVariables, fileList, dbAssessmentDataframes = rules_engine.runRules("2",viewTransformerConfiguration, None, None, args, None, None, None, rulesAlreadyExecuted, transformersParameters, gcpProjectName, bqDataset)
+
+            print ('\n\n Views created. Thank YOU for using Optimus Prime!\n\n')
+        else:
+            print ('\n\n Error: Dataset {}.{} does not exist!\n\n'.format(gcpProjectName, bqDataset))
+            
     # For all cases in which those attributes are <> None it means the user wants to import data to Big Query
     # No need to further messaging for mandatory options because this is being done in argumentsParser function
     elif args.dataset is not None and args.collectionid is not None:

@@ -178,13 +178,13 @@ def createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_
     try:
         # Make an API request to create the view.
         if recreateviews == True:
+            
             # Delete it first. In case view does not exist, it might raise error. we can bypass this error by setting not_found_ok = True and move on to create view in next steps
             print("Deleting view {} to re-create it.".format(view_name))
             view_ref = client.delete_table(view,not_found_ok=True)
-        
-        view = client.create_table(view)  # exists_ok Defaults to false, so is the reason by default setting recreateviews=False in function params
-        print("Created {}: {}".format(view.table_type,str(view.reference)))
-        print("\n")
+            view = client.create_table(view)  # exists_ok Defaults to false, so is the reason by default setting recreateviews=False in function params
+            print("Created {}: {}".format(view.table_type,str(view.reference)))
+            
     except Conflict as error:
         print("View {} already exists.\n".format(str(view.reference)))
         #view = client.update_table(view, ['view_query'])
@@ -648,4 +648,29 @@ def insertErrors(invalidfiles,op_df,gcpProjectName,bq_dataset):
         print ('\nWARNING: Issues while pusing Errors into operrors table with error ', pushErr)
 
 
+def checkDataSetExists(datasetName,gcpProjectName):
+    # Construct a BigQuery client object.
+    client = bigquery.Client(client_info=set_client_info.get_http_client_info())
 
+    # Set dataset_id=datasetName to the ID of the dataset to create.
+    if gcpProjectName is None:
+        # In case the user did NOT pass the project name in the arguments
+        dataset_id = "{}.{}".format(client.project,datasetName)
+    else:
+        # In case tge use DID pass the project name in the arguments
+        dataset_id = "{}.{}".format(gcpProjectName,datasetName)
+    
+    try:
+        print(dataset_id)
+        print('locating dataset {}'.format(dataset_id))
+        dataset = client.get_dataset(dataset_id)  # Make an API request.
+        if isinstance(dataset, bigquery.Dataset):
+            print("Found dataset {}".format(dataset_id))
+            return True
+        else:
+            print("Not Found dataset {}".format(dataset_id))
+            return False
+    except Conflict as error:
+        # If dataset already exists
+        print('Not Found dataset {}.'.format(dataset_id))
+        return False
