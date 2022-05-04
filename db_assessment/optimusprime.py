@@ -41,6 +41,12 @@ __version__= version.__version__
 import logging
 logging.getLogger().setLevel(level=logging.INFO)
 
+# Beautiful table 
+from beautifultable import BeautifulTable
+
+# pandas for dataframe 
+import pandas as pd
+import numpy as np 
 
 def getVersion():
 
@@ -206,6 +212,8 @@ def runMain(args):
 
 
         # STEP: Import ALL data to Big Query
+        # Local Variable store to avoid Global parameters
+        importresults=pd.DataFrame()
 
         # Eliminating duplicated entries from transformers.json processing
         fileList = list(set(fileList))
@@ -217,23 +225,26 @@ def runMain(args):
             if "OPKEYLOG" in dbAssessmentDataframes.keys():
                 op_df = dbAssessmentDataframes["OPKEYLOG"]
                 import_db_assessment.insertErrors(invalidfiles,op_df,gcpProjectName,bqDataset)
+                importresults=import_db_assessment.populateBT('notabname','nodataframe','yes',invalidfiles,'invalidfiles',-1,importresults)
 
         if args.fromdataframe:
 
-            sucessImported, tablesImported = import_db_assessment.importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchema,dbAssessmentDataframes,transformersParameters)
+            sucessImported, tablesImported,importresults = import_db_assessment.importAllDataframeToBQ(args,gcpProjectName,bqDataset,transformersTablesSchema,dbAssessmentDataframes,transformersParameters,importresults)
 
         else:
 
             # Import the CSV data found in the OS
-            import_db_assessment.importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,2,transformersParameters,args)
+            sucessImported,importresults=import_db_assessment.importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema,2,transformersParameters,args,importresults)
             # Import all Optimus Prime CSV configutation
-            import_db_assessment.importAllCSVsToBQ(gcpProjectName,bqDataset,fileListOPConfig,transformersTablesSchema,1,transformersParameters,args)
+            sucessImported,importresults=import_db_assessment.importAllCSVsToBQ(gcpProjectName,bqDataset,fileListOPConfig,transformersTablesSchema,1,transformersParameters,args,importresults)
 
         transformerParameterResults, transformersRulesVariables, fileList, dbAssessmentDataframes = rules_engine.runRules("2",transformerRulesConfig, dbAssessmentDataframes, None, args, collectionKey, transformersTablesSchema, fileList, rulesAlreadyExecuted, transformersParameters, gcpProjectName, bqDataset)
 
         # Create Optimus Prime Views
         import_db_assessment.createOptimusPrimeViewsFromOS(gcpProjectName,bqDataset)
 
+        # Call BT for import summary table
+        import_db_assessment.printBTResults(importresults)
         print ('\n\n Thank YOU for using Optimus Prime!\n\n')
 
 def argumentsParser():
