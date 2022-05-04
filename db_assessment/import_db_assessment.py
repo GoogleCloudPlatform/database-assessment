@@ -17,7 +17,6 @@
 import json
 import os
 import glob
-from sre_constants import SUCCESS
 import sys
 import pandas as pd
 import datetime
