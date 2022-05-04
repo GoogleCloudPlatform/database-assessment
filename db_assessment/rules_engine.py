@@ -197,7 +197,7 @@ def runRules(executionGroup,transformerRules, dataFrames, singleRule, args, coll
                                 view_sql_query = ''.join(view_sql_query)
 
                                 
-                                import_db_assessment.createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_sql_query)
+                                import_db_assessment.createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_sql_query,recreateviews=transformersParameters['recreateviews'])
 
                                 
                     else:

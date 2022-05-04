@@ -149,7 +149,7 @@ def consolidateLos(args, transformersTablesSchema):
     return True
 
 
-def createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_query):
+def createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_query,recreateviews=False):
 # This function intents to create all views found in the opViews directory. The views creation must follow opConfig/transformers.json
 
     client = bigquery.Client(client_info=set_client_info.get_http_client_info())
@@ -177,7 +177,12 @@ def createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_
 
     try:
         # Make an API request to create the view.
-        view = client.create_table(view)
+        if recreateviews == True:
+            # Delete it first. In case view does not exist, it might raise error. we can bypass this error by setting not_found_ok = True and move on to create view in next steps
+            print("Deleting view {} to re-create it.".format(view_name))
+            view_ref = client.delete_table(view,not_found_ok=True)
+        
+        view = client.create_table(view)  # exists_ok Defaults to false, so is the reason by default setting recreateviews=False in function params
         print("Created {}: {}".format(view.table_type,str(view.reference)))
         print("\n")
     except Conflict as error:

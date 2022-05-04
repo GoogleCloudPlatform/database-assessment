@@ -65,11 +65,30 @@ def runMain(args):
     transformersTablesSchemaConfig = {}
     transformersTablesSchemaConfig = transformerConfiguration['tableschemas']
 
-    
+    # SM: 04/28/2022:[Bug#90] If we only intended to run the process for recreating views
+    print('Main with args.recreateviews = {}'.format(str(args.recreateviews).upper()))
+    if str(args.recreateviews).upper() == 'TRUE':
+
+        gcpProjectName = str(args.projectname)
+        bqDataset = str(args.dataset)
+        transformersParameters['dbversion'] = str(args.dbversion)
+        transformersParameters['optimuscollectionversion'] = str(args.collectionversion)
+        transformersParameters['recreateviews'] = True # setting this as parameter to that we can handle recreation in import_db_assesment.createOptimusPrimeViewsTransformers. If already exists, it returns error by default
+        rulesAlreadyExecuted = [] # keeping it, since it is evaluated in rules engine. although keeping it blank for now as for recreate views this should not impact
+        print(transformersParameters)
+        print ('\n\n Recreating views from project {} and BigQuery dataset {}\n\n'.format(gcpProjectName, bqDataset))
+
+        viewTransformerConfiguration = {}
+        viewTransformerConfiguration = {rule:config for rule, config in transformerRulesConfig.items() if "create-view" in rule}
+        # Create Optimus Prime Views
+        # tested with vReport_sysstat_io_summary. added new column iops_total_perc100_2. Existing View: OK, New View: OK
+        transformerParameterResults, transformersRulesVariables, fileList, dbAssessmentDataframes = rules_engine.runRules("2",viewTransformerConfiguration, None, None, args, None, None, None, rulesAlreadyExecuted, transformersParameters, gcpProjectName, bqDataset)
+
+        print ('\n\n Views created. Thank YOU for using Optimus Prime!\n\n')
     # For all cases in which those attributes are <> None it means the user wants to import data to Big Query
     # No need to further messaging for mandatory options because this is being done in argumentsParser function
-    if args.dataset is not None and args.collectionid is not None:
-
+    elif args.dataset is not None and args.collectionid is not None:
+        print("In data load portion")
 
         # This is broken needs to be fixed in upcoming versions
         if args.consolidatelogs:
@@ -260,11 +279,33 @@ def argumentsParser():
 
     parser.add_argument("-importcomment", type=str, default='', help="Comment for the Import")
 
+    # SM: 04/28/2022:[Bug#90] Recreate views without loading the data:
+    parser.add_argument("-recreateviews", default=False, help="Recreate views without loading the data (True/False)")
+
     # Execute the parse_args() method. Variable args is a namespace type
     args = parser.parse_args()
 
+    # SM: 04/28/2022:[Bug#90] Check project name and big query dataset name
+    if str(args.recreateviews).upper() == "TRUE":
+        # In case there is not dataset parameter set or with valid content in the arguments. It is required during view recreates
+        print('Checking required parameters for recreating views')
+        if (args.dataset is None or args.dataset == ''):
+            sys.exit('\nERROR: -dataset not provided. It is required during view recreates\n')
+        
+        # In case project name/project id is not provided. It is required during view recreates
+        elif args.projectname is None:
+            print ('\nWARNING: -projectname not provided. It is required during view recreates\n')
+
+        # In case project name/project id is not provided. It is required during view recreates
+        elif args.dbversion is None:
+            print ('\nWARNING: -dbversion not provided. It is required during view recreates\n')
+
+        # In case project name/project id is not provided. It is required during view recreates
+        elif args.collectionversion is None:
+            print ('\nWARNING: -collectionversion name not provided. It is required during view recreates\n')
+    
     # If not using -cl flag
-    if args.consolidatelogs == False:
+    elif args.consolidatelogs == False:
 
         # In case there is not dataset parameter set or with valid content in the arguments
         if (args.dataset is None or args.dataset == ''):
