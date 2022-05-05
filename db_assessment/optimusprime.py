@@ -225,7 +225,7 @@ def runMain(args):
             if "OPKEYLOG" in dbAssessmentDataframes.keys():
                 op_df = dbAssessmentDataframes["OPKEYLOG"]
                 import_db_assessment.insertErrors(invalidfiles,op_df,gcpProjectName,bqDataset)
-                importresults=import_db_assessment.populateBT('notabname','nodataframe','yes',invalidfiles,'invalidfiles',-1,importresults)
+                importresults=import_db_assessment.populateBT('notabname','nodataframe','yes',invalidfiles,'invalidfiles',-1,importresults,args)
 
         if args.fromdataframe:
 
