@@ -66,7 +66,6 @@ def runMain(args):
     transformersTablesSchemaConfig = transformerConfiguration['tableschemas']
 
     # SM: 04/28/2022:[Bug#90] If we only intended to run the process for recreating views
-    print('Main with args.recreateviews = {}'.format(str(args.recreateviews).upper()))
     if str(args.recreateviews).upper() == 'TRUE':
 
         gcpProjectName = str(args.projectname)
@@ -78,9 +77,7 @@ def runMain(args):
             transformersParameters['optimuscollectionversion'] = str(args.collectionversion)
             transformersParameters['recreateviews'] = True # setting this as parameter to that we can handle recreation in import_db_assesment.createOptimusPrimeViewsTransformers. If already exists, it returns error by default
             rulesAlreadyExecuted = [] # keeping it, since it is evaluated in rules engine. although keeping it blank for now as for recreate views this should not impact
-            print(transformersParameters)
             print ('\n\n Recreating views from project {} and BigQuery dataset {}\n\n'.format(gcpProjectName, bqDataset))
-
             viewTransformerConfiguration = {}
             viewTransformerConfiguration = {rule:config for rule, config in transformerRulesConfig.items() if "create-view" in rule}
             # Create Optimus Prime Views
@@ -94,7 +91,6 @@ def runMain(args):
     # For all cases in which those attributes are <> None it means the user wants to import data to Big Query
     # No need to further messaging for mandatory options because this is being done in argumentsParser function
     elif args.dataset is not None and args.collectionid is not None:
-        print("In data load portion")
 
         # This is broken needs to be fixed in upcoming versions
         if args.consolidatelogs:
@@ -294,7 +290,6 @@ def argumentsParser():
     # SM: 04/28/2022:[Bug#90] Check project name and big query dataset name
     if str(args.recreateviews).upper() == "TRUE":
         # In case there is not dataset parameter set or with valid content in the arguments. It is required during view recreates
-        print('Checking required parameters for recreating views')
         if (args.dataset is None or args.dataset == ''):
             sys.exit('\nERROR: -dataset not provided. It is required during view recreates\n')
         

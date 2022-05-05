@@ -661,7 +661,6 @@ def checkDataSetExists(datasetName,gcpProjectName):
         dataset_id = "{}.{}".format(gcpProjectName,datasetName)
     
     try:
-        print(dataset_id)
         print('locating dataset {}'.format(dataset_id))
         dataset = client.get_dataset(dataset_id)  # Make an API request.
         if isinstance(dataset, bigquery.Dataset):
