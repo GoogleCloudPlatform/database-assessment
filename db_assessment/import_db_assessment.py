@@ -464,9 +464,7 @@ def importAllCSVsToBQ(gcpProjectName,bqDataset,fileList,transformersTablesSchema
             # Import the given CSV fileName into 
             print ('\nThe filename {} is being imported to Big Query.'.format(fileName))
 
-            sucessImport, tmpresultfromfn=importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas,args,importresults)
-            if sucessImport is True:
-                importresults=tmpresultfromfn
+            sucessImport, importresults=importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,autoDetect,tableSchemas,args,importresults)
 
         else:
 
@@ -532,10 +530,10 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
             print ('\n FAILED: Optimus Prime could not import the filename "{}" into "{}" because of the error "{}".\n'.format(fileName,table_id,importErr))
 
             print ('   Table Schema = {}'.format(schema))
-            # if 'csv' not in fileName :
-            #     importresults=populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',-1,importresults,args)
+
             importresults=populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',-1,importresults,args)
-            return False,False
+
+            return False,importresults
 
     try:
         load_job.result()  # Waits for the job to complete.
@@ -544,12 +542,11 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
         # if 'csv' not in fileName :
         #     importresults=populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',-1,importresults,args)
         importresults=populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',-1,importresults,args)
-        return False,False
+        return False,importresults
 
     destination_table = client.get_table(table_id)  # Make an API request.
     print("Loaded {} rows into: {}".format(destination_table.num_rows,destination_table.reference))
-    # if 'csv' not in fileName :
-    #     importresults=populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',destination_table.num_rows,importresults,args)
+
     importresults=populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',destination_table.num_rows,importresults,args)
 
     # returns True if processing is successfully
@@ -697,11 +694,12 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported,im
     # rowsimported of <0 is used to indicate a FAILED status 
     tmpdataFrame=pd.DataFrame()
 
-    if 'csv' in invalidfiles:
+    if 'opConfig/' in invalidfiles:
         return importresults
     
     if btsource=='invalidfiles':
             for fileName, error in invalidfiles.items():
+                tmpdataFrame=pd.DataFrame() 
                 tmpdataFramedict = {"Target Table":getObjNameFromFiles(fileName,'__',1),"Distinct Pkey":getObjNameFromFiles(fileName,'__',2),"Import Status":"FAILED","Loaded rows":0}
                 tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)
                 if len(tmpdataFrame) >0:
@@ -717,6 +715,7 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported,im
                         pkeycount=pkeygroupby.to_dict()
                         for pkeyname,pkeyname_rowcount in pkeycount.items():
                             if 'Elapsed' not in pkeyname:
+                                tmpdataFrame=pd.DataFrame() 
                                 tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":pkeyname,"Import Status":"SUCCESS","Loaded rows":pkeyname_rowcount}
                                 tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)  
                                 if len(tmpdataFrame) >0:
@@ -724,13 +723,26 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported,im
 
         else:
             fileName=invalidfiles
+            
             if 'opdbt' not in fileName: 
                 if rowsimported >=0:
-                    tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":getObjNameFromFiles(fileName,'__',2),"Import Status":"SUCCESS","Loaded rows":rowsimported}
-                    tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)  
+                    if tableName in importresults['Target Table'].values and  'SUCCESS' in importresults['Import Status'].values:
+                        ExistingRowsInDataframe=importresults[importresults['Target Table'].str.contains(tableName ) & importresults['Import Status'].str.contains("SUCCESS")]['Loaded rows'].sum()
+                        newrows4dataframe=rowsimported-ExistingRowsInDataframe
+
+                        tmpdataFrame=pd.DataFrame() 
+                        tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":getObjNameFromFiles(fileName,'__',2),"Import Status":"SUCCESS","Loaded rows":newrows4dataframe}
+                        tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)
+                    else:
+                        tmpdataFrame=pd.DataFrame() 
+                        tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":getObjNameFromFiles(fileName,'__',2),"Import Status":"SUCCESS","Loaded rows":rowsimported}
+                        tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)  
+
                 else:
+                    tmpdataFrame=pd.DataFrame() 
                     tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":getObjNameFromFiles(fileName,'__',2),"Import Status":"FAILED","Loaded rows":0}
                     tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)
+
                 if len(tmpdataFrame) >0:
                     importresults = pd.concat([importresults, tmpdataFrame], ignore_index = True, axis = 0)
   
