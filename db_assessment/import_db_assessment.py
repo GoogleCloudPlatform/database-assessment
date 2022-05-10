@@ -161,7 +161,7 @@ def consolidateLos(args, transformersTablesSchema):
 def createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_query):
 # This function intents to create all views found in the opViews directory. The views creation must follow opConfig/transformers.json
 
-    client = bigquery.Client(client_info=set_client_info.get_http_client_info())
+    client = bigquery.Client()
 
     if gcpProjectName is None:
         # In case projectname is not provided in the arguments
@@ -221,7 +221,7 @@ def createOptimusPrimeViewsFromOS(gcpProjectName,bqDataset):
     
     else:
 
-        client = bigquery.Client(client_info=set_client_info.get_http_client_info())
+        client = bigquery.Client()
 
         # Sorting list to make sure the proper view creation
         fileList.sort()
@@ -365,8 +365,11 @@ def importDataframeToBQ(gcpProjectName,bqDataset,tableName,tableSchemas,df,trans
     except:
         print ('\nWARNING: The dataframe "{}" could not be converted to STRING.'.format(tableName))
 
-    # Construct a BigQuery client object.
-    client = bigquery.Client(client_info=set_client_info.get_http_client_info())
+    if str(tableName).lower() =="opkeylog":
+        # Construct a BigQuery client object with API Call to track Tool usage
+        client = bigquery.Client(client_info=set_client_info.get_http_client_info())
+    else:
+        client = bigquery.Client()
 
     # Adding Project and Dataset based on arguments 
     # table_id to the ID of the table to create.
@@ -423,7 +426,7 @@ def adddetails(fileName,args,params,tableHeader):
         df["CMNT"] = params['importcomment']
     df['LOADTOBQDATE']= ct
     df['JOBPARAMS'] = str(vars(args))
-    df.to_csv(fileName,index=False)
+    df.to_csv(fileName,index=False, sep=str(args.sep))
     line=""
     with open(fileName, 'r+') as f:
         content = f.read()
@@ -487,8 +490,13 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
         print ('The table name "{}" cannot be imported because it does not have table schema in transformers.json. So, it will be skipped.\n'.format(tableName))
         return False
 
-    # Construct a BigQuery client object.
-    client = bigquery.Client(client_info=set_client_info.get_http_client_info(), project=gcpProjectName)
+    if str(tableName).lower() =="opkeylog":
+        # Construct a BigQuery client object with API Call to track Tool usage
+        client = bigquery.Client(client_info=set_client_info.get_http_client_info(), project=gcpProjectName)
+    else:
+        # Construct a BigQuery client object.
+        client = bigquery.Client(project=gcpProjectName)
+
 
     # Adding Project and Dataset based on arguments 
     # table_id to the ID of the table to create.
@@ -607,7 +615,7 @@ def createDataSet(datasetName,gcpProjectName):
 # Always try to create the dataset
 
     # Construct a BigQuery client object.
-    client = bigquery.Client(client_info=set_client_info.get_http_client_info(), project=gcpProjectName)
+    client = bigquery.Client(project=gcpProjectName)
     if gcpProjectName is None:
         # In case the user did NOT pass the project name in the arguments
         dataset_id = "{}.{}".format(client.project,datasetName)
@@ -635,7 +643,7 @@ def createDataSet(datasetName,gcpProjectName):
 def deleteDataSet(datasetName,gcpProjectName):
 
     # Construct a BigQuery client object.
-    client = bigquery.Client(client_info=set_client_info.get_http_client_info())
+    client = bigquery.Client()
 
     # Set dataset_id=datasetName to the ID of the dataset to create.
     if gcpProjectName is None:
@@ -667,7 +675,7 @@ def insertErrors(invalidfiles,op_df,gcpProjectName,bq_dataset):
     tableid = "operrors"
     try:
         pkey = op_df['PKEY'].iloc[0]
-        bq_client = bigquery.Client(client_info=set_client_info.get_http_client_info())
+        bq_client = bigquery.Client()
         try:
             table = bq_client.get_table("{}.{}.{}".format(gcpProjectName,bq_dataset,tableid))
         except NotFound:
