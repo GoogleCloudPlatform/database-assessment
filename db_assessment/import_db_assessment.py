@@ -697,7 +697,7 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported,im
     if 'opConfig/' in invalidfiles:
         return importresults
     
-    if btsource=='invalidfiles':
+    if btsource=='invalidfiles': # when called from runMain
             for fileName, error in invalidfiles.items():
                 tmpdataFrame=pd.DataFrame() 
                 tmpdataFramedict = {"Target Table":getObjNameFromFiles(fileName,'__',1),"Distinct Pkey":getObjNameFromFiles(fileName,'__',2),"Import Status":"FAILED","Loaded rows":0}
@@ -705,7 +705,7 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported,im
                 if len(tmpdataFrame) >0:
                     importresults = pd.concat([importresults, tmpdataFrame], ignore_index = True, axis = 0)
     else:
-        if args.fromdataframe:
+        if args.fromdataframe:  # when called from importDataframeToBQ
             if dataframeornot is not None:
                 if 'PKEY' in df.columns.to_list():
                     # df2.reset_index(inplace=True)
@@ -722,7 +722,7 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported,im
                                     importresults = pd.concat([importresults, tmpdataFrame], ignore_index = True, axis = 0)
 
         else:
-            fileName=invalidfiles
+            fileName=invalidfiles  # when called from importCSVToBQ
 
             if 'opdbt' not in fileName: 
                 if rowsimported >=0:
@@ -732,8 +732,9 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported,im
                         tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True) 
                     else:
                         if tableName in importresults['Target Table'].values and  'SUCCESS' in importresults['Import Status'].values:
+                            # this is needed as bq functions check for rows already loaded and not the new ones only
                             ExistingRowsInDataframe=importresults[importresults['Target Table'].str.contains(tableName ) & importresults['Import Status'].str.contains("SUCCESS")]['Loaded rows'].sum()
-                            newrows4dataframe=rowsimported-ExistingRowsInDataframe
+                            newrows4dataframe=rowsimported-ExistingRowsInDataframe 
 
                             tmpdataFrame=pd.DataFrame() 
                             tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":getObjNameFromFiles(fileName,'__',2),"Import Status":"SUCCESS","Loaded rows":newrows4dataframe}
@@ -758,9 +759,6 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported,im
 def printBTResults(importresults):
     # Fuction to print the import logs present in  btImportLogTable /btImportLogFinalTable
 
-    # Call the function to process the BT results
-    # btImportLogFinalTable=processBTResults(importresults)
-
     #Create and load the output bt table
     btImportLogFinalTable = BeautifulTable()
     btImportLogFinalTable = BeautifulTable(maxwidth=300)
@@ -776,7 +774,7 @@ def printBTResults(importresults):
     #swap for correcting to match the expected order of columns 
     importresultsfinal=importresultsfinal[["Target Table","Distinct Pkey","Import Status","Loaded rows"]]
 
-    #insert into bt table 
+    #insert into beautiful table 
     for index, row in importresultsfinal.iterrows():
         btImportLogFinalTable.rows.append(row)
 
