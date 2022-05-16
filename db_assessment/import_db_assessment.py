@@ -723,20 +723,25 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported,im
 
         else:
             fileName=invalidfiles
-            
+
             if 'opdbt' not in fileName: 
                 if rowsimported >=0:
-                    if tableName in importresults['Target Table'].values and  'SUCCESS' in importresults['Import Status'].values:
-                        ExistingRowsInDataframe=importresults[importresults['Target Table'].str.contains(tableName ) & importresults['Import Status'].str.contains("SUCCESS")]['Loaded rows'].sum()
-                        newrows4dataframe=rowsimported-ExistingRowsInDataframe
-
-                        tmpdataFrame=pd.DataFrame() 
-                        tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":getObjNameFromFiles(fileName,'__',2),"Import Status":"SUCCESS","Loaded rows":newrows4dataframe}
-                        tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)
-                    else:
+                    if len(importresults)==0:
                         tmpdataFrame=pd.DataFrame() 
                         tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":getObjNameFromFiles(fileName,'__',2),"Import Status":"SUCCESS","Loaded rows":rowsimported}
-                        tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)  
+                        tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True) 
+                    else:
+                        if tableName in importresults['Target Table'].values and  'SUCCESS' in importresults['Import Status'].values:
+                            ExistingRowsInDataframe=importresults[importresults['Target Table'].str.contains(tableName ) & importresults['Import Status'].str.contains("SUCCESS")]['Loaded rows'].sum()
+                            newrows4dataframe=rowsimported-ExistingRowsInDataframe
+
+                            tmpdataFrame=pd.DataFrame() 
+                            tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":getObjNameFromFiles(fileName,'__',2),"Import Status":"SUCCESS","Loaded rows":newrows4dataframe}
+                            tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)
+                        else:
+                            tmpdataFrame=pd.DataFrame() 
+                            tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":getObjNameFromFiles(fileName,'__',2),"Import Status":"SUCCESS","Loaded rows":rowsimported}
+                            tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)  
 
                 else:
                     tmpdataFrame=pd.DataFrame() 
@@ -749,49 +754,32 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported,im
     
     return importresults
 
-def processBTResults(importresults):
 
-    #Create a in-memory database and connection
-    #Database is used for 
-    conn=sqlite3.connect(':memory:')
-    c=conn.cursor()
+def printBTResults(importresults):
+    # Fuction to print the import logs present in  btImportLogTable /btImportLogFinalTable
 
-    # create the schema
-    c.execute("""CREATE TABLE importresults(
-            tableName text,
-            pkey text,
-            status text,
-            rowcount integer
-            )""")
-
-    # insert dataframe data into the database table
-    record=0
-    while record < len(importresults):
-        c.execute("INSERT INTO importresults VALUES(?,?,?,?)",importresults.iloc[record])
-        record=record+1
+    # Call the function to process the BT results
+    # btImportLogFinalTable=processBTResults(importresults)
 
     #Create and load the output bt table
     btImportLogFinalTable = BeautifulTable()
     btImportLogFinalTable = BeautifulTable(maxwidth=300)
     btImportLogFinalTable.columns.header = ["Target Table","Distinct Pkey","Import Status","Loaded rows"]
 
-    c.execute("select tablename,DISTINCT_PKEY,STATUS,LOADED_ROWS from ( select tablename, status, count(distinct pkey) as distinct_pkey, sum(rowcount) loaded_rows from importresults group by tablename, status ORDER BY tablename,status) ")
-    items=c.fetchall()
+    # To group by table name, import status, count of distinct pkeys and sum of rows 
+    importresultsagg=importresults.groupby(["Target Table","Import Status"])['Loaded rows'].agg(['size','sum']).reset_index(drop=False)
+    importresultsfinal=importresultsagg.rename(columns={'size':'Distinct Pkey','sum':'Loaded rows'})
 
-    for item in items:
-        btImportLogFinalTable.rows.append(item)
-    
-    #commit and close the database
-    conn.commit()
-    conn.close()
+    #convert float type to int type 
+    importresultsfinal['Loaded rows'] = importresultsfinal['Loaded rows'].astype(int)
 
-    return btImportLogFinalTable
+    #swap for correcting to match the expected order of columns 
+    importresultsfinal=importresultsfinal[["Target Table","Distinct Pkey","Import Status","Loaded rows"]]
 
-def printBTResults(importresults):
-    # Fuction to print the import logs present in  btImportLogTable /btImportLogFinalTable
+    #insert into bt table 
+    for index, row in importresultsfinal.iterrows():
+        btImportLogFinalTable.rows.append(row)
 
-    # Call the function to process the BT results
-    btImportLogFinalTable=processBTResults(importresults)
     btImportLogFinalTable.set_style(BeautifulTable.STYLE_BOX_ROUNDED)
     print('\n\n Import Completed....\n')
     print('\n Import Summary \n\n')
