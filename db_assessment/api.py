@@ -62,3 +62,6 @@ class UserConfig:
     consolidatelogs = False
     consolidatedataframes = False
     importcomment = ''
+    filterbysqlversion = ''
+    filterbydbversion = ''
+    loadtype = 'WRITE_APPEND'
