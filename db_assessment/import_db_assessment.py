@@ -539,8 +539,6 @@ def importCSVToBQ(gcpProjectName,bqDataset,tableName,fileName,skipLeadingRows,au
         load_job.result()  # Waits for the job to complete.
     except Exception as genericLoadErr:
         print ('\n FAILED: Optimus Prime could not import the filename "{}" into "{}" because of the error "{}".\n'.format(fileName,table_id,genericLoadErr))
-        # if 'csv' not in fileName :
-        #     importresults=populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',-1,importresults,args)
         importresults=populateBT(tableName,'isFile','importDataframeToBQ',fileName,'fromimportCSVToBQ',-1,importresults,args)
         return False,importresults
 
@@ -572,14 +570,6 @@ def getObjNameFromFiles(fileName,splitterChar,pos):
     
     return None    
 
-def getPkeyFromFile(fileName):
-    # This function returns the pkey by reading the filename 
-
-    filenameTabnameRemoved = fileName.split('__')[2].split('.')[2:]
-
-    pkey=''.join(filenameTabnameRemoved[0].split('_')[1:]) + '_' + str(filenameTabnameRemoved[1]) + '_' + str(filenameTabnameRemoved[3])
-
-    return pkey   
 
 def getBQJobConfig(tableSchemas,jobType):
     
@@ -708,18 +698,16 @@ def populateBT(tableName,df,dataframeornot,invalidfiles,btsource,rowsimported,im
         if args.fromdataframe:  # when called from importDataframeToBQ
             if dataframeornot is not None:
                 if 'PKEY' in df.columns.to_list():
-                    # df2.reset_index(inplace=True)
-                    if 'dbsizing_summary' not in tableName: # Need to add code to support dbsizing_summary or fix the issue with it 
-                        pkeygroupby=df.groupby(['PKEY']).size()
-                        # pkeygroupby=df2.groupby(level=0).size()
-                        pkeycount=pkeygroupby.to_dict()
-                        for pkeyname,pkeyname_rowcount in pkeycount.items():
-                            if 'Elapsed' not in pkeyname:
-                                tmpdataFrame=pd.DataFrame() 
-                                tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":pkeyname,"Import Status":"SUCCESS","Loaded rows":pkeyname_rowcount}
-                                tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)  
-                                if len(tmpdataFrame) >0:
-                                    importresults = pd.concat([importresults, tmpdataFrame], ignore_index = True, axis = 0)
+                    df.reset_index(drop=True,inplace=True) 
+                    pkeygroupby=df.groupby(['PKEY']).size()
+                    pkeycount=pkeygroupby.to_dict()
+                    for pkeyname,pkeyname_rowcount in pkeycount.items():
+                        if 'Elapsed' not in pkeyname:
+                            tmpdataFrame=pd.DataFrame() 
+                            tmpdataFramedict = {"Target Table":tableName,"Distinct Pkey":pkeyname,"Import Status":"SUCCESS","Loaded rows":pkeyname_rowcount}
+                            tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index = True)  
+                            if len(tmpdataFrame) >0:
+                                importresults = pd.concat([importresults, tmpdataFrame], ignore_index = True, axis = 0)
 
         else:
             fileName=invalidfiles  # when called from importCSVToBQ
