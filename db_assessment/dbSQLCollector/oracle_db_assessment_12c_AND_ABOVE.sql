@@ -21,14 +21,14 @@ Please ensure you have proper licensing. For more information consult Oracle Sup
 
 /*
 
-Version: 2.0.4
-Date: 2022-03-15
+Version: 2.0.5
+Date: 2022-04-22
 
 */
 
-define version = '2.0.4'
+define version = '2.0.5'
 define dtrange = 30
-define colspr = ','
+define colspr = ';'
 
 clear col comp brea
 set headsep off
@@ -162,7 +162,7 @@ SELECT '&&v_host'
         FROM   v$database)                                                      AS log_mode,
        (SELECT force_logging
         FROM   v$database)                                                      AS force_logging,
-       (SELECT ( TRUNC(AVG(conta) * AVG(bytes) / 1024 / 1024 / 1024) )
+       (SELECT ( ROUND(AVG(conta) * AVG(bytes) / 1024 / 1024 / 1024) )
         FROM   (SELECT TRUNC(first_time) dia,
                        COUNT(*)          conta
                 FROM   v$log_history
@@ -192,21 +192,21 @@ SELECT '&&v_host'
         WHERE  username NOT IN (SELECT name
                                 FROM   SYSTEM.logstdby$skip_support
                                 WHERE  action = 0))                             AS user_schemas,
-       (SELECT TRUNC(SUM(bytes / 1024 / 1024))
+       (SELECT ROUND(SUM(bytes / 1024 / 1024))
         FROM   v$sgastat
         WHERE  name = 'buffer_cache')                                           buffer_cache_mb,
-       (SELECT TRUNC(SUM(bytes / 1024 / 1024))
+       (SELECT ROUND(SUM(bytes / 1024 / 1024))
         FROM   v$sgastat
         WHERE  pool = 'shared pool')                                            shared_pool_mb,
        (SELECT ROUND(value / 1024 / 1024, 0)
         FROM   v$pgastat
         WHERE  name = 'total PGA allocated')                                    AS total_pga_allocated_mb,
-       (SELECT ( TRUNC(SUM(bytes) / 1024 / 1024 / 1024) )
+       (SELECT ( ROUND(SUM(bytes) / 1024 / 1024 / 1024) )
         FROM   cdb_data_files)                                                  db_size_allocated_gb,
-       (SELECT ( TRUNC(SUM(bytes) / 1024 / 1024 / 1024) )
+       (SELECT ( ROUND(SUM(bytes) / 1024 / 1024 / 1024) )
         FROM   cdb_segments
         WHERE  owner NOT IN ( 'SYS', 'SYSTEM' ))                                AS db_size_in_use_gb,
-       (SELECT ( TRUNC(SUM(bytes) / 1024 / 1024 / 1024) )
+       (SELECT ( ROUND(SUM(bytes) / 1024 / 1024 / 1024) )
         FROM   cdb_segments
         WHERE  owner NOT IN ( 'SYS', 'SYSTEM' )
                AND ( owner, segment_name ) IN (SELECT owner,
@@ -287,7 +287,6 @@ FROM vdbinst;
 
 spool off
 
-
 spool opdb__usedspacedetails__&v_tag
 
 WITH vused AS (
@@ -299,26 +298,19 @@ SELECT '&&v_host'
        con_id,
        owner,
        segment_type,
-       tablespace_name,
-       flash_cache,
-       inmemory,
-       GROUPING(con_id)                          IN_CON_ID,
-       GROUPING(owner)                           IN_OWNER,
-       GROUPING(segment_type)                    IN_SEGMENT_TYPE,
-       GROUPING(tablespace_name)                 IN_TABLESPACE_NAME,
-       GROUPING(flash_cache)                     IN_FLASH_CACHE,
-       GROUPING(inmemory)                        IN_INMEMORY,
        ROUND(SUM(bytes) / 1024 / 1024 / 1024, 0) GB
        FROM   cdb_segments
        WHERE  owner NOT IN (
                           SELECT name
                           FROM   SYSTEM.logstdby$skip_support
                           WHERE  action=0)
-       GROUP  BY grouping sets( ( ), ( con_id ), ( owner ), ( segment_type ),
-                    ( tablespace_name ), ( flash_cache ), ( inmemory ), ( con_id, owner ), ( con_id, owner, flash_cache, inmemory ) ))
-SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || segment_type || '&&colspr' || tablespace_name || '&&colspr' ||
-       flash_cache || '&&colspr' || inmemory || '&&colspr' || IN_CON_ID || '&&colspr' || IN_OWNER || '&&colspr' || IN_SEGMENT_TYPE || '&&colspr' ||
-	   IN_TABLESPACE_NAME || '&&colspr' || IN_FLASH_CACHE || '&&colspr' || GB
+       GROUP  BY '&&v_host'
+              || '_'
+              || '&&v_dbname'
+              || '_'
+              || '&&v_hora',
+              con_id, owner, segment_type )
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || segment_type || '&&colspr' || GB
 FROM vused;
 
 spool off
@@ -512,212 +504,6 @@ ORDER BY total_gb DESC;
 
 spool off
 
-spool opdb__spacebyownersegtype__&v_tag
-
-WITH vspaceow AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
-       a.con_id,
-       a.owner,
-       DECODE(a.segment_type, 'TABLE', 'TABLE',
-                              'TABLE PARTITION', 'TABLE',
-                              'TABLE SUBPARTITION', 'TABLE',
-                              'INDEX', 'INDEX',
-                              'INDEX PARTITION', 'INDEX',
-                              'INDEX SUBPARTITION', 'INDEX',
-                              'LOB', 'LOB',
-                              'LOB PARTITION', 'LOB',
-                              'LOBSEGMENT', 'LOB',
-                              'LOBINDEX', 'LOB',
-                              'OTHERS')         segment_type,
-       TRUNC(SUM(a.bytes) / 1024 / 1024 / 1024) total_gb
-       FROM   cdb_segments a
-       WHERE  a.owner NOT IN
-                            (
-                            SELECT name
-                            FROM   SYSTEM.logstdby$skip_support
-                            WHERE  action=0)
-       GROUP  BY a.con_id,
-                 a.owner,
-                 DECODE(a.segment_type, 'TABLE', 'TABLE',
-                                         'TABLE PARTITION', 'TABLE',
-                                         'TABLE SUBPARTITION', 'TABLE',
-                                         'INDEX', 'INDEX',
-                                         'INDEX PARTITION', 'INDEX',
-                                         'INDEX SUBPARTITION', 'INDEX',
-                                         'LOB', 'LOB',
-                                         'LOB PARTITION', 'LOB',
-                                         'LOBSEGMENT', 'LOB',
-                                         'LOBINDEX', 'LOB',
-                                         'OTHERS')
-       HAVING TRUNC(SUM(a.bytes) / 1024 / 1024 / 1024) >= 1)
-SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || segment_type || '&&colspr' || total_gb
-FROM vspaceow
-ORDER  BY total_gb DESC;
-
-
-spool off
-
-spool opdb__spacebytablespace__&v_tag
-
-WITH vspctbs AS (
-        SELECT '&&v_host'
-               || '_'
-               || '&&v_dbname'
-               || '_'
-               || '&&v_hora' AS pkey,
-		       b.tablespace_name,
-               b.extent_management,
-               b.allocation_type,
-               b.segment_space_management,
-               b.status,
-               SUM(estd_ganho_mb) estd_ganho_mb
-        FROM   (SELECT b.tablespace_name,
-                       b.extent_management,
-                       b.allocation_type,
-                       b.segment_space_management,
-                       b.status,
-                       a.initial_extent / 1024                                                                                        inital_kb,
-                       a.owner,
-                       a.segment_name,
-                       a.partition_name,
-                       ( a.bytes ) / 1024                                                                                             segsize_kb,
-                       TRUNC(( a.initial_extent / 1024 ) / ( ( a.bytes ) / 1024 ) * 100)                                              perc,
-                       TRUNC(( ( a.bytes ) / 1024 / 100 ) * TRUNC(( a.initial_extent / 1024 ) / ( ( a.bytes ) / 1024 ) * 100) / 1024) estd_ganho_mb
-                FROM   cdb_segments a
-                       inner join cdb_tablespaces b
-                               ON a.tablespace_name = b.tablespace_name
-                WHERE  a.owner NOT IN
-                                   (
-                                   SELECT name
-                                   FROM   SYSTEM.logstdby$skip_support
-                                   WHERE  action=0)
-                       AND b.allocation_type = 'SYSTEM'
-                       AND a.initial_extent = a.bytes) b
-        GROUP  BY b.tablespace_name,
-                  b.extent_management,
-                  b.allocation_type,
-                  b.segment_space_management,
-                  b.status
-        UNION ALL
-        SELECT '&&v_host'
-               || '_'
-               || '&&v_dbname'
-               || '_'
-               || '&&v_hora' AS pkey,
-		       b.tablespace_name,
-               b.extent_management,
-               b.allocation_type,
-               b.segment_space_management,
-               b.status,
-               SUM(estd_ganho_mb) estd_ganho_mb
-        FROM   (SELECT b.tablespace_name,
-                       b.extent_management,
-                       b.allocation_type,
-                       b.segment_space_management,
-                       b.status,
-                       a.initial_extent / 1024                                                                                        inital_kb,
-                       a.owner,
-                       a.segment_name,
-                       a.partition_name,
-                       ( a.bytes ) / 1024                                                                                             segsize_kb,
-                       TRUNC(( a.initial_extent / 1024 ) / ( ( a.bytes ) / 1024 ) * 100)                                              perc,
-                       TRUNC(( ( a.bytes ) / 1024 / 100 ) * TRUNC(( a.initial_extent / 1024 ) / ( ( a.bytes ) / 1024 ) * 100) / 1024) estd_ganho_mb
-                FROM   cdb_segments a
-                       inner join cdb_tablespaces b
-                               ON a.tablespace_name = b.tablespace_name
-                WHERE  a.owner NOT IN
-                                   (
-                                   SELECT name
-                                   FROM   SYSTEM.logstdby$skip_support
-                                   WHERE  action=0)
-                       AND b.allocation_type != 'SYSTEM') b
-        GROUP  BY b.tablespace_name,
-                  b.extent_management,
-                  b.allocation_type,
-                  b.segment_space_management,
-                  b.status)
-SELECT pkey || '&&colspr' || tablespace_name || '&&colspr' || extent_management || '&&colspr' || allocation_type || '&&colspr' ||
-       segment_space_management || '&&colspr' || status || '&&colspr' || estd_ganho_mb
-FROM vspctbs;
-
-
-spool off
-
-spool opdb__freespaces__&v_tag
-
-WITH vfreespace AS (
-        SELECT '&&v_host'
-               || '_'
-               || '&&v_dbname'
-               || '_'
-               || '&&v_hora' AS pkey,
-		       total.con_id,
-               total.ts                                                                          tablespace_name,
-               DECODE(total.mb, NULL, 'OFFLINE',
-                                dbat.status)                                                     status,
-               TRUNC(total.mb / 1024)                                                            total_gb,
-               TRUNC(NVL(total.mb - free.mb, total.mb) / 1024)                                   used_gb,
-               TRUNC(NVL(free.mb, 0) / 1024)                                                     free_gb,
-               DECODE(total.mb, NULL, 0,
-                                NVL(ROUND(( total.mb - free.mb ) / ( total.mb ) * 100, 2), 100)) pct_used,
-               CASE
-                 WHEN ( total.mb IS NULL ) THEN '['
-                                                || RPAD(LPAD('OFFLINE', 13, '-'), 20, '-')
-                                                ||']'
-                 ELSE '['
-                      || DECODE(free.mb, NULL, 'XXXXXXXXXXXXXXXXXXXX',
-                                         NVL(RPAD(LPAD('X', TRUNC(( 100 - ROUND(( free.mb ) / ( total.mb ) * 100, 2) ) / 5), 'X'), 20, '-'), '--------------------'))
-                      ||']'
-               END                                                                               AS GRAPH
-        FROM   (SELECT con_id,
-                       tablespace_name          ts,
-                       SUM(bytes) / 1024 / 1024 mb
-                FROM   cdb_data_files
-                GROUP  BY con_id,
-                          tablespace_name) total,
-               (SELECT con_id,
-                       tablespace_name          ts,
-                       SUM(bytes) / 1024 / 1024 mb
-                FROM   cdb_free_space
-                GROUP  BY con_id,
-                          tablespace_name) free,
-               cdb_tablespaces dbat
-        WHERE  total.ts = free.ts (+)
-               AND total.ts = dbat.tablespace_name
-               AND total.con_id = free.con_id (+)
-               AND total.con_id = dbat.con_id
-        UNION ALL
-        SELECT '&&v_host'
-               || '_'
-               || '&&v_dbname'
-               || '_'
-               || '&&v_hora' AS pkey,
-		       sh.con_id,
-               sh.tablespace_name,
-               'TEMP',
-               SUM(sh.bytes_used + sh.bytes_free) / 1024 / 1024                        total_mb,
-               SUM(sh.bytes_used) / 1024 / 1024                                        used_mb,
-               SUM(sh.bytes_free) / 1024 / 1024                                        free_mb,
-               ROUND(SUM(sh.bytes_used) / SUM(sh.bytes_used + sh.bytes_free) * 100, 2) pct_used,
-               '['
-               ||DECODE(SUM(sh.bytes_free), 0, 'XXXXXXXXXXXXXXXXXXXX',
-                                            NVL(RPAD(LPAD('X', ( TRUNC(ROUND(( SUM(sh.bytes_used) / SUM(sh.bytes_used + sh.bytes_free) ) * 100, 2) / 5) ), 'X'), 20, '-'),
-                                            '--------------------'))
-               ||']'
-        FROM   v$temp_space_header sh
-        GROUP  BY con_id,
-                  tablespace_name)
-SELECT pkey || '&&colspr' || con_id || '&&colspr' || tablespace_name || '&&colspr' || status || '&&colspr' || total_gb || '&&colspr' ||
-       used_gb || '&&colspr' || free_gb || '&&colspr' || pct_used || '&&colspr' || GRAPH
-FROM vfreespace
-ORDER  BY graph;
-
-spool off
-
 spool opdb__dblinks__&v_tag
 
 WITH vdbl AS (
@@ -728,16 +514,20 @@ SELECT '&&v_host'
        || '&&v_hora' AS pkey,
        con_id,
        owner,
-       db_link,
-       host,
-       created
+       count(1) count
 FROM   cdb_db_links
 WHERE  owner NOT IN
                      (
                      SELECT name
                      FROM   SYSTEM.logstdby$skip_support
-                     WHERE  action=0))
-SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || db_link || '&&colspr' || host || '&&colspr' || created
+                     WHERE  action=0)
+GROUP BY '&&v_host'
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora',
+       con_id, owner)
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || count
 FROM vdbl;
 
 spool off
@@ -923,39 +713,6 @@ FROM vsrc;
 
 spool off
 
-spool opdb__partsubparttypes__&v_tag
-
-WITH vpart AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
-       con_id,
-       owner,
-       partitioning_type,
-       subpartitioning_type,
-       COUNT(1) as cnt
-FROM   cdb_part_tables
-WHERE  owner NOT IN
-                     (
-                     SELECT name
-                     FROM   SYSTEM.logstdby$skip_support
-                     WHERE  action=0)
-GROUP  BY '&&v_host'
-          || '_'
-          || '&&v_dbname'
-          || '_'
-          || '&&v_hora',
-          con_id,
-          owner,
-          partitioning_type,
-          subpartitioning_type)
-SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || partitioning_type || '&&colspr' || subpartitioning_type || '&&colspr' || cnt
-FROM vpart;
-
-spool off
-
 spool opdb__indexestypes__&v_tag
 
 WITH vidxtype AS (
@@ -1077,70 +834,6 @@ FROM vnopk;
 
 spool off
 
-spool opdb__systemstats__&v_tag
-
-WITH vpsystat AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
-       sname,
-       pname,
-       pval1,
-       pval2
-FROM   sys.aux_stats$)
-SELECT pkey || '&&colspr' || sname || '&&colspr' || pname || '&&colspr' || pval1 || '&&colspr' || pval2
-FROM vpsystat;
-
-spool off
-
-spool opdb__patchlevel__&v_tag
-
-WITH vpatch AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'                            AS pkey,
-       TO_CHAR(action_time, 'DD-MON-YYYY HH24:MI:SS') AS action_time,
-       action,
-       status,
-       description,
-       patch_id
-FROM   sys.dba_registry_sqlpatch
-ORDER by action_time)
-SELECT pkey || '&&colspr' || '12c+' || '&&colspr' || action_time || '&&colspr' || action || '&&colspr' || status || '&&colspr' || description || '&&colspr' || patch_id || '&&colspr' || 'N/A'
-FROM vpatch;
-
-spool off
-
-spool opdb__alertlog__&v_tag
-
-WITH valert AS (
-         SELECT '&&v_host'
-                || '_'
-                || '&&v_dbname'
-                || '_'
-                || '&&v_hora'                            AS pkey,
-		        TO_CHAR(A.originating_timestamp, 'dd/mm/yyyy hh24:mi:ss')               MESSAGE_TIME,
-                REPLACE(REPLACE(SUBSTR(a.message_text, 0, 180), ',', ';'), '\n', '   ') message_text,
-                SUBSTR(a.host_id, 0, 30)                                                host_id,
-                a.con_id,
-                SUBSTR(a.component_id, 0, 30)                                           component_id,
-                a.message_type,
-                a.message_level,
-                SUBSTR(a.message_id, 0, 30)                                             message_id,
-                a.message_group
-         FROM   v$diag_alert_ext A
-         ORDER  BY A.originating_timestamp DESC)
-SELECT pkey || '&&colspr' || MESSAGE_TIME || '&&colspr' || message_text || '&&colspr' || host_id || '&&colspr' || con_id || '&&colspr' ||
-       component_id || '&&colspr' || message_type || '&&colspr' || message_level || '&&colspr' || message_id || '&&colspr' || message_group
-FROM valert
-WHERE ROWNUM < 5001;
-
-spool off
-
 spool opdb__awrhistsysmetrichist__&v_tag
 
 WITH vsysmetric AS (
@@ -1154,22 +847,22 @@ SELECT '&&v_host'
        TO_CHAR(hsm.begin_time, 'hh24')          hour,
        hsm.metric_name,
        hsm.metric_unit,
-       AVG(hsm.value)                           avg_value,
-       STATS_MODE(hsm.value)                    mode_value,
-       MEDIAN(hsm.value)                        median_value,
-       MIN(hsm.value)                           min_value,
-       MAX(hsm.value)                           max_value,
-       SUM(hsm.value)                           sum_value,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY hsm.value DESC) AS "PERC50",
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY hsm.value DESC) AS "PERC75",
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY hsm.value DESC) AS "PERC90",
-       PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY hsm.value DESC) AS "PERC95",
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY hsm.value DESC) AS "PERC100"
+       ROUND(AVG(hsm.value))                           avg_value,
+       ROUND(STATS_MODE(hsm.value))                    mode_value,
+       ROUND(MEDIAN(hsm.value))                        median_value,
+       ROUND(MIN(hsm.value))                           min_value,
+       ROUND(MAX(hsm.value))                           max_value,
+       ROUND(SUM(hsm.value))                           sum_value,
+       ROUND(PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY hsm.value DESC)) AS "PERC50",
+       ROUND(PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY hsm.value DESC)) AS "PERC75",
+       ROUND(PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY hsm.value DESC)) AS "PERC90",
+       ROUND(PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY hsm.value DESC)) AS "PERC95",
+       ROUND(PERCENTILE_CONT(0)
+         within GROUP (ORDER BY hsm.value DESC)) AS "PERC100"
 FROM   dba_hist_sysmetric_history hsm
        inner join dba_hist_snapshot dhsnap
                ON hsm.snap_id = dhsnap.snap_id
@@ -1236,22 +929,22 @@ vsysmetricsummperhour as (
        hour,
        hsm.metric_name,
        hsm.metric_unit,
-       AVG(hsm.PERC95)                           avg_value,
-       STATS_MODE(hsm.PERC95)                    mode_value,
-       MEDIAN(hsm.PERC95)                        median_value,
-       MIN(hsm.PERC95)                           min_value,
-       MAX(hsm.PERC95)                           max_value,
-       SUM(hsm.PERC95)                           sum_value,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY hsm.PERC95 DESC) AS "PERC50",
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY hsm.PERC95 DESC) AS "PERC75",
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY hsm.PERC95 DESC) AS "PERC90",
-       PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY hsm.PERC95 DESC) AS "PERC95",
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY hsm.PERC95 DESC) AS "PERC100"
+       ROUND(AVG(hsm.PERC95))                           avg_value,
+       ROUND(STATS_MODE(hsm.PERC95))                    mode_value,
+       ROUND(MEDIAN(hsm.PERC95))                        median_value,
+       ROUND(MIN(hsm.PERC95))                           min_value,
+       ROUND(MAX(hsm.PERC95))                           max_value,
+       ROUND(SUM(hsm.PERC95))                           sum_value,
+       ROUND(PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC50",
+       ROUND(PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC75",
+       ROUND(PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC90",
+       ROUND(PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC95",
+       ROUND(PERCENTILE_CONT(0)
+         within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC100"
     FROM vsysmetricsumm hsm
     GROUP  BY pkey,
             hsm.dbid,
@@ -1329,19 +1022,19 @@ SELECT '&&v_host'
        instance_number,
        hh24,
        stat_name,
-       SUM(snap_total_secs) hh24_total_secs,
-       AVG(cumulative_value) cumulative_value,
-       AVG(delta_value)           avg_value,
-       STATS_MODE(delta_value)    mode_value,
-       MEDIAN(delta_value)        median_value,
-       AVG(perc50)          PERC50,
-       AVG(perc75)          PERC75,
-       AVG(perc90)          PERC90,
-       AVG(perc95)          PERC95,
-       AVG(perc100)         PERC100,
-       MIN(delta_value)           min_value,
-       MAX(delta_value)           max_value,
-       SUM(delta_value)           sum_value,
+       ROUND(SUM(snap_total_secs))       hh24_total_secs,
+       ROUND(AVG(cumulative_value))      cumulative_value,
+       ROUND(AVG(delta_value))           avg_value,
+       ROUND(STATS_MODE(delta_value))    mode_value,
+       ROUND(MEDIAN(delta_value))        median_value,
+       ROUND(AVG(perc50))                PERC50,
+       ROUND(AVG(perc75))                PERC75,
+       ROUND(AVG(perc90))                PERC90,
+       ROUND(AVG(perc95))                PERC95,
+       ROUND(AVG(perc100))               PERC100,
+       ROUND(MIN(delta_value))           min_value,
+       ROUND(MAX(delta_value))           max_value,
+       ROUND(SUM(delta_value))           sum_value,
        COUNT(1)             count
 FROM   v_osstat_all
 GROUP  BY '&&v_host'
@@ -1372,16 +1065,16 @@ SELECT '&&v_host'
        TO_CHAR(c.begin_interval_time, 'hh24') hh24,
        b.command_type,
        COUNT(1)                               cnt,
-       AVG(buffer_gets_delta)                 AVG_BUFFER_GETS,
-       AVG(elapsed_time_delta)                AVG_ELASPED_TIME,
-       AVG(rows_processed_delta)              AVG_ROWS_PROCESSED,
-       AVG(executions_delta)                  AVG_EXECUTIONS,
-       AVG(cpu_time_delta)                    AVG_CPU_TIME,
-       AVG(iowait_delta)                      AVG_IOWAIT,
-       AVG(clwait_delta)                      AVG_CLWAIT,
-       AVG(apwait_delta)                      AVG_APWAIT,
-       AVG(ccwait_delta)                      AVG_CCWAIT,
-       AVG(plsexec_time_delta)                AVG_PLSEXEC_TIME
+       ROUND(AVG(buffer_gets_delta))                 AVG_BUFFER_GETS,
+       ROUND(AVG(elapsed_time_delta))                AVG_ELASPED_TIME,
+       ROUND(AVG(rows_processed_delta))              AVG_ROWS_PROCESSED,
+       ROUND(AVG(executions_delta))                  AVG_EXECUTIONS,
+       ROUND(AVG(cpu_time_delta))                    AVG_CPU_TIME,
+       ROUND(AVG(iowait_delta))                      AVG_IOWAIT,
+       ROUND(AVG(clwait_delta))                      AVG_CLWAIT,
+       ROUND(AVG(apwait_delta))                      AVG_APWAIT,
+       ROUND(AVG(ccwait_delta))                      AVG_CCWAIT,
+       ROUND(AVG(plsexec_time_delta))                AVG_PLSEXEC_TIME
 FROM   dba_hist_sqlstat a
        inner join dba_hist_sqltext b
                ON ( a.con_id = b.con_id
@@ -1418,22 +1111,22 @@ SELECT
       hour,
       stat_name,
        COUNT(1)                             cnt,
-       AVG(value)                           avg_value,
-       STATS_MODE(value)                    mode_value,
-       MEDIAN(value)                        median_value,
-       MIN(value)                           min_value,
-       MAX(value)                           max_value,
-       SUM(value)                           sum_value,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY value DESC) AS "PERC50",
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY value DESC) AS "PERC75",
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY value DESC) AS "PERC90",
-       PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY value DESC) AS "PERC95",
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY value DESC) AS "PERC100"
+       ROUND(AVG(value))                           avg_value,
+       ROUND(STATS_MODE(value))                    mode_value,
+       ROUND(MEDIAN(value))                        median_value,
+       ROUND(MIN(value))                           min_value,
+       ROUND(MAX(value))                           max_value,
+       ROUND(SUM(value))                           sum_value,
+       ROUND(PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY value DESC)) AS "PERC50",
+       ROUND(PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY value DESC)) AS "PERC75",
+       ROUND(PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY value DESC)) AS "PERC90",
+       ROUND(PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY value DESC)) AS "PERC95",
+       ROUND(PERCENTILE_CONT(0)
+         within GROUP (ORDER BY value DESC)) AS "PERC100"
 FROM (
 SELECT
        s.snap_id,
@@ -1481,22 +1174,22 @@ SELECT
        hour,
        stat_name,
        COUNT(1)                             cnt,
-       AVG(value)                           avg_value,
-       STATS_MODE(value)                    mode_value,
-       MEDIAN(value)                        median_value,
-       MIN(value)                           min_value,
-       MAX(value)                           max_value,
-       SUM(value)                           sum_value,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY value DESC) AS "PERC50",
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY value DESC) AS "PERC75",
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY value DESC) AS "PERC90",
-       PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY value DESC) AS "PERC95",
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY value DESC) AS "PERC100"
+       ROUND(AVG(value))                           avg_value,
+       ROUND(STATS_MODE(value))                    mode_value,
+       ROUND(MEDIAN(value))                        median_value,
+       ROUND(MIN(value))                           min_value,
+       ROUND(MAX(value))                           max_value,
+       ROUND(SUM(value))                           sum_value,
+       ROUND(PERCENTILE_CONT(0.5)
+         within GROUP (ORDER BY value DESC)) AS "PERC50",
+       ROUND(PERCENTILE_CONT(0.25)
+         within GROUP (ORDER BY value DESC)) AS "PERC75",
+       ROUND(PERCENTILE_CONT(0.10)
+         within GROUP (ORDER BY value DESC)) AS "PERC90",
+       ROUND(PERCENTILE_CONT(0.05)
+         within GROUP (ORDER BY value DESC)) AS "PERC95",
+       ROUND(PERCENTILE_CONT(0)
+         within GROUP (ORDER BY value DESC)) AS "PERC100"
 FROM (
 SELECT
        s.snap_id,
@@ -1545,33 +1238,6 @@ SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr'
        avg_value || '&&colspr' || mode_value || '&&colspr' || median_value || '&&colspr' || min_value || '&&colspr' || max_value || '&&colspr' ||
 	   sum_value || '&&colspr' || perc50 || '&&colspr' || perc75 || '&&colspr' || perc90 || '&&colspr' || perc95 || '&&colspr' || perc100
 FROM vsysstat;
-
-spool off
-
-spool opdb__dbservicesinfo__&v_tag
-
-WITH vservices AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'                          AS pkey,
-       con_id,
-       pdb,
-       service_id,
-       name service_name,
-       network_name,
-       TO_CHAR(creation_date, 'dd/mm/yyyy hh24:mi:ss') creation_date,
-       failover_method,
-       failover_type,
-       failover_retries,
-       failover_delay,
-       goal
-FROM cdb_services
-ORDER BY NAME)
-SELECT pkey || '&&colspr' || con_id || '&&colspr' || pdb || '&&colspr' || service_id || '&&colspr' || service_name || '&&colspr' || network_name || '&&colspr' || creation_date || '&&colspr' ||
-       failover_method || '&&colspr' || failover_type || '&&colspr' || failover_retries || '&&colspr' || failover_delay || '&&colspr' || goal
-FROM vservices;
 
 spool off
 
@@ -1669,7 +1335,7 @@ SELECT '&&v_host'
        || '_'
        || '&&v_hora' AS pkey,
        snap.begin_interval_time, snap.end_interval_time,
-       TO_CHAR(snap.begin_interval_time, 'hh24') hh24,
+       TO_CHAR(snap.begin_interval_time, 'hh24') hour,
        iof.snap_id, iof.dbid, iof.instance_number, iof.function_id, iof.function_name,
        NVL(DECODE(GREATEST(iof.small_read_megabytes, NVL(LAG(iof.small_read_megabytes)
                                                          OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id), 0)),
@@ -1722,149 +1388,70 @@ vperciof AS (
 SELECT pkey,
        dbid,
        instance_number,
-       hh24,
+       hour,
        function_name,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY sm_read_mb_delta_value DESC) AS sm_read_mb_delta_value_P50,
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY sm_read_mb_delta_value DESC) AS sm_read_mb_delta_value_P75,
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY sm_read_mb_delta_value DESC) AS sm_read_mb_delta_value_P90,
        PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY sm_read_mb_delta_value DESC) AS sm_read_mb_delta_value_P95,
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY sm_read_mb_delta_value DESC) AS sm_read_mb_delta_value_P100,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY sm_write_mb_delta_value DESC) AS sm_write_mb_delta_value_P50,
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY sm_write_mb_delta_value DESC) AS sm_write_mb_delta_value_P75,
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY sm_write_mb_delta_value DESC) AS sm_write_mb_delta_value_P90,
        PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY sm_write_mb_delta_value DESC) AS sm_write_mb_delta_value_P95,
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY sm_write_mb_delta_value DESC) AS sm_write_mb_delta_value_P100,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY sm_read_rq_delta_value DESC) AS sm_read_rq_delta_value_P50,
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY sm_read_rq_delta_value DESC) AS sm_read_rq_delta_value_P75,
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY sm_read_rq_delta_value DESC) AS sm_read_rq_delta_value_P90,
        PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY sm_read_rq_delta_value DESC) AS sm_read_rq_delta_value_P95,
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY sm_read_rq_delta_value DESC) AS sm_read_rq_delta_value_P100,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY sm_write_rq_delta_value DESC) AS sm_write_rq_delta_value_P50,
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY sm_write_rq_delta_value DESC) AS sm_write_rq_delta_value_P75,
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY sm_write_rq_delta_value DESC) AS sm_write_rq_delta_value_P90,
        PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY sm_write_rq_delta_value DESC) AS sm_write_rq_delta_value_P95,
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY sm_write_rq_delta_value DESC) AS sm_write_rq_delta_value_P100,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY lg_read_mb_delta_value DESC) AS lg_read_mb_delta_value_P50,
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY lg_read_mb_delta_value DESC) AS lg_read_mb_delta_value_P75,
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY lg_read_mb_delta_value DESC) AS lg_read_mb_delta_value_P90,
        PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY lg_read_mb_delta_value DESC) AS lg_read_mb_delta_value_P95,
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY lg_read_mb_delta_value DESC) AS lg_read_mb_delta_value_P100,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY lg_write_mb_delta_value DESC) AS lg_write_mb_delta_value_P50,
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY lg_write_mb_delta_value DESC) AS lg_write_mb_delta_value_P75,
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY lg_write_mb_delta_value DESC) AS lg_write_mb_delta_value_P90,
        PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY lg_write_mb_delta_value DESC) AS lg_write_mb_delta_value_P95,
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY lg_write_mb_delta_value DESC) AS lg_write_mb_delta_value_P100,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY lg_read_rq_delta_value DESC) AS lg_read_rq_delta_value_P50,
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY lg_read_rq_delta_value DESC) AS lg_read_rq_delta_value_P75,
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY lg_read_rq_delta_value DESC) AS lg_read_rq_delta_value_P90,
        PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY lg_read_rq_delta_value DESC) AS lg_read_rq_delta_value_P95,
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY lg_read_rq_delta_value DESC) AS lg_read_rq_delta_value_P100,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY lg_write_rq_delta_value DESC) AS lg_write_rq_delta_value_P50,
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY lg_write_rq_delta_value DESC) AS lg_write_rq_delta_value_P75,
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY lg_write_rq_delta_value DESC) AS lg_write_rq_delta_value_P90,
        PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY lg_write_rq_delta_value DESC) AS lg_write_rq_delta_value_P95,
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY lg_write_rq_delta_value DESC) AS lg_write_rq_delta_value_P100,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P50,
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P75,
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P90,
        PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P95,
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P100,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P50,
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P75,
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P90,
        PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P95,
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P100
+         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P95
 FROM vrawiof
 GROUP BY pkey,
          dbid,
          instance_number,
-         hh24,
+         hour,
          function_name),
 viof AS(
 SELECT pkey,
        dbid,
        instance_number,
-       hh24,
+       hour,
        function_name,
-       sm_read_mb_delta_value_P50, sm_read_mb_delta_value_P75, sm_read_mb_delta_value_P90, sm_read_mb_delta_value_P95, sm_read_mb_delta_value_P100,
-       sm_write_mb_delta_value_P50, sm_write_mb_delta_value_P75, sm_write_mb_delta_value_P90, sm_write_mb_delta_value_P95, sm_write_mb_delta_value_P100,
-       sm_read_rq_delta_value_P50, sm_read_rq_delta_value_P75, sm_read_rq_delta_value_P90, sm_read_rq_delta_value_P95, sm_read_rq_delta_value_P100,
-       sm_write_rq_delta_value_P50, sm_write_rq_delta_value_P75, sm_write_rq_delta_value_P90, sm_write_rq_delta_value_P95, sm_write_rq_delta_value_P100,
-       lg_read_mb_delta_value_P50, lg_read_mb_delta_value_P75, lg_read_mb_delta_value_P90, lg_read_mb_delta_value_P95, lg_read_mb_delta_value_P100,
-       lg_write_mb_delta_value_P50, lg_write_mb_delta_value_P75, lg_write_mb_delta_value_P90, lg_write_mb_delta_value_P95, lg_write_mb_delta_value_P100,
-       lg_read_rq_delta_value_P50, lg_read_rq_delta_value_P75, lg_read_rq_delta_value_P90, lg_read_rq_delta_value_P95, lg_read_rq_delta_value_P100,
-       lg_write_rq_delta_value_P50, lg_write_rq_delta_value_P75, lg_write_rq_delta_value_P90, lg_write_rq_delta_value_P95, lg_write_rq_delta_value_P100,
-       no_iowait_delta_value_P50, no_iowait_delta_value_P75, no_iowait_delta_value_P90, no_iowait_delta_value_P95, no_iowait_delta_value_P100,
-       tot_watime_delta_value_P50, tot_watime_delta_value_P75, tot_watime_delta_value_P90, tot_watime_delta_value_P95, tot_watime_delta_value_P100,
-       sm_read_mb_delta_value_P95 + lg_read_mb_delta_value_P95 total_reads_mb_P95,
-       NVL(CEIL((sm_read_mb_delta_value_P95 * 100) / NULLIF((sm_read_mb_delta_value_P95 + lg_read_mb_delta_value_P95),0)),0) small_read_share_P95,
-       sm_read_rq_delta_value_P95 + lg_read_rq_delta_value_P95 total_reads_req_P95,
-       sm_write_mb_delta_value_P95 + lg_write_mb_delta_value_P95 total_writes_mb_P95,
-       sm_write_rq_delta_value_P95 + lg_write_rq_delta_value_P95 total_write_req_P95,
-       NVL(ROUND(tot_watime_delta_value_P95 / NULLIF(no_iowait_delta_value_P95,0),2),0) avg_wait_time_ms_P95
+       ROUND(sm_read_mb_delta_value_P95) sm_read_mb_delta_value_P95,
+       ROUND(sm_write_mb_delta_value_P95) sm_write_mb_delta_value_P95,
+       ROUND(sm_read_rq_delta_value_P95) sm_read_rq_delta_value_P95,
+       ROUND(sm_write_rq_delta_value_P95) sm_write_rq_delta_value_P95,
+       ROUND(lg_read_mb_delta_value_P95) lg_read_mb_delta_value_P95,
+       ROUND(lg_write_mb_delta_value_P95) lg_write_mb_delta_value_P95,
+       ROUND(lg_read_rq_delta_value_P95) lg_read_rq_delta_value_P95,
+       ROUND(lg_write_rq_delta_value_P95) lg_write_rq_delta_value_P95,
+       ROUND(no_iowait_delta_value_P95) no_iowait_delta_value_P95,
+       ROUND(tot_watime_delta_value_P95) tot_watime_delta_value_P95,
+       ROUND(sm_read_mb_delta_value_P95 + lg_read_mb_delta_value_P95) total_reads_mb_P95,
+       ROUND(sm_read_rq_delta_value_P95 + lg_read_rq_delta_value_P95) total_reads_req_P95,
+       ROUND(sm_write_mb_delta_value_P95 + lg_write_mb_delta_value_P95) total_writes_mb_P95,
+       ROUND(sm_write_rq_delta_value_P95 + lg_write_rq_delta_value_P95) total_write_req_P95
 FROM vperciof)
-SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || hh24 || '&&colspr' || function_name || '&&colspr' ||
-       sm_read_mb_delta_value_P50 || '&&colspr' || sm_read_mb_delta_value_P75 || '&&colspr' || sm_read_mb_delta_value_P90 || '&&colspr' || sm_read_mb_delta_value_P95 || '&&colspr' || sm_read_mb_delta_value_P100 || '&&colspr' ||
-       sm_write_mb_delta_value_P50 || '&&colspr' || sm_write_mb_delta_value_P75 || '&&colspr' || sm_write_mb_delta_value_P90 || '&&colspr' || sm_write_mb_delta_value_P95 || '&&colspr' || sm_write_mb_delta_value_P100 || '&&colspr' ||
-       sm_read_rq_delta_value_P50 || '&&colspr' || sm_read_rq_delta_value_P75 || '&&colspr' || sm_read_rq_delta_value_P90 || '&&colspr' || sm_read_rq_delta_value_P95 || '&&colspr' || sm_read_rq_delta_value_P100 || '&&colspr' ||
-       sm_write_rq_delta_value_P50 || '&&colspr' || sm_write_rq_delta_value_P75 || '&&colspr' || sm_write_rq_delta_value_P90 || '&&colspr' || sm_write_rq_delta_value_P95 || '&&colspr' || sm_write_rq_delta_value_P100 || '&&colspr' ||
-       lg_read_mb_delta_value_P50 || '&&colspr' || lg_read_mb_delta_value_P75 || '&&colspr' || lg_read_mb_delta_value_P90 || '&&colspr' || lg_read_mb_delta_value_P95 || '&&colspr' || lg_read_mb_delta_value_P100 || '&&colspr' ||
-       lg_write_mb_delta_value_P50 || '&&colspr' || lg_write_mb_delta_value_P75 || '&&colspr' || lg_write_mb_delta_value_P90 || '&&colspr' || lg_write_mb_delta_value_P95 || '&&colspr' || lg_write_mb_delta_value_P100 || '&&colspr' ||
-       lg_read_rq_delta_value_P50 || '&&colspr' || lg_read_rq_delta_value_P75 || '&&colspr' || lg_read_rq_delta_value_P90 || '&&colspr' || lg_read_rq_delta_value_P95 || '&&colspr' || lg_read_rq_delta_value_P100 || '&&colspr' ||
-       lg_write_rq_delta_value_P50 || '&&colspr' || lg_write_rq_delta_value_P75 || '&&colspr' || lg_write_rq_delta_value_P90 || '&&colspr' || lg_write_rq_delta_value_P95 || '&&colspr' || lg_write_rq_delta_value_P100 || '&&colspr' ||
-       no_iowait_delta_value_P50 || '&&colspr' || no_iowait_delta_value_P75 || '&&colspr' || no_iowait_delta_value_P90 || '&&colspr' || no_iowait_delta_value_P95 || '&&colspr' || no_iowait_delta_value_P100 || '&&colspr' ||
-       tot_watime_delta_value_P50 || '&&colspr' || tot_watime_delta_value_P75 || '&&colspr' || tot_watime_delta_value_P90 || '&&colspr' || tot_watime_delta_value_P95 || '&&colspr' || tot_watime_delta_value_P100 || '&&colspr' ||
-       total_reads_mb_P95 || '&&colspr' || small_read_share_P95 || '&&colspr' || total_reads_req_P95 || '&&colspr' || total_writes_mb_P95 || '&&colspr' || total_write_req_P95 || '&&colspr' || avg_wait_time_ms_P95
+SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || hour || '&&colspr' || function_name || '&&colspr' ||
+       sm_read_mb_delta_value_P95 || '&&colspr' ||
+       sm_write_mb_delta_value_P95 || '&&colspr' ||
+       sm_read_rq_delta_value_P95 || '&&colspr' ||
+       sm_write_rq_delta_value_P95 || '&&colspr' ||
+       lg_read_mb_delta_value_P95 || '&&colspr' ||
+       lg_write_mb_delta_value_P95 || '&&colspr' ||
+       lg_read_rq_delta_value_P95 || '&&colspr' ||
+       lg_write_rq_delta_value_P95 || '&&colspr' ||
+       no_iowait_delta_value_P95 || '&&colspr' ||
+       tot_watime_delta_value_P95 || '&&colspr' ||
+       total_reads_mb_P95 || '&&colspr' ||
+       total_reads_req_P95 || '&&colspr' ||
+       total_writes_mb_P95 || '&&colspr' ||
+       total_write_req_P95
 FROM viof;
 
 spool off
@@ -1913,36 +1500,12 @@ SELECT pkey,
        hour,
        wait_class,
        event_name,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY tot_waits_delta_value DESC) AS tot_waits_delta_value_P50,
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY tot_waits_delta_value DESC) AS tot_waits_delta_value_P75,
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY tot_waits_delta_value DESC) AS tot_waits_delta_value_P90,
        PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY tot_waits_delta_value DESC) AS tot_waits_delta_value_P95,
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY tot_waits_delta_value DESC) AS tot_waits_delta_value_P100,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY tot_tout_delta_value DESC) AS tot_tout_delta_value_P50,
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY tot_tout_delta_value DESC) AS tot_tout_delta_value_P75,
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY tot_tout_delta_value DESC) AS tot_tout_delta_value_P90,
        PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY tot_tout_delta_value DESC) AS tot_tout_delta_value_P95,
-       PERCENTILE_CONT(0)
-         within GROUP (ORDER BY tot_tout_delta_value DESC) AS tot_tout_delta_value_P100,
-       PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P50,
-       PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P75,
-       PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P90,
        PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P95,
-       PERCENTILE_CONT(0)
-        within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P100
+         within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P95
 FROM vrawev
 GROUP BY pkey,
          dbid,
@@ -1957,17 +1520,14 @@ SELECT pkey,
        hour,
        wait_class,
        event_name,
-       tot_waits_delta_value_P50, tot_waits_delta_value_P75, tot_waits_delta_value_P90, tot_waits_delta_value_P95, tot_waits_delta_value_P100,
-       tot_tout_delta_value_P50, tot_tout_delta_value_P75, tot_tout_delta_value_P90, tot_tout_delta_value_P95, tot_tout_delta_value_P100,
-       time_wa_us_delta_value_P50, time_wa_us_delta_value_P75, time_wa_us_delta_value_P90, time_wa_us_delta_value_P95, time_wa_us_delta_value_P100,
-       NVL(CEIL((tot_tout_delta_value_P95 * 100) / NULLIF((tot_waits_delta_value_P95),0)),0) timeout_share_P95,
-       NVL(ROUND(time_wa_us_delta_value_P95 / NULLIF(tot_waits_delta_value_P95,0),2),0) avg_wait_time_us_P95
+       ROUND(tot_waits_delta_value_P95) tot_waits_delta_value_P95,
+       ROUND(tot_tout_delta_value_P95) tot_tout_delta_value_P95,
+       ROUND(time_wa_us_delta_value_P95) time_wa_us_delta_value_P95
 FROM vpercev)
 SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || hour || '&&colspr' || wait_class || '&&colspr' || event_name || '&&colspr' ||
-       tot_waits_delta_value_P50 || '&&colspr' || tot_waits_delta_value_P75 || '&&colspr' || tot_waits_delta_value_P90 || '&&colspr' || tot_waits_delta_value_P95 || '&&colspr' || tot_waits_delta_value_P100 || '&&colspr' ||
-       tot_tout_delta_value_P50 || '&&colspr' || tot_tout_delta_value_P75 || '&&colspr' || tot_tout_delta_value_P90 || '&&colspr' || tot_tout_delta_value_P95 || '&&colspr' || tot_tout_delta_value_P100 || '&&colspr' ||
-       time_wa_us_delta_value_P50 || '&&colspr' || time_wa_us_delta_value_P75 || '&&colspr' || time_wa_us_delta_value_P90 || '&&colspr' || time_wa_us_delta_value_P95 || '&&colspr' || time_wa_us_delta_value_P100 || '&&colspr' ||
-       timeout_share_P95 || '&&colspr' || avg_wait_time_us_P95
+       tot_waits_delta_value_P95 || '&&colspr' ||
+       tot_tout_delta_value_P95 || '&&colspr' ||
+       time_wa_us_delta_value_P95
 FROM vfev;
 
 spool off
@@ -1980,22 +1540,23 @@ SELECT '&&v_host'
        || '&&v_dbname'
        || '_'
        || '&&v_hora' AS pkey,
+       sqs.con_id,
 	     dhsnap.dbid,
        dhsnap.instance_number,
        to_char(force_matching_signature) force_matching_signature,
        min(sql_id) sql_id,
-       sum(executions_delta) total_executions,
-       sum(px_servers_execs_delta) total_px_servers_execs,
-       sum(elapsed_time_total) elapsed_time_total,
-       sum(disk_reads_delta) disk_reads_total,
-       sum(physical_read_bytes_delta) physical_read_bytes_total,
-       sum(physical_write_bytes_delta) physical_write_bytes_total,
-       sum(io_offload_elig_bytes_delta) io_offload_elig_bytes_total,
-       sum(io_interconnect_bytes_delta) io_interconnect_bytes_total,
-       sum(optimized_physical_reads_delta) optimized_physical_reads_total,
-       sum(cell_uncompressed_bytes_delta) cell_uncompressed_bytes_total,
-       sum(io_offload_return_bytes_delta) io_offload_return_bytes_total,
-       sum(direct_writes_delta) direct_writes_total,
+       ROUND(sum(executions_delta)) total_executions,
+       ROUND(sum(px_servers_execs_delta)) total_px_servers_execs,
+       ROUND(sum(elapsed_time_total)) elapsed_time_total,
+       ROUND(sum(disk_reads_delta)) disk_reads_total,
+       ROUND(sum(physical_read_bytes_delta)) physical_read_bytes_total,
+       ROUND(sum(physical_write_bytes_delta)) physical_write_bytes_total,
+       ROUND(sum(io_offload_elig_bytes_delta)) io_offload_elig_bytes_total,
+       ROUND(sum(io_interconnect_bytes_delta)) io_interconnect_bytes_total,
+       ROUND(sum(optimized_physical_reads_delta)) optimized_physical_reads_total,
+       ROUND(sum(cell_uncompressed_bytes_delta)) cell_uncompressed_bytes_total,
+       ROUND(sum(io_offload_return_bytes_delta)) io_offload_return_bytes_total,
+       ROUND(sum(direct_writes_delta)) direct_writes_total,
        trunc(decode(sum(executions_delta), 0, 0, (sum(end_of_fetch_count_delta)*100)/sum(executions_delta))) perc_exec_finished,
        trunc(decode(sum(executions_delta), 0, 0, sum(rows_processed_delta)/sum(executions_delta))) avg_rows,
        trunc(decode(sum(executions_delta), 0, 0, sum(disk_reads_delta)/sum(executions_delta))) avg_disk_reads,
@@ -2021,14 +1582,14 @@ GROUP BY '&&v_host'
        || '&&v_dbname'
        || '_'
        || '&&v_hora',
-       dhsnap.dbid, dhsnap.instance_number, force_matching_signature
+       sqs.con_id, dhsnap.dbid, dhsnap.instance_number, force_matching_signature
 ORDER BY elapsed_time_total DESC)
-SELECT pkey || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || force_matching_signature || '&&colspr' || sql_id || '&&colspr' ||
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || dbid || '&&colspr' || instance_number || '&&colspr' || force_matching_signature || '&&colspr' || sql_id || '&&colspr' ||
        total_executions || '&&colspr' || total_px_servers_execs || '&&colspr' || elapsed_time_total || '&&colspr' || disk_reads_total || '&&colspr' ||
        physical_read_bytes_total || '&&colspr' || physical_write_bytes_total || '&&colspr' || io_offload_elig_bytes_total || '&&colspr' || io_interconnect_bytes_total || '&&colspr' ||
        optimized_physical_reads_total || '&&colspr' || cell_uncompressed_bytes_total || '&&colspr' || io_offload_return_bytes_total || '&&colspr' || direct_writes_total || '&&colspr' ||
        perc_exec_finished || '&&colspr' || avg_rows || '&&colspr' || avg_disk_reads || '&&colspr' || avg_buffer_gets || '&&colspr' || avg_cpu_time_us || '&&colspr' || avg_elapsed_us || '&&colspr' || avg_iowait_us || '&&colspr' ||
-       avg_clwait_us || '&&colspr' || avg_clwait_us || '&&colspr' || avg_apwait_us || '&&colspr' || avg_ccwait_us || '&&colspr' || avg_plsexec_us || '&&colspr' || avg_javexec_us
+       avg_clwait_us || '&&colspr' || avg_apwait_us || '&&colspr' || avg_ccwait_us || '&&colspr' || avg_plsexec_us || '&&colspr' || avg_javexec_us
 FROM vsqlstat
 WHERE rownum < 300;
 
@@ -2042,19 +1603,19 @@ SELECT '&&v_host'
        || '&&v_dbname'
        || '_'
        || '&&v_hora' AS pkey,
-       con_id, table_owner, table_name, table_type, index_type, count(1) idx_cnt
+       con_id, table_owner, table_name, count(1) idx_cnt
 FROM cdb_indexes
 WHERE  owner NOT IN
                     ( SELECT name
                       FROM   SYSTEM.logstdby$skip_support
                       WHERE  action=0)
-group by con_id, table_owner, table_name, table_type, index_type),
+group by con_id, table_owner, table_name),
 vcidx AS (
 SELECT pkey,
        con_id,
        count(table_name) tab_count,
        idx_cnt,
-       round(100*ratio_to_report(count(table_name)) over (), 2) idx_perc
+       round(100*ratio_to_report(count(table_name)) over ()) idx_perc
 FROM vrawidx
 GROUP BY pkey, con_id, idx_cnt)
 SELECT pkey || '&&colspr' || con_id || '&&colspr' || tab_count || '&&colspr' || idx_cnt || '&&colspr' || idx_perc
