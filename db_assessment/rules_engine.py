@@ -195,11 +195,7 @@ def runRules(executionGroup,transformerRules, dataFrames, singleRule, args, coll
                                 view_name = transformerRules[ruleItem]['action_details']['target_object_name']
                                 view_sql_query = transformerRules[ruleItem]['action_details']['expr1']
                                 view_sql_query = ''.join(view_sql_query)
-
-                                
-                                import_db_assessment.createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_sql_query)
-
-                                
+                                import_db_assessment.createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_sql_query,recreateviews=transformersParameters['recreateviews'])
                     else:
 
                         print ('\n    The rule "{}" is being skipped because of the Optimus Prime SQL Version is {} and not eligible for this rule based on transformers.json configuration file.\n'.format(str(ruleItem),str(transformersParameters['optimuscollectionversion']).replace('.','')[:3]))
