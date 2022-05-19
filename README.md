@@ -195,6 +195,11 @@ unzip <<zip files>>
 
     python optimusprime.py -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes -filterbydbversion 11.1 -filterbysqlversion 2.0.3
 	
+	If you want to akip all file validations 
+
+    python optimusprime.py -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -skipvalidations
+	
+	
 ```
 
 *  `-dataset`: is the name of the dataset in Google Big Query. It is created if it does not exists. If it does already nothing to do then.
@@ -207,7 +212,7 @@ unzip <<zip files>>
 * `-importcomment`: This an optional. In case you want to store any comment about the load in opkeylog table. Eg: "This is for Production import"
 * `-filterbysqlversion`: This an optional. In case you have files from multiple sql versions in the folder and you want to load only specific sql version files
 * `-filterbydbversion`: This an optional. In case you have files from multiple db versions in the folder and you want to load only specific db version files
-
+* `-skipvalidations`: This is optional. Default is False. if we use the flag, file validations will be skipped 
 
 * NOTE: If your file has elapsed time or any other string except data, fun following script to remove it
 

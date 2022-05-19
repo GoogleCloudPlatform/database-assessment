@@ -126,6 +126,10 @@ def runMain(args):
             # This is the default directory to have all customer database results from oracle_db_assessment.sql
             fileList = import_db_assessment.getAllFilesByPattern(csvFilesLocationPattern)
 
+        skipvalidations = False
+        if args.skipvalidations and args.skipvalidations is not None:
+            skipvalidations = True
+
         # In case there is no matching file in the OS
         if len(fileList) == 0:
             sys.exit('\nERROR: There is not matching CSV file found to be processed using: {}\n'.format(csvFilesLocationPattern))
@@ -220,8 +224,8 @@ def runMain(args):
 
         dbAssessmentDataframes = {}
         invalidfiles = {}
-        dbAssessmentDataframes, transformersTablesSchema = rules_engine.getAllDataFrames(fileList, 1, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles)
-        dbAssessmentDataframes, transformersTablesSchema = rules_engine.getAllDataFrames(fileListOPConfig, 0, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles)
+        dbAssessmentDataframes, transformersTablesSchema = rules_engine.getAllDataFrames(fileList, 1, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles,skipvalidations)
+        dbAssessmentDataframes, transformersTablesSchema = rules_engine.getAllDataFrames(fileListOPConfig, 0, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles,skipvalidations)
 
         # STEP: Reshape Dataframes when necessary based on the transformersParameters
 
@@ -332,7 +336,7 @@ def argumentsParser():
 
     parser.add_argument("-filterbydbversion", type=str, default='', help="To import only specific db version")
     parser.add_argument("-filterbysqlversion", type=str, default='', help="To import only specific SQL version")
-
+    parser.add_argument("-skipvalidations",  default=False, help="To skip all the file Validations", action="store_true")
 
     # Execute the parse_args() method. Variable args is a namespace type
     args = parser.parse_args()
