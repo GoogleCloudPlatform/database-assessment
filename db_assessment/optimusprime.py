@@ -66,7 +66,8 @@ def runMain(args):
     transformersTablesSchemaConfig = transformerConfiguration['tableschemas']
 
     # SM: 04/28/2022:[Bug#90] If we only intended to run the process for recreating views
-    if str(args.recreateviews).upper() == 'TRUE':
+    transformersParameters['recreateviews'] = True # setting false by default, will set true of Recreateview = YES
+    if str(args.recreateviews).upper() == 'YES':
 
         gcpProjectName = str(args.projectname)
         bqDataset = str(args.dataset)
@@ -282,13 +283,13 @@ def argumentsParser():
     parser.add_argument("-importcomment", type=str, default='', help="Comment for the Import")
 
     # SM: 04/28/2022:[Bug#90] Recreate views without loading the data:
-    parser.add_argument("-recreateviews", default=False, help="Recreate views without loading the data (True/False)")
+    parser.add_argument("-recreateviews", default=False, help="Recreate views without loading the data (Yes/No)")
 
     # Execute the parse_args() method. Variable args is a namespace type
     args = parser.parse_args()
 
     # SM: 04/28/2022:[Bug#90] Check project name and big query dataset name
-    if str(args.recreateviews).upper() == "TRUE":
+    if str(args.recreateviews).upper() == "YES":
         # In case there is not dataset parameter set or with valid content in the arguments. It is required during view recreates
         if (args.dataset is None or args.dataset == ''):
             sys.exit('\nERROR: -dataset not provided. It is required during view recreates\n')
