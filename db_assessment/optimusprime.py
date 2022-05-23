@@ -66,7 +66,7 @@ def runMain(args):
     transformersTablesSchemaConfig = transformerConfiguration['tableschemas']
 
     # SM: 04/28/2022:[Bug#90] If we only intended to run the process for recreating views
-    transformersParameters['recreateviews'] = True # setting false by default, will set true of Recreateview = YES
+    transformersParameters['recreateviews'] = True # setting false by default, will set true if Recreateview = YES
     if str(args.recreateviews).upper() == 'YES':
 
         gcpProjectName = str(args.projectname)
