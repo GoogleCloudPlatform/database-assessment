@@ -315,7 +315,7 @@ def getDFHeadersFromTransformers(tableName,transformersTablesSchema):
 
     return tableHeaders
     
-def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles):
+def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles,skipvalidations):
 # Fuction to read from CSVs and store the data into a dataframe. The dataframe is placed then into a Hash Table.
 # This function returns a dictionary with dataframes from CSVs
 
@@ -351,12 +351,13 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
         # Validate the CSV file
         tableHeaders = getDFHeadersFromTransformers(tableName,transformersTablesSchema)
         tableHeader = [header.upper() for header in tableHeaders]
-        fileError = validateInputcsv(fileName,tableHeader, args)
-        if fileError is not None:
-            basename = os.path.basename(fileName)
-            print("File {} is skipped because of error -> {} ".format(basename,fileError))
-            invalidfiles[fileName] = fileError
-            continue
+        if not skipvalidations:
+            fileError = validateInputcsv(fileName,tableHeader, args)
+            if fileError is not None:
+                basename = os.path.basename(fileName)
+                print("File {} is skipped because of error -> {} ".format(basename,fileError))
+                invalidfiles[fileName] = fileError
+                continue
         # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
         df = getDataFrameFromCSV(fileName,tableName,skipRows,args,transformersTablesSchema)
         
