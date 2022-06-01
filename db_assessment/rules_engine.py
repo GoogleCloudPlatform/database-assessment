@@ -195,7 +195,11 @@ def runRules(executionGroup,transformerRules, dataFrames, singleRule, args, coll
                                 view_name = transformerRules[ruleItem]['action_details']['target_object_name']
                                 view_sql_query = transformerRules[ruleItem]['action_details']['expr1']
                                 view_sql_query = ''.join(view_sql_query)
-                                import_db_assessment.createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_sql_query,recreateviews=transformersParameters['recreateviews'])
+
+                                
+                                import_db_assessment.createOptimusPrimeViewsTransformers(gcpProjectName,bqDataset,view_name,view_sql_query)
+
+                                
                     else:
 
                         print ('\n    The rule "{}" is being skipped because of the Optimus Prime SQL Version is {} and not eligible for this rule based on transformers.json configuration file.\n'.format(str(ruleItem),str(transformersParameters['optimuscollectionversion']).replace('.','')[:3]))
@@ -311,7 +315,7 @@ def getDFHeadersFromTransformers(tableName,transformersTablesSchema):
 
     return tableHeaders
     
-def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles):
+def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles,skipvalidations):
 # Fuction to read from CSVs and store the data into a dataframe. The dataframe is placed then into a Hash Table.
 # This function returns a dictionary with dataframes from CSVs
 
@@ -347,12 +351,13 @@ def getAllDataFrames(fileList, skipRows, collectionKey, args, transformersTables
         # Validate the CSV file
         tableHeaders = getDFHeadersFromTransformers(tableName,transformersTablesSchema)
         tableHeader = [header.upper() for header in tableHeaders]
-        fileError = validateInputcsv(fileName,tableHeader, args)
-        if fileError is not None:
-            basename = os.path.basename(fileName)
-            print("File {} is skipped because of error -> {} ".format(basename,fileError))
-            invalidfiles[fileName] = fileError
-            continue
+        if not skipvalidations:
+            fileError = validateInputcsv(fileName,tableHeader, args)
+            if fileError is not None:
+                basename = os.path.basename(fileName)
+                print("File {} is skipped because of error -> {} ".format(basename,fileError))
+                invalidfiles[fileName] = fileError
+                continue
         # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
         df = getDataFrameFromCSV(fileName,tableName,skipRows,args,transformersTablesSchema)
         
@@ -403,8 +408,11 @@ def validateInputcsv(fileName,tableHeader,args):
     fileerror = None
     try:
         with open(fileName,"r") as f:
-                if 'ORA-' in f.read():
-                    fileerror = "File has ORA-Errors"
+            last_line = f.readlines()[-1]
+            if 'ORA-' in f.read():
+                fileerror = "File has ORA-Errors"
+            if last_line.startswith('Elapsed:'):
+                fileerror = "File has Elapsed time message from Oracle, Please remove the message and reprocess"
         df = pd.read_csv(fileName, sep=str(args.sep), skiprows=2,na_values='n/a', keep_default_na=True, skipinitialspace = True, nrows=10, names = tableHeader, index_col=False)
         if df.empty:
             ## If file has header but no rows

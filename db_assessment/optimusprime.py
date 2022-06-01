@@ -95,10 +95,11 @@ def runMain(args):
             print ('\n\n Views created. Thank YOU for using Optimus Prime!\n\n')
         else:
             print ('\n\n Error: Dataset {}.{} does not exist!\n\n'.format(gcpProjectName, bqDataset))
-            
+
     # For all cases in which those attributes are <> None it means the user wants to import data to Big Query
     # No need to further messaging for mandatory options because this is being done in argumentsParser function
-    elif args.dataset is not None and args.collectionid is not None:
+    if args.dataset is not None and args.collectionid is not None:
+
 
         # This is broken needs to be fixed in upcoming versions
         if args.consolidatelogs:
@@ -126,6 +127,10 @@ def runMain(args):
             # Getting a list of files from OS based on the pattern provided
             # This is the default directory to have all customer database results from oracle_db_assessment.sql
             fileList = import_db_assessment.getAllFilesByPattern(csvFilesLocationPattern)
+
+        skipvalidations = False
+        if args.skipvalidations and args.skipvalidations is not None:
+            skipvalidations = True
 
         # In case there is no matching file in the OS
         if len(fileList) == 0:
@@ -221,8 +226,8 @@ def runMain(args):
 
         dbAssessmentDataframes = {}
         invalidfiles = {}
-        dbAssessmentDataframes, transformersTablesSchema = rules_engine.getAllDataFrames(fileList, 1, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles)
-        dbAssessmentDataframes, transformersTablesSchema = rules_engine.getAllDataFrames(fileListOPConfig, 0, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles)
+        dbAssessmentDataframes, transformersTablesSchema = rules_engine.getAllDataFrames(fileList, 1, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles,skipvalidations)
+        dbAssessmentDataframes, transformersTablesSchema = rules_engine.getAllDataFrames(fileListOPConfig, 0, collectionKey, args, transformersTablesSchema, dbAssessmentDataframes, transformersParameters,invalidfiles,skipvalidations)
 
         # STEP: Reshape Dataframes when necessary based on the transformersParameters
 
@@ -333,7 +338,7 @@ def argumentsParser():
 
     parser.add_argument("-filterbydbversion", type=str, default='', help="To import only specific db version")
     parser.add_argument("-filterbysqlversion", type=str, default='', help="To import only specific SQL version")
-
+    parser.add_argument("-skipvalidations",  default=False, help="To skip all the file Validations", action="store_true")
 
     # Execute the parse_args() method. Variable args is a namespace type
     args = parser.parse_args()
@@ -357,7 +362,7 @@ def argumentsParser():
             print ('\nWARNING: -collectionversion name not provided. It is required during view recreates\n')
     
     # If not using -cl flag
-    elif args.consolidatelogs == False:
+    if args.consolidatelogs == False:
 
         # In case there is not dataset parameter set or with valid content in the arguments
         if (args.dataset is None or args.dataset == ''):
