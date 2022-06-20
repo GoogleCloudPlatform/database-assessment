@@ -407,16 +407,19 @@ def processSchemaDetection(schemadetection,transformersTablesSchema, transformer
 def validateInputcsv(fileName,tableHeader,args):
     fileerror = None
     try:
-        with open(fileName,"r") as f:
-            last_line = f.readlines()[-1]
-            if 'ORA-' in f.read():
-                fileerror = "File has ORA-Errors"
-            if last_line.startswith('Elapsed:'):
-                fileerror = "File has Elapsed time message from Oracle, Please remove the message and reprocess"
         df = pd.read_csv(fileName, sep=str(args.sep), skiprows=2,na_values='n/a', keep_default_na=True, skipinitialspace = True, nrows=10, names = tableHeader, index_col=False)
         if df.empty:
             ## If file has header but no rows
             fileerror = "File seems to be Empty"
+        else:
+            with open(fileName,"r") as f:
+                lines = f.readlines()
+                last_line = lines[-1]
+                # if 'ORA-' in f.read():
+                if any(line.startswith('ORA-') for line in lines):
+                    fileerror = "File has ORA-Errors"
+                if last_line.startswith('Elapsed:'):
+                    fileerror = "File has Elapsed time message from Oracle, Please remove the message and reprocess"
     except pd.errors.EmptyDataError:
         ## If file has no records
         fileerror = "File seems to be Empty"
