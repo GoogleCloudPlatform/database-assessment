@@ -6,7 +6,7 @@ The Optimus Prime Database Assessment tool is used to assess homogenous migratio
 2. A python script (.py) to import data into Google Big Query
 3. A Data Studio template that can be used to generate assessment report
 
-NOTE: The script to collect data only runs SELECT statements against Oracle dictionary and requires read permissions. No application data is accessed, nor is any data changed or deleted.
+> NOTE: The script to collect data only runs SELECT statements against Oracle dictionary and requires read permissions. No application data is accessed, nor is any data changed or deleted.
 
 # How to use this tool
 
@@ -15,7 +15,7 @@ NOTE: The script to collect data only runs SELECT statements against Oracle dict
 1.1. Database user creation.
 
 Create an Oracle database user -or- choose an existing user account .
-	* If you decide to use an existing database user with all the privileges already assigned please go to Step 1.3.
+   * If you decide to use an existing database user with all the privileges already assigned please go to Step 1.3.
 
 
 ```
@@ -26,7 +26,6 @@ create user C##optimusprime identified by "mysecretPa33w0rd";
 
  if creating a application user within a PDB create a regular user
 create user optimusprime identified by "mysecretPa33w0rd";
-
 ```
 
 1.2. Clone *optimus prime* into your work directory in a client machine that has connectivity to your databases
@@ -34,7 +33,6 @@ create user optimusprime identified by "mysecretPa33w0rd";
 ```
 cd <work-directory>
 git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
-
 ```
 
 1.3. Verfiy 3 Grants scripts under (@/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/) 
@@ -48,11 +46,10 @@ git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
 ```
 @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/grants_wrapper.sql
 Please enter the DB Local Username(Or CDB Username) to receive all required grants: [C##]optimusprime
-
 ```
 
 
-NOTE: grants_wrapper.sql has provided variable db_awr_license which is set default to Y to access AWR tables. AWR is a licensed feature of Oracle. If you don't have license to run AWR you can disable flag and it will execute script minimum_select_grants_for_targets_ONLY_FOR_11g.sql.
+> NOTE: grants_wrapper.sql has provided variable db_awr_license which is set default to Y to access AWR tables. AWR is a licensed feature of Oracle. If you don't have license to run AWR you can disable flag and it will execute script minimum_select_grants_for_targets_ONLY_FOR_11g.sql.
 
 OR
 
@@ -63,34 +60,30 @@ For Database version 11g and below
 ```
 @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/minimum_select_grants_for_targets_ONLY_FOR_11g.sql
 Please enter the DB Local Username(Or CDB Username) to receive all required grants: [C##]optimusprime
-
 ```
 
 For Database version 12c and above
 
 ```
 @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/minimum_select_grants_for_targets_12c_AND_ABOVE.sql
-
 ```
 
 1.4. Execute /home/oracle/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh to start collecting the data.
-	* Execute this from a system that can access your database via sqlplus
-	* Pass connect string as input to this script (see below for example)
-	* NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
+   * Execute this from a system that can access your database via sqlplus
+   * Pass connect string as input to this script (see below for example)
+   * NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
 
 ```
-
 mkdir -p /<work-directory>/oracle-database-assessment-output
 
 cd /<work-directory>/oracle-database-assessment-output
 
 /<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh optimusprime/mysecretPa33w0rd@//<serverhost>/<servicename>
-
 ```
 
 1.5. Once the script is executed you should see many opdb\*.log output files generated. It is recommended to zip/tar these files.
-	* All the generated files follow this standard  `opdb__<queryname>__<dbversion>_<scriptversion>_<hostname>_<dbname>_<instancename>_<datetime>.log`
-	* Use meaningful names when zip/tar the files.
+   * All the generated files follow this standard  `opdb__<queryname>__<dbversion>_<scriptversion>_<hostname>_<dbname>_<instancename>_<datetime>.log`
+   * Use meaningful names when zip/tar the files.
 
 ```
 Example output:
@@ -125,19 +118,16 @@ opdb__dbservicesinfo__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 gcloud auth list
 
 gcloud config set project <project id>
-
 ```
 
 2.2 Export Environment variables. (Step 1.2 has working directory created)
 
 ```
-
 export OP_WORKDING_DIR=<<path for working directory>
 export OP_BQ_DATASET=<<BigQuery Dataset Name>>
 export OP_OUTPUT_DIR=/$OP_WORKDING_DIR/oracle-database-assessment-output/<<assessment output directory>
 mkdir $OP_OUTPUT_DIR/log
 export OP_LOG_DIR=$OP_OUTPUT_DIR/log
-
 ```
 
 2.3 Create working directory (Skip if you have followed step 1.2 on same server)
@@ -168,8 +158,8 @@ unzip <<zip files>>
 ```
 
 2.7. [Create a service account and download the key](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin ) . 
-	* Set GOOGLE_APPLICATION_CREDENTIALS to point to the downloaded key. Make sure the service account has BigQuery Admin privelege. 
-	* NOTE: This step can be skipped if using [Cloud Shell](https://ssh.cloud.google.com/cloudshell/)
+   * Set GOOGLE_APPLICATION_CREDENTIALS to point to the downloaded key. Make sure the service account has BigQuery Admin privelege. 
+   * NOTE: This step can be skipped if using [Cloud Shell](https://ssh.cloud.google.com/cloudshell/)
 
 2.8. Create a python virtual environment to install dependencies and execute the `optimusprime.py` script
 
@@ -198,8 +188,6 @@ unzip <<zip files>>
 	If you want to akip all file validations 
 
     python optimusprime.py -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -skipvalidations
-	
-	
 ```
 
 *  `-dataset`: is the name of the dataset in Google Big Query. It is created if it does not exists. If it does already nothing to do then.
@@ -214,7 +202,7 @@ unzip <<zip files>>
 * `-filterbydbversion`: This an optional. In case you have files from multiple db versions in the folder and you want to load only specific db version files
 * `-skipvalidations`: This is optional. Default is False. if we use the flag, file validations will be skipped 
 
-* NOTE: If your file has elapsed time or any other string except data, fun following script to remove it
+* >NOTE: If your file has elapsed time or any other string except data, fun following script to remove it
 
 ```
 for i in `grep "Elapsed:" $OP_OUTPUT_DIR/*.log |  cut -d ":" -f 1`; do sed -i '$ d' $i; done
@@ -223,14 +211,14 @@ for i in `grep "Elapsed:" $OP_OUTPUT_DIR/*.log |  cut -d ":" -f 1`; do sed -i '$
 ## Step 3 - Analyzing imported data
 
 3.1. Open the dataset used in the step 2 of Part 2 in Google Big Query
-	*  Query the viewnames starting with vReport* for further analysis
-	*  Sample queries are listed, they provide
-		*  Source DB Summary
-		*  Source Host details
-		*  Google Bare Metal Sizing
-		*  Google Bare Metal Pricing
-		*  Migration Recommendations
-	*  Sample [Assessment Report](report/Optimus_Prime_-_dashboard.pdf), was created in DataStudio. A similar report can be generated using the queries for your datasets as part of the assessment readout.
+  *  Query the viewnames starting with vReport* for further analysis
+  *  Sample queries are listed, they provide
+     *  Source DB Summary
+     *  Source Host details
+     *  Google Bare Metal Sizing
+     *  Google Bare Metal Pricing
+     *  Migration Recommendations
+  *  Sample [Assessment Report](report/Optimus_Prime_-_dashboard.pdf), was created in DataStudio. A similar report can be generated using the queries for your datasets as part of the assessment readout.
 
 ## Contributing to the project
 
