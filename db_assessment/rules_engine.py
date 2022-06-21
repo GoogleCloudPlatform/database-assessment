@@ -264,6 +264,11 @@ def getDataFrameFromCSV(csvFileName,tableName,skipRows,args,transformersTablesSc
     paramCleanDFHeaders = False
     paramGetHeadersFromConfig = True
 
+    # Configuration files always will be , 
+    if 'opConfig' in csvFileName:
+        fileSeparator = ','
+    else:
+        fileSeparator = args.sep
 
     try:
         
@@ -276,19 +281,19 @@ def getDataFrameFromCSV(csvFileName,tableName,skipRows,args,transformersTablesSc
                     tableHeaders = getDFHeadersFromTransformers(tableName,transformersTablesSchema)
                     tableHeaders = [header.upper() for header in tableHeaders]
                     #df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders, keep_default_na=False, na_filter= False)
-                    df = pd.read_csv(csvFileName, skiprows=skipRows+1, sep=str(args.sep), header=None, names=tableHeaders, na_values='n/a', keep_default_na=True, skipinitialspace = True)
+                    df = pd.read_csv(csvFileName, skiprows=skipRows+1, sep=str(fileSeparator), header=None, names=tableHeaders, na_values='n/a', keep_default_na=True, skipinitialspace = True)
 
                 except Exception as dataframeHeaderErr:
                     
                     print ('\nThe filename {} for the table {} could not be imported using the column names {}.\n'.format(csvFileName,tableName,tableHeaders))
                     paramCleanDFHeaders = True
                     #df = pd.read_csv(csvFileName, skiprows=skipRows, keep_default_na=False, na_filter= False)
-                    df = pd.read_csv(csvFileName, sep=str(args.sep), skiprows=skipRows, na_values='n/a', keep_default_na=True, skipinitialspace = True)
+                    df = pd.read_csv(csvFileName, sep=str(fileSeparator), skiprows=skipRows, na_values='n/a', keep_default_na=True, skipinitialspace = True)
 
             else:
             
                 #df = pd.read_csv(csvFileName, skiprows=skipRows, keep_default_na=False, na_filter= False)
-                df = pd.read_csv(csvFileName, sep=str(args.sep), skiprows=skipRows, na_values='n/a', keep_default_na=True, skipinitialspace = True)
+                df = pd.read_csv(csvFileName, sep=str(fileSeparator), skiprows=skipRows, na_values='n/a', keep_default_na=True, skipinitialspace = True)
 
         # Removing index from dataframe
         df.reset_index(drop=True, inplace=True)
