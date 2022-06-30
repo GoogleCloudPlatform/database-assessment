@@ -1,5 +1,5 @@
 /*
-Copyright 2021 Google LLC
+Copyright 2022 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,12 +21,12 @@ Please ensure you have proper licensing. For more information consult Oracle Sup
 
 /*
 
-Version: 2.0.5
-Date: 2022-04-22
+Version: 2.0.6
+Date: 2022-06-15
 
 */
 
-define version = '2.0.5'
+define version = '2.0.6'
 define dtrange = 30
 define colspr = ';'
 
@@ -312,102 +312,6 @@ SELECT '&&v_host'
               con_id, owner, segment_type )
 SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || segment_type || '&&colspr' || GB
 FROM vused;
-
-spool off
-
-spool opdb__compressbytable__&v_tag
-
-WITH vtbcompress AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
-       con_id,
-       owner,
-       SUM(table_count)                  tab,
-       TRUNC(SUM(table_gbytes))          table_gb,
-       SUM(partition_count)              part,
-       TRUNC(SUM(partition_gbytes))      part_gb,
-       SUM(subpartition_count)           subpart,
-       TRUNC(SUM(subpartition_gbytes))   subpart_gb,
-       TRUNC(SUM(table_gbytes) + SUM(partition_gbytes)
-             + SUM(subpartition_gbytes)) total_gbytes
-       FROM   (SELECT t.con_id,
-                       t.owner,
-                       COUNT(*)                        table_count,
-                       SUM(bytes / 1024 / 1024 / 1024) table_gbytes,
-                       0                               partition_count,
-                       0                               partition_gbytes,
-                       0                               subpartition_count,
-                       0                               subpartition_gbytes
-                FROM   cdb_tables t,
-                       cdb_segments s
-                WHERE  t.con_id = s.con_id
-                       AND t.owner = s.owner
-                       AND t.table_name = s.segment_name
-                       AND s.partition_name IS NULL
-                       AND compression = 'ENABLED'
-                       AND t.owner NOT IN
-                                          (
-                                          SELECT name
-                                          FROM   SYSTEM.logstdby$skip_support
-                                          WHERE  action=0)
-                GROUP  BY t.con_id,
-                          t.owner
-                UNION ALL
-                SELECT t.con_id,
-                       t.table_owner owner,
-                       0,
-                       0,
-                       COUNT(*),
-                       SUM(bytes / 1024 / 1024 / 1024),
-                       0,
-                       0
-                FROM   cdb_tab_partitions t,
-                       cdb_segments s
-                WHERE  t.con_id = s.con_id
-                       AND t.table_owner = s.owner
-                       AND t.table_name = s.segment_name
-                       AND t.partition_name = s.partition_name
-                       AND compression = 'ENABLED'
-                       AND t.table_owner NOT IN (
-                                                 SELECT name
-                                                 FROM   SYSTEM.logstdby$skip_support
-                                                 WHERE  action=0)
-                GROUP  BY t.con_id,
-                          t.table_owner
-                UNION ALL
-                SELECT t.con_id,
-                       t.table_owner owner,
-                       0,
-                       0,
-                       0,
-                       0,
-                       COUNT(*),
-                       SUM(bytes / 1024 / 1024 / 1024)
-                FROM   cdb_tab_subpartitions t,
-                       cdb_segments s
-                WHERE  t.con_id = s.con_id
-                       AND t.table_owner = s.owner
-                       AND t.table_name = s.segment_name
-                       AND t.subpartition_name = s.partition_name
-                       AND compression = 'ENABLED'
-                       AND t.table_owner NOT IN
-                                                 (
-                                                 SELECT name
-                                                 FROM   SYSTEM.logstdby$skip_support
-                                                 WHERE  action=0)
-                GROUP  BY t.con_id,
-                          t.table_owner)
-        GROUP  BY con_id,
-                  owner
-        HAVING TRUNC(SUM(table_gbytes) + SUM(partition_gbytes)
-                     + SUM(subpartition_gbytes)) > 0 )
-SELECT pkey || '&&colspr' || con_id || '&&colspr' || owner || '&&colspr' || tab || '&&colspr' || table_gb || '&&colspr' || part || '&&colspr' ||
-       part_gb || '&&colspr' || subpart || '&&colspr' || subpart_gb || '&&colspr' || total_gbytes
-FROM vtbcompress
-ORDER  BY total_gbytes DESC;
 
 spool off
 
@@ -1223,6 +1127,7 @@ WHERE  s.snap_id = g.snap_id
        or LOWER(stat_name) LIKE 'cell%smart%'
        or LOWER(stat_name) LIKE 'cell%mem%'
        or LOWER(stat_name) LIKE 'cell%flash%'
+       or LOWER(stat_name) LIKE 'cell%uncompressed%'
        or LOWER(stat_name) LIKE '%db%block%'
        or LOWER(stat_name) LIKE '%execute%'
       -- or LOWER(stat_name) LIKE '%lob%'
@@ -1620,5 +1525,25 @@ FROM vrawidx
 GROUP BY pkey, con_id, idx_cnt)
 SELECT pkey || '&&colspr' || con_id || '&&colspr' || tab_count || '&&colspr' || idx_cnt || '&&colspr' || idx_perc
 FROM vcidx;
+
+spool off
+
+spool opdb__dataguard__&v_tag
+
+WITH vodg AS (
+SELECT  '&&v_host'
+        || '_'
+        || '&&v_dbname'
+        || '_'
+        || '&&v_hora' AS pkey,
+        con_id, inst_id, dest_id, dest_name, destination, status, target, schedule, register,
+        alternate, transmit_mode, affirm, valid_role, verify,
+        CASE WHEN target = 'STANDBY' OR target = 'REMOTE' THEN (SELECT DECODE(listagg(value, '|') WITHIN GROUP (ORDER BY value), NULL, 'LOG_ARCHIVE_CONFIG_NOT_CONFIGURED', listagg(value, '&&colspr') WITHIN GROUP (ORDER BY value)) FROM gv$parameter WHERE UPPER(name) = 'LOG_ARCHIVE_CONFIG') ELSE 'LOCAL_DESTINATION_CONFIG_NOT_APPLICABLE' END log_archive_config
+FROM gv$archive_dest
+WHERE destination IS NOT NULL)
+SELECT pkey || '&&colspr' || con_id || '&&colspr' || inst_id || '&&colspr' || log_archive_config || '&&colspr' || dest_id || '&&colspr' || dest_name || '&&colspr' || destination || '&&colspr' || status || '&&colspr' ||
+       target || '&&colspr' || schedule || '&&colspr' || register || '&&colspr' || alternate || '&&colspr' ||
+       transmit_mode || '&&colspr' || affirm || '&&colspr' || valid_role || '&&colspr' || verify
+FROM vodg;
 
 spool off
