@@ -22,8 +22,8 @@ from optimusprime import runMain
 app = Flask(__name__)
 
 
-@app.route("/api/loadAssesment", methods=["POST"])
-def loadAssesment():
+@app.route("/api/loadAssessment", methods=["POST"])
+def loadAssessment():
     print(f"{len(request.files)} files uploaded")
     if len(request.files) <= 0:
         return 'No files uploaded', 400
