@@ -3104,7 +3104,7 @@
                                         " FROM sizingSummarySums",
                                         " ORDER BY host_name"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "V_DS_BMSsizing_summary", "store": "BIGQUERY"},
-                                "status": "DISABLED",
+                                "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
                                 "description": ""
                             },
@@ -3129,7 +3129,7 @@
                                         " db_long_size_gb,dg_database_role, dg_protection_mode,dg_protection_level",
                                         " FROM ${projectname}.${dataset}.dbsummary"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "V_DS_dbsummary", "store": "BIGQUERY"},
-                                "status": "DISABLED",
+                                "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
                                 "description": ""
                             },
@@ -3215,7 +3215,7 @@
                                         "    10 )",
                                         " select * from sourceSizing order by host_name"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "V_DS_HostDetails", "store": "BIGQUERY"},
-                                "status": "DISABLED",
+                                "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
                                 "description": ""
                             },
@@ -3268,7 +3268,7 @@
                                         " from",
                                         " ${projectname}.${dataset}.dbsizing_facts"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "V_DS_dbsizing_facts", "store": "BIGQUERY"},
-                                "status": "DISABLED",
+                                "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
                                 "description": ""
                             },
@@ -3287,7 +3287,7 @@
                                         " total_samples, first_usage, last_usage, aux_count",
                                         " FROM ${projectname}.${dataset}.dbfeatures"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "V_DS_dbfeatures", "store": "BIGQUERY"},
-                                "status": "DISABLED",
+                                "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
                                 "description": ""
                             },
@@ -3310,7 +3310,7 @@
                                         " where db_name is not null",
                                         " group by _PKEY, db_name,_INSTANCE_NUMBER"],
                                 "iferror": "None", "type": "CREATE VIEW", "target_object_name": "V_DS_ConsoldatedCoreCount", "store": "BIGQUERY"},
-                                "status": "DISABLED",
+                                "status": "ENABLED",
                                 "tags": ["DATAFRAMERESHAPE"],
                                 "description": ""
                             },
@@ -4181,7 +4181,7 @@
                             "mindbversion": "111",
                             "maxdbversion": "216",
                             "execution_group": "1",
-                            "action_details": {"action": "CREATE_OR_REPLACE_DATAFRAME", "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"FREE_MEMORY_BYTES_PERC95\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\",\"FREE_MEMORY_BYTES_CUMULATIVE_VALUE\",\"NUM_CPUS_CUMULATIVE_VALUE\",\"NUM_CPU_CORES_CUMULATIVE_VALUE\",\"NUM_CPU_SOCKETS_CUMULATIVE_VALUE\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"NUM_CPU_SOCKETS_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]", "iferror": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\",\"NUM_CPUS_CUMULATIVE_VALUE\",\"NUM_CPU_CORES_CUMULATIVE_VALUE\",\"NUM_CPU_SOCKETS_CUMULATIVE_VALUE\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"NUM_CPU_SOCKETS_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]", "type": "FREESTYLE", "dataframe_name": "DBSIZING_FACTS", "store": "BIGQUERY"},
+                            "action_details": {"action": "CREATE_OR_REPLACE_DATAFRAME", "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"FREE_MEMORY_BYTES_PERC95\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\",\"FREE_MEMORY_BYTES_CUMULATIVE_VALUE\",\"NUM_CPUS_CUMULATIVE_VALUE\",\"NUM_CPU_CORES_CUMULATIVE_VALUE\",\"NUM_CPU_SOCKETS_CUMULATIVE_VALUE\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"NUM_CPU_SOCKETS_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]", "iferror": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\",\"NUM_CPUS_CUMULATIVE_VALUE\",\"NUM_CPU_CORES_CUMULATIVE_VALUE\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]", "type": "FREESTYLE", "dataframe_name": "DBSIZING_FACTS", "store": "BIGQUERY"},
                             "status": "ENABLED",
                             "tags": ["BMS_SIZING"],
                             "description": "This rule creates a new dataframe out of a selected list of columns from AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS dataframe."
