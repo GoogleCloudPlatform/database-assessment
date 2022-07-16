@@ -48,6 +48,7 @@ from beautifultable import BeautifulTable
 import pandas as pd
 import numpy as np 
 
+# git training on 16th jul 2022
 def getVersion():
 
     return __version__
