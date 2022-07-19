@@ -1,17 +1,8 @@
 # Dockerfile
-ARG PYTHON_BUILDER_IMAGE=3.9-slim
-ARG PYTHON_RUN_IMAGE=gcr.io/distroless/python3
-## Store the commit versiom into the image for usage later
-FROM alpine/git AS git
-ADD . /app
-WORKDIR /app
-# I use this file to provide the git commit
-# in the footer without having git present
-# in my production image
-RUN git rev-parse HEAD | tee /version
+ARG PYTHON_IMAGE=python:3.10-slim
 
 ## Build venv
-FROM python:${PYTHON_BUILDER_IMAGE} as python-base
+FROM ${PYTHON_IMAGE} as python-base
 ENV PIP_DEFAULT_TIMEOUT=100 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -35,20 +26,20 @@ RUN apt-get install -y --no-install-recommends curl git build-essential \
     && apt-get autoremove -y
 
 WORKDIR /app
-COPY requirements.txt api-requirements ./
+COPY requirements.txt api-requirements.txt ./
 RUN python -m venv --copies /app/venv
 RUN . /app/venv/bin/activate \
     &&  pip install -r requirements.txt  -r api-requirements.txt
 
 ## Beginning of runtime image
-FROM python:${PYTHON_RUN_IMAGE} as run-image
+FROM ${PYTHON_IMAGE} as run-image
 COPY --from=build-stage /app/venv /app/venv/
-ENV PATH /app/venv/bin:$PATH
+ENV PATH=/app/venv/bin:$PATH \
+    PYTHONPATH=/app
 WORKDIR /app
 
 # These are the two folders that change the most.
 COPY db_assessment ./app/
-COPY --from=git /version /app/.version
 
 # switch to a non-root user for security
 RUN addgroup --system --gid 1001 "app-user"
@@ -56,5 +47,5 @@ RUN adduser --system --uid 1001 "app-user"
 USER "app-user"
 
 
-ENTRYPOINT [ "gunicorn","-w", "0.0.0.0:8080", ]
+ENTRYPOINT [ "gunicorn","--bind", "0.0.0.0:8080","--workers","4", "dba_assessment.api:app"]
 EXPOSE 8080
