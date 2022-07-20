@@ -17,18 +17,18 @@
 import os
 
 # Import to Big Query
-import import_db_assessment
-
+from db_assessment import import_db_assessment
 
 
 # Messages handling
 import logging
-logging.getLogger().setLevel(level=logging.INFO)
 
+logging.getLogger().setLevel(level=logging.INFO)
 
 
 def get_id_token():
     import google.auth
+
     credentials, _ = google.auth.default()
     credentials.refresh(google.auth.transport.requests.Request())
     return credentials.id_token
@@ -36,21 +36,32 @@ def get_id_token():
 
 def runRemote(args):
     import requests
+
     id_token = os.getenv("ID_TOKEN") if os.getenv("ID_TOKEN") else get_id_token()
     headers = {"Authorization": f"Bearer {id_token}"}
     config = {
         "projectId": args.projectname,
-        "dataset":  args.dataset,
-        "collectionId": args.collectionid
+        "dataset": args.dataset,
+        "collectionId": args.collectionid,
     }
-    csvFilesLocationPattern = str(args.fileslocation) + '/*' + str(args.collectionid).replace(' ', '') + '.log'
+    csvFilesLocationPattern = (
+        str(args.fileslocation)
+        + "/*"
+        + str(args.collectionid).replace(" ", "")
+        + ".log"
+    )
 
     # Getting a list of files from OS based on the pattern provided
     # This is the default directory to have all customer database results from oracle_db_assessment.sql
     files = import_db_assessment.getAllFilesByPattern(csvFilesLocationPattern)
 
     files = {file_name: file_name for file_name in files}
-    result = requests.post(f"{args.remoteurl}/api/loadAssesment", files=files, data=config, headers=headers)
+    result = requests.post(
+        f"{args.remoteurl}/api/loadAssessment",
+        files=files,
+        data=config,
+        headers=headers,
+    )
     result.raise_for_status()
     logging.info(result.text)
 
