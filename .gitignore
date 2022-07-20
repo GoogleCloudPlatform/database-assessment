@@ -7,3 +7,5 @@ __pycache__
 *$py.class
 .DS_Store
 .vscode
+build/
+*.egg-info

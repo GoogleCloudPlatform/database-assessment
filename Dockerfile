@@ -26,26 +26,27 @@ RUN apt-get install -y --no-install-recommends curl git build-essential \
     && apt-get autoremove -y
 
 WORKDIR /app
-COPY requirements.txt api-requirements.txt ./
+COPY requirements.txt api-requirements.txt setup.py LICENSE /app/ 
+COPY db_assessment /app/db_assessment
 RUN python -m venv --copies /app/venv
 RUN . /app/venv/bin/activate \
     &&  pip install -r requirements.txt  -r api-requirements.txt
 
 ## Beginning of runtime image
 FROM ${PYTHON_IMAGE} as run-image
-COPY --from=build-stage /app/venv /app/venv/
 ENV PATH=/app/venv/bin:$PATH \
-    PYTHONPATH=/app
+    PYTHONPATH=/app/
 WORKDIR /app
 
-# These are the two folders that change the most.
-COPY db_assessment ./app/
-
 # switch to a non-root user for security
-RUN addgroup --system --gid 1001 "app-user"
-RUN adduser --system --uid 1001 "app-user"
+RUN addgroup --system --gid 1001 "app-user" \
+    && adduser --no-create-home --system --uid 1001 "app-user" \
+    && chown -R "app-user":"app-user" /app
+COPY --chown="app-user":"app-user" --from=build-stage /app/venv /app/venv/
+COPY --chown="app-user":"app-user" requirements.txt api-requirements.txt setup.py LICENSE /app/ 
+# These are the two folders that change the most.
+COPY --chown="app-user":"app-user" db_assessment /app/db_assessment
+
 USER "app-user"
-
-
-ENTRYPOINT [ "gunicorn","--bind", "0.0.0.0:8080","--workers","4", "dba_assessment.api:app"]
+ENTRYPOINT [ "gunicorn","--bind", "0.0.0.0:8080","--workers","4", "db_assessment.api:app"]
 EXPOSE 8080
