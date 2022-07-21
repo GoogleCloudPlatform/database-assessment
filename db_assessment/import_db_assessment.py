@@ -1012,26 +1012,29 @@ def printBTResults(importresults):
     ]
 
     # To group by table name, import status, count of distinct pkeys and sum of rows
-    importresultsagg = (
-        importresults.groupby(["Target Table", "Import Status"])["Loaded rows"]
-        .agg(["size", "sum"])
-        .reset_index(drop=False)
-    )
-    importresultsfinal = importresultsagg.rename(
-        columns={"size": "Distinct Pkey", "sum": "Loaded rows"}
-    )
+    if not importresults.empty:
+        importresultsagg = (
+            importresults.groupby(["Target Table", "Import Status"])["Loaded rows"]
+            .agg(["size", "sum"])
+            .reset_index(drop=False)
+        )
+        importresultsfinal = importresultsagg.rename(
+            columns={"size": "Distinct Pkey", "sum": "Loaded rows"}
+        )
 
-    # convert float type to int type
-    importresultsfinal["Loaded rows"] = importresultsfinal["Loaded rows"].astype(int)
+        # convert float type to int type
+        importresultsfinal["Loaded rows"] = importresultsfinal["Loaded rows"].astype(
+            int
+        )
 
-    # swap for correcting to match the expected order of columns
-    importresultsfinal = importresultsfinal[
-        ["Target Table", "Distinct Pkey", "Import Status", "Loaded rows"]
-    ]
+        # swap for correcting to match the expected order of columns
+        importresultsfinal = importresultsfinal[
+            ["Target Table", "Distinct Pkey", "Import Status", "Loaded rows"]
+        ]
 
-    # insert into beautiful table
-    for index, row in importresultsfinal.iterrows():
-        btImportLogFinalTable.rows.append(row)
+        # insert into beautiful table
+        for index, row in importresultsfinal.iterrows():
+            btImportLogFinalTable.rows.append(row)
 
     btImportLogFinalTable.set_style(BeautifulTable.STYLE_BOX_ROUNDED)
     print("\n\n Import Completed....\n")
