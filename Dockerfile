@@ -44,7 +44,7 @@ RUN addgroup --system --gid 1001 "app-user" \
     && chown -R "app-user":"app-user" /app
 COPY --chown="app-user":"app-user" --from=build-stage /app/venv /app/venv/
 COPY --chown="app-user":"app-user" requirements.txt api-requirements.txt setup.py tasks.py LICENSE /app/ 
-COPY --chown="app-user":"app-user" samples /app/samples
+COPY --chown="app-user":"app-user" sample /app/sample
 
 # These are the two folders that change the most.
 COPY --chown="app-user":"app-user" db_assessment /app/db_assessment
