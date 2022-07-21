@@ -13,9 +13,12 @@
 # limitations under the License.
 
 
-import pandas as pd
+import csv
+import os
+import warnings
+
 import numpy as np
-import csv, os, warnings
+import pandas as pd
 
 warnings.simplefilter("error", pd.errors.ParserWarning)
 

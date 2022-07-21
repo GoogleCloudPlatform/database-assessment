@@ -6,6 +6,7 @@ FROM ${PYTHON_IMAGE} as python-base
 ENV PIP_DEFAULT_TIMEOUT=100 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
+    PIP_ROOT_USER_ACTION=ignore \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PYTHONFAULTHANDLER=1 \
@@ -17,8 +18,8 @@ RUN apt-get update \
     && rm -rf /root/.cache \
     && rm -rf /var/apt/lists/* \
     && rm -rf /var/cache/apt/*
-RUN pip install --upgrade pip  \
-    pip install wheel setuptools
+RUN pip install  --no-cache-dir  --upgrade pip  \
+    pip install  --no-cache-dir  wheel setuptools
 
 
 FROM python-base AS build-stage
@@ -30,7 +31,7 @@ COPY requirements.txt api-requirements.txt setup.py LICENSE /app/
 COPY db_assessment /app/db_assessment
 RUN python -m venv --copies /app/venv
 RUN . /app/venv/bin/activate \
-    &&  pip install -r requirements.txt  -r api-requirements.txt
+    &&  pip instal  --no-cache-dir  -r requirements.txt  -r api-requirements.txt
 
 ## Beginning of runtime image
 FROM ${PYTHON_IMAGE} as run-image

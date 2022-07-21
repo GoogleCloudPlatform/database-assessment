@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import dataclass
-from typing import Optional
 import logging
+import os
+from dataclasses import dataclass
+from tempfile import TemporaryDirectory
+from typing import Optional
+
 from flask import Flask, request
 from werkzeug.utils import secure_filename
-from tempfile import TemporaryDirectory
-import os
-from db_assessment.optimusprime import runMain
 
+from db_assessment.optimusprime import runMain
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -28,13 +29,12 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class UserConfig:
-    transformersConfig: str = "opConfig/transformers.json"
+    transformersconfig: str = "db_assessment/opConfig/transformers.json"
     dataset: Optional[str] = None
     projectname: Optional[str] = None
     collectionid: Optional[str] = None
     dbversion: Optional[str] = None
     fileslocation: str = "dbResults"
-    transformersconfig: str = "opConfig/transformers.json"
     sep: str = ","
     collectionversion: str = "0.0.0"
     schemadetection: str = "FILLGAP"
@@ -46,6 +46,7 @@ class UserConfig:
     filterbysqlversion: str = ""
     filterbydbversion: str = ""
     loadtype: str = "WRITE_APPEND"
+    skipvalidations: bool = False
 
 
 @app.route("/api/loadAssessment", methods=["POST"])
@@ -69,3 +70,7 @@ def loadAssessment():
         )
         runMain(config)
     return "", 201
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8001)

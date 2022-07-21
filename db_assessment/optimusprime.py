@@ -131,7 +131,7 @@ def runMain(args):
             )
 
         # Getting file pattern for find config files in the OS to be imported
-        csvFilesLocationPatternOPConfig = "opConfig/*.csv"
+        csvFilesLocationPatternOPConfig = "db_assessment/opConfig/*.csv"
 
         # Getting a list of files from OS based on the pattern provided
         fileListOPConfig = import_db_assessment.getAllFilesByPattern(
@@ -447,7 +447,7 @@ def argumentsParser():
     parser.add_argument(
         "-transformersconfig",
         type=str,
-        default="opConfig/transformers.json",
+        default="db_assessment/opConfig/transformers.json",
         help="location of transformers.json file with all parameters and rules",
     )
 

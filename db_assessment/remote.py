@@ -13,15 +13,14 @@
 # limitations under the License.
 
 
+# Messages handling
+import logging
+
 # Basic python built-in libraries to enable read, write and manipulate files in the OS
 import os
 
 # Import to Big Query
 from db_assessment import import_db_assessment
-
-
-# Messages handling
-import logging
 
 logging.getLogger().setLevel(level=logging.INFO)
 
