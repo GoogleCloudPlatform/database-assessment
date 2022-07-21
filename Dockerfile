@@ -31,7 +31,7 @@ COPY requirements.txt api-requirements.txt setup.py LICENSE /app/
 COPY db_assessment /app/db_assessment
 RUN python -m venv --copies /app/venv
 RUN . /app/venv/bin/activate \
-    &&  pip instal  --no-cache-dir  -r requirements.txt  -r api-requirements.txt
+    &&  pip install  --no-cache-dir  -r requirements.txt  -r api-requirements.txt
 
 ## Beginning of runtime image
 FROM ${PYTHON_IMAGE} as run-image
