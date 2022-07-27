@@ -51,5 +51,5 @@ COPY --chown="app-user":"app-user" sample /app/sample
 COPY --chown="app-user":"app-user" db_assessment /app/db_assessment
 
 USER "app-user"
-ENTRYPOINT [ "gunicorn","--bind", "0.0.0.0:8080","--timeout", "300", "--workers","4", "db_assessment.api:app"]
+ENTRYPOINT [ "gunicorn","--bind", "0.0.0.0:8080","--timeout", "0", "--workers","1", "db_assessment.api:app"]
 EXPOSE 8080
