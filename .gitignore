@@ -1,6 +1,11 @@
 invoke.yml
-sample/datacollection/*.log
-.venv
+sample/datacollection/*
+!sample/datacollection/*.tar.gz
+.venv/
 __pycache__
 *.py[cod]
 *$py.class
+.DS_Store
+.vscode
+build/
+*.egg-info
