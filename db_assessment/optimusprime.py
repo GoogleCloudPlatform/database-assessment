@@ -595,9 +595,7 @@ def argumentsParser():
     return args
 
 
-if __name__ == "__main__":
-
-    # Handling arguments
+def main():
     args = argumentsParser()
 
     if args.remote:
@@ -605,3 +603,8 @@ if __name__ == "__main__":
     else:
         # Call main function
         runMain(args)
+
+
+if __name__ == "__main__":
+
+    main()

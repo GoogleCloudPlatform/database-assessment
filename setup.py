@@ -60,8 +60,8 @@ setuptools.setup(
     extras_require=extras_require,
     entry_points={
         "console_scripts": [
-            "opdba = db_assessment.optimusprime:runMain",
-            "optimus-prime = db_assessment.optimusprime:runMain",
+            "opdba = db_assessment.optimusprime:main",
+            "optimus-prime = db_assessment.optimusprime:main",
         ],
     },
 )
