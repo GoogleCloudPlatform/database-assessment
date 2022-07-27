@@ -52,9 +52,8 @@ def runRemote(args):
 
     # Getting a list of files from OS based on the pattern provided
     # This is the default directory to have all customer database results from oracle_db_assessment.sql
-    files = import_db_assessment.getAllFilesByPattern(csvFilesLocationPattern)
-
-    files = {file_name: file_name for file_name in files}
+    filename_list = import_db_assessment.getAllFilesByPattern(csvFilesLocationPattern)
+    files = {filename: open(filename, "r") for filename in filename_list}
     result = requests.post(
         f"{args.remoteurl}/api/loadAssessment",
         files=files,

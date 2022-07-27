@@ -51,14 +51,14 @@ class UserConfig:
 
 @app.route("/api/loadAssessment", methods=["POST"])
 def loadAssessment():
-    logger.info(f"{len(request.files)} files uploaded")
+    app.logger.info(f"{len(request.files)} files uploaded")
     if len(request.files) <= 0:
         return "No files uploaded", 400
     with TemporaryDirectory() as tmpDir:
         for file in request.files.values():
-            logger.info(f"saved {file.filename}")
+            app.logger.info(f"saved {file.filename}")
             filePath = os.path.join(tmpDir, secure_filename(file.filename))
-            logger.info(f"saved {file.filename} as {secure_filename(file.filename)}")
+            app.logger.info(f"saved {file.filename} as {filePath}")
             file.save(filePath)
 
         request_data = request.form
