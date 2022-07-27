@@ -1,7 +1,6 @@
 invoke.yml
-sample/datacollection/*
-!sample/datacollection/*.tar.gz
-.venv/
+sample/datacollection/*.log
+.venv
 __pycache__
 *.py[cod]
 *$py.class
