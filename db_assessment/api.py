@@ -12,56 +12,61 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+import os
+from dataclasses import dataclass
+from tempfile import TemporaryDirectory
+from typing import Optional
+
 from flask import Flask, request
 from werkzeug.utils import secure_filename
-from tempfile import TemporaryDirectory
-import os
-from optimusprime import runMain
 
+from db_assessment.optimusprime import runMain
 
 app = Flask(__name__)
+logger = logging.getLogger(__name__)
 
 
-@app.route("/api/loadAssesment", methods=["POST"])
-def loadAssesment():
-    print(f"{len(request.files)} files uploaded")
+@dataclass
+class UserConfig:
+    transformersconfig: str = "db_assessment/opConfig/transformers.json"
+    dataset: Optional[str] = None
+    projectname: Optional[str] = None
+    collectionid: Optional[str] = None
+    dbversion: Optional[str] = None
+    fileslocation: str = "dbResults"
+    sep: str = ","
+    collectionversion: str = "0.0.0"
+    schemadetection: str = "FILLGAP"
+    deletedataset: bool = False
+    fromdataframe: bool = False
+    consolidatelogs: bool = False
+    consolidatedataframes: bool = False
+    importcomment: str = ""
+    filterbysqlversion: str = ""
+    filterbydbversion: str = ""
+    loadtype: str = "WRITE_APPEND"
+    skipvalidations: bool = False
+
+
+@app.route("/api/loadAssessment", methods=["POST"])
+def loadAssessment():
+    app.logger.info(f"{len(request.files)} files uploaded")
     if len(request.files) <= 0:
-        return 'No files uploaded', 400
+        return "No files uploaded", 400
     with TemporaryDirectory() as tmpDir:
         for file in request.files.values():
-            print(file)
-            print(file.filename)
-            print(secure_filename(file.filename))
+            app.logger.info(f"saved {file.filename}")
             filePath = os.path.join(tmpDir, secure_filename(file.filename))
+            app.logger.info(f"saved {file.filename} as {filePath}")
             file.save(filePath)
 
         request_data = request.form
-        config = UserConfig()
-        config.fileslocation = tmpDir
-        config.dataset = request_data['dataset']
-        config.collectionid = request_data['collectionId']
-        config.projectname = request_data['projectId']
-
+        config = UserConfig(
+            fileslocation=tmpDir,
+            dataset=request_data.get("dataset", None),
+            collectionid=request_data.get("collectionId", None),
+            projectname=request_data.get("projectId", None),
+        )
         runMain(config)
-    return '', 201
-
-
-class UserConfig:
-    transformersConfig = 'opConfig/transformers.json'
-    dataset = None
-    projectname = None
-    collectionid = None
-    dbversion = None
-    fileslocation = "dbResults"
-    transformersconfig = "opConfig/transformers.json"
-    sep = ","
-    collectionversion = "0.0.0"
-    schemadetection = "FILLGAP"
-    deletedataset = False
-    fromdataframe = False
-    consolidatelogs = False
-    consolidatedataframes = False
-    importcomment = ''
-    filterbysqlversion = ''
-    filterbydbversion = ''
-    loadtype = 'WRITE_APPEND'
+    return "", 201
