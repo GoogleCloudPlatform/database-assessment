@@ -1,4 +1,5 @@
 invoke.yml
+sample/datacollection/*/*.log
 sample/datacollection/*.log
 !sample/datacollection/*.tar.gz
 .venv
