@@ -15,8 +15,8 @@ The Optimus Prime Database Assessment tool is used to assess homogenous migratio
 1.1. Database user creation.
 
 Create an Oracle database user -or- choose an existing user account .
-   * If you decide to use an existing database user with all the privileges already assigned please go to Step 1.3.
 
+* If you decide to use an existing database user with all the privileges already assigned please go to Step 1.3.
 
 ```
 if creating a user within a CDB find out the common_user_prefix and then create the user like so, as higher priveleged user (like sys):
@@ -35,25 +35,24 @@ cd <work-directory>
 git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
 ```
 
-1.3. Verfiy 3 Grants scripts under (@/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/) 
-   * grants_wrapper.sql
-   * minimum_select_grants_for_targets_12c_AND_ABOVE.sql
-   * minimum_select_grants_for_targets_ONLY_FOR_11g.sql
-   
-1.3.1a Run the script grants_wrapper.sql which will call Grants script based on your database version (`minimum_select_grants_for_targets_12c_AND_ABOVE.sql` for Oracle Database Version 12c and above OR `minimum_select_grants_for_targets_ONLY_FOR_11g.sql` for Oracle Database Version 11g) to grant privileges to the user created in Step 1. 
+1.3. Verfiy 3 Grants scripts under (@/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/)
 
-	
+* grants_wrapper.sql
+* minimum_select_grants_for_targets_12c_AND_ABOVE.sql
+* minimum_select_grants_for_targets_ONLY_FOR_11g.sql
+
+1.3.1a Run the script grants_wrapper.sql which will call Grants script based on your database version (`minimum_select_grants_for_targets_12c_AND_ABOVE.sql` for Oracle Database Version 12c and above OR `minimum_select_grants_for_targets_ONLY_FOR_11g.sql` for Oracle Database Version 11g) to grant privileges to the user created in Step 1.
+
 ```
 @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/grants_wrapper.sql
 Please enter the DB Local Username(Or CDB Username) to receive all required grants: [C##]optimusprime
 ```
 
-
 > NOTE: grants_wrapper.sql has provided variable db_awr_license which is set default to Y to access AWR tables. AWR is a licensed feature of Oracle. If you don't have license to run AWR you can disable flag and it will execute script minimum_select_grants_for_targets_ONLY_FOR_11g.sql.
 
 OR
 
-1.3.1b You can run appropriate script based your database version (`minimum_select_grants_for_targets_12c_AND_ABOVE.sql` for Oracle Database Version 12c and above OR `minimum_select_grants_for_targets_ONLY_FOR_11g.sql` for Oracle Database Version 11g) to grant privileges to the user created in Step 1. 
+1.3.1b You can run appropriate script based your database version (`minimum_select_grants_for_targets_12c_AND_ABOVE.sql` for Oracle Database Version 12c and above OR `minimum_select_grants_for_targets_ONLY_FOR_11g.sql` for Oracle Database Version 11g) to grant privileges to the user created in Step 1.
 
 For Database version 11g and below
 
@@ -69,9 +68,10 @@ For Database version 12c and above
 ```
 
 1.4. Execute /home/oracle/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh to start collecting the data.
-   * Execute this from a system that can access your database via sqlplus
-   * Pass connect string as input to this script (see below for example)
-   * NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
+
+* Execute this from a system that can access your database via sqlplus
+* Pass connect string as input to this script (see below for example)
+* NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
 
 ```
 mkdir -p /<work-directory>/oracle-database-assessment-output
@@ -82,8 +82,9 @@ cd /<work-directory>/oracle-database-assessment-output
 ```
 
 1.5. Once the script is executed you should see many opdb\*.log output files generated. It is recommended to zip/tar these files.
-   * All the generated files follow this standard  `opdb__<queryname>__<dbversion>_<scriptversion>_<hostname>_<dbname>_<instancename>_<datetime>.log`
-   * Use meaningful names when zip/tar the files.
+
+* All the generated files follow this standard  `opdb__<queryname>__<dbversion>_<scriptversion>_<hostname>_<dbname>_<instancename>_<datetime>.log`
+* Use meaningful names when zip/tar the files.
 
 ```
 Example output:
@@ -146,7 +147,6 @@ The table below demonstrates, at a high level, the  information that  is being c
 |opdb__dbservicesinfo*log|Database services - Used for connection handling and Application failover|Support how applications connects to database and handle failover scenarios|dba_services,cdb_services
 |opdb__usrsegatt*log|Map user schemas with segments/objects created in SYS/SYSTEM tablespaces|Support database migration strategies|dba_segments,cdb_segments,system.logstdby$skip_support
 
-
 1.6. Repeat step 1.3 for all Oracle databases that you want to assess.
 
 ## Step 2 - Importing the data collected into Google Big Query for analysis
@@ -196,50 +196,49 @@ mv <<file file>> /<work-directory>/oracle-database-assessment-output
 unzip <<zip files>>
 ```
 
-2.7. [Create a service account and download the key](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin ) . 
-   * Set GOOGLE_APPLICATION_CREDENTIALS to point to the downloaded key. Make sure the service account has BigQuery Admin privelege. 
-   * NOTE: This step can be skipped if using [Cloud Shell](https://ssh.cloud.google.com/cloudshell/)
+2.7. [Create a service account and download the key](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin ) .
+
+* Set GOOGLE_APPLICATION_CREDENTIALS to point to the downloaded key. Make sure the service account has BigQuery Admin privelege.
+* NOTE: This step can be skipped if using [Cloud Shell](https://ssh.cloud.google.com/cloudshell/)
 
 2.8. Create a python virtual environment to install dependencies and execute the `optimusprime.py` script
 
 ```
-	python3 -m venv $OP_WORKDING_DIR/op-venv
-	source $OP_WORKDING_DIR/op-venv/bin/activate
-	cd $OP_WORKDING_DIR/oracle-database-assessment/
-	
-	pip3 install pip --upgrade
-	pip3 install .
-	
-	cd $OP_WORKDING_DIR/oracle-database-assessment/db_assessment/
+ python3 -m venv $OP_WORKDING_DIR/op-venv
+ source $OP_WORKDING_DIR/op-venv/bin/activate
+ cd $OP_WORKDING_DIR/oracle-database-assessment/
+ 
+ pip3 install pip --upgrade
+ pip3 install .
+ 
+ If you want to import one single Optimus Prime file collection (From 1 single database), please follow the below step:
 
-	If you want to import one single Optimus Prime file collection (From 1 single database), please follow the below step:
+ optimus-prime -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -importcomment "this is for prod"
 
-	python optimusprime.py -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -importcomment "this is for prod"
+ If you want to import various Optimus Prime file collections (From various databases) that are stored under the same directory being used for -fileslocation. Then, you can add to your command two additional flags (-fromdataframe -consolidatedataframes) and pass only "" to -collectionid. See example below:
 
-	If you want to import various Optimus Prime file collections (From various databases) that are stored under the same directory being used for -fileslocation. Then, you can add to your command two additional flags (-fromdataframe -consolidatedataframes) and pass only "" to -collectionid. See example below:
+ optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes
+ 
+ If you want to import only specific db version or sql version from Optimus Prime file collections hat are stored under the same directory being used for -fileslocation.  
 
-	python optimusprime.py -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes
-	
-	If you want to import only specific db version or sql version from Optimus Prime file collections hat are stored under the same directory being used for -fileslocation.  
+ optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes -filterbydbversion 11.1 -filterbysqlversion 2.0.3
+ 
+ If you want to akip all file validations 
 
-    python optimusprime.py -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes -filterbydbversion 11.1 -filterbysqlversion 2.0.3
-	
-	If you want to akip all file validations 
-
-    python optimusprime.py -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -skipvalidations
+ optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -skipvalidations
 ```
 
-*  `-dataset`: is the name of the dataset in Google Big Query. It is created if it does not exists. If it does already nothing to do then.
-*  `-collectionid`: is the file identification which last numbers in the filename which represents `<datetime> (mmddrrhh24miss)`.
-*  In this example of a filename `opdb__usedspacedetails__121_0.1.0_mydbhost.mycompany.com.ORCLDB.orcl1.071621111714.log` the file identification is `071621111714`.
-*  `-fileslocation`: The location in which the opdb*log were saved.
-*  `-projectname`: The GCP project in which the data will be loaded.
-*  `-deletedataset`: This an optinal. In case you want to delete the whole existing dataset before importing the data. 
-	*  WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
+* `-dataset`: is the name of the dataset in Google Big Query. It is created if it does not exists. If it does already nothing to do then.
+* `-collectionid`: is the file identification which last numbers in the filename which represents `<datetime> (mmddrrhh24miss)`.
+* In this example of a filename `opdb__usedspacedetails__121_0.1.0_mydbhost.mycompany.com.ORCLDB.orcl1.071621111714.log` the file identification is `071621111714`.
+* `-fileslocation`: The location in which the opdb*log were saved.
+* `-projectname`: The GCP project in which the data will be loaded.
+* `-deletedataset`: This an optinal. In case you want to delete the whole existing dataset before importing the data.
+  * WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
 * `-importcomment`: This an optional. In case you want to store any comment about the load in opkeylog table. Eg: "This is for Production import"
 * `-filterbysqlversion`: This an optional. In case you have files from multiple sql versions in the folder and you want to load only specific sql version files
 * `-filterbydbversion`: This an optional. In case you have files from multiple db versions in the folder and you want to load only specific db version files
-* `-skipvalidations`: This is optional. Default is False. if we use the flag, file validations will be skipped 
+* `-skipvalidations`: This is optional. Default is False. if we use the flag, file validations will be skipped
 
 * >NOTE: If your file has elapsed time or any other string except data, fun following script to remove it
 
@@ -250,14 +249,15 @@ for i in `grep "Elapsed:" $OP_OUTPUT_DIR/*.log |  cut -d ":" -f 1`; do sed -i '$
 ## Step 3 - Analyzing imported data
 
 3.1. Open the dataset used in the step 2 of Part 2 in Google Big Query
-  *  Query the viewnames starting with vReport* for further analysis
-  *  Sample queries are listed, they provide
-     *  Source DB Summary
-     *  Source Host details
-     *  Google Bare Metal Sizing
-     *  Google Bare Metal Pricing
-     *  Migration Recommendations
-  *  Sample [Assessment Report](report/Optimus_Prime_-_dashboard.pdf), was created in DataStudio. A similar report can be generated using the queries for your datasets as part of the assessment readout.
+
+* Query the viewnames starting with vReport* for further analysis
+* Sample queries are listed, they provide
+  * Source DB Summary
+  * Source Host details
+  * Google Bare Metal Sizing
+  * Google Bare Metal Pricing
+  * Migration Recommendations
+* Sample [Assessment Report](report/Optimus_Prime_-_dashboard.pdf), was created in DataStudio. A similar report can be generated using the queries for your datasets as part of the assessment readout.
 
 ## Contributing to the project
 
