@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 
 import setuptools
 
 # Importing Optimus Prime Version
-from db_assessment.version import __version__
+from db_assessment import version
+__version__= version.__version__
 
 name = "oracle-db-assessment"
-description = "A tool to enable collection of data from Oracle databases for homogeneous and heterogeneous database migration assessment"
+description = "A tool to enable collection of data from Oracle datases for homogeneous and heterogeneous database migration assessment"
 version = "0.1.0"
 release_status = "Development Status :: 4 - Beta"
 
@@ -34,7 +36,7 @@ with open("requirements.txt", "r") as fp:
 
 extras_require = {}
 
-packages = setuptools.find_packages(include=["db_assessment"])
+packages = setuptools.find_packages()
 
 setuptools.setup(
     name=name,
@@ -58,10 +60,6 @@ setuptools.setup(
     python_requires=">=3.6",
     install_requires=dependencies,
     extras_require=extras_require,
-    entry_points={
-        "console_scripts": [
-            "opdba = db_assessment.optimusprime:runMain",
-            "optimus-prime = db_assessment.optimusprime:runMain",
-        ],
+    entry_points={    
     },
 )
