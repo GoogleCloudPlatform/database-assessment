@@ -2,7 +2,7 @@
 
 function checkVersion(){
 connectString=$1
-version=`sqlplus -s ${connectString} <<EOF
+version=`sqlplus -s "${connectString}" <<EOF
 set pagesize 0 feedback off verify off heading off echo off
 select version from v\\$instance;
 exit;
