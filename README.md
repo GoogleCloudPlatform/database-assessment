@@ -1,9 +1,9 @@
 # Optimus Prime Database Assessment
 
-The Optimus Prime Database Assessment tool is used to assess homogenous migrations of Oracle databases. Assessment results are integrated with Google Big Query to support detailed reporting and analysis. The tool can be used for one or many Oracle databases, and includes the following components:
+The Optimus Prime Database Assessment tool is used to assess homogenous migrations of Oracle databases. Assessment results are integrated with Google BigQuery to support detailed reporting and analysis. The tool can be used for one or many Oracle databases, and includes the following components:
 
 1. A SQL script (.sql) to collect data from Oracle Database(s)
-2. A python script (.py) to import data into Google Big Query
+2. A python script (.py) to import data into Google BigQuery
 3. A Data Studio template that can be used to generate assessment report
 
 > NOTE: The script to collect data only runs SELECT statements against Oracle dictionary and requires read permissions. No application data is accessed, nor is any data changed or deleted.
@@ -108,7 +108,7 @@ The table below demonstrates, at a high level, the  information that  is being c
 |Output Filename(s)|Data Collected|Justification/Context|Dictionary Views
 | :------------- |:-------------------| :-----| :-------------------|
 |opdb__awrsnapdetails_*log|Begin time, End time and the count of snapshots available. |Provide information about both the retention and the amount of data available|dba_hist_snapshot
-|opdb__opkeylog_*log|Host, database name, instance name, collection time |Create a unique identifier when importing multiple collection in the same Big Query data set|NA
+|opdb__opkeylog_*log|Host, database name, instance name, collection time |Create a unique identifier when importing multiple collection in the same BigQuery data set|NA
 |opdb_dbsummary_*log|Dbname, DbVersion, Dbsizes, RAC Instances, etc|It will provide us a high level view of the database and its main attributes|v$database, cdb_users,dba_users, v$instance, v$database,gv$instance, nls_database_parameters,v$version,v$log_history,v$log,v$sgastat,v$pgastat, cdb_data_files,dba_data_files, cdb_segments,dba_segments,logstdby$skip_support
 |opdb_pdbsinfo_*log|DBID, PDBIDs, PDBNames and Status|Overview of the PDBs/applications being used|cdb_pdbs (Applicable only to version 12c and superior in multitenant architecture)
 |opdb_pdbsopenmode_*log|PDBSize|Storage used by PDBs/application|v$pdbs (Applicable only to version 12c and superior in multitenant architecture)
@@ -144,7 +144,7 @@ The table below demonstrates, at a high level, the  information that  is being c
 
 1.6. Repeat step 1.3 for all Oracle databases that you want to assess.
 
-## Step 2 - Importing the data collected into Google Big Query for analysis
+## Step 2 - Importing the data collected into Google BigQuery for analysis
 
 2.1. Setup Environment variables (From Google Cloud Shell ONLY).
 
@@ -225,7 +225,7 @@ Check the column separator used in the unzipped files.  It will be either ';' or
 ```
 
 * `-sep`: is the column separator used in the data to be loaded.  The current version of extract uses '|'.  Previous versions of the extract script used ';'.  
-* `-dataset`: is the name of the dataset in Google Big Query. It is created if it does not exists. If it does already nothing to do then.
+* `-dataset`: is the name of the dataset in Google BigQuery. It is created if it does not exists. If it does already nothing to do then.
 * `-collectionid`: is the file identification which last numbers in the filename which represents `<datetime> (mmddrrhh24miss)`.
 * In this example of a filename `opdb__usedspacedetails__121_0.1.0_mydbhost.mycompany.com.ORCLDB.orcl1.071621111714.log` the file identification is `071621111714`.
 * `-fileslocation`: The location in which the opdbi\*log were saved.
@@ -245,7 +245,7 @@ for i in `grep "Elapsed:" $OP_OUTPUT_DIR/*.log |  cut -d ":" -f 1`; do sed -i '$
 
 ## Step 3 - Analyzing imported data
 
-3.1. Open the dataset used in the step 2 of Part 2 in Google Big Query
+3.1. Open the dataset used in the step 2 of Part 2 in Google BigQuery
 
 * Query the viewnames starting with vReport\* for further analysis
 * Sample queries are listed, they provide
