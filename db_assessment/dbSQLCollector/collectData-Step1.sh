@@ -17,7 +17,7 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 connectString=$1
-version=`checkVersion ${connectString}`
+version=`checkVersion "${connectString}"`
 echo "Your database version is ${version}"
 IFS_bk=`echo ${IFS}`
 IFS="."
