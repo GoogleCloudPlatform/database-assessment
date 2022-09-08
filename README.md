@@ -67,29 +67,24 @@ For Database version 12c and above
 @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/minimum_select_grants_for_targets_12c_AND_ABOVE.sql
 ```
 
-1.4. Execute /home/oracle/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh to start collecting the data.
+1.4. Execute <work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh to start collecting the data.
 
 * Execute this from a system that can access your database via sqlplus
 * Pass connect string as input to this script (see below for example)
 * NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
 
 ```
-mkdir -p /<work-directory>/oracle-database-assessment-output
-
-cd /<work-directory>/oracle-database-assessment-output
-
-/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh optimusprime/mysecretPa33w0rd@//<serverhost>/<servicename>
+cd <work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector
+./collectData-Step1.sh optimusprime/mysecretPa33w0rd@//<serverhost>:<port>/<servicename>
 ```
 
-1.5. Once the script is executed you should see many opdb\*.log output files generated. It is recommended to zip/tar these files.
+1.5. Once the script is executed it will create a compressed tar file in <work-directory>/op_output
 
 * All the generated files follow this standard  `opdb__<queryname>__<dbversion>_<scriptversion>_<hostname>_<dbname>_<instancename>_<datetime>.log`
-* Use meaningful names when zip/tar the files.
 
 ```
-Example output:
+Example tarfile contents:
 
-oracle@oracle12c oracle-database-assessment-output]$ ls
 manual__alertlog__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log            opdb__dbsummary__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 opdb__awrhistcmdtypes__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log       opdb__freespaces__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 opdb__awrhistosstat__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log         opdb__indexestypes__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
@@ -195,6 +190,7 @@ cd /<work-directory>/oracle-database-assessment-output
 mv <<file file>> /<work-directory>/oracle-database-assessment-output
 unzip <<zip files>>
 ```
+Check the column separator used in the unzipped files.  It will be either ';' or '|'. 
 
 2.7. [Create a service account and download the key](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin ) .
 
@@ -213,25 +209,26 @@ unzip <<zip files>>
  
  If you want to import one single Optimus Prime file collection (From 1 single database), please follow the below step:
 
- optimus-prime -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -importcomment "this is for prod"
+ optimus-prime -sep '|' -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -importcomment "this is for prod"
 
  If you want to import various Optimus Prime file collections (From various databases) that are stored under the same directory being used for -fileslocation. Then, you can add to your command two additional flags (-fromdataframe -consolidatedataframes) and pass only "" to -collectionid. See example below:
 
- optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes
+ optimus-prime -sep '|' -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes
  
  If you want to import only specific db version or sql version from Optimus Prime file collections hat are stored under the same directory being used for -fileslocation.  
 
- optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes -filterbydbversion 11.1 -filterbysqlversion 2.0.3
+ optimus-prime -sep '|' -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes -filterbydbversion 11.1 -filterbysqlversion 2.0.3
  
  If you want to akip all file validations 
 
- optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -skipvalidations
+ optimus-prime -sep '|' -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -skipvalidations
 ```
 
+* `-sep`: is the column separator used in the data to be loaded.  The current version of extract uses '|'.  Previous versions of the extract script used ';'.  
 * `-dataset`: is the name of the dataset in Google Big Query. It is created if it does not exists. If it does already nothing to do then.
 * `-collectionid`: is the file identification which last numbers in the filename which represents `<datetime> (mmddrrhh24miss)`.
 * In this example of a filename `opdb__usedspacedetails__121_0.1.0_mydbhost.mycompany.com.ORCLDB.orcl1.071621111714.log` the file identification is `071621111714`.
-* `-fileslocation`: The location in which the opdb*log were saved.
+* `-fileslocation`: The location in which the opdbi\*log were saved.
 * `-projectname`: The GCP project in which the data will be loaded.
 * `-deletedataset`: This an optinal. In case you want to delete the whole existing dataset before importing the data.
   * WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
@@ -250,7 +247,7 @@ for i in `grep "Elapsed:" $OP_OUTPUT_DIR/*.log |  cut -d ":" -f 1`; do sed -i '$
 
 3.1. Open the dataset used in the step 2 of Part 2 in Google Big Query
 
-* Query the viewnames starting with vReport* for further analysis
+* Query the viewnames starting with vReport\* for further analysis
 * Sample queries are listed, they provide
   * Source DB Summary
   * Source Host details
