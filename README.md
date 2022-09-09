@@ -150,8 +150,94 @@ The table below demonstrates, at a high level, the  information that  is being c
 1.6. Repeat step 1.3 for all Oracle databases that you want to assess.
 
 ## Step 2 - Importing the data collected into Google BigQuery for analysis
+Much of the data import and report generation has been automated.  Follow section 2.1 to use the automated process.  Section 2.2 provides instructions for the manual process if that is your preference.  Both processes assume you have rights to create datasets in a Big Query project and access to Data Studio.
 
-2.1. Setup Environment variables (From Google Cloud Shell ONLY).
+Make note of the project name and the data set name and location.  The data set will be created if it does not exist.  
+
+2.1  Automated load process
+
+These instructions are written for running in a Cloud Shell environment.
+
+2.1.1 Clone the Optimus Prime codebase to a working directory.
+
+Create a working directory for the code base, then clone the repository from Github.
+
+Ex:
+```
+mkdir -p ~/code/op
+cd ~/code/op
+git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
+```
+
+2.1.2 Create a data directory and upload files from the client
+
+Create a directory to hold the output files for processing, then upload the files to that location and uncompress.
+
+Ex:
+```
+mkdir ~/data
+<upload files to data>
+cd data
+<uncompress files>
+```
+
+2.1.3 Configure automation
+
+The automated process is configured via the file <workingdirectory>/oracle-database-assessment/db_addessment/0_configure_op_env.sh.  Edit this file and enter values for these variables:
+
+```
+# This is the name of the project into which you want to load data
+export PROJECTNAME=yourProjectNameHere
+
+# This is the name of the data set into which you want to load. 
+# The dataset will be created if it does not exist.
+# If the datset already exists, it will have this data appoended.
+# Use only alphanumeric characters, - (dash) or _ (underscore)
+# This name must be filesystem and html compatible
+export DSNAME=yourDatasetNameHere
+
+# This is the location in which the dataset should be created.  
+export DSLOC=yourRegionNameHere
+
+# This is the full path into which the customer's files have been extracted.
+export OP_LOG_DIR=/full/Path/To/LogFiles
+
+# This is the name of the report you want to create in DataStudio upon load completion.
+# Use only alphanumeric characters or embed HTML encoding.
+export REPORTNAME="OptimusPrime%20Dashboard%20${DSNAME}"
+```
+
+2.1.4 Execute the load scripts
+
+The load scripts expect to be run from the <workingdirectory>/oracle-database-assessment/db_addessment directory.  Change to this directory and run the following commands in numeric order.  Check output of each for errors before continuing to the next. 
+
+```
+. ./0_configure_op_env.sh
+. ./1_activate_op.sh
+. ./2_load_op.sh
+. ./3_run_op_etl.sh
+. ./4_gen_op_report_url.sh
+```
+
+The function of each script is as follows.
+```
+0_configure_op_env.sh - Defines environment variables that are used in the other scripts.
+1_activate_op.sh - Installs necessary Python support modules and activates the Python virtual environment for Optimus Prime.
+2_load_op.sh - Loads the client data files into the base Optimus Prime tables in the requested data set.
+3_run_op_etl.sh - Installs and runs Big Query procedures that create additional views and tables to support the Optimus Prime dashboard.
+4_gen_op_report_url.sh - Generates the URL to view the newly loaded data using a report template.  
+```
+
+2.1.5 View the data in Optimus Prime Dashboard report
+
+Click the link displayed by script 4_gen_op_report_url.sh to view the report.  Note that this link does not persist the report.
+To save the report for future use, click the '"Edit and Share"' button, then '"Acknowledge and Save"', then '"Add to Report"'.  It will then show up in Data Studio in '"Reports owned by me"' and can be shared with others.
+
+Skip to step 3 to perform additional analysis for anything not contained in the dashboard report.
+
+2.2  Manual load process
+
+2.2.1. Setup Environment variables (From Google Cloud Shell ONLY).
 
 ```
 gcloud auth list
@@ -159,7 +245,7 @@ gcloud auth list
 gcloud config set project <project id>
 ```
 
-2.2 Export Environment variables. (Step 1.2 has working directory created)
+2.2.2 Export Environment variables. (Step 1.2 has working directory created)
 
 ```
 export OP_WORKDING_DIR=<<path for working directory>
@@ -169,39 +255,39 @@ mkdir $OP_OUTPUT_DIR/log
 export OP_LOG_DIR=$OP_OUTPUT_DIR/log
 ```
 
-2.3 Create working directory (Skip if you have followed step 1.2 on same server)
+2.2.3 Create working directory (Skip if you have followed step 1.2 on same server)
 
 ```
 mkdir $OP_WORKDING_DIR
 ```
 
-2.4 Clone Github repository (Skip if you have followed step 1.2 on same server)
+2.2.4 Clone Github repository (Skip if you have followed step 1.2 on same server)
 
 ```
 cd <work-directory>
 git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
 ```
 
-2.5 Create assessment output directory
+2.2.5 Create assessment output directory
 
 ```
 mkdir -p /<work-directory>/oracle-database-assessment-output
 cd /<work-directory>/oracle-database-assessment-output
 ```
 
-2.6 Move zip files to assessment output directory and unzip
+2.2.6 Move zip files to assessment output directory and unzip
 
 ```
 mv <<file file>> /<work-directory>/oracle-database-assessment-output
 unzip <<zip files>>
 ```
 
-2.7. [Create a service account and download the key](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin ) .
+2.2.7. [Create a service account and download the key](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin ) .
 
 * Set GOOGLE_APPLICATION_CREDENTIALS to point to the downloaded key. Make sure the service account has BigQuery Admin privelege.
 * NOTE: This step can be skipped if using [Cloud Shell](https://ssh.cloud.google.com/cloudshell/)
 
-2.8. Create a python virtual environment to install dependencies and execute the `optimusprime.py` script
+2.2.8. Create a python virtual environment to install dependencies and execute the `optimusprime.py` script
 
 ```
  python3 -m venv $OP_WORKDING_DIR/op-venv
