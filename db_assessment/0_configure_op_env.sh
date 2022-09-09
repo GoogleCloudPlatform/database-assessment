@@ -1,31 +1,37 @@
-# This file configures the environemt for loading data files from the client
-# Edit this file and set the project name, data set name, and data set location to
-# where you want the data loaded.
-# Ensure you have proper access to the project and rights to create a data set.
+#!/usr/bin/env bash
 
-# This is the name of the project into which you want to load data
-export PROJECTNAME=yourProjectNameHere
+### Validate input
+##############################################################################
+echo "Verifying environment before configuring Optimus Prime"
 
-# This is the name of the data set into which you want to load. 
-# The dataset will be created if it does not exist.
-# If the datset already exists, it will have this data appoended.
-# Use only alphanumeric characters, - (dash) or _ (underscore)
-# This name must be filesystem and html compatible
-export DSNAME=yourDatasetNameHere
+# Fail if these variables are not set
+if [ "${PROJECTNAME}" == "" ]; then
+    echo "Please ensure PROJECTNAME is set properly."
+    return
+fi
+if [ "${DSNAME}" == "" ]; then
+    echo "Please ensure DSNAME is set properly."
+    return
+fi
+if [ "${DSLOC}" == "" ]; then
+    echo "Please ensure DSLOC is set properly."
+    return
+fi
+if [ "${OP_LOG_DIR}" == "" ]; then
+    echo "Please ensure OP_LOG_DIR is set properly."
+    return
+fi
 
-# This is the location in which the dataset should be created.  
-export DSLOC=yourRegionNameHere
 
-# This is the full path into which the customer's files have been extracted.
-export OP_LOG_DIR=fullPathToLogFiles
-
-# This is the name of the report you want to create in DataStudio upon load completion.
-# Use only alphanumeric characters or embed HTML encoding.
-export REPORTNAME="OptimusPrime%20Dashboard%20${DSNAME}"
-
-# This is the column separator used in the customer's files.  Older versions of 
-# the extract will use semicolon, newer versions will use pipe.
-export COLSEP='|'
+# Default these variables if they are not set.
+if [ "${REPORTNAME}" == "" ]; then
+    export REPORTNAME="OptimusPrime%20Dashboard%20${DSNAME}"
+    echo "REPORTNAME not set, defaulting to ${REPORTNAME}."
+fi
+if [ "${COLSEP}" == "" ]; then
+    export COLSEP='|'
+    echo "COLSEP not set, defaulting to ${COLSEP}"
+fi
 
 
 export OP_WORKING_DIR=$(pwd)

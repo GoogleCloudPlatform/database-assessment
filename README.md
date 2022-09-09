@@ -183,12 +183,16 @@ cd data
 
 2.1.3 Configure automation
 
-The automated process is configured via the file <workingdirectory>/oracle-database-assessment/db_addessment/0_configure_op_env.sh.  Edit this file and enter values for these variables:
+The automated process is configured via setting several environment variables and then executing the file <workingdirectory>/oracle-database-assessment/db_addessment/0_configure_op_env.sh.  
+
+Set these environment variables prior to starting the data load process:
 
 ```
+# Required
 # This is the name of the project into which you want to load data
 export PROJECTNAME=yourProjectNameHere
 
+# Required
 # This is the name of the data set into which you want to load. 
 # The dataset will be created if it does not exist.
 # If the datset already exists, it will have this data appoended.
@@ -196,15 +200,25 @@ export PROJECTNAME=yourProjectNameHere
 # This name must be filesystem and html compatible
 export DSNAME=yourDatasetNameHere
 
+# Required
 # This is the location in which the dataset should be created.  
 export DSLOC=yourRegionNameHere
 
+# Required
 # This is the full path into which the customer's files have been extracted.
 export OP_LOG_DIR=/full/Path/To/LogFiles
 
+# Optional
 # This is the name of the report you want to create in DataStudio upon load completion.
 # Use only alphanumeric characters or embed HTML encoding.
-export REPORTNAME="OptimusPrime%20Dashboard%20${DSNAME}"
+# Defaults to "OptimusPrime%20Dashboard%20${DSNAME}"
+export REPORTNAME=yourReportNameHere
+
+# Optional
+# This is the column separator used in the input data files.  
+# Previous versions of Optimus Prime used ';' (semicolon).
+# Defaults to | (pipe)
+export COLSEP='|'
 ```
 
 2.1.4 Execute the load scripts
