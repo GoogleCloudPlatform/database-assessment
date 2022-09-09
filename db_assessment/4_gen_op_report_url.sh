@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+set -eo pipefail 
 # ReportID is taken from the DataStudio template upon which the new report will be created.
 REPORTID=ed2d87f1-e037-4e65-8ef0-4439a3e62aa3
 

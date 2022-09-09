@@ -227,10 +227,10 @@ The load scripts expect to be run from the <workingdirectory>/oracle-database-as
 
 ```
 . ./0_configure_op_env.sh
-. ./1_activate_op.sh
-. ./2_load_op.sh
-. ./3_run_op_etl.sh
-. ./4_gen_op_report_url.sh
+./1_activate_op.sh
+./2_load_op.sh
+./3_run_op_etl.sh
+./4_gen_op_report_url.sh
 ```
 
 The function of each script is as follows.
