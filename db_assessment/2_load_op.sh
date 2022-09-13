@@ -5,7 +5,6 @@ BASE_DIR="${SCRIPT_DIR}/.."
 VENV_DIR="${SCRIPT_DIR}/../op-venv"
 
 bq mk -d --data_location=${DSLOC} ${DSNAME}
-cd ${OP_WORKING_DIR}/..
 for COLID in $(ls -1 ${OP_LOG_DIR}/opdb*| rev | cut -d '.' -f 2 | rev | sort | uniq)
 do
 ${VENV_DIR}/bin/optimus-prime -sep "${COLSEP}" -dataset ${DSNAME} -fileslocation ${OP_LOG_DIR} -projectname ${PROJECTNAME} -collectionid ${COLID} | tee ${THISD}/opload-${DSNAME}-${COLID}.log
