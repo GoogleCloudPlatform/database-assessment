@@ -12,3 +12,6 @@ build/
 *.egg-info
 .hypothesis
 .env
+op-venv
+*.log
+log/*
