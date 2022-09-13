@@ -7,19 +7,19 @@ echo "Verifying environment before configuring Optimus Prime"
 # Fail if these variables are not set
 if [ "${PROJECTNAME}" == "" ]; then
     echo "Please ensure PROJECTNAME is set properly."
-    exit
+    return
 fi
 if [ "${DSNAME}" == "" ]; then
     echo "Please ensure DSNAME is set properly."
-    exit
+    return
 fi
 if [ "${DSLOC}" == "" ]; then
     echo "Please ensure DSLOC is set properly."
-    exit
+    return
 fi
 if [ "${OP_LOG_DIR}" == "" ]; then
     echo "Please ensure OP_LOG_DIR is set properly."
-    exit
+    return
 fi
 
 
