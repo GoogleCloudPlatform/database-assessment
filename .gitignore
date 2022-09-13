@@ -14,3 +14,4 @@ build/
 .env
 op-venv
 *.log
+log/*
