@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -eo pipefail 
-THISDIR=$(pwd)
-python3 -m venv ${OP_WORKING_DIR}/../op-venv
-source ${OP_WORKING_DIR}/../op-venv/bin/activate
-cd ${OP_WORKING_DIR}/..
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="${SCRIPT_DIR}/.."
+VENV_DIR="${SCRIPT_DIR}/../op-venv"
 
-pip3 install pip --upgrade
+python3 -m venv ${VENV_DIR}
+source ${VENV_DIR}/bin/activate
+pip3 install pip wheel setuptools --upgrade
 pip3 install .
-cd ${THISDIR}
+cd ${BASE_DIR}
