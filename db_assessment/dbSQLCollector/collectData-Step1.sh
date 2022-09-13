@@ -27,8 +27,6 @@ dbVersion=$(( mainversion[0] + 0 ))
 
 full_path="$(dirname $(realpath $0))"
 SQL_SCRIPT=${full_path}
-#if [ ${dbVersion} -ge 12 ]; then
-echo "running oracle_db_assessment_12c_AND_ABOVE.sql"
 SQL_SCRIPT="${SQL_SCRIPT}/op_collect.sql"
 sqlplus -s ${connectString} @${SQL_SCRIPT}
 
