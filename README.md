@@ -8,9 +8,9 @@ The Optimus Prime Database Assessment tool is used to assess homogenous migratio
 
 > NOTE: The script to collect data only runs SELECT statements against Oracle dictionary and requires read permissions. No application data is accessed, nor is any data changed or deleted.
 
-# How to use this tool
+## How to use this tool
 
-## Step 1 - Database setup (Create readonly user with required priviledges)
+### Step 1 - Database setup (Create readonly user with required privileges)
 
 1.1. Database user creation.
 
@@ -18,19 +18,23 @@ Create an Oracle database user -or- choose an existing user account .
 
 * If you decide to use an existing database user with all the privileges already assigned please go to Step 1.4.
 
-```
 if creating a user within a CDB find out the common_user_prefix and then create the user like so, as higher privileged user (like sys):
+
+```sql
 select * from v$system_parameter where name='common_user_prefix';
 --C##
 create user C##optimusprime identified by "mysecretPa33w0rd";
+```
 
- if creating a application user within a PDB create a regular user
+if creating a application user within a PDB create a regular user
+
+```sql
 create user optimusprime identified by "mysecretPa33w0rd";
 ```
 
 1.2. Clone *optimus prime* into your work directory in a client machine that has connectivity to your databases
 
-```
+```shell
 cd <work-directory>
 git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
 ```
@@ -43,9 +47,9 @@ git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
 
 1.3.1a Run the script grants_wrapper.sql which will call Grants script based on your database version (`minimum_select_grants_for_targets_12c_AND_ABOVE.sql` for Oracle Database Version 12c and above OR `minimum_select_grants_for_targets_ONLY_FOR_11g.sql` for Oracle Database Version 11g) to grant privileges to the user created in Step 1.
 
-```
+```sql
 @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/grants_wrapper.sql
-Please enter the DB Local Username(Or CDB Username) to receive all required grants: [C##]optimusprime
+-- Please enter the DB Local Username(Or CDB Username) to receive all required grants: [C##]optimusprime
 ```
 
 > NOTE: grants_wrapper.sql has provided variable db_awr_license which is set default to Y to access AWR tables. AWR is a licensed feature of Oracle. If you don't have license to run AWR you can disable flag and it will execute script minimum_select_grants_for_targets_ONLY_FOR_11g.sql.
@@ -56,14 +60,14 @@ OR
 
 For Database version 11g and below
 
-```
+```sql
 @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/minimum_select_grants_for_targets_ONLY_FOR_11g.sql
-Please enter the DB Local Username(Or CDB Username) to receive all required grants: [C##]optimusprime
+-- Please enter the DB Local Username(Or CDB Username) to receive all required grants: [C##]optimusprime
 ```
 
 For Database version 12c and above
 
-```
+```sql
 @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/minimum_select_grants_for_targets_12c_AND_ABOVE.sql
 ```
 
@@ -73,7 +77,7 @@ For Database version 12c and above
 * Pass connect string as input to this script (see below for example)
 * NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
 
-```
+```shell
 mkdir -p /<work-directory>/oracle-database-assessment-output
 
 cd /<work-directory>/oracle-database-assessment-output
@@ -86,9 +90,9 @@ cd /<work-directory>/oracle-database-assessment-output
 * All the generated files follow this standard  `opdb__<queryname>__<dbversion>_<scriptversion>_<hostname>_<dbname>_<instancename>_<datetime>.log`
 * Use meaningful names when zip/tar the files.
 
-```
 Example output:
 
+```shell
 oracle@oracle12c oracle-database-assessment-output]$ ls
 manual__alertlog__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log            opdb__dbsummary__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 opdb__awrhistcmdtypes__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log       opdb__freespaces__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
@@ -149,7 +153,8 @@ The table below demonstrates, at a high level, the  information that  is being c
 
 1.6. Repeat step 1.3 for all Oracle databases that you want to assess.
 
-## Step 2 - Importing the data collected into Google BigQuery for analysis
+### Step 2 - Importing the data collected into Google BigQuery for analysis
+
 Much of the data import and report generation has been automated.  Follow section 2.1 to use the automated process.  Section 2.2 provides instructions for the manual process if that is your preference.  Both processes assume you have rights to create datasets in a Big Query project and access to Data Studio.
 
 Make note of the project name and the data set name and location.  The data set will be created if it does not exist.  
@@ -163,7 +168,8 @@ These instructions are written for running in a Cloud Shell environment.
 Create a working directory for the code base, then clone the repository from Github.
 
 Ex:
-```
+
+```shell
 mkdir -p ~/code/op
 cd ~/code/op
 git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
@@ -174,7 +180,8 @@ git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
 Create a directory to hold the output files for processing, then upload the files to that location and uncompress.
 
 Ex:
-```
+
+```shell
 mkdir ~/data
 <upload files to data>
 cd data
@@ -187,7 +194,7 @@ The automated process is configured via setting several environment variables an
 
 Set these environment variables prior to starting the data load process:
 
-```
+```shell
 # Required
 # This is the name of the project into which you want to load data
 export PROJECTNAME=yourProjectNameHere
@@ -223,9 +230,9 @@ export COLSEP='|'
 
 2.1.4 Execute the load scripts
 
-The load scripts expect to be run from the <workingdirectory>/oracle-database-assessment/db_assessment directory.  Change to this directory and run the following commands in numeric order.  Check output of each for errors before continuing to the next. 
+The load scripts expect to be run from the <workingdirectory>/oracle-database-assessment/db_assessment directory.  Change to this directory and run the following commands in numeric order.  Check output of each for errors before continuing to the next.
 
-```
+```shell
 . ./0_configure_op_env.sh
 ./1_activate_op.sh
 ./2_load_op.sh
@@ -234,13 +241,12 @@ The load scripts expect to be run from the <workingdirectory>/oracle-database-as
 ```
 
 The function of each script is as follows.
-```
-0_configure_op_env.sh - Defines environment variables that are used in the other scripts.
-1_activate_op.sh - Installs necessary Python support modules and activates the Python virtual environment for Optimus Prime.
-2_load_op.sh - Loads the client data files into the base Optimus Prime tables in the requested data set.
-3_run_op_etl.sh - Installs and runs Big Query procedures that create additional views and tables to support the Optimus Prime dashboard.
-4_gen_op_report_url.sh - Generates the URL to view the newly loaded data using a report template.  
-```
+
+* 0_configure_op_env.sh - Defines environment variables that are used in the other scripts.
+* 1_activate_op.sh - Installs necessary Python support modules and activates the Python virtual environment for Optimus Prime.
+* 2_load_op.sh - Loads the client data files into the base Optimus Prime tables in the requested data set.
+* 3_run_op_etl.sh - Installs and runs Big Query procedures that create additional views and tables to support the Optimus Prime dashboard.
+* 4_gen_op_report_url.sh - Generates the URL to view the newly loaded data using a report template.  
 
 2.1.5 View the data in Optimus Prime Dashboard report
 
@@ -253,7 +259,7 @@ Skip to step 3 to perform additional analysis for anything not contained in the 
 
 2.2.1. Setup Environment variables (From Google Cloud Shell ONLY).
 
-```
+```shell
 gcloud auth list
 
 gcloud config set project <project id>
@@ -261,39 +267,39 @@ gcloud config set project <project id>
 
 2.2.2 Export Environment variables. (Step 1.2 has working directory created)
 
-```
-export OP_WORKDING_DIR=<<path for working directory>
-export OP_BQ_DATASET=<<BigQuery Dataset Name>>
-export OP_OUTPUT_DIR=/$OP_WORKDING_DIR/oracle-database-assessment-output/<<assessment output directory>
+```shell
+export OP_WORKDING_DIR=$(pwd)
+export OP_BQ_DATASET=[Dataset Name]
+export OP_OUTPUT_DIR=/$OP_WORKDING_DIR/oracle-database-assessment-output/<assessment output directory>
 mkdir $OP_OUTPUT_DIR/log
 export OP_LOG_DIR=$OP_OUTPUT_DIR/log
 ```
 
 2.2.3 Create working directory (Skip if you have followed step 1.2 on same server)
 
-```
+```shell
 mkdir $OP_WORKDING_DIR
 ```
 
 2.2.4 Clone Github repository (Skip if you have followed step 1.2 on same server)
 
-```
+```shell
 cd <work-directory>
 git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
 ```
 
 2.2.5 Create assessment output directory
 
-```
+```shell
 mkdir -p /<work-directory>/oracle-database-assessment-output
 cd /<work-directory>/oracle-database-assessment-output
 ```
 
 2.2.6 Move zip files to assessment output directory and unzip
 
-```
-mv <<file file>> /<work-directory>/oracle-database-assessment-output
-unzip <<zip files>>
+```shell
+mv <file file> /<work-directory>/oracle-database-assessment-output
+unzip <zip files>
 ```
 
 2.2.7. [Create a service account and download the key](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin ) .
@@ -303,27 +309,27 @@ unzip <<zip files>>
 
 2.2.8. Create a python virtual environment to install dependencies and execute the `optimusprime.py` script
 
-```
+```shell
  python3 -m venv $OP_WORKDING_DIR/op-venv
  source $OP_WORKDING_DIR/op-venv/bin/activate
  cd $OP_WORKDING_DIR/oracle-database-assessment/
  
- pip3 install pip --upgrade
+ pip3 install pip wheel setuptools --upgrade
  pip3 install .
  
- If you want to import one single Optimus Prime file collection (From 1 single database), please follow the below step:
+ # If you want to import one single Optimus Prime file collection (From 1 single database), please follow the below step:
 
  optimus-prime -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -importcomment "this is for prod"
 
- If you want to import various Optimus Prime file collections (From various databases) that are stored under the same directory being used for -fileslocation. Then, you can add to your command two additional flags (-fromdataframe -consolidatedataframes) and pass only "" to -collectionid. See example below:
+ # If you want to import various Optimus Prime file collections (From various databases) that are stored under the same directory being used for -fileslocation. Then, you can add to your command two additional flags (-fromdataframe -consolidatedataframes) and pass only "" to -collectionid. See example below:
 
  optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes
  
- If you want to import only specific db version or sql version from Optimus Prime file collections hat are stored under the same directory being used for -fileslocation.  
+#  If you want to import only specific db version or sql version from Optimus Prime file collections hat are stored under the same directory being used for -fileslocation.  
 
  optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes -filterbydbversion 11.1 -filterbysqlversion 2.0.3
  
- If you want to akip all file validations 
+ # If you want to akip all file validations 
 
  optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -skipvalidations
 ```
@@ -342,11 +348,11 @@ unzip <<zip files>>
 
 * >NOTE: If your file has elapsed time or any other string except data, fun following script to remove it
 
-```
+```shell
 for i in `grep "Elapsed:" $OP_OUTPUT_DIR/*.log |  cut -d ":" -f 1`; do sed -i '$ d' $i; done
 ```
 
-## Step 3 - Analyzing imported data
+### Step 3 - Analyzing imported data
 
 3.1. Open the dataset used in the step 2 of Part 2 in Google BigQuery
 
