@@ -27,7 +27,7 @@ RUN apt-get install -y --no-install-recommends curl git build-essential \
     && apt-get autoremove -y
 
 WORKDIR /app
-COPY requirements.txt api-requirements.txt setup.py README.md LICENSE /app/ 
+COPY requirements.txt requirements/ setup.py README.md LICENSE /app/ 
 COPY db_assessment /app/db_assessment
 RUN python -m venv --copies /app/venv
 RUN . /app/venv/bin/activate \
