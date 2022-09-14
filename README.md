@@ -16,7 +16,7 @@ The Optimus Prime Database Assessment tool is used to assess homogenous migratio
 
 Create an Oracle database user -or- choose an existing user account .
 
-* If you decide to use an existing database user with all the privileges already assigned please go to Step 1.4.
+- If you decide to use an existing database user with all the privileges already assigned please go to Step 1.4.
 
 if creating a user within a CDB find out the common_user_prefix and then create the user like so, as higher privileged user (like sys):
 
@@ -32,7 +32,7 @@ if creating a application user within a PDB create a regular user
 create user optimusprime identified by "mysecretPa33w0rd";
 ```
 
-1.2. Clone *optimus prime* into your work directory in a client machine that has connectivity to your databases
+1.2. Clone _optimus prime_ into your work directory in a client machine that has connectivity to your databases
 
 ```shell
 cd <work-directory>
@@ -41,11 +41,11 @@ git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
 
 1.3. Verify 3 Grants scripts under (@/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/)
 
-* grants_wrapper.sql
-* minimum_select_grants_for_targets_12c_AND_ABOVE.sql
-* minimum_select_grants_for_targets_ONLY_FOR_11g.sql
+- grants_wrapper.sql
+- minimum_select_grants_for_targets_12c_AND_ABOVE.sql
+- minimum_select_grants_for_targets_ONLY_FOR_11g.sql
 
-1.3.1a Run the script grants_wrapper.sql which will call Grants script based on your database version (`minimum_select_grants_for_targets_12c_AND_ABOVE.sql` for Oracle Database Version 12c and above OR `minimum_select_grants_for_targets_ONLY_FOR_11g.sql` for Oracle Database Version 11g) to grant privileges to the user created in Step 1.
+  1.3.1a Run the script grants_wrapper.sql which will call Grants script based on your database version (`minimum_select_grants_for_targets_12c_AND_ABOVE.sql` for Oracle Database Version 12c and above OR `minimum_select_grants_for_targets_ONLY_FOR_11g.sql` for Oracle Database Version 11g) to grant privileges to the user created in Step 1.
 
 ```sql
 @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/grants_wrapper.sql
@@ -73,9 +73,9 @@ For Database version 12c and above
 
 1.4. Execute /home/oracle/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh to start collecting the data.
 
-* Execute this from a system that can access your database via sqlplus
-* Pass connect string as input to this script (see below for example)
-* NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
+- Execute this from a system that can access your database via sqlplus
+- Pass connect string as input to this script (see below for example)
+- NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
 
 ```shell
 mkdir -p /<work-directory>/oracle-database-assessment-output
@@ -87,8 +87,8 @@ cd /<work-directory>/oracle-database-assessment-output
 
 1.5. Once the script is executed you should see many opdb\*.log output files generated. It is recommended to zip/tar these files.
 
-* All the generated files follow this standard  `opdb__<queryname>__<dbversion>_<scriptversion>_<hostname>_<dbname>_<instancename>_<datetime>.log`
-* Use meaningful names when zip/tar the files.
+- All the generated files follow this standard `opdb__<queryname>__<dbversion>_<scriptversion>_<hostname>_<dbname>_<instancename>_<datetime>.log`
+- Use meaningful names when zip/tar the files.
 
 Example output:
 
@@ -112,54 +112,54 @@ opdb__dbservicesinfo__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 
 ```
 
-The table below demonstrates, at a high level, the  information that  is being collected along with a brief explanation on how it will be used.
+The table below demonstrates, at a high level, the information that is being collected along with a brief explanation on how it will be used.
 
-|Output Filename(s)|Data Collected|Justification/Context|Dictionary Views
-| :------------- |:-------------------| :-----| :-------------------|
-|opdb__awrsnapdetails_*log|Begin time, End time and the count of snapshots available. |Provide information about both the retention and the amount of data available|dba_hist_snapshot
-|opdb__opkeylog_*log|Host, database name, instance name, collection time |Create a unique identifier when importing multiple collection in the same BigQuery data set|NA
-|opdb_dbsummary_*log|Dbname, DbVersion, Dbsizes, RAC Instances, etc|It will provide us a high level view of the database and its main attributes|v$database, cdb_users,dba_users, v$instance, v$database,gv$instance, nls_database_parameters,v$version,v$log_history,v$log,v$sgastat,v$pgastat, cdb_data_files,dba_data_files, cdb_segments,dba_segments,logstdby$skip_support
-|opdb_pdbsinfo_*log|DBID, PDBIDs, PDBNames and Status|Overview of the PDBs/applications being used|cdb_pdbs (Applicable only to version 12c and superior in multitenant architecture)
-|opdb_pdbsopenmode_*log|PDBSize|Storage used by PDBs/application|v$pdbs (Applicable only to version 12c and superior in multitenant architecture)
-|opdb_dbinstances_*log|InstanceName, Hostname, etc|If Oracle RAC being used and how many instances|gv$instance
-|opdb_usedspacedetails_*log|SegmentType by Owner|Some SegmentType are not supported in other databases (in case of modernization), can offer upgrades with improvements (Example LOB to SecureLOB) |cdb_segments, logstdby$skip_support
-|opdb_compressbytable_*log|Compressed Tables By Owner|Have a more accurate idea of the DbSize and possible attention points for migration|cdb_tables,dba_tables,cdb_segments,dba_segments, cdb_tab_partitions,dba_tab_partitions, cdb_tab_subpartitions,dba_tab_subpartitions, logstdby$skip_support
-|opdb_compressbytype_*log|Compressed Tables by CompressionType|Have a more accurate idea of the DbSize|cdb_tables,dba_tables, cdb_segments,dba_segments,cdb_tab_partitions,dba_tab_partitions, cdb_tab_subpartitions,dba_tab_subpartitions, logstdby$skip_support
-|opdb_spacebyownersegtype_*log|Used Storage by Owner by SegmentType|How much (storage) of SegmentTypes are in the database. It helps in case of modernization and handling workarounds for it|cdb_segments,dba_segments, logstdby$skip_support
-|opdb_spacebytablespace_*log|Tablespaces Parameters and Fragmentation|It gives an idea about storage consumption for tablespaces|cdb_segments, dba_segments,cdb_tablespaces,dba_tablespaces logstdby$skip_support
-|opdb_freespaces_*log|Storage by Tablespace by PDB|Database Storage used Versus Storage allocated|cdb_data_files,dba_data_files cdb_free_space,dba_free_space cdb_tablespaces,dba_tablespaces v$temp_space_header
-|opdb_dblinks_*log|DBLinkName, HostName by PDB|It tells about the database dependencies|cdb_db_links,dba_db_links,logstdby$skip_support
-|opdb_dbparameters_*log|Database Parameters|Can be used to spot database features, dependencies, replications, memory, instance caging, etc|gv$parameter
-|opdb_dbfeatures_*log|Database Proprietary Features Being Used|Can be used to identify first movers, database lock-in and assist on modernization plan|cdb_feature_usage_statistics,dba_feature_usage_statistics
-|opdb_dbhwmarkstatistics_*log|Database Limits Reached|To be used as reference to identify potential target databases|dba_high_water_mark_statistics
-|opdb_cpucoresusage_|History of Cores Allocated|Assist in sizing exercise|dba_cpu_usage_statistics
-|opdb_dbobjects_*log|ObjectTypes by Owner by PDB|Some ObjectType are not supported in other databases|cdb_objects,dba_objects,logstdby$skip_support
-|opdb_sourcecode_*log|Number of Lines of Code by Type by Owner by PDB|It helps to understand effort to modernize the database and application|cdb_source,dba_source,logstdby$skip_support
-|opdb_partsubparttypes_*log|PartitionTableType by Owner by PDB|Some partition types are not supported in other databases|cdb_part_tables,dba_part_tables, logstdby$skip_support
-|psodb_indexestypes_*log|IndexType by Owner by PDB|Some index types are not supported in other databases|cdb_indexes,dba_indexes, logstdby$skip_support
-|psodb_datatypes_*log|Data Types by Owner by PDB|Some DataType are not supported in other databases|cdb_tab_columns, dba_tab_columns,logstdby$skip_support
-|opdb_tablesnopk_*log|Summary by PDB by Owner of Table Constraints|Evaluate if this is candidate to logical migration online|cdb_tables,dba_tables, cdb_constraints,dba_constraints
-|opdb__systemstats*log|Values for CPU speed, IO transfer speed, single and multiblock read speed |Analyze current key performance metrics of the current environment. This details influence on database behaviour like SQL execution plan.|sys.aux_stats$
-|opdb_patchlevel_*log|Patchset, PSU, RUs, RURs Applied in the DB|Identify the current patch level for the database|dba_registry_sqlpatch,registry$history
-|opdb_alertlog_*log|Database alert log|Assist on analyzing if the current system is healthy enough to be migrated|v$diag_alert_ext
-|opdb_awrhistsysmetrichist_*log|Database Stats (CPU, IO requests, throughput, transactions) by Hour by DB/PDB|Sizing exercise, overprovision analysis|dba_hist_snapshot, dba_hist_sysmetric_history
-|opdb__awrhistsysmetricsumm*log|Database Stats (CPU, IO requests, throughput, transactions) by Hour by DB/PDB|Sizing exercise, overprovision analysis|dba_hist_snapshot,dba_hist_sysmetric_summary
-|opdb_awrhistosstat_*log|OS statistics collected by Database engine by Hour by DB/PDB|Sizing exercise, overprovision analysis|dba_hist_osstat, dba_hist_snapshot
-|opdb_awrhistcmdtypes_*log|SQL Stats (CPU, IO) by command type|Assist on identifying the workload type and best target database for modernization|dba_hist_sqlstat, dba_hist_sqltext, dba_hist_snapshot
-|opdb__dbahistsystimemodel*log|Database stats (DBtime, CPU, background CPU, parse time) by hour by DB/PDB|Sizing exercise, overprovision analysis|dba_hist_sys_time_model,dba_hist_snapshot
-|opdb__dbahistsysstat*log|Database stats (DBtime, redo, IO)|Sizing exercise, overprovision analysis|dba_hist_sysstat, dba_hist_snapshot
-|opdb__dbservicesinfo*log|Database services - Used for connection handling and Application failover|Support how applications connects to database and handle failover scenarios|dba_services,cdb_services
-|opdb__usrsegatt*log|Map user schemas with segments/objects created in SYS/SYSTEM tablespaces|Support database migration strategies|dba_segments,cdb_segments,system.logstdby$skip_support
+| Output Filename(s)                | Data Collected                                                                | Justification/Context                                                                                                                              | Dictionary Views                                                                                                                                                                                                               |
+| :-------------------------------- | :---------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| opdb\__awrsnapdetails_\*log       | Begin time, End time and the count of snapshots available.                    | Provide information about both the retention and the amount of data available                                                                      | dba_hist_snapshot                                                                                                                                                                                                              |
+| opdb\__opkeylog_\*log             | Host, database name, instance name, collection time                           | Create a unique identifier when importing multiple collection in the same BigQuery data set                                                        | NA                                                                                                                                                                                                                             |
+| opdb*dbsummary*\*log              | Dbname, DbVersion, Dbsizes, RAC Instances, etc                                | It will provide us a high level view of the database and its main attributes                                                                       | v$database, cdb_users,dba_users, v$instance, v$database,gv$instance, nls_database_parameters,v$version,v$log_history,v$log,v$sgastat,v$pgastat, cdb_data_files,dba_data_files, cdb_segments,dba_segments,logstdby$skip_support |
+| opdb*pdbsinfo*\*log               | DBID, PDBIDs, PDBNames and Status                                             | Overview of the PDBs/applications being used                                                                                                       | cdb_pdbs (Applicable only to version 12c and superior in multitenant architecture)                                                                                                                                             |
+| opdb*pdbsopenmode*\*log           | PDBSize                                                                       | Storage used by PDBs/application                                                                                                                   | v$pdbs (Applicable only to version 12c and superior in multitenant architecture)                                                                                                                                               |
+| opdb*dbinstances*\*log            | InstanceName, Hostname, etc                                                   | If Oracle RAC being used and how many instances                                                                                                    | gv$instance                                                                                                                                                                                                                    |
+| opdb*usedspacedetails*\*log       | SegmentType by Owner                                                          | Some SegmentType are not supported in other databases (in case of modernization), can offer upgrades with improvements (Example LOB to SecureLOB)  | cdb_segments, logstdby$skip_support                                                                                                                                                                                            |
+| opdb*compressbytable*\*log        | Compressed Tables By Owner                                                    | Have a more accurate idea of the DbSize and possible attention points for migration                                                                | cdb_tables,dba_tables,cdb_segments,dba_segments, cdb_tab_partitions,dba_tab_partitions, cdb_tab_subpartitions,dba_tab_subpartitions, logstdby$skip_support                                                                     |
+| opdb*compressbytype*\*log         | Compressed Tables by CompressionType                                          | Have a more accurate idea of the DbSize                                                                                                            | cdb_tables,dba_tables, cdb_segments,dba_segments,cdb_tab_partitions,dba_tab_partitions, cdb_tab_subpartitions,dba_tab_subpartitions, logstdby$skip_support                                                                     |
+| opdb*spacebyownersegtype*\*log    | Used Storage by Owner by SegmentType                                          | How much (storage) of SegmentTypes are in the database. It helps in case of modernization and handling workarounds for it                          | cdb_segments,dba_segments, logstdby$skip_support                                                                                                                                                                               |
+| opdb*spacebytablespace*\*log      | Tablespaces Parameters and Fragmentation                                      | It gives an idea about storage consumption for tablespaces                                                                                         | cdb_segments, dba_segments,cdb_tablespaces,dba_tablespaces logstdby$skip_support                                                                                                                                               |
+| opdb*freespaces*\*log             | Storage by Tablespace by PDB                                                  | Database Storage used Versus Storage allocated                                                                                                     | cdb_data_files,dba_data_files cdb_free_space,dba_free_space cdb_tablespaces,dba_tablespaces v$temp_space_header                                                                                                                |
+| opdb*dblinks*\*log                | DBLinkName, HostName by PDB                                                   | It tells about the database dependencies                                                                                                           | cdb_db_links,dba_db_links,logstdby$skip_support                                                                                                                                                                                |
+| opdb*dbparameters*\*log           | Database Parameters                                                           | Can be used to spot database features, dependencies, replications, memory, instance caging, etc                                                    | gv$parameter                                                                                                                                                                                                                   |
+| opdb*dbfeatures*\*log             | Database Proprietary Features Being Used                                      | Can be used to identify first movers, database lock-in and assist on modernization plan                                                            | cdb_feature_usage_statistics,dba_feature_usage_statistics                                                                                                                                                                      |
+| opdb*dbhwmarkstatistics*\*log     | Database Limits Reached                                                       | To be used as reference to identify potential target databases                                                                                     | dba_high_water_mark_statistics                                                                                                                                                                                                 |
+| opdb*cpucoresusage*               | History of Cores Allocated                                                    | Assist in sizing exercise                                                                                                                          | dba_cpu_usage_statistics                                                                                                                                                                                                       |
+| opdb*dbobjects*\*log              | ObjectTypes by Owner by PDB                                                   | Some ObjectType are not supported in other databases                                                                                               | cdb_objects,dba_objects,logstdby$skip_support                                                                                                                                                                                  |
+| opdb*sourcecode*\*log             | Number of Lines of Code by Type by Owner by PDB                               | It helps to understand effort to modernize the database and application                                                                            | cdb_source,dba_source,logstdby$skip_support                                                                                                                                                                                    |
+| opdb*partsubparttypes*\*log       | PartitionTableType by Owner by PDB                                            | Some partition types are not supported in other databases                                                                                          | cdb_part_tables,dba_part_tables, logstdby$skip_support                                                                                                                                                                         |
+| psodb*indexestypes*\*log          | IndexType by Owner by PDB                                                     | Some index types are not supported in other databases                                                                                              | cdb_indexes,dba_indexes, logstdby$skip_support                                                                                                                                                                                 |
+| psodb*datatypes*\*log             | Data Types by Owner by PDB                                                    | Some DataType are not supported in other databases                                                                                                 | cdb_tab_columns, dba_tab_columns,logstdby$skip_support                                                                                                                                                                         |
+| opdb*tablesnopk*\*log             | Summary by PDB by Owner of Table Constraints                                  | Evaluate if this is candidate to logical migration online                                                                                          | cdb_tables,dba_tables, cdb_constraints,dba_constraints                                                                                                                                                                         |
+| opdb\_\_systemstats\*log          | Values for CPU speed, IO transfer speed, single and multiblock read speed     | Analyze current key performance metrics of the current environment. This details influence on database behaviour like SQL execution plan.          | sys.aux_stats$                                                                                                                                                                                                                 |
+| opdb*patchlevel*\*log             | Patchset, PSU, RUs, RURs Applied in the DB                                    | Identify the current patch level for the database                                                                                                  | dba_registry_sqlpatch,registry$history                                                                                                                                                                                         |
+| opdb*alertlog*\*log               | Database alert log                                                            | Assist on analyzing if the current system is healthy enough to be migrated                                                                         | v$diag_alert_ext                                                                                                                                                                                                               |
+| opdb*awrhistsysmetrichist*\*log   | Database Stats (CPU, IO requests, throughput, transactions) by Hour by DB/PDB | Sizing exercise, overprovision analysis                                                                                                            | dba_hist_snapshot, dba_hist_sysmetric_history                                                                                                                                                                                  |
+| opdb\_\_awrhistsysmetricsumm\*log | Database Stats (CPU, IO requests, throughput, transactions) by Hour by DB/PDB | Sizing exercise, overprovision analysis                                                                                                            | dba_hist_snapshot,dba_hist_sysmetric_summary                                                                                                                                                                                   |
+| opdb*awrhistosstat*\*log          | OS statistics collected by Database engine by Hour by DB/PDB                  | Sizing exercise, overprovision analysis                                                                                                            | dba_hist_osstat, dba_hist_snapshot                                                                                                                                                                                             |
+| opdb*awrhistcmdtypes*\*log        | SQL Stats (CPU, IO) by command type                                           | Assist on identifying the workload type and best target database for modernization                                                                 | dba_hist_sqlstat, dba_hist_sqltext, dba_hist_snapshot                                                                                                                                                                          |
+| opdb\_\_dbahistsystimemodel\*log  | Database stats (DBtime, CPU, background CPU, parse time) by hour by DB/PDB    | Sizing exercise, overprovision analysis                                                                                                            | dba_hist_sys_time_model,dba_hist_snapshot                                                                                                                                                                                      |
+| opdb\_\_dbahistsysstat\*log       | Database stats (DBtime, redo, IO)                                             | Sizing exercise, overprovision analysis                                                                                                            | dba_hist_sysstat, dba_hist_snapshot                                                                                                                                                                                            |
+| opdb\_\_dbservicesinfo\*log       | Database services - Used for connection handling and Application failover     | Support how applications connects to database and handle failover scenarios                                                                        | dba_services,cdb_services                                                                                                                                                                                                      |
+| opdb\_\_usrsegatt\*log            | Map user schemas with segments/objects created in SYS/SYSTEM tablespaces      | Support database migration strategies                                                                                                              | dba_segments,cdb_segments,system.logstdby$skip_support                                                                                                                                                                         |
 
 1.6. Repeat step 1.3 for all Oracle databases that you want to assess.
 
 ### Step 2 - Importing the data collected into Google BigQuery for analysis
 
-Much of the data import and report generation has been automated.  Follow section 2.1 to use the automated process.  Section 2.2 provides instructions for the manual process if that is your preference.  Both processes assume you have rights to create datasets in a Big Query project and access to Data Studio.
+Much of the data import and report generation has been automated. Follow section 2.1 to use the automated process. Section 2.2 provides instructions for the manual process if that is your preference. Both processes assume you have rights to create datasets in a Big Query project and access to Data Studio.
 
-Make note of the project name and the data set name and location.  The data set will be created if it does not exist.  
+Make note of the project name and the data set name and location. The data set will be created if it does not exist.
 
-2.1  Automated load process
+2.1 Automated load process
 
 These instructions are written for running in a Cloud Shell environment.
 
@@ -190,7 +190,7 @@ cd data
 
 2.1.3 Configure automation
 
-The automated process is configured via setting several environment variables and then executing the file <workingdirectory>/oracle-database-assessment/db_assessment/0_configure_op_env.sh.  
+The automated process is configured via setting several environment variables and then executing the file <workingdirectory>/oracle-database-assessment/db_assessment/0_configure_op_env.sh.
 
 Set these environment variables prior to starting the data load process:
 
@@ -200,7 +200,7 @@ Set these environment variables prior to starting the data load process:
 export PROJECTNAME=yourProjectNameHere
 
 # Required
-# This is the name of the data set into which you want to load. 
+# This is the name of the data set into which you want to load.
 # The dataset will be created if it does not exist.
 # If the datset already exists, it will have this data appoended.
 # Use only alphanumeric characters, - (dash) or _ (underscore)
@@ -208,7 +208,7 @@ export PROJECTNAME=yourProjectNameHere
 export DSNAME=yourDatasetNameHere
 
 # Required
-# This is the location in which the dataset should be created.  
+# This is the location in which the dataset should be created.
 export DSLOC=yourRegionNameHere
 
 # Required
@@ -222,7 +222,7 @@ export OP_LOG_DIR=/full/Path/To/LogFiles
 export REPORTNAME=yourReportNameHere
 
 # Optional
-# This is the column separator used in the input data files.  
+# This is the column separator used in the input data files.
 # Previous versions of Optimus Prime used ';' (semicolon).
 # Defaults to | (pipe)
 export COLSEP='|'
@@ -230,7 +230,7 @@ export COLSEP='|'
 
 2.1.4 Execute the load scripts
 
-The load scripts expect to be run from the <workingdirectory>/oracle-database-assessment/db_assessment directory.  Change to this directory and run the following commands in numeric order.  Check output of each for errors before continuing to the next.
+The load scripts expect to be run from the <workingdirectory>/oracle-database-assessment/db_assessment directory. Change to this directory and run the following commands in numeric order. Check output of each for errors before continuing to the next.
 
 ```shell
 . ./0_configure_op_env.sh
@@ -242,20 +242,20 @@ The load scripts expect to be run from the <workingdirectory>/oracle-database-as
 
 The function of each script is as follows.
 
-* 0_configure_op_env.sh - Defines environment variables that are used in the other scripts.
-* 1_activate_op.sh - Installs necessary Python support modules and activates the Python virtual environment for Optimus Prime.
-* 2_load_op.sh - Loads the client data files into the base Optimus Prime tables in the requested data set.
-* 3_run_op_etl.sh - Installs and runs Big Query procedures that create additional views and tables to support the Optimus Prime dashboard.
-* 4_gen_op_report_url.sh - Generates the URL to view the newly loaded data using a report template.  
+- 0_configure_op_env.sh - Defines environment variables that are used in the other scripts.
+- 1_activate_op.sh - Installs necessary Python support modules and activates the Python virtual environment for Optimus Prime.
+- 2_load_op.sh - Loads the client data files into the base Optimus Prime tables in the requested data set.
+- 3_run_op_etl.sh - Installs and runs Big Query procedures that create additional views and tables to support the Optimus Prime dashboard.
+- 4_gen_op_report_url.sh - Generates the URL to view the newly loaded data using a report template.
 
-2.1.5 View the data in Optimus Prime Dashboard report
+  2.1.5 View the data in Optimus Prime Dashboard report
 
-Click the link displayed by script 4_gen_op_report_url.sh to view the report.  Note that this link does not persist the report.
-To save the report for future use, click the '"Edit and Share"' button, then '"Acknowledge and Save"', then '"Add to Report"'.  It will then show up in Data Studio in '"Reports owned by me"' and can be shared with others.
+Click the link displayed by script 4_gen_op_report_url.sh to view the report. Note that this link does not persist the report.
+To save the report for future use, click the '"Edit and Share"' button, then '"Acknowledge and Save"', then '"Add to Report"'. It will then show up in Data Studio in '"Reports owned by me"' and can be shared with others.
 
 Skip to step 3 to perform additional analysis for anything not contained in the dashboard report.
 
-2.2  Manual load process
+2.2 Manual load process
 
 2.2.1. Setup Environment variables (From Google Cloud Shell ONLY).
 
@@ -302,21 +302,21 @@ mv <file file> /<work-directory>/oracle-database-assessment-output
 unzip <zip files>
 ```
 
-2.2.7. [Create a service account and download the key](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin ) .
+2.2.7. [Create a service account and download the key](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin) .
 
-* Set GOOGLE_APPLICATION_CREDENTIALS to point to the downloaded key. Make sure the service account has BigQuery Admin privelege.
-* NOTE: This step can be skipped if using [Cloud Shell](https://ssh.cloud.google.com/cloudshell/)
+- Set GOOGLE_APPLICATION_CREDENTIALS to point to the downloaded key. Make sure the service account has BigQuery Admin privelege.
+- NOTE: This step can be skipped if using [Cloud Shell](https://ssh.cloud.google.com/cloudshell/)
 
-2.2.8. Create a python virtual environment to install dependencies and execute the `optimusprime.py` script
+  2.2.8. Create a python virtual environment to install dependencies and execute the `optimusprime.py` script
 
 ```shell
- python3 -m venv $OP_WORKDING_DIR/op-venv
- source $OP_WORKDING_DIR/op-venv/bin/activate
+ python3 -m venv $OP_WORKDING_DIR/.venv
+ source $OP_WORKDING_DIR/.venv/bin/activate
  cd $OP_WORKDING_DIR/oracle-database-assessment/
- 
+
  pip3 install pip wheel setuptools --upgrade
  pip3 install .
- 
+
  # If you want to import one single Optimus Prime file collection (From 1 single database), please follow the below step:
 
  optimus-prime -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -importcomment "this is for prod"
@@ -324,29 +324,29 @@ unzip <zip files>
  # If you want to import various Optimus Prime file collections (From various databases) that are stored under the same directory being used for -fileslocation. Then, you can add to your command two additional flags (-fromdataframe -consolidatedataframes) and pass only "" to -collectionid. See example below:
 
  optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes
- 
-#  If you want to import only specific db version or sql version from Optimus Prime file collections hat are stored under the same directory being used for -fileslocation.  
+
+#  If you want to import only specific db version or sql version from Optimus Prime file collections hat are stored under the same directory being used for -fileslocation.
 
  optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes -filterbydbversion 11.1 -filterbysqlversion 2.0.3
- 
- # If you want to akip all file validations 
+
+ # If you want to akip all file validations
 
  optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -skipvalidations
 ```
 
-* `-dataset`: is the name of the dataset in Google BigQuery. It is created if it does not exists. If it does already nothing to do then.
-* `-collectionid`: is the file identification which last numbers in the filename which represents `<datetime> (mmddrrhh24miss)`.
-* In this example of a filename `opdb__usedspacedetails__121_0.1.0_mydbhost.mycompany.com.ORCLDB.orcl1.071621111714.log` the file identification is `071621111714`.
-* `-fileslocation`: The location in which the opdb*log were saved.
-* `-projectname`: The GCP project in which the data will be loaded.
-* `-deletedataset`: This an optinal. In case you want to delete the whole existing dataset before importing the data.
-  * WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
-* `-importcomment`: This an optional. In case you want to store any comment about the load in opkeylog table. Eg: "This is for Production import"
-* `-filterbysqlversion`: This an optional. In case you have files from multiple sql versions in the folder and you want to load only specific sql version files
-* `-filterbydbversion`: This an optional. In case you have files from multiple db versions in the folder and you want to load only specific db version files
-* `-skipvalidations`: This is optional. Default is False. if we use the flag, file validations will be skipped
+- `-dataset`: is the name of the dataset in Google BigQuery. It is created if it does not exists. If it does already nothing to do then.
+- `-collectionid`: is the file identification which last numbers in the filename which represents `<datetime> (mmddrrhh24miss)`.
+- In this example of a filename `opdb__usedspacedetails__121_0.1.0_mydbhost.mycompany.com.ORCLDB.orcl1.071621111714.log` the file identification is `071621111714`.
+- `-fileslocation`: The location in which the opdb\*log were saved.
+- `-projectname`: The GCP project in which the data will be loaded.
+- `-deletedataset`: This an optinal. In case you want to delete the whole existing dataset before importing the data.
+  - WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
+- `-importcomment`: This an optional. In case you want to store any comment about the load in opkeylog table. Eg: "This is for Production import"
+- `-filterbysqlversion`: This an optional. In case you have files from multiple sql versions in the folder and you want to load only specific sql version files
+- `-filterbydbversion`: This an optional. In case you have files from multiple db versions in the folder and you want to load only specific db version files
+- `-skipvalidations`: This is optional. Default is False. if we use the flag, file validations will be skipped
 
-* >NOTE: If your file has elapsed time or any other string except data, fun following script to remove it
+- > NOTE: If your file has elapsed time or any other string except data, fun following script to remove it
 
 ```shell
 for i in `grep "Elapsed:" $OP_OUTPUT_DIR/*.log |  cut -d ":" -f 1`; do sed -i '$ d' $i; done
@@ -356,19 +356,19 @@ for i in `grep "Elapsed:" $OP_OUTPUT_DIR/*.log |  cut -d ":" -f 1`; do sed -i '$
 
 3.1. Open the dataset used in the step 2 of Part 2 in Google BigQuery
 
-* Query the viewnames starting with vReport* for further analysis
-* Sample queries are listed, they provide
-  * Source DB Summary
-  * Source Host details
-  * Google Bare Metal Sizing
-  * Google Bare Metal Pricing
-  * Migration Recommendations
-* Sample [Assessment Report](report/Optimus_Prime_-_dashboard.pdf), was created in DataStudio. A similar report can be generated using the queries for your datasets as part of the assessment readout.
+- Query the viewnames starting with vReport\* for further analysis
+- Sample queries are listed, they provide
+  - Source DB Summary
+  - Source Host details
+  - Google Bare Metal Sizing
+  - Google Bare Metal Pricing
+  - Migration Recommendations
+- Sample [Assessment Report](report/Optimus_Prime_-_dashboard.pdf), was created in DataStudio. A similar report can be generated using the queries for your datasets as part of the assessment readout.
 
 ## Contributing to the project
 
-Contributions and pull requests are welcome.  See [docs/contributing.md](docs/contributing.md) and [docs/code-of-conduct.md](docs/code-of-conduct.md) for details.
+Contributions and pull requests are welcome. See [docs/contributing.md](docs/contributing.md) and [docs/code-of-conduct.md](docs/code-of-conduct.md) for details.
 
 ## The fine print
 
-This product is [licensed](LICENSE) under the Apache 2 license.  This is not an officially supported Google project
+This product is [licensed](LICENSE) under the Apache 2 license. This is not an officially supported Google project

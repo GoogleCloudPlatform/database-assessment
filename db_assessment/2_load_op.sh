@@ -2,7 +2,7 @@
 set -eo pipefail 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="${SCRIPT_DIR}/.."
-VENV_DIR="${SCRIPT_DIR}/../op-venv"
+VENV_DIR="${SCRIPT_DIR}/../.venv"
 
 bq mk -d --data_location=${DSLOC} ${DSNAME}
 for COLID in $(ls -1 ${OP_LOG_DIR}/opdb*| rev | cut -d '.' -f 2 | rev | sort | uniq)
