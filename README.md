@@ -16,10 +16,10 @@ The Optimus Prime Database Assessment tool is used to assess homogenous migratio
 
 Create an Oracle database user -or- choose an existing user account .
 
-* If you decide to use an existing database user with all the privileges already assigned please go to Step 1.3.
+* If you decide to use an existing database user with all the privileges already assigned please go to Step 1.4.
 
 ```
-if creating a user within a CDB find out the common_user_prefix and then create the user like so, as higher priveleged user (like sys):
+if creating a user within a CDB find out the common_user_prefix and then create the user like so, as higher privileged user (like sys):
 select * from v$system_parameter where name='common_user_prefix';
 --C##
 create user C##optimusprime identified by "mysecretPa33w0rd";
@@ -35,7 +35,7 @@ cd <work-directory>
 git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
 ```
 
-1.3. Verfiy 3 Grants scripts under (@/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/)
+1.3. Verify 3 Grants scripts under (@/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/)
 
 * grants_wrapper.sql
 * minimum_select_grants_for_targets_12c_AND_ABOVE.sql
@@ -67,24 +67,29 @@ For Database version 12c and above
 @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/minimum_select_grants_for_targets_12c_AND_ABOVE.sql
 ```
 
-1.4. Execute <work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh to start collecting the data.
+1.4. Execute /home/oracle/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh to start collecting the data.
 
 * Execute this from a system that can access your database via sqlplus
 * Pass connect string as input to this script (see below for example)
 * NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
 
 ```
-cd <work-directory>/oracle-database-assessment
-./db_assessment/dbSQLCollector/collectData-Step1.sh optimusprime/mysecretPa33w0rd@//<serverhost>:<port>/<servicename>
+mkdir -p /<work-directory>/oracle-database-assessment-output
+
+cd /<work-directory>/oracle-database-assessment-output
+
+/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh optimusprime/mysecretPa33w0rd@//<serverhost>/<servicename>
 ```
 
-1.5. Once the script is executed it will create a compressed tar file in <work-directory>/op_output
+1.5. Once the script is executed you should see many opdb\*.log output files generated. It is recommended to zip/tar these files.
 
 * All the generated files follow this standard  `opdb__<queryname>__<dbversion>_<scriptversion>_<hostname>_<dbname>_<instancename>_<datetime>.log`
+* Use meaningful names when zip/tar the files.
 
 ```
-Example tarfile contents:
+Example output:
 
+oracle@oracle12c oracle-database-assessment-output]$ ls
 manual__alertlog__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log            opdb__dbsummary__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 opdb__awrhistcmdtypes__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log       opdb__freespaces__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
 opdb__awrhistosstat__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log         opdb__indexestypes__122_0.1.1_oracle12c.ORCL.orcl.080421224807.log
@@ -178,7 +183,7 @@ cd data
 
 2.1.3 Configure automation
 
-The automated process is configured via setting several environment variables and then executing the file <workingdirectory>/oracle-database-assessment/db_addessment/0_configure_op_env.sh.  
+The automated process is configured via setting several environment variables and then executing the file <workingdirectory>/oracle-database-assessment/db_assessment/0_configure_op_env.sh.  
 
 Set these environment variables prior to starting the data load process:
 
@@ -218,14 +223,14 @@ export COLSEP='|'
 
 2.1.4 Execute the load scripts
 
-The load scripts expect to be run from the <workingdirectory>/oracle-database-assessment directory.  Change to this directory and run the following commands in numeric order.  Check output of each for errors before continuing to the next. 
+The load scripts expect to be run from the <workingdirectory>/oracle-database-assessment/db_assessment directory.  Change to this directory and run the following commands in numeric order.  Check output of each for errors before continuing to the next. 
 
 ```
-. ./db_assessment/0_configure_op_env.sh
-./db_assessment/1_activate_op.sh
-./db_assessment/2_load_op.sh
-./db_assessment/3_run_op_etl.sh
-./db_assessment/4_gen_op_report_url.sh
+. ./0_configure_op_env.sh
+./1_activate_op.sh
+./2_load_op.sh
+./3_run_op_etl.sh
+./4_gen_op_report_url.sh
 ```
 
 The function of each script is as follows.
@@ -290,7 +295,6 @@ cd /<work-directory>/oracle-database-assessment-output
 mv <<file file>> /<work-directory>/oracle-database-assessment-output
 unzip <<zip files>>
 ```
-Check the column separator used in the unzipped files.  It will be either ';' or '|'. 
 
 2.2.7. [Create a service account and download the key](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin ) .
 
@@ -309,26 +313,25 @@ Check the column separator used in the unzipped files.  It will be either ';' or
  
  If you want to import one single Optimus Prime file collection (From 1 single database), please follow the below step:
 
- optimus-prime -sep '|' -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -importcomment "this is for prod"
+ optimus-prime -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -importcomment "this is for prod"
 
  If you want to import various Optimus Prime file collections (From various databases) that are stored under the same directory being used for -fileslocation. Then, you can add to your command two additional flags (-fromdataframe -consolidatedataframes) and pass only "" to -collectionid. See example below:
 
- optimus-prime -sep '|' -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes
+ optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes
  
  If you want to import only specific db version or sql version from Optimus Prime file collections hat are stored under the same directory being used for -fileslocation.  
 
- optimus-prime -sep '|' -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes -filterbydbversion 11.1 -filterbysqlversion 2.0.3
+ optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes -filterbydbversion 11.1 -filterbysqlversion 2.0.3
  
  If you want to akip all file validations 
 
- optimus-prime -sep '|' -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -skipvalidations
+ optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -skipvalidations
 ```
 
-* `-sep`: is the column separator used in the data to be loaded.  The current version of extract uses '|'.  Previous versions of the extract script used ';'.  
 * `-dataset`: is the name of the dataset in Google BigQuery. It is created if it does not exists. If it does already nothing to do then.
 * `-collectionid`: is the file identification which last numbers in the filename which represents `<datetime> (mmddrrhh24miss)`.
 * In this example of a filename `opdb__usedspacedetails__121_0.1.0_mydbhost.mycompany.com.ORCLDB.orcl1.071621111714.log` the file identification is `071621111714`.
-* `-fileslocation`: The location in which the opdbi\*log were saved.
+* `-fileslocation`: The location in which the opdb*log were saved.
 * `-projectname`: The GCP project in which the data will be loaded.
 * `-deletedataset`: This an optinal. In case you want to delete the whole existing dataset before importing the data.
   * WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
@@ -347,7 +350,7 @@ for i in `grep "Elapsed:" $OP_OUTPUT_DIR/*.log |  cut -d ":" -f 1`; do sed -i '$
 
 3.1. Open the dataset used in the step 2 of Part 2 in Google BigQuery
 
-* Query the viewnames starting with vReport\* for further analysis
+* Query the viewnames starting with vReport* for further analysis
 * Sample queries are listed, they provide
   * Source DB Summary
   * Source Host details
