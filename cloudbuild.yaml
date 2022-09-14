@@ -1,4 +1,4 @@
-timeout: "1800"
+timeout: "1800s"
 steps:
   - name: "gcr.io/cloud-builders/docker"
     args:
