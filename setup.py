@@ -11,23 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 import setuptools
-
-# Importing Optimus Prime Version
 from db_assessment.version import __version__
 
-name = "oracle-db-assessment"
-description = "A tool to enable collection of data from Oracle databases for homogeneous and heterogeneous database migration assessment"
-version = "0.1.0"
-release_status = "Development Status :: 4 - Beta"
+NAME = "oracle-db-assessment"
+DESCRIPTION = (
+    "A tool to enable collection of data from Oracle databases for "
+    "homogeneous and heterogeneous database migration assessment"
+)
+VERSION = __version__
+RELEASE_STATUS = "Development Status :: 4 - Beta"
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding="UTF-8") as fh:
     long_description = fh.read()
 
 dependencies = []
-with open("requirements.txt", "r") as fp:
+with open("requirements/base.txt", "r", encoding="UTF-8") as fp:
     for line in fp.readlines():
         if not line.strip().startswith("#"):
             dependencies.append(line.strip())
@@ -37,9 +36,9 @@ extras_require = {}
 packages = setuptools.find_packages(include=["db_assessment"])
 
 setuptools.setup(
-    name=name,
-    description=description,
-    version=version,
+    name=NAME,
+    description=DESCRIPTION,
+    version=VERSION,
     author="Eri Santos",
     author_email="erisantos@google.com",
     long_description=long_description,
@@ -47,7 +46,7 @@ setuptools.setup(
     url="https://github.com/GoogleCloudPlatform/oracle-database-assessment",
     packages=packages,
     classifiers=[
-        release_status,
+        RELEASE_STATUS,
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3.7",

@@ -1,0 +1,14 @@
+{
+  "recommendations": [
+    "matangover.mypy",
+    "ms-python.black-formatter",
+    "mikestead.dotenv",
+    "eamodio.gitlens",
+    "donjayamanne.githistory",
+    "ms-toolsai.jupyter",
+    "christian-kohler.path-intellisense",
+    "elagil.pre-commit-helper",
+    "ms-python.vscode-pylance",
+    "ms-python.python"
+  ]
+}
