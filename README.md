@@ -161,7 +161,10 @@ Make note of the project name and the data set name and location. The data set w
 
 2.1 Automated load process
 
-These instructions are written for running in a Cloud Shell environment.
+These instructions are written for running in a Cloud Shell environment.  Ensure that your environment is configured to access the Google Cloud project you want to use:
+```
+gcloud config set project [PROJECT_ID]
+```
 
 2.1.1 Clone the Optimus Prime codebase to a working directory.
 
