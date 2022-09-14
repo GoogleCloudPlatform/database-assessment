@@ -3,6 +3,6 @@ gunicorn
 google-api-core
 google-cloud-bigquery
 pyarrow
-numpy==1.21.4
+numpy
 pandas
 beautifultable

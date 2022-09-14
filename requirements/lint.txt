@@ -193,7 +193,7 @@ mkdocstrings-python==0.7.1
     # via mkdocstrings
 nodeenv==1.7.0
     # via pre-commit
-numpy==1.21.4
+numpy==1.23.3
     # via
     #   -r requirements/base.in
     #   pandas

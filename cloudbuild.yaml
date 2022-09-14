@@ -1,4 +1,23 @@
 steps:
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID",
+        ".",
+        "-f",
+        "deploy/Cloudbuild.dockerfile",
+      ]
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "push",
+        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID",
+      ]
+  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
+    entrypoint: python3.9
+    args: ["-m", "pip", "install", "-U", "wheel", "setuptools", "pip", "--user"]
   # Build the container image
   - name: "gcr.io/cloud-builders/docker"
     args:
@@ -16,15 +35,16 @@ steps:
         "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-api:$BUILD_ID",
       ]
   # Deploy container image to Cloud Run
-  - name: google/cloud-sdk:debian_component_based
-    entrypoint: pip
-    args: ["install", "-r", "requirements/dev.txt", "--user"]
-  - name: google/cloud-sdk:debian_component_based
+
+  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
+    entrypoint: python3
+    args: ["-m", "pip", "install", "-r", "requirements/dev.txt", "--user"]
+  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
     entrypoint: python3
     args: ["-m", "invoke", "pull-config"]
-  - name: google/cloud-sdk:debian_component_based
+  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
     entrypoint: python3
     args: ["-m", "invoke", "deploy", "--tag=$BUILD_ID"]
-  - name: google/cloud-sdk:debian_component_based
+  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
     entrypoint: python3
     args: ["-m", "invoke", "test"]
