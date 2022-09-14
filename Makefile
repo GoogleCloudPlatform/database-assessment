@@ -22,6 +22,7 @@ help:  ## Display this help
 upgrade-dependencies:          ## Upgrade all dependencies to the latest stable versions
 	pip-compile -r requirements/base.in > requirements/base.txt
 	pip-compile -r requirements/dev.in > requirements/dev.txt
+	pip-compile -r requirements/lint.in > requirements/lint.txt
 
 .PHONY: install
 install:          ## Install the project in dev mode.
