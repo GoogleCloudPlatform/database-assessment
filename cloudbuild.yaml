@@ -16,15 +16,15 @@ steps:
         "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-api:$BUILD_ID",
       ]
   # Deploy container image to Cloud Run
-  - name: python
+  - name: google/cloud-sdk:debian_component_based
     entrypoint: pip
     args: ["install", "-r", "requirements/dev.txt", "--user"]
-  - name: python
+  - name: google/cloud-sdk:debian_component_based
     entrypoint: python3
     args: ["-m", "invoke", "pull-config"]
-  - name: python
+  - name: google/cloud-sdk:debian_component_based
     entrypoint: python3
     args: ["-m", "invoke", "deploy", "--tag=$BUILD_ID"]
-  - name: python
+  - name: google/cloud-sdk:debian_component_based
     entrypoint: python3
     args: ["-m", "invoke", "test"]
