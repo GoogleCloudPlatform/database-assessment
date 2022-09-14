@@ -19,7 +19,7 @@ RUN apt-get update \
     && rm -rf /var/apt/lists/* \
     && rm -rf /var/cache/apt/*
 RUN pip install  --no-cache-dir  --upgrade pip  \
-    pip install  --no-cache-dir  wheel setuptools
+    pip install  --no-cache-dir  wheel setuptools cython
 
 
 FROM python-base AS build-stage
@@ -31,7 +31,7 @@ COPY requirements.txt api-requirements.txt setup.py README.md LICENSE /app/
 COPY db_assessment /app/db_assessment
 RUN python -m venv --copies /app/venv
 RUN . /app/venv/bin/activate \
-    && pip install  --no-cache-dir  -r requirements.txt  -r api-requirements.txt \
+    && pip install  --no-cache-dir  -r requirements.txt  \
     && pip install /app/
 
 ## Beginning of runtime image
@@ -45,7 +45,7 @@ RUN addgroup --system --gid 1001 "app-user" \
     && adduser --no-create-home --system --uid 1001 "app-user" \
     && chown -R "app-user":"app-user" /app
 COPY --chown="app-user":"app-user" --from=build-stage /app/venv /app/venv/
-COPY --chown="app-user":"app-user" requirements.txt api-requirements.txt setup.py tasks.py README.md  LICENSE /app/ 
+COPY --chown="app-user":"app-user" requirements.txt requirements/ setup.py tasks.py README.md  LICENSE /app/ 
 COPY --chown="app-user":"app-user" sample /app/sample
 
 # These are the two folders that change the most.
