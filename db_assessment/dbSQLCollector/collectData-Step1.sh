@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 function checkVersion(){
 connectString=$1
@@ -26,7 +26,10 @@ IFS=`echo ${IFS_bk}`
 dbVersion=$(( mainversion[0] + 0 ))
 
 full_path="$(dirname $(realpath $0))"
-SQL_SCRIPT=${full_path}
-SQL_SCRIPT="${SQL_SCRIPT}/op_collect.sql"
+OLD_ORACLE_PATH=${ORACLE_PATH}
+ORACLE_PATH=${full_path}; export ORACLE_PATH
+SQL_SCRIPT="op_collect.sql"
 sqlplus -s ${connectString} @${SQL_SCRIPT}
-
+if [ ! -z "$OLD_ORACLE_PATH" ]; then
+  ORACLE_PATH=${OLD_ORACLE_PATH}; export ORACLE_PATH
+fi
