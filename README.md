@@ -78,11 +78,9 @@ For Database version 12c and above
 - NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
 
 ```shell
-mkdir -p /<work-directory>/oracle-database-assessment-output
+cd /<work-directory>/oracle-database-assessment
 
-cd /<work-directory>/oracle-database-assessment-output
-
-/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh optimusprime/mysecretPa33w0rd@//<serverhost>/<servicename>
+/<work-directory>/db_assessment/dbSQLCollector/collectData-Step1.sh optimusprime/mysecretPa33w0rd@//<serverhost>/<servicename>
 ```
 
 1.5. Once the script is executed you should see many opdb\*.log output files generated. It is recommended to zip/tar these files.
