@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 
 function checkVersion(){
 connectString=$1
