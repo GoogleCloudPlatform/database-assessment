@@ -78,11 +78,9 @@ For Database version 12c and above
 - NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
 
 ```shell
-mkdir -p /<work-directory>/oracle-database-assessment-output
+cd /<work-directory>/oracle-database-assessment
 
-cd /<work-directory>/oracle-database-assessment-output
-
-/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh optimusprime/mysecretPa33w0rd@//<serverhost>/<servicename>
+/<work-directory>/db_assessment/dbSQLCollector/collectData-Step1.sh optimusprime/mysecretPa33w0rd@//<serverhost>/<servicename>
 ```
 
 1.5. Once the script is executed you should see many opdb\*.log output files generated. It is recommended to zip/tar these files.
@@ -233,14 +231,14 @@ export COLSEP='|'
 
 2.1.4 Execute the load scripts
 
-The load scripts expect to be run from the <workingdirectory>/oracle-database-assessment/db_assessment directory. Change to this directory and run the following commands in numeric order. Check output of each for errors before continuing to the next.
+The load scripts expect to be run from the <workingdirectory>/oracle-database-assessment directory. Change to this directory and run the following commands in numeric order. Check output of each for errors before continuing to the next.
 
 ```shell
-. ./0_configure_op_env.sh
-./1_activate_op.sh
-./2_load_op.sh
-./3_run_op_etl.sh
-./4_gen_op_report_url.sh
+. ./db_assessment/0_configure_op_env.sh
+./db_assessment/1_activate_op.sh
+./db_assessment/2_load_op.sh
+./db_assessment/3_run_op_etl.sh
+./db_assessment/4_gen_op_report_url.sh
 ```
 
 The function of each script is as follows.

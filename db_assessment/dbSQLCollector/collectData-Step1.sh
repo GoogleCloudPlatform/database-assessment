@@ -26,6 +26,7 @@ IFS=`echo ${IFS_bk}`
 dbVersion=$(( mainversion[0] + 0 ))
 
 full_path="$(dirname $(realpath $0))"
+BASE_DIR=$(/usr/bin/pwd -P); export BASE_DIR
 OLD_ORACLE_PATH=${ORACLE_PATH}
 ORACLE_PATH=${full_path}; export ORACLE_PATH
 SQL_SCRIPT="op_collect.sql"

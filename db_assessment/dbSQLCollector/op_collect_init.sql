@@ -51,7 +51,12 @@ set numwidth 48
 whenever sqlerror continue
 whenever oserror continue
 
-define outputdir = 'op_output'
+HOS echo define outputdir=$BASE_DIR/op_output > /tmp/dirs.sql
+HOS echo define seddir=$BASE_DIR/db_assessment/dbSQLCollector >> /tmp/dirs.sql
+@/tmp/dirs.sql
+select '&outputdir' as outputdir from dual;
+select '&seddir' as seddir from dual;
+HOS rm -rf /tmp/dirs.sql
 
 column instnc new_value v_inst noprint
 column hostnc new_value v_host noprint

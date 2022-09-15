@@ -39,7 +39,7 @@ prompt
 
 prompt 
 prompt Preparing files for compression.
-HOST sed -i -r -f op_sed_cleanup.sed &outputdir/*log
+HOST sed -i -r -f &seddir/op_sed_cleanup.sed &outputdir/*log
 HOST sed -i -r '1i\ ' &outputdir/*log
 HOST grep ORA- &outputdir/*log >&outputdir/errors.log
 
