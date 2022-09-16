@@ -29,9 +29,9 @@ trap _exit ERR
 
 function installPackage() {
     info "Installing and upgrading packages."
-    cmdResult="$(${__python_prefix}pip3 install pip wheel setuptools cython --upgrade)"
+    ${__python_prefix}pip3 install pip wheel setuptools cython --upgrade
     check_return_status
-    cmdResult="$(${__python_prefix}pip3 install .)"
+    ${__python_prefix}pip3 install .
     check_return_status
 }
 
