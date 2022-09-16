@@ -37,8 +37,7 @@ function installPackage() {
 
 function createVenv() {
     info "Creating new virtual environment."
-    local cmdResult=""
-    cmdResult="$(python3 -m venv ${__venv_dir})"
+    python3 -m venv ${__venv_dir}
     check_return_status
     info "virtual environment created successfully"
 
