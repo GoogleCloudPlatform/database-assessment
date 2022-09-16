@@ -30,3 +30,34 @@ install:          ## Install the project in dev mode.
 	@if [ "$(VENV_EXISTS)" ]; then rm -Rf .venv; fi
 	python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip
 	${ENV_PREFIX}pip install -r requirements/dev.txt
+
+.PHONY: clean
+clean:       ## remove all build, testing, and static documentation files
+	rm -fr build/
+	rm -fr dist/
+	rm -fr .eggs/
+	find . -name '*.egg-info' -exec rm -fr {} +
+	find . -name '*.egg' -exec rm -f {} +
+	find . -name '*.pyc' -exec rm -f {} +
+	find . -name '*.pyo' -exec rm -f {} +
+	find . -name '*~' -exec rm -f {} +
+	find . -name '__pycache__' -exec rm -fr {} +
+	find . -name '.ipynb_checkpoints' -exec rm -fr {} +
+	rm -fr .tox/
+	rm -fr .coverage
+	rm -fr coverage.xml
+	rm -fr coverage.json
+	rm -fr htmlcov/
+	rm -fr .pytest_cache
+	rm -fr .mypy_cache
+	rm -fr site
+
+
+.PHONY: gen-docs
+gen-docs:       ## generate HTML documentation
+	mkdocs build
+
+.PHONY: docs
+docs:       ## generate HTML documentation and serve it to the browser
+	mkdocs build
+	mkdocs serve
