@@ -19,7 +19,7 @@ __dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 __file="${__dir}/$(basename "${BASH_SOURCE[0]}")"
 __base="$(basename "${__file}" .sh)"
 __venv_dir="${__dir}/../.venv"
-__python_prefix="${__dir}/bin/"
+__python_prefix="${__venv_dir}/bin/"
 
 
 ### Import logging & helper functions
@@ -48,9 +48,7 @@ info "Preparing to configure Optimus Prime python environment"
 # MAIN
 
 info "Looking for Python virtual environment"
-VENV_EXIST=$(cd $__dir && python3 -c "if __import__('pathlib').Path('../.venv/bin/activate').exists(): print('yes')")
-info "venv lookup found: ${VENV_EXISTS}"
-if [ "$(echo ${VENV_EXISTS} | grep 'yes' || true)" == "yes" ]; then
+if [ -f "${__venv_dir}/bin/activate" ]; then
     info "existing environment found.  skipping creation"
 else
    createVenv 
