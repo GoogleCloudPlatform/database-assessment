@@ -22,7 +22,7 @@ import sys
 import pandas as pd
 
 from db_assessment import import_db_assessment, rules_engine
-from db_assessment.remote import runRemote
+from db_assessment.remote import run_remote
 from db_assessment.version import __version__
 
 logging.getLogger().setLevel(level=logging.INFO)
@@ -599,7 +599,7 @@ def main():
     args = argumentsParser()
 
     if args.remote:
-        runRemote(args)
+        run_remote(args)
     else:
         # Call main function
         runMain(args)
