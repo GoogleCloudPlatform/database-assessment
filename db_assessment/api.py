@@ -21,7 +21,7 @@ from typing import Optional
 from flask import Flask, request
 from werkzeug.utils import secure_filename
 
-from db_assessment.optimusprime import runMain
+from db_assessment.optimusprime import run_main
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -50,7 +50,8 @@ class UserConfig:
 
 
 @app.route("/api/loadAssessment", methods=["POST"])
-def loadAssessment():
+def load_assessment():
+    """Load an uploaded assessment"""
     app.logger.info(f"{len(request.files)} files uploaded")
     if len(request.files) <= 0:
         return "No files uploaded", 400
@@ -68,5 +69,5 @@ def loadAssessment():
             collectionid=request_data.get("collectionId", None),
             projectname=request_data.get("projectId", None),
         )
-        runMain(config)
+        run_main(config)
     return "", 201

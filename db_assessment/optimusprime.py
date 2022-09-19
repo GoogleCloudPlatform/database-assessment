@@ -23,17 +23,12 @@ import pandas as pd
 
 from db_assessment import import_db_assessment, rules_engine
 from db_assessment.remote import run_remote
-from db_assessment.version import __version__
 
-logging.getLogger().setLevel(level=logging.INFO)
-
-
-def getVersion():
-
-    return __version__
+logger = logging.getLogger()
+logger.setLevel(level=logging.INFO)
 
 
-def runMain(args):
+def run_main(args):
     # Main function
 
     # Pre-Tasks before trying to import any data
@@ -413,7 +408,7 @@ def runMain(args):
         print("\n\n Thank YOU for using Optimus Prime!\n\n")
 
 
-def argumentsParser():
+def parse_arguments():
     # function to handle all arguments to be used in cli mode for this code and enforces mandatory options
 
     # Creating an argpaser object
@@ -596,13 +591,13 @@ def argumentsParser():
 
 
 def main():
-    args = argumentsParser()
+    args = parse_arguments()
 
     if args.remote:
         run_remote(args)
     else:
         # Call main function
-        runMain(args)
+        run_main(args)
 
 
 if __name__ == "__main__":
