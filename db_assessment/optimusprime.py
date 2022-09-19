@@ -15,8 +15,6 @@
 
 import argparse
 import logging
-
-# Basic python built-in libraries to enable read, write and manipulate files in the OS
 import sys
 
 import pandas as pd
@@ -29,6 +27,7 @@ logger.setLevel(level=logging.INFO)
 
 
 def run_main(args):
+    """Main program"""
     # Main function
 
     # Pre-Tasks before trying to import any data
@@ -409,7 +408,9 @@ def run_main(args):
 
 
 def parse_arguments():
-    # function to handle all arguments to be used in cli mode for this code and enforces mandatory options
+    """Parse command line arguments"""
+    # function to handle all arguments to be used in cli mode
+    # for this code and enforces mandatory options
 
     # Creating an argpaser object
     parser = argparse.ArgumentParser()
@@ -419,7 +420,10 @@ def parse_arguments():
         "-dataset",
         type=str,
         default=None,
-        help="name of the Big Query dataset to import all CSV files. If do not exists it will be created if exists the data is appended",
+        help=(
+            "name of the Big Query dataset to import all CSV files. "
+            "If do not exists it will be created if exists the data is appended"
+        ),
     )
 
     # GCP project name to be used with the dataset
@@ -427,7 +431,7 @@ def parse_arguments():
         "-projectname",
         type=str,
         default=None,
-        help="name of the Google Cloud project name used for the Big Query dataset",
+        help=("Google cloud project name for the BigQuery data"),
     )
 
     # OS csv files location to be imported to Big Query
@@ -566,7 +570,7 @@ def parse_arguments():
     args = parser.parse_args()
 
     # If not using -cl flag
-    if args.consolidatelogs == False:
+    if args.consolidatelogs is False:
 
         # In case there is not dataset parameter set or with valid content in the arguments
         if args.dataset is None or args.dataset == "":
