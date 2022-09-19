@@ -24,7 +24,8 @@ import requests
 # Import to Big Query
 from db_assessment import import_db_assessment
 
-logging.getLogger().setLevel(level=logging.INFO)
+logger = logging.getLogger()
+logger.setLevel(level=logging.INFO)
 
 
 def get_id_token() -> Optional[str]:
