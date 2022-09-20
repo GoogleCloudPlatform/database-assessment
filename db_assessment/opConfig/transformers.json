@@ -9495,7 +9495,7 @@
     "dataframe_reshape_awrhistsysmetrichist": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "0",
@@ -9515,7 +9515,7 @@
     "dataframe_reshape_awrhistosstat": {
       "priority": 0,
       "min_sql_script_version": "2.0.2",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "0",
@@ -9555,7 +9555,7 @@
     "dataframe_reshape_dbparameters": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "0",
@@ -9575,7 +9575,7 @@
     "dataframe_reshape_dbahistsysstat": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "0",
@@ -9600,7 +9600,7 @@
     "2-0-create-view-vdbsummary": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -9642,7 +9642,7 @@
     "2-0-create-view-vawrsnapdetails": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -9677,7 +9677,7 @@
     "2-0-create-view-vawrhistcmdtypes": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -9717,7 +9717,7 @@
     "2-0-create-view-vcompressbytype": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -9750,7 +9750,7 @@
     "2-0-create-view-vcpucoresusage": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -9779,7 +9779,7 @@
     "2-0-create-view-vdatatypes": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -9809,7 +9809,7 @@
     "2-0-create-view-vdbfeatures": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -9842,7 +9842,7 @@
     "2-0-create-view-vdbinstances": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -9874,7 +9874,7 @@
     "2-0-create-view-vsourcecode": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -9910,7 +9910,7 @@
     "2-0-create-view-vtablesnopk": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -9947,7 +9947,7 @@
     "2-0-create-view-vawrhistosstat_rs_metrics": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -9994,7 +9994,7 @@
     "2-0-create-view-vawrhistsysmetrichist_rs_awrhistosstat_rs": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10068,7 +10068,7 @@
     "2-0-create-view-vawrhistsysmetrichist_rs_awrhistosstat_rs-11g": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "112",
       "execution_group": "2",
@@ -10136,7 +10136,7 @@
     "2-0-create-view-vdbsizing_facts": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10197,7 +10197,7 @@
     "2-0-create-view-vawrhistosstat": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10240,7 +10240,7 @@
     "2-0-create-view-vawrhistosstat_rs": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10283,7 +10283,7 @@
     "2-0-create-view-vawrhistsysmetrichist": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10323,7 +10323,7 @@
     "2-0-create-view-vawrhistsysmetricumm": {
       "priority": 0,
       "min_sql_script_version": "2.0.3",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10363,7 +10363,7 @@
     "2-0-create-view-vawrhistsysmetrichist_rs": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "121",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10424,7 +10424,7 @@
     "2-0-create-view-vawrhistsysmetrichist_rs-11g": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "112",
       "execution_group": "2",
@@ -10479,7 +10479,7 @@
     "2-0-create-view-vcompressbytable": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10513,7 +10513,7 @@
     "2-0-create-view-vdbahistsysstat": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10554,7 +10554,7 @@
     "2-0-create-view-vdbahistsystimemodel": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10595,7 +10595,7 @@
     "2-0-create-view-vdbhwmarkstatistics": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10623,7 +10623,7 @@
     "2-0-create-view-vdbobjects": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10657,7 +10657,7 @@
     "2-0-create-view-vdbparameters": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10689,7 +10689,7 @@
     "2-0-create-view-vdbparameters-11g202": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "112",
       "execution_group": "2",
@@ -10789,7 +10789,7 @@
     "2-0-create-view-vindexestypes": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10818,7 +10818,7 @@
     "2-0-create-view-voptimusconfig_bms_machinesizes": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10844,7 +10844,7 @@
     "2-0-create-view-voptimusconfig_network_to_gcp": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10898,7 +10898,7 @@
     "2-0-create-view-vpdbsinfo": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "121",
       "max_db_version": "216",
       "execution_group": "2",
@@ -10928,7 +10928,7 @@
     "2-0-create-view-vpdbsopenmode": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "121",
       "max_db_version": "216",
       "execution_group": "2",
@@ -11046,7 +11046,7 @@
     "2-0-create-view-vusrsegatt": {
       "priority": 0,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -11076,7 +11076,7 @@
     "2-100-create-view-vsysmetric": {
       "priority": 100,
       "min_sql_script_version": "2.0.3",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "121",
       "max_db_version": "216",
       "execution_group": "2",
@@ -11123,7 +11123,7 @@
     "2-100-create-view-vosstat_columnar": {
       "priority": 100,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -11268,7 +11268,7 @@
     "2-100-create-view-vsysstat": {
       "priority": 100,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -11300,7 +11300,7 @@
     "2-200-create-view-vsysmetric_sysstat": {
       "priority": 200,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "121",
       "max_db_version": "216",
       "execution_group": "2",
@@ -11327,7 +11327,7 @@
     "2-300-create-view-vsysmetric_columnar": {
       "priority": 300,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "121",
       "max_db_version": "216",
       "execution_group": "2",
@@ -11768,7 +11768,7 @@
     "2-500-create-view-vsysmetric_io_facts": {
       "priority": 500,
       "min_sql_script_version": "2.0.3",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "121",
       "max_db_version": "216",
       "execution_group": "2",
@@ -11839,7 +11839,7 @@
     "2-500-create-view-vsysmetric_cpu_facts": {
       "priority": 500,
       "min_sql_script_version": "2.0.3",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "121",
       "max_db_version": "216",
       "execution_group": "2",
@@ -11920,7 +11920,7 @@
     "2-700-create-view-V_DS_BMSsizing_summary": {
       "priority": 700,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -12163,7 +12163,7 @@
     "2-700-create-view-V_DS_dbsummary": {
       "priority": 700,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -12194,7 +12194,7 @@
     "2-700-create-view-V_DS_HostDetails": {
       "priority": 700,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -12286,7 +12286,7 @@
     "2-700-create-view-V_DS_dbsizing_facts": {
       "priority": 700,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -12345,7 +12345,7 @@
     "2-700-create-view-V_DS_dbfeatures": {
       "priority": 700,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -12370,7 +12370,7 @@
     "2-700-create-view-V_DS_ConsoldatedCoreCount": {
       "priority": 700,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -12399,7 +12399,7 @@
     "2-1000-create-view-vReport_sysmetric_io_summary": {
       "priority": 700,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -12445,7 +12445,7 @@
     "2-1000-create-view-vReport_sysstat_io_summary": {
       "priority": 700,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -12489,7 +12489,7 @@
     "2-300-create-view-vsysstat_columnar": {
       "priority": 300,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "2",
@@ -12951,7 +12951,7 @@
     "db_migration-rule00-1": {
       "priority": 100,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -12972,7 +12972,7 @@
     "db_migration-rule00": {
       "priority": 100,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -12991,7 +12991,7 @@
     "db_migration-rule01": {
       "priority": 200,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13010,7 +13010,7 @@
     "db_migration-rule02": {
       "priority": 210,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13031,7 +13031,7 @@
     "db_migration-rule03": {
       "priority": 210,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13052,7 +13052,7 @@
     "db_migration-rule04": {
       "priority": 210,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13073,7 +13073,7 @@
     "db_migration-rule05": {
       "priority": 210,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13094,7 +13094,7 @@
     "db_migration-rule06": {
       "priority": 210,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13115,7 +13115,7 @@
     "db_migration-rule07": {
       "priority": 210,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13136,7 +13136,7 @@
     "db_migration-rule08": {
       "priority": 210,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13157,7 +13157,7 @@
     "db_migration-rule09": {
       "priority": 210,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13178,7 +13178,7 @@
     "db_migration-rule10": {
       "priority": 210,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13199,7 +13199,7 @@
     "db_migration-rule11": {
       "priority": 250,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13220,7 +13220,7 @@
     "db_migration-rule12": {
       "priority": 255,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13241,7 +13241,7 @@
     "db_migration-rule13": {
       "priority": 260,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13262,7 +13262,7 @@
     "db_migration-rule14": {
       "priority": 265,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13283,7 +13283,7 @@
     "db_migration-rule15": {
       "priority": 270,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13304,7 +13304,7 @@
     "bms_sizing-rule01": {
       "priority": 272,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13325,7 +13325,7 @@
     "bms_sizing-rule02": {
       "priority": 275,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13344,7 +13344,7 @@
     "bms_sizing-rule03": {
       "priority": 300,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13365,7 +13365,7 @@
     "bms_sizing-rule04": {
       "priority": 300,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13386,7 +13386,7 @@
     "bms_sizing-rule05": {
       "priority": 300,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13407,7 +13407,7 @@
     "bms_sizing-rule06": {
       "priority": 310,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13428,7 +13428,7 @@
     "bms_sizing-rule07": {
       "priority": 315,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13449,7 +13449,7 @@
     "bms_sizing-rule08": {
       "priority": 300,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13470,7 +13470,7 @@
     "bms_sizing-rule09": {
       "priority": 350,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13489,7 +13489,7 @@
     "bms_sizing-rule09a": {
       "priority": 350,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13510,7 +13510,7 @@
     "bms_sizing-rule09b": {
       "priority": 350,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13531,7 +13531,7 @@
     "bms_sizing-rule09c": {
       "priority": 350,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13552,7 +13552,7 @@
     "bms_sizing-rule09d": {
       "priority": 350,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13573,7 +13573,7 @@
     "bms_sizing-rule10": {
       "priority": 355,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13592,7 +13592,7 @@
     "bms_sizing-rule11": {
       "priority": 360,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13613,7 +13613,7 @@
     "bms_sizing-rule12": {
       "priority": 370,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13634,7 +13634,7 @@
     "bms_sizing-rule13": {
       "priority": 380,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13655,7 +13655,7 @@
     "bms_sizing-rule14": {
       "priority": 390,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13674,7 +13674,7 @@
     "bms_sizing-rule15": {
       "priority": 400,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
@@ -13695,7 +13695,7 @@
     "bms_sizing-rule16": {
       "priority": 400,
       "min_sql_script_version": "2.0.0",
-      "max_sql_script_version": "2.0.6",
+      "max_sql_script_version": "3.0.3",
       "min_db_version": "111",
       "max_db_version": "216",
       "execution_group": "1",
