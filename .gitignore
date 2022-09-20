@@ -149,3 +149,4 @@ op-venv
 log/*
 op_output
 db_assessment/op_etl*.sql
+*.csv
