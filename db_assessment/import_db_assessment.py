@@ -520,13 +520,12 @@ def importAllCSVsToBQ(
         # Final table name from the CSV file names
         tableName = getObjNameFromFiles(fileName, "__", 1)
 
-        importTable = True
         doNotImportList = [
             table.strip().lower() for table in transformersParameters["do_not_import"]
         ]
 
         if str(tableName).lower() == "opkeylog":
-            ##skipLeadingRows=1
+            # #skipLeadingRows=1
             tableHeaders = rules_engine.get_headers_from_config(
                 str(tableName).lower(), transformersTablesSchema
             )
@@ -707,6 +706,7 @@ def importCSVToBQ(
 
 
 def getTableRef(dataset, tableName, projectName):
+    client = bigquery.Client(project=projectName)
 
     if projectName:
         return f"{projectName}.{dataset}.{tableName}"
