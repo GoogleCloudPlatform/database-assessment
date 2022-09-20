@@ -12957,7 +12957,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS\"][\"_HOUR\"]",
+        "expr1": "dataframes[\"AWRHISTSYSMETRICHIST_RS\"][\"_HOUR\"]",
         "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS",
@@ -12978,7 +12978,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "CREATE_OR_REPLACE_DATAFRAME",
-        "expr1": "dataFrames[\"DBSUMMARY\"][[\"PKEY\", \"DBID\", \"DB_NAME\",\"DBFULLVERSION\",\"LOG_MODE\",\"REDO_GB_PER_DAY\",\"PLATFORM_NAME\",\"DB_SIZE_ALLOCATED_GB\",\"DB_SIZE_IN_USE_GB\"]]",
+        "expr1": "dataframes[\"DBSUMMARY\"][[\"PKEY\", \"DBID\", \"DB_NAME\",\"DBFULLVERSION\",\"LOG_MODE\",\"REDO_GB_PER_DAY\",\"PLATFORM_NAME\",\"DB_SIZE_ALLOCATED_GB\",\"DB_SIZE_IN_USE_GB\"]]",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBMIGRATION_BASE",
@@ -12997,7 +12997,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "CREATE_OR_REPLACE_DATAFRAME",
-        "expr1": "pd.concat([dataFrames[\"DBMIGRATION_BASE\"].assign(TECHNIQUE=\"RMAN_BACKUP_RESTORE\"),dataFrames[\"DBMIGRATION_BASE\"].assign(TECHNIQUE=\"EXP_FULL\"),dataFrames[\"DBMIGRATION_BASE\"].assign(TECHNIQUE=\"XTTS_INCREMENTAL\"),dataFrames[\"DBMIGRATION_BASE\"].assign(TECHNIQUE=\"DATA_GUARD\")])",
+        "expr1": "pd.concat([dataframes[\"DBMIGRATION_BASE\"].assign(TECHNIQUE=\"RMAN_BACKUP_RESTORE\"),dataframes[\"DBMIGRATION_BASE\"].assign(TECHNIQUE=\"EXP_FULL\"),dataframes[\"DBMIGRATION_BASE\"].assign(TECHNIQUE=\"XTTS_INCREMENTAL\"),dataframes[\"DBMIGRATION_BASE\"].assign(TECHNIQUE=\"DATA_GUARD\")])",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBMIGRATION_DETAILS",
@@ -13005,7 +13005,7 @@
       },
       "status": "ENABLED",
       "tags": ["DB_MIGRATION"],
-      "description": "This rule adds a new column dataFrames['OPTIMUSCONFIG_NETWORK_TO_GCP'].loc[dataFrames['OPTIMUSCONFIG_NETWORK_TO_GCP']['network_to_gcp'] == transformersParameters['network_to_gcp']]"
+      "description": "This rule adds a new column dataframes['OPTIMUSCONFIG_NETWORK_TO_GCP'].loc[dataframes['OPTIMUSCONFIG_NETWORK_TO_GCP']['network_to_gcp'] == transformersParameters['network_to_gcp']]"
     },
     "db_migration-rule02": {
       "priority": 210,
@@ -13121,7 +13121,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "dataFrames[\"DBMIGRATION_DETAILS\"][\"DB_SIZE_ALLOCATED_GB\"];/;dataFrames[\"DBMIGRATION_DETAILS\"][\"SSD_DISK_WRITE_RATE_GBYTESPS\"];/;60;/;60",
+        "expr1": "dataframes[\"DBMIGRATION_DETAILS\"][\"DB_SIZE_ALLOCATED_GB\"];/;dataframes[\"DBMIGRATION_DETAILS\"][\"SSD_DISK_WRITE_RATE_GBYTESPS\"];/;60;/;60",
         "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "DBMIGRATION_DETAILS",
@@ -13142,7 +13142,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "(;dataFrames[\"DBMIGRATION_DETAILS\"][\"DB_SIZE_ALLOCATED_GB\"];*;0.7;);/;dataFrames[\"DBMIGRATION_DETAILS\"][\"NETWORK_TRANSFER_RATE_GBYTESPS\"];/;60;/;60",
+        "expr1": "(;dataframes[\"DBMIGRATION_DETAILS\"][\"DB_SIZE_ALLOCATED_GB\"];*;0.7;);/;dataframes[\"DBMIGRATION_DETAILS\"][\"NETWORK_TRANSFER_RATE_GBYTESPS\"];/;60;/;60",
         "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "DBMIGRATION_DETAILS",
@@ -13163,7 +13163,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "(;dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"];*;2.5;)",
+        "expr1": "(;dataframes[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"];*;2.5;)",
         "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "DBMIGRATION_DETAILS",
@@ -13184,7 +13184,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "(;dataFrames[\"DBMIGRATION_DETAILS\"][\"REDO_GB_PER_DAY\"];*;7;);/;0.36;/;60;/;60",
+        "expr1": "(;dataframes[\"DBMIGRATION_DETAILS\"][\"REDO_GB_PER_DAY\"];*;7;);/;0.36;/;60;/;60",
         "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "DBMIGRATION_DETAILS",
@@ -13205,7 +13205,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"RMAN_BACKUP_RESTORE\"),dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_TRANSFER_BACKUP_OVER_NETWORK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_BACKUP_HOUR\"],dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"])",
+        "expr1": "np.where((dataframes[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"RMAN_BACKUP_RESTORE\"),dataframes[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"]+dataframes[\"DBMIGRATION_DETAILS\"][\"TIME_TO_TRANSFER_BACKUP_OVER_NETWORK_HOUR\"]+dataframes[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_BACKUP_HOUR\"],dataframes[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"])",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBMIGRATION_DETAILS",
@@ -13226,7 +13226,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"EXP_FULL\"),(dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_TRANSFER_BACKUP_OVER_NETWORK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_BACKUP_HOUR\"])*1.2,dataFrames[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
+        "expr1": "np.where((dataframes[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"EXP_FULL\"),(dataframes[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"]+dataframes[\"DBMIGRATION_DETAILS\"][\"TIME_TO_TRANSFER_BACKUP_OVER_NETWORK_HOUR\"]+dataframes[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_BACKUP_HOUR\"])*1.2,dataframes[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBMIGRATION_DETAILS",
@@ -13247,7 +13247,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"XTTS_INCREMENTAL\"),dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR\"]+2,dataFrames[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
+        "expr1": "np.where((dataframes[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"XTTS_INCREMENTAL\"),dataframes[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR\"]+2,dataframes[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBMIGRATION_DETAILS",
@@ -13268,7 +13268,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"DATA_GUARD\"),dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR\"]/7,dataFrames[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
+        "expr1": "np.where((dataframes[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"DATA_GUARD\"),dataframes[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR\"]/7,dataframes[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBMIGRATION_DETAILS",
@@ -13310,7 +13310,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "dataFrames[\"AWRHISTOSSTAT_RS\"][\"BUSY_TIME_PERC95\"];/;(;dataFrames[\"AWRHISTOSSTAT_RS\"][\"BUSY_TIME_PERC95\"];+;dataFrames[\"AWRHISTOSSTAT_RS\"][\"IDLE_TIME_PERC95\"];);*;100",
+        "expr1": "dataframes[\"AWRHISTOSSTAT_RS\"][\"BUSY_TIME_PERC95\"];/;(;dataframes[\"AWRHISTOSSTAT_RS\"][\"BUSY_TIME_PERC95\"];+;dataframes[\"AWRHISTOSSTAT_RS\"][\"IDLE_TIME_PERC95\"];);*;100",
         "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "AWRHISTOSSTAT_RS",
@@ -13331,7 +13331,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "CREATE_OR_REPLACE_DATAFRAME",
-        "expr1": "pd.merge(dataFrames[\"AWRHISTSYSMETRICHIST_RS\"], dataFrames[\"AWRHISTOSSTAT_RS\"], on=[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\", \"_HOUR\"])",
+        "expr1": "pd.merge(dataframes[\"AWRHISTSYSMETRICHIST_RS\"], dataframes[\"AWRHISTOSSTAT_RS\"], on=[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\", \"_HOUR\"])",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
@@ -13350,7 +13350,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "(;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPU_PER_SEC_PERC95\"];+;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"BKGRCPU_PER_SEC_PERC95\"];);/;(;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"HOST_CPU_PER_SEC_PERC95\"];/;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"HOST_CPU_UTILIZATION\"];)",
+        "expr1": "(;dataframes[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPU_PER_SEC_PERC95\"];+;dataframes[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"BKGRCPU_PER_SEC_PERC95\"];);/;(;dataframes[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"HOST_CPU_PER_SEC_PERC95\"];/;dataframes[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"HOST_CPU_UTILIZATION\"];)",
         "if_error": "999",
         "type": "FREESTYLE",
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
@@ -13371,7 +13371,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "(dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"NUM_CPU_CORES_CUMULATIVE_VALUE\"];/;100);*;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPUDB95_PERC\"]",
+        "expr1": "(dataframes[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"NUM_CPU_CORES_CUMULATIVE_VALUE\"];/;100);*;dataframes[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPUDB95_PERC\"]",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
@@ -13392,7 +13392,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "(dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"NUM_CPU_CORES_CUMULATIVE_VALUE\"];/;100);*;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"HOST_CPU_UTILIZATION\"]",
+        "expr1": "(dataframes[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"NUM_CPU_CORES_CUMULATIVE_VALUE\"];/;100);*;dataframes[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"HOST_CPU_UTILIZATION\"]",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
@@ -13413,7 +13413,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "(;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPUDB95_CORES\"];*;0.8;)",
+        "expr1": "(;dataframes[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPUDB95_CORES\"];*;0.8;)",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
@@ -13434,7 +13434,7 @@
       "execution_group": "1",
       "action_details": {
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
-        "expr1": "(dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPUHOST95_CORES\"];*;0.8)",
+        "expr1": "(dataframes[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPUHOST95_CORES\"];*;0.8)",
         "if_error": "None",
         "type": "FREESTYLE",
         "action": "ADD_OR_UPDATE_COLUMN",
@@ -13455,7 +13455,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "(dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"IOPS_PERC95\"];/;6000)",
+        "expr1": "(dataframes[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"IOPS_PERC95\"];/;6000)",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
@@ -13476,8 +13476,8 @@
       "execution_group": "1",
       "action_details": {
         "action": "CREATE_OR_REPLACE_DATAFRAME",
-        "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"FREE_MEMORY_BYTES_PERC95\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\",\"FREE_MEMORY_BYTES_CUMULATIVE_VALUE\",\"NUM_CPUS_CUMULATIVE_VALUE\",\"NUM_CPU_CORES_CUMULATIVE_VALUE\",\"NUM_CPU_SOCKETS_CUMULATIVE_VALUE\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"NUM_CPU_SOCKETS_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
-        "if_error": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\",\"NUM_CPUS_CUMULATIVE_VALUE\",\"NUM_CPU_CORES_CUMULATIVE_VALUE\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
+        "expr1": "dataframes[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"FREE_MEMORY_BYTES_PERC95\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\",\"FREE_MEMORY_BYTES_CUMULATIVE_VALUE\",\"NUM_CPUS_CUMULATIVE_VALUE\",\"NUM_CPU_CORES_CUMULATIVE_VALUE\",\"NUM_CPU_SOCKETS_CUMULATIVE_VALUE\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"NUM_CPU_SOCKETS_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
+        "if_error": "dataframes[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\",\"NUM_CPUS_CUMULATIVE_VALUE\",\"NUM_CPU_CORES_CUMULATIVE_VALUE\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
         "store": "BIGQUERY"
@@ -13495,7 +13495,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "(;dataFrames[\"DBSIZING_FACTS\"][\"NUM_CPUS_CUMULATIVE_VALUE\"])",
+        "expr1": "(;dataframes[\"DBSIZING_FACTS\"][\"NUM_CPUS_CUMULATIVE_VALUE\"])",
         "if_error": "0",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
@@ -13516,7 +13516,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "(;dataFrames[\"DBSIZING_FACTS\"][\"NUM_CPU_CORES_CUMULATIVE_VALUE\"])",
+        "expr1": "(;dataframes[\"DBSIZING_FACTS\"][\"NUM_CPU_CORES_CUMULATIVE_VALUE\"])",
         "if_error": "0",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
@@ -13537,7 +13537,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "(;dataFrames[\"DBSIZING_FACTS\"][\"NUM_CPU_SOCKETS_CUMULATIVE_VALUE\"])",
+        "expr1": "(;dataframes[\"DBSIZING_FACTS\"][\"NUM_CPU_SOCKETS_CUMULATIVE_VALUE\"])",
         "if_error": "0",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
@@ -13558,7 +13558,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "(;dataFrames[\"DBSIZING_FACTS\"][\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\"])",
+        "expr1": "(;dataframes[\"DBSIZING_FACTS\"][\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\"])",
         "if_error": "0",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
@@ -13579,7 +13579,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "CREATE_OR_REPLACE_DATAFRAME",
-        "expr1": "pd.merge(dataFrames[\"DBSIZING_FACTS\"], dataFrames[\"DBSUMMARY\"], left_on=[\"_PKEY\", \"_DBID\"], right_on=[\"PKEY\", \"DBID\"], how=\"inner\")",
+        "expr1": "pd.merge(dataframes[\"DBSIZING_FACTS\"], dataframes[\"DBSUMMARY\"], left_on=[\"_PKEY\", \"_DBID\"], right_on=[\"PKEY\", \"DBID\"], how=\"inner\")",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
@@ -13598,7 +13598,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "np.where((dataFrames[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"] > (dataFrames[\"DBSIZING_FACTS\"][\"DB_SIZE_ALLOCATED_GB\"]/1024)),np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"]),np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"DB_SIZE_ALLOCATED_GB\"]/1024))",
+        "expr1": "np.where((dataframes[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"] > (dataframes[\"DBSIZING_FACTS\"][\"DB_SIZE_ALLOCATED_GB\"]/1024)),np.ceil(dataframes[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"]),np.ceil(dataframes[\"DBSIZING_FACTS\"][\"DB_SIZE_ALLOCATED_GB\"]/1024))",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
@@ -13619,7 +13619,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "np.ceil((dataFrames[\"DBSIZING_FACTS\"][\"BUFFER_CACHE_MB\"]+dataFrames[\"DBSIZING_FACTS\"][\"SHARED_POOL_MB\"]+dataFrames[\"DBSIZING_FACTS\"][\"TOTAL_PGA_ALLOCATED_MB\"])/1024*1.2)",
+        "expr1": "np.ceil((dataframes[\"DBSIZING_FACTS\"][\"BUFFER_CACHE_MB\"]+dataframes[\"DBSIZING_FACTS\"][\"SHARED_POOL_MB\"]+dataframes[\"DBSIZING_FACTS\"][\"TOTAL_PGA_ALLOCATED_MB\"])/1024*1.2)",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
@@ -13640,7 +13640,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"PHYSICAL_MEMORY_BYTES_PERC95\"]/1024/1024/1024)",
+        "expr1": "np.ceil(dataframes[\"DBSIZING_FACTS\"][\"PHYSICAL_MEMORY_BYTES_PERC95\"]/1024/1024/1024)",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
@@ -13661,7 +13661,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "CREATE_OR_REPLACE_DATAFRAME",
-        "expr1": "dataFrames[\"DBSIZING_FACTS\"].groupby([\"PKEY\",\"_DBID\",\"_INSTANCE_NUMBER\"])[\"PKEY\",\"_DBID\",\"DB_NAME\",\"DBFULLVERSION\",\"_INSTANCE_NUMBER\",\"BMSSTORAGE_TB_DB\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\",\"BMSMEMORY_GB_DB\",\"BMSMEMORY_GB_HOST\"].agg(\"max\")",
+        "expr1": "dataframes[\"DBSIZING_FACTS\"].groupby([\"PKEY\",\"_DBID\",\"_INSTANCE_NUMBER\"])[\"PKEY\",\"_DBID\",\"DB_NAME\",\"DBFULLVERSION\",\"_INSTANCE_NUMBER\",\"BMSSTORAGE_TB_DB\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\",\"BMSMEMORY_GB_DB\",\"BMSMEMORY_GB_HOST\"].agg(\"max\")",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_SUMMARY",
@@ -13680,7 +13680,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "np.ceil(dataFrames[\"DBSIZING_SUMMARY\"][\"BMSCORES95_DB\"])",
+        "expr1": "np.ceil(dataframes[\"DBSIZING_SUMMARY\"][\"BMSCORES95_DB\"])",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_SUMMARY",
@@ -13701,7 +13701,7 @@
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
-        "expr1": "np.ceil(dataFrames[\"DBSIZING_SUMMARY\"][\"BMSCORES95_HOST\"])",
+        "expr1": "np.ceil(dataframes[\"DBSIZING_SUMMARY\"][\"BMSCORES95_HOST\"])",
         "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_SUMMARY",

@@ -54,7 +54,7 @@ def coerce_data_type(
 def run_rules(
     executionGroup,
     transformerRules,
-    dataFrames,
+    dataframes,
     singleRule,
     args: "AppConfig",
     collectionKey,
@@ -245,12 +245,12 @@ def run_rules(
                                     continue
 
                                 try:
-                                    dataFrames[str(dfTargetName).upper()][
+                                    dataframes[str(dfTargetName).upper()][
                                         str(columnTargetName).upper()
                                     ] = execStringExpression(
-                                        stringExpression, if_errorExpression, dataFrames
+                                        stringExpression, if_errorExpression, dataframes
                                     )
-                                    df = dataFrames[str(dfTargetName).upper()]
+                                    df = dataframes[str(dfTargetName).upper()]
                                 except KeyError:
                                     print(
                                         '\n WARNING: The rule "{}" could not be executed because the variable "{}" used in the transformers.json could not be found.\n'.format(
@@ -286,7 +286,7 @@ def run_rules(
                                 )
 
                                 # Creating the new dataframe
-                                dataFrames[str(newTableName).upper()] = df
+                                dataframes[str(newTableName).upper()] = df
 
                                 if resCSVCreation:
                                     # If CSV creation was successfully then we will add this to the list of files to be imported
@@ -307,7 +307,7 @@ def run_rules(
                                 #
 
                                 df = execStringExpression(
-                                    stringExpression, if_errorExpression, dataFrames
+                                    stringExpression, if_errorExpression, dataframes
                                 )
 
                                 if df is None:
@@ -345,7 +345,7 @@ def run_rules(
                                 )
 
                                 # Creating the new dataframe
-                                dataFrames[
+                                dataframes[
                                     str(
                                         transformerRules[ruleItem]["action_details"][
                                             "dataframe_name"
@@ -407,7 +407,7 @@ def run_rules(
                                 )
 
                                 # Creating the new dataframe
-                                dataFrames[str(newTableName).upper()] = df
+                                dataframes[str(newTableName).upper()] = df
 
                                 if resCSVCreation:
                                     # If CSV creation was successfully then we will add this to the list of files to be imported
@@ -485,7 +485,7 @@ def run_rules(
                 "Result Value": "Due to the STATUS configurarion on transformers.json",
             }
 
-    return transformerResults, transformersRulesVariables, fileList, dataFrames
+    return transformerResults, transformersRulesVariables, fileList, dataframes
 
 
 def execStringExpression(str_expression, if_error_expression, dataframes):
@@ -838,7 +838,7 @@ def trim_dataframe(df):
 
 
 def getAllReShapedDataframes(
-    dataFrames,
+    dataframes,
     transformersTablesSchema,
     transformersParameters,
     transformerRulesConfig,
@@ -847,8 +847,8 @@ def getAllReShapedDataframes(
     fileList,
 ):
     # Function to iterate on getReShapedDataframe to reShape some dataframes accordingly with targetTableNames
-    # dataFrames is expected to be a Hash Table of dataframes
-    # targetTableNames is expected to be a list with the right keys from the Hash table dataFrames
+    # dataframes is expected to be a Hash Table of dataframes
+    # targetTableNames is expected to be a list with the right keys from the Hash table dataframes
 
     if transformersParameters.get("op_enable_reshape_for") is not None:
         # if the parameter is set to any value
@@ -868,11 +868,11 @@ def getAllReShapedDataframes(
                 transformerParameterResults,
                 transformersResults,
                 fileList,
-                dataFrames,
+                dataframes,
             ) = run_rules(
                 "0",
                 transformerRulesConfig,
-                dataFrames,
+                dataframes,
                 ruleID,
                 args,
                 None,
@@ -892,7 +892,7 @@ def getAllReShapedDataframes(
             # Including rules already executed to be avoided
             executedRulesList.append(ruleID)
 
-            if dataFrames.get(str(tableName)) is not None:
+            if dataframes.get(str(tableName)) is not None:
 
                 if transformerParameterResults[ruleID]["Status"] == "EXECUTED":
 
@@ -902,10 +902,10 @@ def getAllReShapedDataframes(
 
                         try:
                             df = getReShapedDataframe(
-                                dataFrames[str(tableName)],
+                                dataframes[str(tableName)],
                                 transformersResults[str(tableName)],
                             )
-                            dataFrames[reshapedTableName.upper()] = df
+                            dataframes[reshapedTableName.upper()] = df
                         except:
                             df = None
                             print(
@@ -929,7 +929,7 @@ def getAllReShapedDataframes(
                                 resCSVCreation,
                                 transformersTablesSchema,
                             ) = createCSVFromDataframe(
-                                dataFrames[reshapedTableName.upper()],
+                                dataframes[reshapedTableName.upper()],
                                 transformersResults[str(tableName)],
                                 args,
                                 fileName,
@@ -982,7 +982,7 @@ def getAllReShapedDataframes(
                     )
                 )
 
-    return dataFrames, fileList, transformersTablesSchema, executedRulesList
+    return dataframes, fileList, transformersTablesSchema, executedRulesList
 
 
 def createCSVFromDataframe(
