@@ -914,7 +914,7 @@ def getAllReShapedDataframes(
                                 )
                             )
 
-                        # collectionKey already contains .log
+                        # collectionKey already contains .csv
                         fileName = (
                             str(getattr(args, "files_location"))
                             + "/opdbt__"

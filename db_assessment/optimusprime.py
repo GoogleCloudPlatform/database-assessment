@@ -70,7 +70,7 @@ def run_main(args: "AppConfig") -> None:
         # The default location will be dbResults if not overwritten
         # by the argument --files-location
         file_search_pattern = (
-            f"{args.files_location}/*{args.collection_id.replace(' ', '')}.log"
+            f"{args.files_location}/*{args.collection_id.replace(' ', '')}.csv"
         )
 
         # Append files_location if there are filter_by_sql_version
@@ -105,7 +105,7 @@ def run_main(args: "AppConfig") -> None:
         # In case there is no matching file in the OS
         if len(file_list) == 0:
             logger.fatal(
-                "ERROR: There is not matching CSV file found to be processed using: %s",  # pylint: disable=[line-too-long]
+                "ERROR: There is no matching CSV file found to be processed using: %s",  # pylint: disable=[line-too-long]
                 file_search_pattern,
             )
             sys.exit()
@@ -438,7 +438,7 @@ def parse_arguments():
         help="location of transformers.json file with all parameters and rules",
     )
 
-    # Optimus collection ID is the number in the final part of the generated CSV files. For example: dbResults/opdb_dbfeatures_ol79-orcl-db02.ORCLCDB.ORCLCDB.180603.log. Collection ID is: 180603
+    # Optimus collection ID is the number in the final part of the generated CSV files. For example: dbResults/opdb_dbfeatures_ol79-orcl-db02.ORCLCDB.ORCLCDB.180603.csv. Collection ID is: 180603
     parser.add_argument(
         "--collection-id",
         type=str,
@@ -518,7 +518,7 @@ def parse_arguments():
 
     # Consolidates different collection IDs found in the OS (dbResults/*log) into a single CSV per file type.
     # For example: dbResults has 52 files. Meaning, 2 collection IDs (each one has 26 different file types).
-    # After the consolidation it produces 26 *consolidatedlogs.log which would have data from both collection IDs
+    # After the consolidation it produces 26 *consolidatedlogs.csv which would have data from both collection IDs
     parser.add_argument(
         "-cl",
         "--consolidate-logs",

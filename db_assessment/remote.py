@@ -48,7 +48,7 @@ def run_remote(args) -> None:
         str(args.files_location)
         + "/*"
         + str(args.collection_id).replace(" ", "")
-        + ".log"
+        + ".csv"
     )
 
     # Getting a list of files from OS based on the pattern provided

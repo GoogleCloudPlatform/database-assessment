@@ -52,7 +52,7 @@ def consolidate_collection(args, transformersTablesSchema):
 
         # Using the expected tableName to look for files in the OS in the directory passed in --files-location (default dbResults)
         csvFilesLocationPattern = (
-            str(getattr(args, "files_location")) + "/opdb*" + str(tableName) + "*.log"
+            str(getattr(args, "files_location")) + "/opdb*" + str(tableName) + "*.csv"
         )
 
         # Generating a list with all found OS filenames
@@ -75,7 +75,7 @@ def consolidate_collection(args, transformersTablesSchema):
                 str(getattr(args, "files_location"))
                 + "/opalldb__"
                 + str(tableName)
-                + "__consolidate.log"
+                + "__consolidate.csv"
             )
 
             # Checks if file already exists in the first matching file found because the other files need to append to existent one.
