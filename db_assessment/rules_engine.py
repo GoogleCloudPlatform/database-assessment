@@ -829,7 +829,7 @@ def trim_dataframe(df):
 
     for column in cols:
         try:
-            df[column] = df[column].str.strip()
+            df[column] = df[column].astype(str).str.strip()
         except Exception:
             pass
 
