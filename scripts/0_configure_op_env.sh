@@ -7,19 +7,19 @@ echo "Verifying environment before configuring Optimus Prime"
 # Fail if these variables are not set
 if [ "${PROJECTNAME}" == "" ] || [ -z "${PROJECTNAME}" ]; then
     echo "Please ensure PROJECTNAME environment variable is set properly."
-    exit 255
+    exit 1
 fi
 if [ "${DSNAME}" == "" ] || [ -z "${DSNAME}" ]; then
     echo "Please ensure DSNAME environment variable is set properly."
-    exit 255
+    exit 1
 fi
 if [ "${DSLOC}" == "" ] || [ -z "${DSLOC}" ]; then
     echo "Please ensure DSLOC environment variable is set properly."
-    exit 255
+    exit 1
 fi
 if [ "${OPOUTPUTDIR}" == "" ] || [ -z "${OPOUTPUTDIR}" ]; then
     echo "Please ensure OPOUTPUTDIR environment variable is set properly."
-    exit 255
+    exit 1
 fi
 
 
@@ -38,8 +38,8 @@ export OP_WORKING_DIR=$(pwd)
 echo
 echo Environment set to load from ${OPOUTPUTDIR} into ${PROJECTNAME}.${DSNAME}
 
-if [[  -s ${OPOUTPUTDIR}/errors*.log ]] 
+if [[ -s ${OPOUTPUTDIR}/opdb__*errors.log ]] 
 then
     echo Errors found in data to be loaded.   Please review before continuing.
-    cat ${OPOUTPUTDIR}/errors*.log
+    cat ${OPOUTPUTDIR}/opdb__*errors.log
 fi

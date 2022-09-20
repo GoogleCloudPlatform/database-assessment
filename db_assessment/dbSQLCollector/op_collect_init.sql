@@ -85,12 +85,8 @@ SELECT name dbname
 FROM   v$database
 /
 
-/*SELECT TO_CHAR(SYSDATE, 'mmddrrhh24miss') horanc
-FROM   dual
-/
-*/
 
-select RTRIM(SUBSTR('&v_tag',INSTR('&v_tag','_',1,5)+1), '.log') horanc from dual;
+select RTRIM(SUBSTR('&v_tag',INSTR('&v_tag','_',1,5)+1), '.csv') horanc from dual;
 
 SELECT substr(replace(version,'.',''),0,3) dbversion
 from v$instance
@@ -147,8 +143,6 @@ AND dbid = '&&v_dbid'
 PROMPT Collecting data for '&&v_dbid' between snaps &v_min_snapid and &v_max_snapid
 PROMPT
 
-
-/*define v_tag = &v_dbversion._&version._&v_host..&v_dbname..&v_inst..&v_hora..log */
 
 COLUMN min_snapid clear
 COLUMN max_snapid clear

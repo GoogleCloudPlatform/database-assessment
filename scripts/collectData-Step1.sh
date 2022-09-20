@@ -7,6 +7,15 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 BASE_DIR=$(dirname ${SCRIPT_DIR}); export BASE_DIR
 OP_OUTPUT_DIR=${BASE_DIR}/op_output; export OP_OUTPUT_DIR
 ORACLE_PATH=${BASE_DIR}/db_assessment/dbSQLCollector; export ORACLE_PATH
+TMP_DIR=${BASE_DIR}/tmp
+LOG_DIR=${BASE_DIR}/log
+
+if [ ! -d ${TMP_DIR} ]; then
+   mkdir -p ${LOG_DIR}
+fi
+if [ ! -d ${LOG_DIR} ]; then
+   mkdir -p ${LOG_DIR}
+fi
 
 ### Import logging & helper functions
 #############################################################################
@@ -43,10 +52,11 @@ EOF
 }
 
 function cleanupOpOutput(){
+V_FILE_TAG=$1
 echo "Preparing files for compression."
 sed -i -r -f ${BASE_DIR}/db_assessment/dbSQLCollector/op_sed_cleanup.sed ${OP_OUTPUT_DIR}/*csv
 sed -i -r '1i\ ' ${OP_OUTPUT_DIR}/*csv
-grep -E 'SP2-|ORA-' ${OP_OUTPUT_DIR}/opdb__*csv > ${OP_OUTPUT_DIR}/errors.log
+grep -E 'SP2-|ORA-' ${OP_OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
 }
 
 function compressOpFiles(){
@@ -54,6 +64,7 @@ V_FILE_TAG=$1
 echo ""
 echo "Archiving output files"
 CURRENT_WORKING_DIR=$(pwd)
+cp ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ${OP_OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
 cd ${OP_OUTPUT_DIR}; tar czf opdb__${V_FILE_TAG}.tgz --remove-files *csv *.log
 cd ${CURRENT_WORKING_DIR}
 echo ""
@@ -96,7 +107,7 @@ if [ $retval -eq 0 ]; then
       echo "Exiting...."
       exit 255
     fi
-    cleanupOpOutput
+    cleanupOpOutput $(echo ${V_TAG} | sed 's/.csv//g')
     if [ $retval -ne 0 ]; then
       echo "Optimus Prime data sanitation reported an error. Please check the error log in directory ${OP_OUTPUT_DIR}"
       echo "Exiting...."
