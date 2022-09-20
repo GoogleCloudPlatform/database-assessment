@@ -13,54 +13,50 @@
 # limitations under the License.
 
 
+import json
 import os
 import warnings
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 
-warnings.simplefilter("error", pd.errors.ParserWarning)
-
-import json
-
 from db_assessment import import_db_assessment
 
+if TYPE_CHECKING:
+    from .api import AppConfig
+warnings.simplefilter("error", pd.errors.ParserWarning)
+warnings.simplefilter(action="ignore", category=FutureWarning)
 
-def createTransformersVariable(transformerRule):
-    # Convert the JSON fields into variables like dictionaries, lists, string and numbers and return it
 
-    if str(transformerRule["action_details"]["datatype"]).upper() == "DICTIONARY":
-        # For dictionaries
+def coerce_data_type(
+    rule: Dict[str, Any]
+) -> Optional[Union[Any, List[str], str, float]]:
+    """Coerce data type from config
 
-        return json.loads(str(transformerRule["action_details"]["value"]).strip())
+    Convert the JSON fields into variables like dictionaries,
+     lists, string and numbers and return it"""
 
-    elif str(transformerRule["action_details"]["datatype"]).upper() == "LIST":
+    if str(rule["action_details"]["datatype"]).upper() == "DICTIONARY":
+        return json.loads(str(rule["action_details"]["value"]).strip())
+    if str(rule["action_details"]["datatype"]).upper() == "LIST":
         # For Lists it is expected to be separated by comma
-
-        return str(transformerRule["action_details"]["value"]).split(",")
-
-    elif str(transformerRule["action_details"]["datatype"]).upper() == "STRING":
+        return str(rule["action_details"]["value"]).split(",")
+    if str(rule["action_details"]["datatype"]).upper() == "STRING":
         # For strings we just need to carry out the content
-
-        return str(transformerRule["action_details"]["value"])
-
-    elif str(transformerRule["action_details"]["datatype"]).upper() == "NUMBER":
+        return str(rule["action_details"]["value"])
+    if str(rule["action_details"]["datatype"]).upper() == "NUMBER":
         # For number we are casting it to float
-
-        return float(transformerRule["action_details"]["value"])
-
-    else:
-        # If the JSON file has any value not expected
-
-        return None
+        return float(rule["action_details"]["value"])
+    return None
 
 
-def runRules(
+def run_rules(
     executionGroup,
     transformerRules,
     dataFrames,
     singleRule,
-    args,
+    args: "AppConfig",
     collectionKey,
     transformersTablesSchema,
     fileList,
@@ -97,8 +93,8 @@ def runRules(
         stringExpression = getParsedRuleExpr(
             transformerRules[ruleItem]["action_details"]["expr1"]
         )
-        iferrorExpression = getParsedRuleExpr(
-            transformerRules[ruleItem]["action_details"]["iferror"]
+        if_errorExpression = getParsedRuleExpr(
+            transformerRules[ruleItem]["action_details"]["if_error"]
         )
 
         if str(transformerRules[ruleItem]["status"]).upper() == "ENABLED":
@@ -109,15 +105,15 @@ def runRules(
             ):
 
                 if int(
-                    str(transformersParameters["dbversion"]).replace(".", "")[:3]
+                    str(transformersParameters["db_version"]).replace(".", "")[:3]
                 ) in range(
                     int(
-                        str(transformerRules[ruleItem]["mindbversion"]).replace(
+                        str(transformerRules[ruleItem]["min_db_version"]).replace(
                             ".", ""
                         )[:3]
                     ),
                     int(
-                        str(transformerRules[ruleItem]["maxdbversion"]).replace(
+                        str(transformerRules[ruleItem]["max_db_version"]).replace(
                             ".", ""
                         )[:3]
                     )
@@ -125,18 +121,18 @@ def runRules(
                 ):
 
                     if int(
-                        str(transformersParameters["optimuscollectionversion"]).replace(
+                        str(transformersParameters["collection_version"]).replace(
                             ".", ""
                         )[:3]
                     ) in range(
                         int(
                             str(
-                                transformerRules[ruleItem]["minsqlscriptversion"]
+                                transformerRules[ruleItem]["min_sql_script_version"]
                             ).replace(".", "")[:3]
                         ),
                         int(
                             str(
-                                transformerRules[ruleItem]["maxsqlscriptversion"]
+                                transformerRules[ruleItem]["max_sql_script_version"]
                             ).replace(".", "")[:3]
                         )
                         + 1,
@@ -167,7 +163,7 @@ def runRules(
                                 try:
                                     transformerResults[ruleItem] = {
                                         "Status": EXECUTEDSTATUS,
-                                        "Result Value": createTransformersVariable(
+                                        "Result Value": coerce_data_type(
                                             transformerRules[ruleItem]
                                         ),
                                     }
@@ -252,7 +248,7 @@ def runRules(
                                     dataFrames[str(dfTargetName).upper()][
                                         str(columnTargetName).upper()
                                     ] = execStringExpression(
-                                        stringExpression, iferrorExpression, dataFrames
+                                        stringExpression, if_errorExpression, dataFrames
                                     )
                                     df = dataFrames[str(dfTargetName).upper()]
                                 except KeyError:
@@ -269,7 +265,7 @@ def runRules(
                                     ]
                                 ).lower()
                                 fileName = (
-                                    str(getattr(args, "fileslocation"))
+                                    str(getattr(args, "files_location"))
                                     + "/opdbt__"
                                     + newTableName
                                     + "__"
@@ -311,7 +307,7 @@ def runRules(
                                 #
 
                                 df = execStringExpression(
-                                    stringExpression, iferrorExpression, dataFrames
+                                    stringExpression, if_errorExpression, dataFrames
                                 )
 
                                 if df is None:
@@ -328,7 +324,7 @@ def runRules(
                                     ]
                                 ).lower()
                                 fileName = (
-                                    str(getattr(args, "fileslocation"))
+                                    str(getattr(args, "files_location"))
                                     + "/opdbt__"
                                     + newTableName
                                     + "__"
@@ -390,7 +386,7 @@ def runRules(
                                     ]
                                 ).lower()
                                 fileName = (
-                                    str(getattr(args, "fileslocation"))
+                                    str(getattr(args, "files_location"))
                                     + "/opdbt__"
                                     + newTableName
                                     + "__"
@@ -448,7 +444,7 @@ def runRules(
                             '\n    The rule "{}" is being skipped because of the Optimus Prime SQL Version is {} and not eligible for this rule based on transformers.json configuration file.\n'.format(
                                 str(ruleItem),
                                 str(
-                                    transformersParameters["optimuscollectionversion"]
+                                    transformersParameters["collection_version"]
                                 ).replace(".", "")[:3],
                             )
                         )
@@ -462,7 +458,7 @@ def runRules(
                     print(
                         '\n    The rule "{}" is being skipped because of the Database Version is {} and not eligible for this rule based on transformers.json configuration file.\n'.format(
                             str(ruleItem),
-                            str(transformersParameters["dbversion"]).replace(".", "")[
+                            str(transformersParameters["db_version"]).replace(".", "")[
                                 :3
                             ],
                         )
@@ -492,14 +488,14 @@ def runRules(
     return transformerResults, transformersRulesVariables, fileList, dataFrames
 
 
-def execStringExpression(stringExpression, iferrorExpression, dataFrames):
+def execStringExpression(str_expression, if_error_expression, dataframes):
 
     try:
-        res = eval(stringExpression)
-    except:
+        res = eval(str_expression)
+    except Exception:
         try:
-            res = eval(iferrorExpression)
-        except:
+            res = eval(if_error_expression)
+        except Exception:
             res = None
 
     return res
@@ -522,25 +518,25 @@ def getParsedRuleExpr(ruleExpr):
     return finalExpression
 
 
-def getRulesFromJSON(jsonFileName):
-    # Read JSON file from the OS and turn it into a hash table
-
-    with open(jsonFileName) as f:
-        transformerRules = json.load(f)
-
-    return transformerRules
+def load_from_config(config_path: str):
+    with open(config_path, encoding="UTF-8") as f:
+        return json.load(f)
 
 
-def getDataFrameFromCSV(
-    csvFileName, tableName, skipRows, args, transformersTablesSchema
+def parse_data(
+    csv_filename: str,
+    table_name: str,
+    skip_rows: int,
+    args: "AppConfig",
+    transformersTablesSchema,
 ):
-    # Read CSV files from OS and turn it into a dataframe
+    """Read CSV files from OS and turn it into a dataframe"""
 
     paramCleanDFHeaders = False
     paramGetHeadersFromConfig = True
 
     # Configuration files always will be ,
-    if "opConfig" in csvFileName:
+    if "opConfig" in csv_filename:
         fileSeparator = ","
     else:
         fileSeparator = args.sep
@@ -549,18 +545,18 @@ def getDataFrameFromCSV(
 
         if paramGetHeadersFromConfig:
 
-            if transformersTablesSchema.get(tableName):
+            if transformersTablesSchema.get(table_name):
 
                 try:
 
-                    tableHeaders = getDFHeadersFromTransformers(
-                        tableName, transformersTablesSchema
+                    tableHeaders = get_headers_from_config(
+                        table_name, transformersTablesSchema
                     )
                     tableHeaders = [header.upper() for header in tableHeaders]
                     # df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders, keep_default_na=False, na_filter= False)
                     df = pd.read_csv(
-                        csvFileName,
-                        skiprows=skipRows + 1,
+                        csv_filename,
+                        skiprows=skip_rows + 1,
                         sep=str(fileSeparator),
                         header=None,
                         names=tableHeaders,
@@ -569,19 +565,19 @@ def getDataFrameFromCSV(
                         skipinitialspace=True,
                     )
 
-                except Exception as dataframeHeaderErr:
+                except Exception:
 
                     print(
                         "\nThe filename {} for the table {} could not be imported using the column names {}.\n".format(
-                            csvFileName, tableName, tableHeaders
+                            csv_filename, table_name, tableHeaders
                         )
                     )
                     paramCleanDFHeaders = True
                     # df = pd.read_csv(csvFileName, skiprows=skipRows, keep_default_na=False, na_filter= False)
                     df = pd.read_csv(
-                        csvFileName,
+                        csv_filename,
                         sep=str(fileSeparator),
-                        skiprows=skipRows,
+                        skiprows=skip_rows,
                         na_values="n/a",
                         keep_default_na=True,
                         skipinitialspace=True,
@@ -591,9 +587,9 @@ def getDataFrameFromCSV(
 
                 # df = pd.read_csv(csvFileName, skiprows=skipRows, keep_default_na=False, na_filter= False)
                 df = pd.read_csv(
-                    csvFileName,
+                    csv_filename,
                     sep=str(fileSeparator),
-                    skiprows=skipRows,
+                    skiprows=skip_rows,
                     na_values="n/a",
                     keep_default_na=True,
                     skipinitialspace=True,
@@ -604,20 +600,17 @@ def getDataFrameFromCSV(
 
         # In case we need to clean some headers from dataframe
         if paramCleanDFHeaders:
-            columList = df.columns.values.tolist()
-            columList = cleanCSVHeaders(columList)
-            columList = str(columList).strip().split(",")
-            columList = [column.strip() for column in columList]
-            df.columns = columList
+            column_list = clean_csv_headers(df.columns.values.tolist()).split(",")
+            df.columns = [column.strip() for column in column_list]
 
-    except Exception as generalErr:
-        print("\nThe filename {} is most likely empty.\n".format(csvFileName))
+    except Exception:
+        print("\nThe filename {} is most likely empty.\n".format(csv_filename))
         return False
 
     return df
 
 
-def getDFHeadersFromTransformers(tableName, transformersTablesSchema):
+def get_headers_from_config(tableName, transformersTablesSchema):
 
     tableConfig = transformersTablesSchema.get(tableName)
 
@@ -630,7 +623,7 @@ def getAllDataFrames(
     fileList,
     skipRows,
     collectionKey,
-    args,
+    args: "AppConfig",
     transformersTablesSchema,
     dbAssessmentDataframes,
     transformersParameters,
@@ -640,10 +633,8 @@ def getAllDataFrames(
     # Fuction to read from CSVs and store the data into a dataframe. The dataframe is placed then into a Hash Table.
     # This function returns a dictionary with dataframes from CSVs
 
-    separatorString = args.sep
-
     # Hash table to store dataframes after being loaded from CSVs
-    dataFrames = dbAssessmentDataframes
+    dataframes = dbAssessmentDataframes
 
     fileList.sort()
     for fileName in fileList:
@@ -675,10 +666,10 @@ def getAllDataFrames(
         print("\n Processing {} into a dataframe {}".format(fileName, tableName))
 
         # Validate the CSV file
-        tableHeaders = getDFHeadersFromTransformers(tableName, transformersTablesSchema)
+        tableHeaders = get_headers_from_config(tableName, transformersTablesSchema)
         tableHeader = [header.upper() for header in tableHeaders]
         if not skipvalidations:
-            fileError = validateInputcsv(fileName, tableHeader, args)
+            fileError = validate_csv(fileName, tableHeader, args)
             if fileError is not None:
                 basename = os.path.basename(fileName)
                 print(
@@ -689,63 +680,67 @@ def getAllDataFrames(
                 invalidfiles[fileName] = fileError
                 continue
         # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
-        df = getDataFrameFromCSV(
-            fileName, tableName, skipRows, args, transformersTablesSchema
-        )
+        df = parse_data(fileName, tableName, skipRows, args, transformersTablesSchema)
 
         # Checking if no error was found during loading CSV from OS
         if df is not False:
 
-            if args.consolidatedataframes:
+            if args.consolidate_dataframes:
 
                 try:
                     df_concat = pd.concat(
-                        [dataFrames[str(tableName).upper()], df], axis=0
+                        [dataframes[str(tableName).upper()], df], axis=0
                     )
                     # Trimming the data before storing it
-                    dataFrames[str(tableName).upper()] = trimDataframe(df_concat)
+                    dataframes[str(tableName).upper()] = trim_dataframe(df_concat)
                     print(
                         " Concatenated into an existing dataframe for table name {}".format(
                             tableName
                         )
                     )
 
-                except:
+                except Exception:
                     # Trimming the data before storing it
-                    dataFrames[str(tableName).upper()] = trimDataframe(df)
+                    dataframes[str(tableName).upper()] = trim_dataframe(df)
 
             else:
                 # Trimming the data before storing it
-                dataFrames[str(tableName).upper()] = trimDataframe(df)
+                dataframes[str(tableName).upper()] = trim_dataframe(df)
 
-            transformersTablesSchema = processSchemaDetection(
-                args.schemadetection,
+            transformersTablesSchema = detect_schema(
+                args.schema_detection,
                 transformersTablesSchema,
                 transformersParameters,
                 tableName,
                 df,
             )
 
-    return dataFrames, transformersTablesSchema
+    return dataframes, transformersTablesSchema
 
 
-def processSchemaDetection(
-    schemadetection, transformersTablesSchema, transformersParameters, tableName, df
+def detect_schema(
+    schema_detection: str,
+    transformersTablesSchema,
+    transformersParameters,
+    tableName,
+    df,
 ):
 
-    if str(schemadetection).upper() == "AUTO":
+    if schema_detection.upper() == "AUTO":
         # In the arguments if we want to use AUTO schema detection
 
         # Replaces whatever is in there
-        transformersTablesSchema[tableName] = addBQDataType(list(df.columns), "STRING")
+        transformersTablesSchema[tableName] = add_bq_data_type(
+            list(df.columns), "STRING"
+        )
 
-    elif str(schemadetection).upper() == "FILLGAP":
+    elif schema_detection.upper() == "FILLGAP":
         # In the arguments if we want to try to only use it when the configuration file do not have it already
 
         if transformersTablesSchema.get(str(tableName).lower()) is None:
 
             # Adds configuration whenever this is not present
-            transformersTablesSchema[str(tableName).lower()] = addBQDataType(
+            transformersTablesSchema[str(tableName).lower()] = add_bq_data_type(
                 list(df.columns), "STRING"
             )
             print(
@@ -757,25 +752,25 @@ def processSchemaDetection(
     return transformersTablesSchema
 
 
-def validateInputcsv(fileName, tableHeader, args):
+def validate_csv(file_name: str, table_header, args):
     fileerror = None
     try:
         df = pd.read_csv(
-            fileName,
+            file_name,
             sep=str(args.sep),
             skiprows=2,
             na_values="n/a",
             keep_default_na=True,
             skipinitialspace=True,
             nrows=10,
-            names=tableHeader,
+            names=table_header,
             index_col=False,
         )
         if df.empty:
             ## If file has header but no rows
             fileerror = "File seems to be Empty"
         else:
-            with open(fileName, "r") as f:
+            with open(file_name, "r") as f:
                 lines = f.readlines()
                 last_line = lines[-1]
                 # if 'ORA-' in f.read():
@@ -794,24 +789,24 @@ def validateInputcsv(fileName, tableHeader, args):
     return fileerror
 
 
-def addBQDataType(columList, dataType):
+def add_bq_data_type(column_list, data_type):
 
     newColumnList = []
 
     # Cleaning header
-    columList = cleanCSVHeaders(columList)
-    columList = str(columList).split(",")
+    column_list = clean_csv_headers(column_list)
+    column_list = str(column_list).split(",")
 
-    for column in columList:
-        newColumnList.append([column, dataType])
+    for column in column_list:
+        newColumnList.append([column, data_type])
 
     return newColumnList
 
 
-def cleanCSVHeaders(headerString):
+def clean_csv_headers(header_string: str):
 
-    headerString = (
-        str(headerString)
+    header_string = (
+        str(header_string)
         .replace("'||", "")
         .replace("||'", "")
         .replace("'", "")
@@ -822,12 +817,11 @@ def cleanCSVHeaders(headerString):
         .strip()
     )
 
-    return headerString
+    return header_string
 
 
-def trimDataframe(df):
-
-    # Removing spaces (TRIM/Strip) for ALL columns
+def trim_dataframe(df):
+    """Removing spaces (TRIM/Strip) for ALL columns"""
     df.columns = df.columns.str.replace(" ", "")
     cols = list(df.columns)
     # df[cols] = df[cols].apply(lambda x: x.str.strip())
@@ -836,52 +830,11 @@ def trimDataframe(df):
     for column in cols:
         try:
             df[column] = df[column].str.strip()
-        except:
-            None
+        except Exception:
+            pass
 
     # trimmed dataframe
     return df
-
-
-def rewriteTrimmedCSVData(
-    dataFrames, transformersParameters, transformersTablesSchema, fileList
-):
-    # To be Deleted
-
-    if transformersParameters.get("op_trim_csv_data") is not None:
-
-        for csvTableData in list(transformersParameters["op_trim_csv_data"]):
-
-            if dataFrames.get(str(csvTableData).upper()) is not None:
-
-                df = dataFrames[str(csvTableData).upper()]
-
-                df = trimDataframe(df)
-
-                # collectionKey already contains .log
-                fileName = (
-                    str(getattr(args, "fileslocation"))
-                    + "/opdbt__"
-                    + reshapedTableName
-                    + "__"
-                    + str(collectionKey)
-                )
-
-                # Writes CSVs from Dataframes when parameter store in CSV_ONLY or BIGQUERY
-                resCSVCreation, transformersTablesSchema = createCSVFromDataframe(
-                    df,
-                    transformersResults[str(tableName)],
-                    args,
-                    fileName,
-                    transformersTablesSchema,
-                    str(reshapedTableName).lower(),
-                    True,
-                )
-
-                if resCSVCreation:
-                    # If CSV creation was successfully then we will add this to the list of files to be imported
-
-                    fileList.append(fileName)
 
 
 def getAllReShapedDataframes(
@@ -916,7 +869,7 @@ def getAllReShapedDataframes(
                 transformersResults,
                 fileList,
                 dataFrames,
-            ) = runRules(
+            ) = run_rules(
                 "0",
                 transformerRulesConfig,
                 dataFrames,
@@ -963,7 +916,7 @@ def getAllReShapedDataframes(
 
                         # collectionKey already contains .log
                         fileName = (
-                            str(getattr(args, "fileslocation"))
+                            str(getattr(args, "files_location"))
                             + "/opdbt__"
                             + reshapedTableName
                             + "__"
@@ -1061,7 +1014,7 @@ def createCSVFromDataframe(
             df.reset_index(drop=True, inplace=True)
 
         # Always AUTO because we never know the column order in which the dataframe will be
-        transformersTablesSchema = processSchemaDetection(
+        transformersTablesSchema = detect_schema(
             "AUTO",
             transformersTablesSchema,
             transformersParameters,

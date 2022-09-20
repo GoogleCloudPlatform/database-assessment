@@ -7,7 +7,7 @@ VENV_DIR="${SCRIPT_DIR}/../.venv"
 bq mk --dataset --force=TRUE --data_location=${DSLOC} ${DSNAME}
 for COLID in $(ls -1 ${OP_LOG_DIR}/opdb*| rev | cut -d '.' -f 2 | rev | sort | uniq)
 do
-${VENV_DIR}/bin/optimus-prime -sep "${COLSEP}" -dataset ${DSNAME} -fileslocation ${OP_LOG_DIR} -projectname ${PROJECTNAME} -collectionid ${COLID} | tee ${SCRIPT_DIR}/opload-${DSNAME}-${COLID}.log
+${VENV_DIR}/bin/optimus-prime --sep "${COLSEP}" --dataset ${DSNAME} --files-location ${OP_LOG_DIR} --project-name ${PROJECTNAME} --collection-id ${COLID} | tee ${SCRIPT_DIR}/opload-${DSNAME}-${COLID}.log
 done
 echo
 echo Logs of this upload are available at:

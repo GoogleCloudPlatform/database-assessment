@@ -1,0 +1,28 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "OP: Sample File Load",
+      "type": "python",
+      "request": "launch",
+      "program": "db_assessment/optimusprime.py",
+      "args": [
+        "--collection-id",
+        "",
+        "--project-name",
+        "optimus-prime-ci",
+        "--dataset",
+        "op_api_testing",
+        "--files-location",
+        "./sample/datacollection/sample190_3.0.2.log",
+        "--sep",
+        "|"
+      ],
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    }
+  ]
+}

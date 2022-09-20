@@ -159,8 +159,9 @@ Make note of the project name and the data set name and location. The data set w
 
 2.1 Automated load process
 
-These instructions are written for running in a Cloud Shell environment.  Ensure that your environment is configured to access the Google Cloud project you want to use:
-```
+These instructions are written for running in a Cloud Shell environment. Ensure that your environment is configured to access the Google Cloud project you want to use:
+
+```shell
 gcloud config set project [PROJECT_ID]
 ```
 
@@ -320,34 +321,34 @@ unzip <zip files>
 
  # If you want to import one single Optimus Prime file collection (From 1 single database), please follow the below step:
 
- optimus-prime -dataset newdatasetORexistingdataset -collectionid 080421224807 -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -importcomment "this is for prod"
+ optimus-prime -dataset newdatasetORexistingdataset -collectionid 080421224807 --files-location /<work-directory>/oracle-database-assessment-output --project-name my-awesome-gcp-project -importcomment "this is for prod"
 
- # If you want to import various Optimus Prime file collections (From various databases) that are stored under the same directory being used for -fileslocation. Then, you can add to your command two additional flags (-fromdataframe -consolidatedataframes) and pass only "" to -collectionid. See example below:
+ # If you want to import various Optimus Prime file collections (From various databases) that are stored under the same directory being used for --files-location. Then, you can add to your command two additional flags (--from-dataframe -consolidatedataframes) and pass only "" to -collectionid. See example below:
 
- optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes
+ optimus-prime -dataset newdatasetORexistingdataset -collectionid "" --files-location /<work-directory>/oracle-database-assessment-output --project-name my-awesome-gcp-project --from-dataframe -consolidatedataframes
 
-#  If you want to import only specific db version or sql version from Optimus Prime file collections hat are stored under the same directory being used for -fileslocation.
+#  If you want to import only specific db version or sql version from Optimus Prime file collections hat are stored under the same directory being used for --files-location.
 
- optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -fromdataframe -consolidatedataframes -filterbydbversion 11.1 -filterbysqlversion 2.0.3
+ optimus-prime -dataset newdatasetORexistingdataset -collectionid "" --files-location /<work-directory>/oracle-database-assessment-output --project-name my-awesome-gcp-project --from-dataframe -consolidatedataframes --filter-by-db-version 11.1 --filter-by-sql-version 2.0.3
 
  # If you want to akip all file validations
 
- optimus-prime -dataset newdatasetORexistingdataset -collectionid "" -fileslocation /<work-directory>/oracle-database-assessment-output -projectname my-awesome-gcp-project -skipvalidations
+ optimus-prime -dataset newdatasetORexistingdataset -collectionid "" --files-location /<work-directory>/oracle-database-assessment-output --project-name my-awesome-gcp-project -skipvalidations
 ```
 
-- `-dataset`: is the name of the dataset in Google BigQuery. It is created if it does not exists. If it does already nothing to do then.
-- `-collectionid`: is the file identification which last numbers in the filename which represents `<datetime> (mmddrrhh24miss)`.
+- `--dataset`: is the name of the dataset in Google BigQuery. It is created if it does not exists. If it does already nothing to do then.
+- `--collection-id`: is the file identification which last numbers in the filename which represents `<datetime> (mmddrrhh24miss)`.
 - In this example of a filename `opdb__usedspacedetails__121_0.1.0_mydbhost.mycompany.com.ORCLDB.orcl1.071621111714.log` the file identification is `071621111714`.
-- `-fileslocation`: The location in which the opdb\*log were saved.
-- `-projectname`: The GCP project in which the data will be loaded.
-- `-deletedataset`: This an optinal. In case you want to delete the whole existing dataset before importing the data.
+- `--files-location`: The location in which the opdb\*log were saved.
+- `--project-name`: The GCP project in which the data will be loaded.
+- `--delete-dataset`: This an optinal. In case you want to delete the whole existing dataset before importing the data.
   - WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
-- `-importcomment`: This an optional. In case you want to store any comment about the load in opkeylog table. Eg: "This is for Production import"
-- `-filterbysqlversion`: This an optional. In case you have files from multiple sql versions in the folder and you want to load only specific sql version files
-- `-filterbydbversion`: This an optional. In case you have files from multiple db versions in the folder and you want to load only specific db version files
-- `-skipvalidations`: This is optional. Default is False. if we use the flag, file validations will be skipped
+- `--import-comment`: This an optional. In case you want to store any comment about the load in opkeylog table. Eg: "This is for Production import"
+- `--filter-by-sql-version`: This an optional. In case you have files from multiple sql versions in the folder and you want to load only specific sql version files
+- `--filter-by-db-version`: This an optional. In case you have files from multiple db versions in the folder and you want to load only specific db version files
+- `--skip-validations`: This is optional. Default is False. if we use the flag, file validations will be skipped
 
-- > NOTE: If your file has elapsed time or any other string except data, fun following script to remove it
+- > NOTE: If your file has elapsed time or any other string except data, run the following script to remove it
 
 ```shell
 for i in `grep "Elapsed:" $OP_OUTPUT_DIR/*.log |  cut -d ":" -f 1`; do sed -i '$ d' $i; done

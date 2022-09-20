@@ -49,7 +49,7 @@
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "cSpell.words": ["dbping"],
+  "cSpell.words": ["dbping", "skiprows"],
   "[sql]": {
     "editor.defaultFormatter": "adpyke.vscode-sql-formatter"
   },

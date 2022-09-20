@@ -16,7 +16,7 @@
 # Messages handling
 import logging
 import os
-from typing import Any, Optional
+from typing import Optional
 
 import google.auth
 import requests
@@ -37,25 +37,23 @@ def get_id_token() -> Optional[str]:
 
 def run_remote(args) -> None:
     """Run remote execution"""
-    id_token = (
-        os.getenv("ID_TOKEN") if os.getenv("ID_TOKEN") else get_id_token()
-    )  # pylint: disable=[line-too-long]
+    id_token = os.getenv("ID_TOKEN") or get_id_token()
     headers = {"Authorization": f"Bearer {id_token}"}
     config = {
-        "projectId": args.projectname,
+        "projectId": args.project_name,
         "dataset": args.dataset,
-        "collectionId": args.collectionid,
+        "collectionId": args.collection_id,
     }
     file_pattern = (
-        str(args.fileslocation)
+        str(args.files_location)
         + "/*"
-        + str(args.collectionid).replace(" ", "")
+        + str(args.collection_id).replace(" ", "")
         + ".log"
     )
 
     # Getting a list of files from OS based on the pattern provided
     # This is the default directory to have all customer database results from oracle_db_assessment.sql
-    filename_list = import_db_assessment.getAllFilesByPattern(file_pattern)
+    filename_list = import_db_assessment.list_files(file_pattern)
     for filename in filename_list:
         with open(filename, "r", encoding="UTF-8") as content:
             files = {filename: content}
@@ -68,7 +66,3 @@ def run_remote(args) -> None:
     )
     result.raise_for_status()
     logging.info(result.text)
-
-
-def grant_access(project_id: str, dataset: Any) -> None:
-    """Grant Access"""

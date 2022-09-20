@@ -1,5 +1,5 @@
 {
-  "tableschemas": {
+  "table_schemas": {
     "0.0.0": {
       "121,122,180,181,190,191,210,211": {
         "dbsummary": [
@@ -7,7 +7,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -629,7 +629,7 @@
           ["pkey", "STRING"],
           ["dbid", "STRING"],
           ["db_name", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -3167,7 +3167,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -3464,7 +3464,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["cnt", "STRING"]
+          ["coun", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -3773,7 +3773,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -3792,7 +3792,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -3814,7 +3814,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -3829,7 +3829,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -4102,7 +4102,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["cnt", "STRING"]
+          ["coun", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -4228,7 +4228,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -4254,7 +4254,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -4276,7 +4276,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -4293,7 +4293,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -4590,7 +4590,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["cnt", "STRING"]
+          ["coun", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -4899,7 +4899,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -4918,7 +4918,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -4940,7 +4940,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -4955,7 +4955,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -5228,7 +5228,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["cnt", "STRING"]
+          ["coun", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -5354,7 +5354,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -5380,7 +5380,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -5402,7 +5402,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -5419,7 +5419,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -5717,7 +5717,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["cnt", "STRING"]
+          ["coun", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -6026,7 +6026,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -6045,7 +6045,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -6067,7 +6067,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -6081,7 +6081,7 @@
           ["pkey", "STRING"],
           ["dbid", "STRING"],
           ["db_name", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -6355,7 +6355,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["cnt", "STRING"]
+          ["coun", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -6481,7 +6481,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -6507,7 +6507,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -6529,7 +6529,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -6544,7 +6544,7 @@
         "opkeylog": [
           ["pkey", "STRING"],
           ["opscriptversion", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["hostname", "STRING"],
           ["dbname", "STRING"],
           ["instance_name", "STRING"],
@@ -6559,7 +6559,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -6876,7 +6876,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["cnt", "STRING"]
+          ["coun", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -7185,7 +7185,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -7204,7 +7204,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -7226,7 +7226,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -7241,7 +7241,7 @@
         "opkeylog": [
           ["pkey", "STRING"],
           ["opscriptversion", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["hostname", "STRING"],
           ["dbname", "STRING"],
           ["instance_name", "STRING"],
@@ -7256,7 +7256,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -7573,7 +7573,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["cnt", "STRING"]
+          ["coun", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -7882,7 +7882,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -7901,7 +7901,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -7923,7 +7923,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -7940,7 +7940,7 @@
           ["module", "STRING"],
           ["machine", "STRING"],
           ["command_name", "STRING"],
-          ["cnt", "STRING"]
+          ["coun", "STRING"]
         ],
         "exttab": [
           ["pkey", "STRING"],
@@ -8075,7 +8075,7 @@
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["tab_count", "STRING"],
-          ["idx_cnt", "STRING"],
+          ["idx_coun", "STRING"],
           ["idx_perc", "STRING"]
         ]
       }
@@ -8085,7 +8085,7 @@
         "opkeylog": [
           ["pkey", "STRING"],
           ["opscriptversion", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["hostname", "STRING"],
           ["dbname", "STRING"],
           ["instance_name", "STRING"],
@@ -8100,7 +8100,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -8341,7 +8341,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["cnt", "STRING"]
+          ["coun", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -8623,7 +8623,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -8642,7 +8642,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -8664,7 +8664,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -8681,7 +8681,7 @@
           ["module", "STRING"],
           ["machine", "STRING"],
           ["command_name", "STRING"],
-          ["cnt", "STRING"]
+          ["coun", "STRING"]
         ],
         "exttab": [
           ["pkey", "STRING"],
@@ -8774,7 +8774,7 @@
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["tab_count", "STRING"],
-          ["idx_cnt", "STRING"],
+          ["idx_coun", "STRING"],
           ["idx_perc", "STRING"]
         ]
       }
@@ -8784,7 +8784,7 @@
         "opkeylog": [
           ["pkey", "STRING"],
           ["opscriptversion", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["hostname", "STRING"],
           ["dbname", "STRING"],
           ["instance_name", "STRING"],
@@ -8799,7 +8799,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["dbversion", "STRING"],
+          ["db_version", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -9028,7 +9028,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["cnt", "STRING"]
+          ["coun", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -9310,7 +9310,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -9329,7 +9329,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -9351,7 +9351,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["cnt", "STRING"],
+          ["coun", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -9368,7 +9368,7 @@
           ["module", "STRING"],
           ["machine", "STRING"],
           ["command_name", "STRING"],
-          ["cnt", "STRING"]
+          ["coun", "STRING"]
         ],
         "exttab": [
           ["pkey", "STRING"],
@@ -9461,7 +9461,7 @@
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["tab_count", "STRING"],
-          ["idx_cnt", "STRING"],
+          ["idx_coun", "STRING"],
           ["idx_perc", "STRING"]
         ],
         "dataguard": [
@@ -9494,15 +9494,15 @@
   "rules": {
     "dataframe_reshape_awrhistsysmetrichist": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "0",
       "action_details": {
         "action": "CREATE",
         "expr1": "",
-        "iferror": "IGNORE",
+        "if_error": "IGNORE",
         "type": "VARIABLE",
         "varname": "AWRHISTSYSMETRICHIST",
         "value": "{\"from_to_rows_to_columns\": {\"Average Active Sessions\": \"AAS\", \"Background CPU Usage Per Sec\": \"BKGRCPU_PER_SEC\", \"CPU Usage Per Sec\": \"CPU_PER_SEC\", \"DB Block Changes Per Txn \": \"DBBLKSCHANGES_PER_SEC\", \"Executions Per Sec\": \"EXEC_PER_SEC\", \"Host CPU Usage Per Sec\": \"HOST_CPU_PER_SEC\", \"I/O Megabytes per Second\": \"IOMBPS\", \"I/O Requests per Second\": \"IOPS\", \"Logical Reads Per Txn\": \"LOG_READS_PER_TXN\", \"Logons Per Sec\": \"LOGONS_PER_SEC\",  \"Physical Reads Per Sec\": \"PHY_READS_PER_SEC\",  \"Physical Writes Per Sec\": \"PHY_WRITES_PER_SEC\", \"Redo Generated Per Sec\": \"REDO_GEN_PER_SEC\", \"SQL Service Response Time\": \"SQL_RT\", \"User Calls Per Sec\": \"USERCALLS_PER_SEC\", \"User Transaction Per Sec\": \"USER_TX_PER_SEC\"}, \"TARGET_COLUMN\": \"METRIC_NAME\", \"TARGET_STATS_COLUMNS\": [\"PERC90\",\"PERC95\"], \"INDEX_COLUMNS\": [\"PKEY\", \"DBID\",\"INSTANCE_NUMBER\",\"HOUR\"], \"store\": \"BIGQUERY\", \"filterrows\": \"YES\"}",
@@ -9514,15 +9514,15 @@
     },
     "dataframe_reshape_awrhistosstat": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.2",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.2",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "0",
       "action_details": {
         "action": "CREATE",
         "expr1": "",
-        "iferror": "IGNORE",
+        "if_error": "IGNORE",
         "type": "VARIABLE",
         "varname": "AWRHISTOSSTAT",
         "value": "{\"from_to_rows_to_columns\": {\"LOAD\": \"LOAD\", \"NUM_CPUS\": \"NUM_CPUS\", \"SYS_TIME\": \"SYS_TIME\", \"BUSY_TIME\": \"BUSY_TIME\", \"IDLE_TIME\": \"IDLE_TIME\", \"NICE_TIME\": \"NICE_TIME\", \"USER_TIME\": \"USER_TIME\", \"IOWAIT_TIME\": \"IOWAIT_TIME\", \"VM_IN_BYTES\": \"VM_IN_BYTES\", \"VM_OUT_BYTES\": \"VM_OUT_BYTES\", \"NUM_CPU_CORES\": \"NUM_CPU_CORES\", \"NUM_CPU_SOCKETS\": \"NUM_CPU_SOCKETS\", \"SWAP_FREE_BYTES\": \"SWAP_FREE_BYTES\", \"FREE_MEMORY_BYTES\": \"FREE_MEMORY_BYTES\", \"PHYSICAL_MEMORY_BYTES\": \"PHYSICAL_MEMORY_BYTES\", \"RSRC_MGR_CPU_WAIT_TIME\": \"RSRC_MGR_CPU_WAIT_TIME\", \"INACTIVE_MEMORY_BYTES\": \"INACTIVE_MEMORY_BYTES\"}, \"TARGET_COLUMN\": \"STAT_NAME\", \"TARGET_STATS_COLUMNS\": [\"CUMULATIVE_VALUE\",\"PERC90\",\"PERC95\"], \"INDEX_COLUMNS\": [\"PKEY\", \"DBID\",\"INSTANCE_NUMBER\",\"HOUR\"], \"store\": \"BIGQUERY\", \"filterrows\": \"YES\"}",
@@ -9534,15 +9534,15 @@
     },
     "dataframe_reshape_awrhistosstat-2.0.1": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.1",
-      "maxsqlscriptversion": "2.0.1",
-      "mindbversion": "111",
-      "maxdbversion": "215",
+      "min_sql_script_version": "2.0.1",
+      "max_sql_script_version": "2.0.1",
+      "min_db_version": "111",
+      "max_db_version": "215",
       "execution_group": "0",
       "action_details": {
         "action": "CREATE",
         "expr1": "",
-        "iferror": "IGNORE",
+        "if_error": "IGNORE",
         "type": "VARIABLE",
         "varname": "AWRHISTOSSTAT",
         "value": "{\"from_to_rows_to_columns\": {\"LOAD\": \"LOAD\", \"NUM_CPUS\": \"NUM_CPUS\", \"SYS_TIME\": \"SYS_TIME\", \"BUSY_TIME\": \"BUSY_TIME\", \"IDLE_TIME\": \"IDLE_TIME\", \"NICE_TIME\": \"NICE_TIME\", \"USER_TIME\": \"USER_TIME\", \"IOWAIT_TIME\": \"IOWAIT_TIME\", \"VM_IN_BYTES\": \"VM_IN_BYTES\", \"VM_OUT_BYTES\": \"VM_OUT_BYTES\", \"NUM_CPU_CORES\": \"NUM_CPU_CORES\", \"NUM_CPU_SOCKETS\": \"NUM_CPU_SOCKETS\", \"SWAP_FREE_BYTES\": \"SWAP_FREE_BYTES\", \"FREE_MEMORY_BYTES\": \"FREE_MEMORY_BYTES\", \"PHYSICAL_MEMORY_BYTES\": \"PHYSICAL_MEMORY_BYTES\", \"RSRC_MGR_CPU_WAIT_TIME\": \"RSRC_MGR_CPU_WAIT_TIME\", \"INACTIVE_MEMORY_BYTES\": \"INACTIVE_MEMORY_BYTES\"}, \"TARGET_COLUMN\": \"STAT_NAME\", \"TARGET_STATS_COLUMNS\": [\"PERC90\",\"PERC95\"], \"INDEX_COLUMNS\": [\"PKEY\", \"DBID\",\"INSTANCE_NUMBER\",\"HOUR\"], \"store\": \"BIGQUERY\", \"filterrows\": \"YES\"}",
@@ -9554,15 +9554,15 @@
     },
     "dataframe_reshape_dbparameters": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "0",
       "action_details": {
         "action": "CREATE",
         "expr1": "",
-        "iferror": "IGNORE",
+        "if_error": "IGNORE",
         "type": "VARIABLE",
         "varname": "DBPARAMETERS",
         "value": "{\"from_to_rows_to_columns\": {\"cpu_count\": \"CPU_COUNT\", \"sga_target\": \"SGA_TARGET\", \"memory_target\": \"MEMORY_TARGET\", \"memory_max_target\": \"MEMORY_MAX_TARGET\", \"sga_max_size\": \"SGA_MAX_SIZE\", \"sga_min_size\": \"SGA_MIN_SIZE\", \"shared_pool_size\": \"SHARED_POOL_SIZE\", \"large_pool_size\": \"LARGE_POOL_SIZE\", \"java_pool_size\": \"JAVA_POOL_SIZE\", \"db_cache_size\": \"DB_CACHE_SIZE\", \"db_2k_cache_size\": \"DB_2K_CACHE_SIZE\", \"db_4k_cache_size\": \"DB_4K_CACHE_SIZE\", \"db_8k_cache_size\": \"DB_8K_CACHE_SIZE\", \"db_16k_cache_size\": \"DB_16K_CACHE_SIZE\", \"db_32k_cache_size\": \"DB_32K_CACHE_SIZE\", \"db_keep_cache_size\": \"DB_KEEP_CACHE_SIZE\", \"db_recycle_cache_size\": \"DB_RECYCLE_CACHE_SIZE\", \"buffer_pool_keep\": \"BUFFER_POOL_KEEP\", \"buffer_pool_recycle\": \"BUFFER_POOL_RECYCLE\", \"db_flash_cache_file\": \"DB_FLASH_CACHE_FILE\", \"db_flash_cache_size\": \"DB_FLASH_CACHE_SIZE\", \"pga_aggregate_limit\": \"PGA_AGGREGATE_LIMIT\", \"pga_aggregate_target\": \"PGA_AGGREGATE_TARGET\", \"inmemory_size\": \"INMEMORY_SIZE\", \"spfile\": \"SPFILE\", \"cluster_database\": \"CLUSTER_DATABASE\", \"resource_manager_plan\": \"RESOURCE_MANAGER_PLAN\", \"max_iops\": \"MAX_IOPS\", \"max_mbps\": \"MAX_MBPS\", \"db_block_size\": \"DB_BLOCK_SIZE\", \"compatible\": \"COMPATIBLE\", \"optimizer_features_enable\": \"OPTIMIZER_FEATURES_ENABLE\", \"fal_client\": \"FAL_CLIENT\", \"fal_server\": \"FAL_SERVER\", \"enable_goldengate_replication\": \"ENABLE_GOLDENGATE_REPLICATION\", \"db_flashback_retention_target\": \"DB_FLASHBACK_RETENTION_TARGET\", \"db_name\": \"DB_NAME\", \"db_unique_name\": \"DB_UNIQUE_NAME\", \"db_domain\": \"DB_DOMAIN\", \"instance_name\": \"INSTANCE_NAME\", \"local_listener\": \"LOCAL_LISTENER\", \"forward_listener\": \"FORWARD_LISTENER\", \"remote_listener\": \"REMOTE_LISTENER\", \"parallel_min_servers\": \"PARALLEL_MIN_SERVERS\", \"parallel_max_servers\": \"PARALLEL_MAX_SERVERS\", \"parallel_instance_group\": \"PARALLEL_INSTANCE_GROUP\"}, \"TARGET_COLUMN\": \"NAME\", \"TARGET_STATS_COLUMNS\": [\"VALUE\",\"ISDEFA\"], \"INDEX_COLUMNS\": [\"PKEY\", \"INST_ID\"], \"store\": \"BIGQUERY\", \"filterrows\": \"YES\"}",
@@ -9574,10 +9574,10 @@
     },
     "dataframe_reshape_dbahistsysstat": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "0",
       "comment_action_details": {
         "varname": "DBAHISTSYSSTAT",
@@ -9587,7 +9587,7 @@
       "action_details": {
         "action": "CREATE",
         "expr1": "",
-        "iferror": "IGNORE",
+        "if_error": "IGNORE",
         "type": "VARIABLE",
         "varname": "DBAHISTSYSSTAT",
         "value": "{\"from_to_rows_to_columns\": {\"CPU used by this session\": \"CPU_used_by_this_session\", \"DB time  \": \"DBtime\", \"cell IO uncompressed bytes\": \"cell_IO_uncompressed_bytes\", \"cell physical IO bytes eligible for predicate offload \": \"cell_physical_IO_bytes_eligible_for_predicate_offload \", \"cell physical IO bytes saved by storage index  \": \"cell_physical_IO_bytes_saved_by_storage_index\", \"cell physical IO interconnect bytes\": \"cell_physical_IO_interconnect_bytes\", \"cell physical IO interconnect bytes returned by smart scan\": \"cell_physical_IO_interconnect_bytes_returned_by_smart_scan\", \"parse time cpu\": \"parse_time_cpu\", \"physical read IO requests\": \"physical_read_IO_requests\", \"physical read total IO requests\": \"physical_read_total_IO_requests\"}, \"TARGET_COLUMN\": \"STAT_NAME\", \"TARGET_STATS_COLUMNS\": [\"VALUE\",\"DELTA\"], \"INDEX_COLUMNS\": [\"SNAP_ID\", \"INSTANCE_NUMBER\", \"BEGIN_INTERVAL_TIME\"], \"store\": \"BIGQUERY\", \"filterrows\": \"YES\"}",
@@ -9599,10 +9599,10 @@
     },
     "2-0-create-view-vdbsummary": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -9628,9 +9628,9 @@
           "       TRIM(dg_database_role)                        dg_database_role,",
           "       TRIM(dg_protection_mode)                      dg_protection_mode,",
           "       TRIM(dg_protection_level)                     dg_protection_level",
-          " FROM   ${projectname}.${dataset}.dbsummary a"
+          " FROM   ${project_name}.${dataset}.dbsummary a"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vdbsummary",
         "store": "BIGQUERY"
@@ -9641,10 +9641,10 @@
     },
     "2-0-create-view-vawrsnapdetails": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -9657,15 +9657,15 @@
           "cast(max_snapid as numeric) max_snapid,",
           "trim(min_begin_interval_time) min_begin_interval_time,",
           "trim(max_begin_interval_time) max_begin_interval_time,",
-          "cast(cnt as numeric) cnt,",
+          "cast(coun as numeric) coun,",
           "cast(sum_snaps_diff_secs as numeric) sum_snaps_diff_secs,",
           "cast(avg_snaps_diff_secs as numeric) avg_snaps_diff_secs",
-          " from ${projectname}.${dataset}.awrsnapdetails a",
+          " from ${project_name}.${dataset}.awrsnapdetails a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vawrsnapdetails",
         "store": "BIGQUERY"
@@ -9676,10 +9676,10 @@
     },
     "2-0-create-view-vawrhistcmdtypes": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -9688,8 +9688,8 @@
           "cast(con_id as numeric) con_id,",
           "cast(hour as numeric) hour,",
           "cast(command_type as numeric) command_type,",
-          "cast(coun as numeric) coun,",
-          "cast(coun as numeric) cnt,",
+          "cast(counas numeric) coun,",
+          "cast(counas numeric) coun,",
           "round(cast(replace(avg_buffer_gets,'nan','-1') as numeric),2) avg_buffer_gets,",
           "round(cast(replace(avg_elapsed_time,'nan','-1') as numeric),2) avg_elapsed_time,",
           "round(cast(replace(avg_rows_processed,'nan','-1') as numeric),2) avg_rows_processed,",
@@ -9700,12 +9700,12 @@
           "round(cast(replace(avg_apwait,'nan','-1') as numeric),2) avg_apwait,",
           "round(cast(replace(avg_ccwait,'nan','-1') as numeric),2) avg_ccwait,",
           "round(cast(replace(avg_plsexec_time,'nan','-1') as numeric),2) avg_plsexec_time",
-          " from ${projectname}.${dataset}.awrhistcmdtypes a",
+          " from ${project_name}.${dataset}.awrhistcmdtypes a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vawrhistcmdtypes",
         "store": "BIGQUERY"
@@ -9716,10 +9716,10 @@
     },
     "2-0-create-view-vcompressbytype": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -9733,12 +9733,12 @@
           "cast(query_high as numeric) query_high,",
           "cast(archive_low as numeric) archive_low,",
           "cast(archive_high as numeric) archive_high",
-          " from ${projectname}.${dataset}.compressbytype a",
+          " from ${project_name}.${dataset}.compressbytype a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vcompressbytype",
         "store": "BIGQUERY"
@@ -9749,10 +9749,10 @@
     },
     "2-0-create-view-vcpucoresusage": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -9762,12 +9762,12 @@
           "cast(cpu_count as numeric) cpu_count,",
           "cast(cpu_core_count as numeric) cpu_core_count,",
           "cast(cpu_socket_count as numeric) cpu_socket_count",
-          " from ${projectname}.${dataset}.cpucoresusage a",
+          " from ${project_name}.${dataset}.cpucoresusage a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vcpucoresusage",
         "store": "BIGQUERY"
@@ -9778,10 +9778,10 @@
     },
     "2-0-create-view-vdatatypes": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -9790,14 +9790,14 @@
           "cast(replace(trim(con_id),'N/A','-1') as numeric) con_id,",
           "trim(owner) owner,",
           "trim(data_type) data_type,",
-          "cast(coun as numeric) coun,",
-          "cast(coun as numeric) cnt",
-          " from ${projectname}.${dataset}.datatypes a",
+          "cast(counas numeric) coun,",
+          "cast(counas numeric) coun",
+          " from ${project_name}.${dataset}.datatypes a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vdatatypes",
         "store": "BIGQUERY"
@@ -9808,10 +9808,10 @@
     },
     "2-0-create-view-vdbfeatures": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -9825,12 +9825,12 @@
           "replace(trim(first_usage),'nan','') first_usage,",
           "replace(trim(last_usage),'nan','') last_usage,",
           "cast(replace(trim(aux_count),'nan','0') as numeric) aux_count",
-          " from ${projectname}.${dataset}.dbfeatures a",
+          " from ${project_name}.${dataset}.dbfeatures a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vdbfeatures",
         "store": "BIGQUERY"
@@ -9841,10 +9841,10 @@
     },
     "2-0-create-view-vdbinstances": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -9857,12 +9857,12 @@
           "trim(status) status,",
           "trim(database_status) database_status,",
           "trim(instance_role) instance_role",
-          " from ${projectname}.${dataset}.dbinstances a",
+          " from ${project_name}.${dataset}.dbinstances a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vdbinstances",
         "store": "BIGQUERY"
@@ -9873,10 +9873,10 @@
     },
     "2-0-create-view-vsourcecode": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -9893,12 +9893,12 @@
           "cast(nr_lines_w_dbms_sql as numeric) nr_lines_w_dbms_sql,",
           "cast(nr_lines_w_dbms_utl as numeric) nr_lines_w_dbms_utl,",
           "cast(nr_lines_total as numeric) nr_lines_total",
-          " from ${projectname}.${dataset}.sourcecode a",
+          " from ${project_name}.${dataset}.sourcecode a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vsourcecode",
         "store": "BIGQUERY"
@@ -9909,10 +9909,10 @@
     },
     "2-0-create-view-vtablesnopk": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -9930,12 +9930,12 @@
           "cast(replace(trim(suplog),'nan','0') as numeric) suplog,",
           "cast(replace(trim(num_tables),'nan','0') as numeric) num_tables,",
           "cast(replace(trim(total_cons),'nan','0') as numeric) total_cons",
-          " from ${projectname}.${dataset}.tablesnopk a",
+          " from ${project_name}.${dataset}.tablesnopk a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vtablesnopk",
         "store": "BIGQUERY"
@@ -9946,10 +9946,10 @@
     },
     "2-0-create-view-vawrhistosstat_rs_metrics": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -9977,12 +9977,12 @@
           "round(cast(nice_time_perc95 as numeric),2) nice_time_perc95,",
           "round(cast(load_perc95 as numeric),2) load_perc95,",
           "round(cast(host_cpu_utilization as numeric),2) host_cpu_utilization",
-          " from ${projectname}.${dataset}.awrhistosstat_rs_metrics a",
+          " from ${project_name}.${dataset}.awrhistosstat_rs_metrics a",
           " where trim(a._pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vawrhistosstat_rs_metrics",
         "store": "BIGQUERY"
@@ -9993,10 +9993,10 @@
     },
     "2-0-create-view-vawrhistsysmetrichist_rs_awrhistosstat_rs": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10051,12 +10051,12 @@
           "        round(cast(nice_time_perc95 as numeric),2) nice_time_perc95,",
           "        round(cast(load_perc95 as numeric),2) load_perc95,",
           "        round(cast(host_cpu_utilization as numeric),2) host_cpu_utilization ",
-          " from ${projectname}.${dataset}.awrhistsysmetrichist_rs_awrhistosstat_rs a",
+          " from ${project_name}.${dataset}.awrhistsysmetrichist_rs_awrhistosstat_rs a",
           " where trim(a._pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vawrhistsysmetrichist_rs_awrhistosstat_rs",
         "store": "BIGQUERY"
@@ -10067,10 +10067,10 @@
     },
     "2-0-create-view-vawrhistsysmetrichist_rs_awrhistosstat_rs-11g": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "112",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "112",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10119,12 +10119,12 @@
           "        round(cast(nice_time_perc95 as numeric),2) nice_time_perc95,",
           "        round(cast(load_perc95 as numeric),2) load_perc95,",
           "        round(cast(host_cpu_utilization as numeric),2) host_cpu_utilization ",
-          " from ${projectname}.${dataset}.awrhistsysmetrichist_rs_awrhistosstat_rs a",
+          " from ${project_name}.${dataset}.awrhistsysmetrichist_rs_awrhistosstat_rs a",
           " where trim(a._pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vawrhistsysmetrichist_rs_awrhistosstat_rs",
         "store": "BIGQUERY"
@@ -10135,10 +10135,10 @@
     },
     "2-0-create-view-vdbsizing_facts": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10180,12 +10180,12 @@
           "        round(cast(host_cpu_utilization as numeric),2) host_cpu_utilization,",
           "        round(cast(cpuhost95_cores as numeric),2) cpuhost95_cores,",
           "        round(cast(bmscores95_host as numeric),2) bmscores95_host",
-          " from ${projectname}.${dataset}.dbsizing_facts a",
+          " from ${project_name}.${dataset}.dbsizing_facts a",
           " where trim(a._pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vdbsizing_facts",
         "store": "BIGQUERY"
@@ -10196,10 +10196,10 @@
     },
     "2-0-create-view-vawrhistosstat": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10222,13 +10222,13 @@
           "        round(cast(MIN_VALUE as numeric),2) min_value,",
           "        round(cast(MAX_VALUE as numeric),2) max_value,",
           "        round(cast(SUM_VALUE as numeric),2) sum_value,",
-          "        round(cast(CNT as numeric),2) cnt_value",
-          " FROM ${projectname}.${dataset}.awrhistosstat a",
+          "        round(cast(coun as numeric),2) coun_value",
+          " FROM ${project_name}.${dataset}.awrhistosstat a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vawrhistosstat",
         "store": "BIGQUERY"
@@ -10239,10 +10239,10 @@
     },
     "2-0-create-view-vawrhistosstat_rs": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10265,13 +10265,13 @@
           "        round(cast(MIN_VALUE as numeric),2) min_value,",
           "        round(cast(MAX_VALUE as numeric),2) max_value,",
           "        round(cast(SUM_VALUE as numeric),2) sum_value,",
-          "        round(cast(CNT as numeric),2) cnt_value",
-          " FROM ${projectname}.${dataset}.awrhistosstat a",
+          "        round(cast(coun as numeric),2) coun_value",
+          " FROM ${project_name}.${dataset}.awrhistosstat a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vawrhistosstat",
         "store": "BIGQUERY"
@@ -10282,10 +10282,10 @@
     },
     "2-0-create-view-vawrhistsysmetrichist": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10306,12 +10306,12 @@
           "        round(cast(MIN_VALUE as numeric),2) min_value,",
           "        round(cast(MAX_VALUE as numeric),2) max_value,",
           "        round(cast(SUM_VALUE as numeric),2) sum_value",
-          " FROM ${projectname}.${dataset}.awrhistsysmetrichist a",
+          " FROM ${project_name}.${dataset}.awrhistsysmetrichist a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vawrhistsysmetrichist",
         "store": "BIGQUERY"
@@ -10322,10 +10322,10 @@
     },
     "2-0-create-view-vawrhistsysmetricumm": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.3",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.3",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10346,12 +10346,12 @@
           "        round(cast(MIN_VALUE as numeric),2) min_value,",
           "        round(cast(MAX_VALUE as numeric),2) max_value,",
           "        round(cast(SUM_VALUE as numeric),2) sum_value",
-          " FROM ${projectname}.${dataset}.awrhistsysmetricsumm a",
+          " FROM ${project_name}.${dataset}.awrhistsysmetricsumm a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vawrhistsysmetricsumm",
         "store": "BIGQUERY"
@@ -10362,10 +10362,10 @@
     },
     "2-0-create-view-vawrhistsysmetrichist_rs": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "121",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "121",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10407,12 +10407,12 @@
           "      round(cast(sql_rt_perc95 as numeric),2) sql_rt_perc95,",
           "      round(cast(usercalls_per_sec_perc95 as numeric),2) usercalls_per_sec_perc95,",
           "      round(cast(user_tx_per_sec_perc95 as numeric),2) user_tx_per_sec_perc95,",
-          " FROM ${projectname}.${dataset}.awrhistsysmetrichist_rs a",
+          " FROM ${project_name}.${dataset}.awrhistsysmetrichist_rs a",
           " where trim(a._pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vawrhistsysmetrichist_rs",
         "store": "BIGQUERY"
@@ -10423,10 +10423,10 @@
     },
     "2-0-create-view-vawrhistsysmetrichist_rs-11g": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "112",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "112",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10462,12 +10462,12 @@
           "      round(cast(sql_rt_perc95 as numeric),2) sql_rt_perc95,",
           "      round(cast(usercalls_per_sec_perc95 as numeric),2) usercalls_per_sec_perc95,",
           "      round(cast(user_tx_per_sec_perc95 as numeric),2) user_tx_per_sec_perc95,",
-          " FROM ${projectname}.${dataset}.awrhistsysmetrichist_rs a",
+          " FROM ${project_name}.${dataset}.awrhistsysmetrichist_rs a",
           " where trim(a._pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vawrhistsysmetrichist_rs",
         "store": "BIGQUERY"
@@ -10478,10 +10478,10 @@
     },
     "2-0-create-view-vcompressbytable": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10496,12 +10496,12 @@
           "        cast(number_subparts as numeric) number_subparts,",
           "        cast(subpart_gb as numeric) subpart_gb,",
           "        cast(total_gb as numeric) total_gb",
-          " FROM ${projectname}.${dataset}.compressbytable a",
+          " FROM ${project_name}.${dataset}.compressbytable a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vcompressbytable",
         "store": "BIGQUERY"
@@ -10512,10 +10512,10 @@
     },
     "2-0-create-view-vdbahistsysstat": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10536,13 +10536,13 @@
           "        round(cast(MIN_VALUE as numeric),2) min_value,",
           "        round(cast(MAX_VALUE as numeric),2) max_value,",
           "        round(cast(SUM_VALUE as numeric),2) sum_value,",
-          "        round(cast(CNT as numeric),2) cnt_value",
-          " FROM ${projectname}.${dataset}.dbahistsysstat a",
+          "        round(cast(coun as numeric),2) coun_value",
+          " FROM ${project_name}.${dataset}.dbahistsysstat a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vdbahistsysstat",
         "store": "BIGQUERY"
@@ -10553,10 +10553,10 @@
     },
     "2-0-create-view-vdbahistsystimemodel": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10566,7 +10566,7 @@
           "        cast(instance_number as numeric) instance_number,",
           "        cast(hour as numeric) hour,",
           "        trim(stat_name) stat_name,",
-          "        cast(cnt as numeric) cnt,",
+          "        cast(coun as numeric) coun,",
           "        round(cast(AVG_VALUE as numeric),2) avg_value,",
           "        round(cast(MODE_VALUE as numeric),2) mode_value,",
           "        round(cast(MEDIAN_VALUE as numeric),2) median_value,",
@@ -10578,12 +10578,12 @@
           "        round(cast(MIN_VALUE as numeric),2) min_value,",
           "        round(cast(MAX_VALUE as numeric),2) max_value,",
           "        round(cast(SUM_VALUE as numeric),2) sum_value",
-          " FROM ${projectname}.${dataset}.dbahistsystimemodel a",
+          " FROM ${project_name}.${dataset}.dbahistsystimemodel a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vdbahistsystimemodel",
         "store": "BIGQUERY"
@@ -10594,10 +10594,10 @@
     },
     "2-0-create-view-vdbhwmarkstatistics": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10606,12 +10606,12 @@
           "        trim(description) description,",
           "        cast(highwater as numeric) highwater,",
           "        cast(last_value as numeric) last_value",
-          " FROM ${projectname}.${dataset}.dbhwmarkstatistics a",
+          " FROM ${project_name}.${dataset}.dbhwmarkstatistics a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vdbhwmarkstatistics",
         "store": "BIGQUERY"
@@ -10622,10 +10622,10 @@
     },
     "2-0-create-view-vdbobjects": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10635,17 +10635,17 @@
           "        trim(owner) owner,",
           "        trim(objecttype) objecttype,",
           "        trim(editionable) editionable,",
-          "        cast(coun as numeric) cnt,",
+          "        cast(counas numeric) coun,",
           "        cast(replace(trim(in_con_id),'N/A','-1') as numeric) in_con_id,",
           "        cast(in_owner as numeric) in_owner,",
           "        cast(in_object_type as numeric) in_object_type,",
           "        cast(replace(trim(in_editionable),'N/A','-1') as numeric) in_editionable",
-          " FROM ${projectname}.${dataset}.dbobjects a",
+          " FROM ${project_name}.${dataset}.dbobjects a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vdbobjects",
         "store": "BIGQUERY"
@@ -10656,10 +10656,10 @@
     },
     "2-0-create-view-vdbparameters": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10672,12 +10672,12 @@
           "        trim(value) value,",
           "        trim(default_value) default_value,",
           "        trim(isdefault_value) isdefault_value",
-          " FROM ${projectname}.${dataset}.dbparameters a",
+          " FROM ${project_name}.${dataset}.dbparameters a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vdbparameters",
         "store": "BIGQUERY"
@@ -10688,10 +10688,10 @@
     },
     "2-0-create-view-vdbparameters-11g202": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "112",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "112",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10703,12 +10703,12 @@
           "        trim(value) value,",
           "        trim(default_value) default_value,",
           "        trim(isdefault_value) isdefault_value",
-          " FROM ${projectname}.${dataset}.dbparameters a",
+          " FROM ${project_name}.${dataset}.dbparameters a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vdbparameters",
         "store": "BIGQUERY"
@@ -10719,10 +10719,10 @@
     },
     "2-0-create-view-vdbservicesinfo": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.4",
-      "mindbversion": "111",
-      "maxdbversion": "215",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.4",
+      "min_db_version": "111",
+      "max_db_version": "215",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10739,12 +10739,12 @@
           "        trim(failover_retries) failover_retries,",
           "        trim(failover_delay) failover_delay,",
           "        trim(goal) goal",
-          " FROM ${projectname}.${dataset}.dbservicesinfo a",
+          " FROM ${project_name}.${dataset}.dbservicesinfo a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vdbservicesinfo",
         "store": "BIGQUERY"
@@ -10755,10 +10755,10 @@
     },
     "2-0-create-view-vfreespaces": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.4",
-      "mindbversion": "111",
-      "maxdbversion": "215",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.4",
+      "min_db_version": "111",
+      "max_db_version": "215",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10772,12 +10772,12 @@
           "        cast(free_gb as numeric) free_gb,",
           "        cast(pct_used as numeric) pct_used,",
           "        trim(graph) graph",
-          " FROM ${projectname}.${dataset}.freespaces a",
+          " FROM ${project_name}.${dataset}.freespaces a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vfreespaces",
         "store": "BIGQUERY"
@@ -10788,10 +10788,10 @@
     },
     "2-0-create-view-vindexestypes": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10800,13 +10800,13 @@
           "        cast(con_id as numeric) con_id,",
           "        trim(owner) owner,",
           "        trim(index_type) index_type,",
-          "        cast(coun as numeric) cnt",
-          " FROM ${projectname}.${dataset}.indexestypes a",
+          "        cast(counas numeric) coun",
+          " FROM ${project_name}.${dataset}.indexestypes a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vindexestypes",
         "store": "BIGQUERY"
@@ -10817,10 +10817,10 @@
     },
     "2-0-create-view-voptimusconfig_bms_machinesizes": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10830,9 +10830,9 @@
           "        trim(machine_size) machine_size,",
           "        trim(processor) processor,",
           "        cast(est_price as numeric) est_price",
-          " FROM ${projectname}.${dataset}.optimusconfig_bms_machinesizes a"
+          " FROM ${project_name}.${dataset}.optimusconfig_bms_machinesizes a"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "voptimusconfig_bms_machinesizes",
         "store": "BIGQUERY"
@@ -10843,10 +10843,10 @@
     },
     "2-0-create-view-voptimusconfig_network_to_gcp": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10854,9 +10854,9 @@
           "select distinct trim(network_to_gcp) network_to_gcp,",
           "        cast(gbytes_per_sec as numeric) gbytes_per_sec,",
           "        cast(mbytes_per_sec as numeric) mbytes_per_sec",
-          " FROM ${projectname}.${dataset}.optimusconfig_network_to_gcp a"
+          " FROM ${project_name}.${dataset}.optimusconfig_network_to_gcp a"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "voptimusconfig_network_to_gcp",
         "store": "BIGQUERY"
@@ -10867,10 +10867,10 @@
     },
     "2-0-create-view-vpartsubparttypes": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.4",
-      "mindbversion": "111",
-      "maxdbversion": "215",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.4",
+      "min_db_version": "111",
+      "max_db_version": "215",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10880,13 +10880,13 @@
           "        trim(owner) owner,",
           "        trim(`partition`) partition_type,",
           "        trim(subpartition) subpartition,",
-          "        cast(coun as numeric) cnt",
-          " FROM ${projectname}.${dataset}.partsubparttypes a",
+          "        cast(counas numeric) coun",
+          " FROM ${project_name}.${dataset}.partsubparttypes a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vpartsubparttypes",
         "store": "BIGQUERY"
@@ -10897,10 +10897,10 @@
     },
     "2-0-create-view-vpdbsinfo": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "121",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "121",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10911,12 +10911,12 @@
           "        trim(pdb_name) pdb_name,",
           "        trim(status) status,",
           "        trim(logging) logging",
-          " FROM ${projectname}.${dataset}.pdbsinfo a",
+          " FROM ${project_name}.${dataset}.pdbsinfo a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vpdbsinfo",
         "store": "BIGQUERY"
@@ -10927,10 +10927,10 @@
     },
     "2-0-create-view-vpdbsopenmode": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "121",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "121",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10940,12 +10940,12 @@
           "        trim(name) name,",
           "        trim(open_mode) open_mode,",
           "        cast(total_gb as numeric) total_gb",
-          " FROM ${projectname}.${dataset}.pdbsopenmode a",
+          " FROM ${project_name}.${dataset}.pdbsopenmode a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vpdbsopenmode",
         "store": "BIGQUERY"
@@ -10956,10 +10956,10 @@
     },
     "2-0-create-view-vspacebyownersegtype": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.4",
-      "mindbversion": "111",
-      "maxdbversion": "215",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.4",
+      "min_db_version": "111",
+      "max_db_version": "215",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -10969,12 +10969,12 @@
           "        trim(owner) owner,",
           "        trim(segment_type) segment_type,",
           "        cast(total_gb as numeric) total_gb",
-          " FROM ${projectname}.${dataset}.spacebyownersegtype a",
+          " FROM ${project_name}.${dataset}.spacebyownersegtype a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vspacebyownersegtype",
         "store": "BIGQUERY"
@@ -10985,10 +10985,10 @@
     },
     "2-0-create-view-vspacebytablespace": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.4",
-      "mindbversion": "111",
-      "maxdbversion": "215",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.4",
+      "min_db_version": "111",
+      "max_db_version": "215",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -11000,12 +11000,12 @@
           "        trim(segment_space_manage) segment_space_managent,",
           "        trim(status) status,",
           "        cast(est_gain_mb as numeric) est_gain_mb",
-          " FROM ${projectname}.${dataset}.spacebytablespace a",
+          " FROM ${project_name}.${dataset}.spacebytablespace a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vspacebytablespace",
         "store": "BIGQUERY"
@@ -11016,10 +11016,10 @@
     },
     "2-0-create-view-vsystemstats": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.4",
-      "mindbversion": "111",
-      "maxdbversion": "215",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.4",
+      "min_db_version": "111",
+      "max_db_version": "215",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -11029,12 +11029,12 @@
           "        trim(stat_name) stat_name,",
           "        cast(value1 as numeric) value1,",
           "        cast(value2 as numeric) value2",
-          " FROM ${projectname}.${dataset}.systemstats a",
+          " FROM ${project_name}.${dataset}.systemstats a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vsystemstats",
         "store": "BIGQUERY"
@@ -11045,10 +11045,10 @@
     },
     "2-0-create-view-vusrsegatt": {
       "priority": 0,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -11059,12 +11059,12 @@
           "        trim(segmen_name) segment_name,",
           "        trim(segment_type) segment_type,",
           "        trim(tablespace_name) tablespace_name",
-          " FROM ${projectname}.${dataset}.usrsegatt a",
+          " FROM ${project_name}.${dataset}.usrsegatt a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${projectname}.${dataset}.dbsummary )"
+          "      FROM ${project_name}.${dataset}.dbsummary )"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vusrsegatt",
         "store": "BIGQUERY"
@@ -11075,21 +11075,21 @@
     },
     "2-100-create-view-vsysmetric": {
       "priority": 100,
-      "minsqlscriptversion": "2.0.3",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "121",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.3",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "121",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
         "expr1": [
           "select 'SYSMETRIC_HISTORY' info_source, a.*",
-          " from ${projectname}.${dataset}.vawrhistsysmetrichist a",
+          " from ${project_name}.${dataset}.vawrhistsysmetrichist a",
           " union all ",
           "select 'SYSMETRIC_SUMMARY', b.*",
-          " from ${projectname}.${dataset}.vawrhistsysmetricsumm b"
+          " from ${project_name}.${dataset}.vawrhistsysmetricsumm b"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vsysmetric",
         "store": "BIGQUERY"
@@ -11100,18 +11100,18 @@
     },
     "2-100-create-view-vsysmetric-202": {
       "priority": 100,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.2",
-      "mindbversion": "121",
-      "maxdbversion": "215",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.2",
+      "min_db_version": "121",
+      "max_db_version": "215",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
         "expr1": [
           "select 'SYSMETRIC_HISTORY' info_source, a.*",
-          " from ${projectname}.${dataset}.vawrhistsysmetrichist a"
+          " from ${project_name}.${dataset}.vawrhistsysmetrichist a"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vsysmetric",
         "store": "BIGQUERY"
@@ -11122,10 +11122,10 @@
     },
     "2-100-create-view-vosstat_columnar": {
       "priority": 100,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -11240,7 +11240,7 @@
           "         case ",
           "             when stat_name = 'USER_TIME' then perc100_value",
           "         end user_time_perc100",
-          "   from ${projectname}.${dataset}.vawrhistosstat",
+          "   from ${project_name}.${dataset}.vawrhistosstat",
           "   ),",
           "   vosstat_part2 as (",
           "     select pkey, dbid, instance_number, hour,",
@@ -11256,7 +11256,7 @@
           "   )",
           "   select * from vosstat_part2"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vosstat_columnar",
         "store": "BIGQUERY"
@@ -11267,10 +11267,10 @@
     },
     "2-100-create-view-vsysstat": {
       "priority": 100,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -11284,11 +11284,11 @@
           "         round(a.perc90_value / b.avg_snaps_diff_secs,1) perc90_value_per_sec,",
           "         round(a.perc95_value / b.avg_snaps_diff_secs,1) perc95_value_per_sec,",
           "         round(a.perc100_value / b.avg_snaps_diff_secs,1) perc100_value_per_sec",
-          " from ${projectname}.${dataset}.vdbahistsysstat a",
-          " inner join ${projectname}.${dataset}.vawrsnapdetails b",
+          " from ${project_name}.${dataset}.vdbahistsysstat a",
+          " inner join ${project_name}.${dataset}.vawrsnapdetails b",
           " on a.pkey = b.pkey and a.dbid = b.dbid and a.instance_number = b.instance_number and a.hour = b.hour"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vsysstat",
         "store": "BIGQUERY"
@@ -11299,23 +11299,23 @@
     },
     "2-200-create-view-vsysmetric_sysstat": {
       "priority": 200,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "121",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "121",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
         "expr1": [
-          " select * from ${projectname}.${dataset}.vsysmetric",
+          " select * from ${project_name}.${dataset}.vsysmetric",
           " union all ",
           " select info_source, pkey, dbid, instance_number, hour, stat_name metric_name,",
           "         avg_value_per_sec, mode_value_per_sec, median_value_per_sec,",
           "         perc50_value_per_sec, perc75_value_per_sec, perc90_value_per_sec,",
           "         perc95_value_per_sec, perc100_value_per_sec, 0 min_value, 0 max_value, 0 sum_value",
-          " from ${projectname}.${dataset}.vsysstat"
+          " from ${project_name}.${dataset}.vsysstat"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vsysmetric_sysstat",
         "store": "BIGQUERY"
@@ -11326,10 +11326,10 @@
     },
     "2-300-create-view-vsysmetric_columnar": {
       "priority": 300,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "121",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "121",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -11720,7 +11720,7 @@
           "        case ",
           "             when metric_name = 'User Rollbacks Per Sec' then perc100_value",
           "         end user_rollbacks_perc100",
-          " from ${projectname}.${dataset}.vsysmetric a ",
+          " from ${project_name}.${dataset}.vsysmetric a ",
           " ),",
           " vsysmetric_part2 as (",
           " select b.info_source, b.pkey, b.dbid, b.instance_number, b.hour, ",
@@ -11756,7 +11756,7 @@
           " select * from vsysmetric_part2",
           " order by pkey, dbid, instance_number, hour"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vsysmetric_columnar",
         "store": "BIGQUERY"
@@ -11767,10 +11767,10 @@
     },
     "2-500-create-view-vsysmetric_io_facts": {
       "priority": 500,
-      "minsqlscriptversion": "2.0.3",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "121",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.3",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "121",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -11789,10 +11789,10 @@
           "        a.phy_write_total_bytes_perc50, a.phy_write_total_bytes_perc75, a.phy_write_total_bytes_perc95, a.phy_write_total_bytes_perc100, 'Physical Write Total Bytes Per Second indicates the number of bytes written by FOREGROUND and BACKGROUND processess - on other words not only user application workload but also ASM Mirroring, ASM Rebalance, RMAN Backups, etc.' phy_write_total_bytes_comments,",
           "        a.phy_write_total_iops_perc50, a.phy_write_total_iops_perc75, a.phy_write_total_iops_perc95, a.phy_write_total_iops_perc100, 'Physical Write Total IO Per Second indicates the number of IOPs written by FOREGROUND and BACKGROUND processess - on other words not only user application workload but also ASM Mirroring, ASM Rebalance, RMAN Backups, etc.' phy_write_total_iops_comments,",
           "        a.phy_writes_direct_lobs_perc50, a.phy_writes_direct_lobs_perc75, a.phy_writes_direct_lobs_perc95, a.phy_writes_direct_lobs_perc100, 'Physical Read Direct Lobs indicates the number of database blocks written by FOREGROUND processess to server Lob related queries - in other words only by user application Lob workload.' phy_write_direct_lobs_comments,",
-          " from ${projectname}.${dataset}.vsysmetric_columnar a",
+          " from ${project_name}.${dataset}.vsysmetric_columnar a",
           " where a.info_source = 'SYSMETRIC_SUMMARY'"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vsysmetric_io_facts",
         "store": "BIGQUERY"
@@ -11803,10 +11803,10 @@
     },
     "2-500-create-view-vsysmetric_io_facts-202": {
       "priority": 500,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.2",
-      "mindbversion": "121",
-      "maxdbversion": "215",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.2",
+      "min_db_version": "121",
+      "max_db_version": "215",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -11825,9 +11825,9 @@
           "        a.phy_write_total_bytes_perc50, a.phy_write_total_bytes_perc75, a.phy_write_total_bytes_perc95, a.phy_write_total_bytes_perc100, 'Physical Write Total Bytes Per Second indicates the number of bytes written by FOREGROUND and BACKGROUND processess - on other words not only user application workload but also ASM Mirroring, ASM Rebalance, RMAN Backups, etc.' phy_write_total_bytes_comments,",
           "        a.phy_write_total_iops_perc50, a.phy_write_total_iops_perc75, a.phy_write_total_iops_perc95, a.phy_write_total_iops_perc100, 'Physical Write Total IO Per Second indicates the number of IOPs written by FOREGROUND and BACKGROUND processess - on other words not only user application workload but also ASM Mirroring, ASM Rebalance, RMAN Backups, etc.' phy_write_total_iops_comments,",
           "        a.phy_writes_direct_lobs_perc50, a.phy_writes_direct_lobs_perc75, a.phy_writes_direct_lobs_perc95, a.phy_writes_direct_lobs_perc100, 'Physical Read Direct Lobs indicates the number of database blocks written by FOREGROUND processess to server Lob related queries - in other words only by user application Lob workload.' phy_write_direct_lobs_comments,",
-          " from ${projectname}.${dataset}.vsysmetric_columnar a"
+          " from ${project_name}.${dataset}.vsysmetric_columnar a"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vsysmetric_io_facts",
         "store": "BIGQUERY"
@@ -11838,10 +11838,10 @@
     },
     "2-500-create-view-vsysmetric_cpu_facts": {
       "priority": 500,
-      "minsqlscriptversion": "2.0.3",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "121",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.3",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "121",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -11863,12 +11863,12 @@
           "        a.host_cpu_usage_time_perc50, a.host_cpu_usage_time_perc75, a.host_cpu_usage_time_perc95, a.host_cpu_usage_time_perc100, 'Source: DBA_HIST*SYSMETRIC*. Host CPU Usage Per Sec is how much TIME the database estimates the host has spent to serve FOREGROUND and BACKGROUND.' host_cpu_usage_time_comments,",
           "        a.host_cpu_utilization_perc50, a.host_cpu_utilization_perc75, a.host_cpu_utilization_perc95, a.host_cpu_utilization_perc100, 'Source: DBA_HIST*SYSMETRIC*. Host CPU Usage Per Sec is the PERCENTAGE the database estimates the host has spent to serve FOREGROUND and BACKGROUND.' host_cpu_utilization_comments,",
           "        a.logical_reads_perc50, a.logical_reads_perc75, a.logical_reads_perc95, a.logical_reads_perc100, 'Logical Reads Per Second is usually the sole responsible for driving CPU consumption.' logical_reads_comments",
-          " from  ${projectname}.${dataset}.vsysmetric_columnar a",
-          " left outer join ${projectname}.${dataset}.vosstat_columnar b",
+          " from  ${project_name}.${dataset}.vsysmetric_columnar a",
+          " left outer join ${project_name}.${dataset}.vosstat_columnar b",
           " on a.pkey = b.pkey and a.dbid = b.dbid and a.instance_number = b.instance_number and a.hour = b.hour",
           " where a.info_source = 'SYSMETRIC_SUMMARY'"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vsysmetric_cpu_facts",
         "store": "BIGQUERY"
@@ -11879,10 +11879,10 @@
     },
     "2-500-create-view-vsysmetric_cpu_facts-202": {
       "priority": 500,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.2",
-      "mindbversion": "121",
-      "maxdbversion": "215",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.2",
+      "min_db_version": "121",
+      "max_db_version": "215",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -11904,11 +11904,11 @@
           "        a.host_cpu_usage_time_perc50, a.host_cpu_usage_time_perc75, a.host_cpu_usage_time_perc95, a.host_cpu_usage_time_perc100, 'Source: DBA_HIST*SYSMETRIC*. Host CPU Usage Per Sec is how much TIME the database estimates the host has spent to serve FOREGROUND and BACKGROUND.' host_cpu_usage_time_comments,",
           "        a.host_cpu_utilization_perc50, a.host_cpu_utilization_perc75, a.host_cpu_utilization_perc95, a.host_cpu_utilization_perc100, 'Source: DBA_HIST*SYSMETRIC*. Host CPU Usage Per Sec is the PERCENTAGE the database estimates the host has spent to serve FOREGROUND and BACKGROUND.' host_cpu_utilization_comments,",
           "        a.logical_reads_perc50, a.logical_reads_perc75, a.logical_reads_perc95, a.logical_reads_perc100, 'Logical Reads Per Second is usually the sole responsible for driving CPU consumption.' logical_reads_comments",
-          " from  ${projectname}.${dataset}.vsysmetric_columnar a",
-          " left outer join ${projectname}.${dataset}.vosstat_columnar b",
+          " from  ${project_name}.${dataset}.vsysmetric_columnar a",
+          " left outer join ${project_name}.${dataset}.vosstat_columnar b",
           " on a.pkey = b.pkey and a.dbid = b.dbid and a.instance_number = b.instance_number and a.hour = b.hour"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vsysmetric_cpu_facts",
         "store": "BIGQUERY"
@@ -11919,10 +11919,10 @@
     },
     "2-700-create-view-V_DS_BMSsizing_summary": {
       "priority": 700,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -11936,8 +11936,8 @@
           "       MAX(CAST(metrics.PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE AS DECIMAL))-MAX(CAST(metrics.FREE_MEMORY_BYTES_CUMULATIVE_VALUE AS DECIMAL)) AS usedmemory,",
           "       MAX(CAST(metrics.HOST_CPU_UTILIZATION AS DECIMAL)) AS maxHOSTCPUUtilizationPercentage,",
           "       AVG(CAST(metrics.HOST_CPU_UTILIZATION AS DECIMAL)) AS avgHOSTCPUUtilizationPercentage,",
-          "  FROM ${projectname}.${dataset}.awrhistosstat_rs_metrics AS metrics",
-          "       INNER JOIN ${projectname}.${dataset}.dbinstances AS dbinstances",
+          "  FROM ${project_name}.${dataset}.awrhistosstat_rs_metrics AS metrics",
+          "       INNER JOIN ${project_name}.${dataset}.dbinstances AS dbinstances",
           "               ON TRIM(metrics._PKEY) = TRIM(dbinstances.pkey)                                  ",
           "              AND CAST(metrics._INSTANCE_NUMBER AS INT64) = CAST(dbinstances.inst_id AS INT64)  ",
           "  GROUP BY dbinstances.pkey,",
@@ -11957,7 +11957,7 @@
           "       dbsummary.db_size_in_use_gb,",
           "       dbsummary.dg_database_role,",
           "       dbsummary.dg_protection_level",
-          "  FROM ${projectname}.${dataset}.dbsummary AS dbsummary",
+          "  FROM ${project_name}.${dataset}.dbsummary AS dbsummary",
           " ),",
           "  ",
           " sourceSizing AS (",
@@ -11995,7 +11995,7 @@
           "       CEIL(MAX(CAST(BMSCORES95_DB AS NUMERIC))) dbCPU,",
           "       ROUND(MAX(CAST(BMSCORES95_HOST AS NUMERIC))) hostCPU,",
           "       ROUND(MAX(CAST(BMSMEMORY_GB_DB AS NUMERIC))) dbMemory",
-          "  FROM ${projectname}.${dataset}.dbsizing_facts",
+          "  FROM ${project_name}.${dataset}.dbsizing_facts",
           " GROUP BY _PKEY,",
           "         _DBID,",
           "         instanceNumber,",
@@ -12023,8 +12023,8 @@
           "       dbsizing_facts._PKEY, dbinstances.host_name, dbsizing_facts._INSTANCE_NUMBER,",
           "       dbsizing_facts.DB_SIZE_ALLOCATED_GB,",
           "       dbsizing_facts.DB_SIZE_IN_USE_GB",
-          "  from ${projectname}.${dataset}.dbsizing_facts AS dbsizing_facts",
-          "       inner join  ${projectname}.${dataset}.dbinstances as dbinstances",
+          "  from ${project_name}.${dataset}.dbsizing_facts AS dbsizing_facts",
+          "       inner join  ${project_name}.${dataset}.dbinstances as dbinstances",
           "               on trim(dbsizing_facts.pkey) = trim(dbinstances.pkey)",
           "              and cast(dbsizing_facts._INSTANCE_NUMBER as INT64) = cast(dbinstances.inst_id as INT64)",
           "              and cast(dbsizing_facts._HOUR as INT64) = 0",
@@ -12151,7 +12151,7 @@
           " FROM sizingSummarySums",
           " ORDER BY host_name"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "V_DS_BMSsizing_summary",
         "store": "BIGQUERY"
@@ -12162,10 +12162,10 @@
     },
     "2-700-create-view-V_DS_dbsummary": {
       "priority": 700,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -12180,9 +12180,9 @@
           " CAST(db_size_allocated_gb as numeric) as db_size_allocated_gb,",
           " CAST(db_size_in_use_gb as numeric) as db_size_in_use_gb,",
           " db_long_size_gb,dg_database_role, dg_protection_mode,dg_protection_level",
-          " FROM ${projectname}.${dataset}.dbsummary"
+          " FROM ${project_name}.${dataset}.dbsummary"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "V_DS_dbsummary",
         "store": "BIGQUERY"
@@ -12193,10 +12193,10 @@
     },
     "2-700-create-view-V_DS_HostDetails": {
       "priority": 700,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -12213,8 +12213,8 @@
           "    MAX(CAST(a.HOST_CPU_UTILIZATION AS DECIMAL)) AS maxHOSTCPUUtilizationPercentage,",
           "    AVG(CAST(a.HOST_CPU_UTILIZATION AS DECIMAL)) AS avgHOSTCPUUtilizationPercentage,",
           "  FROM",
-          "    ${projectname}.${dataset}.awrhistosstat_rs_metrics a,",
-          "    ${projectname}.${dataset}.dbinstances b",
+          "    ${project_name}.${dataset}.awrhistosstat_rs_metrics a,",
+          "    ${project_name}.${dataset}.dbinstances b",
           "  WHERE",
           "    TRIM(a._PKEY)=TRIM(b.pkey)",
           "    AND CAST(a._INSTANCE_NUMBER AS INT64)= CAST(b.inst_id AS INT64)",
@@ -12235,7 +12235,7 @@
           "    a.dg_database_role,",
           "    a.dg_protection_level",
           "  FROM",
-          "    ${projectname}.${dataset}.dbsummary a ),",
+          "    ${project_name}.${dataset}.dbsummary a ),",
           "  sourceSizing AS (",
           "  SELECT",
           "    a.PKEY,",
@@ -12274,7 +12274,7 @@
           "    10 )",
           " select * from sourceSizing order by host_name"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "V_DS_HostDetails",
         "store": "BIGQUERY"
@@ -12285,10 +12285,10 @@
     },
     "2-700-create-view-V_DS_dbsizing_facts": {
       "priority": 700,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -12331,9 +12331,9 @@
           " CAST(BMSMEMORY_GB_DB as numeric) as BMSMEMORY_GB_DB,",
           " CAST(BMSMEMORY_GB_HOST as numeric) as BMSMEMORY_GB_HOST",
           " from",
-          " ${projectname}.${dataset}.dbsizing_facts"
+          " ${project_name}.${dataset}.dbsizing_facts"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "V_DS_dbsizing_facts",
         "store": "BIGQUERY"
@@ -12344,10 +12344,10 @@
     },
     "2-700-create-view-V_DS_dbfeatures": {
       "priority": 700,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -12356,9 +12356,9 @@
           " pkey, con_id, name, current_usage,",
           " CAST(detected_usage as numeric) as detected_usage,",
           " total_samples, first_usage, last_usage, aux_count",
-          " FROM ${projectname}.${dataset}.dbfeatures"
+          " FROM ${project_name}.${dataset}.dbfeatures"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "V_DS_dbfeatures",
         "store": "BIGQUERY"
@@ -12369,10 +12369,10 @@
     },
     "2-700-create-view-V_DS_ConsoldatedCoreCount": {
       "priority": 700,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -12383,11 +12383,11 @@
           " max(CAST(IOMBPS_PERC95 as numeric)) as DB_IOMBPS,",
           " max(cast(BMSMEMORY_GB_HOST as numeric)) as DB_MEMORY,",
           " max(CAST(DB_SIZE_ALLOCATED_GB as numeric)) as DB_STORAGE",
-          " from  ${projectname}.${dataset}.dbsizing_facts",
+          " from  ${project_name}.${dataset}.dbsizing_facts",
           " where db_name is not null",
           " group by _PKEY, db_name,_INSTANCE_NUMBER"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "V_DS_ConsoldatedCoreCount",
         "store": "BIGQUERY"
@@ -12398,10 +12398,10 @@
     },
     "2-1000-create-view-vReport_sysmetric_io_summary": {
       "priority": 700,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -12418,7 +12418,7 @@
           "        sum(phy_read_total_iops_perc95) + sum(phy_write_total_iops_perc95) iops_total_perc95,",
           "        sum(phy_read_total_iops_perc100) + sum(phy_write_total_iops_perc100) iops_total_perc100,",
           "        replace(max(phy_read_total_iops_comments),'Read','Read+Write') iops_total_comments,",
-          " from ${projectname}.${dataset}.vsysmetric_io_facts",
+          " from ${project_name}.${dataset}.vsysmetric_io_facts",
           " group by info_source, pkey, dbid, hour",
           " )",
           " select info_source, pkey, dbid,",
@@ -12433,7 +12433,7 @@
           " from vReportByHour",
           " group by info_source, pkey, dbid"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vReport_sysmetric_io_summary",
         "store": "BIGQUERY"
@@ -12444,10 +12444,10 @@
     },
     "2-1000-create-view-vReport_sysstat_io_summary": {
       "priority": 700,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -12462,7 +12462,7 @@
           "        sum(physical_read_total_io_requests_perc75) + sum(physical_write_total_io_req_perc75) iops_total_perc75,",
           "        sum(physical_read_total_io_requests_perc95) + sum(physical_write_total_io_req_perc95) iops_total_perc95,",
           "        sum(physical_read_total_io_requests_perc100) + sum(physical_write_total_io_req_perc100) iops_total_perc100",
-          " from ${projectname}.${dataset}.vsysstat_columnar",
+          " from ${project_name}.${dataset}.vsysstat_columnar",
           " group by info_source, pkey, dbid, hour",
           " )",
           " select info_source, pkey, dbid,",
@@ -12477,7 +12477,7 @@
           " from vReportByHour",
           " group by info_source, pkey, dbid"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vReport_sysstat_io_summary",
         "store": "BIGQUERY"
@@ -12488,10 +12488,10 @@
     },
     "2-300-create-view-vsysstat_columnar": {
       "priority": 300,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "2",
       "action_details": {
         "action": "EXECUTE_SQL",
@@ -12894,7 +12894,7 @@
           "         case ",
           "             when stat_name = 'user rollbacks' then perc100_value_per_sec",
           "         end user_rollbacks_perc100",
-          " from ${projectname}.${dataset}.vsysstat a",
+          " from ${project_name}.${dataset}.vsysstat a",
           " ),",
           " vsysstat_part2 as (",
           "     select b.info_source, b.pkey, b.dbid, b.instance_number, b.hour,",
@@ -12936,10 +12936,10 @@
           " )",
           " select d.dbversion, 'All Metrics are Per Second' metric_unit, c.* ",
           " from vsysstat_part2 c",
-          " inner join ${projectname}.${dataset}.vdbsummary d",
+          " inner join ${project_name}.${dataset}.vdbsummary d",
           " on c.pkey = d.pkey and c.dbid = d.dbid"
         ],
-        "iferror": "None",
+        "if_error": "None",
         "type": "CREATE VIEW",
         "target_object_name": "vsysstat_columnar",
         "store": "BIGQUERY"
@@ -12950,15 +12950,15 @@
     },
     "db_migration-rule00-1": {
       "priority": 100,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS\"][\"_HOUR\"]",
-        "iferror": "None",
+        "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS",
         "target_dataframe_name": "AWRHISTSYSMETRICHIST_RS",
@@ -12971,15 +12971,15 @@
     },
     "db_migration-rule00": {
       "priority": 100,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "CREATE_OR_REPLACE_DATAFRAME",
         "expr1": "dataFrames[\"DBSUMMARY\"][[\"PKEY\", \"DBID\", \"DB_NAME\",\"DBFULLVERSION\",\"LOG_MODE\",\"REDO_GB_PER_DAY\",\"PLATFORM_NAME\",\"DB_SIZE_ALLOCATED_GB\",\"DB_SIZE_IN_USE_GB\"]]",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBMIGRATION_BASE",
         "store": "BIGQUERY"
@@ -12990,15 +12990,15 @@
     },
     "db_migration-rule01": {
       "priority": 200,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "CREATE_OR_REPLACE_DATAFRAME",
         "expr1": "pd.concat([dataFrames[\"DBMIGRATION_BASE\"].assign(TECHNIQUE=\"RMAN_BACKUP_RESTORE\"),dataFrames[\"DBMIGRATION_BASE\"].assign(TECHNIQUE=\"EXP_FULL\"),dataFrames[\"DBMIGRATION_BASE\"].assign(TECHNIQUE=\"XTTS_INCREMENTAL\"),dataFrames[\"DBMIGRATION_BASE\"].assign(TECHNIQUE=\"DATA_GUARD\")])",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "store": "BIGQUERY"
@@ -13009,15 +13009,15 @@
     },
     "db_migration-rule02": {
       "priority": 210,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "'1 Gbps'",
-        "iferror": "None",
+        "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "target_dataframe_name": "DBMIGRATION_DETAILS",
@@ -13030,15 +13030,15 @@
     },
     "db_migration-rule03": {
       "priority": 210,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "0.1220703125",
-        "iferror": "None",
+        "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "target_dataframe_name": "DBMIGRATION_DETAILS",
@@ -13051,15 +13051,15 @@
     },
     "db_migration-rule04": {
       "priority": 210,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "125",
-        "iferror": "None",
+        "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "target_dataframe_name": "DBMIGRATION_DETAILS",
@@ -13072,15 +13072,15 @@
     },
     "db_migration-rule05": {
       "priority": 210,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "0.36",
-        "iferror": "None",
+        "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "target_dataframe_name": "DBMIGRATION_DETAILS",
@@ -13093,15 +13093,15 @@
     },
     "db_migration-rule06": {
       "priority": 210,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "360",
-        "iferror": "None",
+        "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "target_dataframe_name": "DBMIGRATION_DETAILS",
@@ -13114,15 +13114,15 @@
     },
     "db_migration-rule07": {
       "priority": 210,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "dataFrames[\"DBMIGRATION_DETAILS\"][\"DB_SIZE_ALLOCATED_GB\"];/;dataFrames[\"DBMIGRATION_DETAILS\"][\"SSD_DISK_WRITE_RATE_GBYTESPS\"];/;60;/;60",
-        "iferror": "None",
+        "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "target_dataframe_name": "DBMIGRATION_DETAILS",
@@ -13135,15 +13135,15 @@
     },
     "db_migration-rule08": {
       "priority": 210,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "(;dataFrames[\"DBMIGRATION_DETAILS\"][\"DB_SIZE_ALLOCATED_GB\"];*;0.7;);/;dataFrames[\"DBMIGRATION_DETAILS\"][\"NETWORK_TRANSFER_RATE_GBYTESPS\"];/;60;/;60",
-        "iferror": "None",
+        "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "target_dataframe_name": "DBMIGRATION_DETAILS",
@@ -13156,15 +13156,15 @@
     },
     "db_migration-rule09": {
       "priority": 210,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "(;dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"];*;2.5;)",
-        "iferror": "None",
+        "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "target_dataframe_name": "DBMIGRATION_DETAILS",
@@ -13177,15 +13177,15 @@
     },
     "db_migration-rule10": {
       "priority": 210,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "(;dataFrames[\"DBMIGRATION_DETAILS\"][\"REDO_GB_PER_DAY\"];*;7;);/;0.36;/;60;/;60",
-        "iferror": "None",
+        "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "target_dataframe_name": "DBMIGRATION_DETAILS",
@@ -13198,15 +13198,15 @@
     },
     "db_migration-rule11": {
       "priority": 250,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"RMAN_BACKUP_RESTORE\"),dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_TRANSFER_BACKUP_OVER_NETWORK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_BACKUP_HOUR\"],dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"])",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "target_dataframe_name": "DBMIGRATION_DETAILS",
@@ -13219,15 +13219,15 @@
     },
     "db_migration-rule12": {
       "priority": 255,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"EXP_FULL\"),(dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_BACKUP_TO_DISK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_TRANSFER_BACKUP_OVER_NETWORK_HOUR\"]+dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_BACKUP_HOUR\"])*1.2,dataFrames[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "target_dataframe_name": "DBMIGRATION_DETAILS",
@@ -13240,15 +13240,15 @@
     },
     "db_migration-rule13": {
       "priority": 260,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"XTTS_INCREMENTAL\"),dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR\"]+2,dataFrames[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "target_dataframe_name": "DBMIGRATION_DETAILS",
@@ -13261,15 +13261,15 @@
     },
     "db_migration-rule14": {
       "priority": 265,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "np.where((dataFrames[\"DBMIGRATION_DETAILS\"][\"TECHNIQUE\"] == \"DATA_GUARD\"),dataFrames[\"DBMIGRATION_DETAILS\"][\"TIME_TO_RESTORE_INCR_7DAY_BKP_HOUR\"]/7,dataFrames[\"DBMIGRATION_DETAILS\"][\"REQUIRED_DB_DOWNTIME_HOURS\"])",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "target_dataframe_name": "DBMIGRATION_DETAILS",
@@ -13282,15 +13282,15 @@
     },
     "db_migration-rule15": {
       "priority": 270,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "'To Be Developed'",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBMIGRATION_DETAILS",
         "target_dataframe_name": "DBMIGRATION_DETAILS",
@@ -13303,15 +13303,15 @@
     },
     "bms_sizing-rule01": {
       "priority": 272,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "dataFrames[\"AWRHISTOSSTAT_RS\"][\"BUSY_TIME_PERC95\"];/;(;dataFrames[\"AWRHISTOSSTAT_RS\"][\"BUSY_TIME_PERC95\"];+;dataFrames[\"AWRHISTOSSTAT_RS\"][\"IDLE_TIME_PERC95\"];);*;100",
-        "iferror": "None",
+        "if_error": "None",
         "type": "NUMBER",
         "dataframe_name": "AWRHISTOSSTAT_RS",
         "target_dataframe_name": "AWRHISTOSSTAT_RS_METRICS",
@@ -13324,15 +13324,15 @@
     },
     "bms_sizing-rule02": {
       "priority": 275,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "CREATE_OR_REPLACE_DATAFRAME",
         "expr1": "pd.merge(dataFrames[\"AWRHISTSYSMETRICHIST_RS\"], dataFrames[\"AWRHISTOSSTAT_RS\"], on=[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\", \"_HOUR\"])",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
         "store": "BIGQUERY"
@@ -13343,15 +13343,15 @@
     },
     "bms_sizing-rule03": {
       "priority": 300,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "(;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPU_PER_SEC_PERC95\"];+;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"BKGRCPU_PER_SEC_PERC95\"];);/;(;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"HOST_CPU_PER_SEC_PERC95\"];/;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"HOST_CPU_UTILIZATION\"];)",
-        "iferror": "999",
+        "if_error": "999",
         "type": "FREESTYLE",
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
         "target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
@@ -13364,15 +13364,15 @@
     },
     "bms_sizing-rule04": {
       "priority": 300,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "(dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"NUM_CPU_CORES_CUMULATIVE_VALUE\"];/;100);*;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPUDB95_PERC\"]",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
         "target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
@@ -13385,15 +13385,15 @@
     },
     "bms_sizing-rule05": {
       "priority": 300,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "(dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"NUM_CPU_CORES_CUMULATIVE_VALUE\"];/;100);*;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"HOST_CPU_UTILIZATION\"]",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
         "target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
@@ -13406,15 +13406,15 @@
     },
     "bms_sizing-rule06": {
       "priority": 310,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "(;dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPUDB95_CORES\"];*;0.8;)",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
         "target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
@@ -13427,15 +13427,15 @@
     },
     "bms_sizing-rule07": {
       "priority": 315,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
         "expr1": "(dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"CPUHOST95_CORES\"];*;0.8)",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "action": "ADD_OR_UPDATE_COLUMN",
         "target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
@@ -13448,15 +13448,15 @@
     },
     "bms_sizing-rule08": {
       "priority": 300,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "(dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][\"IOPS_PERC95\"];/;6000)",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
         "target_dataframe_name": "AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS",
@@ -13469,15 +13469,15 @@
     },
     "bms_sizing-rule09": {
       "priority": 350,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "CREATE_OR_REPLACE_DATAFRAME",
         "expr1": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"FREE_MEMORY_BYTES_PERC95\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\",\"FREE_MEMORY_BYTES_CUMULATIVE_VALUE\",\"NUM_CPUS_CUMULATIVE_VALUE\",\"NUM_CPU_CORES_CUMULATIVE_VALUE\",\"NUM_CPU_SOCKETS_CUMULATIVE_VALUE\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"NUM_CPU_SOCKETS_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
-        "iferror": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\",\"NUM_CPUS_CUMULATIVE_VALUE\",\"NUM_CPU_CORES_CUMULATIVE_VALUE\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
+        "if_error": "dataFrames[\"AWRHISTSYSMETRICHIST_RS_AWRHISTOSSTAT_RS\"][[\"_PKEY\", \"_DBID\", \"_INSTANCE_NUMBER\",\"_HOUR\",\"AAS_PERC95\",\"IOMBPS_PERC95\",\"IOPS_PERC95\",\"PHY_READS_PER_SEC_PERC95\",\"PHY_WRITES_PER_SEC_PERC95\",\"CPUDB95_PERC\",\"CPUDB95_CORES\",\"LOAD_PERC95\",\"HOST_CPU_UTILIZATION\",\"CPUHOST95_CORES\",\"VM_IN_BYTES_PERC95\",\"VM_OUT_BYTES_PERC95\",\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\",\"NUM_CPUS_CUMULATIVE_VALUE\",\"NUM_CPU_CORES_CUMULATIVE_VALUE\",\"PHYSICAL_MEMORY_BYTES_PERC95\",\"NUM_CPUS_PERC95\",\"NUM_CPU_CORES_PERC95\",\"IOPS95_TB_BMS\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\"]]",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
         "store": "BIGQUERY"
@@ -13488,15 +13488,15 @@
     },
     "bms_sizing-rule09a": {
       "priority": 350,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "(;dataFrames[\"DBSIZING_FACTS\"][\"NUM_CPUS_CUMULATIVE_VALUE\"])",
-        "iferror": "0",
+        "if_error": "0",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
         "target_dataframe_name": "DBSIZING_FACTS",
@@ -13509,15 +13509,15 @@
     },
     "bms_sizing-rule09b": {
       "priority": 350,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "(;dataFrames[\"DBSIZING_FACTS\"][\"NUM_CPU_CORES_CUMULATIVE_VALUE\"])",
-        "iferror": "0",
+        "if_error": "0",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
         "target_dataframe_name": "DBSIZING_FACTS",
@@ -13530,15 +13530,15 @@
     },
     "bms_sizing-rule09c": {
       "priority": 350,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "(;dataFrames[\"DBSIZING_FACTS\"][\"NUM_CPU_SOCKETS_CUMULATIVE_VALUE\"])",
-        "iferror": "0",
+        "if_error": "0",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
         "target_dataframe_name": "DBSIZING_FACTS",
@@ -13551,15 +13551,15 @@
     },
     "bms_sizing-rule09d": {
       "priority": 350,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "(;dataFrames[\"DBSIZING_FACTS\"][\"PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE\"])",
-        "iferror": "0",
+        "if_error": "0",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
         "target_dataframe_name": "DBSIZING_FACTS",
@@ -13572,15 +13572,15 @@
     },
     "bms_sizing-rule10": {
       "priority": 355,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "CREATE_OR_REPLACE_DATAFRAME",
         "expr1": "pd.merge(dataFrames[\"DBSIZING_FACTS\"], dataFrames[\"DBSUMMARY\"], left_on=[\"_PKEY\", \"_DBID\"], right_on=[\"PKEY\", \"DBID\"], how=\"inner\")",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
         "store": "BIGQUERY"
@@ -13591,15 +13591,15 @@
     },
     "bms_sizing-rule11": {
       "priority": 360,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "np.where((dataFrames[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"] > (dataFrames[\"DBSIZING_FACTS\"][\"DB_SIZE_ALLOCATED_GB\"]/1024)),np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"IOPS95_TB_BMS\"]),np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"DB_SIZE_ALLOCATED_GB\"]/1024))",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
         "target_dataframe_name": "DBSIZING_FACTS",
@@ -13612,15 +13612,15 @@
     },
     "bms_sizing-rule12": {
       "priority": 370,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "np.ceil((dataFrames[\"DBSIZING_FACTS\"][\"BUFFER_CACHE_MB\"]+dataFrames[\"DBSIZING_FACTS\"][\"SHARED_POOL_MB\"]+dataFrames[\"DBSIZING_FACTS\"][\"TOTAL_PGA_ALLOCATED_MB\"])/1024*1.2)",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
         "target_dataframe_name": "DBSIZING_FACTS",
@@ -13633,15 +13633,15 @@
     },
     "bms_sizing-rule13": {
       "priority": 380,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "np.ceil(dataFrames[\"DBSIZING_FACTS\"][\"PHYSICAL_MEMORY_BYTES_PERC95\"]/1024/1024/1024)",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_FACTS",
         "target_dataframe_name": "DBSIZING_FACTS",
@@ -13654,15 +13654,15 @@
     },
     "bms_sizing-rule14": {
       "priority": 390,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "CREATE_OR_REPLACE_DATAFRAME",
         "expr1": "dataFrames[\"DBSIZING_FACTS\"].groupby([\"PKEY\",\"_DBID\",\"_INSTANCE_NUMBER\"])[\"PKEY\",\"_DBID\",\"DB_NAME\",\"DBFULLVERSION\",\"_INSTANCE_NUMBER\",\"BMSSTORAGE_TB_DB\",\"BMSCORES95_DB\",\"BMSCORES95_HOST\",\"BMSMEMORY_GB_DB\",\"BMSMEMORY_GB_HOST\"].agg(\"max\")",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_SUMMARY",
         "store": "BIGQUERY"
@@ -13673,15 +13673,15 @@
     },
     "bms_sizing-rule15": {
       "priority": 400,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "np.ceil(dataFrames[\"DBSIZING_SUMMARY\"][\"BMSCORES95_DB\"])",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_SUMMARY",
         "target_dataframe_name": "DBSIZING_SUMMARY",
@@ -13694,15 +13694,15 @@
     },
     "bms_sizing-rule16": {
       "priority": 400,
-      "minsqlscriptversion": "2.0.0",
-      "maxsqlscriptversion": "2.0.6",
-      "mindbversion": "111",
-      "maxdbversion": "216",
+      "min_sql_script_version": "2.0.0",
+      "max_sql_script_version": "2.0.6",
+      "min_db_version": "111",
+      "max_db_version": "216",
       "execution_group": "1",
       "action_details": {
         "action": "ADD_OR_UPDATE_COLUMN",
         "expr1": "np.ceil(dataFrames[\"DBSIZING_SUMMARY\"][\"BMSCORES95_HOST\"])",
-        "iferror": "None",
+        "if_error": "None",
         "type": "FREESTYLE",
         "dataframe_name": "DBSIZING_SUMMARY",
         "target_dataframe_name": "DBSIZING_SUMMARY",

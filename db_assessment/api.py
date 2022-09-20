@@ -19,6 +19,7 @@ from tempfile import TemporaryDirectory
 from typing import Optional
 
 from flask import Flask, request
+from typing_extensions import Literal
 from werkzeug.utils import secure_filename
 
 from db_assessment.optimusprime import run_main
@@ -28,25 +29,27 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class UserConfig:
-    transformersconfig: str = "db_assessment/opConfig/transformers.json"
+class AppConfig:
+    """Application Configuration"""
+
+    config_path: str = "db_assessment/opConfig/transformers.json"
     dataset: Optional[str] = None
-    projectname: Optional[str] = None
-    collectionid: Optional[str] = None
+    project_name: Optional[str] = None
+    collection_id: Optional[str] = None
     dbversion: Optional[str] = None
-    fileslocation: str = "dbResults"
-    sep: str = ","
-    collectionversion: str = "0.0.0"
-    schemadetection: str = "FILLGAP"
-    deletedataset: bool = False
-    fromdataframe: bool = False
-    consolidatelogs: bool = False
-    consolidatedataframes: bool = False
-    importcomment: str = ""
-    filterbysqlversion: str = ""
-    filterbydbversion: str = ""
-    loadtype: str = "WRITE_APPEND"
-    skipvalidations: bool = False
+    files_location: str = "dbResults"
+    sep: str = "|"
+    collection_version: str = "0.0.0"
+    schema_detection: Literal["AUTO", "FILLGAP"] = "FILLGAP"
+    delete_dataset: bool = False
+    from_dataframe: bool = False
+    consolidate_logs: bool = False
+    consolidate_dataframes: bool = False
+    import_comment: str = ""
+    filter_by_sql_version: str = ""
+    filter_by_db_version: str = ""
+    load_type: str = "WRITE_APPEND"
+    skip_validations: bool = False
 
 
 @app.route("/api/loadAssessment", methods=["POST"])
@@ -55,19 +58,19 @@ def load_assessment():
     app.logger.info(f"{len(request.files)} files uploaded")
     if len(request.files) <= 0:
         return "No files uploaded", 400
-    with TemporaryDirectory() as tmpDir:
+    with TemporaryDirectory() as temp_dir:
         for file in request.files.values():
             app.logger.info(f"saved {file.filename}")
-            filePath = os.path.join(tmpDir, secure_filename(file.filename))
-            app.logger.info(f"saved {file.filename} as {filePath}")
-            file.save(filePath)
+            file_path = os.path.join(temp_dir, secure_filename(file.filename))
+            app.logger.info(f"saved {file.filename} as {file_path}")
+            file.save(file_path)
 
         request_data = request.form
-        config = UserConfig(
-            fileslocation=tmpDir,
+        config = AppConfig(
+            files_location=temp_dir,
             dataset=request_data.get("dataset", None),
-            collectionid=request_data.get("collectionId", None),
-            projectname=request_data.get("projectId", None),
+            collection_id=request_data.get("collectionId", None),
+            project_name=request_data.get("projectId", None),
         )
         run_main(config)
     return "", 201
