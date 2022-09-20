@@ -7,7 +7,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -629,7 +629,7 @@
           ["pkey", "STRING"],
           ["dbid", "STRING"],
           ["db_name", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -3167,7 +3167,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -3464,7 +3464,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -3773,7 +3773,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -3792,7 +3792,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -3814,7 +3814,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -3829,7 +3829,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -4102,7 +4102,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -4228,7 +4228,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -4254,7 +4254,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -4276,7 +4276,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -4293,7 +4293,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -4590,7 +4590,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -4899,7 +4899,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -4918,7 +4918,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -4940,7 +4940,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -4955,7 +4955,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -5228,7 +5228,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -5354,7 +5354,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -5380,7 +5380,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -5402,7 +5402,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -5419,7 +5419,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -5717,7 +5717,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -6026,7 +6026,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -6045,7 +6045,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -6067,7 +6067,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -6081,7 +6081,7 @@
           ["pkey", "STRING"],
           ["dbid", "STRING"],
           ["db_name", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -6355,7 +6355,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -6481,7 +6481,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -6507,7 +6507,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -6529,7 +6529,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -6544,7 +6544,7 @@
         "opkeylog": [
           ["pkey", "STRING"],
           ["opscriptversion", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["hostname", "STRING"],
           ["dbname", "STRING"],
           ["instance_name", "STRING"],
@@ -6559,7 +6559,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -6876,7 +6876,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -7185,7 +7185,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -7204,7 +7204,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -7226,7 +7226,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -7241,7 +7241,7 @@
         "opkeylog": [
           ["pkey", "STRING"],
           ["opscriptversion", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["hostname", "STRING"],
           ["dbname", "STRING"],
           ["instance_name", "STRING"],
@@ -7256,7 +7256,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -7573,7 +7573,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -7882,7 +7882,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -7901,7 +7901,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -7923,7 +7923,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -7940,7 +7940,7 @@
           ["module", "STRING"],
           ["machine", "STRING"],
           ["command_name", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "exttab": [
           ["pkey", "STRING"],
@@ -8075,7 +8075,7 @@
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["tab_count", "STRING"],
-          ["idx_coun", "STRING"],
+          ["idx_cnt", "STRING"],
           ["idx_perc", "STRING"]
         ]
       }
@@ -8085,7 +8085,7 @@
         "opkeylog": [
           ["pkey", "STRING"],
           ["opscriptversion", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["hostname", "STRING"],
           ["dbname", "STRING"],
           ["instance_name", "STRING"],
@@ -8100,7 +8100,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -8341,7 +8341,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -8623,7 +8623,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -8642,7 +8642,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -8664,7 +8664,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -8681,7 +8681,7 @@
           ["module", "STRING"],
           ["machine", "STRING"],
           ["command_name", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "exttab": [
           ["pkey", "STRING"],
@@ -8774,7 +8774,7 @@
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["tab_count", "STRING"],
-          ["idx_coun", "STRING"],
+          ["idx_cnt", "STRING"],
           ["idx_perc", "STRING"]
         ]
       }
@@ -8784,7 +8784,7 @@
         "opkeylog": [
           ["pkey", "STRING"],
           ["opscriptversion", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["hostname", "STRING"],
           ["dbname", "STRING"],
           ["instance_name", "STRING"],
@@ -8799,7 +8799,7 @@
           ["dbid", "STRING"],
           ["db_name", "STRING"],
           ["cdb", "STRING"],
-          ["db_version", "STRING"],
+          ["dbversion", "STRING"],
           ["dbfullversion", "STRING"],
           ["log_mode", "STRING"],
           ["force_logging", "STRING"],
@@ -9028,7 +9028,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
@@ -9310,7 +9310,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -9329,7 +9329,7 @@
           ["instance_number", "STRING"],
           ["hour", "STRING"],
           ["stat_name", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_value", "STRING"],
           ["mode_value", "STRING"],
           ["median_value", "STRING"],
@@ -9351,7 +9351,7 @@
           ["max_snapid", "STRING"],
           ["min_begin_interval_time", "STRING"],
           ["max_begin_interval_time", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["sum_snaps_diff_secs", "STRING"],
           ["avg_snaps_diff_secs", "STRING"],
           ["median_snaps_diff_secs", "STRING"],
@@ -9368,7 +9368,7 @@
           ["module", "STRING"],
           ["machine", "STRING"],
           ["command_name", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "exttab": [
           ["pkey", "STRING"],
@@ -9461,7 +9461,7 @@
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["tab_count", "STRING"],
-          ["idx_coun", "STRING"],
+          ["idx_cnt", "STRING"],
           ["idx_perc", "STRING"]
         ],
         "dataguard": [
@@ -9628,7 +9628,7 @@
           "       TRIM(dg_database_role)                        dg_database_role,",
           "       TRIM(dg_protection_mode)                      dg_protection_mode,",
           "       TRIM(dg_protection_level)                     dg_protection_level",
-          " FROM   ${project_name}.${dataset}.dbsummary a"
+          " FROM   ${projectname}.${dataset}.dbsummary a"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -9657,13 +9657,13 @@
           "cast(max_snapid as numeric) max_snapid,",
           "trim(min_begin_interval_time) min_begin_interval_time,",
           "trim(max_begin_interval_time) max_begin_interval_time,",
-          "cast(coun as numeric) coun,",
+          "cast(cnt as numeric) cnt,",
           "cast(sum_snaps_diff_secs as numeric) sum_snaps_diff_secs,",
           "cast(avg_snaps_diff_secs as numeric) avg_snaps_diff_secs",
-          " from ${project_name}.${dataset}.awrsnapdetails a",
+          " from ${projectname}.${dataset}.awrsnapdetails a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -9688,8 +9688,8 @@
           "cast(con_id as numeric) con_id,",
           "cast(hour as numeric) hour,",
           "cast(command_type as numeric) command_type,",
-          "cast(counas numeric) coun,",
-          "cast(counas numeric) coun,",
+          "cast(coun as numeric) coun,",
+          "cast(coun as numeric) cnt,",
           "round(cast(replace(avg_buffer_gets,'nan','-1') as numeric),2) avg_buffer_gets,",
           "round(cast(replace(avg_elapsed_time,'nan','-1') as numeric),2) avg_elapsed_time,",
           "round(cast(replace(avg_rows_processed,'nan','-1') as numeric),2) avg_rows_processed,",
@@ -9700,10 +9700,10 @@
           "round(cast(replace(avg_apwait,'nan','-1') as numeric),2) avg_apwait,",
           "round(cast(replace(avg_ccwait,'nan','-1') as numeric),2) avg_ccwait,",
           "round(cast(replace(avg_plsexec_time,'nan','-1') as numeric),2) avg_plsexec_time",
-          " from ${project_name}.${dataset}.awrhistcmdtypes a",
+          " from ${projectname}.${dataset}.awrhistcmdtypes a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -9733,10 +9733,10 @@
           "cast(query_high as numeric) query_high,",
           "cast(archive_low as numeric) archive_low,",
           "cast(archive_high as numeric) archive_high",
-          " from ${project_name}.${dataset}.compressbytype a",
+          " from ${projectname}.${dataset}.compressbytype a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -9762,10 +9762,10 @@
           "cast(cpu_count as numeric) cpu_count,",
           "cast(cpu_core_count as numeric) cpu_core_count,",
           "cast(cpu_socket_count as numeric) cpu_socket_count",
-          " from ${project_name}.${dataset}.cpucoresusage a",
+          " from ${projectname}.${dataset}.cpucoresusage a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -9790,12 +9790,12 @@
           "cast(replace(trim(con_id),'N/A','-1') as numeric) con_id,",
           "trim(owner) owner,",
           "trim(data_type) data_type,",
-          "cast(counas numeric) coun,",
-          "cast(counas numeric) coun",
-          " from ${project_name}.${dataset}.datatypes a",
+          "cast(coun as numeric) coun,",
+          "cast(coun as numeric) cnt",
+          " from ${projectname}.${dataset}.datatypes a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -9825,10 +9825,10 @@
           "replace(trim(first_usage),'nan','') first_usage,",
           "replace(trim(last_usage),'nan','') last_usage,",
           "cast(replace(trim(aux_count),'nan','0') as numeric) aux_count",
-          " from ${project_name}.${dataset}.dbfeatures a",
+          " from ${projectname}.${dataset}.dbfeatures a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -9857,10 +9857,10 @@
           "trim(status) status,",
           "trim(database_status) database_status,",
           "trim(instance_role) instance_role",
-          " from ${project_name}.${dataset}.dbinstances a",
+          " from ${projectname}.${dataset}.dbinstances a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -9893,10 +9893,10 @@
           "cast(nr_lines_w_dbms_sql as numeric) nr_lines_w_dbms_sql,",
           "cast(nr_lines_w_dbms_utl as numeric) nr_lines_w_dbms_utl,",
           "cast(nr_lines_total as numeric) nr_lines_total",
-          " from ${project_name}.${dataset}.sourcecode a",
+          " from ${projectname}.${dataset}.sourcecode a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -9930,10 +9930,10 @@
           "cast(replace(trim(suplog),'nan','0') as numeric) suplog,",
           "cast(replace(trim(num_tables),'nan','0') as numeric) num_tables,",
           "cast(replace(trim(total_cons),'nan','0') as numeric) total_cons",
-          " from ${project_name}.${dataset}.tablesnopk a",
+          " from ${projectname}.${dataset}.tablesnopk a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -9977,10 +9977,10 @@
           "round(cast(nice_time_perc95 as numeric),2) nice_time_perc95,",
           "round(cast(load_perc95 as numeric),2) load_perc95,",
           "round(cast(host_cpu_utilization as numeric),2) host_cpu_utilization",
-          " from ${project_name}.${dataset}.awrhistosstat_rs_metrics a",
+          " from ${projectname}.${dataset}.awrhistosstat_rs_metrics a",
           " where trim(a._pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10051,10 +10051,10 @@
           "        round(cast(nice_time_perc95 as numeric),2) nice_time_perc95,",
           "        round(cast(load_perc95 as numeric),2) load_perc95,",
           "        round(cast(host_cpu_utilization as numeric),2) host_cpu_utilization ",
-          " from ${project_name}.${dataset}.awrhistsysmetrichist_rs_awrhistosstat_rs a",
+          " from ${projectname}.${dataset}.awrhistsysmetrichist_rs_awrhistosstat_rs a",
           " where trim(a._pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10119,10 +10119,10 @@
           "        round(cast(nice_time_perc95 as numeric),2) nice_time_perc95,",
           "        round(cast(load_perc95 as numeric),2) load_perc95,",
           "        round(cast(host_cpu_utilization as numeric),2) host_cpu_utilization ",
-          " from ${project_name}.${dataset}.awrhistsysmetrichist_rs_awrhistosstat_rs a",
+          " from ${projectname}.${dataset}.awrhistsysmetrichist_rs_awrhistosstat_rs a",
           " where trim(a._pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10180,10 +10180,10 @@
           "        round(cast(host_cpu_utilization as numeric),2) host_cpu_utilization,",
           "        round(cast(cpuhost95_cores as numeric),2) cpuhost95_cores,",
           "        round(cast(bmscores95_host as numeric),2) bmscores95_host",
-          " from ${project_name}.${dataset}.dbsizing_facts a",
+          " from ${projectname}.${dataset}.dbsizing_facts a",
           " where trim(a._pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10222,11 +10222,11 @@
           "        round(cast(MIN_VALUE as numeric),2) min_value,",
           "        round(cast(MAX_VALUE as numeric),2) max_value,",
           "        round(cast(SUM_VALUE as numeric),2) sum_value,",
-          "        round(cast(coun as numeric),2) coun_value",
-          " FROM ${project_name}.${dataset}.awrhistosstat a",
+          "        round(cast(CNT as numeric),2) cnt_value",
+          " FROM ${projectname}.${dataset}.awrhistosstat a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10265,11 +10265,11 @@
           "        round(cast(MIN_VALUE as numeric),2) min_value,",
           "        round(cast(MAX_VALUE as numeric),2) max_value,",
           "        round(cast(SUM_VALUE as numeric),2) sum_value,",
-          "        round(cast(coun as numeric),2) coun_value",
-          " FROM ${project_name}.${dataset}.awrhistosstat a",
+          "        round(cast(CNT as numeric),2) cnt_value",
+          " FROM ${projectname}.${dataset}.awrhistosstat a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10306,10 +10306,10 @@
           "        round(cast(MIN_VALUE as numeric),2) min_value,",
           "        round(cast(MAX_VALUE as numeric),2) max_value,",
           "        round(cast(SUM_VALUE as numeric),2) sum_value",
-          " FROM ${project_name}.${dataset}.awrhistsysmetrichist a",
+          " FROM ${projectname}.${dataset}.awrhistsysmetrichist a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10346,10 +10346,10 @@
           "        round(cast(MIN_VALUE as numeric),2) min_value,",
           "        round(cast(MAX_VALUE as numeric),2) max_value,",
           "        round(cast(SUM_VALUE as numeric),2) sum_value",
-          " FROM ${project_name}.${dataset}.awrhistsysmetricsumm a",
+          " FROM ${projectname}.${dataset}.awrhistsysmetricsumm a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10407,10 +10407,10 @@
           "      round(cast(sql_rt_perc95 as numeric),2) sql_rt_perc95,",
           "      round(cast(usercalls_per_sec_perc95 as numeric),2) usercalls_per_sec_perc95,",
           "      round(cast(user_tx_per_sec_perc95 as numeric),2) user_tx_per_sec_perc95,",
-          " FROM ${project_name}.${dataset}.awrhistsysmetrichist_rs a",
+          " FROM ${projectname}.${dataset}.awrhistsysmetrichist_rs a",
           " where trim(a._pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10462,10 +10462,10 @@
           "      round(cast(sql_rt_perc95 as numeric),2) sql_rt_perc95,",
           "      round(cast(usercalls_per_sec_perc95 as numeric),2) usercalls_per_sec_perc95,",
           "      round(cast(user_tx_per_sec_perc95 as numeric),2) user_tx_per_sec_perc95,",
-          " FROM ${project_name}.${dataset}.awrhistsysmetrichist_rs a",
+          " FROM ${projectname}.${dataset}.awrhistsysmetrichist_rs a",
           " where trim(a._pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10496,10 +10496,10 @@
           "        cast(number_subparts as numeric) number_subparts,",
           "        cast(subpart_gb as numeric) subpart_gb,",
           "        cast(total_gb as numeric) total_gb",
-          " FROM ${project_name}.${dataset}.compressbytable a",
+          " FROM ${projectname}.${dataset}.compressbytable a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10536,11 +10536,11 @@
           "        round(cast(MIN_VALUE as numeric),2) min_value,",
           "        round(cast(MAX_VALUE as numeric),2) max_value,",
           "        round(cast(SUM_VALUE as numeric),2) sum_value,",
-          "        round(cast(coun as numeric),2) coun_value",
-          " FROM ${project_name}.${dataset}.dbahistsysstat a",
+          "        round(cast(CNT as numeric),2) cnt_value",
+          " FROM ${projectname}.${dataset}.dbahistsysstat a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10566,7 +10566,7 @@
           "        cast(instance_number as numeric) instance_number,",
           "        cast(hour as numeric) hour,",
           "        trim(stat_name) stat_name,",
-          "        cast(coun as numeric) coun,",
+          "        cast(cnt as numeric) cnt,",
           "        round(cast(AVG_VALUE as numeric),2) avg_value,",
           "        round(cast(MODE_VALUE as numeric),2) mode_value,",
           "        round(cast(MEDIAN_VALUE as numeric),2) median_value,",
@@ -10578,10 +10578,10 @@
           "        round(cast(MIN_VALUE as numeric),2) min_value,",
           "        round(cast(MAX_VALUE as numeric),2) max_value,",
           "        round(cast(SUM_VALUE as numeric),2) sum_value",
-          " FROM ${project_name}.${dataset}.dbahistsystimemodel a",
+          " FROM ${projectname}.${dataset}.dbahistsystimemodel a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10606,10 +10606,10 @@
           "        trim(description) description,",
           "        cast(highwater as numeric) highwater,",
           "        cast(last_value as numeric) last_value",
-          " FROM ${project_name}.${dataset}.dbhwmarkstatistics a",
+          " FROM ${projectname}.${dataset}.dbhwmarkstatistics a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10635,15 +10635,15 @@
           "        trim(owner) owner,",
           "        trim(objecttype) objecttype,",
           "        trim(editionable) editionable,",
-          "        cast(counas numeric) coun,",
+          "        cast(coun as numeric) cnt,",
           "        cast(replace(trim(in_con_id),'N/A','-1') as numeric) in_con_id,",
           "        cast(in_owner as numeric) in_owner,",
           "        cast(in_object_type as numeric) in_object_type,",
           "        cast(replace(trim(in_editionable),'N/A','-1') as numeric) in_editionable",
-          " FROM ${project_name}.${dataset}.dbobjects a",
+          " FROM ${projectname}.${dataset}.dbobjects a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10672,10 +10672,10 @@
           "        trim(value) value,",
           "        trim(default_value) default_value,",
           "        trim(isdefault_value) isdefault_value",
-          " FROM ${project_name}.${dataset}.dbparameters a",
+          " FROM ${projectname}.${dataset}.dbparameters a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10703,10 +10703,10 @@
           "        trim(value) value,",
           "        trim(default_value) default_value,",
           "        trim(isdefault_value) isdefault_value",
-          " FROM ${project_name}.${dataset}.dbparameters a",
+          " FROM ${projectname}.${dataset}.dbparameters a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10739,10 +10739,10 @@
           "        trim(failover_retries) failover_retries,",
           "        trim(failover_delay) failover_delay,",
           "        trim(goal) goal",
-          " FROM ${project_name}.${dataset}.dbservicesinfo a",
+          " FROM ${projectname}.${dataset}.dbservicesinfo a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10772,10 +10772,10 @@
           "        cast(free_gb as numeric) free_gb,",
           "        cast(pct_used as numeric) pct_used,",
           "        trim(graph) graph",
-          " FROM ${project_name}.${dataset}.freespaces a",
+          " FROM ${projectname}.${dataset}.freespaces a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10800,11 +10800,11 @@
           "        cast(con_id as numeric) con_id,",
           "        trim(owner) owner,",
           "        trim(index_type) index_type,",
-          "        cast(counas numeric) coun",
-          " FROM ${project_name}.${dataset}.indexestypes a",
+          "        cast(coun as numeric) cnt",
+          " FROM ${projectname}.${dataset}.indexestypes a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10830,7 +10830,7 @@
           "        trim(machine_size) machine_size,",
           "        trim(processor) processor,",
           "        cast(est_price as numeric) est_price",
-          " FROM ${project_name}.${dataset}.optimusconfig_bms_machinesizes a"
+          " FROM ${projectname}.${dataset}.optimusconfig_bms_machinesizes a"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10854,7 +10854,7 @@
           "select distinct trim(network_to_gcp) network_to_gcp,",
           "        cast(gbytes_per_sec as numeric) gbytes_per_sec,",
           "        cast(mbytes_per_sec as numeric) mbytes_per_sec",
-          " FROM ${project_name}.${dataset}.optimusconfig_network_to_gcp a"
+          " FROM ${projectname}.${dataset}.optimusconfig_network_to_gcp a"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10880,11 +10880,11 @@
           "        trim(owner) owner,",
           "        trim(`partition`) partition_type,",
           "        trim(subpartition) subpartition,",
-          "        cast(counas numeric) coun",
-          " FROM ${project_name}.${dataset}.partsubparttypes a",
+          "        cast(coun as numeric) cnt",
+          " FROM ${projectname}.${dataset}.partsubparttypes a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10911,10 +10911,10 @@
           "        trim(pdb_name) pdb_name,",
           "        trim(status) status,",
           "        trim(logging) logging",
-          " FROM ${project_name}.${dataset}.pdbsinfo a",
+          " FROM ${projectname}.${dataset}.pdbsinfo a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10940,10 +10940,10 @@
           "        trim(name) name,",
           "        trim(open_mode) open_mode,",
           "        cast(total_gb as numeric) total_gb",
-          " FROM ${project_name}.${dataset}.pdbsopenmode a",
+          " FROM ${projectname}.${dataset}.pdbsopenmode a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -10969,10 +10969,10 @@
           "        trim(owner) owner,",
           "        trim(segment_type) segment_type,",
           "        cast(total_gb as numeric) total_gb",
-          " FROM ${project_name}.${dataset}.spacebyownersegtype a",
+          " FROM ${projectname}.${dataset}.spacebyownersegtype a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -11000,10 +11000,10 @@
           "        trim(segment_space_manage) segment_space_managent,",
           "        trim(status) status,",
           "        cast(est_gain_mb as numeric) est_gain_mb",
-          " FROM ${project_name}.${dataset}.spacebytablespace a",
+          " FROM ${projectname}.${dataset}.spacebytablespace a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -11029,10 +11029,10 @@
           "        trim(stat_name) stat_name,",
           "        cast(value1 as numeric) value1,",
           "        cast(value2 as numeric) value2",
-          " FROM ${project_name}.${dataset}.systemstats a",
+          " FROM ${projectname}.${dataset}.systemstats a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -11059,10 +11059,10 @@
           "        trim(segmen_name) segment_name,",
           "        trim(segment_type) segment_type,",
           "        trim(tablespace_name) tablespace_name",
-          " FROM ${project_name}.${dataset}.usrsegatt a",
+          " FROM ${projectname}.${dataset}.usrsegatt a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
-          "      FROM ${project_name}.${dataset}.dbsummary )"
+          "      FROM ${projectname}.${dataset}.dbsummary )"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -11084,10 +11084,10 @@
         "action": "EXECUTE_SQL",
         "expr1": [
           "select 'SYSMETRIC_HISTORY' info_source, a.*",
-          " from ${project_name}.${dataset}.vawrhistsysmetrichist a",
+          " from ${projectname}.${dataset}.vawrhistsysmetrichist a",
           " union all ",
           "select 'SYSMETRIC_SUMMARY', b.*",
-          " from ${project_name}.${dataset}.vawrhistsysmetricsumm b"
+          " from ${projectname}.${dataset}.vawrhistsysmetricsumm b"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -11109,7 +11109,7 @@
         "action": "EXECUTE_SQL",
         "expr1": [
           "select 'SYSMETRIC_HISTORY' info_source, a.*",
-          " from ${project_name}.${dataset}.vawrhistsysmetrichist a"
+          " from ${projectname}.${dataset}.vawrhistsysmetrichist a"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -11240,7 +11240,7 @@
           "         case ",
           "             when stat_name = 'USER_TIME' then perc100_value",
           "         end user_time_perc100",
-          "   from ${project_name}.${dataset}.vawrhistosstat",
+          "   from ${projectname}.${dataset}.vawrhistosstat",
           "   ),",
           "   vosstat_part2 as (",
           "     select pkey, dbid, instance_number, hour,",
@@ -11284,8 +11284,8 @@
           "         round(a.perc90_value / b.avg_snaps_diff_secs,1) perc90_value_per_sec,",
           "         round(a.perc95_value / b.avg_snaps_diff_secs,1) perc95_value_per_sec,",
           "         round(a.perc100_value / b.avg_snaps_diff_secs,1) perc100_value_per_sec",
-          " from ${project_name}.${dataset}.vdbahistsysstat a",
-          " inner join ${project_name}.${dataset}.vawrsnapdetails b",
+          " from ${projectname}.${dataset}.vdbahistsysstat a",
+          " inner join ${projectname}.${dataset}.vawrsnapdetails b",
           " on a.pkey = b.pkey and a.dbid = b.dbid and a.instance_number = b.instance_number and a.hour = b.hour"
         ],
         "if_error": "None",
@@ -11307,13 +11307,13 @@
       "action_details": {
         "action": "EXECUTE_SQL",
         "expr1": [
-          " select * from ${project_name}.${dataset}.vsysmetric",
+          " select * from ${projectname}.${dataset}.vsysmetric",
           " union all ",
           " select info_source, pkey, dbid, instance_number, hour, stat_name metric_name,",
           "         avg_value_per_sec, mode_value_per_sec, median_value_per_sec,",
           "         perc50_value_per_sec, perc75_value_per_sec, perc90_value_per_sec,",
           "         perc95_value_per_sec, perc100_value_per_sec, 0 min_value, 0 max_value, 0 sum_value",
-          " from ${project_name}.${dataset}.vsysstat"
+          " from ${projectname}.${dataset}.vsysstat"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -11720,7 +11720,7 @@
           "        case ",
           "             when metric_name = 'User Rollbacks Per Sec' then perc100_value",
           "         end user_rollbacks_perc100",
-          " from ${project_name}.${dataset}.vsysmetric a ",
+          " from ${projectname}.${dataset}.vsysmetric a ",
           " ),",
           " vsysmetric_part2 as (",
           " select b.info_source, b.pkey, b.dbid, b.instance_number, b.hour, ",
@@ -11789,7 +11789,7 @@
           "        a.phy_write_total_bytes_perc50, a.phy_write_total_bytes_perc75, a.phy_write_total_bytes_perc95, a.phy_write_total_bytes_perc100, 'Physical Write Total Bytes Per Second indicates the number of bytes written by FOREGROUND and BACKGROUND processess - on other words not only user application workload but also ASM Mirroring, ASM Rebalance, RMAN Backups, etc.' phy_write_total_bytes_comments,",
           "        a.phy_write_total_iops_perc50, a.phy_write_total_iops_perc75, a.phy_write_total_iops_perc95, a.phy_write_total_iops_perc100, 'Physical Write Total IO Per Second indicates the number of IOPs written by FOREGROUND and BACKGROUND processess - on other words not only user application workload but also ASM Mirroring, ASM Rebalance, RMAN Backups, etc.' phy_write_total_iops_comments,",
           "        a.phy_writes_direct_lobs_perc50, a.phy_writes_direct_lobs_perc75, a.phy_writes_direct_lobs_perc95, a.phy_writes_direct_lobs_perc100, 'Physical Read Direct Lobs indicates the number of database blocks written by FOREGROUND processess to server Lob related queries - in other words only by user application Lob workload.' phy_write_direct_lobs_comments,",
-          " from ${project_name}.${dataset}.vsysmetric_columnar a",
+          " from ${projectname}.${dataset}.vsysmetric_columnar a",
           " where a.info_source = 'SYSMETRIC_SUMMARY'"
         ],
         "if_error": "None",
@@ -11825,7 +11825,7 @@
           "        a.phy_write_total_bytes_perc50, a.phy_write_total_bytes_perc75, a.phy_write_total_bytes_perc95, a.phy_write_total_bytes_perc100, 'Physical Write Total Bytes Per Second indicates the number of bytes written by FOREGROUND and BACKGROUND processess - on other words not only user application workload but also ASM Mirroring, ASM Rebalance, RMAN Backups, etc.' phy_write_total_bytes_comments,",
           "        a.phy_write_total_iops_perc50, a.phy_write_total_iops_perc75, a.phy_write_total_iops_perc95, a.phy_write_total_iops_perc100, 'Physical Write Total IO Per Second indicates the number of IOPs written by FOREGROUND and BACKGROUND processess - on other words not only user application workload but also ASM Mirroring, ASM Rebalance, RMAN Backups, etc.' phy_write_total_iops_comments,",
           "        a.phy_writes_direct_lobs_perc50, a.phy_writes_direct_lobs_perc75, a.phy_writes_direct_lobs_perc95, a.phy_writes_direct_lobs_perc100, 'Physical Read Direct Lobs indicates the number of database blocks written by FOREGROUND processess to server Lob related queries - in other words only by user application Lob workload.' phy_write_direct_lobs_comments,",
-          " from ${project_name}.${dataset}.vsysmetric_columnar a"
+          " from ${projectname}.${dataset}.vsysmetric_columnar a"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -11863,8 +11863,8 @@
           "        a.host_cpu_usage_time_perc50, a.host_cpu_usage_time_perc75, a.host_cpu_usage_time_perc95, a.host_cpu_usage_time_perc100, 'Source: DBA_HIST*SYSMETRIC*. Host CPU Usage Per Sec is how much TIME the database estimates the host has spent to serve FOREGROUND and BACKGROUND.' host_cpu_usage_time_comments,",
           "        a.host_cpu_utilization_perc50, a.host_cpu_utilization_perc75, a.host_cpu_utilization_perc95, a.host_cpu_utilization_perc100, 'Source: DBA_HIST*SYSMETRIC*. Host CPU Usage Per Sec is the PERCENTAGE the database estimates the host has spent to serve FOREGROUND and BACKGROUND.' host_cpu_utilization_comments,",
           "        a.logical_reads_perc50, a.logical_reads_perc75, a.logical_reads_perc95, a.logical_reads_perc100, 'Logical Reads Per Second is usually the sole responsible for driving CPU consumption.' logical_reads_comments",
-          " from  ${project_name}.${dataset}.vsysmetric_columnar a",
-          " left outer join ${project_name}.${dataset}.vosstat_columnar b",
+          " from  ${projectname}.${dataset}.vsysmetric_columnar a",
+          " left outer join ${projectname}.${dataset}.vosstat_columnar b",
           " on a.pkey = b.pkey and a.dbid = b.dbid and a.instance_number = b.instance_number and a.hour = b.hour",
           " where a.info_source = 'SYSMETRIC_SUMMARY'"
         ],
@@ -11904,8 +11904,8 @@
           "        a.host_cpu_usage_time_perc50, a.host_cpu_usage_time_perc75, a.host_cpu_usage_time_perc95, a.host_cpu_usage_time_perc100, 'Source: DBA_HIST*SYSMETRIC*. Host CPU Usage Per Sec is how much TIME the database estimates the host has spent to serve FOREGROUND and BACKGROUND.' host_cpu_usage_time_comments,",
           "        a.host_cpu_utilization_perc50, a.host_cpu_utilization_perc75, a.host_cpu_utilization_perc95, a.host_cpu_utilization_perc100, 'Source: DBA_HIST*SYSMETRIC*. Host CPU Usage Per Sec is the PERCENTAGE the database estimates the host has spent to serve FOREGROUND and BACKGROUND.' host_cpu_utilization_comments,",
           "        a.logical_reads_perc50, a.logical_reads_perc75, a.logical_reads_perc95, a.logical_reads_perc100, 'Logical Reads Per Second is usually the sole responsible for driving CPU consumption.' logical_reads_comments",
-          " from  ${project_name}.${dataset}.vsysmetric_columnar a",
-          " left outer join ${project_name}.${dataset}.vosstat_columnar b",
+          " from  ${projectname}.${dataset}.vsysmetric_columnar a",
+          " left outer join ${projectname}.${dataset}.vosstat_columnar b",
           " on a.pkey = b.pkey and a.dbid = b.dbid and a.instance_number = b.instance_number and a.hour = b.hour"
         ],
         "if_error": "None",
@@ -11936,8 +11936,8 @@
           "       MAX(CAST(metrics.PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE AS DECIMAL))-MAX(CAST(metrics.FREE_MEMORY_BYTES_CUMULATIVE_VALUE AS DECIMAL)) AS usedmemory,",
           "       MAX(CAST(metrics.HOST_CPU_UTILIZATION AS DECIMAL)) AS maxHOSTCPUUtilizationPercentage,",
           "       AVG(CAST(metrics.HOST_CPU_UTILIZATION AS DECIMAL)) AS avgHOSTCPUUtilizationPercentage,",
-          "  FROM ${project_name}.${dataset}.awrhistosstat_rs_metrics AS metrics",
-          "       INNER JOIN ${project_name}.${dataset}.dbinstances AS dbinstances",
+          "  FROM ${projectname}.${dataset}.awrhistosstat_rs_metrics AS metrics",
+          "       INNER JOIN ${projectname}.${dataset}.dbinstances AS dbinstances",
           "               ON TRIM(metrics._PKEY) = TRIM(dbinstances.pkey)                                  ",
           "              AND CAST(metrics._INSTANCE_NUMBER AS INT64) = CAST(dbinstances.inst_id AS INT64)  ",
           "  GROUP BY dbinstances.pkey,",
@@ -11957,7 +11957,7 @@
           "       dbsummary.db_size_in_use_gb,",
           "       dbsummary.dg_database_role,",
           "       dbsummary.dg_protection_level",
-          "  FROM ${project_name}.${dataset}.dbsummary AS dbsummary",
+          "  FROM ${projectname}.${dataset}.dbsummary AS dbsummary",
           " ),",
           "  ",
           " sourceSizing AS (",
@@ -11995,7 +11995,7 @@
           "       CEIL(MAX(CAST(BMSCORES95_DB AS NUMERIC))) dbCPU,",
           "       ROUND(MAX(CAST(BMSCORES95_HOST AS NUMERIC))) hostCPU,",
           "       ROUND(MAX(CAST(BMSMEMORY_GB_DB AS NUMERIC))) dbMemory",
-          "  FROM ${project_name}.${dataset}.dbsizing_facts",
+          "  FROM ${projectname}.${dataset}.dbsizing_facts",
           " GROUP BY _PKEY,",
           "         _DBID,",
           "         instanceNumber,",
@@ -12023,8 +12023,8 @@
           "       dbsizing_facts._PKEY, dbinstances.host_name, dbsizing_facts._INSTANCE_NUMBER,",
           "       dbsizing_facts.DB_SIZE_ALLOCATED_GB,",
           "       dbsizing_facts.DB_SIZE_IN_USE_GB",
-          "  from ${project_name}.${dataset}.dbsizing_facts AS dbsizing_facts",
-          "       inner join  ${project_name}.${dataset}.dbinstances as dbinstances",
+          "  from ${projectname}.${dataset}.dbsizing_facts AS dbsizing_facts",
+          "       inner join  ${projectname}.${dataset}.dbinstances as dbinstances",
           "               on trim(dbsizing_facts.pkey) = trim(dbinstances.pkey)",
           "              and cast(dbsizing_facts._INSTANCE_NUMBER as INT64) = cast(dbinstances.inst_id as INT64)",
           "              and cast(dbsizing_facts._HOUR as INT64) = 0",
@@ -12180,7 +12180,7 @@
           " CAST(db_size_allocated_gb as numeric) as db_size_allocated_gb,",
           " CAST(db_size_in_use_gb as numeric) as db_size_in_use_gb,",
           " db_long_size_gb,dg_database_role, dg_protection_mode,dg_protection_level",
-          " FROM ${project_name}.${dataset}.dbsummary"
+          " FROM ${projectname}.${dataset}.dbsummary"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -12213,8 +12213,8 @@
           "    MAX(CAST(a.HOST_CPU_UTILIZATION AS DECIMAL)) AS maxHOSTCPUUtilizationPercentage,",
           "    AVG(CAST(a.HOST_CPU_UTILIZATION AS DECIMAL)) AS avgHOSTCPUUtilizationPercentage,",
           "  FROM",
-          "    ${project_name}.${dataset}.awrhistosstat_rs_metrics a,",
-          "    ${project_name}.${dataset}.dbinstances b",
+          "    ${projectname}.${dataset}.awrhistosstat_rs_metrics a,",
+          "    ${projectname}.${dataset}.dbinstances b",
           "  WHERE",
           "    TRIM(a._PKEY)=TRIM(b.pkey)",
           "    AND CAST(a._INSTANCE_NUMBER AS INT64)= CAST(b.inst_id AS INT64)",
@@ -12235,7 +12235,7 @@
           "    a.dg_database_role,",
           "    a.dg_protection_level",
           "  FROM",
-          "    ${project_name}.${dataset}.dbsummary a ),",
+          "    ${projectname}.${dataset}.dbsummary a ),",
           "  sourceSizing AS (",
           "  SELECT",
           "    a.PKEY,",
@@ -12331,7 +12331,7 @@
           " CAST(BMSMEMORY_GB_DB as numeric) as BMSMEMORY_GB_DB,",
           " CAST(BMSMEMORY_GB_HOST as numeric) as BMSMEMORY_GB_HOST",
           " from",
-          " ${project_name}.${dataset}.dbsizing_facts"
+          " ${projectname}.${dataset}.dbsizing_facts"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -12356,7 +12356,7 @@
           " pkey, con_id, name, current_usage,",
           " CAST(detected_usage as numeric) as detected_usage,",
           " total_samples, first_usage, last_usage, aux_count",
-          " FROM ${project_name}.${dataset}.dbfeatures"
+          " FROM ${projectname}.${dataset}.dbfeatures"
         ],
         "if_error": "None",
         "type": "CREATE VIEW",
@@ -12383,7 +12383,7 @@
           " max(CAST(IOMBPS_PERC95 as numeric)) as DB_IOMBPS,",
           " max(cast(BMSMEMORY_GB_HOST as numeric)) as DB_MEMORY,",
           " max(CAST(DB_SIZE_ALLOCATED_GB as numeric)) as DB_STORAGE",
-          " from  ${project_name}.${dataset}.dbsizing_facts",
+          " from  ${projectname}.${dataset}.dbsizing_facts",
           " where db_name is not null",
           " group by _PKEY, db_name,_INSTANCE_NUMBER"
         ],
@@ -12418,7 +12418,7 @@
           "        sum(phy_read_total_iops_perc95) + sum(phy_write_total_iops_perc95) iops_total_perc95,",
           "        sum(phy_read_total_iops_perc100) + sum(phy_write_total_iops_perc100) iops_total_perc100,",
           "        replace(max(phy_read_total_iops_comments),'Read','Read+Write') iops_total_comments,",
-          " from ${project_name}.${dataset}.vsysmetric_io_facts",
+          " from ${projectname}.${dataset}.vsysmetric_io_facts",
           " group by info_source, pkey, dbid, hour",
           " )",
           " select info_source, pkey, dbid,",
@@ -12462,7 +12462,7 @@
           "        sum(physical_read_total_io_requests_perc75) + sum(physical_write_total_io_req_perc75) iops_total_perc75,",
           "        sum(physical_read_total_io_requests_perc95) + sum(physical_write_total_io_req_perc95) iops_total_perc95,",
           "        sum(physical_read_total_io_requests_perc100) + sum(physical_write_total_io_req_perc100) iops_total_perc100",
-          " from ${project_name}.${dataset}.vsysstat_columnar",
+          " from ${projectname}.${dataset}.vsysstat_columnar",
           " group by info_source, pkey, dbid, hour",
           " )",
           " select info_source, pkey, dbid,",
@@ -12894,7 +12894,7 @@
           "         case ",
           "             when stat_name = 'user rollbacks' then perc100_value_per_sec",
           "         end user_rollbacks_perc100",
-          " from ${project_name}.${dataset}.vsysstat a",
+          " from ${projectname}.${dataset}.vsysstat a",
           " ),",
           " vsysstat_part2 as (",
           "     select b.info_source, b.pkey, b.dbid, b.instance_number, b.hour,",
@@ -12936,7 +12936,7 @@
           " )",
           " select d.dbversion, 'All Metrics are Per Second' metric_unit, c.* ",
           " from vsysstat_part2 c",
-          " inner join ${project_name}.${dataset}.vdbsummary d",
+          " inner join ${projectname}.${dataset}.vdbsummary d",
           " on c.pkey = d.pkey and c.dbid = d.dbid"
         ],
         "if_error": "None",
