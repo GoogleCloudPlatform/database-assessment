@@ -44,9 +44,9 @@ EOF
 
 function cleanupOpOutput(){
 echo "Preparing files for compression."
-sed -i -r -f ${BASE_DIR}/db_assessment/dbSQLCollector/op_sed_cleanup.sed ${OP_OUTPUT_DIR}/*log
-sed -i -r '1i\ ' ${OP_OUTPUT_DIR}/*log
-grep -E 'SP2-|ORA-' ${OP_OUTPUT_DIR}/opdb__*log > ${OP_OUTPUT_DIR}/errors.log
+sed -i -r -f ${BASE_DIR}/db_assessment/dbSQLCollector/op_sed_cleanup.sed ${OP_OUTPUT_DIR}/*csv
+sed -i -r '1i\ ' ${OP_OUTPUT_DIR}/*csv
+grep -E 'SP2-|ORA-' ${OP_OUTPUT_DIR}/opdb__*csv > ${OP_OUTPUT_DIR}/errors.log
 }
 
 function compressOpFiles(){
@@ -54,7 +54,7 @@ V_FILE_TAG=$1
 echo ""
 echo "Archiving output files"
 CURRENT_WORKING_DIR=$(pwd)
-cd ${OP_OUTPUT_DIR}; tar czf opdb__${V_FILE_TAG}.tgz --remove-files *log
+cd ${OP_OUTPUT_DIR}; tar czf opdb__${V_FILE_TAG}.tgz --remove-files *csv *.log
 cd ${CURRENT_WORKING_DIR}
 echo ""
 echo "Step completed."
@@ -89,7 +89,7 @@ if [ $retval -eq 0 ]; then
     exit 255
   else
     echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
-    V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).log"; export V_TAG
+    V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
     executeOP ${connectString}
     if [ $retval -ne 0 ]; then
       echo "Optimus Prime extract reported an error.  Please check the error log in directory ${OP_OUTPUT_DIR}"
@@ -102,7 +102,7 @@ if [ $retval -eq 0 ]; then
       echo "Exiting...."
       exit 255
     fi
-    compressOpFiles $(echo ${V_TAG} | sed 's/.log//g')
+    compressOpFiles $(echo ${V_TAG} | sed 's/.csv//g')
     if [ $retval -ne 0 ]; then
       echo "Optimus Prime data file archive encountered a problem.  Exiting...."
       exit 255
@@ -110,8 +110,10 @@ if [ $retval -eq 0 ]; then
     echo ""
     echo "==================================================================================="
     echo "Optimus Prime Database Assessment Collector completed."
+    echo "Data collection located at ${OP_OUTPUT_DIR}/opdb__${V_FILE_TAG}.tgz"
     echo "==================================================================================="
     echo ""
+    exit 0
   fi
 else
   echo "Error executing SQL*Plus"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-set -eo pipefail 
+set -eo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BASE_DIR="${SCRIPT_DIR}/.."
+BASE_DIR=$(dirname ${SCRIPT_DIR});
 export VENV_DIR="${SCRIPT_DIR}/../.venv"
 export VENV_EXISTS=$(cd $SCRIPT_DIR && python3 -c "if __import__('pathlib').Path('../.venv/bin/activate').exists(): print('yes')")
 

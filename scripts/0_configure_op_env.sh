@@ -5,42 +5,41 @@
 echo "Verifying environment before configuring Optimus Prime"
 
 # Fail if these variables are not set
-if [ "${PROJECTNAME}" == "" ]; then
-    echo "Please ensure PROJECTNAME is set properly."
-    return
+if [ "${PROJECTNAME}" == "" ] || [ -z "${PROJECTNAME}" ]; then
+    echo "Please ensure PROJECTNAME environment variable is set properly."
+    exit 255
 fi
-if [ "${DSNAME}" == "" ]; then
-    echo "Please ensure DSNAME is set properly."
-    return
+if [ "${DSNAME}" == "" ] || [ -z "${DSNAME}" ]; then
+    echo "Please ensure DSNAME environment variable is set properly."
+    exit 255
 fi
-if [ "${DSLOC}" == "" ]; then
-    echo "Please ensure DSLOC is set properly."
-    return
+if [ "${DSLOC}" == "" ] || [ -z "${DSLOC}" ]; then
+    echo "Please ensure DSLOC environment variable is set properly."
+    exit 255
 fi
-if [ "${OP_LOG_DIR}" == "" ]; then
-    echo "Please ensure OP_LOG_DIR is set properly."
-    return
+if [ "${OPOUTPUTDIR}" == "" ] || [ -z "${OPOUTPUTDIR}" ]; then
+    echo "Please ensure OPOUTPUTDIR environment variable is set properly."
+    exit 255
 fi
 
 
 # Default these variables if they are not set.
-if [ "${REPORTNAME}" == "" ]; then
+if [ "${REPORTNAME}" == "" ] || [ -z "${REPORTNAME}" ]; then
     export REPORTNAME="OptimusPrime%20Dashboard%20${DSNAME}"
     echo "REPORTNAME not set, defaulting to ${REPORTNAME}."
 fi
-if [ "${COLSEP}" == "" ]; then
+if [ "${COLSEP}" == "" ] || [ -z "${COLSEP}" ]; then
     export COLSEP='|'
     echo "COLSEP not set, defaulting to ${COLSEP}"
 fi
 
-
 export OP_WORKING_DIR=$(pwd)
 
 echo
-echo Environment set to load from ${OP_LOG_DIR} into ${PROJECTNAME}.${DSNAME}
+echo Environment set to load from ${OPOUTPUTDIR} into ${PROJECTNAME}.${DSNAME}
 
-if [[  -s ${OP_LOG_DIR}/errors*.log ]] 
+if [[  -s ${OPOUTPUTDIR}/errors*.log ]] 
 then
-	echo Errors found in data to be loaded.   Please review before continuing.
-	cat ${OP_LOG_DIR}/errors*.log
+    echo Errors found in data to be loaded.   Please review before continuing.
+    cat ${OPOUTPUTDIR}/errors*.log
 fi
