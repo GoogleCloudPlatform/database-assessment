@@ -11,8 +11,6 @@ ORACLE_PATH=${BASE_DIR}/db_assessment/dbSQLCollector; export ORACLE_PATH
 ### Import logging & helper functions
 #############################################################################
 
-#source ${SCRIPT_DIR}/_script_bootstrap.sh
-
 function checkVersion(){
 connectString=$1
 OpVersion=$(cat ${BASE_DIR}/version | head -1)
@@ -81,12 +79,13 @@ retval=$?
 
 echo ""
 echo "==================================================================================="
-echo "Optimus Prime Database Assessment Collector {{ script_version}}"
+echo "Optimus Prime Database Assessment Collector Version $(cat ${BASE_DIR}/version | head -1)"
 echo "==================================================================================="
 
 if [ $retval -eq 0 ]; then
   if [ "$(echo "${sqlcmd_result}" | grep -E '(ORA-|SP2-)')" != "" ]; then
     echo "Database version check returned error ${sqlcmd_result}"
+    echo "Exiting...."
     exit 255
   else
     echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
