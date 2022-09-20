@@ -479,8 +479,8 @@ def adddetails(fileName, args, params, tableHeader):
         names=tableHeader,
         index_col=False,
     )
-    if params["importcomment"]:
-        df["CMNT"] = params["importcomment"]
+    if params["import_comment"]:
+        df["CMNT"] = params["import_comment"]
     df["LOADTOBQDATE"] = ct
     df["JOBPARAMS"] = str(vars(args))
     df.to_csv(fileName, index=False, sep=str(args.sep))
