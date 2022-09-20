@@ -8790,9 +8790,7 @@
           ["instance_name", "STRING"],
           ["collection_time", "STRING"],
           ["dbid", "STRING"],
-          ["cmnt", "STRING"],
-          ["loadtobqdate", "STRING"],
-          ["jobparams", "STRING"]
+          ["cmnt", "STRING"]
         ],
         "dbsummary": [
           ["pkey", "STRING"],
