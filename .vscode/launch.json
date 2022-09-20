@@ -17,7 +17,7 @@
         "--dataset",
         "op_api_testing",
         "--files-location",
-        "./sample/datacollection/sample190_3.0.2.log",
+        "${workspaceFolder}/sample/datacollection/sample190_3.0.2.log",
         "--sep",
         "|"
       ],
