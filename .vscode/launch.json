@@ -15,11 +15,12 @@
         "--project-name",
         "optimus-prime-ci",
         "--dataset",
-        "op_api_testing",
+        "op_api_testing_v3",
         "--files-location",
         "${workspaceFolder}/sample/datacollection/sample190_3.0.2.log",
         "--sep",
-        "|"
+        "|",
+        "--delete-dataset"
       ],
       "justMyCode": true,
       "console": "integratedTerminal"
