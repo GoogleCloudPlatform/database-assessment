@@ -114,7 +114,7 @@ def consolidate_collection(args, transformersTablesSchema):
 
                     continue
 
-                # Writting up the line from linesToBeConsolidated into fileConsolidated
+                # Writing up the line from linesToBeConsolidated into fileConsolidated
                 fileConsolidated.write(line)
 
             # Closing file handle
@@ -485,7 +485,7 @@ def adddetails(fileName, args, params, tableHeader):
     df["JOBPARAMS"] = str(vars(args))
     df.to_csv(fileName, index=False, sep=str(args.sep))
     line = ""
-    with open(fileName, "r+") as f:
+    with open(fileName, "r+", encoding="UTF-8") as f:
         content = f.read()
         f.seek(0, 0)
         f.write(line.rstrip("\r\n") + "\n" + content)
