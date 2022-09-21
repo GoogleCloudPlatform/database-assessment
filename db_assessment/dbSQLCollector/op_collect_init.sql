@@ -19,14 +19,7 @@ Please ensure you have proper licensing. For more information consult Oracle Sup
 */
 
 
-/*
-
-Version: 2.0.6
-Date: 2022-06-15
-
-*/
-
-define version = '2.0.6'
+define version = '&1'
 define dtrange = 30
 define colspr = '|'
 
@@ -40,7 +33,6 @@ set underline off
 set verify off
 set head on
 set scan on
-/*set term on */
 set pause off
 set wrap on
 set echo off
