@@ -22,7 +22,7 @@ fi
 
 function checkVersion(){
 connectString=$1
-OpVersion=$(cat ${BASE_DIR}/version | head -1)
+OpVersion=$2
 
 if ! [ -x "$(command -v sqlplus)" ]; then
   error 'could not find sqlplus command.'
@@ -39,6 +39,7 @@ EOF
 
 function executeOP(){
 connectString=$1
+OpVersion=$2
 
 if ! [ -x "$(command -v sqlplus)" ]; then
   error 'could not find sqlplus command.'
@@ -46,7 +47,7 @@ fi
 
 sqlplus -s /nolog << EOF
 connect ${connectString}
-@${BASE_DIR}/db_assessment/dbSQLCollector/op_collect.sql
+@${BASE_DIR}/db_assessment/dbSQLCollector/op_collect.sql ${OpVersion}
 exit;
 EOF
 }
@@ -81,16 +82,23 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
+if [ ! -f ${BASE_DIR}/version ]; then
+  echo "${BASE_DIR}/version file not found.  Please correct and try again"
+  exit 1
+else
+  OpVersion=$(cat ${BASE_DIR}/version | head -1)
+fi
+
 # MAIN
 #############################################################################
 
 connectString=$1
-sqlcmd_result=$(checkVersion "${connectString}")
+sqlcmd_result=$(checkVersion "${connectString}" "${OpVersion}")
 retval=$?
 
 echo ""
 echo "==================================================================================="
-echo "Optimus Prime Database Assessment Collector Version $(cat ${BASE_DIR}/version | head -1)"
+echo "Optimus Prime Database Assessment Collector Version ${OpVersion}"
 echo "==================================================================================="
 
 if [ $retval -eq 0 ]; then
@@ -101,7 +109,7 @@ if [ $retval -eq 0 ]; then
   else
     echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    executeOP ${connectString}
+    executeOP ${connectString} ${OpVersion}
     if [ $retval -ne 0 ]; then
       echo "Optimus Prime extract reported an error.  Please check the error log in directory ${OP_OUTPUT_DIR}"
       echo "Exiting...."

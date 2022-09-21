@@ -70,7 +70,7 @@ reportId=${REPORTID}
 echo ""
 echo "The Optimus Prime dashboard report ${REPORTNAME} is available at the link below"
 echo ""
-echo "${URL_TEMPLATE}" | sed 's/\r//g;s/\n//g;s/ //g'
+echo ${URL_TEMPLATE} | sed 's/\r//g;s/\n//g;s/ //g'
 echo ""
 echo "Click the link to view the report."
 echo "To create a persistent copy of this report:"
