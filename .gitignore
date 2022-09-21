@@ -141,7 +141,9 @@ dmypy.json
 # App specifics
 invoke.yml
 sample/datacollection/*/*.log
+sample/datacollection/*/*.csv
 sample/datacollection/*.log
+sample/datacollection/*.csv
 !sample/datacollection/*.tar.gz
 .env
 op-venv
@@ -150,3 +152,5 @@ log/*
 op_output
 db_assessment/op_etl*.sql
 *.csv
+tmp
+tmp/*
