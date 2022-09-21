@@ -25,7 +25,8 @@ connectString=$1
 OpVersion=$2
 
 if ! [ -x "$(command -v sqlplus)" ]; then
-  error 'could not find sqlplus command.'
+  echo "Could not find sqlplus command. Source in environment and try again"
+  echo "Exiting..."
 fi
 
 sqlplus -s /nolog << EOF
@@ -42,7 +43,8 @@ connectString=$1
 OpVersion=$2
 
 if ! [ -x "$(command -v sqlplus)" ]; then
-  error 'could not find sqlplus command.'
+  echo "Could not find sqlplus command. Source in environment and try again"
+  echo "Exiting..."
 fi
 
 sqlplus -s /nolog << EOF
@@ -56,7 +58,15 @@ function cleanupOpOutput(){
 V_FILE_TAG=$1
 echo "Preparing files for compression."
 sed -i -r -f ${BASE_DIR}/db_assessment/dbSQLCollector/op_sed_cleanup.sed ${OP_OUTPUT_DIR}/*csv
+retval=$?
+if [ $retval -ne 0 ]; then
+  echo "Error processing ${BASE_DIR}/db_assessment/dbSQLCollector/op_sed_cleanup.sed.  Exiting..."
+fi
 sed -i -r '1i\ ' ${OP_OUTPUT_DIR}/*csv
+retval=$?
+if [ $retval -ne 0 ]; then
+  echo "Error adding newline to top of Optimus Prime extract files.  Exiting..."
+fi
 grep -E 'SP2-|ORA-' ${OP_OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
 }
 
