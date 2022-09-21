@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import json
+import logging
 import os
 import warnings
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
@@ -27,6 +27,8 @@ if TYPE_CHECKING:
     from .api import AppConfig
 warnings.simplefilter("error", pd.errors.ParserWarning)
 warnings.simplefilter(action="ignore", category=FutureWarning)
+
+logger = logging.getLogger()
 
 
 def coerce_data_type(
@@ -906,14 +908,13 @@ def getAllReShapedDataframes(
                                 transformersResults[str(tableName)],
                             )
                             dataframes[reshapedTableName.upper()] = df
-                        except:
+                        except Exception as e:
                             df = None
-                            print(
-                                "WARNING: Optimus Prime could not ReShape the table {} due to a fatal error.\n".format(
-                                    tableName
-                                )
+                            logger.warning(
+                                "WARNING: Optimus Prime could not ReShape the table %s due to a fatal error.",
+                                tableName,
                             )
-
+                            logger.exception(e)
                         # collectionKey already contains .csv
                         fileName = (
                             str(getattr(args, "files_location"))
