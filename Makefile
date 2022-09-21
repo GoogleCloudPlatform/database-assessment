@@ -29,7 +29,14 @@ install:          ## Install the project in dev mode.
 	@if [ "$(VENV_EXISTS)" ]; then echo "Removing existing environment"; fi
 	@if [ "$(VENV_EXISTS)" ]; then rm -Rf .venv; fi
 	python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip
+	${ENV_PREFIX}pip install -r requirements.txt
+
+.PHONY: install-dev
+install-dev:
+	@if [ "$(VENV_EXISTS)" ]; then echo "Found existing environment"; fi
+	@if [ ! "$(VENV_EXISTS)" ]; then python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip; fi 
 	${ENV_PREFIX}pip install -r requirements/dev.txt
+	${ENV_PREFIX}pip install -r requirements/lint.txt
 
 .PHONY: clean
 clean:       ## remove all build, testing, and static documentation files
