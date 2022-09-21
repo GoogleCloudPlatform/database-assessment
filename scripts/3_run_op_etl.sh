@@ -9,7 +9,7 @@ TMP_DIR=${BASE_DIR}/tmp
 LOG_DIR=${BASE_DIR}/log
 
 if [ ! -d ${TMP_DIR} ]; then
-   mkdir -p ${LOG_DIR}
+   mkdir -p ${TMP_DIR}
 fi
 if [ ! -d ${LOG_DIR} ]; then
    mkdir -p ${LOG_DIR}
