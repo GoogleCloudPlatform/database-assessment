@@ -1,5 +1,3 @@
--r base.in
--r dev.in
 coverage[toml]
 flake8
 flake8-type-checking
@@ -30,4 +28,5 @@ pylint
 pyupgrade
 bandit
 bump2version
+mypy
 pip-tools

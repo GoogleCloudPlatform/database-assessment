@@ -139,7 +139,7 @@
           ["name", "STRING"],
           ["value", "STRING"],
           ["default_value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -748,7 +748,7 @@
           ["inst_id", "STRING"],
           ["name", "STRING"],
           ["value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -1180,7 +1180,7 @@
           ["name", "STRING"],
           ["value", "STRING"],
           ["default_value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -1795,7 +1795,7 @@
           ["inst_id", "STRING"],
           ["name", "STRING"],
           ["value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -2239,7 +2239,7 @@
           ["name", "STRING"],
           ["value", "STRING"],
           ["default_value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -2855,7 +2855,7 @@
           ["inst_id", "STRING"],
           ["name", "STRING"],
           ["value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -3300,7 +3300,7 @@
           ["name", "STRING"],
           ["value", "STRING"],
           ["default_value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -3949,7 +3949,7 @@
           ["inst_id", "STRING"],
           ["name", "STRING"],
           ["value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -4426,7 +4426,7 @@
           ["name", "STRING"],
           ["value", "STRING"],
           ["default_value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -5075,7 +5075,7 @@
           ["inst_id", "STRING"],
           ["name", "STRING"],
           ["value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -5552,7 +5552,7 @@
           ["name", "STRING"],
           ["value", "STRING"],
           ["default_value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -6201,7 +6201,7 @@
           ["inst_id", "STRING"],
           ["name", "STRING"],
           ["value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -6691,7 +6691,7 @@
           ["name", "STRING"],
           ["value", "STRING"],
           ["default_value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -7388,7 +7388,7 @@
           ["name", "STRING"],
           ["value", "STRING"],
           ["default_value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -8181,7 +8181,7 @@
           ["name", "STRING"],
           ["value", "STRING"],
           ["default_value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -8868,7 +8868,7 @@
           ["name", "STRING"],
           ["value", "STRING"],
           ["default_value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -9573,7 +9573,7 @@
           ["name", "STRING"],
           ["value", "STRING"],
           ["default_value", "STRING"],
-          ["isdefault_value", "STRING"]
+          ["isdefault", "STRING"]
         ],
         "dbfeatures": [
           ["pkey", "STRING"],
@@ -11376,7 +11376,7 @@
           "        trim(name) name,",
           "        trim(value) value,",
           "        trim(default_value) default_value,",
-          "        trim(isdefault_value) isdefault_value",
+          "        trim(isdefault) isdefault",
           " FROM ${project_name}.${dataset}.dbparameters a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
@@ -11407,7 +11407,7 @@
           "        trim(name) name,",
           "        trim(value) value,",
           "        trim(default_value) default_value,",
-          "        trim(isdefault_value) isdefault_value",
+          "        trim(isdefault) isdefault",
           " FROM ${project_name}.${dataset}.dbparameters a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",

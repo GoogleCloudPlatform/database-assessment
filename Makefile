@@ -30,6 +30,8 @@ install:          ## Install the project in dev mode.
 	@if [ "$(VENV_EXISTS)" ]; then rm -Rf .venv; fi
 	python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip
 	${ENV_PREFIX}pip install -r requirements.txt
+	${ENV_PREFIX}pip install .
+
 
 .PHONY: install-dev
 install-dev:
@@ -38,6 +40,7 @@ install-dev:
 	python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip
 	${ENV_PREFIX}pip install -r requirements/dev.txt
 	${ENV_PREFIX}pip install -r requirements/lint.txt
+	${ENV_PREFIX}pip install -e .
 
 .PHONY: clean
 clean:       ## remove all build, testing, and static documentation files
