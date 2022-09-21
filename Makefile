@@ -20,9 +20,9 @@ help:  ## Display this help
 
 .PHONY: upgrade-dependencies
 upgrade-dependencies:          ## Upgrade all dependencies to the latest stable versions
-	pip-compile -r requirements/base.in > requirements/base.txt
-	pip-compile -r requirements/dev.in > requirements/dev.txt
-	pip-compile -r requirements/lint.in > requirements/lint.txt
+	${ENV_PREFIX}pip-compile -r requirements/base.in > requirements/base.txt
+	${ENV_PREFIX}pip-compile -r requirements/dev.in > requirements/dev.txt
+	${ENV_PREFIX}pip-compile -r requirements/lint.in > requirements/lint.txt
 
 .PHONY: install
 install:          ## Install the project in dev mode.
@@ -63,9 +63,9 @@ clean:       ## remove all build, testing, and static documentation files
 
 .PHONY: gen-docs
 gen-docs:       ## generate HTML documentation
-	mkdocs build
+	${ENV_PREFIX}mkdocs build
 
 .PHONY: docs
 docs:       ## generate HTML documentation and serve it to the browser
-	mkdocs build
-	mkdocs serve
+	${ENV_PREFIX}mkdocs build
+	${ENV_PREFIX}mkdocs serve
