@@ -25,10 +25,10 @@ read -a mainversion <<< "$version"
 IFS=`echo ${IFS_bk}`
 dbVersion=$(( mainversion[0] + 0 ))
 
-full_path="$(dirname $(realpath $0))"
-BASE_DIR=$(/usr/bin/pwd -P); export BASE_DIR
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+BASE_DIR=${SCRIPT_DIR}/../..; export BASE_DIR
 OLD_ORACLE_PATH=${ORACLE_PATH}
-ORACLE_PATH=${full_path}; export ORACLE_PATH
+ORACLE_PATH=${SCRIPT_DIR}; export ORACLE_PATH
 SQL_SCRIPT="op_collect.sql"
 sqlplus -s ${connectString} @${SQL_SCRIPT}
 if [ ! -z "$OLD_ORACLE_PATH" ]; then
