@@ -40,6 +40,7 @@ set appinfo 'OPTIMUS_PRIME'
 set colsep '|'
 set numwidth 48
 set timing off
+set time off
 
 whenever sqlerror continue
 whenever oserror continue
