@@ -39,6 +39,7 @@ set echo off
 set appinfo 'OPTIMUS_PRIME'
 set colsep '|'
 set numwidth 48
+set timing off
 
 whenever sqlerror continue
 whenever oserror continue
