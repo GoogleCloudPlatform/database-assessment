@@ -33,7 +33,7 @@ def test(ctx, base_url=None, local=False):
         base_url = get_beta_url(ctx)
     logger.info(base_url)
     id_token = authenticate(ctx, local)
-    cmd = f"python3 -m db_assessment.optimusprime -remote --files-location ./sample/datacollection/ --dataset {ctx.dataset} --project {ctx.project} --collection-id {ctx.collection_id} --remote-url {base_url}"
+    cmd = f"python3 -m db_assessment.optimusprime --remote --files-location ./sample/datacollection/ --dataset {ctx.dataset} --project {ctx.project} --collection-id {ctx.collection_id} --remote-url {base_url}"
     logger.info(cmd)
     ctx.run(cmd, env={"ID_TOKEN": id_token})
 
