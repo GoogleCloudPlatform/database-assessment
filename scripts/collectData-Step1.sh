@@ -112,14 +112,14 @@ echo "Optimus Prime Database Assessment Collector Version ${OpVersion}"
 echo "==================================================================================="
 
 if [ $retval -eq 0 ]; then
-  if [ "$(echo "${sqlcmd_result}" | grep -E '(ORA-|SP2-)')" != "" ]; then
+  if [ "$(echo ${sqlcmd_result} | grep -E '(ORA-|SP2-)')" != "" ]; then
     echo "Database version check returned error ${sqlcmd_result}"
     echo "Exiting...."
     exit 255
   else
     echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    executeOP ${connectString} ${OpVersion}
+    executeOP "${connectString}" ${OpVersion}
     if [ $retval -ne 0 ]; then
       echo "Optimus Prime extract reported an error.  Please check the error log in directory ${OP_OUTPUT_DIR}"
       echo "Exiting...."
