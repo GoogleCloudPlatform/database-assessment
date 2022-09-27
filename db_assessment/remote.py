@@ -58,7 +58,7 @@ def run_remote(args) -> None:
         with open(filename, "r", encoding="UTF-8") as content:
             files = {filename: content}
     result = requests.post(
-        f"{args.remoteurl}/api/loadAssessment",
+        f"{args.remote_url}/api/loadAssessment",
         files=files,
         data=config,
         headers=headers,
