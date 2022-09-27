@@ -18,7 +18,7 @@ fi
 
 set -eo pipefail
 
-source ${SCRIPT_DIR}/0_configure_op_env.sh
+source ${SCRIPT_DIR}/_configure_op_env.sh
 
 # ReportID is taken from the DataStudio template upon which the new report will be created.
 REPORTID=ed2d87f1-e037-4e65-8ef0-4439a3e62aa3

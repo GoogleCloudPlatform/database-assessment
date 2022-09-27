@@ -15,7 +15,7 @@ if [ ! -d ${LOG_DIR} ]; then
    mkdir -p ${LOG_DIR}
 fi
 
-source ${SCRIPT_DIR}/0_configure_op_env.sh
+source ${SCRIPT_DIR}/_configure_op_env.sh
 
 sed "s/projectID.dataset/${PROJECTNAME}.${DSNAME}/g" ${BASE_DIR}/db_assessment/op_etl_template.sql > ${TMP_DIR}/op_etl_${DSNAME}.sql
 retval=$?
