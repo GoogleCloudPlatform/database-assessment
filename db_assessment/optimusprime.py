@@ -23,6 +23,7 @@ from typing import TYPE_CHECKING, Any, Dict
 import pandas as pd
 
 from db_assessment import import_db_assessment, rules_engine
+from db_assessment.remote import run_remote
 
 logger = logging.getLogger()
 logger.setLevel(level=logging.INFO)
