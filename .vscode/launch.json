@@ -17,7 +17,7 @@
         "--dataset",
         "op_api_testing_v3",
         "--files-location",
-        "${workspaceFolder}/sample/datacollection/opdb__210_3.0.3_317593e95c22_XE_XE_092022202249",
+        "${workspaceFolder}/sample/datacollection",
         "--sep",
         "|",
         "--delete-dataset"
