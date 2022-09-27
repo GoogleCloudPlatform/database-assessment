@@ -17,7 +17,7 @@ if [ ! -d ${LOG_DIR} ]; then
    mkdir -p ${LOG_DIR}
 fi
 
-source ${SCRIPT_DIR}/0_configure_op_env.sh
+source ${SCRIPT_DIR}/_configure_op_env.sh
 
 if [ $VENV_EXISTS ]; then 
    echo "Existing environment found"

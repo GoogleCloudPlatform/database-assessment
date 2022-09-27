@@ -192,7 +192,7 @@ cd data
 
 2.1.3 Configure automation
 
-The automated process is configured via setting several environment variables and then executing the file <workingdirectory>/oracle-database-assessment/db_assessment/0_configure_op_env.sh.
+The automated load process is configured via setting several environment variables and then executing a set of scripts in the <workingdirectory>/oracle-database-assessment/scripts/ directory.
 
 Set these environment variables prior to starting the data load process:
 
@@ -232,19 +232,18 @@ export COLSEP='|'
 
 2.1.4 Execute the load scripts
 
-The load scripts expect to be run from the <workingdirectory>/oracle-database-assessment directory. Change to this directory and run the following commands in numeric order. Check output of each for errors before continuing to the next.
+The load scripts expect to be run from the <workingdirectory>/oracle-database-assessment/scripts directory. Change to this directory and run the following commands in numeric order. Check output of each for errors before continuing to the next.
 
 ```shell
-. ./db_assessment/0_configure_op_env.sh
-./db_assessment/1_activate_op.sh
-./db_assessment/2_load_op.sh
-./db_assessment/3_run_op_etl.sh
-./db_assessment/4_gen_op_report_url.sh
+./scripts/1_activate_op.sh
+./scripts/2_load_op.sh
+./scripts/3_run_op_etl.sh
+./scripts/4_gen_op_report_url.sh
 ```
 
 The function of each script is as follows.
 
-- 0_configure_op_env.sh - Defines environment variables that are used in the other scripts.
+- _configure_op_env.sh - Defines environment variables that are used in the other scripts.  This script is executed only by the other scripts in the loading process.
 - 1_activate_op.sh - Installs necessary Python support modules and activates the Python virtual environment for Optimus Prime.
 - 2_load_op.sh - Loads the client data files into the base Optimus Prime tables in the requested data set.
 - 3_run_op_etl.sh - Installs and runs Big Query procedures that create additional views and tables to support the Optimus Prime dashboard.
