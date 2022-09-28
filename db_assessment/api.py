@@ -16,16 +16,16 @@ import logging
 import os
 from dataclasses import dataclass
 from tempfile import TemporaryDirectory
-from typing import Optional
+from typing import Literal, Optional
 
 from flask import Flask, request
-from typing_extensions import Literal
 from werkzeug.utils import secure_filename
 
 from db_assessment.optimusprime import run_main
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 @dataclass
