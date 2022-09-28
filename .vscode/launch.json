@@ -24,6 +24,23 @@
       ],
       "justMyCode": true,
       "console": "integratedTerminal"
+    },
+    {
+      "name": "OP: Flask App",
+      "type": "python",
+      "request": "launch",
+      "module": "gunicorn",
+      "args": [
+        "--bind",
+        "0.0.0.0:8080",
+        "--timeout",
+        "0",
+        "--workers",
+        "1",
+        "db_assessment.api:app"
+      ],
+      "justMyCode": true,
+      "console": "integratedTerminal"
     }
   ]
 }
