@@ -51,7 +51,7 @@ HOS echo define v_tag=$V_TAG >> /tmp/dirs.sql
 @/tmp/dirs.sql
 select '&outputdir' as outputdir from dual;
 select '&seddir' as seddir from dual;
-select '&vTag' as v_tag from dual;
+select '&v_tag' as v_tag from dual;
 HOS rm -rf /tmp/dirs.sql
 
 column instnc new_value v_inst noprint

@@ -21,7 +21,7 @@ fi
 #############################################################################
 
 function checkVersion(){
-connectString=$1
+connectString="$1"
 OpVersion=$2
 
 if ! [ -x "$(command -v sqlplus)" ]; then
@@ -39,7 +39,7 @@ EOF
 }
 
 function executeOP(){
-connectString=$1
+connectString="$1"
 OpVersion=$2
 
 if ! [ -x "$(command -v sqlplus)" ]; then
@@ -102,7 +102,7 @@ fi
 # MAIN
 #############################################################################
 
-connectString=$1
+connectString="$1"
 sqlcmd_result=$(checkVersion "${connectString}" "${OpVersion}")
 retval=$?
 
