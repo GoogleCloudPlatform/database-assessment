@@ -36,7 +36,7 @@ class AppConfig:
     dataset: Optional[str] = None
     project_name: Optional[str] = None
     collection_id: Optional[str] = None
-    dbversion: Optional[str] = None
+    db_version: Optional[str] = None
     files_location: str = "dbResults"
     sep: str = "|"
     collection_version: str = "0.0.0"
