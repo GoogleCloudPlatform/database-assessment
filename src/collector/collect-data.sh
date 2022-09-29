@@ -4,11 +4,10 @@
 #############################################################################
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-BASE_DIR=$(dirname ${SCRIPT_DIR}); export BASE_DIR
-OP_OUTPUT_DIR=${BASE_DIR}/output; export OP_OUTPUT_DIR
-ORACLE_PATH=${BASE_DIR}; export ORACLE_PATH
-TMP_DIR=${BASE_DIR}/tmp
-LOG_DIR=${BASE_DIR}/log
+OUTPUT_DIR=${SCRIPT_DIR}/output; export OUTPUT_DIR
+ORACLE_PATH=${SCRIPT_DIR}; export ORACLE_PATH
+TMP_DIR=${SCRIPT_DIR}/tmp
+LOG_DIR=${SCRIPT_DIR}/log
 
 if [ ! -d ${TMP_DIR} ]; then
    mkdir -p ${LOG_DIR}
@@ -49,7 +48,7 @@ fi
 
 sqlplus -s /nolog << EOF
 connect ${connectString}
-@${BASE_DIR}/sql/op_collect.sql ${OpVersion}
+@${SCRIPT_DIR}/sql/op_collect.sql ${OpVersion}
 exit;
 EOF
 }
@@ -57,17 +56,17 @@ EOF
 function cleanupOpOutput(){
 V_FILE_TAG=$1
 echo "Preparing files for compression."
-sed -i -r -f ${BASE_DIR}/sql/op_sed_cleanup.sed ${OP_OUTPUT_DIR}/*csv
+sed -i -r -f ${SCRIPT_DIR}/sql/op_sed_cleanup.sed ${OUTPUT_DIR}/*csv
 retval=$?
 if [ $retval -ne 0 ]; then
-  echo "Error processing ${BASE_DIR}/sql/op_sed_cleanup.sed.  Exiting..."
+  echo "Error processing ${SCRIPT_DIR}/sql/op_sed_cleanup.sed.  Exiting..."
 fi
-sed -i -r '1i\ ' ${OP_OUTPUT_DIR}/*csv
+sed -i -r '1i\ ' ${OUTPUT_DIR}/*csv
 retval=$?
 if [ $retval -ne 0 ]; then
   echo "Error adding newline to top of Optimus Prime extract files.  Exiting..."
 fi
-grep -E 'SP2-|ORA-' ${OP_OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+grep -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
 }
 
 function compressOpFiles(){
@@ -75,8 +74,8 @@ V_FILE_TAG=$1
 echo ""
 echo "Archiving output files"
 CURRENT_WORKING_DIR=$(pwd)
-cp ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ${OP_OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
-cd ${OP_OUTPUT_DIR}; tar czf opdb__${V_FILE_TAG}.tgz --remove-files *csv *.log
+cp ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
+cd ${OUTPUT_DIR}; tar czf opdb__${V_FILE_TAG}.tgz --remove-files *csv *.log
 cd ${CURRENT_WORKING_DIR}
 echo ""
 echo "Step completed."
@@ -92,11 +91,11 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-if [ ! -f ${BASE_DIR}/VERSION.txt ]; then
-  echo "${BASE_DIR}/VERSION.txt file not found.  Please sure you have set up your environment correctly."
+if [ ! -f ${SCRIPT_DIR}/VERSION.txt ]; then
+  echo "${SCRIPT_DIR}/VERSION.txt file not found.  Please sure you have set up your environment correctly."
   exit 1
 else
-  OpVersion=$(cat ${BASE_DIR}/VERSION.txt | head -1)
+  OpVersion=$(cat ${SCRIPT_DIR}/VERSION.txt | head -1)
 fi
 
 # MAIN
@@ -121,13 +120,13 @@ if [ $retval -eq 0 ]; then
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
     executeOP "${connectString}" ${OpVersion}
     if [ $retval -ne 0 ]; then
-      echo "Optimus Prime extract reported an error.  Please check the error log in directory ${OP_OUTPUT_DIR}"
+      echo "Optimus Prime extract reported an error.  Please check the error log in directory ${OUTPUT_DIR}"
       echo "Exiting...."
       exit 255
     fi
     cleanupOpOutput $(echo ${V_TAG} | sed 's/.csv//g')
     if [ $retval -ne 0 ]; then
-      echo "Optimus Prime data sanitation reported an error. Please check the error log in directory ${OP_OUTPUT_DIR}"
+      echo "Optimus Prime data sanitation reported an error. Please check the error log in directory ${OUTPUT_DIR}"
       echo "Exiting...."
       exit 255
     fi
@@ -139,7 +138,7 @@ if [ $retval -eq 0 ]; then
     echo ""
     echo "==================================================================================="
     echo "Optimus Prime Database Assessment Collector completed."
-    echo "Data collection located at ${OP_OUTPUT_DIR}/opdb__${V_FILE_TAG}.tgz"
+    echo "Data collection located at ${OUTPUT_DIR}/opdb__${V_FILE_TAG}.tgz"
     echo "==================================================================================="
     echo ""
     exit 0
