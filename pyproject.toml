@@ -33,14 +33,16 @@ gunicorn ="*"
 numpy ="*"
 pandas ="*"
 pyarrow ="*"
-python = ">=3.8,<=3.11"
+python = ">3.7,<=3.11"
 python-dotenv = "*"
+requests = "*"
+
 
 
 [tool.poetry.group.future.dependencies]
 duckdb = "*"
-duckdb-engine = {git = "https://github.com/cofin/duckdb_engine.git", branch = 'master'}
-aiosql = {git = "https://github.com/cofin/aiosql.git", branch = "master"}
+duckdb-engine = "*"
+aiosql = "*"
 
 
 [tool.poetry.group.future]
@@ -56,6 +58,7 @@ pytest-dotenv = "*"
 pytest-mock = "*"
 ipython = "*"
 ipykernel = "*"
+invoke = "*"
 
 [tool.poetry.group.docs]
 optional = true
@@ -137,8 +140,7 @@ show_missing = true
 [tool.coverage.run]
 omit = [
   "tests/server/*",
-  "utils/restartable_worker.py",
-]
+ ]
 
 [tool.pytest.ini_options]
 addopts = "--cov=opdba -v --doctest-modules --doctest-glob=*.md --ignore=gunicorn.conf.py --ignore=alembic"

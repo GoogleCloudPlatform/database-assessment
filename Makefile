@@ -2,7 +2,6 @@
 .ONESHELL:
 ENV_PREFIX=$(shell python3 -c "if __import__('pathlib').Path('.venv/bin/pip').exists(): print('.venv/bin/')")
 USING_POETRY=$(shell grep "tool.poetry" pyproject.toml && echo "yes")
-USING_DOCKER=$(shell (grep "USE_DOCKER=true" .env && echo "yes") || "")
 USING_PNPM=$(shell python3 -c "if __import__('pathlib').Path('pnpm-lock.yaml').exists(): print('yes')")
 USING_YARN=$(shell python3 -c "if __import__('pathlib').Path('yarn.lock').exists(): print('yes')")
 USING_NPM=$(shell python3 -c "if __import__('pathlib').Path('package-lock.json').exists(): print('yes')")
@@ -14,8 +13,6 @@ PYTHON_PACKAGES=$(shell poetry export -f requirements.txt  --without-hashes |cut
 #   multiple whitespace sequences around the version number
 VERSION := $(shell grep -m 1 version pyproject.toml | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)
 GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
-UI_SRC_DIR=src/ui
-UI_BUILD_DIR=$(UI_SRC_DIR)/dist
 COLLECTOR_SRC_DIR=src/collector
 COLLECTOR_BUILD_DIR=dist/collector
 COLLECTOR_PACKAGE=opdba_advisor_collection_scripts_$(VERSION).tar
