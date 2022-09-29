@@ -109,7 +109,7 @@ build-collector: clean-collector          ## Build the collector SQL scripts.
 	cp src/collector/collect-data.sh $(COLLECTOR_BUILD_DIR)
 	cp src/collector/README.txt $(COLLECTOR_BUILD_DIR)
 	cp  LICENSE $(COLLECTOR_BUILD_DIR)
-	echo "Advisor Data Extractor version $(VERSION) ($(BUILD))" > $(COLLECTOR_BUILD_DIR)/VERSION.txt
+	echo "Advisor Data Extractor version $(VERSION) ($(COMMIT_SHA))" > $(COLLECTOR_BUILD_DIR)/VERSION.txt
 
 
 .PHONY: build
