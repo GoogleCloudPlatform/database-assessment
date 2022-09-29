@@ -1,9 +1,26 @@
 .DEFAULT_GOAL:=help
 .ONESHELL:
 ENV_PREFIX=$(shell python3 -c "if __import__('pathlib').Path('.venv/bin/pip').exists(): print('.venv/bin/')")
+USING_POETRY=$(shell grep "tool.poetry" pyproject.toml && echo "yes")
+USING_DOCKER=$(shell (grep "USE_DOCKER=true" .env && echo "yes") || "")
+USING_PNPM=$(shell python3 -c "if __import__('pathlib').Path('pnpm-lock.yaml').exists(): print('yes')")
+USING_YARN=$(shell python3 -c "if __import__('pathlib').Path('yarn.lock').exists(): print('yes')")
+USING_NPM=$(shell python3 -c "if __import__('pathlib').Path('package-lock.json').exists(): print('yes')")
 VENV_EXISTS=$(shell python3 -c "if __import__('pathlib').Path('.venv/bin/activate').exists(): print('yes')")
-GRPC_PYTHON_BUILD_SYSTEM_ZLIB=true
-
+NODE_MODULES_EXISTS=$(shell python3 -c "if __import__('pathlib').Path('node_modules').exists(): print('yes')")
+PYTHON_PACKAGES=$(shell poetry export -f requirements.txt  --without-hashes |cut -d'=' -f1 |cut -d ' ' -f1)
+# grep the version from pyproject.toml, squeeze multiple spaces, delete double
+#   and single quotes, get 3rd val. This command tolerates 
+#   multiple whitespace sequences around the version number
+VERSION := $(shell grep -m 1 version pyproject.toml | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)
+GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
+UI_SRC_DIR=src/ui
+UI_BUILD_DIR=$(UI_SRC_DIR)/dist
+COLLECTOR_SRC_DIR=src/collector
+COLLECTOR_BUILD_DIR=dist/collector
+COLLECTOR_PACKAGE=opdba_advisor_collection_scripts_$(VERSION).tar
+SERVER_SRC_DIR=src/server
+SERVER_BUILD_DIR=dist
 .EXPORT_ALL_VARIABLES:
 
 ifndef VERBOSE
@@ -19,28 +36,37 @@ help:  ## Display this help
 
 
 .PHONY: upgrade-dependencies
-upgrade-dependencies:          ## Upgrade all dependencies to the latest stable versions
-	${ENV_PREFIX}pip-compile -r requirements/base.in > requirements/base.txt
-	${ENV_PREFIX}pip-compile -r requirements/dev.in > requirements/dev.txt
-	${ENV_PREFIX}pip-compile -r requirements/lint.in > requirements/lint.txt
-
+upgrade-dependencies:       ## Upgrade all dependencies to the latest stable versions
+	if [ "$(USING_POETRY)" ]; then poetry update; fi
+	@echo "=> Python Dependencies Updated"
+	if [ "$(USING_NPM)" ]; then npm upgrade --latest; fi
+	if [ "$(USING_YARN)" ]; then yarn upgrade; fi
+	if [ "$(USING_PNPM)" ]; then pnpm upgrade --latest; fi
+	@echo "=> Node Dependencies Updated"
+ 
+###############
+# app         #
+###############
 .PHONY: install
 install:          ## Install the project in dev mode.
+	@if ! poetry --version > /dev/null; then echo 'poetry is required, install from https://python-poetry.org/'; exit 1; fi
 	@if [ "$(VENV_EXISTS)" ]; then echo "Removing existing environment"; fi
-	@if [ "$(VENV_EXISTS)" ]; then rm -Rf .venv; fi
-	python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip
-	${ENV_PREFIX}pip install -r requirements.txt
-	${ENV_PREFIX}pip install .
+	if [ "$(VENV_EXISTS)" ]; then rm -Rf .venv; fi
+	if [ "$(USING_POETRY)" ]; then poetry config virtualenvs.in-project true && poetry config virtualenvs.create false  && poetry config virtualenvs.options.always-copy true && python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip && poetry install --with main && exit; fi
+	if [ "$(USING_NPM)" ]; then npm install; fi
+	@echo "=> Install complete.  ** If you want to re-install re-run 'make install'"
+
 
 
 .PHONY: install-dev
-install-dev:
+install-dev:	 ## Install the project in dev mode.
+	@if ! poetry --version > /dev/null; then echo 'poetry is required, install from https://python-poetry.org/'; exit 1; fi
 	@if [ "$(VENV_EXISTS)" ]; then echo "Removing existing environment"; fi
-	@if [ "$(VENV_EXISTS)" ]; then rm -Rf .venv; fi
-	python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip
-	${ENV_PREFIX}pip install -r requirements/dev.txt
-	${ENV_PREFIX}pip install -r requirements/lint.txt
-	${ENV_PREFIX}pip install -e .
+	if [ "$(VENV_EXISTS)" ]; then rm -Rf .venv; fi
+	if [ "$(USING_POETRY)" ]; then poetry config virtualenvs.in-project true && poetry config virtualenvs.create false  && poetry config virtualenvs.options.always-copy true && python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip && poetry install --with "dev linting future" && exit; fi
+	if [ "$(USING_NPM)" ]; then npm install; fi
+	@echo "=> Install complete.  ** If you want to re-install re-run 'make install-dev'"
+
 
 .PHONY: clean
 clean:       ## remove all build, testing, and static documentation files
@@ -63,12 +89,90 @@ clean:       ## remove all build, testing, and static documentation files
 	rm -fr .mypy_cache
 	rm -fr site
 
+###############
+# builds      #
+###############
+build-server: $(SERVER_BUILD_DIR)
 
+$(SERVER_BUILD_DIR): $(shell find $(SERVER_SRC_DIR))
+	@poetry build
+
+clean-collector:
+	@echo  "=> Cleaning previous build artifcats for data collector scripts..."
+	rm -Rf $(COLLECTOR_BUILD_DIR)/*
+
+
+
+build-collector: clean-collector          ## Build the collector SQL scripts.
+	@echo "=> Building Advisor Data Collection Scripts..."
+	
+	mkdir -p $(COLLECTOR_BUILD_DIR)/sql/extracts
+	cp src/collector/sql/*.{sql,sed} $(COLLECTOR_BUILD_DIR)/sql
+	cp src/collector/sql/extracts/*.sql $(COLLECTOR_BUILD_DIR)/sql/extracts
+	cp src/collector/scripts/collect-data.sh $(COLLECTOR_BUILD_DIR)
+	cp src/collector/README.txt $(COLLECTOR_BUILD_DIR)
+	cp  LICENSE $(COLLECTOR_BUILD_DIR)
+	echo "Advisor Data Extractor version $(VERSION) ($(BUILD))" > $(COLLECTOR_BUILD_DIR)/VERSION.txt
+
+
+.PHONY: build
+build: build-collector build-server          ## Install the project in dev mode.
+
+package-collector:
+	@echo  "=> Packaging Data Extractor..."
+	rm -f ./dist/$(COLLECTOR_PACKAGE).bz2
+	tar -cjf  ./dist/$(COLLECTOR_PACKAGE).bz2  $(COLLECTOR_BUILD_DIR)
+
+
+
+
+.PHONY: migrations
+###############
+# docs        #
+###############
 .PHONY: gen-docs
 gen-docs:       ## generate HTML documentation
-	${ENV_PREFIX}mkdocs build
+	mkdocs build
 
 .PHONY: docs
 docs:       ## generate HTML documentation and serve it to the browser
-	${ENV_PREFIX}mkdocs build
-	${ENV_PREFIX}mkdocs serve
+	mkdocs build
+	mkdocs serve
+
+.PHONY: pre-release
+pre-release:       ## bump the version and create the release tag
+	make check
+	make gen-docs
+	make clean
+	bump2version $(increment)
+	git describe --tags --abbrev=0
+	head pyproject.toml | grep version
+	cat src/pytemplates_typer_cli/__version__.py
+
+###########
+# version #
+###########
+.PHONY: version-bump-major
+version-bump-major:       ## bump major version
+	poetry run bump2version major
+.PHONY: version-bump-minor
+version-bump-minor:       ## bump minor version
+	poetry run bump2version minor
+.PHONY: version-bump-patch
+version-bump-patch:       ## bump patch version
+	poetry run bump2version patch
+
+
+###########
+# license #
+###########
+
+.PHONY: licenses
+licenses: 			## Generate licenses
+	@echo "Generating Licenses"
+	@poetry run pip-licenses --with-urls --format=markdown --order=name --packages ${PYTHON_PACKAGES}
+
+.PHONY: license-file
+license-file: 		## Generate licenses
+	@echo "Generating License file"
+	@poetry run pip-licenses --packages ${PYTHON_PACKAGES} --format=plain-vertical --with-license-file --no-license-path > NOTICE

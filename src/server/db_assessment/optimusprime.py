@@ -111,15 +111,20 @@ def run_main(args: "AppConfig") -> None:
             )
             sys.exit()
 
-        #  Make sure there are not 11.2 or 11.1 database versions being imported along with other database versions.
-        db_versions_list = set([f.split("__")[2].split("_")[0] for f in file_list])
+        # Make sure there are not 11.2 or 11.1 database versions
+        # being imported along with other database versions.
+        db_versions_list = (f.split("__")[2].split("_")[0] for f in file_list)
         outliers = len(
             [version for version in db_versions_list if version not in ["111", "112"]]
         )
         if ("111" in db_versions_list or "112" in db_versions_list) and outliers > 0:
-            sys.exit(
-                '\nERROR:  Importing other versions along with 11.1 and 11.2 is not supported. Please use flag --filter-by-db-version to filter database versions, For example: --filter-by-db-version "12.1,12.2,18.0,19.1"\n'
+            logger.error(
+                "ERROR:  Importing other versions along with 11.1 and 11.2 is "
+                " not supported. Please use flag --filter-by-db-version"
+                " to filter database versions,"
+                " For example: --filter-by-db-version '12.1,12.2,18.0,19.1'"
             )
+            sys.exit()
 
         sqlversionslist = set([f.split("__")[2].split("_")[1] for f in file_list])
         if len(sqlversionslist) > 1:

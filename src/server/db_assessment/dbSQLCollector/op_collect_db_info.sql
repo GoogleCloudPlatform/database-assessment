@@ -1,0 +1,33 @@
+set termout off
+@@extracts/awrhistcmdtypes.sql
+@@extracts/awrhistosstat.sql
+@@extracts/awrhistsysmetrichist.sql
+@@extracts/awrhistsysmetricsumm.sql
+@@extracts/awrsnapdetails.sql
+@@extracts/compressbytype.sql
+@@extracts/cpucoresusage.sql
+@@extracts/dataguard.sql
+@@extracts/datatypes.sql
+@@extracts/dbahistsysstat.sql
+@@extracts/dbahistsystimemodel.sql
+@@extracts/dbfeatures.sql
+@@extracts/dbhwmarkstatistics.sql
+@@extracts/dbinstances.sql
+@@extracts/dblinks.sql
+@@extracts/dbobjects.sql
+@@extracts/dbparameters.sql
+@@extracts/dbsummary.sql
+@@extracts/exttab.sql
+@@extracts/idxpertable.sql
+@@extracts/indexestypes.sql
+@@extracts/ioevents.sql
+@@extracts/iofunction.sql
+@@extracts/opkeylog.sql
+@@extracts/sourcecode.sql
+@@extracts/sourceconn.sql
+@@extracts/sqlstats.sql
+@@extracts/tablesnopk.sql
+@@extracts/usedspacedetails.sql
+@@extracts/usrsegatt.sql
+@@&v_dopluggable
+set termout on
