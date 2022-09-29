@@ -1,3 +1,4 @@
+set termout off
 @@extracts/awrhistcmdtypes.sql
 @@extracts/awrhistosstat.sql
 @@extracts/awrhistsysmetrichist.sql
@@ -29,4 +30,4 @@
 @@extracts/usedspacedetails.sql
 @@extracts/usrsegatt.sql
 @@&v_dopluggable
-
+set termout on

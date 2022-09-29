@@ -10,7 +10,7 @@ build==0.8.0
     # via pip-tools
 cachetools==5.2.0
     # via google-auth
-certifi==2022.6.15.2
+certifi==2022.9.14
     # via requests
 charset-normalizer==2.1.1
     # via requests
@@ -26,14 +26,14 @@ google-api-core[grpc]==2.10.1
     #   google-cloud-bigquery
     #   google-cloud-bigquery-storage
     #   google-cloud-core
-google-auth==2.11.0
+google-auth==2.11.1
     # via
     #   -r requirements/dev.in
     #   google-api-core
     #   google-cloud-core
 google-cloud-bigquery==3.3.2
     # via -r requirements/base.in
-google-cloud-bigquery-storage==2.15.0
+google-cloud-bigquery-storage==2.16.0
     # via google-cloud-bigquery
 google-cloud-core==2.3.2
     # via google-cloud-bigquery
@@ -75,7 +75,7 @@ packaging==21.3
     # via
     #   build
     #   google-cloud-bigquery
-pandas==1.4.4
+pandas==1.5.0
     # via -r requirements/base.in
 pep517==0.13.0
     # via build

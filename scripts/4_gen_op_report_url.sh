@@ -1,5 +1,25 @@
 #!/usr/bin/env bash
-set -eo pipefail 
+
+### Setup directories and options needed for execution
+#############################################################################
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR=$(dirname ${SCRIPT_DIR})
+VENV_DIR="${BASE_DIR}/.venv"
+TMP_DIR=${BASE_DIR}/tmp
+LOG_DIR=${BASE_DIR}/log
+
+if [ ! -d ${TMP_DIR} ]; then
+   mkdir -p ${TMP_DIR}
+fi
+if [ ! -d ${LOG_DIR} ]; then
+   mkdir -p ${LOG_DIR}
+fi
+
+set -eo pipefail
+
+source ${SCRIPT_DIR}/_configure_op_env.sh
+
 # ReportID is taken from the DataStudio template upon which the new report will be created.
 REPORTID=ed2d87f1-e037-4e65-8ef0-4439a3e62aa3
 
@@ -47,12 +67,12 @@ reportId=${REPORTID}
 &ds.ds12.datasetId=${DSNAME}
 &ds.ds12.tableId=V_DS_dbsummary"
 
-echo
-echo The Optimus Prime dashboard report \"${REPORTNAME}\" is available at the link below
-echo
+echo ""
+echo "The Optimus Prime dashboard report ${REPORTNAME} is available at the link below"
+echo ""
 echo ${URL_TEMPLATE} | sed 's/\r//g;s/\n//g;s/ //g'
-echo
-echo Click the link to view the report.  
-echo To create a persistent copy of this report:
-echo Click the '"Edit and Share"' button, then '"Acknowledge and Save"', then '"Add to Report"'.
-echo It will then show up in Data Studio in '"Reports owned by me"' and can be shared with others.
+echo ""
+echo "Click the link to view the report."
+echo "To create a persistent copy of this report:"
+echo "Click the \"Edit and Share\" button, then \"Acknowledge and Save\", then \"Add to Report\"."
+echo "It will then show up in Data Studio in \"Reports owned by me\" and can be shared with others."

@@ -19,7 +19,7 @@ RUN apt-get update \
     && rm -rf /var/apt/lists/* \
     && rm -rf /var/cache/apt/*
 RUN pip install  --no-cache-dir  --upgrade pip  \
-    pip install  --no-cache-dir  wheel setuptools cython
+    pip install  --no-cache-dir  --upgrade wheel setuptools cython
 
 
 FROM python-base AS build-stage

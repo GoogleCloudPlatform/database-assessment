@@ -8,7 +8,7 @@ steps:
         "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID",
         ".",
         "-f",
-        "deploy/Cloudbuild.dockerfile",
+        "deploy/docker/cloudbuild/Dockerfile",
       ]
   - name: "gcr.io/cloud-builders/docker"
     args:

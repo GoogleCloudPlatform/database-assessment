@@ -15,284 +15,268 @@
 
 import argparse
 import logging
-
-# Basic python built-in libraries to enable read, write and manipulate files in the OS
 import sys
+import warnings
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Dict
 
 import pandas as pd
 
 from db_assessment import import_db_assessment, rules_engine
-from db_assessment.remote import runRemote
-from db_assessment.version import __version__
+from db_assessment.remote import run_remote
 
-logging.getLogger().setLevel(level=logging.INFO)
+logger = logging.getLogger()
+logger.setLevel(level=logging.INFO)
+
+if TYPE_CHECKING:
+    from .api import AppConfig
+
+warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
-def getVersion():
+@dataclass
+class RunConfig:
+    parameters: Dict[str, Any]
+    rules: Dict[str, Any]
+    table_schemas = Dict[str, Any]
 
-    return __version__
 
+def run_main(args: "AppConfig") -> None:
+    """Main program"""
+    run_config: Dict[str, Any] = rules_engine.load_from_config(args.config_path)
+    rules: Dict[str, Any] = run_config["rules"]
+    run_parameters: Dict[str, Any] = run_config["parameters"]
+    schema_config: Dict[str, Any] = run_config["table_schemas"]
 
-def runMain(args):
-    # Main function
+    table_schema = None
 
-    # Pre-Tasks before trying to import any data
-
-    # STEP: Read in JSON file configuration (rules and parameters)
-
-    # Import Json with parameters and rules
-    transformerConfiguration = rules_engine.getRulesFromJSON(
-        str(args.transformersconfig)
-    )
-
-    # Assigning the rules and parameter {} variables
-    transformerRulesConfig = {}
-    transformerRulesConfig = transformerConfiguration["rules"]
-    transformersParameters = {}
-    transformersParameters = transformerConfiguration["parameters"]
-    transformersTablesSchema = None
-    transformersTablesSchemaConfig = {}
-    transformersTablesSchemaConfig = transformerConfiguration["tableschemas"]
-
-    # For all cases in which those attributes are <> None it means the user wants to import data to Big Query
-    # No need to further messaging for mandatory options because this is being done in argumentsParser function
-    if args.dataset is not None and args.collectionid is not None:
+    # For all cases in which those attributes are <> None it means
+    #  the user wants to import data to Big Query
+    # No need to further messaging for mandatory options because
+    #  this is being done in argumentsParser function
+    if args.dataset is not None and args.collection_id is not None:
 
         # This is broken needs to be fixed in upcoming versions
-        if args.consolidatelogs:
+        if args.consolidate_logs:
             # It is True if no fatal errors were found
-            resConsolidation = import_db_assessment.consolidateLos(
-                args, transformersTablesSchema
+            import_db_assessment.consolidate_collection(
+                args,
+                table_schema,
             )
 
         # STEP 1: Import customer database assessment data
 
-        # Optimus Prime Search Pattern to find the target CSV files to be processed
-        # The default location will be dbResults if not overwritten by the argument -fileslocation
-        csvFilesLocationPattern = (
-            str(args.fileslocation)
-            + "/*"
-            + str(args.collectionid).replace(" ", "")
-            + ".log"
+        # Optimus Prime Search Pattern to find the target
+        # CSV files to be processed
+        # The default location will be dbResults if not overwritten
+        # by the argument --files-location
+        file_search_pattern = (
+            f"{args.files_location}/*{args.collection_id.replace(' ', '')}.csv"
         )
 
-        # Append csvFilesLocationPattern if there are filterbysqlversion and/or filterbydbversion flag
-        if args.filterbysqlversion and args.filterbysqlversion is not None:
-            csvFilesLocationPattern = csvFilesLocationPattern.replace(
-                str(args.fileslocation) + "/*",
-                str(args.fileslocation) + "/*_" + str(args.filterbysqlversion) + "*",
+        # Append files_location if there are filter_by_sql_version
+        # and/or filter_by_db_version flag
+        if args.filter_by_sql_version:
+            file_search_pattern = file_search_pattern.replace(
+                f"{args.files_location}/",
+                f"{args.files_location}/*-{args.filter_by_sql_version}*",
             )
 
-        fileList = []
-        if args.filterbydbversion and args.filterbydbversion is not None:
-            for dbversion in args.filterbydbversion.split(","):
-                dbversion = dbversion.replace(".", "")
-                newcsvFilesLocationPattern = csvFilesLocationPattern.replace(
-                    str(args.fileslocation) + "/*",
-                    str(args.fileslocation) + "/*__" + dbversion + "*",
+        file_list = []
+        if args.filter_by_db_version:
+            for db_version in args.filter_by_db_version.split(","):
+                db_version = db_version.replace(".", "")
+                file_search_pattern = file_search_pattern.replace(
+                    f"{args.files_location}/*",
+                    f"{args.files_location}/*__{db_version}*",
                 )
-                fileListfordbversion = import_db_assessment.getAllFilesByPattern(
-                    newcsvFilesLocationPattern
+
+                file_matches = import_db_assessment.list_files(
+                    file_search_pattern,
                 )
-                fileList.extend(fileListfordbversion)
+                file_list.extend(file_matches)
         else:
             # Getting a list of files from OS based on the pattern provided
-            # This is the default directory to have all customer database results from oracle_db_assessment.sql
-            fileList = import_db_assessment.getAllFilesByPattern(
-                csvFilesLocationPattern
+            # This is the default directory to have all customer database
+            # results from oracle_db_assessment.sql
+            file_list.extend(
+                import_db_assessment.list_files(file_search_pattern),
             )
-
-        skipvalidations = False
-        if args.skipvalidations and args.skipvalidations is not None:
-            skipvalidations = True
 
         # In case there is no matching file in the OS
-        if len(fileList) == 0:
-            sys.exit(
-                "\nERROR: There is not matching CSV file found to be processed using: {}\n".format(
-                    csvFilesLocationPattern
-                )
+        if len(file_list) == 0:
+            logger.fatal(
+                "ERROR: There is no matching CSV file found to be processed using: %s",  # pylint: disable=[line-too-long]
+                file_search_pattern,
             )
+            sys.exit()
 
         #  Make sure there are not 11.2 or 11.1 database versions being imported along with other database versions.
-        dbversionslist = set([f.split("__")[2].split("_")[0] for f in fileList])
+        db_versions_list = set([f.split("__")[2].split("_")[0] for f in file_list])
         outliers = len(
-            [version for version in dbversionslist if version not in ["111", "112"]]
+            [version for version in db_versions_list if version not in ["111", "112"]]
         )
-        if ("111" in dbversionslist or "112" in dbversionslist) and outliers > 0:
+        if ("111" in db_versions_list or "112" in db_versions_list) and outliers > 0:
             sys.exit(
-                '\nERROR:  Importing other versions along with 11.1 and 11.2 is not supported. Please use flag fileterbydbversion to filter database versions, For example: -filterbydbversion "12.1,12.2,18.0,19.1"\n'
+                '\nERROR:  Importing other versions along with 11.1 and 11.2 is not supported. Please use flag --filter-by-db-version to filter database versions, For example: --filter-by-db-version "12.1,12.2,18.0,19.1"\n'
             )
 
-        sqlversionslist = set([f.split("__")[2].split("_")[1] for f in fileList])
+        sqlversionslist = set([f.split("__")[2].split("_")[1] for f in file_list])
         if len(sqlversionslist) > 1:
             sys.exit(
-                '\nERROR:  Importing multiple SQL versions is not supported. Please use flag fileterbysqlversion to filter SQL versions, For example: -filterbysqlversion 2.0.3"\n'
+                '\nERROR:  Importing multiple SQL versions is not supported. Please use flag --filter-by-sql-version to filter SQL versions, For example: --filter-by-sql-version 2.0.3"\n'
             )
 
         # Getting file pattern for find config files in the OS to be imported
         csvFilesLocationPatternOPConfig = "db_assessment/opConfig/*.csv"
 
         # Getting a list of files from OS based on the pattern provided
-        fileListOPConfig = import_db_assessment.getAllFilesByPattern(
+        fileListOPConfig = import_db_assessment.list_files(
             csvFilesLocationPatternOPConfig
         )
 
         # Variable to track the collection id. To be used mostly when new CSV files are generated from processing rules
         collectionKey = import_db_assessment.getObjNameFromFiles(
-            str(fileList[0]), "__", 2
+            str(file_list[0]), "__", 2
         )
-        transformersParameters["collectionKey"] = collectionKey
+        run_parameters["collectionKey"] = collectionKey
 
         # Verify if the script has any version on it (only old script versions should not have 3 parts)
-        if args.dbversion is not None:
-            transformersParameters["dbversion"] = str(args.dbversion)
+        if args.db_version is not None:
+            run_parameters["db_version"] = str(args.db_version)
         elif (
-            len(collectionKey.split("_")) >= 3 and args.dbversion is None
+            len(collectionKey.split("_")) >= 3 and args.db_version is None
         ):  # bug #23. Changed == to >=.
-            transformersParameters[
-                "dbversion"
-            ] = import_db_assessment.getObjNameFromFiles(collectionKey, "_", 0)
+            run_parameters["db_version"] = import_db_assessment.getObjNameFromFiles(
+                collectionKey, "_", 0
+            )
         else:
-            print(
-                "\nFATAL ERRROR: Please use -dbversion and -collectionversion. \nI.E -dbversion 122 -collectionversion 2.0.3\n"
+            logger.fatal(
+                "FATAL ERROR: Please use --db-version and --collection-version."
+                " (i.e --db-version 122 --collection-version 2.0.3)"
             )
             sys.exit()
 
-        if args.importcomment is not None:
-            transformersParameters["importcomment"] = str(args.importcomment)
+        if args.import_comment is not None:
+            run_parameters["import_comment"] = args.import_comment
 
         if len(collectionKey.split("_")) >= 3:  # bug #23. Changed == to >=.
-            transformersParameters[
-                "optimuscollectionversion"
+            run_parameters[
+                "collection_version"
             ] = import_db_assessment.getObjNameFromFiles(collectionKey, "_", 1)
         else:
-            transformersParameters["optimuscollectionversion"] = args.collectionversion
+            run_parameters["collection_version"] = args.collection_version
 
-        # If this valus is set it has precende over everything else
-        if args.collectionversion != "0.0.0":
-            transformersParameters["optimuscollectionversion"] = args.collectionversion
+        # If this value is set it has precedence over everything else
+        if args.collection_version != "0.0.0":
+            run_parameters["collection_version"] = args.collection_version
 
         try:
             # Automatically try to select the right file separator accordingly with the SQL Script version
-            if (
-                int(
-                    str(transformersParameters["optimuscollectionversion"]).replace(
-                        ".", ""
-                    )
-                )
-                < 205
-            ):
+            if int(str(run_parameters["collection_version"]).replace(".", "")) < 205:
                 args.sep = ","
-        except:
-            None
+        except Exception as e:
+            logger.warning("non-fatal exception occurred: %s", e.args)
+        logger.info("Source Database Version: %s: {}\n", run_parameters["db_version"])
 
-        print(
-            "\nSource Database Version: {} \nCollection Script Version: {}\n".format(
-                transformersParameters["dbversion"],
-                transformersParameters["optimuscollectionversion"],
-            )
+        logger.info(
+            "Source Database Version: %s Collection Script Version: %s",
+            run_parameters["db_version"],
+            run_parameters["collection_version"],
         )
-
         try:
-            # Adjusting the tableschemas from transformers.json accordingly with the database version
-            for dbVersion in transformersTablesSchemaConfig[
-                transformersParameters["optimuscollectionversion"]
+            # Adjusting the table_schemas from transformers.json accordingly with the database version
+            for db_version in schema_config[
+                run_parameters["collection_version"]
             ].keys():
 
-                if transformersParameters["dbversion"] in dbVersion:
-                    transformersTablesSchema = transformersTablesSchemaConfig[
-                        transformersParameters["optimuscollectionversion"]
-                    ][dbVersion]
+                if run_parameters["db_version"] in db_version:
+                    table_schema = schema_config[run_parameters["collection_version"]][
+                        db_version
+                    ]
 
             # If we could not find any matching for tableSchemas
-            if transformersTablesSchema is None:
-                print(
-                    '\n FAILURE: Optimus Prime could not find in transformers.json matching for table schema configuration for "optimuscollectionversion={}" and "dbversion={}"\n'.format(
-                        transformersParameters["optimuscollectionversion"],
-                        transformersParameters["dbversion"],
-                    )
-                )
-                sys.exit()
+            if table_schema is None:
+                raise KeyError
         except KeyError:
-            print(
-                '\n FAILURE: Optimus Prime could not find in transformers.json matching for table schema configuration for "optimuscollectionversion={}" and "dbversion={}"\n'.format(
-                    transformersParameters["optimuscollectionversion"],
-                    transformersParameters["dbversion"],
-                )
+            logger.fatal(
+                "FAILURE: Optimus Prime could not find in transformers.json"
+                "matching for table schema configuration for "
+                "collection_version=%s and db_version=%s",
+                run_parameters["collection_version"],
+                run_parameters["db_version"],
             )
             sys.exit()
 
         # Import the CSV files into Big Query
-        gcpProjectName = args.projectname
+        gcpProjectName = args.project_name
         bqDataset = str(args.dataset)
 
         # Delete the dataset before importing new data
-        if args.deletedataset:
-            if args.projectname is not None:
+        if args.delete_dataset:
+            if args.project_name is not None:
                 import_db_assessment.deleteDataSet(bqDataset, gcpProjectName)
             else:
-                sys.exit(
-                    "\nWARNING: The database {} will not be deleted because the option -projectname is omitted. \nPlease try again either providing -projectname OR removing -deletedataset.\n\n".format(
-                        args.deletedataset
-                    )
+                logger.fatal(
+                    "WARNING: The database %s will not be deleted "
+                    "because the option --project-name is omitted. "
+                    "Please try again either "
+                    "providing --project-name OR removing -delete_dataset.",
+                    args.delete_dataset,
                 )
+                sys.exit()
 
         # Create the dataset to import the CSV data
         import_db_assessment.createDataSet(bqDataset, gcpProjectName)
 
-        # STEP: Processing parameters which create internal variables(transformersParameters) to be used in later stages
+        # STEP: Processing parameters
+        # which create internal variables(run_parameters)
+        # to be used in later stages
 
-        #####transformerParameterResults, transformersParameters = rules_engine.runRules(transformerRulesConfig, None, None)
+        # ####transformerParameterResults, run_parameters = rules_engine.runRules(rules, None, None)
 
         # STEP: Loading all CSV files in memory into dataframes
 
         dbAssessmentDataframes = {}
         invalidfiles = {}
-        (
-            dbAssessmentDataframes,
-            transformersTablesSchema,
-        ) = rules_engine.getAllDataFrames(
-            fileList,
+        (dbAssessmentDataframes, table_schema,) = rules_engine.getAllDataFrames(
+            file_list,
             1,
             collectionKey,
             args,
-            transformersTablesSchema,
+            table_schema,
             dbAssessmentDataframes,
-            transformersParameters,
+            run_parameters,
             invalidfiles,
-            skipvalidations,
+            args.skip_validations,
         )
-        (
-            dbAssessmentDataframes,
-            transformersTablesSchema,
-        ) = rules_engine.getAllDataFrames(
+        (dbAssessmentDataframes, table_schema,) = rules_engine.getAllDataFrames(
             fileListOPConfig,
             0,
             collectionKey,
             args,
-            transformersTablesSchema,
+            table_schema,
             dbAssessmentDataframes,
-            transformersParameters,
+            run_parameters,
             invalidfiles,
-            skipvalidations,
+            args.skip_validations,
         )
 
-        # STEP: Reshape Dataframes when necessary based on the transformersParameters
+        # STEP: Reshape Dataframes when necessary based on the run_parameters
 
         (
             dbAssessmentDataframes,
-            fileList,
-            transformersTablesSchema,
+            file_list,
+            table_schema,
             rulesAlreadyExecuted,
         ) = rules_engine.getAllReShapedDataframes(
             dbAssessmentDataframes,
-            transformersTablesSchema,
-            transformersParameters,
-            transformerRulesConfig,
+            table_schema,
+            run_parameters,
+            rules,
             args,
             collectionKey,
-            fileList,
+            file_list,
         )
 
         # STEP: Run rules engine
@@ -300,19 +284,19 @@ def runMain(args):
         (
             transformerParameterResults,
             transformersRulesVariables,
-            fileList,
+            file_list,
             dbAssessmentDataframes,
-        ) = rules_engine.runRules(
+        ) = rules_engine.run_rules(
             "1",
-            transformerRulesConfig,
+            rules,
             dbAssessmentDataframes,
             None,
             args,
             collectionKey,
-            transformersTablesSchema,
-            fileList,
+            table_schema,
+            file_list,
             rulesAlreadyExecuted,
-            transformersParameters,
+            run_parameters,
             gcpProjectName,
             bqDataset,
         )
@@ -322,11 +306,11 @@ def runMain(args):
         importresults = pd.DataFrame()
 
         # Eliminating duplicated entries from transformers.json processing
-        fileList = list(set(fileList))
+        file_list = list(set(file_list))
         if len(invalidfiles) > 0:
             print("Below are Invalid Files \n")
             [print(key, ":", value) for key, value in invalidfiles.items()]
-            fileList = [file for file in fileList if file not in invalidfiles.keys()]
+            file_list = [file for file in file_list if file not in invalidfiles.keys()]
             ## Insert Invalid Files to BQ
             if "OPKEYLOG" in dbAssessmentDataframes.keys():
                 op_df = dbAssessmentDataframes["OPKEYLOG"]
@@ -344,7 +328,7 @@ def runMain(args):
                     args,
                 )
 
-        if args.fromdataframe:
+        if args.from_dataframe:
 
             (
                 sucessImported,
@@ -354,9 +338,9 @@ def runMain(args):
                 args,
                 gcpProjectName,
                 bqDataset,
-                transformersTablesSchema,
+                table_schema,
                 dbAssessmentDataframes,
-                transformersParameters,
+                run_parameters,
                 importresults,
             )
 
@@ -366,10 +350,10 @@ def runMain(args):
             sucessImported, importresults = import_db_assessment.importAllCSVsToBQ(
                 gcpProjectName,
                 bqDataset,
-                fileList,
-                transformersTablesSchema,
+                file_list,
+                table_schema,
                 2,
-                transformersParameters,
+                run_parameters,
                 args,
                 importresults,
             )
@@ -378,9 +362,9 @@ def runMain(args):
                 gcpProjectName,
                 bqDataset,
                 fileListOPConfig,
-                transformersTablesSchema,
+                table_schema,
                 1,
-                transformersParameters,
+                run_parameters,
                 args,
                 importresults,
             )
@@ -388,19 +372,19 @@ def runMain(args):
         (
             transformerParameterResults,
             transformersRulesVariables,
-            fileList,
+            file_list,
             dbAssessmentDataframes,
-        ) = rules_engine.runRules(
+        ) = rules_engine.run_rules(
             "2",
-            transformerRulesConfig,
+            rules,
             dbAssessmentDataframes,
             None,
             args,
             collectionKey,
-            transformersTablesSchema,
-            fileList,
+            table_schema,
+            file_list,
             rulesAlreadyExecuted,
-            transformersParameters,
+            run_parameters,
             gcpProjectName,
             bqDataset,
         )
@@ -413,31 +397,35 @@ def runMain(args):
         print("\n\n Thank YOU for using Optimus Prime!\n\n")
 
 
-def argumentsParser():
-    # function to handle all arguments to be used in cli mode for this code and enforces mandatory options
-
-    # Creating an argpaser object
+def parse_arguments():
+    """Parse command line arguments"""
+    # function to handle all arguments to be used in cli mode
+    # for this code and enforces mandatory options
+    # Creating an argparser object
     parser = argparse.ArgumentParser()
 
     # Name of dataset to be created and have the data imported
     parser.add_argument(
-        "-dataset",
+        "--dataset",
         type=str,
         default=None,
-        help="name of the Big Query dataset to import all CSV files. If do not exists it will be created if exists the data is appended",
+        help=(
+            "name of the Big Query dataset to import all CSV files. "
+            "If do not exists it will be created if exists the data is appended"
+        ),
     )
 
     # GCP project name to be used with the dataset
     parser.add_argument(
-        "-projectname",
+        "--project-name",
         type=str,
         default=None,
-        help="name of the Google Cloud project name used for the Big Query dataset",
+        help=("Google cloud project name for the BigQuery data"),
     )
 
     # OS csv files location to be imported to Big Query
     parser.add_argument(
-        "-fileslocation",
+        "--files-location",
         type=str,
         default="dbResults",
         help="optimus prime files location to be imported",
@@ -445,15 +433,15 @@ def argumentsParser():
 
     # OS csv files location to be imported to Big Query
     parser.add_argument(
-        "-transformersconfig",
+        "--config-path",
         type=str,
         default="db_assessment/opConfig/transformers.json",
         help="location of transformers.json file with all parameters and rules",
     )
 
-    # Optimus collection ID is the number in the final part of the generated CSV files. For example: dbResults/opdb_dbfeatures_ol79-orcl-db02.ORCLCDB.ORCLCDB.180603.log. Collection ID is: 180603
+    # Optimus collection ID is the number in the final part of the generated CSV files. For example: dbResults/opdb_dbfeatures_ol79-orcl-db02.ORCLCDB.ORCLCDB.180603.csv. Collection ID is: 180603
     parser.add_argument(
-        "-collectionid",
+        "--collection-id",
         type=str,
         default=None,
         help="optimus prime collection id from CSV files OR 'consolidate' for consolidated logs",
@@ -461,25 +449,25 @@ def argumentsParser():
 
     # Separator for the logs being processed
     parser.add_argument(
-        "-sep",
+        "--sep",
         type=str,
         default=";",
-        help="separator string in the files to be processed. The default is: ; (semicomma)",
+        help="separator string in the files to be processed. The default is: ; (semicolon)",
     )
 
     parser.add_argument(
-        "-dbversion", type=str, default=None, help="database version to be processed"
+        "--db-version", type=str, default=None, help="database version to be processed"
     )
 
     parser.add_argument(
-        "-collectionversion",
+        "--collection-version",
         type=str,
         default="0.0.0",
         help="script collection version used",
     )
 
     parser.add_argument(
-        "-schemadetection",
+        "--schema-detection",
         type=str,
         default="FILLGAP",
         help="How Optimus Prime will handle table schemas to be imported to Big Query",
@@ -490,39 +478,40 @@ def argumentsParser():
 
     # If this is present in the command line it will take value as true otherwise it will always be false
     parser.add_argument(
-        "-deletedataset",
+        "-d",
+        "--delete-dataset",
         default=False,
         help="Delete dataset before importing new data. WARNING: It will delete all data in the dataset!",
         action="store_true",
     )
 
     parser.add_argument(
-        "-loadtype",
+        "--load-type",
         type=str,
         default="WRITE_APPEND",
         help="Choose the BQ Load Type. Options are: WRITE_TRUNCATE, WRITE_APPEND and WRITE_EMPTY. The WRITE_APPEND is the default option.",
     )
 
     parser.add_argument(
-        "-fromdataframe",
+        "--from-dataframe",
         default=False,
         help="Import dataframes to Big Query instead of CSV files.",
         action="store_true",
     )
 
     parser.add_argument(
-        "-consolidatedataframes",
+        "--consolidate-dataframes",
         default=False,
         help="Consolidate CSV files before importing.",
         action="store_true",
     )
 
     parser.add_argument(
-        "-remote", default=False, help="Leverage remote API", action="store_true"
+        "--remote", default=False, help="Leverage remote API", action="store_true"
     )
 
     parser.add_argument(
-        "-remoteurl",
+        "--remote-url",
         type=str,
         default="https://op-api-3qhhvv7zvq-uc.a.run.app",
         help="Leverage remote API",
@@ -530,10 +519,10 @@ def argumentsParser():
 
     # Consolidates different collection IDs found in the OS (dbResults/*log) into a single CSV per file type.
     # For example: dbResults has 52 files. Meaning, 2 collection IDs (each one has 26 different file types).
-    # After the consolidation it produces 26 *consolidatedlogs.log which would have data from both collection IDs
+    # After the consolidation it produces 26 *consolidatedlogs.csv which would have data from both collection IDs
     parser.add_argument(
         "-cl",
-        "--consolidatelogs",
+        "--consolidate-logs",
         default=False,
         help="consolidate all CSV files opdb*log found in dbResults/ directory",
         action="store_true",
@@ -545,23 +534,23 @@ def argumentsParser():
     )
 
     parser.add_argument(
-        "-importcomment", type=str, default="", help="Comment for the Import"
+        "--import-comment", type=str, default="", help="Comment for the Import"
     )
 
     parser.add_argument(
-        "-filterbydbversion",
+        "--filter-by-db-version",
         type=str,
         default="",
         help="To import only specific db version",
     )
     parser.add_argument(
-        "-filterbysqlversion",
+        "--filter-by-sql-version",
         type=str,
         default="",
         help="To import only specific SQL version",
     )
     parser.add_argument(
-        "-skipvalidations",
+        "--skip-validations",
         default=False,
         help="To skip all the file Validations",
         action="store_true",
@@ -571,7 +560,7 @@ def argumentsParser():
     args = parser.parse_args()
 
     # If not using -cl flag
-    if args.consolidatelogs == False:
+    if args.consolidate_logs is False:
 
         # In case there is not dataset parameter set or with valid content in the arguments
         if args.dataset is None or args.dataset == "":
@@ -580,13 +569,13 @@ def argumentsParser():
             )
 
         # In case project name/project id is not provided
-        elif args.projectname is None:
+        elif args.project_name is None:
             print(
                 "\nWARNING: Google Cloud project name not provided. Optimus Prime will try to get it automatically from Google Big Query API call.\n"
             )
 
         # In case optimus collection id is omitted
-        elif args.collectionid is None:
+        elif args.collection_id is None:
             sys.exit(
                 "\nERROR: The parameter -collectionid cannot be omitted. Please provide the collection id from CSV files.\n"
             )
@@ -596,13 +585,13 @@ def argumentsParser():
 
 
 def main():
-    args = argumentsParser()
+    args = parse_arguments()
 
     if args.remote:
-        runRemote(args)
+        run_remote(args)
     else:
         # Call main function
-        runMain(args)
+        run_main(args)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,46 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "OP: Sample File Load",
+      "type": "python",
+      "request": "launch",
+      "program": "db_assessment/optimusprime.py",
+      "args": [
+        "--collection-id",
+        "",
+        "--project-name",
+        "optimus-prime-ci",
+        "--dataset",
+        "op_api_testing_v3",
+        "--files-location",
+        "${workspaceFolder}/sample/datacollection",
+        "--sep",
+        "|",
+        "--delete-dataset"
+      ],
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "OP: Flask App",
+      "type": "python",
+      "request": "launch",
+      "module": "gunicorn",
+      "args": [
+        "--bind",
+        "0.0.0.0:8080",
+        "--timeout",
+        "0",
+        "--workers",
+        "1",
+        "db_assessment.api:app"
+      ],
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    }
+  ]
+}

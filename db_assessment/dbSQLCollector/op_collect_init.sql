@@ -19,14 +19,7 @@ Please ensure you have proper licensing. For more information consult Oracle Sup
 */
 
 
-/*
-
-Version: 2.0.6
-Date: 2022-06-15
-
-*/
-
-define version = '2.0.6'
+define version = '&1'
 define dtrange = 30
 define colspr = '|'
 
@@ -40,22 +33,25 @@ set underline off
 set verify off
 set head on
 set scan on
-set term on
 set pause off
 set wrap on
 set echo off
 set appinfo 'OPTIMUS_PRIME'
 set colsep '|'
 set numwidth 48
+set timing off
+set time off
 
 whenever sqlerror continue
 whenever oserror continue
 
-HOS echo define outputdir=$BASE_DIR/op_output > /tmp/dirs.sql
+HOS echo define outputdir=$OP_OUTPUT_DIR > /tmp/dirs.sql
 HOS echo define seddir=$BASE_DIR/db_assessment/dbSQLCollector >> /tmp/dirs.sql
+HOS echo define v_tag=$V_TAG >> /tmp/dirs.sql
 @/tmp/dirs.sql
 select '&outputdir' as outputdir from dual;
 select '&seddir' as seddir from dual;
+select '&v_tag' as v_tag from dual;
 HOS rm -rf /tmp/dirs.sql
 
 column instnc new_value v_inst noprint
@@ -83,9 +79,8 @@ SELECT name dbname
 FROM   v$database
 /
 
-SELECT TO_CHAR(SYSDATE, 'mmddrrhh24miss') horanc
-FROM   dual
-/
+
+select RTRIM(SUBSTR('&v_tag',INSTR('&v_tag','_',1,5)+1), '.csv') horanc from dual;
 
 SELECT substr(replace(version,'.',''),0,3) dbversion
 from v$instance
@@ -142,8 +137,6 @@ AND dbid = '&&v_dbid'
 PROMPT Collecting data for '&&v_dbid' between snaps &v_min_snapid and &v_max_snapid
 PROMPT
 
-
-define v_tag = &v_dbversion._&version._&v_host..&v_dbname..&v_inst..&v_hora..log
 
 COLUMN min_snapid clear
 COLUMN max_snapid clear

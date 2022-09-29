@@ -15,8 +15,7 @@
 
 import datetime
 import glob
-
-# Basic python built-in libraries to enable read, write and manipulate files in the OS
+import logging
 import os
 import re
 
@@ -30,27 +29,12 @@ from db_assessment.version import __version__
 
 ct = datetime.datetime.now()
 
-client = None  # Declare this at the top after import statements
 
-# Messages handling
-import logging
-
-logging.getLogger().setLevel(level=logging.INFO)
+logger = logging.getLogger()
+logger.setLevel(level=logging.INFO)
 
 
-def get_bigqueryClient():
-    global client
-    if not client:
-        client = bigquery.Client(client_info=set_client_info.get_http_client_info())
-    return client
-
-
-def getVersion():
-
-    return __version__
-
-
-def consolidateLos(args, transformersTablesSchema):
+def consolidate_collection(args, transformersTablesSchema):
 
     # This function intents to consolidate the collected files into a single large file to facilitate importing the data to Big Query
 
@@ -66,13 +50,13 @@ def consolidateLos(args, transformersTablesSchema):
 
         fileCounter = fileCounter + 1
 
-        # Using the expected tableName to look for files in the OS in the directory passed in -fileslocation (default dbResults)
+        # Using the expected tableName to look for files in the OS in the directory passed in --files-location (default dbResults)
         csvFilesLocationPattern = (
-            str(getattr(args, "fileslocation")) + "/opdb*" + str(tableName) + "*.log"
+            str(getattr(args, "files_location")) + "/opdb*" + str(tableName) + "*.csv"
         )
 
         # Generating a list with all found OS filenames
-        fileList = getAllFilesByPattern(csvFilesLocationPattern)
+        fileList = list_files(csvFilesLocationPattern)
 
         # To control how many files are being processed and identify the first processed file since it needs to bring the headers
         fileTableCounter = 0
@@ -88,10 +72,10 @@ def consolidateLos(args, transformersTablesSchema):
 
             # Filename to be used to name consolidated file
             targetFileNameConsolidated = (
-                str(getattr(args, "fileslocation"))
+                str(getattr(args, "files_location"))
                 + "/opalldb__"
                 + str(tableName)
-                + "__consolidate.log"
+                + "__consolidate.csv"
             )
 
             # Checks if file already exists in the first matching file found because the other files need to append to existent one.
@@ -130,7 +114,7 @@ def consolidateLos(args, transformersTablesSchema):
 
                     continue
 
-                # Writting up the line from linesToBeConsolidated into fileConsolidated
+                # Writing up the line from linesToBeConsolidated into fileConsolidated
                 fileConsolidated.write(line)
 
             # Closing file handle
@@ -156,20 +140,20 @@ def createOptimusPrimeViewsTransformers(
     client = bigquery.Client()
 
     if gcpProjectName is None:
-        # In case projectname is not provided in the arguments
+        # In case project_name is not provided in the arguments
         view_id = str(client.project) + "." + str(bqDataset) + "." + view_name
         gcpProjectName = str(client.project)
     else:
-        # If projectname is provided in the arguments
+        # If project_name is provided in the arguments
         view_id = str(gcpProjectName) + "." + str(bqDataset) + "." + view_name
 
     # Creating the JOB to create view in Big Query
     view = bigquery.Table(view_id)
 
-    # Extracting the view text and replacing the string ${dataset}/${projectname} by the proper dataset independent of case sensitive
+    # Extracting the view text and replacing the string ${dataset}/${project_name} by the proper dataset independent of case sensitive
     pattern = re.compile(re.escape("${dataset}"), re.IGNORECASE)
     view_query = pattern.sub(str(bqDataset), view_query)
-    pattern = re.compile(re.escape("${projectname}"), re.IGNORECASE)
+    pattern = re.compile(re.escape("${project_name}"), re.IGNORECASE)
     view_query = pattern.sub(str(gcpProjectName), view_query)
     # source_id = 'optimusprime-migrations.consolidate_test.dbsummary'
     # view_query = f"SELECT pkey, dbid FROM `{source_id}`"
@@ -207,7 +191,7 @@ def createOptimusPrimeViewsFromOS(gcpProjectName, bqDataset):
     filePattern = "opViews/optimus_createView*.sql"
 
     # List with all views to be created
-    fileList = getAllFilesByPattern(filePattern)
+    fileList = list_files(filePattern)
 
     if len(fileList) == 0:
         # print('\nWARNING: No views found to be created at expected location: {}. Please make sure you the location is correct.'.format(filePattern))
@@ -236,10 +220,10 @@ def createOptimusPrimeViewsFromOS(gcpProjectName, bqDataset):
             )
 
             if gcpProjectName is None:
-                # In case projectname is not provided in the arguments
+                # In case project_name is not provided in the arguments
                 view_id = str(client.project) + "." + str(bqDataset) + "." + view_name
             else:
-                # If projectname is provided in the arguments
+                # If project_name is provided in the arguments
                 view_id = str(gcpProjectName) + "." + str(bqDataset) + "." + view_name
 
             # Creating the JOB to create view in Big Query
@@ -262,7 +246,7 @@ def createOptimusPrimeViewsFromOS(gcpProjectName, bqDataset):
         return True
 
 
-def getAllFilesByPattern(filePattern):
+def list_files(filePattern):
     # This function intends to get the name of all files in the OS and return a list of strings
 
     # Get all matching files and creates a list returning it
@@ -374,7 +358,7 @@ def importDataframeToBQ(
         df.columns = dfNewColumns
 
         # Always AUTO because we never know the column order in which the dataframe will be
-        transformersTablesSchemaDataframe = rules_engine.processSchemaDetection(
+        transformersTablesSchemaDataframe = rules_engine.detect_schema(
             "FILLGAP",
             transformersTablesSchemaDataframe,
             None,
@@ -430,7 +414,7 @@ def importDataframeToBQ(
     if gcpProjectName is not None:
         table_id = str(gcpProjectName) + "." + str(bqDataset) + "." + str(tableName)
 
-    # In case projectname was passed as argument. Then, it tries to get the default project for the [service] account being used
+    # In case project_name was passed as argument. Then, it tries to get the default project for the [service] account being used
     else:
         table_id = str(client.project) + "." + str(bqDataset) + "." + str(tableName)
 
@@ -495,13 +479,13 @@ def adddetails(fileName, args, params, tableHeader):
         names=tableHeader,
         index_col=False,
     )
-    if params["importcomment"]:
-        df["CMNT"] = params["importcomment"]
+    if params["import_comment"]:
+        df["CMNT"] = params["import_comment"]
     df["LOADTOBQDATE"] = ct
     df["JOBPARAMS"] = str(vars(args))
     df.to_csv(fileName, index=False, sep=str(args.sep))
     line = ""
-    with open(fileName, "r+") as f:
+    with open(fileName, "r+", encoding="UTF-8") as f:
         content = f.read()
         f.seek(0, 0)
         f.write(line.rstrip("\r\n") + "\n" + content)
@@ -536,14 +520,13 @@ def importAllCSVsToBQ(
         # Final table name from the CSV file names
         tableName = getObjNameFromFiles(fileName, "__", 1)
 
-        importTable = True
         doNotImportList = [
             table.strip().lower() for table in transformersParameters["do_not_import"]
         ]
 
         if str(tableName).lower() == "opkeylog":
-            ##skipLeadingRows=1
-            tableHeaders = rules_engine.getDFHeadersFromTransformers(
+            # #skipLeadingRows=1
+            tableHeaders = rules_engine.get_headers_from_config(
                 str(tableName).lower(), transformersTablesSchema
             )
             tableHeader = [header.upper() for header in tableHeaders]
@@ -622,13 +605,13 @@ def importCSVToBQ(
     if gcpProjectName is not None:
         table_id = str(gcpProjectName) + "." + str(bqDataset) + "." + str(tableName)
 
-    # In case projectname was passed as argument. Then, it tries to get the default project for the [service] account being used
+    # In case project_name was passed as argument. Then, it tries to get the default project for the [service] account being used
     else:
         table_id = str(client.project) + "." + str(bqDataset) + "." + str(tableName)
 
     schema_updateOptions = []
     field_delimiter = str(args.sep)
-    write_disposition = str(args.loadtype).upper()
+    write_disposition = str(args.load_type).upper()
 
     if str(tableName).lower() == "opkeylog":
         ## OpkeyLog is a load stats table so rows would be appended and if any schema change is there, the update of schema would be allowed
@@ -723,6 +706,7 @@ def importCSVToBQ(
 
 
 def getTableRef(dataset, tableName, projectName):
+    client = bigquery.Client(project=projectName)
 
     if projectName:
         return f"{projectName}.{dataset}.{tableName}"
@@ -906,7 +890,7 @@ def populateBT(
                     [importresults, tmpdataFrame], ignore_index=True, axis=0
                 )
     else:
-        if args.fromdataframe:  # when called from importDataframeToBQ
+        if args.from_dataframe:  # when called from importDataframeToBQ
             if dataframeornot is not None:
                 if "PKEY" in df.columns.to_list():
                     df.reset_index(drop=True, inplace=True)
@@ -1002,7 +986,6 @@ def printBTResults(importresults):
     # Fuction to print the import logs present in  btImportLogTable /btImportLogFinalTable
 
     # Create and load the output bt table
-    btImportLogFinalTable = BeautifulTable()
     btImportLogFinalTable = BeautifulTable(maxwidth=300)
     btImportLogFinalTable.columns.header = [
         "Target Table",
