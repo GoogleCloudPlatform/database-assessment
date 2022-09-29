@@ -7,7 +7,7 @@ USING_YARN=$(shell python3 -c "if __import__('pathlib').Path('yarn.lock').exists
 USING_NPM=$(shell python3 -c "if __import__('pathlib').Path('package-lock.json').exists(): print('yes')")
 VENV_EXISTS=$(shell python3 -c "if __import__('pathlib').Path('.venv/bin/activate').exists(): print('yes')")
 NODE_MODULES_EXISTS=$(shell python3 -c "if __import__('pathlib').Path('node_modules').exists(): print('yes')")
-PYTHON_PACKAGES=$(shell poetry export -f requirements.txt  --without-hashes |cut -d'=' -f1 |cut -d ' ' -f1)
+# PYTHON_PACKAGES=$(shell poetry export -f requirements.txt  --without-hashes |cut -d'=' -f1 |cut -d ' ' -f1)
 # grep the version from pyproject.toml, squeeze multiple spaces, delete double
 #   and single quotes, get 3rd val. This command tolerates 
 #   multiple whitespace sequences around the version number
@@ -164,12 +164,12 @@ version-bump-patch:       ## bump patch version
 # license #
 ###########
 
-.PHONY: licenses
-licenses: 			## Generate licenses
-	@echo "Generating Licenses"
-	@poetry run pip-licenses --with-urls --format=markdown --order=name --packages ${PYTHON_PACKAGES}
+# .PHONY: licenses
+# licenses: 			## Generate licenses
+# 	@echo "Generating Licenses"
+# 	@poetry run pip-licenses --with-urls --format=markdown --order=name --packages ${PYTHON_PACKAGES}
 
-.PHONY: license-file
-license-file: 		## Generate licenses
-	@echo "Generating License file"
-	@poetry run pip-licenses --packages ${PYTHON_PACKAGES} --format=plain-vertical --with-license-file --no-license-path > NOTICE
+# .PHONY: license-file
+# license-file: 		## Generate licenses
+# 	@echo "Generating License file"
+# 	@poetry run pip-licenses --packages ${PYTHON_PACKAGES} --format=plain-vertical --with-license-file --no-license-path > NOTICE
