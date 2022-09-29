@@ -5,8 +5,8 @@
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 BASE_DIR=$(dirname ${SCRIPT_DIR}); export BASE_DIR
-OP_OUTPUT_DIR=${BASE_DIR}/op_output; export OP_OUTPUT_DIR
-ORACLE_PATH=${BASE_DIR}/db_assessment/dbSQLCollector; export ORACLE_PATH
+OP_OUTPUT_DIR=${BASE_DIR}/output; export OP_OUTPUT_DIR
+ORACLE_PATH=${BASE_DIR}; export ORACLE_PATH
 TMP_DIR=${BASE_DIR}/tmp
 LOG_DIR=${BASE_DIR}/log
 
@@ -57,10 +57,10 @@ EOF
 function cleanupOpOutput(){
 V_FILE_TAG=$1
 echo "Preparing files for compression."
-sed -i -r -f ${BASE_DIR}/db_assessment/dbSQLCollector/op_sed_cleanup.sed ${OP_OUTPUT_DIR}/*csv
+sed -i -r -f ${BASE_DIR}/sql/op_sed_cleanup.sed ${OP_OUTPUT_DIR}/*csv
 retval=$?
 if [ $retval -ne 0 ]; then
-  echo "Error processing ${BASE_DIR}/db_assessment/dbSQLCollector/op_sed_cleanup.sed.  Exiting..."
+  echo "Error processing ${BASE_DIR}/sql/op_sed_cleanup.sed.  Exiting..."
 fi
 sed -i -r '1i\ ' ${OP_OUTPUT_DIR}/*csv
 retval=$?
@@ -92,11 +92,11 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-if [ ! -f ${BASE_DIR}/version ]; then
-  echo "${BASE_DIR}/version file not found.  Please correct and try again"
+if [ ! -f ${BASE_DIR}/VERSION.txt ]; then
+  echo "${BASE_DIR}/VERSION.txt file not found.  Please sure you have set up your environment correctly."
   exit 1
 else
-  OpVersion=$(cat ${BASE_DIR}/version | head -1)
+  OpVersion=$(cat ${BASE_DIR}/VERSION.txt | head -1)
 fi
 
 # MAIN

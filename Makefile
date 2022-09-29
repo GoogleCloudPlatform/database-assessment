@@ -106,7 +106,7 @@ build-collector: clean-collector          ## Build the collector SQL scripts.
 	mkdir -p $(COLLECTOR_BUILD_DIR)/sql/extracts
 	cp src/collector/sql/*.{sql,sed} $(COLLECTOR_BUILD_DIR)/sql
 	cp src/collector/sql/extracts/*.sql $(COLLECTOR_BUILD_DIR)/sql/extracts
-	cp src/collector/scripts/collect-data.sh $(COLLECTOR_BUILD_DIR)
+	cp src/collector/collect-data.sh $(COLLECTOR_BUILD_DIR)
 	cp src/collector/README.txt $(COLLECTOR_BUILD_DIR)
 	cp  LICENSE $(COLLECTOR_BUILD_DIR)
 	echo "Advisor Data Extractor version $(VERSION) ($(BUILD))" > $(COLLECTOR_BUILD_DIR)/VERSION.txt
