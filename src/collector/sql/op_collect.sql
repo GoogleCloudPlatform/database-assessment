@@ -14,26 +14,22 @@ prompt
 
 prompt Initializing Optimus Prime Collector...
 prompt
+
+DEFINE SQLDIR=&2
+DEFINE EXTRACTSDIR=&SQLDIR/extracts
 set termout off
 @@op_collect_init.sql
 set termout on
 prompt
 prompt Step completed.
 
-prompt
-prompt Creating output directory
-set termout off
-!mkdir -p &outputdir
-set termout on
-prompt
-prompt Setp completed.
 
 prompt
 prompt Collecting Optimus Prime data...
 prompt
 
 set termout off
-@@op_collect_db_info.sql
+@&SQLDIR/op_collect_db_info.sql &SQLDIR
 
 set termout on
 prompt Step completed.

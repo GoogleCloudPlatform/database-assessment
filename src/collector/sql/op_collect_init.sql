@@ -45,7 +45,7 @@ set time off
 whenever sqlerror continue
 whenever oserror continue
 
-HOS echo define outputdir=$OP_OUTPUT_DIR > /tmp/dirs.sql
+HOS echo define outputdir=$OUTPUT_DIR > /tmp/dirs.sql
 HOS echo define seddir=$BASE_DIR/db_assessment/dbSQLCollector >> /tmp/dirs.sql
 HOS echo define v_tag=$V_TAG >> /tmp/dirs.sql
 @/tmp/dirs.sql
