@@ -726,7 +726,7 @@ def create_dataset(datasetName, gcpProjectName):
         dataset = client.create_dataset(dataset)  # Make an API request.
         print("Created dataset {}.{}".format(client.project, dataset.dataset_id))
 
-    except Conflict as e:
+    except Conflict:
         # If dataset already exists
         print("Dataset {} already exists.".format(dataset_id))
 
@@ -754,10 +754,10 @@ def delete_dataset(datasetName, gcpProjectName):
     # Raises google.api_core.exceptions.Conflict if the Dataset already
     # exists within the project.
     try:
-        dataset = client.delete_dataset(dataset_id, delete_contents=True, not_found_ok=True)  # Make an API request.
+        client.delete_dataset(dataset_id, delete_contents=True, not_found_ok=True)  # Make an API request.
         print("Deleted dataset {}".format(dataset_id))
 
-    except Conflict as e:
+    except Conflict:
         # If dataset already exists
         print("Failed to delete dataset {}.".format(dataset_id))
 
