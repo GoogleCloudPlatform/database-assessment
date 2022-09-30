@@ -40,7 +40,7 @@ def consolidate_collection(args, transformersTablesSchema):
 
     # Creating Hash Table with all expected tableName schemas to be imported
     tableSchemas = {}
-    tableSchemas = getBQJobConfig(transformersTablesSchema, "REGULAR")
+    tableSchemas = get_bq_job_config(transformersTablesSchema, "REGULAR")
 
     # Counting all processed files
     fileCounter = 0
@@ -51,9 +51,7 @@ def consolidate_collection(args, transformersTablesSchema):
         fileCounter = fileCounter + 1
 
         # Using the expected tableName to look for files in the OS in the directory passed in --files-location (default dbResults)
-        csvFilesLocationPattern = (
-            str(getattr(args, "files_location")) + "/opdb*" + str(tableName) + "*.csv"
-        )
+        csvFilesLocationPattern = str(getattr(args, "files_location")) + "/opdb*" + str(tableName) + "*.csv"
 
         # Generating a list with all found OS filenames
         fileList = list_files(csvFilesLocationPattern)
@@ -68,14 +66,11 @@ def consolidate_collection(args, transformersTablesSchema):
             fileTableCounter = fileTableCounter + 1
 
             # Final table name from the CSV file names
-            tableName = getObjNameFromFiles(fileName, "__", 1)
+            tableName = get_obj_name_from_files(fileName, "__", 1)
 
             # Filename to be used to name consolidated file
             targetFileNameConsolidated = (
-                str(getattr(args, "files_location"))
-                + "/opalldb__"
-                + str(tableName)
-                + "__consolidate.csv"
+                str(getattr(args, "files_location")) + "/opalldb__" + str(tableName) + "__consolidate.csv"
             )
 
             # Checks if file already exists in the first matching file found because the other files need to append to existent one.
@@ -85,9 +80,7 @@ def consolidate_collection(args, transformersTablesSchema):
                 if os.path.exists(targetFileNameConsolidated):
 
                     print(
-                        "The file {} already exists. It is going to be overwritten.".format(
-                            targetFileNameConsolidated
-                        )
+                        "The file {} already exists. It is going to be overwritten.".format(targetFileNameConsolidated)
                     )
                     os.remove(targetFileNameConsolidated)
 
@@ -132,9 +125,7 @@ def consolidate_collection(args, transformersTablesSchema):
     return True
 
 
-def createOptimusPrimeViewsTransformers(
-    gcpProjectName, bqDataset, view_name, view_query
-):
+def createOptimusPrimeViewsTransformers(gcpProjectName, bqDataset, view_name, view_query):
     # This function intents to create all views found in the opViews directory. The views creation must follow opConfig/transformers.json
 
     client = bigquery.Client()
@@ -170,9 +161,7 @@ def createOptimusPrimeViewsTransformers(
         # view = client.update_table(view, ['view_query'])
         return False
     except:
-        print(
-            "View {} count not be created. See DDL below:\n".format(str(view.reference))
-        )
+        print("View {} count not be created. See DDL below:\n".format(str(view.reference)))
         print(view_query)
         return False
 
@@ -209,15 +198,9 @@ def createOptimusPrimeViewsFromOS(gcpProjectName, bqDataset):
         for viewFileName in fileList:
 
             # Extracting the proper view name to be created in Big Query based out of OS view filename
-            view_name = str(getObjNameFromFiles(viewFileName, "__", 1)).replace(
-                ".sql", ""
-            )
+            view_name = str(get_obj_name_from_files(viewFileName, "__", 1)).replace(".sql", "")
 
-            print(
-                "Preparing to process {} and create the view name {}".format(
-                    viewFileName, view_name
-                )
-            )
+            print("Preparing to process {} and create the view name {}".format(viewFileName, view_name))
 
             if gcpProjectName is None:
                 # In case project_name is not provided in the arguments
@@ -231,9 +214,7 @@ def createOptimusPrimeViewsFromOS(gcpProjectName, bqDataset):
 
             # Extracting the view text and replacing the string ${dataset} by the proper dataset
             with open(viewFileName, "r") as view_content:
-                view.view_query = view_content.read().replace(
-                    "${dataset}", str(bqDataset)
-                )
+                view.view_query = view_content.read().replace("${dataset}", str(bqDataset))
 
             try:
                 # Make an API request to create the view.
@@ -280,15 +261,11 @@ def importAllDataframeToBQ(
 
         for tableName in dbAssessmentDataframes:
 
-            print(
-                "\nThe dataframe {} is being imported to Big Query.".format(tableName)
-            )
+            print("\nThe dataframe {} is being imported to Big Query.".format(tableName))
 
             if str(tableName).lower() in transformersParameters["do_not_import"]:
 
-                print(
-                    "Table name {} is being SKPIPED accordingly with transformers.json do_not_import parameter"
-                )
+                print("Table name {} is being SKPIPED accordingly with transformers.json do_not_import parameter")
 
                 continue
 
@@ -366,23 +343,19 @@ def importDataframeToBQ(
             df,
         )
 
-        tableSchemas = getBQJobConfig(transformersTablesSchemaDataframe, "DATAFRAME")
+        tableSchemas = get_bq_job_config(transformersTablesSchemaDataframe, "DATAFRAME")
 
         schema = tableSchemas[str(tableName).lower()]
 
     except KeyError:
         # In case there is not expected table schema found in getBQJobConfig function
-        print(
-            '\nWARNING: The dataframe "{}" could not be imported to Big Query.'.format(
-                tableName
-            )
-        )
+        print('\nWARNING: The dataframe "{}" could not be imported to Big Query.'.format(tableName))
         print(
             'The table name "{}" cannot be imported because it does not have table schema in transformers.json. So, it will be skipped.\n'.format(
                 tableName
             )
         )
-        importresults = populateBT(
+        importresults = populate_summary(
             tableName,
             df,
             "importDataframeToBQ",
@@ -397,11 +370,7 @@ def importDataframeToBQ(
     try:
         df = df.astype(str)
     except:
-        print(
-            '\nWARNING: The dataframe "{}" could not be converted to STRING.'.format(
-                tableName
-            )
-        )
+        print('\nWARNING: The dataframe "{}" could not be converted to STRING.'.format(tableName))
 
     if str(tableName).lower() == "opkeylog":
         # Construct a BigQuery client object with API Call to track Tool usage
@@ -441,19 +410,13 @@ def importDataframeToBQ(
         # source_format = file_format
     )
 
-    job = client.load_table_from_dataframe(
-        df, table_id, job_config=job_config
-    )  # Make an API request.
+    job = client.load_table_from_dataframe(df, table_id, job_config=job_config)  # Make an API request.
     job.result()  # Wait for the job to complete.
 
     table = client.get_table(table_id)  # Make an API request.
-    print(
-        "Loaded {} rows and {} columns to {}".format(
-            table.num_rows, len(table.schema), table_id
-        )
-    )
+    print("Loaded {} rows and {} columns to {}".format(table.num_rows, len(table.schema), table_id))
 
-    importresults = populateBT(
+    importresults = populate_summary(
         tableName,
         df,
         "importDataframeToBQ",
@@ -468,7 +431,7 @@ def importDataframeToBQ(
     return True, importresults
 
 
-def adddetails(fileName, args, params, tableHeader):
+def add_details(fileName, args, params, table_header):
     df = pd.read_csv(
         fileName,
         sep=str(args.sep),
@@ -476,7 +439,7 @@ def adddetails(fileName, args, params, tableHeader):
         na_values="n/a",
         keep_default_na=True,
         skipinitialspace=True,
-        names=tableHeader,
+        names=table_header,
         index_col=False,
     )
     if params["import_comment"]:
@@ -491,134 +454,125 @@ def adddetails(fileName, args, params, tableHeader):
         f.write(line.rstrip("\r\n") + "\n" + content)
 
 
-def importAllCSVsToBQ(
-    gcpProjectName,
-    bqDataset,
+def import_all_csvs_to_bq(
+    gcp_project_name,
+    bq_dataset,
     fileList,
     transformersTablesSchema,
-    skipLeadingRows,
+    skip_leading_rows,
     transformersParameters,
     args,
-    importresults,
+    import_results,
 ):
     # This function receives a list of files to import to Big Query, then it calls importCSVToBQ to import table/file by table/file
 
     print("\nPreparing to upload CSV files\n")
 
     # Creating Hash Table with all expected table schemas to be imported
-    tableSchemas = {}
-    tableSchemas = getBQJobConfig(transformersTablesSchema, "REGULAR")
+    table_schemas = {}
+    table_schemas = get_bq_job_config(transformersTablesSchema, "REGULAR")
 
     fileList.sort()
 
     # Getting the name of the target table_name to import the data based on the filename from OS
-    for fileName in fileList:
+    for file_name in fileList:
 
         # Default Big Query Job Configurations for Optimus Prime CSV files
-        autoDetect = "True"
+        auto_detect = "True"
 
         # Final table name from the CSV file names
-        tableName = getObjNameFromFiles(fileName, "__", 1)
+        table_name = get_obj_name_from_files(file_name, "__", 1)
 
-        doNotImportList = [
-            table.strip().lower() for table in transformersParameters["do_not_import"]
-        ]
+        doNotImportList = [table.strip().lower() for table in transformersParameters["do_not_import"]]
 
-        if str(tableName).lower() == "opkeylog":
+        if str(table_name).lower() == "opkeylog":
             # #skipLeadingRows=1
-            tableHeaders = rules_engine.get_headers_from_config(
-                str(tableName).lower(), transformersTablesSchema
-            )
+            tableHeaders = rules_engine.get_headers_from_config(str(table_name).lower(), transformersTablesSchema)
             tableHeader = [header.upper() for header in tableHeaders]
-            adddetails(fileName, args, transformersParameters, tableHeader)
+            add_details(file_name, args, transformersParameters, tableHeader)
 
-        if tableName.lower() not in doNotImportList:
+        if table_name.lower() not in doNotImportList:
 
             # Import the given CSV fileName into
-            print("\nThe filename {} is being imported to Big Query.".format(fileName))
+            print("\nThe filename {} is being imported to Big Query.".format(file_name))
 
-            successImport, importresults = importCSVToBQ(
-                gcpProjectName,
-                bqDataset,
-                tableName,
-                fileName,
-                skipLeadingRows,
-                autoDetect,
-                tableSchemas,
+            success_import, import_results = importCSVToBQ(
+                gcp_project_name,
+                bq_dataset,
+                table_name,
+                file_name,
+                skip_leading_rows,
+                auto_detect,
+                table_schemas,
                 args,
-                importresults,
+                import_results,
             )
 
         else:
 
             print(
                 "\nThe filename {} is being SKIPPED accordingly with parameter {} from transformers.json.".format(
-                    fileName, "do_not_import"
+                    file_name, "do_not_import"
                 )
             )
 
-    return True, importresults
+    return True, import_results
 
 
 def importCSVToBQ(
-    gcpProjectName,
-    bqDataset,
-    tableName,
-    fileName,
-    skipLeadingRows,
-    autoDetect,
-    tableSchemas,
+    gcp_project_name,
+    bq_dataset,
+    table_name,
+    file_name,
+    skip_leading_rows,
+    auto_detect,
+    table_schemas,
     args,
-    importresults,
+    import_results,
 ):
     # This function will import the CSV file into the Big Query using the proper project.dataset.tablename
     # A Big Query Job is created for it
 
     # Getting table schema
     try:
-        schema = tableSchemas[tableName]
+        schema = table_schemas[table_name]
     except KeyError:
         # In case there is not expected table schema found in getBQJobConfig function
-        print(
-            '\nWARNING: The filename "{}" could not be imported to Big Query.'.format(
-                fileName
-            )
-        )
+        print('\nWARNING: The filename "{}" could not be imported to Big Query.'.format(file_name))
         print(
             'The table name "{}" cannot be imported because it does not have table schema in transformers.json. So, it will be skipped.\n'.format(
-                tableName
+                table_name
             )
         )
         return False
 
-    if str(tableName).lower() == "opkeylog":
+    if str(table_name).lower() == "opkeylog":
         # Construct a BigQuery client object with API Call to track Tool usage
-        client = bigquery.Client(
-            client_info=set_client_info.get_http_client_info(), project=gcpProjectName
-        )
+        client = bigquery.Client(client_info=set_client_info.get_http_client_info(), project=gcp_project_name)
     else:
         # Construct a BigQuery client object.
-        client = bigquery.Client(project=gcpProjectName)
+        client = bigquery.Client(project=gcp_project_name)
 
     # Adding Project and Dataset based on arguments
     # table_id to the ID of the table to create.
-    if gcpProjectName is not None:
-        table_id = str(gcpProjectName) + "." + str(bqDataset) + "." + str(tableName)
+    if gcp_project_name is not None:
+        table_id = str(gcp_project_name) + "." + str(bq_dataset) + "." + str(table_name)
 
     # In case project_name was passed as argument. Then, it tries to get the default project for the [service] account being used
     else:
-        table_id = str(client.project) + "." + str(bqDataset) + "." + str(tableName)
+        table_id = str(client.project) + "." + str(bq_dataset) + "." + str(table_name)
 
-    schema_updateOptions = []
+    schema_update_options = []
     field_delimiter = str(args.sep)
     write_disposition = str(args.load_type).upper()
 
-    if str(tableName).lower() == "opkeylog":
-        ## OpkeyLog is a load stats table so rows would be appended and if any schema change is there, the update of schema would be allowed
-        schema_updateOptions = [bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION]
+    if str(table_name).lower() == "opkeylog":
+        ## OpkeyLog is a load stats table so rows would be appended
+        # and if any schema change is there, the update of schema would be allowed
+        schema_update_options = [bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION]
 
     # OP Internal Configuration Files
-    elif str(tableName).lower() in (
+    elif str(table_name).lower() in (
         "optimusconfig_bms_machinesizes",
         "optimusconfig_network_to_gcp",
     ):
@@ -627,98 +581,92 @@ def importCSVToBQ(
 
     job_config = bigquery.LoadJobConfig(
         schema=schema,
-        skip_leading_rows=skipLeadingRows,
-        schema_update_options=schema_updateOptions,
+        skip_leading_rows=skip_leading_rows,
+        schema_update_options=schema_update_options,
         # The source format defaults to CSV, so the line below is optional.
         source_format=bigquery.SourceFormat.CSV,
         field_delimiter=field_delimiter,
         write_disposition=write_disposition,
     )
 
-    with open(fileName, "rb") as source_file:
+    with open(file_name, "rb") as source_file:
 
         try:
-            load_job = client.load_table_from_file(
-                source_file, table_id, job_config=job_config
-            )
-        except Exception as importErr:
+            load_job = client.load_table_from_file(source_file, table_id, job_config=job_config)
+        except Exception as e:
             print(
                 '\n FAILED: Optimus Prime could not import the filename "{}" into "{}" because of the error "{}".\n'.format(
-                    fileName, table_id, importErr
+                    file_name, table_id, e
                 )
             )
 
             print("   Table Schema = {}".format(schema))
 
-            importresults = populateBT(
-                tableName,
+            import_results = populate_summary(
+                table_name,
                 "isFile",
                 "importDataframeToBQ",
-                fileName,
+                file_name,
                 "fromimportCSVToBQ",
                 -1,
-                importresults,
+                import_results,
                 args,
             )
 
-            return False, importresults
+            return False, import_results
 
     try:
         load_job.result()  # Waits for the job to complete.
-    except Exception as genericLoadErr:
+    except Exception as e:
         print(
             '\n FAILED: Optimus Prime could not import the filename "{}" into "{}" because of the error "{}".\n'.format(
-                fileName, table_id, genericLoadErr
+                file_name, table_id, e
             )
         )
-        importresults = populateBT(
-            tableName,
+        import_results = populate_summary(
+            table_name,
             "isFile",
             "importDataframeToBQ",
-            fileName,
+            file_name,
             "fromimportCSVToBQ",
             -1,
-            importresults,
+            import_results,
             args,
         )
-        return False, importresults
+        return False, import_results
 
     destination_table = client.get_table(table_id)  # Make an API request.
-    print(
-        "Loaded {} rows into: {}".format(
-            destination_table.num_rows, destination_table.reference
-        )
-    )
+    print("Loaded {} rows into: {}".format(destination_table.num_rows, destination_table.reference))
 
-    importresults = populateBT(
-        tableName,
+    import_results = populate_summary(
+        table_name,
         "isFile",
         "importDataframeToBQ",
-        fileName,
+        file_name,
         "fromimportCSVToBQ",
         destination_table.num_rows,
-        importresults,
+        import_results,
         args,
     )
 
     # returns True if processing is successfully
-    return True, importresults
+    return True, import_results
 
 
-def getTableRef(dataset, tableName, projectName):
-    client = bigquery.Client(project=projectName)
+def get_table_ref(dataset, table_name, project_name):
+    client = bigquery.Client(project=project_name)
 
-    if projectName:
-        return f"{projectName}.{dataset}.{tableName}"
+    if project_name:
+        return f"{project_name}.{dataset}.{table_name}"
 
-    return f"{client.project}.{dataset}.{tableName}"
+    return f"{client.project}.{dataset}.{table_name}"
 
 
-def getObjNameFromFiles(fileName, splitterChar, pos):
+def get_obj_name_from_files(file_name, splitter_char, pos):
     # This function returns a string based on a string splitted(Created a list) by a given character. Then, it returns the desired index position of the list.
 
     # return fileName.split(splitterChar)[pos]
-    splits = fileName.split(splitterChar)
+    splits = file_name.split(splitter_char)
 
     if len(splits) >= pos:
 
@@ -727,35 +675,33 @@ def getObjNameFromFiles(fileName, splitterChar, pos):
     return None
 
 
-def getBQJobConfig(tableSchemas, jobType):
+def get_bq_job_config(table_schemas, job_type):
 
-    bqTablesJobConfig = {}
+    bq_tables_job_config = {}
 
-    for tableName in tableSchemas:
+    for table_name in table_schemas:
 
-        bqTablesJobConfig[tableName] = []
+        bq_tables_job_config[table_name] = []
 
-        for schemaField in tableSchemas[tableName]:
+        for schema_field in table_schemas[table_name]:
 
-            if jobType == "REGULAR":
+            if job_type == "REGULAR":
 
-                bqTablesJobConfig[tableName].append(
-                    bigquery.SchemaField(str(schemaField[0]), str(schemaField[1]))
+                bq_tables_job_config[table_name].append(
+                    bigquery.SchemaField(str(schema_field[0]), str(schema_field[1]))
                 )
 
-            elif jobType == "DATAFRAME":
+            elif job_type == "DATAFRAME":
 
                 # bqTablesJobConfig[tableName].append(bigquery.SchemaField(str(schemaField[0]).upper(), 'bigquery.enums.SqlTypeNames.' + str(schemaField[1])))
-                bqTablesJobConfig[tableName].append(
-                    bigquery.SchemaField(
-                        str(schemaField[0]).upper(), str(schemaField[1])
-                    )
+                bq_tables_job_config[table_name].append(
+                    bigquery.SchemaField(str(schema_field[0]).upper(), str(schema_field[1]))
                 )
 
-    return bqTablesJobConfig
+    return bq_tables_job_config
 
 
-def createDataSet(datasetName, gcpProjectName):
+def create_dataset(datasetName, gcpProjectName):
     # Always try to create the dataset
 
     # Construct a BigQuery client object.
@@ -780,12 +726,12 @@ def createDataSet(datasetName, gcpProjectName):
         dataset = client.create_dataset(dataset)  # Make an API request.
         print("Created dataset {}.{}".format(client.project, dataset.dataset_id))
 
-    except Conflict as error:
+    except Conflict as e:
         # If dataset already exists
         print("Dataset {} already exists.".format(dataset_id))
 
 
-def deleteDataSet(datasetName, gcpProjectName):
+def delete_dataset(datasetName, gcpProjectName):
 
     # Construct a BigQuery client object.
     client = bigquery.Client()
@@ -808,27 +754,23 @@ def deleteDataSet(datasetName, gcpProjectName):
     # Raises google.api_core.exceptions.Conflict if the Dataset already
     # exists within the project.
     try:
-        dataset = client.delete_dataset(
-            dataset_id, delete_contents=True, not_found_ok=True
-        )  # Make an API request.
+        dataset = client.delete_dataset(dataset_id, delete_contents=True, not_found_ok=True)  # Make an API request.
         print("Deleted dataset {}".format(dataset_id))
 
-    except Conflict as error:
+    except Conflict as e:
         # If dataset already exists
         print("Failed to delete dataset {}.".format(dataset_id))
 
 
-def insertErrors(invalidfiles, op_df, gcpProjectName, bq_dataset):
+def insert_errors(invalid_files, op_df, gcp_project_name, bq_dataset):
     from google.cloud.exceptions import NotFound
 
-    tableid = "operrors"
+    table_id = "operrors"
     try:
         pkey = op_df["PKEY"].iloc[0]
         bq_client = bigquery.Client()
         try:
-            table = bq_client.get_table(
-                "{}.{}.{}".format(gcpProjectName, bq_dataset, tableid)
-            )
+            table = bq_client.get_table("{}.{}.{}".format(gcp_project_name, bq_dataset, table_id))
         except NotFound:
             schema = [
                 bigquery.SchemaField("PKEY", "STRING", mode="REQUIRED"),
@@ -836,12 +778,10 @@ def insertErrors(invalidfiles, op_df, gcpProjectName, bq_dataset):
                 bigquery.SchemaField("FILENAME", "STRING", mode="REQUIRED"),
                 bigquery.SchemaField("ERROR", "STRING", mode="REQUIRED"),
             ]
-            table = bigquery.Table(
-                gcpProjectName + "." + bq_dataset + "." + tableid, schema=schema
-            )
+            table = bigquery.Table(gcp_project_name + "." + bq_dataset + "." + table_id, schema=schema)
             table = bq_client.create_table(table)  # Make an API request.
         rows = []
-        for filename, error in invalidfiles.items():
+        for filename, error in invalid_files.items():
             basename = os.path.basename(filename)
             rows_to_insert = {
                 "PKEY": pkey,
@@ -850,144 +790,128 @@ def insertErrors(invalidfiles, op_df, gcpProjectName, bq_dataset):
                 "ERROR": error,
             }
             rows.append(rows_to_insert)
-        errors = bq_client.insert_rows_json(table, rows)
-    except Exception as pushErr:
+        _ = bq_client.insert_rows_json(table, rows)
+    except Exception as e:
         print(
             "\nWARNING: Issues while pushing Errors into operrors table with error ",
-            pushErr,
+            e,
         )
 
 
-def populateBT(
-    tableName,
+def populate_summary(
+    table_name,
     df,
-    dataframeornot,
-    invalidfiles,
-    btsource,
-    rowsimported,
-    importresults,
+    dataframe_or_not,
+    invalid_files,
+    bt_source,
+    imported_rows,
+    import_results,
     args,
 ):
     # Fuction to populate the importresults list which will be used to print using Beautiful Table
     # rowsimported of <0 is used to indicate a FAILED status
-    tmpdataFrame = pd.DataFrame()
+    tmp_dataframe = pd.DataFrame()
 
-    if "opConfig/" in invalidfiles:
-        return importresults
+    if "opConfig/" in invalid_files:
+        return import_results
 
-    if btsource == "invalidfiles":  # when called from runMain
-        for fileName, error in invalidfiles.items():
-            tmpdataFrame = pd.DataFrame()
-            tmpdataFramedict = {
-                "Target Table": getObjNameFromFiles(fileName, "__", 1),
-                "Distinct Pkey": getObjNameFromFiles(fileName, "__", 2),
+    if bt_source == "invalidfiles":  # when called from runMain
+        for file_name, error in invalid_files.items():
+            tmp_dataframe = pd.DataFrame()
+            tmp_dataframe_dict = {
+                "Target Table": get_obj_name_from_files(file_name, "__", 1),
+                "Distinct Pkey": get_obj_name_from_files(file_name, "__", 2),
                 "Import Status": "FAILED",
                 "Loaded rows": 0,
             }
-            tmpdataFrame = tmpdataFrame.append(tmpdataFramedict, ignore_index=True)
-            if len(tmpdataFrame) > 0:
-                importresults = pd.concat(
-                    [importresults, tmpdataFrame], ignore_index=True, axis=0
-                )
+            tmp_dataframe = tmp_dataframe.append(tmp_dataframe_dict, ignore_index=True)
+            if len(tmp_dataframe) > 0:
+                import_results = pd.concat([import_results, tmp_dataframe], ignore_index=True, axis=0)
     else:
         if args.from_dataframe:  # when called from importDataframeToBQ
-            if dataframeornot is not None:
+            if dataframe_or_not is not None:
                 if "PKEY" in df.columns.to_list():
                     df.reset_index(drop=True, inplace=True)
-                    pkeygroupby = df.groupby(["PKEY"]).size()
-                    pkeycount = pkeygroupby.to_dict()
-                    for pkeyname, pkeyname_rowcount in pkeycount.items():
-                        tmpdataFrame = pd.DataFrame()
-                        tmpdataFramedict = {
-                            "Target Table": tableName,
-                            "Distinct Pkey": pkeyname,
+                    group_by = df.groupby(["PKEY"]).size()
+                    key_count = group_by.to_dict()
+                    for key_name, key_name_rowcount in key_count.items():
+                        tmp_dataframe = pd.DataFrame()
+                        tmp_dataframe_dict = {
+                            "Target Table": table_name,
+                            "Distinct Pkey": key_name,
                             "Import Status": "SUCCESS",
-                            "Loaded rows": pkeyname_rowcount,
+                            "Loaded rows": key_name_rowcount,
                         }
-                        tmpdataFrame = tmpdataFrame.append(
-                            tmpdataFramedict, ignore_index=True
-                        )
-                        if len(tmpdataFrame) > 0:
-                            importresults = pd.concat(
-                                [importresults, tmpdataFrame], ignore_index=True, axis=0
-                            )
+                        tmp_dataframe = tmp_dataframe.append(tmp_dataframe_dict, ignore_index=True)
+                        if len(tmp_dataframe) > 0:
+                            import_results = pd.concat([import_results, tmp_dataframe], ignore_index=True, axis=0)
 
         else:
-            fileName = invalidfiles  # when called from importCSVToBQ
+            file_name = invalid_files  # when called from importCSVToBQ
 
-            if "opdbt" not in fileName:
-                if rowsimported >= 0:
-                    if len(importresults) == 0:
-                        tmpdataFrame = pd.DataFrame()
-                        tmpdataFramedict = {
-                            "Target Table": tableName,
-                            "Distinct Pkey": getObjNameFromFiles(fileName, "__", 2),
+            if "opdbt" not in file_name:
+                if imported_rows >= 0:
+                    if len(import_results) == 0:
+                        tmp_dataframe = pd.DataFrame()
+                        tmp_dataframe_dict = {
+                            "Target Table": table_name,
+                            "Distinct Pkey": get_obj_name_from_files(file_name, "__", 2),
                             "Import Status": "SUCCESS",
-                            "Loaded rows": rowsimported,
+                            "Loaded rows": imported_rows,
                         }
-                        tmpdataFrame = tmpdataFrame.append(
-                            tmpdataFramedict, ignore_index=True
-                        )
+                        tmp_dataframe = tmp_dataframe.append(tmp_dataframe_dict, ignore_index=True)
                     else:
                         if (
-                            tableName in importresults["Target Table"].values
-                            and "SUCCESS" in importresults["Import Status"].values
+                            table_name in import_results["Target Table"].values
+                            and "SUCCESS" in import_results["Import Status"].values
                         ):
                             # this is needed as bq functions check for rows already loaded and not the new ones only
-                            ExistingRowsInDataframe = importresults[
-                                importresults["Target Table"].str.contains(tableName)
-                                & importresults["Import Status"].str.contains("SUCCESS")
+                            existing_rows = import_results[
+                                import_results["Target Table"].str.contains(table_name)
+                                & import_results["Import Status"].str.contains("SUCCESS")
                             ]["Loaded rows"].sum()
-                            newrows4dataframe = rowsimported - ExistingRowsInDataframe
+                            new_rows = imported_rows - existing_rows
 
-                            tmpdataFrame = pd.DataFrame()
-                            tmpdataFramedict = {
-                                "Target Table": tableName,
-                                "Distinct Pkey": getObjNameFromFiles(fileName, "__", 2),
+                            tmp_dataframe = pd.DataFrame()
+                            tmp_dataframe_dict = {
+                                "Target Table": table_name,
+                                "Distinct Pkey": get_obj_name_from_files(file_name, "__", 2),
                                 "Import Status": "SUCCESS",
-                                "Loaded rows": newrows4dataframe,
+                                "Loaded rows": new_rows,
                             }
-                            tmpdataFrame = tmpdataFrame.append(
-                                tmpdataFramedict, ignore_index=True
-                            )
+                            tmp_dataframe = tmp_dataframe.append(tmp_dataframe_dict, ignore_index=True)
                         else:
-                            tmpdataFrame = pd.DataFrame()
-                            tmpdataFramedict = {
-                                "Target Table": tableName,
-                                "Distinct Pkey": getObjNameFromFiles(fileName, "__", 2),
+                            tmp_dataframe = pd.DataFrame()
+                            tmp_dataframe_dict = {
+                                "Target Table": table_name,
+                                "Distinct Pkey": get_obj_name_from_files(file_name, "__", 2),
                                 "Import Status": "SUCCESS",
-                                "Loaded rows": rowsimported,
+                                "Loaded rows": imported_rows,
                             }
-                            tmpdataFrame = tmpdataFrame.append(
-                                tmpdataFramedict, ignore_index=True
-                            )
+                            tmp_dataframe = tmp_dataframe.append(tmp_dataframe_dict, ignore_index=True)
 
                 else:
-                    tmpdataFrame = pd.DataFrame()
-                    tmpdataFramedict = {
-                        "Target Table": tableName,
-                        "Distinct Pkey": getObjNameFromFiles(fileName, "__", 2),
+                    tmp_dataframe = pd.DataFrame()
+                    tmp_dataframe_dict = {
+                        "Target Table": table_name,
+                        "Distinct Pkey": get_obj_name_from_files(file_name, "__", 2),
                         "Import Status": "FAILED",
                         "Loaded rows": 0,
                     }
-                    tmpdataFrame = tmpdataFrame.append(
-                        tmpdataFramedict, ignore_index=True
-                    )
+                    tmp_dataframe = tmp_dataframe.append(tmp_dataframe_dict, ignore_index=True)
 
-                if len(tmpdataFrame) > 0:
-                    importresults = pd.concat(
-                        [importresults, tmpdataFrame], ignore_index=True, axis=0
-                    )
+                if len(tmp_dataframe) > 0:
+                    import_results = pd.concat([import_results, tmp_dataframe], ignore_index=True, axis=0)
 
-    return importresults
+    return import_results
 
 
-def printBTResults(importresults):
+def print_results(importresults):
     # Fuction to print the import logs present in  btImportLogTable /btImportLogFinalTable
 
     # Create and load the output bt table
-    btImportLogFinalTable = BeautifulTable(maxwidth=300)
-    btImportLogFinalTable.columns.header = [
+    import_log_final_table = BeautifulTable(maxwidth=300)
+    import_log_final_table.columns.header = [
         "Target Table",
         "Distinct Pkey",
         "Import Status",
@@ -996,30 +920,24 @@ def printBTResults(importresults):
 
     # To group by table name, import status, count of distinct pkeys and sum of rows
     if not importresults.empty:
-        importresultsagg = (
+        import_results_agg = (
             importresults.groupby(["Target Table", "Import Status"])["Loaded rows"]
             .agg(["size", "sum"])
             .reset_index(drop=False)
         )
-        importresultsfinal = importresultsagg.rename(
-            columns={"size": "Distinct Pkey", "sum": "Loaded rows"}
-        )
+        import_results_final = import_results_agg.rename(columns={"size": "Distinct Pkey", "sum": "Loaded rows"})
 
         # convert float type to int type
-        importresultsfinal["Loaded rows"] = importresultsfinal["Loaded rows"].astype(
-            int
-        )
+        import_results_final["Loaded rows"] = import_results_final["Loaded rows"].astype(int)
 
         # swap for correcting to match the expected order of columns
-        importresultsfinal = importresultsfinal[
-            ["Target Table", "Distinct Pkey", "Import Status", "Loaded rows"]
-        ]
+        import_results_final = import_results_final[["Target Table", "Distinct Pkey", "Import Status", "Loaded rows"]]
 
         # insert into beautiful table
-        for index, row in importresultsfinal.iterrows():
-            btImportLogFinalTable.rows.append(row)
+        for _, row in import_results_final.iterrows():
+            import_log_final_table.rows.append(row)
 
-    btImportLogFinalTable.set_style(BeautifulTable.STYLE_BOX_ROUNDED)
+    import_log_final_table.set_style(BeautifulTable.STYLE_BOX_ROUNDED)
     print("\n\n Import Completed....\n")
     print("\n Import Summary \n\n")
-    print(btImportLogFinalTable)
+    print(import_log_final_table)

@@ -70,9 +70,7 @@ def run_main(args: "AppConfig") -> None:
         # CSV files to be processed
         # The default location will be dbResults if not overwritten
         # by the argument --files-location
-        file_search_pattern = (
-            f"{args.files_location}/*{args.collection_id.replace(' ', '')}.csv"
-        )
+        file_search_pattern = f"{args.files_location}/*{args.collection_id.replace(' ', '')}.csv"
 
         # Append files_location if there are filter_by_sql_version
         # and/or filter_by_db_version flag
@@ -114,9 +112,7 @@ def run_main(args: "AppConfig") -> None:
         # Make sure there are not 11.2 or 11.1 database versions
         # being imported along with other database versions.
         db_versions_list = (f.split("__")[2].split("_")[0] for f in file_list)
-        outliers = len(
-            [version for version in db_versions_list if version not in ["111", "112"]]
-        )
+        outliers = len([version for version in db_versions_list if version not in ["111", "112"]])
         if ("111" in db_versions_list or "112" in db_versions_list) and outliers > 0:
             logger.error(
                 "ERROR:  Importing other versions along with 11.1 and 11.2 is "
@@ -136,25 +132,17 @@ def run_main(args: "AppConfig") -> None:
         csvFilesLocationPatternOPConfig = "db_assessment/opConfig/*.csv"
 
         # Getting a list of files from OS based on the pattern provided
-        fileListOPConfig = import_db_assessment.list_files(
-            csvFilesLocationPatternOPConfig
-        )
+        fileListOPConfig = import_db_assessment.list_files(csvFilesLocationPatternOPConfig)
 
         # Variable to track the collection id. To be used mostly when new CSV files are generated from processing rules
-        collectionKey = import_db_assessment.getObjNameFromFiles(
-            str(file_list[0]), "__", 2
-        )
+        collectionKey = import_db_assessment.get_obj_name_from_files(str(file_list[0]), "__", 2)
         run_parameters["collectionKey"] = collectionKey
 
         # Verify if the script has any version on it (only old script versions should not have 3 parts)
         if args.db_version is not None:
             run_parameters["db_version"] = str(args.db_version)
-        elif (
-            len(collectionKey.split("_")) >= 3 and args.db_version is None
-        ):  # bug #23. Changed == to >=.
-            run_parameters["db_version"] = import_db_assessment.getObjNameFromFiles(
-                collectionKey, "_", 0
-            )
+        elif len(collectionKey.split("_")) >= 3 and args.db_version is None:  # bug #23. Changed == to >=.
+            run_parameters["db_version"] = import_db_assessment.get_obj_name_from_files(collectionKey, "_", 0)
         else:
             logger.fatal(
                 "FATAL ERROR: Please use --db-version and --collection-version."
@@ -166,9 +154,7 @@ def run_main(args: "AppConfig") -> None:
             run_parameters["import_comment"] = args.import_comment
 
         if len(collectionKey.split("_")) >= 3:  # bug #23. Changed == to >=.
-            run_parameters[
-                "collection_version"
-            ] = import_db_assessment.getObjNameFromFiles(collectionKey, "_", 1)
+            run_parameters["collection_version"] = import_db_assessment.get_obj_name_from_files(collectionKey, "_", 1)
         else:
             run_parameters["collection_version"] = args.collection_version
 
@@ -191,14 +177,10 @@ def run_main(args: "AppConfig") -> None:
         )
         try:
             # Adjusting the table_schemas from transformers.json accordingly with the database version
-            for db_version in schema_config[
-                run_parameters["collection_version"]
-            ].keys():
+            for db_version in schema_config[run_parameters["collection_version"]].keys():
 
                 if run_parameters["db_version"] in db_version:
-                    table_schema = schema_config[run_parameters["collection_version"]][
-                        db_version
-                    ]
+                    table_schema = schema_config[run_parameters["collection_version"]][db_version]
 
             # If we could not find any matching for tableSchemas
             if table_schema is None:
@@ -220,7 +202,7 @@ def run_main(args: "AppConfig") -> None:
         # Delete the dataset before importing new data
         if args.delete_dataset:
             if args.project_name is not None:
-                import_db_assessment.deleteDataSet(bqDataset, gcpProjectName)
+                import_db_assessment.delete_dataset(bqDataset, gcpProjectName)
             else:
                 logger.fatal(
                     "WARNING: The database %s will not be deleted "
@@ -232,7 +214,7 @@ def run_main(args: "AppConfig") -> None:
                 sys.exit()
 
         # Create the dataset to import the CSV data
-        import_db_assessment.createDataSet(bqDataset, gcpProjectName)
+        import_db_assessment.create_dataset(bqDataset, gcpProjectName)
 
         # STEP: Processing parameters
         # which create internal variables(run_parameters)
@@ -319,10 +301,8 @@ def run_main(args: "AppConfig") -> None:
             ## Insert Invalid Files to BQ
             if "OPKEYLOG" in dbAssessmentDataframes.keys():
                 op_df = dbAssessmentDataframes["OPKEYLOG"]
-                import_db_assessment.insertErrors(
-                    invalidfiles, op_df, gcpProjectName, bqDataset
-                )
-                importresults = import_db_assessment.populateBT(
+                import_db_assessment.insert_errors(invalidfiles, op_df, gcpProjectName, bqDataset)
+                importresults = import_db_assessment.populate_summary(
                     "notabname",
                     "nodataframe",
                     "yes",
@@ -335,11 +315,7 @@ def run_main(args: "AppConfig") -> None:
 
         if args.from_dataframe:
 
-            (
-                sucessImported,
-                tablesImported,
-                importresults,
-            ) = import_db_assessment.importAllDataframeToBQ(
+            (sucessImported, tablesImported, importresults,) = import_db_assessment.importAllDataframeToBQ(
                 args,
                 gcpProjectName,
                 bqDataset,
@@ -352,7 +328,7 @@ def run_main(args: "AppConfig") -> None:
         else:
 
             # Import the CSV data found in the OS
-            sucessImported, importresults = import_db_assessment.importAllCSVsToBQ(
+            sucessImported, importresults = import_db_assessment.import_all_csvs_to_bq(
                 gcpProjectName,
                 bqDataset,
                 file_list,
@@ -363,7 +339,7 @@ def run_main(args: "AppConfig") -> None:
                 importresults,
             )
             # Import all Optimus Prime CSV configutation
-            sucessImported, importresults = import_db_assessment.importAllCSVsToBQ(
+            sucessImported, importresults = import_db_assessment.import_all_csvs_to_bq(
                 gcpProjectName,
                 bqDataset,
                 fileListOPConfig,
@@ -398,7 +374,7 @@ def run_main(args: "AppConfig") -> None:
         import_db_assessment.createOptimusPrimeViewsFromOS(gcpProjectName, bqDataset)
 
         # Call BT for import summary table
-        import_db_assessment.printBTResults(importresults)
+        import_db_assessment.print_results(importresults)
         print("\n\n Thank YOU for using Optimus Prime!\n\n")
 
 
@@ -460,9 +436,7 @@ def parse_arguments():
         help="separator string in the files to be processed. The default is: ; (semicolon)",
     )
 
-    parser.add_argument(
-        "--db-version", type=str, default=None, help="database version to be processed"
-    )
+    parser.add_argument("--db-version", type=str, default=None, help="database version to be processed")
 
     parser.add_argument(
         "--collection-version",
@@ -511,9 +485,7 @@ def parse_arguments():
         action="store_true",
     )
 
-    parser.add_argument(
-        "--remote", default=False, help="Leverage remote API", action="store_true"
-    )
+    parser.add_argument("--remote", default=False, help="Leverage remote API", action="store_true")
 
     parser.add_argument(
         "--remote-url",
@@ -534,13 +506,9 @@ def parse_arguments():
     )
 
     # Increase logging output level
-    parser.add_argument(
-        "-v", "--verbose", help="increase output verbosity", action="store_true"
-    )
+    parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
 
-    parser.add_argument(
-        "--import-comment", type=str, default="", help="Comment for the Import"
-    )
+    parser.add_argument("--import-comment", type=str, default="", help="Comment for the Import")
 
     parser.add_argument(
         "--filter-by-db-version",
@@ -569,9 +537,7 @@ def parse_arguments():
 
         # In case there is not dataset parameter set or with valid content in the arguments
         if args.dataset is None or args.dataset == "":
-            sys.exit(
-                "\nERROR: The parameter -dataset cannot be omitted and it must have a valid name.\n"
-            )
+            sys.exit("\nERROR: The parameter -dataset cannot be omitted and it must have a valid name.\n")
 
         # In case project name/project id is not provided
         elif args.project_name is None:

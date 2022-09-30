@@ -31,9 +31,7 @@ warnings.simplefilter(action="ignore", category=FutureWarning)
 logger = logging.getLogger()
 
 
-def coerce_data_type(
-    rule: Dict[str, Any]
-) -> Optional[Union[Any, List[str], str, float]]:
+def coerce_data_type(rule: Dict[str, Any]) -> Optional[Union[Any, List[str], str, float]]:
     """Coerce data type from config
 
     Convert the JSON fields into variables like dictionaries,
@@ -85,59 +83,26 @@ def run_rules(
         sorted_keys.append(singleRule)
     else:
         # Getting ordered list of keys by priority to iterate over the dictionary
-        sorted_keys = sorted(
-            transformerRules, key=lambda x: (transformerRules[x]["priority"])
-        )
+        sorted_keys = sorted(transformerRules, key=lambda x: (transformerRules[x]["priority"]))
 
     # Looping on ALL rules from transformers.json
     for ruleItem in sorted_keys:
 
-        stringExpression = getParsedRuleExpr(
-            transformerRules[ruleItem]["action_details"]["expr1"]
-        )
-        if_errorExpression = getParsedRuleExpr(
-            transformerRules[ruleItem]["action_details"]["if_error"]
-        )
+        stringExpression = getParsedRuleExpr(transformerRules[ruleItem]["action_details"]["expr1"])
+        if_errorExpression = getParsedRuleExpr(transformerRules[ruleItem]["action_details"]["if_error"])
 
         if str(transformerRules[ruleItem]["status"]).upper() == "ENABLED":
 
-            if (
-                str(transformerRules[ruleItem]["execution_group"]).upper()
-                == str(executionGroup).upper()
-            ):
+            if str(transformerRules[ruleItem]["execution_group"]).upper() == str(executionGroup).upper():
 
-                if int(
-                    str(transformersParameters["db_version"]).replace(".", "")[:3]
-                ) in range(
-                    int(
-                        str(transformerRules[ruleItem]["min_db_version"]).replace(
-                            ".", ""
-                        )[:3]
-                    ),
-                    int(
-                        str(transformerRules[ruleItem]["max_db_version"]).replace(
-                            ".", ""
-                        )[:3]
-                    )
-                    + 1,
+                if int(str(transformersParameters["db_version"]).replace(".", "")[:3]) in range(
+                    int(str(transformerRules[ruleItem]["min_db_version"]).replace(".", "")[:3]),
+                    int(str(transformerRules[ruleItem]["max_db_version"]).replace(".", "")[:3]) + 1,
                 ):
 
-                    if int(
-                        str(transformersParameters["collection_version"]).replace(
-                            ".", ""
-                        )[:3]
-                    ) in range(
-                        int(
-                            str(
-                                transformerRules[ruleItem]["min_sql_script_version"]
-                            ).replace(".", "")[:3]
-                        ),
-                        int(
-                            str(
-                                transformerRules[ruleItem]["max_sql_script_version"]
-                            ).replace(".", "")[:3]
-                        )
-                        + 1,
+                    if int(str(transformersParameters["collection_version"]).replace(".", "")[:3]) in range(
+                        int(str(transformerRules[ruleItem]["min_sql_script_version"]).replace(".", "")[:3]),
+                        int(str(transformerRules[ruleItem]["max_sql_script_version"]).replace(".", "")[:3]) + 1,
                     ):
 
                         if ruleItem not in rulesAlreadyExecuted:
@@ -149,30 +114,18 @@ def run_rules(
                             )
 
                             if (
-                                str(
-                                    transformerRules[ruleItem]["action_details"]["type"]
-                                ).upper()
-                                == "VARIABLE"
-                                and str(
-                                    transformerRules[ruleItem]["action_details"][
-                                        "action"
-                                    ]
-                                ).upper()
-                                == "CREATE"
+                                str(transformerRules[ruleItem]["action_details"]["type"]).upper() == "VARIABLE"
+                                and str(transformerRules[ruleItem]["action_details"]["action"]).upper() == "CREATE"
                             ):
                                 # transformers.json asking to create a variable which is a dictionary
 
                                 try:
                                     transformerResults[ruleItem] = {
                                         "Status": EXECUTEDSTATUS,
-                                        "Result Value": coerce_data_type(
-                                            transformerRules[ruleItem]
-                                        ),
+                                        "Result Value": coerce_data_type(transformerRules[ruleItem]),
                                     }
                                     transformersRulesVariables[
-                                        transformerRules[ruleItem]["action_details"][
-                                            "varname"
-                                        ]
+                                        transformerRules[ruleItem]["action_details"]["varname"]
                                     ] = transformerResults[ruleItem]["Result Value"]
 
                                 except:
@@ -182,54 +135,35 @@ def run_rules(
                                         "Result Value": None,
                                     }
                                     transformersRulesVariables[
-                                        transformerRules[ruleItem]["action_details"][
-                                            "varname"
-                                        ]
+                                        transformerRules[ruleItem]["action_details"]["varname"]
                                     ] = None
 
                             elif (
-                                str(
-                                    transformerRules[ruleItem]["action_details"]["type"]
-                                ).upper()
+                                str(transformerRules[ruleItem]["action_details"]["type"]).upper()
                                 in ("NUMBER", "FREESTYLE")
-                                and str(
-                                    transformerRules[ruleItem]["action_details"][
-                                        "action"
-                                    ]
-                                ).upper()
+                                and str(transformerRules[ruleItem]["action_details"]["action"]).upper()
                                 == "ADD_OR_UPDATE_COLUMN"
                             ):
                                 # transformers.json asking to add a column that is type number meaning it can be a calculation and the column to be added is NUMBER too
 
                                 # Where the result of expr1 will be saved initially
-                                dfTargetName = transformerRules[ruleItem][
-                                    "action_details"
-                                ]["dataframe_name"]
-                                columnTargetName = transformerRules[ruleItem][
-                                    "action_details"
-                                ]["column_name"]
+                                dfTargetName = transformerRules[ruleItem]["action_details"]["dataframe_name"]
+                                columnTargetName = transformerRules[ruleItem]["action_details"]["column_name"]
                                 ruleCondition = True
 
                                 try:
                                     ruleConditionString = str(
-                                        transformerRules[ruleItem]["action_details"][
-                                            "ifcondition1"
-                                        ]
+                                        transformerRules[ruleItem]["action_details"]["ifcondition1"]
                                     )
                                 except KeyError:
                                     ruleConditionString = None
 
                                 # In case ifcondition1 (transformers.json) is set for the rule
-                                if (
-                                    ruleConditionString is not None
-                                    and ruleConditionString != ""
-                                ):
+                                if ruleConditionString is not None and ruleConditionString != "":
 
                                     try:
                                         ruleCondition = eval(ruleConditionString)
-                                        print(
-                                            "ruleCondition = {}".format(ruleCondition)
-                                        )
+                                        print("ruleCondition = {}".format(ruleCondition))
                                     except:
                                         print(
                                             '\n Error processing ifcondition1 "{}" for rule "{}". So, this rule will be skipped.\n'.format(
@@ -249,9 +183,7 @@ def run_rules(
                                 try:
                                     dataframes[str(dfTargetName).upper()][
                                         str(columnTargetName).upper()
-                                    ] = execStringExpression(
-                                        stringExpression, if_errorExpression, dataframes
-                                    )
+                                    ] = execStringExpression(stringExpression, if_errorExpression, dataframes)
                                     df = dataframes[str(dfTargetName).upper()]
                                 except KeyError:
                                     print(
@@ -262,9 +194,7 @@ def run_rules(
                                     continue
 
                                 newTableName = str(
-                                    transformerRules[ruleItem]["action_details"][
-                                        "target_dataframe_name"
-                                    ]
+                                    transformerRules[ruleItem]["action_details"]["target_dataframe_name"]
                                 ).lower()
                                 fileName = (
                                     str(getattr(args, "files_location"))
@@ -274,10 +204,7 @@ def run_rules(
                                     + collectionKey
                                 )
 
-                                (
-                                    resCSVCreation,
-                                    transformersTablesSchema,
-                                ) = createCSVFromDataframe(
+                                (resCSVCreation, transformersTablesSchema,) = createCSVFromDataframe(
                                     df,
                                     transformerRules[ruleItem]["action_details"],
                                     args,
@@ -295,22 +222,13 @@ def run_rules(
                                     fileList.append(fileName)
 
                             elif (
-                                str(
-                                    transformerRules[ruleItem]["action_details"]["type"]
-                                ).upper()
-                                == "FREESTYLE"
-                                and str(
-                                    transformerRules[ruleItem]["action_details"][
-                                        "action"
-                                    ]
-                                ).upper()
+                                str(transformerRules[ruleItem]["action_details"]["type"]).upper() == "FREESTYLE"
+                                and str(transformerRules[ruleItem]["action_details"]["action"]).upper()
                                 == "CREATE_OR_REPLACE_DATAFRAME"
                             ):
                                 #
 
-                                df = execStringExpression(
-                                    stringExpression, if_errorExpression, dataframes
-                                )
+                                df = execStringExpression(stringExpression, if_errorExpression, dataframes)
 
                                 if df is None:
                                     print(
@@ -321,9 +239,7 @@ def run_rules(
                                     continue
 
                                 newTableName = str(
-                                    transformerRules[ruleItem]["action_details"][
-                                        "dataframe_name"
-                                    ]
+                                    transformerRules[ruleItem]["action_details"]["dataframe_name"]
                                 ).lower()
                                 fileName = (
                                     str(getattr(args, "files_location"))
@@ -333,10 +249,7 @@ def run_rules(
                                     + collectionKey
                                 )
 
-                                (
-                                    resCSVCreation,
-                                    transformersTablesSchema,
-                                ) = createCSVFromDataframe(
+                                (resCSVCreation, transformersTablesSchema,) = createCSVFromDataframe(
                                     df,
                                     transformerRules[ruleItem]["action_details"],
                                     args,
@@ -348,11 +261,7 @@ def run_rules(
 
                                 # Creating the new dataframe
                                 dataframes[
-                                    str(
-                                        transformerRules[ruleItem]["action_details"][
-                                            "dataframe_name"
-                                        ]
-                                    ).upper()
+                                    str(transformerRules[ruleItem]["action_details"]["dataframe_name"]).upper()
                                 ] = df
 
                                 if resCSVCreation:
@@ -360,16 +269,8 @@ def run_rules(
                                     fileList.append(fileName)
 
                             elif (
-                                str(
-                                    transformerRules[ruleItem]["action_details"]["type"]
-                                ).upper()
-                                == "FREESTYLE"
-                                and str(
-                                    transformerRules[ruleItem]["action_details"][
-                                        "action"
-                                    ]
-                                ).upper()
-                                == "FREESTYLE"
+                                str(transformerRules[ruleItem]["action_details"]["type"]).upper() == "FREESTYLE"
+                                and str(transformerRules[ruleItem]["action_details"]["action"]).upper() == "FREESTYLE"
                             ):
 
                                 try:
@@ -383,9 +284,7 @@ def run_rules(
                                     continue
 
                                 newTableName = str(
-                                    transformerRules[ruleItem]["action_details"][
-                                        "target_dataframe_name"
-                                    ]
+                                    transformerRules[ruleItem]["action_details"]["target_dataframe_name"]
                                 ).lower()
                                 fileName = (
                                     str(getattr(args, "files_location"))
@@ -395,10 +294,7 @@ def run_rules(
                                     + collectionKey
                                 )
 
-                                (
-                                    resCSVCreation,
-                                    transformersTablesSchema,
-                                ) = createCSVFromDataframe(
+                                (resCSVCreation, transformersTablesSchema,) = createCSVFromDataframe(
                                     df,
                                     transformerRules[ruleItem]["action_details"],
                                     args,
@@ -416,24 +312,12 @@ def run_rules(
                                     fileList.append(fileName)
 
                             elif (
-                                str(
-                                    transformerRules[ruleItem]["action_details"]["type"]
-                                ).upper()
-                                == "CREATE VIEW"
-                                and str(
-                                    transformerRules[ruleItem]["action_details"][
-                                        "action"
-                                    ]
-                                ).upper()
-                                == "EXECUTE_SQL"
+                                str(transformerRules[ruleItem]["action_details"]["type"]).upper() == "CREATE VIEW"
+                                and str(transformerRules[ruleItem]["action_details"]["action"]).upper() == "EXECUTE_SQL"
                             ):
 
-                                view_name = transformerRules[ruleItem][
-                                    "action_details"
-                                ]["target_object_name"]
-                                view_sql_query = transformerRules[ruleItem][
-                                    "action_details"
-                                ]["expr1"]
+                                view_name = transformerRules[ruleItem]["action_details"]["target_object_name"]
+                                view_sql_query = transformerRules[ruleItem]["action_details"]["expr1"]
                                 view_sql_query = "".join(view_sql_query)
 
                                 import_db_assessment.createOptimusPrimeViewsTransformers(
@@ -445,9 +329,7 @@ def run_rules(
                         print(
                             '\n    The rule "{}" is being skipped because of the Optimus Prime SQL Version is {} and not eligible for this rule based on transformers.json configuration file.\n'.format(
                                 str(ruleItem),
-                                str(
-                                    transformersParameters["collection_version"]
-                                ).replace(".", "")[:3],
+                                str(transformersParameters["collection_version"]).replace(".", "")[:3],
                             )
                         )
                         transformerResults[ruleItem] = {
@@ -460,9 +342,7 @@ def run_rules(
                     print(
                         '\n    The rule "{}" is being skipped because of the Database Version is {} and not eligible for this rule based on transformers.json configuration file.\n'.format(
                             str(ruleItem),
-                            str(transformersParameters["db_version"]).replace(".", "")[
-                                :3
-                            ],
+                            str(transformersParameters["db_version"]).replace(".", "")[:3],
                         )
                     )
                     transformerResults[ruleItem] = {
@@ -551,9 +431,7 @@ def parse_data(
 
                 try:
 
-                    tableHeaders = get_headers_from_config(
-                        table_name, transformersTablesSchema
-                    )
+                    tableHeaders = get_headers_from_config(table_name, transformersTablesSchema)
                     tableHeaders = [header.upper() for header in tableHeaders]
                     # df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders, keep_default_na=False, na_filter= False)
                     df = pd.read_csv(
@@ -642,9 +520,7 @@ def getAllDataFrames(
     for fileName in fileList:
 
         # Verifying if the file is a file that came from the SQL Script or is this is a result of a previous execution from transformers.json in which a file had been saved. I.E: Reshaped Dataframes
-        collectionType = import_db_assessment.getObjNameFromFiles(
-            str(fileName), "__", 0
-        )
+        collectionType = import_db_assessment.get_obj_name_from_files(str(fileName), "__", 0)
         collectionType = collectionType.split("/")[-1]
 
         if collectionType == "opdbt":
@@ -653,7 +529,7 @@ def getAllDataFrames(
             continue
 
         # Final table name from the CSV file names
-        tableName = import_db_assessment.getObjNameFromFiles(fileName, "__", 1)
+        tableName = import_db_assessment.get_obj_name_from_files(fileName, "__", 1)
 
         if str(tableName).lower() in transformersParameters["do_not_import"]:
 
@@ -674,11 +550,7 @@ def getAllDataFrames(
             fileError = validate_csv(fileName, tableHeader, args)
             if fileError is not None:
                 basename = os.path.basename(fileName)
-                print(
-                    "File {} is skipped because of error -> {} ".format(
-                        basename, fileError
-                    )
-                )
+                print("File {} is skipped because of error -> {} ".format(basename, fileError))
                 invalidfiles[fileName] = fileError
                 continue
         # Storing Dataframe in a Hash Table using as a key the final Table name coming from CSV filename
@@ -690,16 +562,10 @@ def getAllDataFrames(
             if args.consolidate_dataframes:
 
                 try:
-                    df_concat = pd.concat(
-                        [dataframes[str(tableName).upper()], df], axis=0
-                    )
+                    df_concat = pd.concat([dataframes[str(tableName).upper()], df], axis=0)
                     # Trimming the data before storing it
                     dataframes[str(tableName).upper()] = trim_dataframe(df_concat)
-                    print(
-                        " Concatenated into an existing dataframe for table name {}".format(
-                            tableName
-                        )
-                    )
+                    print(" Concatenated into an existing dataframe for table name {}".format(tableName))
 
                 except Exception:
                     # Trimming the data before storing it
@@ -732,9 +598,7 @@ def detect_schema(
         # In the arguments if we want to use AUTO schema detection
 
         # Replaces whatever is in there
-        transformersTablesSchema[tableName] = add_bq_data_type(
-            list(df.columns), "STRING"
-        )
+        transformersTablesSchema[tableName] = add_bq_data_type(list(df.columns), "STRING")
 
     elif schema_detection.upper() == "FILLGAP":
         # In the arguments if we want to try to only use it when the configuration file do not have it already
@@ -742,9 +606,7 @@ def detect_schema(
         if transformersTablesSchema.get(str(tableName).lower()) is None:
 
             # Adds configuration whenever this is not present
-            transformersTablesSchema[str(tableName).lower()] = add_bq_data_type(
-                list(df.columns), "STRING"
-            )
+            transformersTablesSchema[str(tableName).lower()] = add_bq_data_type(list(df.columns), "STRING")
             print(
                 "INFO: Optimus Prime is filling the gap in the transformers.json schema definition for {} table.\n".format(
                     tableName
@@ -857,21 +719,14 @@ def getAllReShapedDataframes(
 
         executedRulesList = []
 
-        for tableName_RuleID in transformersParameters.get(
-            "op_enable_reshape_for"
-        ).split(","):
+        for tableName_RuleID in transformersParameters.get("op_enable_reshape_for").split(","):
             # This parameter accepted multiple values
 
             tableName = str(tableName_RuleID).split(":")[0]
             ruleID = str(tableName_RuleID).split(":")[1]
             resCSVCreation = False
 
-            (
-                transformerParameterResults,
-                transformersResults,
-                fileList,
-                dataframes,
-            ) = run_rules(
+            (transformerParameterResults, transformersResults, fileList, dataframes,) = run_rules(
                 "0",
                 transformerRulesConfig,
                 dataframes,
@@ -885,11 +740,7 @@ def getAllReShapedDataframes(
                 None,
                 None,
             )
-            print(
-                "Reshaping Rule Processed: {} for the table name {}".format(
-                    ruleID, tableName
-                )
-            )
+            print("Reshaping Rule Processed: {} for the table name {}".format(ruleID, tableName))
 
             # Including rules already executed to be avoided
             executedRulesList.append(ruleID)
@@ -926,10 +777,7 @@ def getAllReShapedDataframes(
 
                         if df is not None:
                             # Writes CSVs from Dataframes when parameter store in CSV_ONLY or BIGQUERY
-                            (
-                                resCSVCreation,
-                                transformersTablesSchema,
-                            ) = createCSVFromDataframe(
+                            (resCSVCreation, transformersTablesSchema,) = createCSVFromDataframe(
                                 dataframes[reshapedTableName.upper()],
                                 transformersResults[str(tableName)],
                                 args,
@@ -948,9 +796,7 @@ def getAllReShapedDataframes(
                     else:
 
                         print(
-                            "\nThere is no parameter set to define the reshape process for: {}".format(
-                                str(tableName)
-                            )
+                            "\nThere is no parameter set to define the reshape process for: {}".format(str(tableName))
                         )
                         print(
                             "This is all valid reshape configurations found: {}\n".format(
@@ -972,16 +818,8 @@ def getAllReShapedDataframes(
             # For cases in which we are trying to reshape a CSV/tablename that does not exist
             else:
 
-                print(
-                    "\nWARNING: There is no data parsed from CSVs named {}".format(
-                        str(tableName)
-                    )
-                )
-                print(
-                    "WARNING: This is all valid CSVs names {}\n".format(
-                        str(dataFrames.keys())
-                    )
-                )
+                print("\nWARNING: There is no data parsed from CSVs named {}".format(str(tableName)))
+                print("WARNING: This is all valid CSVs names {}\n".format(str(dataFrames.keys())))
 
     return dataframes, fileList, transformersTablesSchema, executedRulesList
 
@@ -1028,11 +866,7 @@ def createCSVFromDataframe(
         df.to_csv(fileName, sep=str(args.sep), header=True, index=False, mode="a")
         # df.to_hdf(fileName, key='optimus')
 
-        print(
-            '\n Sucessfully created filename "{}" for table name "{}".\n'.format(
-                fileName, tableName
-            )
-        )
+        print('\n Sucessfully created filename "{}" for table name "{}".\n'.format(fileName, tableName))
 
         return True, transformersTablesSchema
 
@@ -1094,9 +928,7 @@ def getReShapedDataframe(df, transformersParameters):
             )
 
     # Pivoting daframe following the parameters given
-    pivoted_df = df.pivot(
-        index=frozenIndex, columns=targetColumn, values=targetStatsColumn
-    )
+    pivoted_df = df.pivot(index=frozenIndex, columns=targetColumn, values=targetStatsColumn)
 
     # Getting Columns names and levels to change it
     multiIndexColumns = pivoted_df.columns
@@ -1151,9 +983,7 @@ def getNewNamesFromMultiColumns(newNamesMapping, multiIndex, convertColumns):
             multiIndex[index] = tuple(tempList)
 
             # Creates the normalized dataframe column names. Using new column name
-            normalizedColumnsList.append(
-                str(tempList[1]) + "_" + str(multiIndex[index][0])
-            )
+            normalizedColumnsList.append(str(tempList[1]) + "_" + str(multiIndex[index][0]))
 
         else:
             # Nothing to do related to changing the column names and we use the current dataframe column names to create a non hirerarrical columns
@@ -1162,9 +992,7 @@ def getNewNamesFromMultiColumns(newNamesMapping, multiIndex, convertColumns):
             # str(multiIndex[index][1]) == '' then the column used to be index for the dataframe and therefore not part of the hirerarrical columns structure
 
             # Creates the normalized dataframe column names. For columns that are hirerarrical
-            normalizedColumnsList.append(
-                str(multiIndex[index][1]) + "_" + str(multiIndex[index][0])
-            )
+            normalizedColumnsList.append(str(multiIndex[index][1]) + "_" + str(multiIndex[index][0]))
             # else:
             # Creates the normalized dataframe column names. For columns that are NON hirerarrical (Used to be dataframe index)
             # normalizedColumnsList.append(str(multiIndex[index][0]))
