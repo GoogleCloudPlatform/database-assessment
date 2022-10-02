@@ -1,12 +1,15 @@
 import functools as ft
-from typing import Any, Callable, Dict, List, Literal, Optional, Set, Type
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Set, Type
 
 import aiosql as sql
-from aiosql.queries import Queries
 from sqlalchemy.future import Engine, create_engine
 from sqlalchemy.orm import sessionmaker
 
 from dbma.utils.aiosql_adapters import BigQueryAdapter, DuckDBAdapter
+
+if TYPE_CHECKING:
+    from aiosql.queries import Queries
+
 
 __all__ = ["get_engine", "get_aiosql_adapter", "db_session_maker", "SQLManager", "SupportedEngines"]
 
@@ -57,7 +60,7 @@ class SQLManager:
         self.engine_type = engine_type
         self.engine = get_engine(engine_type)
         self.sql_files_path = sql_files_path
-        self._queries: List[Queries] = []
+        self._queries: "List[Queries]" = []
         self._count: Dict[str, int] = {}
         self._available_queries: Set[str] = set()
         if sql_files_path:
@@ -95,7 +98,7 @@ class SQLManager:
         self._count[query] += 1
         return fn(self._db_session, *args, **kwargs)
 
-    def _create_fns(self, queries: Queries) -> None:
+    def _create_fns(self, queries: "Queries") -> None:
         """Create call forwarding to insert the database connection."""
         self._queries.append(queries)
         for q in queries.available_queries:
@@ -110,5 +113,4 @@ class SQLManager:
         return f"Connection Manager for ({self.engine_type})"
 
     def __del__(self) -> None:
-        if hasattr(self, "_db_session") and self._db_session:
-            self.close()
+        self.close()

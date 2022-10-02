@@ -5,4 +5,4 @@ from dbma.db import SQLManager
 
 __all__ = ["sql"]
 
-transformer = SQLManager(engine_type="duckdb", sql_files_path=str(Path(BASE_DIR / "transformer" / "sql")))
+sql = SQLManager(engine_type="duckdb", sql_files_path=str(Path(BASE_DIR / "transformer" / "sql")))

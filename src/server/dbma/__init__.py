@@ -1,7 +1,6 @@
 import logging
 
-from dbma import cli, config, db, log, utils
-from dbma.transformer import transformer
+from dbma import cli, config, db, log, transformer, utils
 from dbma.version import __version__
 
 logger = logging.getLogger(__name__)

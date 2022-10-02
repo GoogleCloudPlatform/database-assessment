@@ -1,8 +1,14 @@
 from logging import config as _logging_config
+from logging import getLogger
+from typing import TYPE_CHECKING
 
 from dbma.config import settings
 
-__all__ = ["config"]
+if TYPE_CHECKING:
+    from logging import Logger
+
+
+__all__ = ["config", "get_logger"]
 config = {
     "version": 1,
     "root": {"level": settings.log_level, "handlers": ["console"]},
@@ -28,4 +34,18 @@ config = {
 """
 Pre-configured log config for application.
 """
+
+
+def get_logger(name: str = "dbma") -> "Logger":
+    """Returns a configured logger for the given name
+
+    Args:
+        name (str, optional): _description_. Defaults to "dbma".
+
+    Returns:
+        Logger: A configured logger instance
+    """
+    return getLogger(name)
+
+
 _logging_config.dictConfig(config)
