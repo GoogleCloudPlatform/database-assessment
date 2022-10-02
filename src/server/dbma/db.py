@@ -76,7 +76,7 @@ class SQLManager:
 
     def cursor(self):  # type: ignore[no-untyped-def]
         """Get a cursor on the current connection."""
-        return self._db_session.cursor
+        return self._db_session.cursor()
 
     def commit(self) -> None:
         """Commit database transaction."""

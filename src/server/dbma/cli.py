@@ -2,6 +2,8 @@ import typer
 from rich.console import Console
 from rich.traceback import install as rich_tracebacks
 
+from dbma import transformer
+
 __all__ = ["console", "app"]
 
 TEXT_LOGO = """
@@ -29,4 +31,6 @@ def process_collection(
     collection: str = typer.Option(None, "--collection", "-c", help="Path to collection zip to upload"),
 ) -> None:
     """Process a collection"""
+    console.log("Dropping existing in-memory tables")
+    transformer.drop_all_tables()
     console.log(collection)

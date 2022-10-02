@@ -1,5 +1,6 @@
 import json
 import logging
+from typing import Final
 
 import requests
 from invoke.tasks import task
@@ -60,11 +61,7 @@ def get_beta_url(ctx):
         hide=True,
     ).stdout
     service = json.loads(json_output)
-    beta = [
-        revision["url"]
-        for revision in service["status"]["traffic"]
-        if revision.get("tag", None) == "beta"
-    ]
+    beta = [revision["url"] for revision in service["status"]["traffic"] if revision.get("tag", None) == "beta"]
     return beta[0]
 
 
@@ -82,14 +79,14 @@ def authenticate(ctx, local=False):
     if local:
         token_cmd = ctx.run("gcloud auth print-identity-token", hide=True)
         return token_cmd.stdout.replace("\n", "")
-    METADATA_SERVER_URL = "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes=https://www.googleapis.com/auth/iam"
-    METADATA_REQUEST_HEADERS = {"Metadata-Flavor": "Google"}
-    ID_TOKEN_URL = f"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{ctx.invoker_sa}:generateIdToken"
+    METADATA_SERVER_URL: Final = "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes=https://www.googleapis.com/auth/iam"
+    METADATA_REQUEST_HEADERS: Final = {"Metadata-Flavor": "Google"}
+    ID_TOKEN_URL: Final = (
+        f"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{ctx.invoker_sa}:generateIdToken"
+    )
 
     # Get the access token for the Cloud build account
-    access_token_request = requests.get(
-        METADATA_SERVER_URL, headers=METADATA_REQUEST_HEADERS, timeout=10
-    )
+    access_token_request = requests.get(METADATA_SERVER_URL, headers=METADATA_REQUEST_HEADERS, timeout=10)
     access_token = access_token_request.json()["access_token"]
     logger.info("Got access token")
     identity_token_resp = requests.post(
@@ -111,15 +108,9 @@ PROJECT = "optimus-prime-ci"
 
 @task
 def pull_config(ctx):
-    ctx.run(
-        "gcloud secrets versions access latest "
-        f'--secret="op-api-config" --project {PROJECT} > invoke.yml'
-    )
+    ctx.run("gcloud secrets versions access latest " f'--secret="op-api-config" --project {PROJECT} > invoke.yml')
 
 
 @task
 def push_config(ctx):
-    ctx.run(
-        "gcloud secrets versions add op-api-config "
-        f"--data-file=invoke.yml --project {PROJECT}"
-    )
+    ctx.run("gcloud secrets versions add op-api-config " f"--data-file=invoke.yml --project {PROJECT}")
