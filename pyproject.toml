@@ -3,7 +3,7 @@ authors = ["Eri Santos <erisantos@google.com>","Cody Fincher <codyfincher@google
 maintainers = ["Cody Fincher <codyfincher@google.com>"]
 description =  "A tool to enable collection of data from Oracle databases for homogeneous and heterogeneous database migration assessment"
 license = "Apache"
-name = "oracle-db-assessment"
+name = "db-migration-advisor"
 readme = "README.md"
 homepage = "https://github.com/GoogleCloudPlatform/oracle-database-assessment"
 repository = "https://github.com/GoogleCloudPlatform/oracle-database-assessment"
@@ -17,14 +17,31 @@ classifiers = [
         "Programming Language :: Python :: 3.10",
         "Operating System :: OS Independent",
 ]
-packages = [{include = "db_assessment", from = "src/server"}]
+packages = [{include = "db_assessment", from = "src/server"},{include = "dbma", from = "src/server"}]
 version = "3.0.4"
 
 [tool.poetry.scripts]
-opdba = "db_assessment.optimusprime:main"
+dbma = "dbma.__main__:main"
 optimus-prime = "db_assessment.optimusprime:main"
 
 [tool.poetry.dependencies]
+python = ">3.7,<=3.11"
+duckdb = "*"
+duckdb-engine = "*"
+aiosql = "*"
+pydantic = {version="*", extras=["dotenv"]}
+typer = "*"
+sqlalchemy = "*"
+sqlalchemy-bigquery = "*"
+rich = "*"
+google-api-core ="*"
+google-cloud-bigquery = "*"
+orjson = "*"
+google-cloud-secret-manager = "*"
+
+
+
+[tool.poetry.group.legacy.dependencies]
 beautifultable ="*"
 flask ="*"
 google-api-core ="*"
@@ -37,15 +54,7 @@ python = ">3.7,<=3.11"
 python-dotenv = "*"
 requests = "*"
 
-
-
-[tool.poetry.group.future.dependencies]
-duckdb = "*"
-duckdb-engine = "*"
-aiosql = "*"
-pydantic = {version="*", extras=["dotenv"]}
-
-[tool.poetry.group.future]
+[tool.poetry.group.legacy]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
@@ -96,6 +105,8 @@ bandit = "*"
 black = "*"
 slotscheck = "*"
 blacken-docs = "*"
+pandas-stubs = "*"
+sqlalchemy2-stubs = "*"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"

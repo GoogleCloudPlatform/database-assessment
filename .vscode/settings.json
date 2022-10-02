@@ -51,6 +51,7 @@
   },
   "cSpell.words": [
     "astype",
+    "dbma",
     "dbping",
     "highwater",
     "isdefault",
@@ -60,6 +61,6 @@
   "[sql]": {
     "editor.defaultFormatter": "adpyke.vscode-sql-formatter"
   },
-  "python.linting.banditEnabled": false,
-  "python.linting.mypyEnabled": false
+  "python.linting.banditEnabled": true,
+  "python.linting.mypyEnabled": true
 }
