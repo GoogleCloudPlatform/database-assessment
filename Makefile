@@ -49,7 +49,7 @@ install:          ## Install the project in dev mode.
 	@if ! poetry --version > /dev/null; then echo 'poetry is required, install from https://python-poetry.org/'; exit 1; fi
 	@if [ "$(VENV_EXISTS)" ]; then echo "Removing existing environment"; fi
 	if [ "$(VENV_EXISTS)" ]; then rm -Rf .venv; fi
-	if [ "$(USING_POETRY)" ]; then poetry config virtualenvs.in-project true && poetry config virtualenvs.create false  && poetry config virtualenvs.options.always-copy true && python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip && poetry install --with main && exit; fi
+	if [ "$(USING_POETRY)" ]; then poetry config virtualenvs.in-project true  && poetry config virtualenvs.options.always-copy true && python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip && poetry install --with main && exit; fi
 	if [ "$(USING_NPM)" ]; then npm install; fi
 	@echo "=> Install complete.  ** If you want to re-install re-run 'make install'"
 
@@ -60,7 +60,7 @@ install-dev:	 ## Install the project in dev mode.
 	@if ! poetry --version > /dev/null; then echo 'poetry is required, install from https://python-poetry.org/'; exit 1; fi
 	@if [ "$(VENV_EXISTS)" ]; then echo "Removing existing environment"; fi
 	if [ "$(VENV_EXISTS)" ]; then rm -Rf .venv; fi
-	if [ "$(USING_POETRY)" ]; then poetry config virtualenvs.in-project true && poetry config virtualenvs.create false  && poetry config virtualenvs.options.always-copy true && python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip && poetry install --with "dev linting future" && exit; fi
+	if [ "$(USING_POETRY)" ]; then poetry config virtualenvs.in-project true  && poetry config virtualenvs.options.always-copy true && python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip && poetry install && exit; fi
 	if [ "$(USING_NPM)" ]; then npm install; fi
 	@echo "=> Install complete.  ** If you want to re-install re-run 'make install-dev'"
 
@@ -144,7 +144,9 @@ pre-release:       ## bump the version and create the release tag
 	bump2version $(increment)
 	git describe --tags --abbrev=0
 	head pyproject.toml | grep version
-	cat src/pytemplates_typer_cli/__version__.py
+	cat src/dbma/version.py
+	make build-collector
+	make package-collector
 
 ###########
 # version #

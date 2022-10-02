@@ -8,7 +8,7 @@
       "name": "DBMA: Database Migration Advisor",
       "type": "python",
       "request": "launch",
-      "module": "dbma.__main__",
+      "module": "dbma",
       "args": ["process-collection"],
       "justMyCode": true,
       "console": "integratedTerminal"

@@ -25,7 +25,7 @@ dbma = "dbma.__main__:main"
 optimus-prime = "db_assessment.optimusprime:main"
 
 [tool.poetry.dependencies]
-python = ">3.7,<=3.11"
+python = ">=3.8,<3.11"
 duckdb = "*"
 duckdb-engine = "*"
 aiosql = "*"
@@ -35,27 +35,24 @@ sqlalchemy = "*"
 sqlalchemy-bigquery = "*"
 rich = "*"
 google-api-core ="*"
-google-cloud-bigquery = "*"
+google-cloud-bigquery = ">=1.28.0"
+protobuf = ">=4.0.0"
 orjson = "*"
+httpx = "*"
 google-cloud-secret-manager = "*"
-
-
-
-[tool.poetry.group.legacy.dependencies]
-beautifultable ="*"
-flask ="*"
-google-api-core ="*"
-google-cloud-bigquery = "*"
-gunicorn ="*"
+google-resumable-media = ">=2.0.0"
 numpy ="*"
 pandas ="*"
 pyarrow ="*"
-python = ">3.7,<=3.11"
-python-dotenv = "*"
+flask ="*"
+gunicorn ="*"
+
+[tool.poetry.group.legacy.dependencies]
+beautifultable ="*"
 requests = "*"
 
 [tool.poetry.group.legacy]
-optional = true
+optional = false
 
 [tool.poetry.group.dev.dependencies]
 bump2version = "*"
@@ -65,9 +62,10 @@ pytest = "*"
 pytest-cov = "*"
 pytest-dotenv = "*"
 pytest-mock = "*"
+invoke = "*"
+ipython-sql = "*"
 ipython = "*"
 ipykernel = "*"
-invoke = "*"
 
 [tool.poetry.group.docs]
 optional = true
