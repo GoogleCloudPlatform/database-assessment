@@ -58,10 +58,9 @@ class EnvironmentSettings(_BaseSettings):
 
 
 class Settings(BaseSettings):
-    secret_key: SecretBytes
-    build_number: str = __version__
+    version_number: str = __version__
     log_level: str = "INFO"
-    google_application_project_id: Optional[str]
+    google_project_id: Optional[str]
     google_application_credentials: Optional[str] = None
     google_assets_bucket: str = "dbma-assets"
     google_runtime_secrets: str = "run-config"
