@@ -16,3 +16,7 @@ def main() -> None:
         )
         sys.exit(1)
     cli.app()
+
+
+if __name__ == "__main__":
+    main()

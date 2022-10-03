@@ -3,24 +3,32 @@ from typing import Optional, Type, Union
 
 from packaging.version import LegacyVersion, Version
 
-from dbma import log
+from dbma import db, log
 from dbma.config import BaseSchema
 
-__all__ = ["CollectionConfig", "BaseCollection", "VersionProfile", "CollectionFileSchema"]
+__all__ = ["CollectionConfig", "BaseCollection", "VersionProfile"]
 
 logger = log.get_logger()
 
 ScriptVersionType = Union[Version, LegacyVersion]
 
 
-class CollectionFileSchema(BaseSchema):
-    extract_file: Path
-
-
 class BaseCollection(BaseSchema):
     """Base Schema for file Collection"""
 
     _file_mapper: dict[str, str] = {}
+
+    def load(self, db: db.SQLManager) -> None:
+        """Returns first values in a list or None"""
+        for file_type, file_name in self.dict(exclude_unset=True, exclude_none=True).items():
+            has_load_fn = hasattr(db, f"load_{file_type}")
+            if not has_load_fn:
+                raise ValueError("Could not find the specified load function")
+            if file_name.stat().st_size > 0:
+                fn = getattr(db, f"load_{file_type}")
+                fn(str(file_name.absolute()))
+            else:
+                logger.info("skipping the load of empty file: %s", file_type)
 
     @classmethod
     def from_file_list(cls, files: list[Path]) -> "BaseCollection":

@@ -1,4 +1,4 @@
 from dbma.transformer.schemas import v1
-from dbma.transformer.schemas.base import BaseCollection, CollectionConfig, CollectionFileSchema, VersionProfile
+from dbma.transformer.schemas.base import BaseCollection, CollectionConfig, VersionProfile
 
-__all__ = ["v1", "CollectionConfig", "BaseCollection", "VersionProfile", "CollectionFileSchema"]
+__all__ = ["v1", "CollectionConfig", "BaseCollection", "VersionProfile"]

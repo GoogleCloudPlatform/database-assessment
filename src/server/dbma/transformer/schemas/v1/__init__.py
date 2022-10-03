@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 from dbma import log
 from dbma.__version__ import __version__
@@ -52,7 +51,7 @@ class CollectionSchema(BaseCollection):
     db_constraint_summary: Path
     db_used_space_details: Path
     db_user_tablespace_segments: Path
-    key_log: Optional[Path]
+    # key_log: Optional[Path]
 
     _file_mapper = {
         "awr_hist_cmd_types": "opdb__awrhistcmdtypes__",
@@ -78,7 +77,7 @@ class CollectionSchema(BaseCollection):
         "index_types": "opdb__indexestypes__",
         "io_events": "opdb__ioevents__",
         "io_function": "opdb__iofunction__",
-        "key_log": "opdb__opkeylog__",
+        # "key_log": "opdb__opkeylog__",
         "pdbs_info": "opdb__pdbsinfo__",
         "pdbs_in_open_mode": "opdb__pdbsopenmode__",
         "db_source_code": "opdb__sourcecode__",

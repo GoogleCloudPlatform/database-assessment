@@ -15,13 +15,15 @@ class GCPDetector:
     identifier = "gcp"
 
     def __init__(self) -> None:
-        self.metadata_url = "http://metadata.google.internal/computeMetadata/v1/instance/tags"
+        self.metadata_url = "http://metadata.google.internal/computeMetadata/v1/instance/zone"
+        self.project_id_url = "http://metadata.google.internal/computeMetadata/v1/instance/project-id"
         self.vendor_file = "/sys/class/dmi/id/product_name"
         self.headers = {"Metadata-Flavor": "Google"}
 
     def is_running_in_gcp(self) -> bool:
         """Detect if the application is currently running in GCP"""
-        return self.check_vendor_file() or self.check_metadata_server()
+        # return self.check_vendor_file() or self.check_metadata_server()
+        return self.check_metadata_server()
 
     def check_metadata_server(self) -> bool:
         """

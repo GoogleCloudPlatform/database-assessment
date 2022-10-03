@@ -8,12 +8,12 @@
       "name": "DBMA: Database Migration Advisor",
       "type": "python",
       "request": "launch",
-      "module": "dbma",
-      // "args": [
-      //   "process-collection",
-      //   "-c",
-      //   "${workspaceFolder}/notebooks/data/"
-      // ],
+      "module": "dbma.__main__",
+      "args": [
+        "process-collection",
+        "-c",
+        "${workspaceFolder}/notebooks/data/"
+      ],
       "justMyCode": false,
       "console": "integratedTerminal"
     },

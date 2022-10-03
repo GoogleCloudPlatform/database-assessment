@@ -38,12 +38,8 @@ def process_collection(
     # loop through the collections that were successfully extracted
     for collection in valid_collections:
         sql = SQLManager(engine_type="duckdb", sql_files_path=str(collection.config.sql_files_path))
-        files_to_load: "dict[str, Path]" = collection.files.dict(exclude_none=True)
-        for file_type, file_name in files_to_load.items():
-            if file_name.stat().st_size > 0:
-                logger.info(sql.read_csv(str(file_name)))  # type: ignore[attr-defined]
-            else:
-                logger.info("skipping the load of empty file: %s", file_type)
+        sql.create_schema()  # type: ignore[attr-defined]
+        collection.files.load(sql)
 
 
 def extract_and_validate_archive(
