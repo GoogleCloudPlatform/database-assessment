@@ -84,8 +84,16 @@ def process_collection(
             "This will override the value from the environment."
         ),
     ),
+    use_gcs: bool = typer.Option(
+        settings.storage_backend == "gcs",
+        "--use-gcs",
+        show_default=True,
+        help=("Upload and store files in GCS "),
+    ),
 ) -> None:
     """Process a collection"""
+    if use_gcs:
+        settings.storage_backend = "gcs"
     if google_project_id:
         settings.google_project_id = google_project_id
     # setup configuration based on user input
@@ -108,8 +116,8 @@ def process_collection(
         extract_path=next(transformer.get_temp_dir()),
         parse_as_version=collection_version,
     )
-    transformer.sql.drop_all_objects()  # type: ignore[attr-defined]
-    transformer.sql.create_schema()  # type: ignore[attr-defined]
+    # transformer.sql.drop_all_objects()  # type: ignore[attr-defined]
+    # transformer.sql.create_schema()  # type: ignore[attr-defined]
     dirs = storage.engine.fs.ls(settings.collections_path)
     logger.info(dirs)
     cloud_detect = GCPDetector()

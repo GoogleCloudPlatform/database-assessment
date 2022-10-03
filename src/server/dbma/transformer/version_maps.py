@@ -17,7 +17,7 @@ version_config_map = [
         config=CollectionConfig(
             delimiter="|",
             collection_schema=v1.CollectionSchema,
-            sql_files_path=str(Path(BASE_DIR / "transformer" / "sql")),
+            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v1" / "sql")),
         ),
     ),
     VersionProfile(
@@ -26,7 +26,7 @@ version_config_map = [
         config=CollectionConfig(
             delimiter=",",
             collection_schema=v1.CollectionSchema,
-            sql_files_path=str(Path(BASE_DIR / "transformer" / "sql")),
+            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v1" / "sql")),
         ),
     ),
 ]

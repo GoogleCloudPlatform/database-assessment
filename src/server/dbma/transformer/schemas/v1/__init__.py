@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Optional
 
 from dbma import log
@@ -20,38 +21,38 @@ class CollectionSchema(BaseCollection):
      The matcher will find the closest match to this string when returning a filename
     """
 
-    awr_hist_cmd_types: str
-    awr_hist_os_stat: str
-    awr_hist_sys_metric_hist: str
-    awr_hist_sys_metric_summary: str
-    awr_snap_details: str
-    db_compression_by_type: str
-    db_cpu_core_usage: str
-    db_dataguard: str
-    db_data_types: str
-    dba_hist_sys_stat: str
-    dba_hist_sys_time_model: str
-    db_features: str
-    db_high_water_stats: str
-    db_instances: str
-    db_links: str
-    db_objects: str
-    db_parameters: str
-    db_summary: str
-    db_external_tables: str
-    index_per_table: str
-    index_types: str
-    io_events: str
-    io_function: str
-    pdbs_info: str
-    pdbs_in_open_mode: str
-    db_source_code: str
-    db_source_connections: str
-    db_sql_stats: str
-    db_constraint_summary: str
-    db_used_space_details: str
-    db_user_tablespace_segments: str
-    key_log: Optional[str]
+    awr_hist_cmd_types: Path
+    awr_hist_os_stat: Path
+    awr_hist_sys_metric_hist: Path
+    awr_hist_sys_metric_summary: Path
+    awr_snap_details: Path
+    db_compression_by_type: Path
+    db_cpu_core_usage: Path
+    db_dataguard: Path
+    db_data_types: Path
+    dba_hist_sys_stat: Path
+    dba_hist_sys_time_model: Path
+    db_features: Path
+    db_high_water_stats: Path
+    db_instances: Path
+    db_links: Path
+    db_objects: Path
+    db_parameters: Path
+    db_summary: Path
+    db_external_tables: Path
+    index_per_table: Path
+    index_types: Path
+    io_events: Path
+    io_function: Path
+    pdbs_info: Path
+    pdbs_in_open_mode: Path
+    db_source_code: Path
+    db_source_connections: Path
+    db_sql_stats: Path
+    db_constraint_summary: Path
+    db_used_space_details: Path
+    db_user_tablespace_segments: Path
+    key_log: Optional[Path]
 
     _file_mapper = {
         "awr_hist_cmd_types": "opdb__awrhistcmdtypes__",

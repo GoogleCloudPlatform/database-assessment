@@ -49,7 +49,7 @@ flask ="*"
 gunicorn ="*"
 gcsfs = ">=2022.8.2"
 fsspec = ">=2022.8.2"
-
+universal_pathlib = "*"
 
 [tool.poetry.group.legacy.dependencies]
 beautifultable ="*"
