@@ -15,16 +15,16 @@ from pydantic import BaseSettings as _BaseSettings
 from pydantic import SecretBytes, SecretStr, ValidationError
 
 from dbma import utils
-from dbma.version import __version__
+from dbma.__version__ import __version__
 
-__all__ = ["BASE_DIR", "BaseSettings", "EnvironmentSettings", "Settings", "settings"]
+__all__ = ["BASE_DIR", "BaseSchema", "EnvironmentSettings", "Settings", "settings"]
 BASE_DIR: Final = utils.module_loading.module_to_os_path("dbma")
 
 
 logger = logging.getLogger()
 
 
-class BaseSettings(_BaseSettings):
+class BaseSchema(_BaseSettings):
     """Base Settings"""
 
     class Config:
@@ -57,7 +57,7 @@ class EnvironmentSettings(_BaseSettings):
         env_file_encoding = "utf-8"
 
 
-class Settings(BaseSettings):
+class Settings(BaseSchema):
     version_number: str = __version__
     log_level: str = "INFO"
     google_project_id: Optional[str]

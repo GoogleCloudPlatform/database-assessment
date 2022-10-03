@@ -94,7 +94,7 @@ drop table if exists T_DS_Database_Metrics;
 
 drop table if exists vsysstat_columnar;
 
--- name: create_tables#
+-- name: create_schema#
 -- Create all tables for loaded data
 CREATE TABLE AWRHISTCMDTYPES (
     PKEY VARCHAR(256),

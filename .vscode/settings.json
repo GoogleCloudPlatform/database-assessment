@@ -62,5 +62,6 @@
     "editor.defaultFormatter": "adpyke.vscode-sql-formatter"
   },
   "python.linting.banditEnabled": true,
-  "python.linting.mypyEnabled": true
+  "python.linting.mypyEnabled": true,
+  "mypy.runUsingActiveInterpreter": true
 }

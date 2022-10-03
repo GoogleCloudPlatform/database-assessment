@@ -1,10 +1,13 @@
+import sys
 from pathlib import Path
+from typing import Optional
 
 import typer
 from rich.console import Console
 from rich.traceback import install as rich_tracebacks
 
 from dbma import log, transformer
+from dbma.config import settings
 
 __all__ = ["console", "app"]
 
@@ -20,6 +23,7 @@ app = typer.Typer(
     name="Oracle Database Migration Advisor",
     pretty_exceptions_show_locals=False,
     pretty_exceptions_short=True,
+    add_completion=False,
 )
 
 
@@ -45,7 +49,9 @@ def upload_collection(
     console.log(collection)
 
 
-@app.command(name="process-collection")
+@app.command(
+    name="process-collection", no_args_is_help=True, short_help="This command processes one or more collections."
+)
 def process_collection(
     collection: Path = typer.Option(
         ...,
@@ -57,9 +63,50 @@ def process_collection(
         readable=True,
         resolve_path=True,
         help="Path to collection zip to upload",
-    )
+    ),
+    collection_version: Optional[str] = typer.Option(
+        None,
+        "--collection-version",
+        "-cv",
+        show_default=True,
+        help=(
+            "Optionally specify the script version to process against. "
+            "This is useful if the tooling is unable to detect the script version from the file names."
+        ),
+    ),
+    google_project_id: Optional[str] = typer.Option(
+        None,
+        "--google-project-id",
+        show_default=True,
+        help=(
+            "Sets the Google Project ID to use for processing the collection. "
+            "This will override the value from the environment."
+        ),
+    ),
 ) -> None:
     """Process a collection"""
-    logger.info("Dropping existing in-memory tables")
+    if google_project_id:
+        settings.google_project_id = google_project_id
+    # setup configuration based on user input
+    if collection.is_dir():
+        # The path is a directory.  We need to check for zipped archives
+        logger.info("Searching for collection archives in the specified directory")
+        collections_to_process = list(collection.glob("*.tar.gz")) + list(collection.glob("*.zip"))
+        if len(collections_to_process) < 1:
+            logger.error("[bold red]No collection files were found in the specified directory")
+            sys.exit(1)
+    else:
+        collections_to_process = [collection]
+
+    # handled parsed list of collection paths
+    filenames = [f"{c.stem}{c.suffix}" for c in collections_to_process]
+    logger.info("=> Processing %d collection(s)", len(filenames))
+    logger.info("=> Collections to process: %s", filenames)
+    transformer.process_collection(
+        collections=collections_to_process,
+        extract_path=next(transformer.get_temp_dir()),
+        parse_as_version=collection_version,
+    )
     transformer.sql.drop_all_objects()  # type: ignore[attr-defined]
+    transformer.sql.create_schema()  # type: ignore[attr-defined]
     logger.info(collection)
