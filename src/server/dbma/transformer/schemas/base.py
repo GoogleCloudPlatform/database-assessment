@@ -50,6 +50,7 @@ class BaseCollection(BaseSchema):
 class CollectionConfig(BaseSchema):
     delimiter: str = "|"
     collection_schema: Type[BaseCollection]
+    sql_files_path: str
 
 
 class VersionProfile(BaseSchema):
