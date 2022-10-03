@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 from rich.traceback import install as rich_tracebacks
 
-from dbma import log, transformer
+from dbma import log, storage, transformer
 from dbma.config import settings
 
 __all__ = ["console", "app"]
@@ -28,7 +28,7 @@ app = typer.Typer(
 
 
 console = Console(markup=True, emoji=True, color_system="truecolor", stderr=False)
-rich_tracebacks(console=console, suppress=("sqlalchemy", "aiosql", "google"), show_locals=False)
+rich_tracebacks(console=console, suppress=("sqlalchemy", "aiosql", "google", "fsspec", "gcsfs"), show_locals=False)
 
 
 @app.command(name="upload-collection")
@@ -109,3 +109,4 @@ def process_collection(
     )
     transformer.sql.drop_all_objects()  # type: ignore[attr-defined]
     transformer.sql.create_schema()  # type: ignore[attr-defined]
+    storage.engine.fs.ls(settings.google_assets_bucket)

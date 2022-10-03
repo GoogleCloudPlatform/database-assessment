@@ -9,10 +9,11 @@ import sys
 from datetime import datetime
 from enum import Enum, EnumMeta
 from functools import lru_cache
-from typing import Final, Optional
+from typing import Any, Final, Optional
 
 from pydantic import BaseSettings as _BaseSettings
 from pydantic import SecretBytes, SecretStr, ValidationError
+from typing_extensions import Literal
 
 from dbma import utils
 from dbma.__version__ import __version__
@@ -57,13 +58,23 @@ class EnvironmentSettings(_BaseSettings):
         env_file_encoding = "utf-8"
 
 
-class Settings(BaseSchema):
+class Settings(EnvironmentSettings):
+    """Settings file"""
+
     version_number: str = __version__
     log_level: str = "INFO"
+    storage_backend: Literal["file", "gcs"] = "gcs"
     google_project_id: Optional[str]
     google_application_credentials: Optional[str] = None
-    google_assets_bucket: str = "dbma-assets"
+    google_assets_bucket: str = "collection-storage"
     google_runtime_secrets: str = "run-config"
+
+    @property
+    def storage_backend_options(self) -> dict[str, Any]:
+        if self.storage_backend == "gcs":
+            return {"project": self.google_project_id}
+        if self.storage_backend == "file":
+            return {}
 
 
 @lru_cache
