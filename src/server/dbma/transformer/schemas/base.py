@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Type, Union
+from typing import Optional, Type, Union
 
 from packaging.version import LegacyVersion, Version
 
@@ -28,7 +28,7 @@ class BaseCollection(BaseSchema):
         return cls.parse_obj({key: cls._match_path(value, files) for key, value in cls._file_mapper.items()})
 
     @classmethod
-    def _match_path(cls, match_string: str, list_of_paths: list[Path]) -> Path | None:
+    def _match_path(cls, match_string: str, list_of_paths: list[Path]) -> Optional[Path]:
         for value in list_of_paths:
             if value.name.startswith(match_string):
                 return value
