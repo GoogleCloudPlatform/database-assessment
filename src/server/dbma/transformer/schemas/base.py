@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Type, Union
 
 from packaging.version import LegacyVersion, Version
-from pydantic import PyObject
 
 from dbma import log
 from dbma.config import BaseSchema
@@ -16,7 +15,6 @@ ScriptVersionType = Union[Version, LegacyVersion]
 
 class CollectionFileSchema(BaseSchema):
     extract_file: Path
-    extract_model: PyObject | None
 
 
 class BaseCollection(BaseSchema):

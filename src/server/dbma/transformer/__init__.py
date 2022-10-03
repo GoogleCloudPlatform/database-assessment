@@ -1,5 +1,5 @@
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, Generator, Optional
+from typing import TYPE_CHECKING, Generator, Optional, Union
 
 from pydantic import ValidationError
 
@@ -24,7 +24,7 @@ def get_temp_dir() -> Generator[TemporaryDirectory, None, None]:
 
 
 def process_collection(
-    collections: list["Path"], extract_path: "TemporaryDirectory | Path", parse_as_version: Optional[str] = None
+    collections: list["Path"], extract_path: "Union[TemporaryDirectory , Path]", parse_as_version: Optional[str] = None
 ) -> None:
     """Process the collection"""
     # override or detect version to process with
@@ -41,13 +41,13 @@ def process_collection(
         files_to_load: "dict[str, Path]" = collection.files.dict(exclude_none=True)
         for file_type, file_name in files_to_load.items():
             if file_name.stat().st_size > 0:
-                logger.info(sql.read_csv(str(file_name)))
+                logger.info(sql.read_csv(str(file_name)))  # type: ignore[attr-defined]
             else:
                 logger.info("skipping the load of empty file: %s", file_type)
 
 
 def extract_and_validate_archive(
-    collections: list["Path"], extract_path: "TemporaryDirectory | Path", parse_as_version: Optional[str] = None
+    collections: list["Path"], extract_path: "Union[TemporaryDirectory , Path]", parse_as_version: Optional[str] = None
 ) -> list["CollectionArchive"]:
     """Process the collection"""
     # override or detect version to process with

@@ -1,5 +1,5 @@
 import functools as ft
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Set, Type
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Set, Type, Union
 
 import aiosql as sql
 from sqlalchemy.future import Engine, create_engine
@@ -17,7 +17,7 @@ SupportedEngines = Literal["duckdb", "bigquery"]
 
 
 @ft.lru_cache(maxsize=3)
-def get_engine(engine_type: SupportedEngines) -> Engine:
+def get_engine(engine_type: SupportedEngines) -> "Engine":
     """builds an engine for the specified database type"""
     if engine_type == "duckdb":
         return create_engine(url="duckdb:///:memory:", connect_args={"config": {"memory_limit": "500mb"}})
@@ -29,7 +29,7 @@ def get_engine(engine_type: SupportedEngines) -> Engine:
 
 
 @ft.lru_cache(maxsize=3)
-def get_aiosql_adapter(engine_type: SupportedEngines) -> Type[DuckDBAdapter] | Type[BigQueryAdapter]:
+def get_aiosql_adapter(engine_type: SupportedEngines) -> "Union[Type[DuckDBAdapter], Type[BigQueryAdapter]]":
     """builds an engine for the specified database type"""
     if engine_type == "duckdb":
         return DuckDBAdapter
