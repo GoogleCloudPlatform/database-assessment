@@ -9,8 +9,12 @@
       "type": "python",
       "request": "launch",
       "module": "dbma",
-      "args": ["process-collection"],
-      "justMyCode": true,
+      // "args": [
+      //   "process-collection",
+      //   "-c",
+      //   "${workspaceFolder}/notebooks/data/"
+      // ],
+      "justMyCode": false,
       "console": "integratedTerminal"
     },
     {

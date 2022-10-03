@@ -109,4 +109,3 @@ def process_collection(
     )
     transformer.sql.drop_all_objects()  # type: ignore[attr-defined]
     transformer.sql.create_schema()  # type: ignore[attr-defined]
-    logger.info(collection)
