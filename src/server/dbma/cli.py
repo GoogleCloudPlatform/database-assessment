@@ -8,6 +8,7 @@ from rich.traceback import install as rich_tracebacks
 
 from dbma import log, storage, transformer
 from dbma.config import settings
+from dbma.utils.gcp.detect import GCPDetector
 
 __all__ = ["console", "app"]
 
@@ -109,4 +110,7 @@ def process_collection(
     )
     transformer.sql.drop_all_objects()  # type: ignore[attr-defined]
     transformer.sql.create_schema()  # type: ignore[attr-defined]
-    storage.engine.fs.ls(settings.google_assets_bucket)
+    dirs = storage.engine.fs.ls(settings.collections_path)
+    logger.info(dirs)
+    cloud_detect = GCPDetector()
+    logger.info(cloud_detect.is_running_in_gcp())

@@ -66,7 +66,7 @@ class Settings(EnvironmentSettings):
     storage_backend: Literal["file", "gcs"] = "gcs"
     google_project_id: Optional[str]
     google_application_credentials: Optional[str] = None
-    google_assets_bucket: str = "collection-storage"
+    collections_path: str = "collection-storage/"
     google_runtime_secrets: str = "run-config"
 
     @property

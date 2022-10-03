@@ -1,8 +1,8 @@
 import logging
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal, Optional
 
-import fsspec
-import gcsfs  # pylance: reportMissingImports=false # pylint: disable=[unused-import]
+from fsspec.implementations.local import LocalFileSystem
+from gcsfs import GCSFileSystem
 
 from dbma.config import settings
 
@@ -19,9 +19,12 @@ class StorageBucket:
         """Storage Bucket."""
         self.backend = backend
         self.backend_options = backend_options or {}
-        self.fs: Union[gcsfs.GCSFileSystem, fsspec.implementations.dirfs.DirFileSystem] = fsspec.filesystem(
-            backend, **backend_options
-        )
+        if self.backend == "file":
+            self.fs = LocalFileSystem(auto_mkdir=True)
+        elif self.backend == "gcs":
+            self.fs = GCSFileSystem(
+                project=settings.google_project_id, requests_timeout=4, token=settings.google_application_credentials
+            )
 
 
 engine = StorageBucket(backend=settings.storage_backend, backend_options=settings.storage_backend_options)
