@@ -99,18 +99,18 @@ def process_collection(
     # setup configuration based on user input
     if collection.is_dir():
         # The path is a directory.  We need to check for zipped archives
-        logger.info("=> [gray]Searching for collection archives in the specified directory")
+        logger.info("🔎 Searching for collection archives in the specified directory")
         collections_to_process = list(collection.glob("*.tar.gz")) + list(collection.glob("*.zip"))
         if len(collections_to_process) < 1:
-            logger.error("=> [bold red]No collection files were found in the specified directory")
+            logger.error("⚠️ No collection files were found in the specified directory")
             sys.exit(1)
     else:
         collections_to_process = [collection]
 
     # handled parsed list of collection paths
     filenames = [f"{c.stem}{c.suffix}" for c in collections_to_process]
-    logger.info("=> Processing %d collection(s)", len(filenames))
-    logger.info("=> Collections to process: %s", filenames)
+    logger.debug("ℹ️  Processing %d collection(s)", len(filenames))
+    logger.debug("ℹ️  Collections to process: %s", filenames)
     transformer.process_collection(
         collections=collections_to_process,
         extract_path=next(transformer.get_temp_dir()),

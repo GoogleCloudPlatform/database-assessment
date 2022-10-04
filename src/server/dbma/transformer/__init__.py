@@ -43,21 +43,21 @@ def extract_and_validate_archive(
     """Process the collection"""
     # override or detect version to process with
     if parse_as_version:
-        logger.info("=> Skipping version analysis and forcing version to be %s", parse_as_version)
+        logger.info("ℹ️   => Skipping version analysis and forcing version to be %s", parse_as_version)
     else:
-        logger.info("=> Detecting collector version")
+        logger.info("ℹ️   => Detecting collector version")
     valid_collections: "list[CollectionArchive]" = []
     # loop through collections and extract them
     for extract in collections:
         version = parse_as_version or identify_collection_version_from_name(extract.stem)
         config = get_config_for_version(version)
-        logger.info('=> config specifies the "%s" character as the delimiter', config.delimiter)
+        logger.debug('ℹ️  config specifies the "%s" character as the delimiter', config.delimiter)
         files = extract_collection(extract, extract_path)
         try:
             valid_collections.append(
                 CollectionArchive.parse_obj({"config": config, "files": config.collection_schema.from_file_list(files)})
             )
         except ValidationError as e:
-            logger.error("failed to validate files contained in collections: %s", e.errors)
+            logger.error("⚠️ [bold red]failed to validate files contained in collections: %s", e.errors)
             raise e from e
     return valid_collections
