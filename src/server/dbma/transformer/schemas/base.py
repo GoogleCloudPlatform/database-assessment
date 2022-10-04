@@ -18,7 +18,7 @@ class BaseCollection(BaseSchema):
 
     _file_mapper: dict[str, str] = {}
 
-    def load(self, db: db.SQLManager) -> None:
+    def load(self, db: db.SQLManager, delimiter: str = "|") -> None:
         """Returns first values in a list or None"""
         for file_type, file_name in self.dict(exclude_unset=True, exclude_none=True).items():
             has_load_fn = hasattr(db, f"load_{file_type}")
@@ -26,11 +26,11 @@ class BaseCollection(BaseSchema):
                 raise ValueError("Could not find the specified load function")
             if file_name.stat().st_size > 0:
                 fn = getattr(db, f"load_{file_type}")
-                fn(str(file_name.absolute()))
-                logger.info("📝  => %s  [green bold]SUCCESS", file_type)
+                rows_loaded = fn(str(file_name.absolute()), delimiter)
+                logger.info("... %s  [green bold]SUCCESS[/] [%s rows(s)]", file_type, rows_loaded)
 
             else:
-                logger.info("📝  => %s  [bold]EMPTY", file_type)
+                logger.info("... %s  [dim bold]SKIPPED[/] [empty file]", file_type)
 
     @classmethod
     def from_file_list(cls, files: list[Path]) -> "BaseCollection":

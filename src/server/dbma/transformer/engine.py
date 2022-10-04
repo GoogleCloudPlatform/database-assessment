@@ -22,17 +22,17 @@ def process_collection(
     collections: list["Path"], extract_path: "Union[TemporaryDirectory , Path]", parse_as_version: Optional[str] = None
 ) -> None:
     """Process the collection"""
-    valid_collections = extract_and_validate_archive(collections, extract_path, parse_as_version)
+    valid_collections = _extract_and_validate_archive(collections, extract_path, parse_as_version)
     if len(valid_collections) == 0:
         raise FileNotFoundError("No collections found to process")
     # loop through the collections that were successfully extracted
     for collection in valid_collections:
         sql = SQLManager(engine_type="duckdb", sql_files_path=str(collection.config.sql_files_path))
         sql.create_schema()  # type: ignore[attr-defined]
-        collection.files.load(sql)
+        collection.files.load(sql, collection.config.delimiter)
 
 
-def extract_and_validate_archive(
+def _extract_and_validate_archive(
     collections: list["Path"], extract_path: "Union[TemporaryDirectory , Path]", parse_as_version: Optional[str] = None
 ) -> list["CollectionArchive"]:
     """Process the collection"""
