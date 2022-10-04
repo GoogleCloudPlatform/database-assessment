@@ -5,6 +5,7 @@ import aiosql as sql
 from sqlalchemy.future import Engine, create_engine
 from sqlalchemy.orm import sessionmaker
 
+from dbma.config import settings
 from dbma.utils.aiosql_adapters import BigQueryAdapter, DuckDBAdapter
 
 if TYPE_CHECKING:
@@ -20,10 +21,12 @@ SupportedEngines = Literal["duckdb", "bigquery"]
 def get_engine(engine_type: SupportedEngines) -> "Engine":
     """builds an engine for the specified database type"""
     if engine_type == "duckdb":
-        return create_engine(url="duckdb:///:memory:", connect_args={"config": {"memory_limit": "500mb"}})
+        return create_engine(
+            url=f"duckdb:///{settings.duckdb_path}", connect_args={"config": {"memory_limit": "500mb"}}
+        )
 
     if engine_type == "bigquery":
-        return create_engine(url="bigquery://some-project/some-dataset")
+        return create_engine(url=f"bigquery://{settings.google_project_id}/{settings.bigquery_dataset}")
 
     raise NotImplementedError("The specified engine is not implemented")
 

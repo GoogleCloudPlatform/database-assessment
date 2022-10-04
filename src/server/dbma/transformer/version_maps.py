@@ -5,7 +5,7 @@ from packaging.version import parse as parse_version
 from dbma import log
 from dbma.__version__ import __version__
 from dbma.config import BASE_DIR
-from dbma.transformer.schemas import v1
+from dbma.transformer.schemas import v2xx, v3xx
 from dbma.transformer.schemas.base import CollectionConfig, VersionProfile
 
 logger = log.get_logger()
@@ -16,8 +16,8 @@ version_config_map = [
         max_version=parse_version(__version__),
         config=CollectionConfig(
             delimiter="|",
-            collection_schema=v1.CollectionSchema,
-            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v1" / "sql")),
+            collection_schema=v3xx.CollectionSchema,
+            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v3xx" / "sql")),
         ),
     ),
     VersionProfile(
@@ -25,8 +25,8 @@ version_config_map = [
         max_version=parse_version("2.99.0"),
         config=CollectionConfig(
             delimiter=",",
-            collection_schema=v1.CollectionSchema,
-            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v1" / "sql")),
+            collection_schema=v2xx.CollectionSchema,
+            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v2xx" / "sql")),
         ),
     ),
 ]

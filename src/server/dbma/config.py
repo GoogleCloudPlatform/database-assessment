@@ -68,6 +68,8 @@ class Settings(EnvironmentSettings):
     google_application_credentials: Optional[str] = None
     collections_path: str = "collection-storage/"
     google_runtime_secrets: str = "run-config"
+    duckdb_path: str = ":memory:"
+    bigquery_dataset: str = "v4-development"
 
     @property
     def storage_backend_options(self) -> dict[str, Any]:

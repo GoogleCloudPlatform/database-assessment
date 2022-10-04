@@ -1,16 +1,15 @@
-# type: ignore
 from aiosql.adapters.generic import GenericAdapter
 
 
 class DuckDBAdapter(GenericAdapter):
     """Implements a duckdb backend for aiosql."""
 
-    def insert_update_delete(self, conn, _query_name, sql, parameters):
+    def insert_update_delete(self, conn, _query_name, sql, parameters):  # type: ignore[no-untyped-def]
         """Insert Update Delete
 
         This enhancement adds support for returning the row count for duckdb.  By default, DuckDB always returns -1
         """
-        cur = self._cursor(conn)
+        cur = self._cursor(conn)  # type: ignore[no-untyped-call]
         cur.execute(sql, parameters)
         rc = cur.rowcount if hasattr(cur, "rowcount") else -1
         # We leave the original behavior in and only call the override if we get -1.
@@ -21,8 +20,8 @@ class DuckDBAdapter(GenericAdapter):
         cur.close()
         return rc
 
-    def insert_update_delete_many(self, conn, _query_name, sql, parameters):
-        cur = self._cursor(conn)
+    def insert_update_delete_many(self, conn, _query_name, sql, parameters):  # type: ignore[no-untyped-def]
+        cur = self._cursor(conn)  # type: ignore[no-untyped-call]
         cur.executemany(sql, parameters)
         rc = cur.rowcount if hasattr(cur, "rowcount") else -1
         # We leave the original behavior in and only call the override if we get -1.

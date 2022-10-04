@@ -72,6 +72,7 @@ invoke = "*"
 ipython-sql = "*"
 ipython = "*"
 ipykernel = "*"
+notebook = "*"
 
 [tool.poetry.group.docs]
 optional = true
