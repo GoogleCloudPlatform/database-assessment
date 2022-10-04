@@ -1,23 +1,21 @@
 import tarfile as tf
 import zipfile as zf
 from pathlib import Path
-from typing import TYPE_CHECKING
+from tempfile import TemporaryDirectory
+from typing import Generator
 
 from dbma import log
 from dbma.__version__ import __version__
 
-if TYPE_CHECKING:
-
-    from tempfile import TemporaryDirectory
-
-
-__all__ = [
-    "identify_collection_version_from_name",
-    "extract_collection",
-]
+__all__ = ["identify_collection_version_from_name", "extract_collection", "get_temp_dir"]
 
 
 logger = log.get_logger()
+
+
+def get_temp_dir() -> Generator[TemporaryDirectory, None, None]:
+    with TemporaryDirectory() as d:
+        yield d  # type: ignore
 
 
 def identify_collection_version_from_name(collection: str) -> str:
