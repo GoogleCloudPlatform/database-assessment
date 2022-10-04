@@ -27,8 +27,10 @@ class BaseCollection(BaseSchema):
             if file_name.stat().st_size > 0:
                 fn = getattr(db, f"load_{file_type}")
                 fn(str(file_name.absolute()))
+                logger.info("=> %s: [green]successfully loaded", file_type)
+
             else:
-                logger.info("skipping the load of empty file: %s", file_type)
+                logger.info("=> %s: [yellow]skipping the load of empty file", file_type)
 
     @classmethod
     def from_file_list(cls, files: list[Path]) -> "BaseCollection":

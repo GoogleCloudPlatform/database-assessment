@@ -6,9 +6,8 @@ import typer
 from rich.console import Console
 from rich.traceback import install as rich_tracebacks
 
-from dbma import log, storage, transformer
+from dbma import log, transformer
 from dbma.config import settings
-from dbma.utils.gcp.detect import GCPDetector
 
 __all__ = ["console", "app"]
 
@@ -96,13 +95,14 @@ def process_collection(
         settings.storage_backend = "gcs"
     if google_project_id:
         settings.google_project_id = google_project_id
+    logger.info("launching Collection loader against %s Google Cloud Project", settings.google_project_id)
     # setup configuration based on user input
     if collection.is_dir():
         # The path is a directory.  We need to check for zipped archives
-        logger.info("Searching for collection archives in the specified directory")
+        logger.info("=> [gray]Searching for collection archives in the specified directory")
         collections_to_process = list(collection.glob("*.tar.gz")) + list(collection.glob("*.zip"))
         if len(collections_to_process) < 1:
-            logger.error("[bold red]No collection files were found in the specified directory")
+            logger.error("=> [bold red]No collection files were found in the specified directory")
             sys.exit(1)
     else:
         collections_to_process = [collection]
@@ -116,9 +116,7 @@ def process_collection(
         extract_path=next(transformer.get_temp_dir()),
         parse_as_version=collection_version,
     )
-    # transformer.sql.drop_all_objects()  # type: ignore[attr-defined]
-    # transformer.sql.create_schema()  # type: ignore[attr-defined]
-    dirs = storage.engine.fs.ls(settings.collections_path)
-    logger.info(dirs)
-    cloud_detect = GCPDetector()
-    logger.info(cloud_detect.is_running_in_gcp())
+    # dirs = storage.engine.fs.ls(settings.collections_path)
+    # logger.info(dirs)
+    # cloud_detect = GCPDetector()
+    # logger.info(cloud_detect.is_running_in_gcp())

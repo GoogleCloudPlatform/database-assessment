@@ -28,8 +28,7 @@ def identify_collection_version_from_name(collection: str) -> str:
 
 def extract_collection(collection: "Path", extract_path: "TemporaryDirectory | Path") -> "list[Path]":
     """Extracts the specified collection to the specified directory."""
-    logger.info("searching %s for files and extracting to %s", collection, extract_path)
-    logger.info("collection suffix is %s", collection.suffix)
+    logger.info("=> searching %s for files and extracting to %s", collection.name, extract_path)
     if collection.suffix in {".gz", ".tgz"}:
         with tf.TarFile.open(collection, "r|gz") as archive:
             archive.extractall(str(extract_path))

@@ -27,11 +27,6 @@ def process_collection(
     collections: list["Path"], extract_path: "Union[TemporaryDirectory , Path]", parse_as_version: Optional[str] = None
 ) -> None:
     """Process the collection"""
-    # override or detect version to process with
-    if parse_as_version:
-        logger.info("=> Skipping version analysis and forcing version to be %s", parse_as_version)
-    else:
-        logger.info("=> Detecting collector version")
     valid_collections = extract_and_validate_archive(collections, extract_path, parse_as_version)
     if len(valid_collections) == 0:
         raise FileNotFoundError("No collections found to process")
