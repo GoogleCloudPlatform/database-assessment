@@ -141,7 +141,7 @@ pre-release:       ## bump the version and create the release tag
 	make check
 	make gen-docs
 	make clean
-	bump2version $(increment)
+	poetry run bump2version $(increment)
 	git describe --tags --abbrev=0
 	head pyproject.toml | grep version
 	cat src/dbma/version.py
