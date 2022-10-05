@@ -35,9 +35,10 @@ def process_collection(
         ]
         for transform_script in sorted(transform_scripts):
             getattr(sql, transform_script)()
+        rows = sql.get_database_metrics()  # type: ignore[attr-defined]
         # sql.process_collection()  # type: ignore[attr-defined]
         # rows = sql.select_table()  # type: ignore[attr-defined]
-        # logger.info(rows)
+        logger.info(rows)
 
 
 def _extract_and_validate_archive(
