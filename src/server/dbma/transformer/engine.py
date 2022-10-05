@@ -22,14 +22,22 @@ def process_collection(
     collections: list["Path"], extract_path: "Union[TemporaryDirectory , Path]", parse_as_version: Optional[str] = None
 ) -> None:
     """Process the collection"""
-    valid_collections = _extract_and_validate_archive(collections, extract_path, parse_as_version)
-    if len(valid_collections) == 0:
+    extracted_archives = _extract_and_validate_archive(collections, extract_path, parse_as_version)
+    if len(extracted_archives) == 0:
         raise FileNotFoundError("No collections found to process")
     # loop through the collections that were successfully extracted
-    for collection in valid_collections:
-        sql = SQLManager(engine_type="duckdb", sql_files_path=str(collection.config.sql_files_path))
+    for archive in extracted_archives:
+        sql = SQLManager(engine_type="duckdb", sql_files_path=str(archive.config.sql_files_path))
         sql.create_schema()  # type: ignore[attr-defined]
-        collection.files.load(sql, collection.config.delimiter)
+        archive.files.load(sql, archive.config.delimiter)
+        transform_scripts = [
+            q for q in sql._available_queries if q.startswith("transform")  # pylint: disable=[protected-access
+        ]
+        for transform_script in sorted(transform_scripts):
+            getattr(sql, transform_script)()
+        # sql.process_collection()  # type: ignore[attr-defined]
+        # rows = sql.select_table()  # type: ignore[attr-defined]
+        # logger.info(rows)
 
 
 def _extract_and_validate_archive(

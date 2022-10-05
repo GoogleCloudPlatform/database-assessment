@@ -95,7 +95,7 @@
     "usrsegatt"
   ],
   "[sql]": {
-    "editor.defaultFormatter": "adpyke.vscode-sql-formatter"
+    "editor.defaultFormatter": "mtxr.sqltools"
   },
   "python.linting.banditEnabled": true,
   "python.linting.mypyEnabled": true,

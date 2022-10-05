@@ -1,4 +1,5 @@
 import functools as ft
+import sqlite3
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Set, Type, Union
 
 import aiosql as sql
@@ -71,6 +72,7 @@ class SQLManager:
         # last thing is to actually create the connection, which may fail
         self._db_session_factory = db_session_maker(engine_type)
         self._db_session = self.engine.raw_connection()
+        self._db_session.row_factory = sqlite3.Row
 
     def add_sql_from_path(self, fn: str) -> None:
         """Load queries from a file or directory."""

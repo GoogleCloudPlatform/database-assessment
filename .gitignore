@@ -154,3 +154,5 @@ db_assessment/op_etl*.sql
 *.csv
 tmp
 tmp/*
+local.db
+local.db.wal

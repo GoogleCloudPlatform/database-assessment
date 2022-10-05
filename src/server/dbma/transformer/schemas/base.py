@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Type, Union
+from typing import Any, Optional, Type, Union
 
 from packaging.version import LegacyVersion, Version
 
@@ -23,14 +23,20 @@ class BaseCollection(BaseSchema):
         for file_type, file_name in self.dict(exclude_unset=True, exclude_none=True).items():
             has_load_fn = hasattr(db, f"load_{file_type}")
             if not has_load_fn:
-                raise ValueError("Could not find the specified load function")
+                logger.warning("... [bold yellow] Could not find a load procedure for %s.", file_type)
             if file_name.stat().st_size > 0:
                 fn = getattr(db, f"load_{file_type}")
                 rows_loaded = fn(str(file_name.absolute()), delimiter)
                 logger.info("... %s  [green bold]SUCCESS[/] [%s rows(s)]", file_type, rows_loaded)
-
             else:
                 logger.info("... %s  [dim bold]SKIPPED[/] [empty file]", file_type)
+
+    def process(self, db: db.SQLManager, *args: Any, **kwargs: Any) -> Any:
+        """Returns first values in a list or None"""
+        fn = getattr(db, "process_collection", None)
+        if not fn:
+            raise ValueError("Could not find the specified load function")
+        return fn(*args, **kwargs)
 
     @classmethod
     def from_file_list(cls, files: list[Path]) -> "BaseCollection":
