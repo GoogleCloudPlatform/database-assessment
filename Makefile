@@ -129,12 +129,12 @@ package-collector:
 ###############
 .PHONY: gen-docs
 gen-docs:       ## generate HTML documentation
-	mkdocs build
+	poetry run mkdocs build
 
 .PHONY: docs
 docs:       ## generate HTML documentation and serve it to the browser
-	mkdocs build
-	mkdocs serve
+	poetry run mkdocs build
+	poetry run mkdocs serve
 
 .PHONY: pre-release
 pre-release:       ## bump the version and create the release tag

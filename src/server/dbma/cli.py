@@ -95,6 +95,11 @@ def process_collection(
         settings.storage_backend = "gcs"
     if google_project_id:
         settings.google_project_id = google_project_id
+    _process_collection(collection, collection_version)
+
+
+def _process_collection(collection: Path, collection_version: Optional[str] = None) -> None:
+    """Process a collection or set of collections"""
     logger.info("launching Collection loader against %s Google Cloud Project", settings.google_project_id)
     # setup configuration based on user input
     if collection.is_dir():
