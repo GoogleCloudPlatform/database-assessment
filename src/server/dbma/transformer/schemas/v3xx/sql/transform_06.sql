@@ -3,15 +3,13 @@
 CREATE OR REPLACE TABLE V_DS_dbsummary AS WITH awr AS (
         SELECT PKEY,
             MIN(
-                strftime(
-                    min_begin_interval_time,
-                    '%d-%b_%y'
+                strptime(
+                    min_begin_interval_time, '%d-%b-%y %I.%M.%S.%g %p'
                 )
             ) AS begin_Date,
             MAX(
-                strftime(
-                    max_begin_interval_time,
-                    '%d-%b_%y'
+                strptime(
+                    max_begin_interval_time, '%d-%b-%y %I.%M.%S.%g %p'
                 )
             ) AS End_date
         FROM awrsnapdetails
