@@ -7,6 +7,7 @@ from rich.console import Console
 from rich.traceback import install as rich_tracebacks
 
 from dbma import log, transformer
+from dbma.__version__ import __version__ as version
 from dbma.config import settings
 
 __all__ = ["console", "app"]
@@ -65,7 +66,7 @@ def process_collection(
         help="Path to collection zip to upload",
     ),
     collection_version: Optional[str] = typer.Option(
-        None,
+        version,
         "--collection-version",
         "-cv",
         show_default=True,
