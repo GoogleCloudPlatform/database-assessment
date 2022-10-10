@@ -9,9 +9,9 @@ SELECT '&&v_host'
        has.dbid,
        has.instance_number,
        TO_CHAR(dhsnap.begin_interval_time, 'hh24') hour,
-       has.program,
-       has.module,
-       has.machine,
+       replace(has.program, '|', '_') program,
+       replace(has.module, '|', '_') module,
+       replace(has.machine, '|', '_') machine,
        scmd.command_name,
        count(1) cnt
 FROM &v_tblprefix._HIST_ACTIVE_SESS_HISTORY has
