@@ -215,7 +215,7 @@ export DSLOC=yourRegionNameHere
 
 # Required
 # This is the full path into which the customer's files have been extracted.
-export OP_LOG_DIR=/full/Path/To/LogFiles
+export OPOUTPUTDIR=/full/Path/To/CollectionFiles
 
 # Optional
 # This is the name of the report you want to create in DataStudio upon load completion.
