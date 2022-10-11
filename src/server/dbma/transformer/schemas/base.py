@@ -5,6 +5,7 @@ from packaging.version import LegacyVersion, Version
 
 from dbma import db, log
 from dbma.config import BaseSchema
+from dbma.transformer.helpers import CSVTransformer
 
 __all__ = ["CollectionConfig", "BaseCollection", "VersionProfile"]
 
@@ -25,6 +26,10 @@ class BaseCollection(BaseSchema):
             if not has_load_fn:
                 logger.warning("... [bold yellow] Could not find a load procedure for %s.", file_type)
             if file_name.stat().st_size > 0:
+                csv = CSVTransformer(file_path=file_name)
+                arrow = csv.to_arrow_table()
+                csv.to_parquet()
+                logger.info(arrow)
                 fn = getattr(db, f"load_{file_type}")
                 rows_loaded = fn(str(file_name.absolute()), delimiter)
                 logger.info("... %s  [green bold]SUCCESS[/] [%s rows(s)]", file_type, rows_loaded)

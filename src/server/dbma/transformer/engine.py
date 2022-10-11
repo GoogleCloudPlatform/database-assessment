@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from dbma import log
 from dbma.db import SQLManager
 from dbma.transformer.helpers import extract_collection, identify_collection_version_from_name
-from dbma.transformer.schemas.base import CollectionArchive
+from dbma.transformer.schemas.base import CollectionArchive, CollectionConfig
 from dbma.transformer.version_maps import get_config_for_version
 
 __all__ = ["process"]
@@ -21,14 +21,14 @@ logger = log.get_logger()
 def process(collections: list["Path"], extract_path: "Union[TemporaryDirectory , Path]", parse_as_version: str) -> None:
     """Process the collection"""
     config = get_config_for_version(parse_as_version)
-    extracted_archives = _extract_and_validate_archive(collections, extract_path, parse_as_version)
+    extracted_archives = _extract_and_validate_archive(collections, extract_path, config)
 
     if len(extracted_archives) == 0:
         raise FileNotFoundError("No collections found to process")
     # loop through the collections that were successfully extracted
     sql = SQLManager(engine_type="duckdb", sql_files_path=str(config.sql_files_path))
     sql.create_schema()  # type: ignore[attr-defined]
-    sql_target = SQLManager(engine_type="bigquery", sql_files_path=str(config.sql_files_path))
+    # sql_target = SQLManager(engine_type="bigquery", sql_files_path=str(config.sql_files_path))
     for archive in extracted_archives:
 
         archive.files.load(sql, archive.config.delimiter)
@@ -52,6 +52,8 @@ def _extract_and_validate_archive(
     # loop through collections and extract them
     for extract in collections:
         detected_version = identify_collection_version_from_name(extract.stem)
+        logger.info('ℹ️  detected version "%s" from the collection name', detected_version)
+
         logger.debug('ℹ️  config specifies the "%s" character as the delimiter', config.delimiter)
         files = extract_collection(extract, extract_path)
         try:

@@ -1,6 +1,5 @@
 import sys
 from pathlib import Path
-from typing import Optional
 
 import typer
 from rich.console import Console
@@ -65,7 +64,7 @@ def process_collection(
         resolve_path=True,
         help="Path to collection zip to upload",
     ),
-    collection_version: Optional[str] = typer.Option(
+    collection_version: str = typer.Option(
         version,
         "--collection-version",
         "-cv",
@@ -75,8 +74,8 @@ def process_collection(
             "This is useful if the tooling is unable to detect the script version from the file names."
         ),
     ),
-    google_project_id: Optional[str] = typer.Option(
-        None,
+    google_project_id: str = typer.Option(
+        settings.google_project_id,
         "--google-project-id",
         show_default=True,
         help=(
@@ -99,7 +98,7 @@ def process_collection(
     _process_collection(collection, collection_version)
 
 
-def _process_collection(collection: Path, collection_version: Optional[str] = None) -> None:
+def _process_collection(collection: Path, collection_version: str) -> None:
     """Process a collection or set of collections"""
     logger.info("launching Collection loader against %s Google Cloud Project", settings.google_project_id)
     # setup configuration based on user input
