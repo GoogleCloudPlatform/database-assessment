@@ -286,7 +286,7 @@ from
 dbparameters.PKEY,
 dbparameters.inst_id,
 hostdetails.host_name,
-CAST(max(dbparameters.value) as numeric)/1024/1024/1024 as SGA_SIZE_GB
+max(CAST(dbparameters.value as numeric))/1024/1024/1024 as SGA_SIZE_GB
 FROM `projectID.dataset.dbparameters` as dbparameters
 INNER JOIN hostdetails as hostdetails
 ON TRIM(hostdetails.PKEY)=TRIM(dbparameters.PKEY)
