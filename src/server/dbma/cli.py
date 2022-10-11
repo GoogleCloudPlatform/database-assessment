@@ -6,7 +6,7 @@ import typer
 from rich.console import Console
 from rich.traceback import install as rich_tracebacks
 
-from dbma import log, transformer
+from dbma import log, storage, transformer
 from dbma.__version__ import __version__ as version
 from dbma.config import settings
 
@@ -117,12 +117,12 @@ def _process_collection(collection: Path, collection_version: Optional[str] = No
     filenames = [f"{c.stem}{c.suffix}" for c in collections_to_process]
     logger.debug("ℹ️  Processing %d collection(s)", len(filenames))
     logger.debug("ℹ️  Collections to process: %s", filenames)
-    transformer.process_collection(
+    transformer.process(
         collections=collections_to_process,
         extract_path=next(transformer.get_temp_dir()),
         parse_as_version=collection_version,
     )
-    # dirs = storage.engine.fs.ls(settings.collections_path)
-    # logger.info(dirs)
+    dirs = storage.engine.fs.ls(settings.collections_path)
+    logger.info(dirs)
     # cloud_detect = GCPDetector()
     # logger.info(cloud_detect.is_running_in_gcp())

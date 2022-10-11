@@ -36,3 +36,7 @@ def extract_collection(collection: "Path", extract_path: "TemporaryDirectory | P
             archive.extractall(str(extract_path))
             return list(Path(str(extract_path)).glob("*.csv"))
     raise NotImplementedError("Could not find collections to extract")
+
+
+# def csv_to_arrow(file: Path):
+#     """Converts a csv to an arrow dataframe"""

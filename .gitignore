@@ -74,6 +74,7 @@ docs/_build/
 
 # PyBuilder
 target/
+!src/server/dbma/transformer/schemas/*/sql/target
 
 # Jupyter Notebook
 .ipynb_checkpoints

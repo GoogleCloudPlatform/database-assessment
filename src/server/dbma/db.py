@@ -1,5 +1,5 @@
 import functools as ft
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Set, Type, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Set, Type, Union, cast
 
 import aiosql as sql
 from sqlalchemy.future import Engine, create_engine
@@ -40,7 +40,7 @@ def get_aiosql_adapter(engine_type: SupportedEngines) -> "Union[Type[DuckDBAdapt
     if engine_type == "bigquery":
         return BigQueryAdapter
 
-    raise NotImplementedError("The specified engine is not implemented")
+    raise NotImplementedError("The specified adapter is not implemented")
 
 
 @ft.lru_cache
@@ -56,9 +56,7 @@ class SQLManager:
     and SQL execution methods from aiosql.
     """
 
-    def __init__(
-        self, engine_type: Literal["duckdb", "bigquery", "postgres"], sql_files_path: Optional[str] = None
-    ) -> None:
+    def __init__(self, engine_type: SupportedEngines, sql_files_path: Optional[str] = None) -> None:
 
         self.engine_type = engine_type
         self.engine = get_engine(engine_type)
@@ -74,11 +72,11 @@ class SQLManager:
 
     def add_sql_from_path(self, fn: str) -> None:
         """Load queries from a file or directory."""
-        self._create_fns(sql.from_path(fn, get_aiosql_adapter(self.engine_type)))
+        self._create_fns(sql.from_path(fn, cast("str", get_aiosql_adapter(self.engine_type))))
 
     def add_sql_from_str(self, qs: str) -> None:
         """Load queries from a string."""
-        self._create_fns(sql.from_str(qs, get_aiosql_adapter(self.engine_type)))
+        self._create_fns(sql.from_str(qs, cast("str", get_aiosql_adapter(self.engine_type))))
 
     def cursor(self):  # type: ignore[no-untyped-def]
         """Get a cursor on the current connection."""

@@ -31,6 +31,11 @@ class BaseCollection(BaseSchema):
             else:
                 logger.info("... %s  [dim bold]SKIPPED[/] [empty file]", file_type)
 
+    def pre_process(self) -> None:
+        """Preps a file for loading."""
+        for _, file_name in self.dict(exclude_unset=True, exclude_none=True).items():
+            logger.info("pre-processing for %s", file_name)
+
     def process(self, db: db.SQLManager, *args: Any, **kwargs: Any) -> Any:
         """Returns first values in a list or None"""
         fn = getattr(db, "process_collection", None)
