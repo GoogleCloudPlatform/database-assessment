@@ -12,7 +12,7 @@ from dbma.utils.aiosql_adapters import BigQueryAdapter, DuckDBAdapter
 if TYPE_CHECKING:
     from aiosql.queries import Queries
 
-    from dbma.transformer.schemas import BaseCollection
+    from dbma.transformer.schemas import AdvisorExtractFiles
 
 
 __all__ = ["get_engine", "get_aiosql_adapter", "db_session_maker", "SQLManager", "SupportedEngines"]
@@ -104,7 +104,7 @@ class SQLManager:
         """Get transformation scripts"""
         return sorted([q for q in self._available_queries if q.startswith("transform")])
 
-    def execute_transformation_scripts(self, collection: "BaseCollection") -> None:
+    def execute_transformation_scripts(self, collection: "AdvisorExtractFiles") -> None:
         """
 
 
@@ -119,7 +119,7 @@ class SQLManager:
         """Get transformation scripts"""
         return sorted([q for q in self._available_queries if q.startswith("load")])
 
-    def execute_load_scripts(self, collection: "BaseCollection") -> None:
+    def execute_load_scripts(self, collection: "AdvisorExtractFiles") -> None:
         """
 
 

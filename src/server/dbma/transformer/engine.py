@@ -47,7 +47,8 @@ class CSVTransformer:
 
     def to_parquet(self, output_path: str) -> None:
         """Converts the CSV to an arrow table"""
-        file = f"{self.file_path.parent}/{self.file_path.stem}.parquet"
+        storage.engine.fs.auto_mkdir = True
+        file = f"{self.file_path.parent}/{self.collection_id}/{self.file_path.stem}.parquet"
         # nosec
         query = f"""
         --begin-sql
@@ -87,9 +88,7 @@ class CSVTransformer:
 def run(collections: list["Path"], extract_path: "Union[TemporaryDirectory , Path]", parse_as_version: str) -> None:
     """Process the collection"""
     config = schemas.get_config_for_version(parse_as_version)
-    extracted_archives: list[schemas.CollectionArchive] = extract_and_validate_archives(
-        collections, extract_path, config
-    )
+    extracted_archives: list[schemas.AdvisorExtract] = extract_and_validate_archives(collections, extract_path, config)
 
     if len(extracted_archives) == 0:
         raise FileNotFoundError("No collections found to process")
@@ -110,24 +109,32 @@ def run(collections: list["Path"], extract_path: "Union[TemporaryDirectory , Pat
 def extract_and_validate_archives(
     collection_archives: list["Path"],
     extract_path: "Union[TemporaryDirectory , Path]",
-    config: "schemas.CollectionConfig",
-) -> "list[schemas.CollectionArchive]":
+    config: "schemas.AdvisorExtractConfig",
+) -> "list[schemas.AdvisorExtract]":
     """Process the collection"""
     # override or detect version to process with
-    valid_collections: "list[schemas.CollectionArchive]" = []
+    valid_collections: "list[schemas.AdvisorExtract]" = []
     # loop through collections and extract them
     for extract in collection_archives:
-        detected_version = helpers.get_version_from_file(extract)
+        script_version = helpers.get_version_from_file(extract)
+        db_version = helpers.get_db_version_from_file(extract)
         collection_key = helpers.get_collection_key_from_file(extract)
         collection_id = helpers.get_collection_id_from_key(collection_key)
-        logger.info('ℹ️  detected version "%s" from the collection name', detected_version)
 
+        logger.info('ℹ️  detected version "%s" from the collection name', script_version)
         logger.debug('ℹ️  config specifies the "%s" character as the delimiter', config.delimiter)
         files = helpers.extract_collection(collection_id, extract, extract_path)
         try:
             valid_collections.append(
-                schemas.CollectionArchive.parse_obj(
-                    {"config": config, "files": config.collection_schema.from_file_list(files)}
+                schemas.AdvisorExtract.parse_obj(
+                    {
+                        "config": config,
+                        "files": config.collection_files_schema.from_file_list(files),
+                        "collection_id": collection_id,
+                        "collection_key": collection_id,
+                        "script_version": script_version,
+                        "db_version": db_version,
+                    }
                 )
             )
         except ValidationError as e:

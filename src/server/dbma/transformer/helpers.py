@@ -45,7 +45,7 @@ def extract_collection(
             archive.extractall(str(extract_path))
     for file_to_rename in list(Path(str(extract_path)).glob(f"*{collection_id}.log")):
         new_path = file_to_rename.rename(f"{file_to_rename.parent}/{file_to_rename.stem}.csv")
-        logger.info("renaming file that ends with 'log' extension to 'csv': %s", new_path.stem)
+        logger.info("changed file extension to csv: %s", new_path.stem)
     return list(Path(str(extract_path)).glob(f"*{collection_id}.csv"))
 
 

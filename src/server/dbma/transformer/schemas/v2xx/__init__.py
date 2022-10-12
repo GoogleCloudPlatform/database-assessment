@@ -2,12 +2,12 @@ from pathlib import Path
 
 from dbma import log
 from dbma.__version__ import __version__
-from dbma.transformer.schemas.base import BaseCollection
+from dbma.transformer.schemas.base import AdvisorExtractFiles
 
 logger = log.get_logger()
 
 
-class CollectionSchema(BaseCollection):
+class CollectionSchema(AdvisorExtractFiles):
     """Files that are expected to be in the v1 collection schema
 
 
