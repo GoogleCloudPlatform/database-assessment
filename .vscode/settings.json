@@ -85,6 +85,7 @@
     "pdbs",
     "pdbsinfo",
     "pdbsopenmode",
+    "rplit",
     "skiprows",
     "sourcecode",
     "sourceconn",
@@ -97,7 +98,9 @@
   "[sql]": {
     "editor.defaultFormatter": "mtxr.sqltools"
   },
+  "python.linting.lintOnSave": true,
   "python.linting.banditEnabled": true,
+  "python.linting.banditArgs": ["-r", "-c", "pyproject.toml"],
   "python.linting.mypyEnabled": true,
   "mypy.runUsingActiveInterpreter": true
 }

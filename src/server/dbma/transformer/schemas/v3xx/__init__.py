@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 
 from dbma import log
 from dbma.__version__ import __version__
@@ -51,8 +52,8 @@ class CollectionSchema(BaseCollection):
     db_constraint_summary: Path
     db_used_space_details: Path
     db_user_tablespace_segments: Path
-    # key_log: Optional[Path]
-
+    key_log: Optional[Path]
+    _delimiter = "|"
     _file_mapper = {
         "awr_hist_cmd_types": "opdb__awrhistcmdtypes__",
         "awr_hist_os_stat": "opdb__awrhistosstat__",
@@ -87,3 +88,9 @@ class CollectionSchema(BaseCollection):
         "db_used_space_details": "opdb__usedspacedetails__",
         "db_user_tablespace_segments": "opdb__usrsegatt__",
     }
+    """
+    This dictionary maps the filenames to their respective columns.
+
+    This allows us to decouple the file naming conventions from our Python code.
+    The key of the dict is a attribute in your collection, and the value is a search string to use for identifying files
+    """

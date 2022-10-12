@@ -1,13 +1,16 @@
 from pathlib import Path
-from typing import Any, Optional, Type, Union
+from typing import Optional, Type, Union
 
 from packaging.version import LegacyVersion, Version
 
-from dbma import db, log
+from dbma import log
 from dbma.config import BaseSchema
-from dbma.transformer.helpers import CSVTransformer
 
-__all__ = ["CollectionConfig", "BaseCollection", "VersionProfile"]
+__all__ = [
+    "CollectionConfig",
+    "BaseCollection",
+    "VersionProfile",
+]
 
 logger = log.get_logger()
 
@@ -18,35 +21,7 @@ class BaseCollection(BaseSchema):
     """Base Schema for file Collection"""
 
     _file_mapper: dict[str, str] = {}
-
-    def load(self, db: db.SQLManager, delimiter: str = "|") -> None:
-        """Returns first values in a list or None"""
-        for file_type, file_name in self.dict(exclude_unset=True, exclude_none=True).items():
-            has_load_fn = hasattr(db, f"load_{file_type}")
-            if not has_load_fn:
-                logger.warning("... [bold yellow] Could not find a load procedure for %s.", file_type)
-            if file_name.stat().st_size > 0:
-                csv = CSVTransformer(file_path=file_name)
-                arrow = csv.to_arrow_table()
-                csv.to_parquet()
-                logger.info(arrow)
-                fn = getattr(db, f"load_{file_type}")
-                rows_loaded = fn(str(file_name.absolute()), delimiter)
-                logger.info("... %s  [green bold]SUCCESS[/] [%s rows(s)]", file_type, rows_loaded)
-            else:
-                logger.info("... %s  [dim bold]SKIPPED[/] [empty file]", file_type)
-
-    def pre_process(self) -> None:
-        """Preps a file for loading."""
-        for _, file_name in self.dict(exclude_unset=True, exclude_none=True).items():
-            logger.info("pre-processing for %s", file_name)
-
-    def process(self, db: db.SQLManager, *args: Any, **kwargs: Any) -> Any:
-        """Returns first values in a list or None"""
-        fn = getattr(db, "process_collection", None)
-        if not fn:
-            raise ValueError("Could not find the specified load function")
-        return fn(*args, **kwargs)
+    _delimiter: str = "|"
 
     @classmethod
     def from_file_list(cls, files: list[Path]) -> "BaseCollection":
@@ -59,6 +34,14 @@ class BaseCollection(BaseSchema):
             if value.name.startswith(match_string):
                 return value
         return None
+
+    @property
+    def file_mapper(self) -> dict[str, str]:
+        return self._file_mapper
+
+    @property
+    def delimiter(self) -> dict[str, str]:
+        return self.delimiter
 
 
 class CollectionConfig(BaseSchema):

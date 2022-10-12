@@ -165,5 +165,5 @@ env_files = [".env.example"]
 
 [tool.bandit]
 exclude_dirs = ["tests"]
-skips = ["B101", "B601"]
+skips = ["B101", "B601", "B608"]
 tests = ["B201", "B301", "B101"]

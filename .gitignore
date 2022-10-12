@@ -157,3 +157,4 @@ tmp
 tmp/*
 local.db
 local.db.wal
+notebooks/data/*.tgz

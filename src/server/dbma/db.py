@@ -5,16 +5,21 @@ import aiosql as sql
 from sqlalchemy.future import Engine, create_engine
 from sqlalchemy.orm import sessionmaker
 
+from dbma import log
 from dbma.config import settings
 from dbma.utils.aiosql_adapters import BigQueryAdapter, DuckDBAdapter
 
 if TYPE_CHECKING:
     from aiosql.queries import Queries
 
+    from dbma.transformer.schemas import BaseCollection
+
 
 __all__ = ["get_engine", "get_aiosql_adapter", "db_session_maker", "SQLManager", "SupportedEngines"]
 
 SupportedEngines = Literal["duckdb", "bigquery"]
+
+logger = log.get_logger()
 
 
 @ft.lru_cache(maxsize=3)
@@ -93,6 +98,63 @@ class SQLManager:
     def close(self) -> None:
         """Close underlying database connection."""
         self._db_session.close()
+
+    @property
+    def transform_scripts(self) -> list[str]:
+        """Get transformation scripts"""
+        return sorted([q for q in self._available_queries if q.startswith("transform")])
+
+    def execute_transformation_scripts(self, collection: "BaseCollection") -> None:
+        """
+
+
+        Returns:
+            _type_: _description_
+        """
+        for script in self.transform_scripts:
+            getattr(self, script)()
+
+    @property
+    def load_scripts(self) -> list[str]:
+        """Get transformation scripts"""
+        return sorted([q for q in self._available_queries if q.startswith("load")])
+
+    def execute_load_scripts(self, collection: "BaseCollection") -> None:
+        """
+
+
+        Returns:
+            _type_: _description_
+        """
+        for file_type, file_name in collection.dict(exclude_unset=True, exclude_none=True).items():
+            has_load_fn = hasattr(self, f"load_{file_type}")
+            if not has_load_fn:
+                logger.warning("... [bold yellow] Could not find a load procedure for %s.", file_type)
+            if file_name.stat().st_size > 0:
+                fn = getattr(self, f"load_{file_type}")
+                rows_loaded = fn(str(file_name.absolute()), collection.delimiter)
+                logger.info("... %s  [green bold]SUCCESS[/] [%s rows(s)]", file_type, rows_loaded)
+                # csv = CSVTransformer(file_path=file_name)
+                # csv.to_parquet(settings.collections_path)
+            else:
+                logger.info("... %s  [dim bold]SKIPPED[/] [empty file]", file_type)
+            for script in self.load_scripts:
+                getattr(self, script)()
+
+    @property
+    def pre_processing_scripts(self) -> list[str]:
+        """Get transformation scripts"""
+        return sorted([q for q in self._available_queries if q.startswith("pre")])
+
+    def execute_pre_processing_scripts(self) -> None:
+        """
+
+
+        Returns:
+            _type_: _description_
+        """
+        for script in self.pre_processing_scripts:
+            getattr(self, script)()
 
     def _call_fn(self, query: str, fn: Callable, *args: Any, **kwargs: Any) -> Any:
         """Forward method call to aiosql query"""

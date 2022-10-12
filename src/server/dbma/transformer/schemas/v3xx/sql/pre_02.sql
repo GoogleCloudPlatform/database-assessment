@@ -1,4 +1,4 @@
--- name: create_schema#
+-- name: pre-process-02-create_schema#
 -- Create all tables for loaded data
 CREATE TABLE IF NOT EXISTS AWRHISTCMDTYPES (
     PKEY VARCHAR(256),

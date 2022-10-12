@@ -5,7 +5,7 @@ from google.cloud import secretmanager as sm
 
 
 def get_secret(project_id: str, secret_id: str, version_id: str = "latest") -> str:
-    """_summary_
+    """Load Secret from GCP Secret Manager
 
     Args:
         project_id (str): _description_

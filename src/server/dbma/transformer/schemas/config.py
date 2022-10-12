@@ -10,7 +10,7 @@ from dbma.transformer.schemas.base import CollectionConfig, VersionProfile
 
 logger = log.get_logger()
 
-version_config_map = [
+mapper = [
     VersionProfile(
         min_version=parse_version("3.0.0"),
         max_version=parse_version(__version__),
@@ -42,24 +42,8 @@ def get_config_for_version(script_version: str) -> CollectionConfig:
         CollectionConfig: _description_
     """
     version = parse_version(script_version)
-    for version_profile in version_config_map:
-        if version_profile.min_version <= version <= version_profile.max_version:
-            return version_profile.config
-    raise NotImplementedError("The specified version is not implemented")
 
-
-def get_version_from_filename(filename: Path) -> CollectionConfig:
-    """Get the correct collection config for the specified version
-
-    Args:
-        version (str): The version number of compare
-
-    Returns:
-        CollectionConfig: _description_
-    """
-
-    version = parse_version(script_version)
-    for version_profile in version_config_map:
+    for version_profile in mapper:
         if version_profile.min_version <= version <= version_profile.max_version:
             return version_profile.config
     raise NotImplementedError("The specified version is not implemented")

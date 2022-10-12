@@ -33,7 +33,7 @@ rich_tracebacks(console=console, suppress=("sqlalchemy", "aiosql", "google", "fs
 
 @app.command(name="upload-collection")
 def upload_collection(
-    collection: str = typer.Option(
+    collection: Path = typer.Option(
         ...,
         "--collection",
         "-c",
@@ -43,10 +43,32 @@ def upload_collection(
         readable=True,
         resolve_path=True,
         help="Path to collection zip to upload",
-    )
+    ),
+    google_project_id: str = typer.Option(
+        settings.google_project_id,
+        "--google-project-id",
+        show_default=True,
+        help=(
+            "Sets the Google Project ID to use for processing the collection. "
+            "This will override the value from the environment."
+        ),
+    ),
 ) -> None:
     """Upload a collection to Google"""
+    if google_project_id:
+        settings.google_project_id = google_project_id
+    if collection.is_dir():
+        # The path is a directory.  We need to check for zipped archives
+        logger.info("🔎 Searching for collection archives in the specified directory")
+        collections_to_process = list(collection.glob("*.tar.gz")) + list(collection.glob("*.zip"))
+        if len(collections_to_process) < 1:
+            logger.error("⚠️ No collection files were found in the specified directory")
+            sys.exit(1)
+    else:
+        collections_to_process = [collection]
     console.log(collection)
+    for collection_archive in collections_to_process:
+        storage.engine.fs.put_file(collection_archive, f"{settings.collections_path}/upload/")
 
 
 @app.command(
@@ -105,7 +127,9 @@ def _process_collection(collection: Path, collection_version: str) -> None:
     if collection.is_dir():
         # The path is a directory.  We need to check for zipped archives
         logger.info("🔎 Searching for collection archives in the specified directory")
-        collections_to_process = list(collection.glob("*.tar.gz")) + list(collection.glob("*.zip"))
+        collections_to_process = (
+            list(collection.glob("*.tar.gz")) + list(collection.glob("*.zip")) + list(collection.glob("*.tgz"))
+        )
         if len(collections_to_process) < 1:
             logger.error("⚠️ No collection files were found in the specified directory")
             sys.exit(1)
@@ -116,9 +140,9 @@ def _process_collection(collection: Path, collection_version: str) -> None:
     filenames = [f"{c.stem}{c.suffix}" for c in collections_to_process]
     logger.debug("ℹ️  Processing %d collection(s)", len(filenames))
     logger.debug("ℹ️  Collections to process: %s", filenames)
-    transformer.process(
+    transformer.engine.run(
         collections=collections_to_process,
-        extract_path=next(transformer.get_temp_dir()),
+        extract_path=next(transformer.helpers.get_temp_dir()),
         parse_as_version=collection_version,
     )
     dirs = storage.engine.fs.ls(settings.collections_path)

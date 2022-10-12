@@ -1,4 +1,4 @@
--- name: drop_all_objects#
+-- name: pre-process-01-drop_all_objects#
 -- Drop all objects in the in-memory duckdb engine
 drop table if exists AWRHISTCMDTYPES;
 
