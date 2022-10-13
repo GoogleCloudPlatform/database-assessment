@@ -6,11 +6,12 @@ Take not of the environment variable prefixes required for each settings class, 
 """
 import logging
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum, EnumMeta
 from functools import lru_cache
-from typing import Any, Final, Optional
+from typing import Any, Final, Optional, Union
 
+import orjson
 from pydantic import BaseSettings as _BaseSettings
 from pydantic import SecretBytes, SecretStr, ValidationError
 from typing_extensions import Literal
@@ -88,6 +89,44 @@ def get_settings() -> "Settings":
         logger.fatal("Could not load settings. %s", e)
         sys.exit(1)
     return settings
+
+
+def serialize_object(value: Any) -> str:
+    """Encodes json with the optimized ORJSON package.
+
+    orjson.dumps returns bytearray, so you can't pass it directly as
+    json_serializer
+    """
+
+    def _serializer(value: Any) -> Any:
+        if isinstance(value, SecretBytes):
+            return value.get_secret_value()
+        raise TypeError
+
+    return orjson.dumps(
+        value,
+        default=_serializer,
+        option=orjson.OPT_NAIVE_UTC | orjson.OPT_SERIALIZE_NUMPY,
+    ).decode()
+
+
+def deserialize_object(value: Union[bytes, bytearray, memoryview, str, dict[str, Any]]) -> Any:
+    """Decodes to an object with the optimized ORJSON package.
+
+    orjson.dumps returns bytearray, so you can't pass it directly as
+    json_serializer
+    """
+    if isinstance(value, dict):
+        return value
+    return orjson.loads(value)
+
+
+def convert_datetime_to_gmt(dt: datetime) -> str:
+    """Handles datetime serialization for nested timestamps in
+    models/dataclasses."""
+    if not dt.tzinfo:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.isoformat().replace("+00:00", "Z")
 
 
 settings = get_settings()

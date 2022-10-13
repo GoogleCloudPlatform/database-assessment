@@ -1,13 +1,13 @@
-import tarfile as tf
-import zipfile as zf
-from pathlib import Path
+import logging
 from tempfile import TemporaryDirectory
-from typing import Generator, Union
+from typing import TYPE_CHECKING, Generator, Union
 
 from packaging.version import LegacyVersion, Version
 from packaging.version import parse as parse_version
 
-from dbma import log
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 __all__ = [
     "get_collection_id_from_key",
@@ -15,10 +15,9 @@ __all__ = [
     "get_db_version_from_file",
     "get_version_from_file",
     "get_temp_dir",
-    "extract_collection",
 ]
 
-logger = log.get_logger()
+logger = logging.getLogger()
 
 ScriptVersionType = Union[Version, LegacyVersion]
 
@@ -30,23 +29,6 @@ class InvalidFileError(Exception):
 def get_temp_dir() -> "Generator[TemporaryDirectory, None, None]":
     with TemporaryDirectory() as d:
         yield d  # type: ignore
-
-
-def extract_collection(
-    collection_id: str, collection_archive: "Path", extract_path: "Union[TemporaryDirectory,Path]"
-) -> "list[Path]":
-    """Extracts the specified collection to the specified directory."""
-    logger.info("🔎 searching %s for files and extracting to %s", collection_archive.name, extract_path)
-    if collection_archive.suffix in {".gz", ".tgz"}:
-        with tf.TarFile.open(collection_archive, "r|gz") as archive:
-            archive.extractall(str(extract_path))
-    elif collection_archive.suffix in {".zip"}:
-        with zf.ZipFile(collection_archive, "r") as archive:
-            archive.extractall(str(extract_path))
-    for file_to_rename in list(Path(str(extract_path)).glob(f"*{collection_id}.log")):
-        new_path = file_to_rename.rename(f"{file_to_rename.parent}/{file_to_rename.stem}.csv")
-        logger.info("changed file extension to csv: %s", new_path.stem)
-    return list(Path(str(extract_path)).glob(f"*{collection_id}.csv"))
 
 
 def get_version_from_file(file: "Path") -> "Union[LegacyVersion, Version]":
@@ -101,7 +83,7 @@ def get_collection_id_from_key(key: str) -> str:
     try:
         collection_id = key.rsplit(".", maxsplit=1)[1]
         return collection_id
-    except ValueError as e:
+    except (ValueError, IndexError) as e:
         raise InvalidFileError from e
 
 

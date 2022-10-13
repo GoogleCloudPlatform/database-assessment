@@ -1,6 +1,6 @@
 from logging import config as _logging_config
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from dbma.config import settings
 
@@ -36,7 +36,7 @@ Pre-configured log config for application.
 """
 
 
-def get_logger(name: str = "dbma") -> "Logger":
+def get_logger(name: Optional[str] = None) -> "Logger":
     """Returns a configured logger for the given name
 
     Args:

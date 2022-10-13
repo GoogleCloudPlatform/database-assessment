@@ -71,4 +71,4 @@ def _cached_import(module_path: str, class_name: str) -> Any:
     module = sys.modules.get(module_path)
     if not _is_loaded(module):
         module = import_module(module_path)
-    return getattr(module, class_name)  #
+    return getattr(module, class_name)

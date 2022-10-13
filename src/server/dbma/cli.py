@@ -5,7 +5,7 @@ import typer
 from rich.console import Console
 from rich.traceback import install as rich_tracebacks
 
-from dbma import log, storage, transformer
+from dbma import log, storage, transformer, utils
 from dbma.__version__ import __version__ as version
 from dbma.config import settings
 
@@ -112,15 +112,15 @@ def process_collection(
         help=("Upload and store files in GCS "),
     ),
 ) -> None:
-    """Process a collection"""
+    """Process a collection of advisor extracts"""
     if use_gcs:
         settings.storage_backend = "gcs"
     if google_project_id:
         settings.google_project_id = google_project_id
-    _process_collection(collection, collection_version)
+    _process_advisor_extract(collection, collection_version)
 
 
-def _process_collection(collection: Path, collection_version: str) -> None:
+def _process_advisor_extract(collection: Path, collection_version: str) -> None:
     """Process a collection or set of collections"""
     logger.info("launching Collection loader against %s Google Cloud Project", settings.google_project_id)
     # setup configuration based on user input
@@ -128,7 +128,9 @@ def _process_collection(collection: Path, collection_version: str) -> None:
         # The path is a directory.  We need to check for zipped archives
         logger.info("🔎 Searching for collection archives in the specified directory")
         collections_to_process = (
-            list(collection.glob("*.tar.gz")) + list(collection.glob("*.zip")) + list(collection.glob("*.tgz"))
+            list(collection.glob("opdb__*.tar.gz"))
+            + list(collection.glob("opdb__*.zip"))
+            + list(collection.glob("opdb__*.tgz"))
         )
         if len(collections_to_process) < 1:
             logger.error("⚠️ No collection files were found in the specified directory")
@@ -142,7 +144,7 @@ def _process_collection(collection: Path, collection_version: str) -> None:
     logger.debug("ℹ️  Collections to process: %s", filenames)
     transformer.engine.run(
         collections=collections_to_process,
-        extract_path=next(transformer.helpers.get_temp_dir()),
+        local_working_path=next(utils.file_helpers.get_temp_dir()),
         parse_as_version=collection_version,
     )
     dirs = storage.engine.fs.ls(settings.collections_path)

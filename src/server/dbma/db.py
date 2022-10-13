@@ -2,18 +2,23 @@ import functools as ft
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Set, Type, Union, cast
 
 import aiosql as sql
+import duckdb
 from sqlalchemy.future import Engine, create_engine
 from sqlalchemy.orm import sessionmaker
 
-from dbma import log
+from dbma import log, storage
 from dbma.config import settings
+from dbma.utils import file_helpers as helpers
 from dbma.utils.aiosql_adapters import BigQueryAdapter, DuckDBAdapter
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from aiosql.queries import Queries
+    from duckdb import DuckDBPyConnection
+    from pyarrow.lib import Table as ArrowTable
 
-    from dbma.transformer.schemas import AdvisorExtractFiles
-
+    from dbma.transformer.schemas import AdvisorExtract
 
 __all__ = ["get_engine", "get_aiosql_adapter", "db_session_maker", "SQLManager", "SupportedEngines"]
 
@@ -104,46 +109,51 @@ class SQLManager:
         """Get transformation scripts"""
         return sorted([q for q in self._available_queries if q.startswith("transform")])
 
-    def execute_transformation_scripts(self, collection: "AdvisorExtractFiles") -> None:
+    def execute_transformation_scripts(self, advisor_extract: "AdvisorExtract") -> None:
         """
 
 
         Returns:
             _type_: _description_
         """
-        for script in self.transform_scripts:
-            getattr(self, script)()
+        for _, file_name in advisor_extract.files.dict(exclude_unset=True, exclude_none=True).items():
+            for script in self.transform_scripts:
+                fn = getattr(self, script)
+                fn(str(file_name.absolute()), advisor_extract.files.delimiter)
 
     @property
     def load_scripts(self) -> list[str]:
         """Get transformation scripts"""
         return sorted([q for q in self._available_queries if q.startswith("load")])
 
-    def execute_load_scripts(self, collection: "AdvisorExtractFiles") -> None:
-        """
+    def execute_load_scripts(self, advisor_extract: "AdvisorExtract") -> None:
+        """Execute load scripts
 
+        Accepts a collection and runs the SQL load scripts against it.
 
-        Returns:
-            _type_: _description_
+        Args:
+            advisor_extract (AdvisorExtract): The collection of Advisor extract files
         """
-        for file_type, file_name in collection.dict(exclude_unset=True, exclude_none=True).items():
+        for file_type, file_name in advisor_extract.files.dict(exclude_unset=True, exclude_none=True).items():
+            logger.info("delimiter is %s", advisor_extract.files.delimiter)
             has_load_fn = hasattr(self, f"load_{file_type}")
             if not has_load_fn:
                 logger.warning("... [bold yellow] Could not find a load procedure for %s.", file_type)
             if file_name.stat().st_size > 0:
                 fn = getattr(self, f"load_{file_type}")
-                rows_loaded = fn(str(file_name.absolute()), collection.delimiter)
+                rows_loaded = fn(str(file_name.absolute()), advisor_extract.files.delimiter)
                 logger.info("... %s  [green bold]SUCCESS[/] [%s rows(s)]", file_type, rows_loaded)
-                # csv = CSVTransformer(file_path=file_name)
-                # csv.to_parquet(settings.collections_path)
+
             else:
                 logger.info("... %s  [dim bold]SKIPPED[/] [empty file]", file_type)
-            for script in self.load_scripts:
-                getattr(self, script)()
 
     @property
     def pre_processing_scripts(self) -> list[str]:
-        """Get transformation scripts"""
+        """Get transformation scripts
+
+        Returns a sorted list of available commands loaded from the SQL files
+
+        """
         return sorted([q for q in self._available_queries if q.startswith("pre")])
 
     def execute_pre_processing_scripts(self) -> None:
@@ -177,3 +187,62 @@ class SQLManager:
 
     def __del__(self) -> None:
         self.close()
+
+
+class CSVTransformer:
+    """Transforms a CSV to various formats"""
+
+    def __init__(self, file_path: "Path", delimiter: str = "|", has_headers: bool = True, skip_rows: int = 0) -> None:
+        self.file_path = file_path
+        self.delimiter = delimiter
+        self.has_headers = has_headers
+        self.skip_rows = skip_rows
+        self.local_db = duckdb.connect()
+        self.script_version = helpers.get_version_from_file(file_path)
+        self.db_version = helpers.get_db_version_from_file(file_path)
+        self.collection_key = helpers.get_collection_key_from_file(file_path)
+        self.collection_id = helpers.get_collection_id_from_key(self.collection_key)
+
+    def to_arrow_table(self, chunk_size: int = 1000000) -> "ArrowTable":
+        """Converts the CSV to an arrow table"""
+        data = self._select_data()
+        return data.arrow(chunk_size)
+
+    def to_parquet(self, output_path: str) -> None:
+        """Converts the CSV to an arrow table"""
+        storage.engine.fs.auto_mkdir = True
+        file = f"{self.file_path.parent}/{self.file_path.stem}.parquet"
+        # nosec
+        query = f"""
+        --begin-sql
+            COPY (
+            select * from read_csv_auto(?, delim = ?, header = ?)
+            ) TO '{file}' (FORMAT 'parquet')
+        --end-sql
+        """
+        self.local_db.execute(
+            query,
+            [
+                str(self.file_path),
+                self.delimiter,
+                self.has_headers,
+            ],
+        )
+        storage.engine.fs.put(file, f"{output_path}/{self.collection_id}")
+
+    def to_df(self) -> "ArrowTable":
+        """Converts the CSV to an arrow table"""
+        data = self._select_data()
+        return data.df()
+
+    def _select_data(self) -> "DuckDBPyConnection":
+        """Select the data from the CSV"""
+        results = self.local_db.execute(
+            """
+            --begin-sql
+            select * from read_csv_auto(?, delim = ?, header = ?)
+            --end-sql
+            """,
+            [str(self.file_path), self.delimiter, self.has_headers],
+        )
+        return results

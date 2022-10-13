@@ -40,8 +40,8 @@ class AdvisorExtractFiles(BaseSchema):
         return self._file_mapper
 
     @property
-    def delimiter(self) -> dict[str, str]:
-        return self.delimiter
+    def delimiter(self) -> str:
+        return self._delimiter
 
 
 class AdvisorExtractConfig(BaseSchema):
