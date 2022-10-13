@@ -1,5 +1,5 @@
 import functools as ft
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Optional, Set, Type, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Set, Type, Union, cast
 
 import aiosql as sql
 import duckdb
@@ -17,10 +17,18 @@ if TYPE_CHECKING:
     from aiosql.queries import Queries
     from duckdb import DuckDBPyConnection
     from pyarrow.lib import Table as ArrowTable
+    from sqlalchemy.engine.interfaces import TypingDBAPICursor as DBAPICursor
 
     from dbma.transformer.schemas import AdvisorExtract
 
-__all__ = ["get_engine", "get_aiosql_adapter", "db_session_maker", "SQLManager", "SupportedEngines"]
+__all__ = [
+    "get_engine",
+    "get_aiosql_adapter",
+    "db_session_maker",
+    "DatabaseConnectionManager",
+    "SQLManager",
+    "SupportedEngines",
+]
 
 SupportedEngines = Literal["duckdb", "bigquery"]
 
@@ -59,53 +67,65 @@ def db_session_maker(engine_type: SupportedEngines) -> sessionmaker:
     return sessionmaker(engine, expire_on_commit=False)
 
 
-class SQLManager:
-    """Hides database connection and queries in here.
+class DatabaseConnectionManager:
+    """Hides database connection.
 
     The class provides the DB-API 2.0 connection methods,
     and SQL execution methods from aiosql.
     """
 
-    def __init__(self, engine_type: SupportedEngines, sql_files_path: Optional[str] = None) -> None:
-
+    def __init__(self, engine_type: SupportedEngines) -> None:
         self.engine_type = engine_type
         self.engine = get_engine(engine_type)
+        self.session = db_session_maker(engine_type)
+        self.connection = self.engine.raw_connection()
+
+    def cursor(self) -> "DBAPICursor":
+        """Get a cursor on the current connection."""
+        return self.connection.cursor()
+
+    def commit(self) -> None:
+        """Commit database transaction."""
+        self.connection.commit()
+
+    def rollback(self) -> None:
+        """Rollback database transaction."""
+        self.connection.rollback()  # type: ignore[attr-defined]
+
+    def close(self) -> None:
+        """Close underlying database connection."""
+        self.connection.close()
+
+    def __str__(self) -> str:
+        return f"Connection Manager for ({self.engine_type})"
+
+    def __del__(self) -> None:
+        self.close()
+
+
+class SQLManager:
+    """Stores the queries for a version of the collection"""
+
+    def __init__(self, db: DatabaseConnectionManager, sql_files_path: str) -> None:
+
+        self.db = db
         self.sql_files_path = sql_files_path
         self._queries: "List[Queries]" = []
         self._count: Dict[str, int] = {}
         self._available_queries: Set[str] = set()
         if sql_files_path:
             self.add_sql_from_path(sql_files_path)
-        # last thing is to actually create the connection, which may fail
-        self._db_session_factory = db_session_maker(engine_type)
-        self._db_session = self.engine.raw_connection()
 
     def add_sql_from_path(self, fn: str) -> None:
         """Load queries from a file or directory."""
-        self._create_fns(sql.from_path(fn, cast("str", get_aiosql_adapter(self.engine_type))))
+        self._create_fns(sql.from_path(fn, cast("str", get_aiosql_adapter(self.db.engine_type))))
 
     def add_sql_from_str(self, qs: str) -> None:
         """Load queries from a string."""
-        self._create_fns(sql.from_str(qs, cast("str", get_aiosql_adapter(self.engine_type))))
-
-    def cursor(self):  # type: ignore[no-untyped-def]
-        """Get a cursor on the current connection."""
-        return self._db_session.cursor()
-
-    def commit(self) -> None:
-        """Commit database transaction."""
-        self._db_session.commit()
-
-    def rollback(self) -> None:
-        """Rollback database transaction."""
-        self._db_session.rollback()  # type: ignore[attr-defined]
-
-    def close(self) -> None:
-        """Close underlying database connection."""
-        self._db_session.close()
+        self._create_fns(sql.from_str(qs, cast("str", get_aiosql_adapter(self.db.engine_type))))
 
     @property
-    def transform_scripts(self) -> list[str]:
+    def transformation_scripts(self) -> list[str]:
         """Get transformation scripts"""
         return sorted([q for q in self._available_queries if q.startswith("transform")])
 
@@ -117,7 +137,7 @@ class SQLManager:
             _type_: _description_
         """
         for _, file_name in advisor_extract.files.dict(exclude_unset=True, exclude_none=True).items():
-            for script in self.transform_scripts:
+            for script in self.transformation_scripts:
                 fn = getattr(self, script)
                 fn(str(file_name.absolute()), advisor_extract.files.delimiter)
 
@@ -169,7 +189,7 @@ class SQLManager:
     def _call_fn(self, query: str, fn: Callable, *args: Any, **kwargs: Any) -> Any:
         """Forward method call to aiosql query"""
         self._count[query] += 1
-        return fn(self._db_session, *args, **kwargs)
+        return fn(self.db.connection, *args, **kwargs)
 
     def _create_fns(self, queries: "Queries") -> None:
         """Create call forwarding to insert the database connection."""
@@ -183,10 +203,7 @@ class SQLManager:
                 self._count[q] = 0
 
     def __str__(self) -> str:
-        return f"Connection Manager for ({self.engine_type})"
-
-    def __del__(self) -> None:
-        self.close()
+        return f"Query Manager for ({self.db.engine_type})"
 
 
 class CSVTransformer:

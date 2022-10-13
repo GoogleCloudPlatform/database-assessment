@@ -5,6 +5,7 @@ from packaging.version import LegacyVersion, Version
 
 from dbma import log
 from dbma.config import BaseSchema
+from dbma.db import SQLManager
 
 __all__ = [
     "AdvisorExtractConfig",
@@ -64,3 +65,4 @@ class AdvisorExtract(BaseSchema):
     script_version: "Union[LegacyVersion, Version]"
     config: AdvisorExtractConfig
     files: AdvisorExtractFiles
+    queries: SQLManager

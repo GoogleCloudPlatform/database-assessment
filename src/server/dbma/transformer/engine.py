@@ -9,6 +9,7 @@ from packaging.version import LegacyVersion, Version
 from pydantic import ValidationError
 
 from dbma import db, log
+from dbma.config import settings
 from dbma.transformer import schemas
 from dbma.utils import file_helpers
 
@@ -37,11 +38,12 @@ def run(
     sql = db.SQLManager(engine_type="duckdb", sql_files_path=str(config.sql_files_path))
     sql.execute_pre_processing_scripts()
     # sql.execute_load_scripts()
-    # csv = CSVTransformer(file_path=file_name, delimiter=advisor_extract.files.delimiter)
-    # csv.to_parquet(settings.collections_path)
     for advisor_extract in advisor_extracts:
-        sql.execute_transformation_scripts(advisor_extract)
-        sql.execute_load_scripts(advisor_extract)
+        csv = db.CSVTransformer(file_path=file_name, delimiter=advisor_extract.files.delimiter)
+        csv.to_parquet(settings.collections_path)
+    # for advisor_extract in advisor_extracts:
+    #     sql.execute_transformation_scripts(advisor_extract)
+    #     sql.execute_load_scripts(advisor_extract)
     rows = sql.get_database_metrics()  # type: ignore[attr-defined]
     # sql.process_collection()  # type: ignore[attr-defined]
     # rows = sql.select_table()  # type: ignore[attr-defined]
