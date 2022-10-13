@@ -154,3 +154,4 @@ db_assessment/op_etl*.sql
 *.csv
 tmp
 tmp/*
+*.tgz
