@@ -1,11 +1,10 @@
 from pathlib import Path
 from typing import Optional, Type, Union
 
-from packaging.version import LegacyVersion, Version
-
 from dbma import log
 from dbma.config import BaseSchema
-from dbma.db import SQLManager
+from dbma.database import SQLManager
+from packaging.version import LegacyVersion, Version
 
 __all__ = [
     "AdvisorExtractConfig",

@@ -1,4 +1,5 @@
 # nosec: B608
+import re
 import tarfile as tf
 import zipfile as zf
 from pathlib import Path
@@ -8,9 +9,10 @@ from typing import Union
 from packaging.version import LegacyVersion, Version
 from pydantic import ValidationError
 
-from dbma import db, log
+from dbma import database, log
 from dbma.config import settings
 from dbma.transformer import schemas
+from dbma.transformer.loaders import CSVTransformer
 from dbma.utils import file_helpers
 
 __all__ = [
@@ -27,34 +29,32 @@ def run(
     collections: list["Path"], local_working_path: "Union[TemporaryDirectory , Path]", parse_as_version: str
 ) -> None:
     """Process the collection"""
-    config = schemas.get_config_for_version(parse_as_version)
-    advisor_extracts: list[schemas.AdvisorExtract] = find_advisor_extracts_in_path(
-        collections, local_working_path, config
-    )
+    db = database.ConnectionManager(engine_type="duckdb")
+    advisor_extracts: list[schemas.AdvisorExtract] = find_advisor_extracts_in_path(collections, local_working_path, db)
 
     if len(advisor_extracts) == 0:
         raise FileNotFoundError("No collections found to process")
-    # loop through the collections that were successfully extracted
-    sql = db.SQLManager(engine_type="duckdb", sql_files_path=str(config.sql_files_path))
-    sql.execute_pre_processing_scripts()
-    # sql.execute_load_scripts()
+
     for advisor_extract in advisor_extracts:
-        csv = db.CSVTransformer(file_path=file_name, delimiter=advisor_extract.files.delimiter)
-        csv.to_parquet(settings.collections_path)
+        # sql = database.SQLManager(db, advisor_extract.config.sql_files_path)
+        for file_type in advisor_extract.files.__fields__:
+            file_name = getattr(advisor_extract.files, file_type)
+            csv = CSVTransformer(file_path=file_name, delimiter=advisor_extract.files.delimiter)
+            csv.to_parquet(settings.collections_path)
     # for advisor_extract in advisor_extracts:
     #     sql.execute_transformation_scripts(advisor_extract)
     #     sql.execute_load_scripts(advisor_extract)
-    rows = sql.get_database_metrics()  # type: ignore[attr-defined]
+    # rows = sql.get_database_metrics()  # type: ignore[attr-defined]
     # sql.process_collection()  # type: ignore[attr-defined]
     # rows = sql.select_table()  # type: ignore[attr-defined]
 
-    logger.info(rows)
+    # logger.info(rows)
 
 
 def find_advisor_extracts_in_path(
     advisor_extracts: list["Path"],
     extract_path: "Union[TemporaryDirectory , Path]",
-    config: "schemas.AdvisorExtractConfig",
+    db: "database.ConnectionManager",
 ) -> "list[schemas.AdvisorExtract]":
     """Process the collection"""
     # override or detect version to process with
@@ -75,11 +75,12 @@ def find_advisor_extracts_in_path(
                 schemas.AdvisorExtract.parse_obj(
                     {
                         "config": schemas.get_config_for_version(str(script_version)),
-                        "files": config.collection_files_schema.from_file_list(files),
+                        "files": version_config.collection_files_schema.from_file_list(files),
                         "collection_id": collection_id,
                         "collection_key": collection_key,
                         "script_version": script_version,
                         "db_version": db_version,
+                        "queries": database.SQLManager(db, version_config.sql_files_path),
                     }
                 )
             )
@@ -92,7 +93,20 @@ def find_advisor_extracts_in_path(
 def extract_collection(
     collection_id: str, collection_archive: "Path", extract_path: "Union[TemporaryDirectory,Path]"
 ) -> "list[Path]":
-    """Extracts the specified collection to the specified directory."""
+    """Extracts the specified collection to the specified directory.
+
+    *Note* - This function will also rename files with a *.log to a *.csv extension.
+    2.X.X versions of the collector scripts used this convention
+
+    Args:
+        collection_id (str): the collection ID of the archive you are extracting.
+        collection_archive (Path): the archive to extract
+        extract_path (Union[TemporaryDirectory,Path]): where to extract the collection
+
+    Returns:
+        list[Path]: A list containing `Path` objects for each extracted file
+    """
+
     logger.info("🔎 searching %s for files and extracting to %s", collection_archive.name, extract_path)
     if collection_archive.suffix in {".gz", ".tgz"}:
         with tf.TarFile.open(collection_archive, "r|gz") as archive:
@@ -103,4 +117,15 @@ def extract_collection(
     for file_to_rename in list(Path(str(extract_path)).glob(f"*{collection_id}.log")):
         new_path = file_to_rename.rename(f"{file_to_rename.parent}/{file_to_rename.stem}.csv")
         logger.info("changed file extension to csv: %s", new_path.stem)
-    return list(Path(str(extract_path)).glob(f"*{collection_id}.csv"))
+    csv_files = list(Path(str(extract_path)).glob(f"*{collection_id}.csv"))
+
+    for csv_file in csv_files:
+
+        with open(csv_file, "r+", encoding="utf8") as f:
+            content = f.readlines()
+            f.seek(0)
+            for line in content:
+                if line.strip() != "" and not re.match(r"^Elapsed: (\d+):(\d+):(\d+).(\d+)$", line):
+                    f.write(line)
+            f.truncate()
+    return csv_files

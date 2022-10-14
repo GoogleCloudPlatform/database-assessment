@@ -52,7 +52,7 @@ class CollectionSchema(AdvisorExtractFiles):
     db_constraint_summary: Path
     db_used_space_details: Path
     db_user_tablespace_segments: Path
-    key_log: Optional[Path]
+    # key_log: Optional[Path]
     _delimiter = "|"
     _file_mapper = {
         "awr_hist_cmd_types": "opdb__awrhistcmdtypes__",

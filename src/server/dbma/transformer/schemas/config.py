@@ -12,7 +12,7 @@ logger = log.get_logger()
 
 mapper = [
     AdvisorExtractVersionConfig(
-        min_version=parse_version("3.0.0"),
+        min_version=parse_version("2.0.6"),
         max_version=parse_version(__version__),
         config=AdvisorExtractConfig(
             delimiter="|",
@@ -22,7 +22,7 @@ mapper = [
     ),
     AdvisorExtractVersionConfig(
         min_version=parse_version("2.0.0"),
-        max_version=parse_version("2.99.0"),
+        max_version=parse_version("2.0.5"),
         config=AdvisorExtractConfig(
             delimiter=",",
             collection_files_schema=v2xx.CollectionSchema,

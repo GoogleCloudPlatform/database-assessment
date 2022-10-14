@@ -1,31 +1,35 @@
 import functools as ft
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Set, Type, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
+    Literal,
+    Set,
+    Type,
+    Union,
+    cast,
+)
 
 import aiosql as sql
-import duckdb
+from dbma import log
+from dbma.config import settings
+from dbma.utils.aiosql_adapters import BigQueryAdapter, DuckDBAdapter
 from sqlalchemy.future import Engine, create_engine
 from sqlalchemy.orm import sessionmaker
 
-from dbma import log, storage
-from dbma.config import settings
-from dbma.utils import file_helpers as helpers
-from dbma.utils.aiosql_adapters import BigQueryAdapter, DuckDBAdapter
-
 if TYPE_CHECKING:
-    from pathlib import Path
 
     from aiosql.queries import Queries
-    from duckdb import DuckDBPyConnection
-    from pyarrow.lib import Table as ArrowTable
-    from sqlalchemy.engine.interfaces import TypingDBAPICursor as DBAPICursor
-
     from dbma.transformer.schemas import AdvisorExtract
+    from sqlalchemy.engine.interfaces import TypingDBAPICursor as DBAPICursor
 
 __all__ = [
     "get_engine",
     "get_aiosql_adapter",
     "db_session_maker",
-    "DatabaseConnectionManager",
+    "ConnectionManager",
     "SQLManager",
     "SupportedEngines",
 ]
@@ -67,7 +71,7 @@ def db_session_maker(engine_type: SupportedEngines) -> sessionmaker:
     return sessionmaker(engine, expire_on_commit=False)
 
 
-class DatabaseConnectionManager:
+class ConnectionManager:
     """Hides database connection.
 
     The class provides the DB-API 2.0 connection methods,
@@ -106,7 +110,7 @@ class DatabaseConnectionManager:
 class SQLManager:
     """Stores the queries for a version of the collection"""
 
-    def __init__(self, db: DatabaseConnectionManager, sql_files_path: str) -> None:
+    def __init__(self, db: ConnectionManager, sql_files_path: str) -> None:
 
         self.db = db
         self.sql_files_path = sql_files_path
@@ -204,62 +208,3 @@ class SQLManager:
 
     def __str__(self) -> str:
         return f"Query Manager for ({self.db.engine_type})"
-
-
-class CSVTransformer:
-    """Transforms a CSV to various formats"""
-
-    def __init__(self, file_path: "Path", delimiter: str = "|", has_headers: bool = True, skip_rows: int = 0) -> None:
-        self.file_path = file_path
-        self.delimiter = delimiter
-        self.has_headers = has_headers
-        self.skip_rows = skip_rows
-        self.local_db = duckdb.connect()
-        self.script_version = helpers.get_version_from_file(file_path)
-        self.db_version = helpers.get_db_version_from_file(file_path)
-        self.collection_key = helpers.get_collection_key_from_file(file_path)
-        self.collection_id = helpers.get_collection_id_from_key(self.collection_key)
-
-    def to_arrow_table(self, chunk_size: int = 1000000) -> "ArrowTable":
-        """Converts the CSV to an arrow table"""
-        data = self._select_data()
-        return data.arrow(chunk_size)
-
-    def to_parquet(self, output_path: str) -> None:
-        """Converts the CSV to an arrow table"""
-        storage.engine.fs.auto_mkdir = True
-        file = f"{self.file_path.parent}/{self.file_path.stem}.parquet"
-        # nosec
-        query = f"""
-        --begin-sql
-            COPY (
-            select * from read_csv_auto(?, delim = ?, header = ?)
-            ) TO '{file}' (FORMAT 'parquet')
-        --end-sql
-        """
-        self.local_db.execute(
-            query,
-            [
-                str(self.file_path),
-                self.delimiter,
-                self.has_headers,
-            ],
-        )
-        storage.engine.fs.put(file, f"{output_path}/{self.collection_id}")
-
-    def to_df(self) -> "ArrowTable":
-        """Converts the CSV to an arrow table"""
-        data = self._select_data()
-        return data.df()
-
-    def _select_data(self) -> "DuckDBPyConnection":
-        """Select the data from the CSV"""
-        results = self.local_db.execute(
-            """
-            --begin-sql
-            select * from read_csv_auto(?, delim = ?, header = ?)
-            --end-sql
-            """,
-            [str(self.file_path), self.delimiter, self.has_headers],
-        )
-        return results
