@@ -1,11 +1,14 @@
 from enum import Enum
-from typing import List
+from typing import TYPE_CHECKING, List, Union
 
-from pydantic import UUID4
+from packaging.version import LegacyVersion, Version
+
+if TYPE_CHECKING:
+    from pydantic import UUID4
 
 
 class OpKeyLog:
-    key: UUID4
+    key: "UUID4"
 
 
 class RuleAction(str, Enum):
@@ -40,7 +43,7 @@ class TransformerRule:
     """Represents a table schema that can be attached to a version"""
 
     priority: int = 0
-    applies_to_script_version
+    applies_to_script_version: Union[Version, LegacyVersion]
     execution_group: int
     status: TransformerStatus
     action

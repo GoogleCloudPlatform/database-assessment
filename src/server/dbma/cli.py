@@ -140,6 +140,7 @@ def _process_advisor_extract(collection: Path, collection_version: str) -> None:
 
     # handled parsed list of collection paths
     filenames = [f"{c.stem}{c.suffix}" for c in collections_to_process]
+    _store_archive(collections_to_process)
     logger.debug("ℹ️  Processing %d collection(s)", len(filenames))
     logger.debug("ℹ️  Collections to process: %s", filenames)
     transformer.engine.run(
@@ -151,3 +152,13 @@ def _process_advisor_extract(collection: Path, collection_version: str) -> None:
     logger.info(dirs)
     # cloud_detect = GCPDetector()
     # logger.info(cloud_detect.is_running_in_gcp())
+
+
+def _store_archive(collections: list[Path]) -> None:
+    """Store archive to storage backend"""
+    for archive in collections:
+        collection_key = utils.file_helpers.get_collection_key_from_file(archive)
+        collection_id = utils.file_helpers.get_collection_id_from_key(collection_key)
+        storage_path = f"{settings.collections_path}upload/{collection_id}"
+        storage.engine.fs.mkdir(storage_path, create_parents=True)
+        storage.engine.fs.put(str(archive), storage_path)

@@ -120,7 +120,6 @@ def extract_collection(
     csv_files = list(Path(str(extract_path)).glob(f"*{collection_id}.csv"))
 
     for csv_file in csv_files:
-
         with open(csv_file, "r+", encoding="utf8") as f:
             content = f.readlines()
             f.seek(0)

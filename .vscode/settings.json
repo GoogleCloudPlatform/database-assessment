@@ -50,9 +50,7 @@
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "cSpell.words": [
-    "dbma"
-  ],
+  "cSpell.words": ["dbma", "opdb"],
   "[sql]": {
     "editor.defaultFormatter": "mtxr.sqltools"
   },

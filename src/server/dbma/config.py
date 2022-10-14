@@ -9,6 +9,7 @@ import sys
 from datetime import datetime, timezone
 from enum import Enum, EnumMeta
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, Final, Optional, Union
 
 import orjson
@@ -67,10 +68,11 @@ class Settings(EnvironmentSettings):
     storage_backend: Literal["file", "gcs"] = "gcs"
     google_project_id: Optional[str]
     google_application_credentials: Optional[str] = None
-    collections_path: str = "collection-storage/"
+    collections_path: str = "collection-storage"
     google_runtime_secrets: str = "run-config"
     duckdb_path: str = ":memory:"
     bigquery_dataset: str = "v4-development"
+    temp_path: Optional[Path] = None
 
     @property
     def storage_backend_options(self) -> dict[str, Any]:
