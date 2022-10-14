@@ -69,7 +69,7 @@ class CSVTransformer:
         results = self.local_db.execute(
             """
             --begin-sql
-            select * from read_csv_auto(?, delim = ?, header = ?)
+            select * from read_csv_auto(?, delim = ?, header = ?, normalize_names=true, ignore_errors=true)
             --end-sql
             """,
             [str(self.file_path), self.delimiter, self.has_headers],
