@@ -8,6 +8,7 @@ from rich.traceback import install as rich_tracebacks
 from dbma import log, storage, transformer, utils
 from dbma.__version__ import __version__ as version
 from dbma.config import settings
+from dbma.utils.gcp.detect import GCPMetadata
 
 __all__ = ["console", "app"]
 
@@ -150,8 +151,10 @@ def _process_advisor_extract(collection: Path, collection_version: str) -> None:
     )
     dirs = storage.engine.fs.ls(settings.collections_path)
     logger.info(dirs)
-    # cloud_detect = GCPDetector()
-    # logger.info(cloud_detect.is_running_in_gcp())
+    cloud_detect = GCPMetadata()
+    logger.info(cloud_detect.is_running_in_gcp())
+    logger.info(cloud_detect.get_project_id())
+    logger.info(cloud_detect.get_service_region())
 
 
 def _store_archive(collections: list[Path]) -> None:

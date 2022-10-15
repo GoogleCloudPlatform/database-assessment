@@ -59,6 +59,7 @@ requests = "*"
 
 # [tool.poetry.group.legacy]
 # optional = false
+functions-framework = "^3.2.0"
 
 [tool.poetry.group.dev.dependencies]
 bump2version = "*"
