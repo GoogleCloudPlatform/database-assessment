@@ -1,5 +1,6 @@
 # nosec: B608
 import re
+import sys
 import tarfile as tf
 import zipfile as zf
 from pathlib import Path
@@ -9,23 +10,52 @@ from typing import Union
 from packaging.version import LegacyVersion, Version
 from pydantic import ValidationError
 
-from dbma import database, log
+from dbma import database, log, storage, utils
 from dbma.config import settings
 from dbma.transformer import schemas
 from dbma.transformer.loaders import CSVTransformer
 from dbma.utils import file_helpers
 
-__all__ = [
-    "run",
-    "find_advisor_extracts_in_path",
-]
+__all__ = ["load_collection", "find_advisor_extracts_in_path", "process_collection_archives"]
 
 logger = log.get_logger()
 
 ScriptVersionType = Union[Version, LegacyVersion]
 
 
-def run(
+def process_collection_archives(collection: Path, collection_version: str) -> None:
+    """Process a collection or set of collections"""
+    logger.info("launching Collection loader against %s Google Cloud Project", settings.google_project_id)
+    # setup configuration based on user input
+    if collection.is_dir():
+        # The path is a directory.  We need to check for zipped archives
+        logger.info("🔎 Searching for collection archives in the specified directory")
+        collections_to_process = (
+            list(collection.glob("opdb__*.tar.gz"))
+            + list(collection.glob("opdb__*.zip"))
+            + list(collection.glob("opdb__*.tgz"))
+        )
+        if len(collections_to_process) < 1:
+            logger.error("⚠️ No collection files were found in the specified directory")
+            sys.exit(1)
+    else:
+        collections_to_process = [collection]
+
+    # handled parsed list of collection paths
+    filenames = [f"{c.stem}{c.suffix}" for c in collections_to_process]
+    upload_collection_archive(collections_to_process)
+    logger.debug("ℹ️  Processing %d collection(s)", len(filenames))
+    logger.debug("ℹ️  Collections to process: %s", filenames)
+    load_collection(
+        collections=collections_to_process,
+        local_working_path=next(utils.file_helpers.get_temp_dir()),
+        parse_as_version=collection_version,
+    )
+    dirs = storage.engine.fs.ls(settings.collections_path)
+    logger.info(dirs)
+
+
+def load_collection(
     collections: list["Path"], local_working_path: "Union[TemporaryDirectory , Path]", parse_as_version: str
 ) -> None:
     """Process the collection"""
@@ -44,9 +74,9 @@ def run(
     for advisor_extract in advisor_extracts:
         advisor_extract.queries.execute_transformation_scripts(advisor_extract)
         advisor_extract.queries.execute_load_scripts(advisor_extract)
-    rows = sql.get_database_metrics()  # type: ignore[attr-defined]
-    sql.process_collection()  # type: ignore[attr-defined]
-    rows = sql.select_table()  # type: ignore[attr-defined]
+    # rows = sql.get_database_metrics()  # type: ignore[attr-defined]
+    # sql.process_collection()  # type: ignore[attr-defined]
+    # rows = sql.select_table()  # type: ignore[attr-defined]
 
     # logger.info(rows)
 
@@ -129,3 +159,13 @@ def extract_collection(
             f.truncate()
     logger.info("completed preprocessing for collection %s", collection_id)
     return csv_files
+
+
+def upload_collection_archive(collections: list[Path]) -> None:
+    """Store archive to storage backend"""
+    for archive in collections:
+        # collection_key = utils.file_helpers.get_collection_key_from_file(archive)
+        # collection_id = utils.file_helpers.get_collection_id_from_key(collection_key)
+        storage_path = f"{settings.collections_path}/upload/{archive.stem}{archive.suffix}"
+        storage.engine.fs.mkdir(storage_path, create_parents=True)
+        storage.engine.fs.put(str(archive), storage_path)

@@ -5,7 +5,7 @@ import typer
 from rich.console import Console
 from rich.traceback import install as rich_tracebacks
 
-from dbma import log, storage, transformer, utils
+from dbma import log, storage, transformer
 from dbma.__version__ import __version__ as version
 from dbma.config import settings
 from dbma.utils.gcp.metadata import GCPMetadata
@@ -126,46 +126,4 @@ def process_collection(
     logger.info(cloud_detect.is_running_in_gcp())
     logger.info(cloud_detect.get_project_id())
     logger.info(cloud_detect.get_service_region())
-    _process_advisor_extract(collection, collection_version)
-
-
-def _process_advisor_extract(collection: Path, collection_version: str) -> None:
-    """Process a collection or set of collections"""
-    logger.info("launching Collection loader against %s Google Cloud Project", settings.google_project_id)
-    # setup configuration based on user input
-    if collection.is_dir():
-        # The path is a directory.  We need to check for zipped archives
-        logger.info("🔎 Searching for collection archives in the specified directory")
-        collections_to_process = (
-            list(collection.glob("opdb__*.tar.gz"))
-            + list(collection.glob("opdb__*.zip"))
-            + list(collection.glob("opdb__*.tgz"))
-        )
-        if len(collections_to_process) < 1:
-            logger.error("⚠️ No collection files were found in the specified directory")
-            sys.exit(1)
-    else:
-        collections_to_process = [collection]
-
-    # handled parsed list of collection paths
-    filenames = [f"{c.stem}{c.suffix}" for c in collections_to_process]
-    _store_archive(collections_to_process)
-    logger.debug("ℹ️  Processing %d collection(s)", len(filenames))
-    logger.debug("ℹ️  Collections to process: %s", filenames)
-    transformer.engine.run(
-        collections=collections_to_process,
-        local_working_path=next(utils.file_helpers.get_temp_dir()),
-        parse_as_version=collection_version,
-    )
-    dirs = storage.engine.fs.ls(settings.collections_path)
-    logger.info(dirs)
-
-
-def _store_archive(collections: list[Path]) -> None:
-    """Store archive to storage backend"""
-    for archive in collections:
-        # collection_key = utils.file_helpers.get_collection_key_from_file(archive)
-        # collection_id = utils.file_helpers.get_collection_id_from_key(collection_key)
-        storage_path = f"{settings.collections_path}/upload/{archive.stem}{archive.suffix}"
-        storage.engine.fs.mkdir(storage_path, create_parents=True)
-        storage.engine.fs.put(str(archive), storage_path)
+    transformer.engine.process_collection_archives(collection, collection_version)
