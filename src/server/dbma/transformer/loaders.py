@@ -2,7 +2,8 @@ from typing import TYPE_CHECKING
 
 import duckdb
 
-from dbma import storage
+from dbma import log, storage
+from dbma.config import settings
 from dbma.utils import file_helpers as helpers
 
 if TYPE_CHECKING:
@@ -14,6 +15,8 @@ if TYPE_CHECKING:
 __all__ = [
     "CSVTransformer",
 ]
+
+logger = log.get_logger()
 
 
 class CSVTransformer:
@@ -57,7 +60,10 @@ class CSVTransformer:
                     self.has_headers,
                 ],
             )
-            storage.engine.fs.put(file, f"{output_path}/{self.collection_id}")
+            storage.engine.fs.put(
+                file,
+                f"{settings.collections_path}/processed/{self.collection_id}/{self.file_path.stem}.parquet",
+            )
 
     def to_df(self) -> "ArrowTable":
         """Converts the CSV to an arrow table"""

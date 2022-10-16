@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import cast
 
 import httpx
 
@@ -30,7 +31,7 @@ class GCPMetadata:
         """
         try:
             slug = "instance/zone"
-            response = httpx.get(f"{self.metadata_url}{slug}")
+            response = httpx.get(f"{self.metadata_url}{slug}", headers=self.headers)
             if response:
                 return True
             return False
@@ -49,12 +50,24 @@ class GCPMetadata:
     def get_project_id(self) -> str:
         """Get the project ID from the Google Metadata servers
 
+        *Note* - Be aware that when running this outside of Cloudtop, you'll get back the Cloudtop project
         Returns:
             str: project ID string
         """
-        slug = "instance/project-id"
-        response = httpx.get(f"{self.metadata_url}{slug}")
+        slug = "project/project-id"
+        response = httpx.get(f"{self.metadata_url}{slug}", headers=self.headers)
         return response.content.decode()
+
+    def get_project_number(self) -> int:
+        """Get the project number from the Google Metadata servers
+
+        *Note* - Be aware that when running this outside of Cloudtop, you'll get back the Cloudtop project
+        Returns:
+            str: project number
+        """
+        slug = "project/numeric-project-id"
+        response = httpx.get(f"{self.metadata_url}{slug}", headers=self.headers)
+        return cast("int", response.content.decode())
 
     def get_service_region(self) -> str:
         """Get the service region from the Google Metadata servers
@@ -63,5 +76,5 @@ class GCPMetadata:
             str: service region
         """
         slug = "instance/region"
-        response = httpx.get(f"{self.metadata_url}{slug}")
+        response = httpx.get(f"{self.metadata_url}{slug}", headers=self.headers)
         return response.content.decode()

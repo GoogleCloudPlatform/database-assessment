@@ -1,29 +1,20 @@
 import functools as ft
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Callable,
-    Dict,
-    List,
-    Literal,
-    Set,
-    Type,
-    Union,
-    cast,
-)
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Set, Type, Union, cast
 
 import aiosql as sql
+from sqlalchemy.future import Engine, create_engine
+from sqlalchemy.orm import sessionmaker
+
 from dbma import log
 from dbma.config import settings
 from dbma.utils.aiosql_adapters import BigQueryAdapter, DuckDBAdapter
-from sqlalchemy.future import Engine, create_engine
-from sqlalchemy.orm import sessionmaker
 
 if TYPE_CHECKING:
 
     from aiosql.queries import Queries
-    from dbma.transformer.schemas import AdvisorExtract
     from sqlalchemy.engine.interfaces import TypingDBAPICursor as DBAPICursor
+
+    from dbma.transformer.schemas import AdvisorExtract
 
 __all__ = [
     "get_engine",

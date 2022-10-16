@@ -94,11 +94,28 @@ def get_db_version_from_file(file: "Path") -> str:
         file (Path): The version number of compare
 
     Returns:
-        CollectionConfig: _description_
+        str: _description_
     """
     try:
         object_meta = file.stem.rsplit("__", maxsplit=2)[0]
         db_version = object_meta.split("_", maxsplit=2)[0]
         return db_version
+    except (ValueError, IndexError) as e:
+        raise InvalidFileError from e
+
+
+def get_schema_type_from_file(file: "Path") -> str:
+    """Get the file type from the file name.
+
+    Args:
+        file (Path): The version number of compare
+
+    Returns:
+        str: The type of file it is
+    """
+    try:
+        object_meta = file.stem.rsplit("__", maxsplit=2)[0]
+        schema_type = object_meta.split("_", maxsplit=2)[0]
+        return schema_type
     except (ValueError, IndexError) as e:
         raise InvalidFileError from e

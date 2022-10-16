@@ -143,5 +143,5 @@ class DuckDBAdapter(SyncDriverAdapterProtocol):
         return cast("str", msg)
 
 
-class BigQueryAdapter:
+class BigQueryAdapter(SyncDriverAdapterProtocol):
     """Implements a Google BigQuery backend for aiosql."""

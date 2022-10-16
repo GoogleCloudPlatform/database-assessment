@@ -8,7 +8,7 @@ from rich.traceback import install as rich_tracebacks
 from dbma import log, storage, transformer, utils
 from dbma.__version__ import __version__ as version
 from dbma.config import settings
-from dbma.utils.gcp.detect import GCPMetadata
+from dbma.utils.gcp.metadata import GCPMetadata
 
 __all__ = ["console", "app"]
 
@@ -29,7 +29,11 @@ app = typer.Typer(
 
 
 console = Console(markup=True, emoji=True, color_system="truecolor", stderr=False)
-rich_tracebacks(console=console, suppress=("sqlalchemy", "aiosql", "google", "fsspec", "gcsfs"), show_locals=False)
+rich_tracebacks(
+    console=console,
+    suppress=("sqlalchemy", "aiosql", "google", "fsspec", "gcsfs", "duckdb", "duckdb_engine"),
+    show_locals=False,
+)
 
 
 @app.command(name="upload-collection")
@@ -118,6 +122,10 @@ def process_collection(
         settings.storage_backend = "gcs"
     if google_project_id:
         settings.google_project_id = google_project_id
+    cloud_detect = GCPMetadata()
+    logger.info(cloud_detect.is_running_in_gcp())
+    logger.info(cloud_detect.get_project_id())
+    logger.info(cloud_detect.get_service_region())
     _process_advisor_extract(collection, collection_version)
 
 
@@ -151,17 +159,13 @@ def _process_advisor_extract(collection: Path, collection_version: str) -> None:
     )
     dirs = storage.engine.fs.ls(settings.collections_path)
     logger.info(dirs)
-    cloud_detect = GCPMetadata()
-    logger.info(cloud_detect.is_running_in_gcp())
-    logger.info(cloud_detect.get_project_id())
-    logger.info(cloud_detect.get_service_region())
 
 
 def _store_archive(collections: list[Path]) -> None:
     """Store archive to storage backend"""
     for archive in collections:
-        collection_key = utils.file_helpers.get_collection_key_from_file(archive)
-        collection_id = utils.file_helpers.get_collection_id_from_key(collection_key)
-        storage_path = f"{settings.collections_path}upload/{collection_id}"
+        # collection_key = utils.file_helpers.get_collection_key_from_file(archive)
+        # collection_id = utils.file_helpers.get_collection_id_from_key(collection_key)
+        storage_path = f"{settings.collections_path}/upload/{archive.stem}{archive.suffix}"
         storage.engine.fs.mkdir(storage_path, create_parents=True)
         storage.engine.fs.put(str(archive), storage_path)
