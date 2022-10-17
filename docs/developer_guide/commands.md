@@ -1,14 +1,16 @@
 # Commands
 
+- `make install` - Creates a new virtual environment for development.
+
 - `make clean` - Remove all build, testing, and static documentation files.
 
-- `make test` - Run the tests using pytest.
+- `make format-source` - Formats the source code with isort and black.
 
-- `make lint` - Run the linting tools. Includes pre-commit hooks, black, isort, flake8, pylint, and mypy.
+- `make upgrade-dependencies` - Upgrades all dependencies to the latest compatible version.
 
-- `make check` - Run the test and lint commands.
+- `make build-collection` - Build a folder containing a set of the latest database collection scripts.
 
-- `make build` - Build a docker image locally using the Dockerfile. The image will be named _pyspa_.
+- `make package-collection` - Generate an archive of the database collection scripts. To be used after executing build
 
 - `make gen-docs` - Generate HTML documentation.
 
