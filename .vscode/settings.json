@@ -13,7 +13,8 @@
     ".nova": true,
     ".cache": true,
     ".dist": true,
-    "**/.pytest_cache": true
+    "**/.pytest_cache": true,
+    "site": true
   },
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
