@@ -45,9 +45,10 @@ def process_collection_archives(collection: Path, collection_version: str) -> No
     store_collection(collections_to_process)
     logger.debug("ℹ️  Processing %d collection(s)", len(filenames))
     logger.debug("ℹ️  Collections to process: %s", filenames)
+    temp_path = settings.temp_path or next(utils.file_helpers.get_temp_dir())
     load_collection(
-        collections=collections_to_process,
-        local_working_path=next(utils.file_helpers.get_temp_dir()),
+        files=collections_to_process,
+        local_working_path=temp_path,
         parse_as_version=collection_version,
     )
     dirs = storage.engine.fs.ls(settings.collections_path)
@@ -55,12 +56,12 @@ def process_collection_archives(collection: Path, collection_version: str) -> No
 
 
 def load_collection(
-    collections: "list[Path]", local_working_path: "Union[TemporaryDirectory , Path]", parse_as_version: str
+    files: "list[Path]", local_working_path: "Union[TemporaryDirectory , Path]", parse_as_version: str
 ) -> None:
     """Load discovered collection archives
 
     Args:
-        collections (list[Path]): _description_
+        files (list[Path]): _description_
         local_working_path (Union[TemporaryDirectory , Path]): _description_
         parse_as_version (str): _description_
 
@@ -68,7 +69,7 @@ def load_collection(
         FileNotFoundError: _description_
     """
     db = database.ConnectionManager(engine_type="duckdb")
-    advisor_extracts: list[schemas.AdvisorExtract] = find_advisor_extracts_in_path(collections, local_working_path, db)
+    advisor_extracts: list[schemas.AdvisorExtract] = find_advisor_extracts_in_path(files, local_working_path, db)
 
     if len(advisor_extracts) == 0:
         raise FileNotFoundError("No collections found to process")

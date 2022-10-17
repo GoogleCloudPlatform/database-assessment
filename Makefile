@@ -44,8 +44,8 @@ upgrade-dependencies:       ## Upgrade all dependencies to the latest stable ver
 ###############
 # app         #
 ###############
-.PHONY: install
-install:          ## Install the project in dev mode.
+.PHONY: install-runtime-only
+install-runtime-only:          ## Install the project with run only dependencies
 	@if ! poetry --version > /dev/null; then echo 'poetry is required, install from https://python-poetry.org/'; exit 1; fi
 	@if [ "$(VENV_EXISTS)" ]; then echo "Removing existing environment"; fi
 	if [ "$(VENV_EXISTS)" ]; then rm -Rf .venv; fi
@@ -55,8 +55,8 @@ install:          ## Install the project in dev mode.
 
 
 
-.PHONY: install-dev
-install-dev:	 ## Install the project in dev mode.
+.PHONY: install
+install:	 ## Install the project in dev mode.
 	@if ! poetry --version > /dev/null; then echo 'poetry is required, install from https://python-poetry.org/'; exit 1; fi
 	@if [ "$(VENV_EXISTS)" ]; then echo "Removing existing environment"; fi
 	if [ "$(VENV_EXISTS)" ]; then rm -Rf .venv; fi
@@ -147,19 +147,6 @@ pre-release:       ## bump the version and create the release tag
 	cat src/dbma/version.py
 	make build-collector
 	make package-collector
-
-###########
-# version #
-###########
-.PHONY: version-bump-major
-version-bump-major:       ## bump major version
-	poetry run bump2version major
-.PHONY: version-bump-minor
-version-bump-minor:       ## bump minor version
-	poetry run bump2version minor
-.PHONY: version-bump-patch
-version-bump-patch:       ## bump patch version
-	poetry run bump2version patch
 
 
 ###########
