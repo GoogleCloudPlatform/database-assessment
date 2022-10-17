@@ -97,7 +97,7 @@ def get_db_version_from_file(file: "Path") -> str:
         str: _description_
     """
     try:
-        object_meta = file.stem.rsplit("__", maxsplit=2)[0]
+        object_meta = file.stem.rsplit("__", maxsplit=2)[1]
         db_version = object_meta.split("_", maxsplit=2)[0]
         return db_version
     except (ValueError, IndexError) as e:

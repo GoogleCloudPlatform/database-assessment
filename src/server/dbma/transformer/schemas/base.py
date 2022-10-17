@@ -59,7 +59,7 @@ class AdvisorExtractVersionConfig(BaseSchema):
 
 
 class AdvisorExtract(BaseSchema):
-    collection_id: str
+    collection_id: int
     collection_key: str
     db_version: str
     script_version: "Union[LegacyVersion, Version]"

@@ -1,6 +1,6 @@
 -- name: load_awr_hist_cmd_types!
 CREATE TABLE IF NOT EXISTS AWRHISTCMDTYPES (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     HH24 SMALLINT,
     COMMAND_TYPE SMALLINT,
@@ -16,14 +16,21 @@ CREATE TABLE IF NOT EXISTS AWRHISTCMDTYPES (
     AVG_CCWAIT BIGINT,
     AVG_PLSEXEC_TIME BIGINT
 );
-insert into AWRHISTCMDTYPES
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO AWRHISTCMDTYPES
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_awr_hist_os_stat!
 CREATE TABLE IF NOT EXISTS AWRHISTOSSTAT (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     DBID BIGINT,
     INSTANCE_NUMBER SMALLINT,
     HH24 SMALLINT,
@@ -43,14 +50,21 @@ CREATE TABLE IF NOT EXISTS AWRHISTOSSTAT (
     SUM_VALUE BIGINT,
     COUNT BIGINT
 );
-insert into AWRHISTOSSTAT
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO AWRHISTOSSTAT
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_awr_hist_sys_metric_hist!
 CREATE TABLE IF NOT EXISTS AWRHISTSYSMETRICHIST (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     DBID BIGINT,
     INSTANCE_NUMBER SMALLINT,
     HOUR SMALLINT,
@@ -68,15 +82,21 @@ CREATE TABLE IF NOT EXISTS AWRHISTSYSMETRICHIST (
     PERC95 BIGINT,
     PERC100 BIGINT
 );
-insert into AWRHISTSYSMETRICHIST
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO AWRHISTSYSMETRICHIST
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_awr_hist_sys_metric_summary!
-
 CREATE TABLE IF NOT EXISTS AWRHISTSYSMETRICSUMM (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     DBID BIGINT,
     INSTANCE_NUMBER SMALLINT,
     HOUR SMALLINT,
@@ -94,14 +114,21 @@ CREATE TABLE IF NOT EXISTS AWRHISTSYSMETRICSUMM (
     PERC95 BIGINT,
     PERC100 BIGINT
 );
-insert into AWRHISTSYSMETRICSUMM
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO AWRHISTSYSMETRICSUMM
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_awr_snap_details!
 CREATE TABLE IF NOT EXISTS AWRSNAPDETAILS (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     DBID BIGINT,
     INSTANCE_NUMBER SMALLINT,
     HOUR SMALLINT,
@@ -118,14 +145,20 @@ CREATE TABLE IF NOT EXISTS AWRSNAPDETAILS (
     MAX_SNAPS_DIFF_SECS BIGINT
 );
 
-insert into AWRSNAPDETAILS
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+INSERT INTO AWRSNAPDETAILS
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_compression_by_type!
 CREATE TABLE IF NOT EXISTS COMPRESSBYTYPE (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     OWNER VARCHAR(128),
     BASIC BIGINT,
@@ -137,28 +170,40 @@ CREATE TABLE IF NOT EXISTS COMPRESSBYTYPE (
     TOTAL_GB BIGINT
 );
 
-insert into COMPRESSBYTYPE
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+INSERT INTO COMPRESSBYTYPE
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_cpu_core_usage!
 CREATE TABLE IF NOT EXISTS CPUCORESUSAGE (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     DT VARCHAR(14),
     CPU_COUNT BIGINT,
     CPU_CORE_COUNT BIGINT,
     CPU_SOCKET_COUNT BIGINT
 );
 
-insert into CPUCORESUSAGE
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+INSERT INTO CPUCORESUSAGE
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_dataguard!
 CREATE TABLE IF NOT EXISTS DATAGUARD (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     INST_ID BIGINT,
     LOG_ARCHIVE_CONFIG VARCHAR(4000),
@@ -175,27 +220,41 @@ CREATE TABLE IF NOT EXISTS DATAGUARD (
     VALID_ROLE VARCHAR(12),
     VERIFY VARCHAR(3)
 );
-insert into DATAGUARD
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO DATAGUARD
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_data_types!
 CREATE TABLE IF NOT EXISTS DATATYPES (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     OWNER VARCHAR(128),
     DATA_TYPE VARCHAR(128),
     CNT BIGINT
 );
-insert into DATATYPES
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO DATATYPES
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_dba_hist_sys_stat!
 CREATE TABLE IF NOT EXISTS DBAHISTSYSSTAT (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     DBID BIGINT,
     INSTANCE_NUMBER SMALLINT,
     HOUR SMALLINT,
@@ -213,14 +272,21 @@ CREATE TABLE IF NOT EXISTS DBAHISTSYSSTAT (
     PERC95 BIGINT,
     PERC100 BIGINT
 );
-insert into DBAHISTSYSSTAT
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO DBAHISTSYSSTAT
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_dba_hist_sys_time_model!
 CREATE TABLE IF NOT EXISTS DBAHISTSYSTIMEMODEL (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     DBID BIGINT,
     INSTANCE_NUMBER SMALLINT,
     HOUR SMALLINT,
@@ -239,14 +305,20 @@ CREATE TABLE IF NOT EXISTS DBAHISTSYSTIMEMODEL (
     PERC100 BIGINT
 );
 
-insert into DBAHISTSYSTIMEMODEL
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+INSERT INTO DBAHISTSYSTIMEMODEL
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_features!
 CREATE TABLE IF NOT EXISTS DBFEATURES (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     NAME VARCHAR(128),
     CURRENT_USAGE VARCHAR(5),
@@ -257,27 +329,39 @@ CREATE TABLE IF NOT EXISTS DBFEATURES (
     AUX_COUNT NUMERIC
 );
 
-insert into DBFEATURES
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+INSERT INTO DBFEATURES
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_high_water_stats!
 CREATE TABLE IF NOT EXISTS DBHWMARKSTATISTICS (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     DESCRIPTION VARCHAR(128),
     HIGHWATER NUMERIC,
     LAST_VALUE NUMERIC
 );
 
-insert into DBHWMARKSTATISTICS
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+INSERT INTO DBHWMARKSTATISTICS
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_instances!
 CREATE TABLE IF NOT EXISTS DBINSTANCES (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     INST_ID BIGINT,
     INSTANCE_NAME VARCHAR(16),
     HOST_NAME VARCHAR(64),
@@ -286,27 +370,40 @@ CREATE TABLE IF NOT EXISTS DBINSTANCES (
     DATABASE_STATUS VARCHAR(17),
     INSTANCE_ROLE VARCHAR(18)
 );
-insert into DBINSTANCES
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO DBINSTANCES
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_links!
 CREATE TABLE IF NOT EXISTS DBLINKS (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     OWNER VARCHAR(128),
     COUNT BIGINT
 );
-insert into DBLINKS
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO DBLINKS
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_objects!
-
 CREATE TABLE IF NOT EXISTS DBOBJECTS (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     OWNER VARCHAR(128),
     OBJECT_TYPE VARCHAR(23),
@@ -318,15 +415,20 @@ CREATE TABLE IF NOT EXISTS DBOBJECTS (
     IN_EDITIONABLE VARCHAR(40)
 );
 
-insert into DBOBJECTS
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+INSERT INTO DBOBJECTS
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_parameters!
-
 CREATE TABLE IF NOT EXISTS DBPARAMETERS (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     INST_ID BIGINT,
     CON_ID SMALLINT,
     NAME VARCHAR(80),
@@ -335,14 +437,20 @@ CREATE TABLE IF NOT EXISTS DBPARAMETERS (
     ISDEFAULT VARCHAR(9)
 );
 
-insert into DBPARAMETERS
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+INSERT INTO DBPARAMETERS
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_summary!
 CREATE TABLE IF NOT EXISTS DBSUMMARY (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     DBID BIGINT,
     DB_NAME VARCHAR(9),
     CDB VARCHAR(3),
@@ -364,59 +472,86 @@ CREATE TABLE IF NOT EXISTS DBSUMMARY (
     DB_LONG_SIZE_GB BIGINT,
     DG_DATABASE_ROLE VARCHAR(16),
     DG_PROTECTION_MODE VARCHAR(20),
-    DG_PROTECTION_LEVEL VARCHAR(20),
-    MIGRATION_TECHNIQUE VARCHAR2(50)
+    DG_PROTECTION_LEVEL VARCHAR(20)
 );
-insert into DBSUMMARY
-select *, 'RMAN_BACKUP_RESTORE' as MIGRATION_TECHNIQUE
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO DBSUMMARY
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_external_tables!
 CREATE TABLE IF NOT EXISTS EXTTAB (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     OWNER VARCHAR(128),
     TABLE_NAME VARCHAR(128),
     TYPE_OWNER VARCHAR(3),
     TYPE_NAME VARCHAR(128),
     DEFAULT_DIRECTORY_OWNER VARCHAR(3),
-    DEF
-insert into EXTTAB
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+    DEFAULT_DIRECTORY_NAME VARCHAR(128)
+);
+
+
+INSERT INTO EXTTAB
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_index_per_table!
 CREATE TABLE IF NOT EXISTS IDXPERTABLE (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     TAB_COUNT BIGINT,
     IDX_CNT BIGINT,
     IDX_PERC BIGINT
 );
-insert into IDXPERTABLE
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO IDXPERTABLE
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_index_types!
 CREATE TABLE IF NOT EXISTS INDEXESTYPES (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     OWNER VARCHAR(128),
     INDEX_TYPE VARCHAR(27),
     CNT BIGINT
 );
 
-insert into INDEXESTYPES
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+INSERT INTO INDEXESTYPES
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_io_events!
 CREATE TABLE IF NOT EXISTS IOEVENTS (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     DBID BIGINT,
     INSTANCE_NUMBER SMALLINT,
     HOUR SMALLINT,
@@ -427,14 +562,20 @@ CREATE TABLE IF NOT EXISTS IOEVENTS (
     TIME_WA_US_DELTA_VALUE_P95 BIGINT
 );
 
-insert into IOEVENTS
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+INSERT INTO IOEVENTS
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_io_function!
 CREATE TABLE IF NOT EXISTS IOFUNCTION (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     DBID BIGINT,
     INSTANCE_NUMBER SMALLINT,
     HOUR SMALLINT,
@@ -454,15 +595,21 @@ CREATE TABLE IF NOT EXISTS IOFUNCTION (
     TOTAL_WRITES_MB_P95 BIGINT,
     TOTAL_WRITE_REQ_P95 BIGINT
 );
-insert into IOFUNCTION
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO IOFUNCTION
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_pdbs_info!
-
 CREATE TABLE IF NOT EXISTS PDBSINFO (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     DBID BIGINT,
     PDB_ID BIGINT,
     PDB_NAME VARCHAR(128),
@@ -470,28 +617,40 @@ CREATE TABLE IF NOT EXISTS PDBSINFO (
     LOGGING VARCHAR(9)
 );
 
-insert into PDBSINFO
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+INSERT INTO PDBSINFO
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_pdbs_in_open_mode!
 CREATE TABLE IF NOT EXISTS PDBSOPENMODE (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     NAME VARCHAR(128),
     OPEN_MODE VARCHAR(10),
     TOTAL_GB NUMERIC
 );
 
-insert into PDBSOPENMODE
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+INSERT INTO PDBSOPENMODE
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_source_code!
 CREATE TABLE IF NOT EXISTS SOURCECODE (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     OWNER VARCHAR(128),
     TYPE VARCHAR(12),
@@ -505,14 +664,20 @@ CREATE TABLE IF NOT EXISTS SOURCECODE (
     SUM_COUNT_TOTAL BIGINT
 );
 
-insert into SOURCECODE
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+INSERT INTO SOURCECODE
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_source_connections!
 CREATE TABLE IF NOT EXISTS SOURCECONN (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     DBID BIGINT,
     INSTANCE_NUMBER SMALLINT,
     HOUR SMALLINT,
@@ -522,14 +687,21 @@ CREATE TABLE IF NOT EXISTS SOURCECONN (
     COMMAND_NAME VARCHAR(64),
     CNT BIGINT
 );
-insert into SOURCECONN
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO SOURCECONN
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_sql_stats!
 CREATE TABLE IF NOT EXISTS SQLSTATS (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     DBID BIGINT,
     INSTANCE_NUMBER SMALLINT,
@@ -560,14 +732,21 @@ CREATE TABLE IF NOT EXISTS SQLSTATS (
     AVG_PLSEXEC_US BIGINT,
     AVG_JAVEXEC_US BIGINT
 );
-insert into SQLSTATS
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO SQLSTATS
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_constraint_summary!
 CREATE TABLE IF NOT EXISTS TABLESNOPK (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     OWNER VARCHAR(128),
     PK BIGINT,
@@ -581,33 +760,54 @@ CREATE TABLE IF NOT EXISTS TABLESNOPK (
     NUM_TABLES BIGINT,
     TOTAL_CONS BIGINT
 );
-insert into TABLESNOPK
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO TABLESNOPK
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_used_space_details!
 CREATE TABLE IF NOT EXISTS USEDSPACEDETAILS (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     OWNER VARCHAR(128),
     SEGMENT_TYPE VARCHAR(18),
     GB BIGINT
 );
-insert into USEDSPACEDETAILS
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO USEDSPACEDETAILS
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );
 
 
 -- name: load_db_user_tablespace_segments!
 CREATE TABLE IF NOT EXISTS USRSEGATT (
-    COLLECTION_KEY VARCHAR(256),
+    PKEY VARCHAR(256),
     CON_ID SMALLINT,
     OWNER VARCHAR(128),
     SEGMENT_NAME VARCHAR(128),
     SEGMENT_TYPE VARCHAR(18),
     TABLESPACE_NAME VARCHAR(30)
 );
-insert into USRSEGATT
-select *
-from read_csv_auto(?, delim = ?, header = True, ignore_errors = True);
+
+
+INSERT INTO USRSEGATT
+SELECT *
+FROM read_csv_auto(
+        ?,
+        delim = ?,
+        header = TRUE,
+        ignore_errors = TRUE
+    );

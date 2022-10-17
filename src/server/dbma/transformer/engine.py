@@ -5,7 +5,7 @@ import tarfile as tf
 import zipfile as zf
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Union
+from typing import Any, Union
 
 from packaging.version import LegacyVersion, Version
 from pydantic import ValidationError
@@ -13,8 +13,6 @@ from pydantic import ValidationError
 from dbma import database, log, storage, utils
 from dbma.config import settings
 from dbma.transformer import schemas
-from dbma.transformer.loaders import CSVTransformer
-from dbma.utils import file_helpers
 
 __all__ = ["load_collection", "find_advisor_extracts_in_path", "process_collection_archives"]
 
@@ -43,7 +41,7 @@ def process_collection_archives(collection: Path, collection_version: str) -> No
 
     # handled parsed list of collection paths
     filenames = [f"{c.stem}{c.suffix}" for c in collections_to_process]
-    upload_collection_archive(collections_to_process)
+    store_collection(collections_to_process)
     logger.debug("ℹ️  Processing %d collection(s)", len(filenames))
     logger.debug("ℹ️  Collections to process: %s", filenames)
     load_collection(
@@ -56,29 +54,46 @@ def process_collection_archives(collection: Path, collection_version: str) -> No
 
 
 def load_collection(
-    collections: list["Path"], local_working_path: "Union[TemporaryDirectory , Path]", parse_as_version: str
+    collections: "list[Path]", local_working_path: "Union[TemporaryDirectory , Path]", parse_as_version: str
 ) -> None:
-    """Process the collection"""
+    """Load discovered collection archives
+
+    Args:
+        collections (list[Path]): _description_
+        local_working_path (Union[TemporaryDirectory , Path]): _description_
+        parse_as_version (str): _description_
+
+    Raises:
+        FileNotFoundError: _description_
+    """
     db = database.ConnectionManager(engine_type="duckdb")
     advisor_extracts: list[schemas.AdvisorExtract] = find_advisor_extracts_in_path(collections, local_working_path, db)
 
     if len(advisor_extracts) == 0:
         raise FileNotFoundError("No collections found to process")
 
+    # for advisor_extract in advisor_extracts:
+    #     for file_type in advisor_extract.files.__fields__:
+    #         file_name = getattr(advisor_extract.files, file_type)
+    #         csv = CSVTransformer(file_path=file_name, delimiter=advisor_extract.files.delimiter)
+    #         csv.to_parquet(settings.collections_path)
+    #     logger.info("converted all files to parquet for collection %s", advisor_extract.collection_id)
+    rows: dict[str, Any] = {}
     for advisor_extract in advisor_extracts:
-        for file_type in advisor_extract.files.__fields__:
-            file_name = getattr(advisor_extract.files, file_type)
-            csv = CSVTransformer(file_path=file_name, delimiter=advisor_extract.files.delimiter)
-            csv.to_parquet(settings.collections_path)
-        logger.info("converted all files to parquet for collection %s", advisor_extract.collection_id)
-    for advisor_extract in advisor_extracts:
-        advisor_extract.queries.execute_transformation_scripts(advisor_extract)
+        # advisor_extract.queries.execute_pre_processing_scripts()
         advisor_extract.queries.execute_load_scripts(advisor_extract)
-    # rows = sql.get_database_metrics()  # type: ignore[attr-defined]
-    # sql.process_collection()  # type: ignore[attr-defined]
-    # rows = sql.select_table()  # type: ignore[attr-defined]
+        advisor_extract.queries.execute_transformation_scripts(advisor_extract)
+        logger.info(advisor_extract.queries.get_test())
+        database_metrics = advisor_extract.queries.get_db_metrics()  # type: ignore[attr-defined]
+        database_features = advisor_extract.queries.get_db_features()  # type: ignore[attr-defined]
+        rows.update(
+            {
+                "database_metrics": rows.get("database_metrics", []) + database_metrics,
+                "database_features": rows.get("database_features", []) + database_features,
+            }
+        )
 
-    # logger.info(rows)
+    logger.info(rows)
 
 
 def find_advisor_extracts_in_path(
@@ -91,14 +106,14 @@ def find_advisor_extracts_in_path(
     valid_collections: "list[schemas.AdvisorExtract]" = []
     # loop through collections and extract them
     for extract in advisor_extracts:
-        script_version = file_helpers.get_version_from_file(extract)
+        script_version = utils.file_helpers.get_version_from_file(extract)
         version_config = schemas.get_config_for_version(str(script_version))
-        db_version = file_helpers.get_db_version_from_file(extract)
-        collection_key = file_helpers.get_collection_key_from_file(extract)
-        collection_id = file_helpers.get_collection_id_from_key(collection_key)
+        db_version = utils.file_helpers.get_db_version_from_file(extract)
+        collection_key = utils.file_helpers.get_collection_key_from_file(extract)
+        collection_id = utils.file_helpers.get_collection_id_from_key(collection_key)
 
         logger.info('ℹ️  detected version "%s" from the collection name', script_version)
-        files = extract_collection(collection_id, extract, extract_path)
+        files = parse_collection(collection_id, extract, extract_path)
         try:
             valid_collections.append(
                 schemas.AdvisorExtract.parse_obj(
@@ -119,13 +134,19 @@ def find_advisor_extracts_in_path(
     return valid_collections
 
 
-def extract_collection(
+def parse_collection(
     collection_id: str, collection_archive: "Path", extract_path: "Union[TemporaryDirectory,Path]"
 ) -> "list[Path]":
     """Extracts the specified collection to the specified directory.
 
-    *Note* - This function will also rename files with a *.log to a *.csv extension.
+    *Note* -
+    - This function will also rename files with a *.log to a *.csv extension.
     2.X.X versions of the collector scripts used this convention
+    - It will remove all blank lines from any CSV.  Some version of the script have a line skipped before the headers.
+    - Remove `Elapsed` total at the end of extracts.
+    SQLPLUS output sometimes was executed with timing.  This removes it
+
+
 
     Args:
         collection_id (str): the collection ID of the archive you are extracting.
@@ -161,7 +182,7 @@ def extract_collection(
     return csv_files
 
 
-def upload_collection_archive(collections: list[Path]) -> None:
+def store_collection(collections: list[Path]) -> None:
     """Store archive to storage backend"""
     for archive in collections:
         # collection_key = utils.file_helpers.get_collection_key_from_file(archive)

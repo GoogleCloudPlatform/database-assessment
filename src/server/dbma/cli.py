@@ -125,5 +125,4 @@ def process_collection(
     cloud_detect = GCPMetadata()
     logger.info(cloud_detect.is_running_in_gcp())
     logger.info(cloud_detect.get_project_id())
-    logger.info(cloud_detect.get_service_region())
     transformer.engine.process_collection_archives(collection, collection_version)

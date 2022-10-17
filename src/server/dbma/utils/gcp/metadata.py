@@ -68,13 +68,3 @@ class GCPMetadata:
         slug = "project/numeric-project-id"
         response = httpx.get(f"{self.metadata_url}{slug}", headers=self.headers)
         return cast("int", response.content.decode())
-
-    def get_service_region(self) -> str:
-        """Get the service region from the Google Metadata servers
-
-        Returns:
-            str: service region
-        """
-        slug = "instance/region"
-        response = httpx.get(f"{self.metadata_url}{slug}", headers=self.headers)
-        return response.content.decode()

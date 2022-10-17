@@ -1,4 +1,9 @@
--- name: get-database-metrics
+-- name: get-test
+select *
+from AWRHISTSYSMETRICHIST;
+
+
+-- name: get-db-metrics
 -- Get database metrics
 select *
 from T_DS_Database_Metrics;
