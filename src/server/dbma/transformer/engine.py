@@ -13,6 +13,7 @@ from pydantic import ValidationError
 from dbma import database, log, storage, utils
 from dbma.config import settings
 from dbma.transformer import schemas
+from dbma.transformer.loaders import CSVTransformer
 
 __all__ = ["load_collection", "find_advisor_extracts_in_path", "process_collection_archives"]
 
@@ -72,18 +73,18 @@ def load_collection(
     if len(advisor_extracts) == 0:
         raise FileNotFoundError("No collections found to process")
 
-    # for advisor_extract in advisor_extracts:
-    #     for file_type in advisor_extract.files.__fields__:
-    #         file_name = getattr(advisor_extract.files, file_type)
-    #         csv = CSVTransformer(file_path=file_name, delimiter=advisor_extract.files.delimiter)
-    #         csv.to_parquet(settings.collections_path)
-    #     logger.info("converted all files to parquet for collection %s", advisor_extract.collection_id)
+    for advisor_extract in advisor_extracts:
+        for file_type in advisor_extract.files.__fields__:
+            file_name = getattr(advisor_extract.files, file_type)
+            csv = CSVTransformer(file_path=file_name, delimiter=advisor_extract.files.delimiter)
+            csv.to_parquet(settings.collections_path)
+        logger.info("converted all files to parquet for collection %s", advisor_extract.collection_id)
     rows: dict[str, Any] = {}
     for advisor_extract in advisor_extracts:
         # advisor_extract.queries.execute_pre_processing_scripts()
         advisor_extract.queries.execute_load_scripts(advisor_extract)
         advisor_extract.queries.execute_transformation_scripts(advisor_extract)
-        logger.info(advisor_extract.queries.get_test())
+        logger.info(advisor_extract.queries.get_test())  # type: ignore[attr-defined]
         database_metrics = advisor_extract.queries.get_db_metrics()  # type: ignore[attr-defined]
         database_features = advisor_extract.queries.get_db_features()  # type: ignore[attr-defined]
         rows.update(
