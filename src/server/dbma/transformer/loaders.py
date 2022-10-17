@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from duckdb import DuckDBPyConnection
+    from pandas import DataFrame
     from pyarrow.lib import Table as ArrowTable
 
 __all__ = [
@@ -65,7 +66,7 @@ class CSVTransformer:
                 f"{settings.collections_path}/processed/{self.collection_id}/{self.file_path.stem}.parquet",
             )
 
-    def to_df(self) -> "ArrowTable":
+    def to_df(self) -> "DataFrame":
         """Converts the CSV to an arrow table"""
         data = self._select_data()
         return data.df()
