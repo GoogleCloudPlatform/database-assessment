@@ -21,28 +21,31 @@ ScriptVersionType = Union[Version, LegacyVersion]
 class AdvisorExtractFiles(BaseSchema):
     """Base Schema for file Collection"""
 
-    _file_mapper: dict[str, str] = {}
     _delimiter: str = "|"
 
     @classmethod
     def from_file_list(cls, files: list[Path]) -> "AdvisorExtractFiles":
         """Returns first values in a list or None"""
-        return cls.parse_obj({key: cls._match_path(value, files) for key, value in cls._file_mapper.items()})
+        return cls.parse_obj(
+            {
+                file_type: cls._match_path(file_type, files)
+                for file_type in cls.schema(by_alias=True).get("properties", {}).keys()
+            }
+        )
 
     @classmethod
     def _match_path(cls, match_string: str, list_of_paths: list[Path]) -> Optional[Path]:
         for value in list_of_paths:
-            if value.name.startswith(match_string):
+            if value.name.startswith(f"opdb__{match_string}"):
                 return value
         return None
 
     @property
-    def file_mapper(self) -> dict[str, str]:
-        return self._file_mapper
-
-    @property
     def delimiter(self) -> str:
         return self._delimiter
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 class AdvisorExtractConfig(BaseSchema):

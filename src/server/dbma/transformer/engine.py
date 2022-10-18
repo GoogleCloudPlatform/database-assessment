@@ -76,15 +76,19 @@ def load_collection(
 
     for advisor_extract in advisor_extracts:
         for file_type in advisor_extract.files.__fields__:
-            file_name = getattr(advisor_extract.files, file_type)
-            csv = CSVTransformer(file_path=file_name, delimiter=advisor_extract.files.delimiter)
-            csv.to_parquet(settings.collections_path)
+            file_path = getattr(advisor_extract.files, file_type)
+            if file_path and file_path.stat().st_size > 0:
+                csv = CSVTransformer(
+                    file_path=file_path, delimiter=advisor_extract.files.delimiter, schema_type=file_type
+                )
+                csv.to_parquet(settings.collections_path)
         logger.info("converted all files to parquet for collection %s", advisor_extract.collection_id)
     rows: dict[str, Any] = {}
     for advisor_extract in advisor_extracts:
         # advisor_extract.queries.execute_pre_processing_scripts()
         advisor_extract.queries.execute_load_scripts(advisor_extract)
         advisor_extract.queries.execute_transformation_scripts(advisor_extract)
+        db.commit()
         logger.info(advisor_extract.queries.get_test())  # type: ignore[attr-defined]
         database_metrics = advisor_extract.queries.get_db_metrics()  # type: ignore[attr-defined]
         database_features = advisor_extract.queries.get_db_features()  # type: ignore[attr-defined]

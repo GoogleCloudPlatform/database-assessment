@@ -1,7 +1,7 @@
 -- name: load_awr_hist_cmd_types!
 CREATE TABLE IF NOT EXISTS AWRHISTCMDTYPES (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     HH24 SMALLINT,
     COMMAND_TYPE SMALLINT,
     CNT BIGINT,
@@ -24,7 +24,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -58,7 +58,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -90,7 +90,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -122,7 +122,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -152,14 +152,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_db_compression_by_type!
 CREATE TABLE IF NOT EXISTS COMPRESSBYTYPE (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     OWNER VARCHAR(128),
     BASIC BIGINT,
     OLTP BIGINT,
@@ -177,7 +177,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -197,14 +197,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_db_dataguard!
 CREATE TABLE IF NOT EXISTS DATAGUARD (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     INST_ID BIGINT,
     LOG_ARCHIVE_CONFIG VARCHAR(4000),
     DEST_ID BIGINT,
@@ -228,14 +228,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_db_data_types!
 CREATE TABLE IF NOT EXISTS DATATYPES (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     OWNER VARCHAR(128),
     DATA_TYPE VARCHAR(128),
     CNT BIGINT
@@ -248,7 +248,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -280,7 +280,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -312,14 +312,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_db_features!
 CREATE TABLE IF NOT EXISTS DBFEATURES (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     NAME VARCHAR(128),
     CURRENT_USAGE VARCHAR(5),
     DETECTED_USAGES BIGINT,
@@ -336,7 +336,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -355,7 +355,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -378,14 +378,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_db_links!
 CREATE TABLE IF NOT EXISTS DBLINKS (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     OWNER VARCHAR(128),
     COUNT BIGINT
 );
@@ -397,14 +397,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_db_objects!
 CREATE TABLE IF NOT EXISTS DBOBJECTS (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     OWNER VARCHAR(128),
     OBJECT_TYPE VARCHAR(23),
     EDITIONABLE VARCHAR(3),
@@ -422,7 +422,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -430,7 +430,7 @@ FROM read_csv_auto(
 CREATE TABLE IF NOT EXISTS DBPARAMETERS (
     PKEY VARCHAR(256),
     INST_ID BIGINT,
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     NAME VARCHAR(80),
     VALUE VARCHAR(960),
     DEFAULT_VALUE VARCHAR(480),
@@ -444,7 +444,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -482,14 +482,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_db_external_tables!
 CREATE TABLE IF NOT EXISTS EXTTAB (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     OWNER VARCHAR(128),
     TABLE_NAME VARCHAR(128),
     TYPE_OWNER VARCHAR(3),
@@ -505,14 +505,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_index_per_table!
 CREATE TABLE IF NOT EXISTS IDXPERTABLE (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     TAB_COUNT BIGINT,
     IDX_CNT BIGINT,
     IDX_PERC BIGINT
@@ -525,14 +525,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_index_types!
 CREATE TABLE IF NOT EXISTS INDEXESTYPES (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     OWNER VARCHAR(128),
     INDEX_TYPE VARCHAR(27),
     CNT BIGINT
@@ -545,7 +545,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -569,7 +569,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -603,7 +603,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -624,14 +624,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_pdbs_in_open_mode!
 CREATE TABLE IF NOT EXISTS PDBSOPENMODE (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     NAME VARCHAR(128),
     OPEN_MODE VARCHAR(10),
     TOTAL_GB NUMERIC
@@ -644,14 +644,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_db_source_code!
 CREATE TABLE IF NOT EXISTS SOURCECODE (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     OWNER VARCHAR(128),
     TYPE VARCHAR(12),
     SUM_NR_LINES BIGINT,
@@ -671,7 +671,7 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
@@ -695,14 +695,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_db_sql_stats!
 CREATE TABLE IF NOT EXISTS SQLSTATS (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     DBID BIGINT,
     INSTANCE_NUMBER SMALLINT,
     FORCE_MATCHING_SIGNATURE VARCHAR(40),
@@ -740,14 +740,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_db_constraint_summary!
 CREATE TABLE IF NOT EXISTS TABLESNOPK (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     OWNER VARCHAR(128),
     PK BIGINT,
     UK BIGINT,
@@ -768,14 +768,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_db_used_space_details!
 CREATE TABLE IF NOT EXISTS USEDSPACEDETAILS (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     OWNER VARCHAR(128),
     SEGMENT_TYPE VARCHAR(18),
     GB BIGINT
@@ -788,14 +788,14 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );
 
 
 -- name: load_db_user_tablespace_segments!
 CREATE TABLE IF NOT EXISTS USRSEGATT (
     PKEY VARCHAR(256),
-    CON_ID SMALLINT,
+    CON_ID VARCHAR(256),
     OWNER VARCHAR(128),
     SEGMENT_NAME VARCHAR(128),
     SEGMENT_TYPE VARCHAR(18),
@@ -809,5 +809,5 @@ FROM read_csv_auto(
         ?,
         delim = ?,
         header = TRUE,
-        ignore_errors = TRUE
+        ignore_errors = FALSE
     );

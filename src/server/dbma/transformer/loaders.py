@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 import duckdb
 
 from dbma import log, storage
-from dbma.config import settings
 from dbma.utils import file_helpers as helpers
 
 if TYPE_CHECKING:
@@ -23,7 +22,9 @@ logger = log.get_logger()
 class CSVTransformer:
     """Transforms a CSV to various formats"""
 
-    def __init__(self, file_path: "Path", delimiter: str = "|", has_headers: bool = True, skip_rows: int = 0) -> None:
+    def __init__(
+        self, file_path: "Path", schema_type: str, delimiter: str = "|", has_headers: bool = True, skip_rows: int = 0
+    ) -> None:
         self.file_path = file_path
         self.delimiter = delimiter
         self.has_headers = has_headers
@@ -33,6 +34,7 @@ class CSVTransformer:
         self.db_version = helpers.get_db_version_from_file(file_path)
         self.collection_key = helpers.get_collection_key_from_file(file_path)
         self.collection_id = helpers.get_collection_id_from_key(self.collection_key)
+        self.schema_type = schema_type
 
     def to_arrow_table(self, chunk_size: int = 1000000) -> "ArrowTable":
         """Converts the CSV to an arrow table"""
@@ -63,7 +65,7 @@ class CSVTransformer:
             )
             storage.engine.fs.put(
                 file,
-                f"{settings.collections_path}/processed/{self.collection_id}/{self.file_path.stem}.parquet",
+                f"{output_path}/processed/{self.collection_id}/{self.schema_type}.parquet",
             )
 
     def to_df(self) -> "DataFrame":

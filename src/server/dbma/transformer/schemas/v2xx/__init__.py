@@ -1,4 +1,7 @@
 from pathlib import Path
+from typing import Optional
+
+from pydantic import Field
 
 from dbma import log
 from dbma.__version__ import __version__
@@ -20,70 +23,43 @@ class CollectionSchema(AdvisorExtractFiles):
      The matcher will find the closest match to this string when returning a filename
     """
 
-    awr_hist_cmd_types: Path
-    awr_hist_os_stat: Path
-    awr_hist_sys_metric_hist: Path
-    awr_hist_sys_metric_summary: Path
-    awr_snap_details: Path
-    db_compression_by_type: Path
-    db_cpu_core_usage: Path
-    db_dataguard: Path
-    db_data_types: Path
-    dba_hist_sys_stat: Path
-    dba_hist_sys_time_model: Path
-    db_features: Path
-    db_high_water_stats: Path
-    db_instances: Path
-    db_links: Path
-    db_objects: Path
-    db_parameters: Path
-    db_summary: Path
-    db_external_tables: Path
-    index_per_table: Path
-    index_types: Path
-    io_events: Path
-    io_function: Path
-    pdbs_info: Path
-    pdbs_in_open_mode: Path
-    db_source_code: Path
-    db_source_connections: Path
-    db_sql_stats: Path
-    db_constraint_summary: Path
-    db_used_space_details: Path
-    db_user_tablespace_segments: Path
-    # key_log: Optional[Path]
-    _delimiter = ","
-    _file_mapper = {
-        "awr_hist_cmd_types": "opdb__awrhistcmdtypes__",
-        "awr_hist_os_stat": "opdb__awrhistosstat__",
-        "awr_hist_sys_metric_hist": "opdb__awrhistsysmetrichist__",
-        "awr_hist_sys_metric_summary": "opdb__awrhistsysmetricsumm__",
-        "awr_snap_details": "opdb__awrsnapdetails__",
-        "db_compression_by_type": "opdb__compressbytype__",
-        "db_cpu_core_usage": "opdb__cpucoresusage__",
-        "db_dataguard": "opdb__dataguard__",
-        "db_data_types": "opdb__datatypes__",
-        "dba_hist_sys_stat": "opdb__dbahistsysstat__",
-        "dba_hist_sys_time_model": "opdb__dbahistsystimemodel__",
-        "db_features": "opdb__dbfeatures__",
-        "db_high_water_stats": "opdb__dbhwmarkstatistics__",
-        "db_instances": "opdb__dbinstances__",
-        "db_links": "opdb__dblinks__",
-        "db_objects": "opdb__dbobjects__",
-        "db_parameters": "opdb__dbparameters__",
-        "db_summary": "opdb__dbsummary__",
-        "db_external_tables": "opdb__exttab__",
-        "index_per_table": "opdb__idxpertable__",
-        "index_types": "opdb__indexestypes__",
-        "io_events": "opdb__ioevents__",
-        "io_function": "opdb__iofunction__",
-        # "key_log": "opdb__opkeylog__",
-        "pdbs_info": "opdb__pdbsinfo__",
-        "pdbs_in_open_mode": "opdb__pdbsopenmode__",
-        "db_source_code": "opdb__sourcecode__",
-        "db_source_connections": "opdb__sourceconn__",
-        "db_sql_stats": "opdb__sqlstats__",
-        "db_constraint_summary": "opdb__tablesnopk__",
-        "db_used_space_details": "opdb__usedspacedetails__",
-        "db_user_tablespace_segments": "opdb__usrsegatt__",
-    }
+    awr_hist_cmd_types: Path = Field(..., alias="awrhistcmdtypes")
+    awr_hist_os_stat: Path = Field(..., alias="awrhistosstat")
+    awr_hist_sys_metric_hist: Path = Field(..., alias="awrhistsysmetrichist")
+    awr_hist_sys_metric_summary: Path = Field(..., alias="awrhistsysmetricsumm")
+    awr_snap_details: Path = Field(..., alias="awrsnapdetails")
+    db_compression_by_type: Path = Field(..., alias="compressbytype")
+    db_cpu_core_usage: Path = Field(..., alias="cpucoresusage")
+    db_dataguard: Path = Field(..., alias="dataguard")
+    db_data_types: Path = Field(..., alias="datatypes")
+    dba_hist_sys_stat: Path = Field(..., alias="dbahistsysstat")
+    dba_hist_sys_time_model: Path = Field(..., alias="dbahistsystimemodel")
+    db_features: Path = Field(..., alias="dbfeatures")
+    db_high_water_stats: Path = Field(..., alias="dbhwmarkstatistics")
+    db_instances: Path = Field(..., alias="dbinstances")
+    db_links: Path = Field(..., alias="dblinks")
+    db_objects: Path = Field(..., alias="dbobjects")
+    db_parameters: Path = Field(..., alias="dbparameters")
+    db_summary: Path = Field(..., alias="dbsummary")
+    db_external_tables: Path = Field(..., alias="exttab")
+    index_per_table: Path = Field(..., alias="idxpertable")
+    index_types: Path = Field(..., alias="indexestypes")
+    io_events: Path = Field(..., alias="ioevents")
+    io_function: Path = Field(..., alias="iofunction")
+    pdbs_info: Optional[Path] = Field(..., alias="pdbsinfo")
+    pdbs_in_open_mode: Optional[Path] = Field(..., alias="pdbsopenmode")
+    db_source_code: Path = Field(..., alias="sourcecode")
+    db_source_connections: Path = Field(..., alias="sourceconn")
+    db_sql_stats: Path = Field(..., alias="sqlstats")
+    db_constraint_summary: Path = Field(..., alias="tablesnopk")
+    db_used_space_details: Path = Field(..., alias="usedspacedetails")
+    db_user_tablespace_segments: Path = Field(..., alias="usrsegatt")
+    # key_log: Optional[Path] = Field(..., alias="opkeylog")
+    _delimiter = "|"
+
+    """
+    This dictionary maps the filenames to their respective columns.
+
+    This allows us to decouple the file naming conventions from our Python code.
+    The key of the dict is a attribute in your collection, and the value is a search string to use for identifying files
+    """

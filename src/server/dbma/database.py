@@ -150,7 +150,7 @@ class SQLManager:
             advisor_extract (AdvisorExtract): The collection of Advisor extract files
         """
         for file_type, file_name in advisor_extract.files.dict(exclude_unset=True, exclude_none=True).items():
-            logger.info("delimiter is %s", advisor_extract.files.delimiter)
+            logger.debug("delimiter is %s", advisor_extract.files.delimiter)
             has_load_fn = hasattr(self, f"load_{file_type}")
             if not has_load_fn:
                 logger.warning("... [bold yellow] Could not find a load procedure for %s.", file_type)
