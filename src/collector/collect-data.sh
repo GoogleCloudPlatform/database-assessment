@@ -32,7 +32,7 @@ fi
 if [ ! -d ${OUTPUT_DIR} ]; then
    mkdir -p ${OUTPUT_DIR}
 fi
-
+OpVersion="4.0.0"
 ### Import logging & helper functions
 #############################################################################
 
@@ -108,12 +108,6 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-if [ ! -f ${SCRIPT_DIR}/VERSION.txt ]; then
-  echo "${SCRIPT_DIR}/VERSION.txt file not found.  Please sure you have set up your environment correctly."
-  exit 1
-else
-  OpVersion=$(cat ${SCRIPT_DIR}/VERSION.txt | tr ' ' '_' | head -1)
-fi
 
 # MAIN
 #############################################################################
