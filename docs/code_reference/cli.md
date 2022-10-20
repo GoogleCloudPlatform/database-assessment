@@ -1,3 +1,0 @@
-# CLI
-
-::: db_assessment
