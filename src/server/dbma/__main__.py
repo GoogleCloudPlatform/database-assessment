@@ -1,4 +1,4 @@
-# pylint: disable=[invalid-name]
+# pylint: disable=[invalid-name,import-outside-toplevel]
 # Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,7 @@ def main() -> None:
     current_path = Path(__file__).parent.resolve()
     sys.path.append(str(current_path))
     try:
-        from dbma import cli  # pylint: disable=[import-outside-toplevel]
+        from dbma import cli
 
     except ImportError:
         print(  # noqa: T201

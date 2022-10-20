@@ -18,7 +18,7 @@ from packaging.version import LegacyVersion, Version
 
 from dbma import log
 from dbma.config import BaseSchema
-from dbma.database import SQLManager
+from dbma.transformer.manager import SQLManager
 
 __all__ = [
     "CollectionConfig",

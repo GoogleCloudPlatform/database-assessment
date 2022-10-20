@@ -69,10 +69,3 @@ class CollectionFiles(_CollectionFiles):
     db_user_tablespace_segments: Path = Field(..., alias="usrsegatt")
     # key_log: Optional[Path] = Field(..., alias="opkeylog")
     _delimiter = "|"
-
-    """
-    This dictionary maps the filenames to their respective columns.
-
-    This allows us to decouple the file naming conventions from our Python code.
-    The key of the dict is a attribute in your collection, and the value is a search string to use for identifying files
-    """

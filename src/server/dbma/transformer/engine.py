@@ -22,10 +22,10 @@ from typing import TYPE_CHECKING, Any, Union
 from packaging.version import LegacyVersion, Version
 from pydantic import ValidationError
 
-from dbma import database, log, storage, utils
+from dbma import log, storage, utils
 from dbma.__version__ import __version__ as version
 from dbma.config import settings
-from dbma.transformer import schemas
+from dbma.transformer import manager, schemas
 
 if TYPE_CHECKING:
     from duckdb import DuckDBPyConnection
@@ -88,7 +88,7 @@ def find_collections(
                         "collection_key": collection_key,
                         "script_version": script_version,
                         "db_version": db_version,
-                        "queries": database.SQLManager(db, version_config.sql_files_path),
+                        "queries": manager.SQLManager(db, version_config.sql_files_path),
                     }
                 )
             )
@@ -107,10 +107,11 @@ def upload_to_storage_backend(collections: list[Path]) -> None:
     logger.info("Data Uploaded to storage backend")
 
 
-def run_assessment(queries: "database.SQLManager") -> None:
+def run_assessment(queries: "manager.SQLManager") -> None:
     """Execute an assessment"""
     logger.info("Launching assessment using version %s", version)
     rows: dict[str, Any] = {}
+    queries.execute_transformation_scripts()
     database_metrics = queries.get_db_metrics()  # type: ignore[attr-defined]
     database_features = queries.get_db_features()  # type: ignore[attr-defined]
     rows.update(

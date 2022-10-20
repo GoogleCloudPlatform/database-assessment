@@ -20,7 +20,7 @@ import typer
 from rich.console import Console
 from rich.traceback import install as rich_tracebacks
 
-from dbma import database, log, storage, transformer, utils
+from dbma import log, storage, transformer, utils
 from dbma.__version__ import __version__ as version
 from dbma.config import settings
 
@@ -152,15 +152,16 @@ def process_collection(
             sys.exit(1)
     working_path = settings.temp_path or next(utils.file_helpers.get_temp_dir())
     db = duckdb.connect(
-        # database=f"/tmp/local.db",
+        database=settings.duckdb_path,
         read_only=False,
         config={"memory_limit": "500mb"},
     )
     op = transformer.schemas.get_config_for_version(version)
-    sql = database.SQLManager(db, op.sql_files_path)
+    sql = transformer.manager.SQLManager(db, op.sql_files_path)
     logger.info("Configuring SQL Workspace at %s", settings.duckdb_path)
     logger.info("Working Directory set to %s", str(working_path))
     transformer.engine.upload_to_storage_backend(archives)
     collections_to_process: "list[schemas.Collection]" = transformer.engine.find_collections(db, archives, working_path)
     transformer.engine.stage_collection_data(collections_to_process)
+    db.commit()
     transformer.engine.run_assessment(sql)
