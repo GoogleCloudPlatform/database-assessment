@@ -1,4 +1,4 @@
-name  :  "\U0001F41B Bug"
+name: "\U0001F41B Bug"
 description: File a bug report
 title: "BUG: "
 labels: ["bug,priority:0"]
@@ -24,8 +24,8 @@ body:
       label: Version
       description: What version of optimus version  are you running?
       options:
-        - 1.0.2 (Default)
-        - 1.0.3 (Edge)
+        - 4.0.0 (Default)
+        - 2.0.7 (Edge)
     validations:
       required: false
   - type: dropdown
