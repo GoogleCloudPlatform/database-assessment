@@ -1,0 +1,33 @@
+set termout off
+@&EXTRACTSDIR/awrhistcmdtypes.sql
+@&EXTRACTSDIR/awrhistosstat.sql
+@&EXTRACTSDIR/awrhistsysmetrichist.sql
+@&EXTRACTSDIR/awrhistsysmetricsumm.sql
+@&EXTRACTSDIR/awrsnapdetails.sql
+@&EXTRACTSDIR/compressbytype.sql
+@&EXTRACTSDIR/cpucoresusage.sql
+@&EXTRACTSDIR/dataguard.sql
+@&EXTRACTSDIR/datatypes.sql
+@&EXTRACTSDIR/dbahistsysstat.sql
+@&EXTRACTSDIR/dbahistsystimemodel.sql
+@&EXTRACTSDIR/dbfeatures.sql
+@&EXTRACTSDIR/dbhwmarkstatistics.sql
+@&EXTRACTSDIR/dbinstances.sql
+@&EXTRACTSDIR/dblinks.sql
+@&EXTRACTSDIR/dbobjects.sql
+@&EXTRACTSDIR/dbparameters.sql
+@&EXTRACTSDIR/dbsummary.sql
+@&EXTRACTSDIR/exttab.sql
+@&EXTRACTSDIR/idxpertable.sql
+@&EXTRACTSDIR/indexestypes.sql
+@&EXTRACTSDIR/ioevents.sql
+@&EXTRACTSDIR/iofunction.sql
+@&EXTRACTSDIR/opkeylog.sql
+@&EXTRACTSDIR/sourcecode.sql
+@&EXTRACTSDIR/sourceconn.sql
+@&EXTRACTSDIR/sqlstats.sql
+@&EXTRACTSDIR/tablesnopk.sql
+@&EXTRACTSDIR/usedspacedetails.sql
+@&EXTRACTSDIR/usrsegatt.sql
+@&v_dopluggable
+set termout on

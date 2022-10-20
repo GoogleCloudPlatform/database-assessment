@@ -1,8 +1,0 @@
-flask
-gunicorn
-google-api-core
-google-cloud-bigquery
-pyarrow
-numpy
-pandas
-beautifultable

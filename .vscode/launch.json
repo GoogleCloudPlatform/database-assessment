@@ -5,6 +5,19 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "DBMA: Database Migration Advisor",
+      "type": "python",
+      "request": "launch",
+      "module": "dbma.__main__",
+      "args": [
+        "process-collection",
+        "-c",
+        "${workspaceFolder}/notebooks/data/"
+      ],
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    },
+    {
       "name": "OP: Sample File Load",
       "type": "python",
       "request": "launch",

@@ -1,14 +1,14 @@
 FROM docker:20.10.12 as static-docker-source
 
 
-FROM python:latest
+FROM python:3.10
 ARG CLOUD_SDK_VERSION=402.0.0
 ENV CLOUD_SDK_VERSION=$CLOUD_SDK_VERSION
 ENV PATH /google-cloud-sdk/bin:$PATH
 COPY --from=static-docker-source /usr/local/bin/docker /usr/local/bin/docker
 RUN groupadd -r -g 1000 cloudsdk && \
     useradd -r -u 1000 -m -s /bin/bash -g cloudsdk cloudsdk
-RUN apt-get -qqy update && apt-get install -qqy \
+RUN apt-get -qqy update && apt-get install --no-install-recommends -qqy \
         curl \
         gcc \
         apt-transport-https \

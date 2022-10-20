@@ -27,6 +27,8 @@ steps:
         "-t",
         "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-api:$BUILD_ID",
         ".",
+        "-f",
+        "deploy/docker/api/Dockerfile",
       ]
   # Push the container image to Container Registry
   - name: "gcr.io/cloud-builders/docker"

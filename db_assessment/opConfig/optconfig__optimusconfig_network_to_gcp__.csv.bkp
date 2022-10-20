@@ -1,7 +1,0 @@
-network_to_gcp,gbytes_per_sec,mbytes_per_sec
-10 Mbps,0.001220703125,1.25
-100 Mbps,0.01220703125,12.5
-1 Gbps,0.1220703125,125
-10 Gbps,1.220703125,1250
-100 Gbps,12.20703125,12500
-To SSD,0.36,360

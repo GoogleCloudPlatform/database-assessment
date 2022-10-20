@@ -1,6 +1,0 @@
-cores,ram_gb,machine_size,machine_size_short,processor,est_price
-8,192,Extra Small,XS,Xeon Gold 3.2 GHz,1850
-16,384,Small,S,Xeon Gold 3.2 GHz,2000
-24,768,Medium,M,Xeon Gold 3.0 GHz,2400
-56,1536,Large,L,Xeon Platinum 2.2 GHz,3400
-112,3072,Extra Large,XL,Xeon Platinum 2.7 GHz,6800
