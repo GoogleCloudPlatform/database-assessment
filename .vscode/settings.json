@@ -90,6 +90,7 @@
     "sourcecode",
     "sourceconn",
     "sqlstats",
+    "statspack",
     "tablesnopk",
     "topsql",
     "usedspacedetails",

@@ -4,7 +4,8 @@
 
 - Get the recommended Google Cloud configuration your current Oracle environments .
 - Assessment based on workload.
-- Support 11g to 21c
+- Support all Oracle editions from 11g to 21c.
+- Leverages AWR data (requires tuning and diagnostics pack for Oracle) or statspack for sizing.
 
 ## Getting Started
 

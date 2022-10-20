@@ -52,13 +52,6 @@ fsspec = ">=2022.8.2"
 universal_pathlib = "*"
 beautifultable ="*"
 requests = "*"
-
-# [tool.poetry.group.legacy.dependencies]
-# beautifultable ="*"
-# requests = "*"
-
-# [tool.poetry.group.legacy]
-# optional = false
 functions-framework = "^3.2.0"
 
 [tool.poetry.group.dev.dependencies]
