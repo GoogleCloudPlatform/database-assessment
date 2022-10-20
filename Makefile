@@ -15,7 +15,7 @@ VERSION := $(shell grep -m 1 version pyproject.toml | tr -s ' ' | tr -d '"' | tr
 GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
 COLLECTOR_SRC_DIR=src/collector
 COLLECTOR_BUILD_DIR=dist/collector
-COLLECTOR_PACKAGE=opdba_advisor_collection_scripts_$(VERSION).tar
+COLLECTOR_PACKAGE=collection_scripts.tar
 SERVER_SRC_DIR=src/server
 SERVER_BUILD_DIR=dist
 .EXPORT_ALL_VARIABLES:
