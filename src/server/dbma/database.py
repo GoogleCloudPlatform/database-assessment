@@ -12,104 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import functools as ft
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Set, Type, Union
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Set
 
 import aiosql as sql
-from sqlalchemy.future import Engine, create_engine
-from sqlalchemy.orm import sessionmaker
 
 from dbma import log
-from dbma.config import settings
-from dbma.utils.aiosql_adapters import BigQueryAdapter, DuckDBAdapter
+from dbma.utils.aiosql_adapters import DuckDBAdapter
 
 if TYPE_CHECKING:
 
     from aiosql.queries import Queries
     from duckdb import DuckDBPyConnection
-    from sqlalchemy.engine.interfaces import TypingDBAPICursor as DBAPICursor
 
     from dbma.transformer.schemas import Collection
 
-__all__ = [
-    "get_engine",
-    "get_aiosql_adapter",
-    "db_session_maker",
-    "ConnectionManager",
-    "SQLManager",
-    "SupportedEngines",
-]
+__all__ = ["SQLManager"]
 
-SupportedEngines = Literal["duckdb", "bigquery"]
 
 logger = log.get_logger()
-
-
-@ft.lru_cache(maxsize=3)
-def get_engine(engine_type: SupportedEngines) -> "Engine":
-    """builds an engine for the specified database type"""
-    if engine_type == "duckdb":
-        return create_engine(
-            url=f"duckdb:///{settings.duckdb_path}", connect_args={"config": {"memory_limit": "500mb"}}
-        )
-
-    if engine_type == "bigquery":
-        return create_engine(url=f"bigquery://{settings.google_project_id}/{settings.bigquery_dataset}")
-
-    raise NotImplementedError("The specified engine is not implemented")
-
-
-@ft.lru_cache(maxsize=3)
-def get_aiosql_adapter(engine_type: SupportedEngines) -> "Union[Type[DuckDBAdapter], Type[BigQueryAdapter]]":
-    """builds an engine for the specified database type"""
-    if engine_type == "duckdb":
-        return DuckDBAdapter
-
-    if engine_type == "bigquery":
-        return BigQueryAdapter
-
-    raise NotImplementedError("The specified adapter is not implemented")
-
-
-@ft.lru_cache
-def db_session_maker(engine_type: SupportedEngines) -> sessionmaker:
-    engine = get_engine(engine_type)
-    return sessionmaker(engine, expire_on_commit=False)
-
-
-class ConnectionManager:
-    """Hides database connection.
-
-    The class provides the DB-API 2.0 connection methods,
-    and SQL execution methods from aiosql.
-    """
-
-    def __init__(self, engine_type: SupportedEngines) -> None:
-        self.engine_type = engine_type
-        self.engine = get_engine(engine_type)
-        self.session = db_session_maker(engine_type)
-        self.connection = self.engine.raw_connection()
-
-    def cursor(self) -> "DBAPICursor":
-        """Get a cursor on the current connection."""
-        return self.connection.cursor()
-
-    def commit(self) -> None:
-        """Commit database transaction."""
-        self.connection.commit()
-
-    def rollback(self) -> None:
-        """Rollback database transaction."""
-        self.connection.rollback()  # type: ignore[attr-defined]
-
-    def close(self) -> None:
-        """Close underlying database connection."""
-        self.connection.close()
-
-    def __str__(self) -> str:
-        return f"Connection Manager for ({self.engine_type})"
-
-    def __del__(self) -> None:
-        self.close()
 
 
 class SQLManager:

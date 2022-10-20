@@ -101,8 +101,6 @@ def find_collections(
 def upload_to_storage_backend(collections: list[Path]) -> None:
     """Store archive to storage backend"""
     for archive in collections:
-        # collection_key = utils.file_helpers.get_collection_key_from_file(archive)
-        # collection_id = utils.file_helpers.get_collection_id_from_key(collection_key)
         storage_path = f"{settings.collections_path}/upload/{archive.stem}{archive.suffix}"
         storage.engine.fs.mkdir(storage_path, create_parents=True)
         storage.engine.fs.put(str(archive), storage_path)

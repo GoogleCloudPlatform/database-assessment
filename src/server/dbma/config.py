@@ -26,21 +26,46 @@ from pathlib import Path
 from typing import Any, Final, Optional, Union
 
 import orjson
-from pydantic import BaseModel as _BaseSettings
+from pydantic import BaseModel as _BaseModel
+from pydantic import BaseSettings as _BaseSettings
 from pydantic import SecretBytes, SecretStr, ValidationError
 from typing_extensions import Literal
 
 from dbma import utils
 from dbma.__version__ import __version__
 
-__all__ = ["BASE_DIR", "BaseSchema", "EnvironmentSettings", "Settings", "settings"]
+__all__ = ["BASE_DIR", "BaseSchema", "BaseSettings", "Settings", "settings"]
 BASE_DIR: Final = utils.module_loading.module_to_os_path("dbma")
 
 
 logger = logging.getLogger()
 
 
-class BaseSchema(_BaseSettings):
+class BaseSettings(_BaseSettings):
+    """Base Settings"""
+
+    class Config:
+        """Base Settings Config"""
+
+        json_loads = utils.serializers.deserialize_object
+        json_dumps = utils.serializers.serialize_object
+        case_sensitive = False
+        json_encoders = {
+            datetime: utils.serializers.convert_datetime_to_gmt,
+            SecretStr: lambda secret: secret.get_secret_value() if secret else None,
+            SecretBytes: lambda secret: secret.get_secret_value() if secret else None,
+            Enum: lambda enum: enum.value if enum else None,
+            EnumMeta: None,
+        }
+        validate_assignment = True
+        orm_mode = True
+        use_enum_values = True
+        arbitrary_types_allowed = True
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+
+
+class BaseSchema(_BaseModel):
     """Base Settings"""
 
     class Config:
@@ -62,27 +87,17 @@ class BaseSchema(_BaseSettings):
         arbitrary_types_allowed = True
 
 
-class EnvironmentSettings(_BaseSettings):
-    """Env Settings"""
-
-    class Config:
-        """Base Settings Config"""
-
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-
-
-class Settings(EnvironmentSettings):
+class Settings(BaseSettings):
     """Settings file"""
 
     version_number: str = __version__
     log_level: str = "INFO"
     storage_backend: Literal["file", "gcs"] = "gcs"
-    google_project_id: Optional[str]
+    google_project_id: str
     google_application_credentials: Optional[str] = None
     collections_path: str = "collection-storage"
     google_runtime_secrets: str = "run-config"
-    duckdb_path: str = "local.db"
+    duckdb_path: str = ":memory:"
     bigquery_dataset: str = "v4-development"
     temp_path: Optional[Path] = None
 
@@ -98,7 +113,7 @@ class Settings(EnvironmentSettings):
 def get_settings() -> "Settings":
     """Load Settings file"""
     try:
-        settings = Settings()
+        settings = Settings.parse_obj({})
     except ValidationError as e:
         logger.fatal("Could not load settings. %s", e)
         sys.exit(1)

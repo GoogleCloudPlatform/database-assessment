@@ -108,16 +108,6 @@ def process_collection(
         resolve_path=True,
         help="Path to collection zip to upload",
     ),
-    # collection_version: str = typer.Option(
-    #     version,
-    #     "--collection-version",
-    #     "-cv",
-    #     show_default=True,
-    #     help=(
-    #         "Optionally specify the script version to process against. "
-    #         "This is useful if the tooling is unable to detect the script version from the file names."
-    #     ),
-    # ),
     google_project_id: str = typer.Option(
         settings.google_project_id,
         "--google-project-id",
@@ -162,7 +152,7 @@ def process_collection(
             sys.exit(1)
     working_path = settings.temp_path or next(utils.file_helpers.get_temp_dir())
     db = duckdb.connect(
-        database=settings.duckdb_path,
+        # database=f"/tmp/local.db",
         read_only=False,
         config={"memory_limit": "500mb"},
     )
