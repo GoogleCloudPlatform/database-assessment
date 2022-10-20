@@ -46,7 +46,7 @@ upgrade-dependencies:       ## Upgrade all dependencies to the latest stable ver
 ###############
 .PHONY: install-runtime-only
 install-runtime-only:          ## Install the project with run only dependencies
-	@if ! poetry --version > /dev/null; then echo 'poetry is required, install from https://python-poetry.org/'; exit 1; fi
+	@if ! poetry --version > /dev/null; then echo 'poetry is required, installing from from https://python-poetry.org/'; curl -sSL https://install.python-poetry.org | python3 -; fi
 	@if [ "$(VENV_EXISTS)" ]; then echo "Removing existing environment"; fi
 	if [ "$(VENV_EXISTS)" ]; then rm -Rf .venv; fi
 	if [ "$(USING_POETRY)" ]; then poetry config virtualenvs.in-project true  && poetry config virtualenvs.options.always-copy true && python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip && poetry install --with main && exit; fi
@@ -57,7 +57,7 @@ install-runtime-only:          ## Install the project with run only dependencies
 
 .PHONY: install
 install:	 ## Install the project in dev mode.
-	@if ! poetry --version > /dev/null; then echo 'poetry is required, install from https://python-poetry.org/'; exit 1; fi
+	@if ! poetry --version > /dev/null; then echo 'poetry is required, installing from from https://python-poetry.org/'; curl -sSL https://install.python-poetry.org | python3 -; fi
 	@if [ "$(VENV_EXISTS)" ]; then echo "Removing existing environment"; fi
 	if [ "$(VENV_EXISTS)" ]; then rm -Rf .venv; fi
 	if [ "$(USING_POETRY)" ]; then poetry config virtualenvs.in-project true  && poetry config virtualenvs.options.always-copy true && python3 -m venv .venv && source .venv/bin/activate && .venv/bin/pip install -U wheel setuptools cython pip && poetry install --with linting,dev,docs && exit; fi
