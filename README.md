@@ -9,7 +9,7 @@
 
 ## Getting Started
 
-- Grab the latest collection files from [here](http://google.com). Instructions for execution are included in the bundled README.
+- Grab the collection scripts from the latest release [here](https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest). Instructions for execution are included in the bundled README.
 - Execute collection scripts against targeted database environments.
 - Send collection archives in for processing.
 - Please refer to the our [official documentation](http://google.com) for additional usage instructions.
