@@ -10,4 +10,6 @@
 ## Getting Started
 
 - Grab the latest collection files from [here](http://google.com). Instructions for execution are included in the bundled README.
+- Execute collection scripts against targeted database environments.
+- Send collection archives in for processing.
 - Please refer to the our [official documentation](http://google.com) for additional usage instructions.

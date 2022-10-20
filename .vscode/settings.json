@@ -73,6 +73,7 @@
     "dbparameters",
     "dbping",
     "dbsummary",
+    "Exadata",
     "exttab",
     "highwater",
     "idxpertable",
