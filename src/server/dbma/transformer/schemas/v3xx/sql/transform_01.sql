@@ -1,4 +1,4 @@
--- name: transform-01#
+-- name: transform-01!
 CREATE or replace TABLE DBMIGRATION_BASE AS
 SELECT PKEY,
   DBID,

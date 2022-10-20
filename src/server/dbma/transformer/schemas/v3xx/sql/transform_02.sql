@@ -1,4 +1,4 @@
--- name: transform-02
+-- name: transform-02!
 CREATE or REPLACE TABLE vsysstat_columnar (
         dbversion VARCHAR(10),
         metric_unit VARCHAR(100),

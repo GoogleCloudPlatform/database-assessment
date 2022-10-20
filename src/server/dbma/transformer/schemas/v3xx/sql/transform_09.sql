@@ -1,4 +1,4 @@
---name: transform-09
+--name: transform-09!
 create or replace view V_DS_BMS_BOM as With bms_servers as (
         select bms_server_size,
             count(BMS_Server_size) as Count

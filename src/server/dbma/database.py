@@ -1,5 +1,5 @@
 import functools as ft
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Set, Type, Union, cast
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Literal, Set, Type, Union
 
 import aiosql as sql
 from sqlalchemy.future import Engine, create_engine
@@ -12,9 +12,10 @@ from dbma.utils.aiosql_adapters import BigQueryAdapter, DuckDBAdapter
 if TYPE_CHECKING:
 
     from aiosql.queries import Queries
+    from duckdb import DuckDBPyConnection
     from sqlalchemy.engine.interfaces import TypingDBAPICursor as DBAPICursor
 
-    from dbma.transformer.schemas import AdvisorExtract
+    from dbma.transformer.schemas import Collection
 
 __all__ = [
     "get_engine",
@@ -101,7 +102,7 @@ class ConnectionManager:
 class SQLManager:
     """Stores the queries for a version of the collection"""
 
-    def __init__(self, db: ConnectionManager, sql_files_path: str) -> None:
+    def __init__(self, db: "DuckDBPyConnection", sql_files_path: str) -> None:
 
         self.db = db
         self.sql_files_path = sql_files_path
@@ -113,50 +114,50 @@ class SQLManager:
 
     def add_sql_from_path(self, fn: str) -> None:
         """Load queries from a file or directory."""
-        self._create_fns(sql.from_path(fn, cast("str", get_aiosql_adapter(self.db.engine_type))))
+        self._create_fns(sql.from_path(fn, driver_adapter=DuckDBAdapter))
 
     def add_sql_from_str(self, qs: str) -> None:
         """Load queries from a string."""
-        self._create_fns(sql.from_str(qs, cast("str", get_aiosql_adapter(self.db.engine_type))))
+        self._create_fns(sql.from_str(qs, driver_adapter=DuckDBAdapter))
 
     @property
     def transformation_scripts(self) -> list[str]:
         """Get transformation scripts"""
         return sorted([q for q in self._available_queries if q.startswith("transform")])
 
-    def execute_transformation_scripts(self, advisor_extract: "AdvisorExtract") -> None:
+    def execute_transformation_scripts(self) -> None:
         """
 
 
         Returns:
             _type_: _description_
         """
-        for _, file_name in advisor_extract.files.dict(exclude_unset=True, exclude_none=True).items():
-            for script in self.transformation_scripts:
-                fn = getattr(self, script)
-                fn(str(file_name.absolute()), advisor_extract.files.delimiter)
+        for script in self.transformation_scripts:
+            fn = getattr(self, script)
+            logger.info("executing transformation script %s", script)
+            fn()
 
     @property
     def load_scripts(self) -> list[str]:
         """Get transformation scripts"""
         return sorted([q for q in self._available_queries if q.startswith("load")])
 
-    def execute_load_scripts(self, advisor_extract: "AdvisorExtract") -> None:
+    def execute_load_scripts(self, collection: "Collection") -> None:
         """Execute load scripts
 
         Accepts a collection and runs the SQL load scripts against it.
 
         Args:
-            advisor_extract (AdvisorExtract): The collection of Advisor extract files
+            collection (Collection): The collection of Advisor extract files
         """
-        for file_type, file_name in advisor_extract.files.dict(exclude_unset=True, exclude_none=True).items():
-            logger.debug("delimiter is %s", advisor_extract.files.delimiter)
+        for file_type, file_name in collection.files.dict(exclude_unset=True, exclude_none=True).items():
+            logger.debug("delimiter is %s", collection.files.delimiter)
             has_load_fn = hasattr(self, f"load_{file_type}")
             if not has_load_fn:
                 logger.warning("... [bold yellow] Could not find a load procedure for %s.", file_type)
             if file_name.stat().st_size > 0:
                 fn = getattr(self, f"load_{file_type}")
-                rows_loaded = fn(str(file_name.absolute()), advisor_extract.files.delimiter)
+                rows_loaded = fn(str(file_name.absolute()), collection.files.delimiter)
                 logger.info("... %s  [green bold]SUCCESS[/] [%s rows(s)]", file_type, rows_loaded)
 
             else:
@@ -179,12 +180,14 @@ class SQLManager:
             _type_: _description_
         """
         for script in self.pre_processing_scripts:
+            logger.info("executing preprocessing script %s", script)
             getattr(self, script)()
+        self.db.commit()
 
     def _call_fn(self, query: str, fn: Callable, *args: Any, **kwargs: Any) -> Any:
         """Forward method call to aiosql query"""
         self._count[query] += 1
-        return fn(self.db.connection, *args, **kwargs)
+        return fn(self.db, *args, **kwargs)
 
     def _create_fns(self, queries: "Queries") -> None:
         """Create call forwarding to insert the database connection."""
@@ -198,4 +201,4 @@ class SQLManager:
                 self._count[q] = 0
 
     def __str__(self) -> str:
-        return f"Query Manager for ({self.db.engine_type})"
+        return f"Query Manager for ({self.sql_files_path})"

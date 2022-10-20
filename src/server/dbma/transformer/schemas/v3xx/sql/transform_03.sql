@@ -1,4 +1,4 @@
---name: transform-03
+--name: transform-03!
 CREATE or replace TABLE T_DS_CPU_CALC AS WITH hostdetails AS (
         SELECT TRIM(dbinstances.pkey) AS PKEY,
             dbinstances.host_name as host_name,

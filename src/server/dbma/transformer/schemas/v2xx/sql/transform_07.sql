@@ -1,4 +1,4 @@
---name: transform-07
+--name: transform-07!
 CREATE or replace TABLE V_DS_dbfeatures AS
 SELECT pkey,
     con_id,

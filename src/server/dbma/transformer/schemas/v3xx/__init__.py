@@ -5,17 +5,17 @@ from pydantic import Field
 
 from dbma import log
 from dbma.__version__ import __version__
-from dbma.transformer.schemas.base import AdvisorExtractFiles
+from dbma.transformer.schemas.base import CollectionFiles as _CollectionFiles
 
 logger = log.get_logger()
 
 
-class CollectionSchema(AdvisorExtractFiles):
+class CollectionFiles(_CollectionFiles):
     """Files that are expected to be in the v1 collection schema
 
 
 
-    This filename mapper dictionary maps the attributes in `CollectionSchema` with a match string
+    This filename mapper dictionary maps the attributes in `CollectionFiles` with a match string
      to use when mapping extracted files to the correct attribute.
 
     For instance, `top_sql`:`topsql`, sets the search string for the

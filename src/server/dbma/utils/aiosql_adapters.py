@@ -32,6 +32,7 @@ class DuckDBAdapter(SyncDriverAdapterProtocol):
     ) -> list[Any]:
         try:
             cur = self._cursor(conn)
+            cur.execute(sql, parameters)
             results = cur.fetchall()
 
             if record_class is None and len(results) > 0:

@@ -74,9 +74,9 @@ for analysis by Database Migration Advisor.
 2. Preparation
 --------------
 
-    a) unzip the install archive. An "advisor_extract" subdirectory will be created.
+    a) unzip the install archive. A "collection" subdirectory will be created.
 
-    b) review the advisor_extract_env.sql configuration file and edit as required.
+    b) review the collector_env.sql configuration file and edit as required.
 
        Notes:
           1) a number of configurable options are defined and documented in this file
@@ -88,25 +88,25 @@ for analysis by Database Migration Advisor.
 3. Execution
 ------------
 
-    a) change directory to the "advisor_extract" subdirectory.
+    a) change directory to the "collection" subdirectory.
 
     b) login to sqlplus as a user with the required privileges and run:
 
-        @advisor_extract.sql
+        @collection.sql
 
     c) follow the prompt at the end of the warning message to either continue or cancel the execution
 
         Notes:
             1) Google Database Migration Advisor Data Extractor extracts data for a single database or PDB at a time. In multitenant
                CDB databases, you must either connect to the required PDB container directly or switch to the
-               the required PDB container from within your session before running the advisor_extract.sql
+               the required PDB container from within your session before running the collector.sql
                script. Running this from within the root container will generate an exception and terminate
 
 
 4. Results
 ----------
 
-    A zipfile of extracted results will be created in the location specified by the opdba_advisor_spool_dir
-    configuration parameter. The zipfile will be named advisor_extract_[DBNAME]_[DATE_TIME].zip.
+    An archive of the extracted results will be created in the location specified by the opdba_advisor_spool_dir
+    configuration parameter. The archive will be named opdb_[DBNAME]_[DATE_TIME].tgz.
 
 LICENSE_TEXT

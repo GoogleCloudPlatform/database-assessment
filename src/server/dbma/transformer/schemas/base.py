@@ -8,9 +8,9 @@ from dbma.config import BaseSchema
 from dbma.database import SQLManager
 
 __all__ = [
-    "AdvisorExtractConfig",
-    "AdvisorExtractFiles",
-    "AdvisorExtractVersionConfig",
+    "CollectionConfig",
+    "CollectionFiles",
+    "CollectionVersionConfig",
 ]
 
 logger = log.get_logger()
@@ -18,13 +18,13 @@ logger = log.get_logger()
 ScriptVersionType = Union[Version, LegacyVersion]
 
 
-class AdvisorExtractFiles(BaseSchema):
+class CollectionFiles(BaseSchema):
     """Base Schema for file Collection"""
 
     _delimiter: str = "|"
 
     @classmethod
-    def from_file_list(cls, files: list[Path]) -> "AdvisorExtractFiles":
+    def from_file_list(cls, files: list[Path]) -> "CollectionFiles":
         """Returns first values in a list or None"""
         return cls.parse_obj(
             {
@@ -48,24 +48,24 @@ class AdvisorExtractFiles(BaseSchema):
         allow_population_by_field_name = True
 
 
-class AdvisorExtractConfig(BaseSchema):
+class CollectionConfig(BaseSchema):
     delimiter: str = "|"
     pre_process_files: bool = False
-    collection_files_schema: Type[AdvisorExtractFiles]
+    collection_files_schema: Type[CollectionFiles]
     sql_files_path: str
 
 
-class AdvisorExtractVersionConfig(BaseSchema):
+class CollectionVersionConfig(BaseSchema):
     min_version: ScriptVersionType
     max_version: ScriptVersionType
-    config: AdvisorExtractConfig
+    config: CollectionConfig
 
 
-class AdvisorExtract(BaseSchema):
+class Collection(BaseSchema):
     collection_id: str
     collection_key: str
     db_version: str
     script_version: "Union[LegacyVersion, Version]"
-    config: AdvisorExtractConfig
-    files: AdvisorExtractFiles
+    config: CollectionConfig
+    files: CollectionFiles
     queries: SQLManager

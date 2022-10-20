@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Final, Optional, Union
 
 import orjson
-from pydantic import BaseSettings as _BaseSettings
+from pydantic import BaseModel as _BaseSettings
 from pydantic import SecretBytes, SecretStr, ValidationError
 from typing_extensions import Literal
 
@@ -46,8 +46,7 @@ class BaseSchema(_BaseSettings):
         validate_assignment = True
         orm_mode = True
         use_enum_values = True
-        env_file = ".env"
-        env_file_encoding = "utf-8"
+        arbitrary_types_allowed = True
 
 
 class EnvironmentSettings(_BaseSettings):
@@ -70,7 +69,7 @@ class Settings(EnvironmentSettings):
     google_application_credentials: Optional[str] = None
     collections_path: str = "collection-storage"
     google_runtime_secrets: str = "run-config"
-    duckdb_path: str = ":memory:"
+    duckdb_path: str = "local.db"
     bigquery_dataset: str = "v4-development"
     temp_path: Optional[Path] = None
 

@@ -1,4 +1,4 @@
---name: transform-12
+--name: transform-12!
 Create or replace table T_DS_Database_Metrics as WITH vcputimemodel as (
         SELECT pkey,
             dbid,

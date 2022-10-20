@@ -1,4 +1,4 @@
---name: transform-10
+--name: transform-10!
 --BMS Sizing
 --This query will evaluate the customer's on-premises environment and right-size the workload on BMS using the same on-premises server to database mapping
 --On-premises host details

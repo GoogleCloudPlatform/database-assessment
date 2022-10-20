@@ -1,4 +1,4 @@
---name: transform-08
+--name: transform-08!
 Create or replace view V_DS_HostDetails as WITH hostdetails AS (
         SELECT b.pkey,
             b.host_name,

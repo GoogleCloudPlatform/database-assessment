@@ -1,15 +1,17 @@
---name: transform-06
+--name: transform-06!
 -- V_DS_dbsummary
 CREATE OR REPLACE TABLE V_DS_dbsummary AS WITH awr AS (
         SELECT PKEY,
             MIN(
                 strptime(
-                    min_begin_interval_time, '%d-%b-%y %I.%M.%S.%g %p'
+                    min_begin_interval_time,
+                    '%d-%b-%y %I.%M.%S.%g %p'
                 )
             ) AS begin_Date,
             MAX(
                 strptime(
-                    max_begin_interval_time, '%d-%b-%y %I.%M.%S.%g %p'
+                    max_begin_interval_time,
+                    '%d-%b-%y %I.%M.%S.%g %p'
                 )
             ) AS End_date
         FROM awrsnapdetails
