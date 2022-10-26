@@ -23,8 +23,9 @@ Date: 2022-03-10
 
 set verify off
 
+/*
 accept dbusername char prompt "Please enter the DB Local Username(Or CDB Username) to receive all required grants: "
-
+*/
 
 /*
         Use db_awr_license variable to OVERRIDE license usage.

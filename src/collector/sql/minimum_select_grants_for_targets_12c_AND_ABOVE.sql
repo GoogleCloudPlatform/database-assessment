@@ -23,11 +23,10 @@ Date: 2022-03-15
 
 set verify off
 
-accept dbusername char prompt "Please enter the DB Local Username to receive all required grants: "
-
+accept dbusername char prompt "Please enter the DB Local Username(Or CDB Username) to receive all required grants: "
 grant alter session to &&dbusername ;
 grant create session to &&dbusername ;
-grant execute on sys.DBMS_SPACE_ADMIN to &&dbusername ;
+--grant execute on sys.DBMS_SPACE_ADMIN to &&dbusername ;
 grant select on sys.v_$database to &&dbusername ;
 grant select on sys.v_$instance to &&dbusername ;
 grant select on sys.cdb_users to &&dbusername ;
@@ -51,6 +50,7 @@ grant select on sys.v_$temp_space_header to &&dbusername ;
 grant select on sys.gv_$parameter to &&dbusername ;
 grant select on sys.cdb_feature_usage_statistics to &&dbusername ;
 grant select on sys.dba_high_water_mark_statistics to &&dbusername ;
+grant select on sys.cdb_high_water_mark_statistics to &&dbusername ;
 grant select on sys.dba_cpu_usage_statistics to &&dbusername ;
 grant select on sys.cdb_objects to &&dbusername ;
 grant select on sys.cdb_source to &&dbusername ;
@@ -108,4 +108,9 @@ grant select on sys.cdb_hist_iostat_function to &&dbusername ;
 grant select on sys.dba_hist_system_event to &&dbusername ;
 grant select on sys.cdb_hist_system_event to &&dbusername ;
 grant select on sys.gv_$archive_dest to &&dbusername ;
+grant select on sys.gv_$archived_log to &&dbusername ;
+grant select on sys.v_$rman_backup_job_details to &&dbusername ;
+grant select on sys.v_$logfile to &&dbusername ;
+grant select on sys.dba_temp_files to &&dbusername ;
+grant select on sys.cdb_temp_files to &&dbusername ;
 

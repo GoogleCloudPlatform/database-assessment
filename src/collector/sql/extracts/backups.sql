@@ -13,20 +13,21 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-spool &outputdir/opdb__dbhwmarkstatistics__&v_tag
+spool &outputdir/opdb__backups__&v_tag
 
-WITH vhwmst AS (
 SELECT '&&v_host'
        || '_'
        || '&&v_dbname'
        || '_'
        || '&&v_hora' AS pkey,
-       description,
-       highwater,
-       last_value,
-       &v_a_con_id AS con_id
-FROM   &v_tblprefix._high_water_mark_statistics a
-ORDER  BY description)
-SELECT pkey , description , highwater , last_value, con_id
-FROM vhwmst;
+       trunc(start_time) AS backup_start_date, 
+       &v_a_con_id AS con_id, 
+       input_type, 
+       round(sum(elapsed_seconds)) AS elapsed_seconds, 
+       round(sum(input_bytes)/1024/1024) AS mbytes_in, 
+       round(sum(output_bytes)/1024/1024) AS mbytes_out
+FROM v$rman_backup_job_details a
+WHERE start_time >= trunc(sysdate) - '&&dtrange'
+GROUP BY trunc(start_time), input_type, &v_a_con_id
+;
 spool off

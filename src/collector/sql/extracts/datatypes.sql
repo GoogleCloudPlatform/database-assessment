@@ -24,7 +24,12 @@ SELECT '&&v_host'
        &v_a_con_id con_id,
        owner,
        data_type,
-       COUNT(1) as cnt
+       COUNT(1) as cnt,
+       data_length, 
+       data_precision, 
+       data_scale, 
+       avg_col_len,
+       count(distinct &v_a_con_id||owner||table_name) as distinct_table_count
 FROM   &v_tblprefix._tab_columns a
 WHERE  owner NOT IN
                      (
@@ -38,7 +43,13 @@ GROUP  BY '&&v_host'
           || '&&v_hora',
           &v_a_con_id ,
           owner,
-          data_type)
-SELECT pkey , con_id , owner , data_type , cnt
+          data_type,
+          data_length,
+          data_precision,
+          data_scale,
+          avg_col_len
+)
+SELECT pkey , con_id , owner , data_type , cnt,
+       data_length, data_precision, data_scale, avg_col_len, distinct_table_count
 FROM vdtype;
 spool off

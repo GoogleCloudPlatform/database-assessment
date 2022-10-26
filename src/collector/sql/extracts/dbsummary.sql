@@ -92,11 +92,62 @@ SELECT '&&v_host'
        (SELECT protection_mode
         FROM   v$database)                                                      AS dg_protection_mode,
        (SELECT protection_level
-        FROM   v$database)                                                      AS dg_protection_level
+        FROM   v$database)                                                      AS dg_protection_level,
+       (SELECT ( ROUND(SUM(bytes) / 1024 / 1024 / 1024) )
+        FROM   &v_tblprefix._temp_files)                                        AS db_size_temp_allocated_gb,
+       (SELECT  ( ROUND(SUM(l.bytes) / 1024 / 1024 / 1024 ) )
+        FROM v$log l,
+             v$logfile f
+        WHERE f.group# = l.group#     )                                         AS db_size_redo_allocated_gb,
+        (
+        SELECT CASE WHEN table_name = 'FND_PRODUCT_GROUPS' AND column_name = 'RELEASE_NAME' AND data_type = 'VARCHAR2' THEN owner END AS ebs_owner
+        FROM &v_tblprefix._tab_columns
+        WHERE ( table_name = 'FND_PRODUCT_GROUPS'  -- EBS
+           AND column_name = 'RELEASE_NAME'
+           AND data_type = 'VARCHAR2'
+           AND rownum = 1
+           )
+           ) as ebs_owner,
+        (
+        SELECT CASE WHEN table_name = 'S_REPOSITORY'       AND column_name = 'ROW_ID'       AND data_type = 'VARCHAR2' THEN owner END AS siebel_owner
+        FROM &v_tblprefix._tab_columns
+        WHERE ( table_name = 'S_REPOSITORY'           -- Siebel
+           AND column_name = 'ROW_ID'
+           AND data_type = 'VARCHAR2'
+           AND rownum = 1
+           )
+           ) as siebel_owner,
+          (
+        SELECT CASE WHEN table_name = 'PSSTATUS'           AND column_name = 'TOOLSREL'     AND data_type = 'VARCHAR2' THEN owner END AS psft_owner
+        FROM &v_tblprefix._tab_columns
+        WHERE ( table_name = 'PSSTATUS'               -- PeopleSoft
+           AND column_name = 'TOOLSREL'
+           AND data_type = 'VARCHAR2'
+           AND rownum = 1
+        )
+        ) as psft_owner,
+        (SELECT 'Y' 
+         FROM dba_objects 
+         WHERE owner = 'RDSADMIN'
+           AND object_name = 'RDAADMIN_UTIL' 
+           AND ROWNUM = 1) AS rds_flag,
+         (SELECT 'Y'
+          FROM dba_views 
+          WHERE view_name ='OCI_AUTONOMOUS_DATABASES'
+            AND ROWNUM = 1) AS oci_autonomous_flag,
+         (SELECT 'Y' 
+          FROM dba_objects 
+          WHERE object_name = 'DBMS_CLOUD'
+            AND owner = (SELECT value 
+                         FROM v$parameter 
+                         WHERE name = 'common_user_prefix') || 'CLOUD$SERVICE'
+            AND ROWNUM = 1) AS dbms_cloud_pkg_installed
 FROM   dual)
 SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , force_logging ,
        redo_gb_per_day , rac_dbinstaces , characterset , platform_name , startup_time , user_schemas ,
 	   buffer_cache_mb , shared_pool_mb , total_pga_allocated_mb , db_size_allocated_gb , db_size_in_use_gb ,
-	   db_long_size_gb , dg_database_role , dg_protection_mode , dg_protection_level
+	   db_long_size_gb , dg_database_role , dg_protection_mode , dg_protection_level, 
+           db_size_temp_allocated_gb, db_size_redo_allocated_gb,
+           ebs_owner, siebel_owner, psft_owner, rds_flag, oci_autonomous_flag, dbms_cloud_pkg_installed
 FROM vdbsummary;
 spool off

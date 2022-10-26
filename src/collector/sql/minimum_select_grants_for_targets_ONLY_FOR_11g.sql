@@ -27,7 +27,7 @@ accept dbusername char prompt "Please enter the DB Local Username(Or CDB Usernam
 
 grant alter session to &&dbusername;
 grant create session to &&dbusername;
-grant execute on sys.DBMS_SPACE_ADMIN to &&dbusername;
+-- grant execute on sys.DBMS_SPACE_ADMIN to &&dbusername;
 grant select on sys.v_$database to &&dbusername;
 grant select on sys.v_$instance to &&dbusername;
 grant select on sys.dba_users to &&dbusername;
@@ -93,3 +93,8 @@ grant select on sys.dba_external_tables to &&dbusername;
 grant select on sys.dba_hist_iostat_function to &&dbusername;
 grant select on sys.dba_hist_system_event to &&dbusername;
 grant select on sys.gv_$archive_dest to &&dbusername;
+grant select on sys.gv_$archived_log to &&dbusername ;
+grant select on sys.v_$rman_backup_job_details to &&dbusername ;
+grant select on sys.v_$logfile to &&dbusername ;
+grant select on sys.dba_temp_files to &&dbusername ;
+

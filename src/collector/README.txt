@@ -22,92 +22,126 @@ for analysis by Database Migration Advisor.
     and to execute the packages listed below:
 
     Views:
-      * DBA_ALL_TABLES
+
+      * AUX_STATS$
+      * CDB_CONSTRAINTS
+      * CDB_DATA_FILES
+      * CDB_DB_LINKS
+      * CDB_EXTERNAL_TABLES
+      * CDB_FEATURE_USAGE_STATISTICS
+      * CDB_FREE_SPACE
+      * CDB_HIGH_WATER_MARK_STATISTICS
+      * CDB_HIST_ACTIVE_SESS_HISTORY
+      * CDB_HIST_IOSTAT_FUNCTION
+      * CDB_HIST_OSSTAT
+      * CDB_HIST_SNAPSHOT
+      * CDB_HIST_SQLSTAT
+      * CDB_HIST_SQLTEXT
+      * CDB_HIST_SYSMETRIC_HISTORY
+      * CDB_HIST_SYSMETRIC_SUMMARY
+      * CDB_HIST_SYSSTAT
+      * CDB_HIST_SYSTEM_EVENT
+      * CDB_HIST_SYS_TIME_MODEL
+      * CDB_INDEXES
+      * CDB_OBJECTS
+      * CDB_PART_TABLES
+      * CDB_PDBS
+      * CDB_SEGMENTS
+      * CDB_SERVICES
+      * CDB_SOURCE
+      * CDB_TAB_COLUMNS
+      * CDB_TABLES
+      * CDB_TABLESPACES
+      * CDB_TAB_PARTITIONS
+      * CDB_TAB_SUBPARTITIONS
+      * CDB_USERS
+      * DBA_CONSTRAINTS
+      * DBA_CPU_USAGE_STATISTICS
       * DBA_DATA_FILES
+      * DBA_DB_LINKS
       * DBA_EXTERNAL_TABLES
+      * DBA_FEATURE_USAGE_STATISTICS
       * DBA_FREE_SPACE
+      * DBA_HIGH_WATER_MARK_STATISTICS
       * DBA_HIST_ACTIVE_SESS_HISTORY
-      * DBA_HIST_SYS_TIME_MODEL
-      * DBA_HIST_DATABASE_INSTANCE
+      * DBA_HIST_IOSTAT_FUNCTION
       * DBA_HIST_OSSTAT
-      * DBA_HIST_PDB_INSTANCE
-      * DBA_HIST_SEG_STAT
-      * DBA_HIST_SEG_STAT_OBJ
       * DBA_HIST_SNAPSHOT
       * DBA_HIST_SQLSTAT
+      * DBA_HIST_SQLTEXT
+      * DBA_HIST_SYSMETRIC_HISTORY
+      * DBA_HIST_SYSMETRIC_SUMMARY
+      * DBA_HIST_SYSSTAT
+      * DBA_HIST_SYSTEM_EVENT
       * DBA_HIST_SYS_TIME_MODEL
-      * DBA_IND_PARTITIONS
-      * DBA_IND_SUBPARTITIONS
       * DBA_INDEXES
-      * DBA_LOBS
-      * DBA_LOB_PARTITIONS
-      * DBA_LOB_SUBPARTITIONS
-      * DBA_MVIEWS
-      * DBA_MVIEW_LOGS
-      * DBA_NESTED_TABLES
       * DBA_OBJECTS
-      * DBA_PART_INDEXES
-      * DBA_PART_KEY_COLUMNS
       * DBA_PART_TABLES
-      * DBA_PROCEDURES
-      * DBA_RECYCLEBIN
+      * DBA_REGISTRY_SQLPATCH
       * DBA_SEGMENTS
-      * DBA_TAB_COLS
+      * DBA_SERVICES
+      * DBA_SOURCE
+      * DBA_TAB_COLUMNS
+      * DBA_TABLES
       * DBA_TABLESPACES
       * DBA_TAB_PARTITIONS
       * DBA_TAB_SUBPARTITIONS
-      * DBA_TEMP_FILES
       * DBA_USERS
-      * GV_$DATABASE
+      * GV_$ARCHIVE_DEST
+      * GV_$ARCHIVED_LOG
       * GV_$INSTANCE
-      * GV_$OSSTAT
+      * GV_$PARAMETER
+      * LOGSTDBY$SKIP_SUPPORT
+      * NLS_DATABASE_PARAMETERS
+      * REGISTRY$HISTORY
       * V_$DATABASE
+      * V_$DIAG_ALERT_EXT
       * V_$INSTANCE
-      * V_$PARAMETER
-      * V_$SESSION
-      * V_$SQL_MONITOR
-
-    Packages:
-      * DBMS_SQLTUNE.REPORT_SQL_MONITOR (11g) / DBMS_SQL_MONITOR.REPORT_SQL_MONITOR (12c+)
+      * V_$LOG
+      * V_$LOG_HISTORY
+      * V_$PDBS
+      * V_$PGASTAT
+      * V_$RMAN_BACKUP_JOB_DETAILS
+      * V_$SGASTAT
+      * V_$SQLCOMMAND
+      * V_$TEMP_SPACE_HEADER
+      * V_$VERSION
 
 
 2. Preparation
 --------------
 
-    a) unzip the install archive. A "collection" subdirectory will be created.
+    a) Unzip the install archive. A "collector" subdirectory will be created.
 
-    b) review the collector_env.sql configuration file and edit as required.
+    b) Ensure sqlplus is in the path.
 
-       Notes:
-          1) a number of configurable options are defined and documented in this file
-          2) default values are provided as a guide (the utility is able to run with these default options)
-          3) ensure that the location specified by the opdba_advisor_spool_dir parameter has sufficient space to
-             save extracted data
+    c) If the exract will be run by a user that does not have SYSDBA privilege, connect to the database 
+       as a user with SYSDBA privileges and execute grants_wrapper.sql.  You will be prompted for the
+       name of a database user to be granted SELECT privileges on the objects required for data collection.
 
 
 3. Execution
 ------------
 
-    a) change directory to the "collection" subdirectory.
+    a) Change directory to the "collector" subdirectory.
 
-    b) login to sqlplus as a user with the required privileges and run:
+    b) Execute ./collect-data.sh, passing a database connection string as the only parameter:
 
-        @collection.sql
+        ./collect-data.sh 'username/password@//hostname.domain.com:1521/dbname.domain.com as sysdba'
 
-    c) follow the prompt at the end of the warning message to either continue or cancel the execution
+    c) Follow the prompt at the end of the warning message to either continue or cancel the execution
 
         Notes:
-            1) Google Database Migration Advisor Data Extractor extracts data for a single database or PDB at a time. In multitenant
-               CDB databases, you must either connect to the required PDB container directly or switch to the
-               the required PDB container from within your session before running the collector.sql
-               script. Running this from within the root container will generate an exception and terminate
+            1) Google Database Migration Advisor Data Extractor extracts data for the entire database. In multitenant
+               CDB databases, you must connect to the container database.  Running this from within a 
+               pluggable database will not collect the proper data.
 
 
 4. Results
 ----------
 
-    An archive of the extracted results will be created in the location specified by the opdba_advisor_spool_dir
-    configuration parameter. The archive will be named opdb_[DBNAME]_[DATE_TIME].tgz.
+    An archive of the extracted results will be created in the directory collector/output. 
+    The full path and file name will be displayed on completion.
 
 
 5. License

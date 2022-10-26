@@ -15,11 +15,13 @@ limitations under the License.
 */
 
 set termout off
+@&EXTRACTSDIR/archlogs.sql
 @&EXTRACTSDIR/awrhistcmdtypes.sql
 @&EXTRACTSDIR/awrhistosstat.sql
 @&EXTRACTSDIR/awrhistsysmetrichist.sql
 @&EXTRACTSDIR/awrhistsysmetricsumm.sql
 @&EXTRACTSDIR/awrsnapdetails.sql
+@&EXTRACTSDIR/backups.sql
 @&EXTRACTSDIR/compressbytype.sql
 @&EXTRACTSDIR/cpucoresusage.sql
 @&EXTRACTSDIR/dataguard.sql
@@ -45,5 +47,4 @@ set termout off
 @&EXTRACTSDIR/tablesnopk.sql
 @&EXTRACTSDIR/usedspacedetails.sql
 @&EXTRACTSDIR/usrsegatt.sql
-@&v_dopluggable
-set termout on
+@&SQLDIR/&v_dopluggable

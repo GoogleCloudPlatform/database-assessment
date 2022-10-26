@@ -40,11 +40,14 @@ SELECT
        s.end_interval_time,
        TO_CHAR(s.begin_interval_time,'hh24') hour,
        ( TO_NUMBER(CAST((end_interval_time) AS DATE) - CAST(
-                     (begin_interval_time) AS DATE)) * 60 * 60 * 24 ) snaps_diff_secs
+                     (begin_interval_time) AS DATE)) * 60 * 60 * 24 ) snaps_diff_secs,
+       s.startup_time,
+       lag(s.startup_time,1) over (partition by s.dbid, s.instance_number order by s.snap_id) lag_startup_time
 FROM   &v_tblprefix._hist_snapshot s
 WHERE  s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
 AND dbid = &&v_dbid
 )
+WHERE startup_time = lag_startup_time
 GROUP BY '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora', dbid, instance_number, hour)
 SELECT pkey , dbid , instance_number , hour , min_snap_id , max_snap_id , min_begin_interval_time ,
        max_begin_interval_time , cnt , sum_snaps_diff_secs , avg_snaps_diff_secs , median_snaps_diff_secs ,
