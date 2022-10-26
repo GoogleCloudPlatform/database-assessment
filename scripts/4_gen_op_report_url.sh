@@ -65,7 +65,14 @@ reportId=${REPORTID}
 &ds.ds12.projectId=${PROJECTNAME}
 &ds.ds12.type=TABLE
 &ds.ds12.datasetId=${DSNAME}
-&ds.ds12.tableId=V_DS_dbsummary"
+&ds.ds12.tableId=V_DS_dbsummary
+&ds.ds137.connector=bigQuery
+&ds.ds137.datasourceName=V_DS_BMS_BOM_HT
+&ds.ds137.projectId=${PROJECTNAME}
+&ds.ds137.type=TABLE
+&ds.ds137.datasetId=${DSNAME}
+&ds.ds137.tableId=V_DS_BMS_BOM_HT
+"
 
 echo ""
 echo "The Optimus Prime dashboard report ${REPORTNAME} is available at the link below"
