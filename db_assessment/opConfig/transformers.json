@@ -12450,7 +12450,7 @@
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -13315,8 +13315,8 @@
           "cast(replace(trim(con_id),'N/A','-1') as numeric) con_id,",
           "trim(owner) owner,",
           "trim(data_type) data_type,",
-          "cast(coun as numeric) coun,",
-          "cast(coun as numeric) cnt",
+          "cast(cnt as numeric) coun,",
+          "cast(cnt as numeric) cnt",
           " from ${project_name}.${dataset}.datatypes a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
