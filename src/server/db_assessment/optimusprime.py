@@ -150,7 +150,7 @@ def run_main(args: "AppConfig") -> None:
             )
 
         # Getting file pattern for find config files in the OS to be imported
-        csvFilesLocationPatternOPConfig = "db_assessment/opConfig/*.csv"
+        csvFilesLocationPatternOPConfig = f"{str(BASE_DIR)}/opConfig/*.csv"
 
         # Getting a list of files from OS based on the pattern provided
         fileListOPConfig = import_db_assessment.list_files(csvFilesLocationPatternOPConfig)

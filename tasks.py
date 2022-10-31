@@ -98,6 +98,7 @@ def authenticate(ctx, local=False):
         data=json.dumps({"audience": ctx.api_audience, "includeEmail": True}),
         timeout=10,
     )
+    print(identity_token_resp)
     identity_token = identity_token_resp.json()["token"]
     logger.info("Got identity token")
     return identity_token

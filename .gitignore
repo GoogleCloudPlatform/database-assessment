@@ -159,3 +159,4 @@ local.db
 local.db.wal
 notebooks/data/*.tgz
 *.tgz
+!optconfig*.csv
