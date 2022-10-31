@@ -57,7 +57,7 @@ RUN curl -sSL https://install.python-poetry.org | python - \
     && ln -s /opt/poetry/bin/poetry /usr/local/bin/poetry
 
 WORKDIR /workspace/app
-COPY pyproject.toml poetry.lock README.md mkdocs.yml mypy.ini .flake8 .pre-commit-config.yaml .pylintrc alembic.ini LICENSE Makefile ./
+COPY pyproject.toml poetry.lock README.md mkdocs.yml mypy.ini .flake8 .pre-commit-config.yaml .pylintrc LICENSE Makefile ./
 COPY tests ./tests/
 COPY docs ./docs/
 COPY scripts ./scripts
