@@ -15,10 +15,14 @@
 
 import argparse
 import logging
+import pkgutil
 import sys
 import warnings
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Dict
+from functools import lru_cache
+from importlib.machinery import SourceFileLoader
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, Final
 
 import pandas as pd
 
@@ -32,6 +36,23 @@ if TYPE_CHECKING:
     from .api import AppConfig
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
+
+
+@lru_cache
+def module_to_os_path(dotted_path: str = "db_assessment") -> Path:
+    """Returns the path to the base directory of the project or the module
+    specified by `dotted_path`.
+
+    Ensures that pkgutil returns a valid source file loader.
+    """
+    src = pkgutil.get_loader(dotted_path)
+    if not isinstance(src, SourceFileLoader):
+        raise ValueError(f"Couldn't find the path for {dotted_path}")
+    return Path(str(src.path).removesuffix("/__init__.py"))
+
+
+BASE_DIR: Final = module_to_os_path("db_assessment")
+CONFIG_PATH: str = str(Path(BASE_DIR, "opConfig/transformers.json"))
 
 
 @dataclass
@@ -416,7 +437,7 @@ def parse_arguments():
     parser.add_argument(
         "--config-path",
         type=str,
-        default="db_assessment/opConfig/transformers.json",
+        default=CONFIG_PATH,
         help="location of transformers.json file with all parameters and rules",
     )
 

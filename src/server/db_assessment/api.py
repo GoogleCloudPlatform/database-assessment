@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import logging
 import os
 from dataclasses import dataclass
@@ -21,7 +20,7 @@ from typing import Literal, Optional
 from flask import Flask, request
 from werkzeug.utils import secure_filename
 
-from db_assessment.optimusprime import run_main
+from db_assessment.optimusprime import CONFIG_PATH, run_main
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -32,7 +31,7 @@ logger.setLevel(logging.INFO)
 class AppConfig:
     """Application Configuration"""
 
-    config_path: str = "db_assessment/opConfig/transformers.json"
+    config_path: str = CONFIG_PATH
     dataset: Optional[str] = None
     project_name: Optional[str] = None
     collection_id: Optional[str] = None
