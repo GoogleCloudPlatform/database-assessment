@@ -77,26 +77,45 @@ sed -i -r -f ${SCRIPT_DIR}/sql/op_sed_cleanup.sed ${OUTPUT_DIR}/*csv
 retval=$?
 if [ $retval -ne 0 ]; then
   echo "Error processing ${SCRIPT_DIR}/sql/op_sed_cleanup.sed.  Exiting..."
+  return $retval
 fi
 sed -i -r '1i\ ' ${OUTPUT_DIR}/*csv
 retval=$?
 if [ $retval -ne 0 ]; then
   echo "Error adding newline to top of Optimus Prime extract files.  Exiting..."
+  return $retval
 fi
 grep -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+retval=$?
+if [ $retval -eq 1 ]; then 
+  retval=0
+fi
+if [ $retval -gt 1 ]; then
+  echo "Error creating error log.  Exiting..."
+  return $retval
+fi
 }
 
 function compressOpFiles(){
 V_FILE_TAG=$1
+V_ERR_TAG=""
 echo ""
 echo "Archiving output files"
 CURRENT_WORKING_DIR=$(pwd)
 cp ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
-cd ${OUTPUT_DIR}; tar czf opdb__${V_FILE_TAG}.tgz --remove-files *csv *.log
+ERRCNT=$(wc -l < ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log)
+if [[ ${ERRCNT} -ne 0 ]]
+then
+  V_ERR_TAG="_ERROR"
+  retval=1
+fi
+
+cd ${OUTPUT_DIR}; tar czf opdb__${V_FILE_TAG}${V_ERR_TAG}.tgz --remove-files *csv *.log
 cd ${CURRENT_WORKING_DIR}
 echo ""
 echo "Step completed."
 echo ""
+return $retval
 }
 
 ### Validate input
@@ -130,18 +149,21 @@ if [ $retval -eq 0 ]; then
     echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
     executeOP "${connectString}" ${OpVersion}
+    retval=$?
     if [ $retval -ne 0 ]; then
       echo "Optimus Prime extract reported an error.  Please check the error log in directory ${OUTPUT_DIR}"
       echo "Exiting...."
       exit 255
     fi
     cleanupOpOutput $(echo ${V_TAG} | sed 's/.csv//g')
+    retval=$?
     if [ $retval -ne 0 ]; then
       echo "Optimus Prime data sanitation reported an error. Please check the error log in directory ${OUTPUT_DIR}"
       echo "Exiting...."
       exit 255
     fi
     compressOpFiles $(echo ${V_TAG} | sed 's/.csv//g')
+    retval=$?
     if [ $retval -ne 0 ]; then
       echo "Optimus Prime data file archive encountered a problem.  Exiting...."
       exit 255
