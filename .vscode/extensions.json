@@ -9,6 +9,7 @@
     "elagil.pre-commit-helper",
     "ms-python.vscode-pylance",
     "ms-python.python",
-    "mtxr.sqltools"
+    "mtxr.sqltools",
+    "knowsuchagency.pdm-task-provider"
   ]
 }

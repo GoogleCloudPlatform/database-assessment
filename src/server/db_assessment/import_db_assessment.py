@@ -25,7 +25,6 @@ from google.api_core.exceptions import Conflict
 from google.cloud import bigquery
 
 from db_assessment import rules_engine, set_client_info
-from db_assessment.version import __version__
 
 ct = datetime.datetime.now()
 

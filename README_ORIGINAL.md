@@ -243,7 +243,7 @@ The load scripts expect to be run from the <workingdirectory>/oracle-database-as
 
 The function of each script is as follows.
 
-- _configure_op_env.sh - Defines environment variables that are used in the other scripts.  This script is executed only by the other scripts in the loading process.
+- \_configure_op_env.sh - Defines environment variables that are used in the other scripts. This script is executed only by the other scripts in the loading process.
 - 1_activate_op.sh - Installs necessary Python support modules and activates the Python virtual environment for Optimus Prime.
 - 2_load_op.sh - Loads the client data files into the base Optimus Prime tables in the requested data set.
 - 3_run_op_etl.sh - Installs and runs Big Query procedures that create additional views and tables to support the Optimus Prime dashboard.
@@ -269,9 +269,9 @@ gcloud config set project <project id>
 2.2.2 Export Environment variables. (Step 1.2 has working directory created)
 
 ```shell
-export OP_WORKDING_DIR=$(pwd)
+export OP_WORKING_DIR=$(pwd)
 export OP_BQ_DATASET=[Dataset Name]
-export OP_OUTPUT_DIR=/$OP_WORKDING_DIR/oracle-database-assessment-output/<assessment output directory>
+export OP_OUTPUT_DIR=/$OP_WORKING_DIR/oracle-database-assessment-output/<assessment output directory>
 mkdir $OP_OUTPUT_DIR/log
 export OP_LOG_DIR=$OP_OUTPUT_DIR/log
 ```
@@ -279,7 +279,7 @@ export OP_LOG_DIR=$OP_OUTPUT_DIR/log
 2.2.3 Create working directory (Skip if you have followed step 1.2 on same server)
 
 ```shell
-mkdir $OP_WORKDING_DIR
+mkdir $OP_WORKING_DIR
 ```
 
 2.2.4 Clone Github repository (Skip if you have followed step 1.2 on same server)
@@ -311,9 +311,9 @@ unzip <zip files>
   2.2.8. Create a python virtual environment to install dependencies and execute the `optimusprime.py` script
 
 ```shell
- python3 -m venv $OP_WORKDING_DIR/.venv
- source $OP_WORKDING_DIR/.venv/bin/activate
- cd $OP_WORKDING_DIR/oracle-database-assessment/
+ python3 -m venv $OP_WORKING_DIR/.venv
+ source $OP_WORKING_DIR/.venv/bin/activate
+ cd $OP_WORKING_DIR/oracle-database-assessment/
 
  pip3 install pip wheel setuptools --upgrade
  pip3 install .

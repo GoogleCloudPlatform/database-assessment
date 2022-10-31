@@ -27,9 +27,9 @@ if [ ! $VENV_EXISTS ];
 fi
 
 source ${VENV_DIR}/bin/activate
-pip3 install pip wheel setuptools --upgrade
+pip3 install -U pip wheel setuptools --upgrade
 #pip3 install .
-pip3 install ${BASE_DIR}
+pip3 install -U ${BASE_DIR}
 cd ${BASE_DIR}
 
 exit 0

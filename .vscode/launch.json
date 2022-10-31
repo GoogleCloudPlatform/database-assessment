@@ -9,6 +9,7 @@
       "type": "python",
       "request": "launch",
       "module": "dbma.__main__",
+      "envFile": "${workspaceFolder}/.env",
       "args": [
         "process-collection",
         "-c",
@@ -21,7 +22,7 @@
       "name": "OP: Sample File Load",
       "type": "python",
       "request": "launch",
-      "program": "db_assessment/optimusprime.py",
+      "module": "db_assessment.optimusprime",
       "args": [
         "--collection-id",
         "",
@@ -35,6 +36,7 @@
         "|",
         "--delete-dataset"
       ],
+      "envFile": "${workspaceFolder}/.env",
       "justMyCode": true,
       "console": "integratedTerminal"
     },

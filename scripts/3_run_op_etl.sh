@@ -17,7 +17,7 @@ fi
 
 source ${SCRIPT_DIR}/_configure_op_env.sh
 
-sed "s/projectID.dataset/${PROJECTNAME}.${DSNAME}/g" ${BASE_DIR}/db_assessment/op_etl_template.sql > ${TMP_DIR}/op_etl_${DSNAME}.sql
+sed "s/projectID.dataset/${PROJECTNAME}.${DSNAME}/g" ${SCRIPT_DIR}/op_etl_template.sql > ${TMP_DIR}/op_etl_${DSNAME}.sql
 retval=$?
 if [ ${retval} -ne 0 ]; then
    echo "Error creating ${TMP_DIR}/op_etl_${DSNAME}.sql.  Exiting...."
