@@ -13723,7 +13723,7 @@
           ["valid_role", "STRING"],
           ["verify", "STRING"]
         ],
-	"archlogs": [
+        "archlogs": [
           ["pkey", "STRING"],
           ["log_start_date", "STRING"],
           ["hour", "STRING"],
@@ -13740,7 +13740,48 @@
           ["elapsed_seconds", "STRING"],
           ["mbytes_in", "STRING"],
           ["mbytes_out", "STRING"]
-	]
+        ],
+        "columntypes": [
+          ["pkey", "STRING"],
+          ["conid", "NUMBER"],
+          ["owner", "STRING"],
+          ["table_name", "STRING"],
+          ["ANYDATA_COL_COUNT", "NUMBER"],
+          ["BFILE_COL_COUNT", "NUMBER"],
+          ["BINARY_DOUBLE_COL_COUNT", "NUMBER"],
+          ["BINARY_FLOAT_COL_COUNT", "NUMBER"],
+          ["BLOB_COL_COUNT", "NUMBER"],
+          ["CFILE_COL_COUNT", "NUMBER"],
+          ["CHAR_COL_COUNT", "NUMBER"],
+          ["CLOB_COL_COUNT", "NUMBER"],
+          ["DATE_COL_COUNT", "NUMBER"],
+          ["FLOAT_COL_COUNT", "NUMBER"],
+          ["INTERVAL_DAY(x)_TO_SECOND(x)_COL_COUNT", "NUMBER"],
+          ["INTERVAL_YEAR(x)_TO_MONTH_COL_COUNT", "NUMBER"],
+          ["JSON_COL_COUNT", "NUMBER"],
+          ["LONG_RAW_COL_COUNT", "NUMBER"],
+          ["LONG_COL_COUNT", "NUMBER"],
+          ["MLSLABEL_COL_COUNT", "NUMBER"],
+          ["NCHAR_VARYING_COL_COUNT", "NUMBER"],
+          ["NCHAR_COL_COUNT", "NUMBER"],
+          ["NCLOB_COL_COUNT", "NUMBER"],
+          ["NUMBER_COL_COUNT", "NUMBER"],
+          ["NVARCHAR2_COL_COUNT", "NUMBER"],
+          ["RAW_COL_COUNT", "NUMBER"],
+          ["ROWID_COL_COUNT", "NUMBER"],
+          ["TIME(x)_WITH_TIME_ZONE_COL_COUNT", "NUMBER"],
+          ["TIME(x)_COL_COUNT", "NUMBER"],
+          ["TIMESTAMP(x)_WITH_LOCAL_TIME_Z_COL_COUNT", "NUMBER"],
+          ["TIMESTAMP(x)_WITH_TIME_ZONE_COL_COUNT", "NUMBER"],
+          ["TIMESTAMP(x)_COL_COUNT", "NUMBER"],
+          ["UROWID_COL_COUNT", "NUMBER"],
+          ["VARCHAR(x)_COL_COUNT", "NUMBER"],
+          ["VARCHAR2_COL_COUNT", "NUMBER"],
+          ["XMLTYPE_COL_COUNT", "NUMBER"],
+          ["UNDEFINED_COL_COUNT", "NUMBER"],
+          ["USER_DEFINED_COL_COUNT", "NUMBER"],
+          ["BYTES", "NUMBER"]
+        }
       }
     }
   },

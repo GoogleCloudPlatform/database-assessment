@@ -22,6 +22,7 @@ set termout off
 @&EXTRACTSDIR/awrhistsysmetricsumm.sql
 @&EXTRACTSDIR/awrsnapdetails.sql
 @&EXTRACTSDIR/backups.sql
+@&EXTRACTSDIR/columntypes.sql
 @&EXTRACTSDIR/compressbytype.sql
 @&EXTRACTSDIR/cpucoresusage.sql
 @&EXTRACTSDIR/dataguard.sql
