@@ -13161,7 +13161,7 @@
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["cnt", "STRING"]
+          ["cnt", "STRING"],
           ["data_length", "STRING"],
           ["data_precision", "STRING"],
           ["data_scale", "STRING"],
@@ -13781,7 +13781,7 @@
           ["UNDEFINED_COL_COUNT", "NUMBER"],
           ["USER_DEFINED_COL_COUNT", "NUMBER"],
           ["BYTES", "NUMBER"]
-        }
+        ]
       }
     }
   },
