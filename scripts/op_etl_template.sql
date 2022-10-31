@@ -1,12 +1,12 @@
---------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------
 --This script creates the BQ views required for the Data Studio Template
 --To execute this script you will need to alter the script to run in your project
 --Use the find/replace to replace the following value:
 --“projectID.dataset” = your_project_name.your_data_set
 --Project - Optimus Prime 
---Date - 30-June-2022
---Version 2.0.1
---------------------------------------------------------------------------------------
+--Date - 14-Oct-2022
+------------------------------------------------------------------------------------
+ 
 --Name: P_DS_CPU_CALC
 --Description: Manually calculate the CPU used by the database. This procedure will create the table T_DS_CPU_CALC
 Create or replace procedure `projectID.dataset.P_DS_CPU_CALC` ()
@@ -195,19 +195,19 @@ create or replace table `projectID.dataset.T_DS_BMS_sizing` as
 --On-premises host details
 WITH hostdetails AS (
 SELECT
-    TRIM(dbinstances.pkey) AS PKEY,
-     dbinstances.host_name as host_name,
-     CAST(metrics._INSTANCE_NUMBER AS INT64) AS instanceNumber,
-     MAX(CAST(metrics.NUM_CPU_CORES_CUMULATIVE_VALUE AS DECIMAL)) AS cores,
-     MAX(CAST(metrics.PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE AS DECIMAL)/1024/1024/1024) AS totalMemoryGB, 
+   TRIM(dbinstances.pkey) AS PKEY,
+    dbinstances.host_name as host_name,
+    CAST(metrics._INSTANCE_NUMBER AS INT64) AS instanceNumber,
+    MAX(CAST(metrics.NUM_CPU_CORES_CUMULATIVE_VALUE AS DECIMAL)) AS cores,
+    MAX(CAST(metrics.PHYSICAL_MEMORY_BYTES_CUMULATIVE_VALUE AS DECIMAL)/1024/1024/1024) AS totalMemoryGB,
 FROM `projectID.dataset.awrhistosstat_rs_metrics` AS metrics
-     INNER JOIN `projectID.dataset.dbinstances` AS dbinstances
-             ON TRIM(metrics._PKEY) = TRIM(dbinstances.pkey)                                 
-            AND CAST(metrics._INSTANCE_NUMBER AS INT64) = CAST(dbinstances.inst_id AS INT64) 
+    INNER JOIN `projectID.dataset.dbinstances` AS dbinstances
+            ON TRIM(metrics._PKEY) = TRIM(dbinstances.pkey)                                
+           AND CAST(metrics._INSTANCE_NUMBER AS INT64) = CAST(dbinstances.inst_id AS INT64)
 GROUP BY dbinstances.pkey,
-         dbinstances.host_name,
-         instanceNumber
-            
+        dbinstances.host_name,
+        instanceNumber
+          
 ),
 DB_number AS --Identify the number of databases per servers
 (
@@ -226,24 +226,24 @@ SELECT *  FROM `projectID.dataset.T_DS_CPU_CALC`
 DBStorage AS
 (
 select DISTINCT
-     dbsizing_facts._PKEY, dbinstances.host_name, dbsizing_facts._INSTANCE_NUMBER,
-     --dbsizing_facts.DB_SIZE_ALLOCATED_GB,
-     CAST(dbsizing_facts.DB_SIZE_ALLOCATED_GB as numeric)/1024 as DB_SIZE_ALLOCATED_GB
+    dbsizing_facts._PKEY, dbinstances.host_name, dbsizing_facts._INSTANCE_NUMBER,
+    --dbsizing_facts.DB_SIZE_ALLOCATED_GB,
+    CAST(dbsizing_facts.DB_SIZE_ALLOCATED_GB as numeric)/1024 as DB_SIZE_ALLOCATED_GB
 from `projectID.dataset.dbsizing_facts` AS dbsizing_facts
-     inner join  `projectID.dataset.dbinstances` as dbinstances
-             on trim(dbsizing_facts.pkey) = trim(dbinstances.pkey)
-            and cast(dbsizing_facts._INSTANCE_NUMBER as INT64) = cast(dbinstances.inst_id as INT64)
-            and cast(dbsizing_facts._HOUR as INT64) = 0
+    inner join  `projectID.dataset.dbinstances` as dbinstances
+            on trim(dbsizing_facts.pkey) = trim(dbinstances.pkey)
+           and cast(dbsizing_facts._INSTANCE_NUMBER as INT64) = cast(dbinstances.inst_id as INT64)
+           and cast(dbsizing_facts._HOUR as INT64) = 0
 order by dbsizing_facts._PKEY, dbsizing_facts._INSTANCE_NUMBER
 ),
 StorageRanking AS --Rank the data in order to only count the storage once per RAC cluster
 (
 SELECT
-     host_name,
-     _INSTANCE_NUMBER,
-     CAST(DB_SIZE_ALLOCATED_GB AS NUMERIC) AS DB_SIZE_ALLOCATED_GB,
-     RANK() OVER (PARTITION BY _PKEY
-                  ORDER BY _PKEY, _INSTANCE_NUMBER) AS Ranking
+    host_name,
+    _INSTANCE_NUMBER,
+    CAST(DB_SIZE_ALLOCATED_GB AS NUMERIC) AS DB_SIZE_ALLOCATED_GB,
+    RANK() OVER (PARTITION BY _PKEY
+                 ORDER BY _PKEY, _INSTANCE_NUMBER) AS Ranking
 FROM DBstorage
 ),
 StorageSizeSums AS --Select the first storage value
@@ -265,8 +265,8 @@ FROM StorageSizeSums
 StorageFinalResults AS --Display the storage results counting the storage once per RAC cluster
 (
 SELECT
-     host_name,
-     CEIL(SUM(DB_SIZE_ALLOCATED_GB)) AS DB_size_TB,
+    host_name,
+    CEIL(SUM(DB_SIZE_ALLOCATED_GB)) AS DB_size_TB,
 FROM StorageSizeSums
 GROUP BY
 host_name
@@ -286,16 +286,12 @@ from
 dbparameters.PKEY,
 dbparameters.inst_id,
 hostdetails.host_name,
-max(CAST(dbparameters.value as numeric))/1024/1024/1024 as SGA_SIZE_GB
+CAST(dbparameters.value as numeric)/1024/1024/1024 as SGA_SIZE_GB
 FROM `projectID.dataset.dbparameters` as dbparameters
 INNER JOIN hostdetails as hostdetails
 ON TRIM(hostdetails.PKEY)=TRIM(dbparameters.PKEY)
 and CAST(hostdetails.instanceNumber as numeric)=CAST(dbparameters.INST_ID as numeric)
-and TRIM(dbparameters.name) in ( 'sga_target', 'memory_max_target', 'memory_target', 'sga_max_size')
-group by 
-dbparameters.PKEY,
-dbparameters.inst_id,
-hostdetails.host_name
+and TRIM(dbparameters.name) = 'sga_target'
 ) a
 group by 1
 ),
@@ -308,23 +304,23 @@ max(a.iombps_total_perc95) as iombps_total_perc95,
 max(a.iops_total_perc95) as iops_total_perc95
 FROM
 (
- SELECT -- Step 1 -find the SUM of IOPS and MBps by database for each hour
-  sysstat.pkey,
-  dbid,
-  hour,
-  ROUND((SUM(physical_read_total_bytes_perc95) + SUM(physical_write_total_bytes_perc95))/1024/1024,2) iombps_total_perc95,
-  SUM(physical_read_total_io_requests_perc95) + SUM(physical_write_total_io_req_perc95) iops_total_perc95,
+SELECT -- Step 1 -find the SUM of IOPS and MBps by database for each hour
+ sysstat.pkey,
+ dbid,
+ hour,
+ ROUND((SUM(physical_read_total_bytes_perc95) + SUM(physical_write_total_bytes_perc95))/1024/1024,2) iombps_total_perc95,
+ SUM(physical_read_total_io_requests_perc95) + SUM(physical_write_total_io_req_perc95) iops_total_perc95,
 FROM
-  projectID.dataset.vsysstat_columnar  as sysstat
-  JOIN projectID.dataset.vdbinstances as dbinstance
-  ON sysstat.PKEY = dbinstance.PKEY AND sysstat.instance_number = dbinstance.inst_id
+ projectID.dataset.vsysstat_columnar  as sysstat
+ JOIN projectID.dataset.vdbinstances as dbinstance
+ ON sysstat.PKEY = dbinstance.PKEY AND sysstat.instance_number = dbinstance.inst_id
 GROUP BY
-  sysstat.pkey,
-  dbid,
-  hour
-  order by pkey
-  ) a
-  group by 1
+ sysstat.pkey,
+ dbid,
+ hour
+ order by pkey
+ ) a
+ group by 1
 ),
 DBHostName as(
 select --Determine the host_names of the on-premises servers
@@ -332,16 +328,15 @@ DISTINCT sysstat.pkey,
 host_name
 from
 projectID.dataset.vsysstat_columnar  as sysstat
-  JOIN projectID.dataset.vdbinstances as dbinstance
-  ON sysstat.PKEY = dbinstance.PKEY AND sysstat.instance_number = dbinstance.inst_id
+ JOIN projectID.dataset.vdbinstances as dbinstance
+ ON sysstat.PKEY = dbinstance.PKEY AND sysstat.instance_number = dbinstance.inst_id
 ),
 DBHostJoin as(
 select  --Join the on-premises hosts to the databases
-DBIO.*,
-MIN(DBhostName.host_name) as host_name
+DBIO.*,dbinstance.host_name
 from DBIO
-inner join DBhostName using (PKEY)
-group by 1,2,3
+ JOIN projectID.dataset.vdbinstances as dbinstance using (pkey)
+ where dbinstance.INST_ID=1
 ),
 DBIOMissing AS
 (
@@ -356,9 +351,9 @@ FROM DBHostJoin
 DBIOFinalResults AS
 (
 SELECT --Sum the results of the RAC databases for each host
-     host_name,
-     sum(DBHostjoin.iombps_total_perc95) as iombps_total_perc95,
-     sum(DBHostjoin.iops_total_perc95) as iops_total_perc95,
+    host_name,
+    sum(DBHostjoin.iombps_total_perc95) as iombps_total_perc95,
+    sum(DBHostjoin.iops_total_perc95) as iops_total_perc95,
 FROM DBHostJoin
 group by 1
 UNION ALL
@@ -383,10 +378,10 @@ else CEIL(DBIOFinalResults.iombps_total_perc95/56)
 end as SSD_Storage_TB, --calcualte the SSD storage required
 CASE
 when DBIOFinalResults.iops_total_perc95 = 0 or DBIOFinalResults.iombps_total_perc95 = 0 then 0
-when DBIOFinalResults.iops_total_perc95 < 28800 and DBIOFinalResults.iombps_total_perc95 < 900 AND CEIL(StorageFinalResults.DB_size_TB) < 16 then 1
+when DBIOFinalResults.iops_total_perc95 < 28800 and DBIOFinalResults.iombps_total_perc95 < 900 AND CEIL(StorageFinalResults.DB_size_TB) <= 16 then 1
 when DBIOFinalResults.iops_total_perc95 < 28800 and DBIOFinalResults.iombps_total_perc95 < 900 AND CEIL(StorageFinalResults.DB_size_TB) > 16 then 1 + Trunc((StorageFinalResults.DB_size_TB)/16)
-when CEIL(DBIOFinalResults.iops_total_perc95/28800) > CEIL(DBIOFinalResults.iombps_total_perc95/900) AND CEIL(StorageFinalResults.DB_size_TB) < 16 then CEIL(DBIOFinalResults.iops_total_perc95/28800)
-when CEIL(DBIOFinalResults.iops_total_perc95/28800) < CEIL(DBIOFinalResults.iombps_total_perc95/900) AND CEIL(StorageFinalResults.DB_size_TB) < 16 then CEIL(DBIOFinalResults.iombps_total_perc95/900)
+when CEIL(DBIOFinalResults.iops_total_perc95/28800) > CEIL(DBIOFinalResults.iombps_total_perc95/900) AND CEIL(StorageFinalResults.DB_size_TB) <= 16 then CEIL(DBIOFinalResults.iops_total_perc95/28800)
+when CEIL(DBIOFinalResults.iops_total_perc95/28800) < CEIL(DBIOFinalResults.iombps_total_perc95/900) AND CEIL(StorageFinalResults.DB_size_TB) <= 16 then CEIL(DBIOFinalResults.iombps_total_perc95/900)
 when CEIL(DBIOFinalResults.iops_total_perc95/28800) > CEIL(DBIOFinalResults.iombps_total_perc95/900) AND CEIL(StorageFinalResults.DB_size_TB) > 16 then CEIL(DBIOFinalResults.iops_total_perc95/28800)
 when CEIL(DBIOFinalResults.iops_total_perc95/28800) < CEIL(DBIOFinalResults.iombps_total_perc95/900) AND CEIL(StorageFinalResults.DB_size_TB) > 16 then
 (CASE
@@ -427,8 +422,7 @@ WHEN (DBCPU.DB_CPU_CORES >=  8*.75  AND DBCPU.DB_CPU_CORES <16*.75) AND DBMEMORY
 WHEN (DBCPU.DB_CPU_CORES >=  8*.75  AND DBCPU.DB_CPU_CORES <16*.75) AND DBMEMORY.SGA_SIZE_GB  >= 384 and DBMEMORY.SGA_SIZE_GB < 768 THEN 'M'
 WHEN (DBCPU.DB_CPU_CORES >=  8*.75  AND DBCPU.DB_CPU_CORES <16*.75) AND DBMEMORY.SGA_SIZE_GB  >= 768 and DBMEMORY.SGA_SIZE_GB < 1536 THEN 'L'
 WHEN (DBCPU.DB_CPU_CORES >=  8*.75  AND DBCPU.DB_CPU_CORES <16*.75) AND DBMEMORY.SGA_SIZE_GB  >= 1536 and DBMEMORY.SGA_SIZE_GB < 3072 THEN 'XL'
-WHEN (DBCPU.DB_CPU_CORES >=  16*.75  AND DBCPU.DB_CPU_CORES < 24*.75) AND DBMEMORY.SGA_SIZE_GB < 768 THEN 'M' 
- 
+WHEN (DBCPU.DB_CPU_CORES >=  16*.75  AND DBCPU.DB_CPU_CORES < 24*.75) AND DBMEMORY.SGA_SIZE_GB < 768 THEN 'M'
 WHEN ((DBCPU.DB_CPU_CORES >=  16*.75  AND DBCPU.DB_CPU_CORES < 24*.75) AND (DBMEMORY.SGA_SIZE_GB  >= 768 AND DBMEMORY.SGA_SIZE_GB < 1536)) THEN 'L'
 WHEN ((DBCPU.DB_CPU_CORES >=  16*.75  AND DBCPU.DB_CPU_CORES < 24*.75) AND (DBMEMORY.SGA_SIZE_GB  >= 1536 AND DBMEMORY.SGA_SIZE_GB < 3072)) THEN 'XL'
 WHEN (DBCPU.DB_CPU_CORES >=  24*.75  AND DBCPU.DB_CPU_CORES < 56*.75) AND DBMEMORY.SGA_SIZE_GB < 1536 THEN 'L'
@@ -473,14 +467,16 @@ end as Total_BMS_Price_using_HT_Storage,
 cast(SSD_Storage_Price as numeric)+cast(BMS_Server_Price as numeric) Total_BMS_Price_using_SSD_Storage
 from DBPRICING
 )
-select *,
+ select *,
 CASE
 when  Finaltable.DB_size_TB > (CEIL(High_Throughput_per_4TB * 4)) AND Perferred_storage = 'HT'  then CEIL(finalTable.DB_size_TB - (High_Throughput_per_4TB * 4))
 else 0
 end as High_Throughput_Additional_TB
 from FinalTable
 order by 1;
-End;
+end;
+ 
+ 
  
  
 --Name: P_DS_BMS_sizing
@@ -684,8 +680,8 @@ call `projectID.dataset.P_DS_Database_Metrics`();
 Create or replace view `projectID.dataset.V_DS_dbsummary` as
 select a.*,
 CASE
-when a.DB_feature_usage = 'False' then 'Non-Exadata'
-when a.DB_feature_usage = 'True' then 'Exadata'
+when a.DB_feature_usage = 'False' or a.DB_feature_usage = 'FALSE'  then 'Non-Exadata'
+when a.DB_feature_usage = 'True' or a.DB_feature_usage = 'TRUE' then 'Exadata'
 else 'UNKOWN'
 end as Is_Exadata
 from
@@ -729,8 +725,52 @@ and features.name like '%Exadata%'
  
  
 --Name: V_DS_BMS_BOM
---Description: This view build the BMS BOM required for this Oracle workload
+--Description: This view builds the BMS BOM required for this Oracle workload using SSD storage only. 
 create or replace view `projectID.dataset.V_DS_BMS_BOM` as
+With bms_servers
+as
+(
+select bms_server_size,
+count(BMS_Server_size) as Count,
+from `projectID.dataset.T_DS_BMS_sizing` as BMSsizing
+group by BMS_Server_size
+),
+BOM
+as
+(select
+CASE
+when bms_server_size = 'XS' then '8 CORE 192 GB DRAM'
+when bms_server_size = 'S' then '16 CORE 384 GB DRAM'
+when bms_server_size = 'M' then '24 CORE 768 GB DRAM'
+when bms_server_size = 'L' then '56 CORE 1536 GB DRAM'
+when bms_server_size = 'XL' then '112 CORE 3072 GB DRAM'
+end as BMS_SKU,
+bms_servers.count
+from bms_servers
+),
+SSD_storage
+as
+(select
+sum(SSD_Storage_TB) as SSD_Storage_TB
+from  `projectID.dataset.T_DS_BMS_sizing` as BMSsizing
+),
+ 
+FinalTable
+as
+(
+select * from BOM
+union all
+select 'SSD Storage / TB',SSD_Storage_TB --total SSD required
+from SSD_storage
+union all
+select 'Network Interconnect Gbps', cast('1' as numeric)
+order by 1
+)
+select * from FinalTable;
+ 
+--Name: V_DS_BMS_BOM_HT
+--Description: This view builds the BMS BOM required for this Oracle workload using SSD and HT storage.  HT storage is chosen if its more cost effective then SSD
+create or replace view `projectID.dataset.V_DS_BMS_BOM_HT` as
 With bms_servers
 as
 (
@@ -781,7 +821,7 @@ as
 (
 select * from BOM
 union all
-select 'All SSD Storage / TB',SSD_Storage_TB
+select 'SSD Storage / TB',SSD_Storage_TB
 from SSD_storage
 union all
 select 'HT SSD Storage (Initial 4TB)', High_Throughput_per_4TB
@@ -789,6 +829,8 @@ from HT_storage
 union all
 select 'HT SSD Storage (Additional 1TB)', sum(High_Throughput_additional)
 from HT_storage_add
+union all
+select 'Network Interconnect Gbps', cast('1' as numeric)
 order by 1
 )
 select * from FinalTable;
@@ -868,12 +910,5 @@ WITH hostdetails AS
    select * from sourceSizing order by host_name;
  
 -- End of script
--------------------------------------------------------------------------------------
- 
- 
- 
- 
- 
---end of script
---------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------
 

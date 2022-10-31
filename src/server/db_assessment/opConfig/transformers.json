@@ -12450,7 +12450,7 @@
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
