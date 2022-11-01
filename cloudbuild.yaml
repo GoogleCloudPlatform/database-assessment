@@ -42,11 +42,11 @@ steps:
       ]
 
   - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-ci:latest"
-    entrypoint: python3
-    args: ["-m", "invoke", "pull-config"]
+    entrypoint: poetry
+    args: ["run", "invoke", "pull-config"]
   - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-ci:latest"
-    entrypoint: python3
-    args: ["-m", "invoke", "deploy", "--tag=$BUILD_ID"]
+    entrypoint: poetry
+    args: ["run", "invoke", "deploy", "--tag=$BUILD_ID"]
   - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-ci:latest"
-    entrypoint: python3
-    args: ["-m", "invoke", "test"]
+    entrypoint: poetry
+    args: ["run", "invoke", "test"]
