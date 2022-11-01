@@ -1,25 +1,26 @@
 timeout: "1800s"
 steps:
+  # Build the container image
   - name: "gcr.io/cloud-builders/docker"
     args:
       [
         "build",
         "-t",
-        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID",
-        ".",
+        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-build:$BUILD_ID",
+        "--build-arg",
+        "POETRY_INSTALL_ARGS=--with=docs,linting,test",
+        "--target",
+        "build-stage",
         "-f",
-        "deploy/docker/cloudbuild/Dockerfile",
+        "deploy/docker/api/Dockerfile",
+        ".",
       ]
   - name: "gcr.io/cloud-builders/docker"
     args:
       [
         "push",
-        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID",
+        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-build:$BUILD_ID",
       ]
-  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
-    entrypoint: python3
-    args: ["-m", "pip", "install", "-U", "wheel", "setuptools", "pip", "--user"]
-  # Build the container image
   - name: "gcr.io/cloud-builders/docker"
     args:
       [
@@ -37,17 +38,27 @@ steps:
         "push",
         "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-api:$BUILD_ID",
       ]
-  # Deploy container image to Cloud Run
-
-  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
-    entrypoint: bash
-    args: ["-c", "make", "install"]
-  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
+  # Build the cloud run image with the gcloud cli included
+  - name: "gcr.io/cloud-builders/docker"
+    args:
+      [
+        "build",
+        "-t",
+        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-ci:$BUILD_ID",
+        "--build-arg",
+        "BUILD_ID=$BUILD_ID",
+        "--build-arg",
+        "POETRY_INSTALL_ARGS=--with=docs,linting,test",
+        ".",
+        "-f",
+        "deploy/docker/cloudbuild/Dockerfile",
+      ]
+  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-ci:$BUILD_ID"
     entrypoint: python3
     args: ["-m", "invoke", "pull-config"]
-  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
+  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-ci:$BUILD_ID"
     entrypoint: python3
     args: ["-m", "invoke", "deploy", "--tag=$BUILD_ID"]
-  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
+  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-ci:$BUILD_ID"
     entrypoint: python3
     args: ["-m", "invoke", "test"]

@@ -62,6 +62,7 @@ COPY pyproject.toml poetry.lock README.md mkdocs.yml mypy.ini .flake8 .pre-commi
 copy sample ./sample
 COPY docs ./docs/
 COPY scripts ./scripts
+COPY tasks.py ./
 COPY src/server ./src/server
 RUN python -m venv --copies /workspace/venv
 RUN . /workspace/venv/bin/activate \

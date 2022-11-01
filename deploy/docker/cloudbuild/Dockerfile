@@ -1,7 +1,8 @@
 FROM docker:20.10.12 as static-docker-source
 
-
-FROM python:3.10-slim
+ARG BUILD_ID=latest
+ENV BUILD_ID=$BUILD_ID
+FROM us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-build
 ARG CLOUD_SDK_VERSION=402.0.0
 ENV CLOUD_SDK_VERSION=$CLOUD_SDK_VERSION
 ENV PATH /google-cloud-sdk/bin:$PATH
