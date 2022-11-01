@@ -6,7 +6,7 @@ steps:
       [
         "build",
         "-t",
-        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-build:$BUILD_ID",
+        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-build:latest",
         "--build-arg",
         "POETRY_INSTALL_ARGS=--with=docs,linting,test",
         "--target",
@@ -19,7 +19,7 @@ steps:
     args:
       [
         "push",
-        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-build:$BUILD_ID",
+        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-build:latest",
       ]
   - name: "gcr.io/cloud-builders/docker"
     args:
