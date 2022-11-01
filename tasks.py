@@ -1,3 +1,4 @@
+# type: ignore
 import json
 import logging
 from typing import Final
@@ -7,14 +8,16 @@ from invoke.tasks import task
 
 logger = logging.getLogger()
 
+PROJECT: Final = "optimus-prime-ci"
+
 
 @task
-def build(ctx, tag="latest"):
+def build(ctx, tag="latest") -> None:
     ctx.run(f"docker build . -t {ctx.image}:{tag}")
 
 
 @task
-def run(ctx, tag="latest"):
+def run(ctx, tag="latest") -> None:
     local_cred_file = "${HOME}/.config/gcloud/application_default_credentials.json"  # pylint: disable=[line-too-long]
     docker_cred_file = "/tmp/creds/creds.json"
     cmd = f"docker run -e FLASK_ENV=development -e GOOGLE_APPLICATION_CREDENTIALS={docker_cred_file} -v {local_cred_file}:{docker_cred_file} -p 8080:8080 {ctx.image}:{tag}"  # pylint: disable=[line-too-long]
@@ -22,19 +25,19 @@ def run(ctx, tag="latest"):
 
 
 @task
-def push(ctx, tag="latest"):
+def push(ctx, tag="latest") -> None:
     ctx.run(f"docker push {ctx.image}:{tag}")
 
 
 @task
-def test(ctx, base_url=None, local=False):
+def test(ctx, base_url=None, local=False) -> None:
     with ctx.cd("sample/datacollection"):
         ctx.run(f"tar -xvf {ctx.test_file}")
     if not base_url:
         base_url = get_beta_url(ctx)
     logger.info(base_url)
     id_token = authenticate(ctx, local)
-    cmd = f"python3 -m db_assessment.optimusprime --remote --files-location sample/datacollection --dataset {ctx.dataset} --project {ctx.project} --collection-id {ctx.collection_id} --remote-url {base_url}"
+    cmd = f"python3 -m db_assessment.optimusprime --remote --files-location sample/datacollection --dataset {ctx.dataset} --project {ctx.project} --collection-id {ctx.collection_id} --remote-url {base_url}"  # pylint: disable=[line-too-long]
     logger.info(cmd)
     ctx.run(cmd, env={"ID_TOKEN": id_token})
 
@@ -42,7 +45,7 @@ def test(ctx, base_url=None, local=False):
 @task
 def deploy(ctx, tag="latest"):
     ctx.run(
-        f"gcloud run deploy {ctx.service} --image {ctx.image}:{tag} --region {ctx.region} --project {ctx.project} --no-traffic --tag beta"
+        f"gcloud run deploy {ctx.service} --image {ctx.image}:{tag} --region {ctx.region} --project {ctx.project} --no-traffic --tag beta"  # pylint: disable=[line-too-long]
     )
 
 
@@ -79,9 +82,9 @@ def authenticate(ctx, local=False):
     if local:
         token_cmd = ctx.run("gcloud auth print-identity-token", hide=True)
         return token_cmd.stdout.replace("\n", "")
-    METADATA_SERVER_URL: Final = "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes=https://www.googleapis.com/auth/iam"
-    METADATA_REQUEST_HEADERS: Final = {"Metadata-Flavor": "Google"}
-    ID_TOKEN_URL: Final = (
+    METADATA_SERVER_URL: Final = "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes=https://www.googleapis.com/auth/iam"  # pylint: disable=[line-too-long, invalid-name]
+    METADATA_REQUEST_HEADERS: Final = {"Metadata-Flavor": "Google"}  # pylint: disable=[invalid-name]
+    ID_TOKEN_URL: Final = (  # pylint: disable=[invalid-name]
         f"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{ctx.invoker_sa}:generateIdToken"
     )
 
@@ -98,20 +101,16 @@ def authenticate(ctx, local=False):
         data=json.dumps({"audience": ctx.api_audience, "includeEmail": True}),
         timeout=10,
     )
-    print(identity_token_resp)
     identity_token = identity_token_resp.json()["token"]
     logger.info("Got identity token")
     return identity_token
 
 
-PROJECT = "optimus-prime-ci"
-
-
 @task
-def pull_config(ctx):
+def pull_config(ctx) -> None:
     ctx.run("gcloud secrets versions access latest " f'--secret="op-api-config" --project {PROJECT} > invoke.yml')
 
 
 @task
-def push_config(ctx):
+def push_config(ctx) -> None:
     ctx.run("gcloud secrets versions add op-api-config " f"--data-file=invoke.yml --project {PROJECT}")

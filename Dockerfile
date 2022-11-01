@@ -37,7 +37,7 @@ ENV POETRY_HOME="/opt/poetry" \
     PROTOC_VERSION="3.14.0" \
     BAZEL_VERSION="5.1.1" \
     GRPC_PYTHON_BUILD_WITH_CYTHON=1 \ 
-    PATH=/google-cloud-sdk/bin:$PATH
+    PATH="/workspace/venv/bin:/google-cloud-sdk/bin:$PATH"
 
 RUN apt-get install -y --no-install-recommends curl git build-essential g++ unzip ca-certificates libaio1 libaio-dev ninja-build make gnupg cmake gcc libssl-dev wget zip maven unixodbc-dev libssl-dev libcurl4-gnutls-dev libexpat1-dev gettext checkinstall libffi-dev libz-dev \
     && apt-get autoremove -y \
