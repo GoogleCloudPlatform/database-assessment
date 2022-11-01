@@ -74,6 +74,7 @@ RUN . /workspace/venv/bin/activate \
 FROM python:${PYTHON_BUILDER_IMAGE} as run-image
 ENV PATH /workspace/venv/bin:$PATH
 # switch to a non-root user for security
+WORKDIR /workspace/app
 RUN addgroup --system --gid 1001 "app-user" \
     && adduser --no-create-home --system --uid 1001 "app-user" \
     && chown -R "app-user":"app-user" /workspace
