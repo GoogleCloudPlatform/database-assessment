@@ -41,7 +41,7 @@ steps:
 
   - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
     entrypoint: bash
-    args: ["make", "install"]
+    args: ["-c", "make", "install"]
   - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
     entrypoint: python3
     args: ["-m", "invoke", "pull-config"]
