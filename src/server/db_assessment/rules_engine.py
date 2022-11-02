@@ -322,9 +322,7 @@ def run_rules(
                                 view_sql_query = transformer_rules[rule_item]["action_details"]["expr1"]
                                 view_sql_query = "".join(view_sql_query)
 
-                                import_db_assessment.createOptimusPrimeViewsTransformers(
-                                    gcpProjectName, bq_dataset, view_name, view_sql_query
-                                )
+                                import_db_assessment.create_views(gcpProjectName, bq_dataset, view_name, view_sql_query)
 
                     else:
                         logger.warning(
@@ -933,7 +931,7 @@ def get_reshaped_dataframe(df, transformer_parameters):
 
 
 def getNewNamesFromMultiColumns(newNamesMapping, multiIndex, convertColumns):
-    # Function to change the column names for a multi index / hirerarrical columns dataframe based on a hash table with from/to names
+    # Function to change the column names for a multi index / hierarchical columns dataframe based on a hash table with from/to names
     # Example of multiIndex:
     # MultiIndex([('PERC90',                       'Average Active Sessions'),
     #            ('PERC90', 'Average Synchronous Single-Block Read Latency'),
@@ -947,7 +945,7 @@ def getNewNamesFromMultiColumns(newNamesMapping, multiIndex, convertColumns):
     # Turning a tuple into a list in order to be changed
     multiIndex = list(multiIndex)
 
-    # Converted list from hirerarrical columns
+    # Converted list from hierarchical columns
     normalizedColumnsList = []
 
     # Variable to be used in the return accordingly with parameter convertColumns
@@ -971,25 +969,25 @@ def getNewNamesFromMultiColumns(newNamesMapping, multiIndex, convertColumns):
             normalizedColumnsList.append(str(tempList[1]) + "_" + str(multiIndex[index][0]))
 
         else:
-            # Nothing to do related to changing the column names and we use the current dataframe column names to create a non hirerarrical columns
+            # Nothing to do related to changing the column names and we use the current dataframe column names to create a non hierarchical columns
 
             # if str(multiIndex[index][1]) != '':
-            # str(multiIndex[index][1]) == '' then the column used to be index for the dataframe and therefore not part of the hirerarrical columns structure
+            # str(multiIndex[index][1]) == '' then the column used to be index for the dataframe and therefore not part of the hierarchical columns structure
 
-            # Creates the normalized dataframe column names. For columns that are hirerarrical
+            # Creates the normalized dataframe column names. For columns that are hierarchical
             normalizedColumnsList.append(str(multiIndex[index][1]) + "_" + str(multiIndex[index][0]))
             # else:
-            # Creates the normalized dataframe column names. For columns that are NON hirerarrical (Used to be dataframe index)
+            # Creates the normalized dataframe column names. For columns that are NON hierarchical (Used to be dataframe index)
             # normalizedColumnsList.append(str(multiIndex[index][0]))
 
     # Processing conversion of columns
     if convertColumns:
-        # If convering from hirerarrical columns to non hirerarrical
+        # If converting from hierarchical columns to non hierarchical
 
         resultColumns = normalizedColumnsList
 
     else:
-        # if keeping it hirerarrical columns
+        # if keeping it hierarchical columns
 
         # Retuning a tuple again
         resultColumns = tuple(multiIndex)

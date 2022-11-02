@@ -88,6 +88,7 @@
     "LOADDATE",
     "LOADTOBQDATE",
     "machinesizes",
+    "opalldb",
     "opdb",
     "opdbt",
     "operrors",

@@ -28,6 +28,7 @@ import pandas as pd
 
 from db_assessment import import_db_assessment, rules_engine
 from db_assessment.remote import run_remote
+from db_assessment.version import __version__
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -69,8 +70,6 @@ def run_main(args: "AppConfig") -> None:
     run_parameters: Dict[str, Any] = run_config["parameters"]
     schema_config: Dict[str, Any] = run_config["table_schemas"]
 
-    table_schema = None
-
     # For all cases in which those attributes are <> None it means
     #  the user wants to import data to Big Query
     # No need to further messaging for mandatory options because
@@ -86,6 +85,10 @@ def run_main(args: "AppConfig") -> None:
         # This is broken needs to be fixed in upcoming versions
         if args.consolidate_logs:
             # It is True if no fatal errors were found
+            table_schema: dict[str, Any] = {}
+            for _, val in schema_config[__version__].items():
+                table_schema.update(val)
+                break  # break after fetching the first
             import_db_assessment.consolidate_collection(
                 args,
                 table_schema,
@@ -142,14 +145,15 @@ def run_main(args: "AppConfig") -> None:
             )
             sys.exit()
 
-        sql_versions = {f.split("__")[2].split("_")[1] for f in file_list}
-        if len(sql_versions) > 1:
-            logger.fatal(
-                "Importing multiple SQL versions is not supported. "
-                "Please use flag --filter-by-sql-version to filter SQL versions, "
-                "For example: --filter-by-sql-version 2.0.3"
-            )
-            sys.exit()
+        if not args.consolidate_logs:
+            sql_versions = {f.split("__")[2].split("_")[1] for f in file_list}
+            if len(sql_versions) > 1:
+                logger.fatal(
+                    "Importing multiple SQL versions is not supported. "
+                    "Please use flag --filter-by-sql-version to filter SQL versions, "
+                    "For example: --filter-by-sql-version 2.0.3"
+                )
+                sys.exit()
 
         # Getting file pattern for find config files in the OS to be imported
         csvFilesLocationPatternOPConfig = f"{str(BASE_DIR)}/opConfig/*.csv"
@@ -166,10 +170,11 @@ def run_main(args: "AppConfig") -> None:
             run_parameters["db_version"] = str(args.db_version)
         elif len(collectionKey.split("_")) >= 3 and args.db_version is None:  # bug #23. Changed == to >=.
             run_parameters["db_version"] = import_db_assessment.get_obj_name_from_files(collectionKey, "_", 0)
+        elif args.consolidate_logs:
+            run_parameters["db_version"] = "all"
         else:
             logger.fatal(
-                "FATAL ERROR: Please use --db-version and --collection-version."
-                " (i.e --db-version 122 --collection-version 2.0.3)"
+                "Please use --db-version and --collection-version." " (i.e --db-version 122 --collection-version 2.0.3)"
             )
             sys.exit()
 
@@ -231,7 +236,7 @@ def run_main(args: "AppConfig") -> None:
                     "WARNING: The database %s will not be deleted "
                     "because the option --project-name is omitted. "
                     "Please try again either "
-                    "providing --project-name OR removing -delete_dataset.",
+                    "providing --project-name OR removing --delete-dataset.",
                     args.delete_dataset,
                 )
                 sys.exit()
@@ -355,7 +360,7 @@ def run_main(args: "AppConfig") -> None:
                 args,
                 import_results,
             )
-            # Import all Optimus Prime CSV configutation
+            # Import all Optimus Prime CSV configuration
             _, import_results = import_db_assessment.import_all_csvs_to_bq(
                 gcpProjectName,
                 bqDataset,
@@ -453,7 +458,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--collection-version",
         type=str,
-        default="0.0.0",
+        default=__version__,
         help="script collection version used",
     )
 
