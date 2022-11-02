@@ -34,8 +34,7 @@
         "${workspaceFolder}/sample/datacollection",
         "--sep",
         "|",
-        "--delete-dataset",
-        "--consolidate-logs"
+        "--delete-dataset"
       ],
       "envFile": "${workspaceFolder}/.env",
       "justMyCode": true,

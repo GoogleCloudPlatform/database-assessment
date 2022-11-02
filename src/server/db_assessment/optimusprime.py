@@ -29,8 +29,8 @@ import pandas as pd
 from db_assessment import import_db_assessment, rules_engine
 from db_assessment.remote import run_remote
 
-logger = logging.getLogger()
-logger.setLevel(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 if TYPE_CHECKING:
     from .api import AppConfig
@@ -142,11 +142,14 @@ def run_main(args: "AppConfig") -> None:
             )
             sys.exit()
 
-        sql_versions = set(f.split("__")[2].split("_")[1] for f in file_list)
+        sql_versions = {f.split("__")[2].split("_")[1] for f in file_list}
         if len(sql_versions) > 1:
-            sys.exit(
-                '\nERROR:  Importing multiple SQL versions is not supported. Please use flag --filter-by-sql-version to filter SQL versions, For example: --filter-by-sql-version 2.0.3"\n'
+            logger.fatal(
+                "Importing multiple SQL versions is not supported. "
+                "Please use flag --filter-by-sql-version to filter SQL versions, "
+                "For example: --filter-by-sql-version 2.0.3"
             )
+            sys.exit()
 
         # Getting file pattern for find config files in the OS to be imported
         csvFilesLocationPatternOPConfig = f"{str(BASE_DIR)}/opConfig/*.csv"
@@ -188,7 +191,7 @@ def run_main(args: "AppConfig") -> None:
                 args.sep = ","
         except Exception as e:
             logger.warning("non-fatal exception occurred: %s", e.args)
-        logger.info("Source Database Version: %s: {}\n", run_parameters["db_version"])
+        logger.info("Source Database Version: %s", run_parameters["db_version"])
 
         logger.info(
             "Source Database Version: %s Collection Script Version: %s",
@@ -288,12 +291,7 @@ def run_main(args: "AppConfig") -> None:
 
         # STEP: Run rules engine
 
-        (
-            transformerParameterResults,
-            transformersRulesVariables,
-            file_list,
-            dbAssessmentDataframes,
-        ) = rules_engine.run_rules(
+        (_, _, file_list, dbAssessmentDataframes,) = rules_engine.run_rules(
             "1",
             rules,
             dbAssessmentDataframes,
@@ -310,45 +308,44 @@ def run_main(args: "AppConfig") -> None:
 
         # STEP: Import ALL data to Big Query
         # Local Variable store to avoid Global parameters
-        importresults = pd.DataFrame()
+        import_results = pd.DataFrame()
 
         # Eliminating duplicated entries from transformers.json processing
         file_list = list(set(file_list))
         if len(invalidfiles) > 0:
-            print("Below are Invalid Files \n")
-            [print(key, ":", value) for key, value in invalidfiles.items()]
+            logger.info("Invalid files: %s", {f"{key}:{value}" for key, value in invalidfiles.items()})
             file_list = [file for file in file_list if file not in invalidfiles.keys()]
             ## Insert Invalid Files to BQ
             if "OPKEYLOG" in dbAssessmentDataframes.keys():
                 op_df = dbAssessmentDataframes["OPKEYLOG"]
                 import_db_assessment.insert_errors(invalidfiles, op_df, gcpProjectName, bqDataset)
-                importresults = import_db_assessment.populate_summary(
+                import_results = import_db_assessment.populate_summary(
                     "notabname",
                     "nodataframe",
                     "yes",
                     invalidfiles,
                     "invalidfiles",
                     -1,
-                    importresults,
+                    import_results,
                     args,
                 )
 
         if args.from_dataframe:
 
-            (sucessImported, tablesImported, importresults,) = import_db_assessment.importAllDataframeToBQ(
+            (_, _, import_results,) = import_db_assessment.import_all_df_to_bq(
                 args,
                 gcpProjectName,
                 bqDataset,
                 table_schema,
                 dbAssessmentDataframes,
                 run_parameters,
-                importresults,
+                import_results,
             )
 
         else:
 
             # Import the CSV data found in the OS
-            sucessImported, importresults = import_db_assessment.import_all_csvs_to_bq(
+            _, import_results = import_db_assessment.import_all_csvs_to_bq(
                 gcpProjectName,
                 bqDataset,
                 file_list,
@@ -356,10 +353,10 @@ def run_main(args: "AppConfig") -> None:
                 2,
                 run_parameters,
                 args,
-                importresults,
+                import_results,
             )
             # Import all Optimus Prime CSV configutation
-            sucessImported, importresults = import_db_assessment.import_all_csvs_to_bq(
+            _, import_results = import_db_assessment.import_all_csvs_to_bq(
                 gcpProjectName,
                 bqDataset,
                 fileListOPConfig,
@@ -367,15 +364,10 @@ def run_main(args: "AppConfig") -> None:
                 1,
                 run_parameters,
                 args,
-                importresults,
+                import_results,
             )
 
-        (
-            transformerParameterResults,
-            transformersRulesVariables,
-            file_list,
-            dbAssessmentDataframes,
-        ) = rules_engine.run_rules(
+        (_, _, file_list, dbAssessmentDataframes,) = rules_engine.run_rules(
             "2",
             rules,
             dbAssessmentDataframes,
@@ -394,11 +386,10 @@ def run_main(args: "AppConfig") -> None:
         import_db_assessment.createOptimusPrimeViewsFromOS(gcpProjectName, bqDataset)
 
         # Call BT for import summary table
-        import_db_assessment.print_results(importresults)
-        print("\n\n Thank YOU for using Optimus Prime!\n\n")
+        import_db_assessment.print_results(import_results)
 
 
-def parse_arguments():
+def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments"""
     # function to handle all arguments to be used in cli mode
     # for this code and enforces mandatory options
@@ -440,7 +431,8 @@ def parse_arguments():
         help="location of transformers.json file with all parameters and rules",
     )
 
-    # Optimus collection ID is the number in the final part of the generated CSV files. For example: dbResults/opdb_dbfeatures_ol79-orcl-db02.ORCLCDB.ORCLCDB.180603.csv. Collection ID is: 180603
+    # Optimus collection ID is the number in the final part of the generated CSV files.
+    # For example: dbResults/opdb_dbfeatures_ol79-orcl-db02.ORCLCDB.ORCLCDB.180603.csv. Collection ID is: 180603
     parser.add_argument(
         "--collection-id",
         type=str,
@@ -488,7 +480,8 @@ def parse_arguments():
         "--load-type",
         type=str,
         default="WRITE_APPEND",
-        help="Choose the BQ Load Type. Options are: WRITE_TRUNCATE, WRITE_APPEND and WRITE_EMPTY. The WRITE_APPEND is the default option.",
+        help="Choose the BQ Load Type. "
+        "Options are: WRITE_TRUNCATE, WRITE_APPEND and WRITE_EMPTY. The WRITE_APPEND is the default option.",
     )
 
     parser.add_argument(
@@ -578,9 +571,8 @@ def parse_arguments():
     return args
 
 
-def main():
+def main() -> None:
     args = parse_arguments()
-
     if args.remote:
         run_remote(args)
     else:

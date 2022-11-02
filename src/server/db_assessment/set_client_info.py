@@ -18,8 +18,14 @@ from google.api_core import client_info as http_client_info
 from db_assessment.version import __version__
 
 APPLICATION_NAME = "google-pso-tool/optimus-prime-db-assessment"
-USER_AGENT = "{}/{}".format(APPLICATION_NAME, __version__)
+USER_AGENT = f"{APPLICATION_NAME}/{__version__}"
 
 
-def get_http_client_info():
+def get_http_client_info() -> http_client_info.ClientInfo:
+    """Get HTTP Client Info
+
+    Returns:
+        http_client_info.ClientInfo: _description_
+    """
+
     return http_client_info.ClientInfo(user_agent=USER_AGENT)
