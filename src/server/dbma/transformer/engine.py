@@ -26,6 +26,7 @@ from dbma import log, storage, utils
 from dbma.__version__ import __version__ as version
 from dbma.config import settings
 from dbma.transformer import manager, schemas
+from dbma.transformer.loaders import CSVTransformer
 
 if TYPE_CHECKING:
     from duckdb import DuckDBPyConnection
@@ -49,13 +50,13 @@ def stage_collection_data(collections_to_process: "list[schemas.Collection]") ->
         FileNotFoundError: _description_
     """
 
-    # for collection in collections_to_process:
-    #     for file_type in collection.files.__fields__:
-    #         file_path = getattr(collection.files, file_type)
-    #         if file_path and file_path.stat().st_size > 0:
-    #             csv = CSVTransformer(file_path=file_path, delimiter=collection.files.delimiter, schema_type=file_type)
-    #             csv.to_parquet(settings.collections_path)
-    #     logger.info("converted all files to parquet for collection %s", collection.collection_id)
+    for collection in collections_to_process:
+        for file_type in collection.files.__fields__:
+            file_path = getattr(collection.files, file_type)
+            if file_path and file_path.stat().st_size > 0:
+                csv = CSVTransformer(file_path=file_path, delimiter=collection.files.delimiter, schema_type=file_type)
+                csv.to_parquet(settings.collections_path)
+        logger.info("converted all files to parquet for collection %s", collection.collection_id)
 
     for collection in collections_to_process:
         collection.queries.execute_pre_processing_scripts()
