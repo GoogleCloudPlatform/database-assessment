@@ -1,4 +1,3 @@
-# type: ignore
 import json
 import logging
 from typing import Final
@@ -12,12 +11,12 @@ PROJECT: Final = "optimus-prime-ci"
 
 
 @task
-def build(ctx, tag="latest") -> None:
+def build(ctx, tag="latest"):
     ctx.run(f"docker build . -t {ctx.image}:{tag}")
 
 
 @task
-def run(ctx, tag="latest") -> None:
+def run(ctx, tag="latest"):
     local_cred_file = "${HOME}/.config/gcloud/application_default_credentials.json"  # pylint: disable=[line-too-long]
     docker_cred_file = "/tmp/creds/creds.json"
     cmd = f"docker run -e FLASK_ENV=development -e GOOGLE_APPLICATION_CREDENTIALS={docker_cred_file} -v {local_cred_file}:{docker_cred_file} -p 8080:8080 {ctx.image}:{tag}"  # pylint: disable=[line-too-long]
@@ -25,12 +24,12 @@ def run(ctx, tag="latest") -> None:
 
 
 @task
-def push(ctx, tag="latest") -> None:
+def push(ctx, tag="latest"):
     ctx.run(f"docker push {ctx.image}:{tag}")
 
 
 @task
-def test(ctx, base_url=None, local=False) -> None:
+def test(ctx, base_url=None, local=False):
     with ctx.cd("sample/datacollection"):
         ctx.run(f"tar -xvf {ctx.test_file}")
     if not base_url:
@@ -87,7 +86,6 @@ def authenticate(ctx, local=False):
     ID_TOKEN_URL: Final = (  # pylint: disable=[invalid-name]
         f"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{ctx.invoker_sa}:generateIdToken"
     )
-
     # Get the access token for the Cloud build account
     access_token_request = requests.get(METADATA_SERVER_URL, headers=METADATA_REQUEST_HEADERS, timeout=10)
     access_token = access_token_request.json()["access_token"]
@@ -107,10 +105,10 @@ def authenticate(ctx, local=False):
 
 
 @task
-def pull_config(ctx) -> None:
+def pull_config(ctx):
     ctx.run("gcloud secrets versions access latest " f'--secret="op-api-config" --project {PROJECT} > invoke.yml')
 
 
 @task
-def push_config(ctx) -> None:
+def push_config(ctx):
     ctx.run("gcloud secrets versions add op-api-config " f"--data-file=invoke.yml --project {PROJECT}")

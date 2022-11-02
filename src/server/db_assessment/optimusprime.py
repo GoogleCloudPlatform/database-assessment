@@ -76,15 +76,6 @@ def run_main(args: "AppConfig") -> None:
     # No need to further messaging for mandatory options because
     #  this is being done in argumentsParser function
     if args.dataset is not None and args.collection_id is not None:
-
-        # This is broken needs to be fixed in upcoming versions
-        if args.consolidate_logs:
-            # It is True if no fatal errors were found
-            import_db_assessment.consolidate_collection(
-                args,
-                table_schema,
-            )
-
         # STEP 1: Import customer database assessment data
 
         # Optimus Prime Search Pattern to find the target
@@ -92,6 +83,14 @@ def run_main(args: "AppConfig") -> None:
         # The default location will be dbResults if not overwritten
         # by the argument --files-location
         file_search_pattern = f"{args.files_location}/*{args.collection_id.replace(' ', '')}.csv"
+        # This is broken needs to be fixed in upcoming versions
+        if args.consolidate_logs:
+            # It is True if no fatal errors were found
+            import_db_assessment.consolidate_collection(
+                args,
+                table_schema,
+            )
+            file_search_pattern = f"{args.files_location}/*consolidated.csv"
 
         # Append files_location if there are filter_by_sql_version
         # and/or filter_by_db_version flag
@@ -143,8 +142,8 @@ def run_main(args: "AppConfig") -> None:
             )
             sys.exit()
 
-        sqlversionslist = set([f.split("__")[2].split("_")[1] for f in file_list])
-        if len(sqlversionslist) > 1:
+        sql_versions = set(f.split("__")[2].split("_")[1] for f in file_list)
+        if len(sql_versions) > 1:
             sys.exit(
                 '\nERROR:  Importing multiple SQL versions is not supported. Please use flag --filter-by-sql-version to filter SQL versions, For example: --filter-by-sql-version 2.0.3"\n'
             )
@@ -558,19 +557,22 @@ def parse_arguments():
 
         # In case there is not dataset parameter set or with valid content in the arguments
         if args.dataset is None or args.dataset == "":
-            sys.exit("\nERROR: The parameter -dataset cannot be omitted and it must have a valid name.\n")
+            logger.fatal("The parameter --dataset cannot be omitted and it must have a valid name.")
+            sys.exit()
 
         # In case project name/project id is not provided
         elif args.project_name is None:
-            print(
-                "\nWARNING: Google Cloud project name not provided. Optimus Prime will try to get it automatically from Google Big Query API call.\n"
+            logger.info(
+                "Google Cloud project name not provided.  "
+                "Will try to get it automatically from Google Big Query API call."
             )
 
         # In case optimus collection id is omitted
         elif args.collection_id is None:
-            sys.exit(
-                "\nERROR: The parameter -collectionid cannot be omitted. Please provide the collection id from CSV files.\n"
+            logger.fatal(
+                "The parameter --collection-id cannot be omitted. Please provide the collection id from CSV files."
             )
+            sys.exit()
 
     # Returns a namespace object with all arguments and its values
     return args

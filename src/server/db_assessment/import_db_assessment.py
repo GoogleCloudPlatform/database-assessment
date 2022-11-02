@@ -18,6 +18,7 @@ import glob
 import logging
 import os
 import re
+from typing import TYPE_CHECKING
 
 import pandas as pd
 from beautifultable import BeautifulTable
@@ -26,6 +27,9 @@ from google.cloud import bigquery
 
 from db_assessment import rules_engine, set_client_info
 
+if TYPE_CHECKING:
+    from .api import AppConfig
+
 ct = datetime.datetime.now()
 
 
@@ -33,24 +37,25 @@ logger = logging.getLogger()
 logger.setLevel(level=logging.INFO)
 
 
-def consolidate_collection(args, transformersTablesSchema):
-
-    # This function intents to consolidate the collected files into a single large file to facilitate importing the data to Big Query
+def consolidate_collection(args: "AppConfig", transformersTablesSchema):
+    """Consolidated Files into a Single Combined Set of CSVs"""
+    # This function intents to consolidate the collected files
+    # into a single large file to facilitate importing the data to Big Query
 
     # Creating Hash Table with all expected tableName schemas to be imported
-    tableSchemas = {}
-    tableSchemas = get_bq_job_config(transformersTablesSchema, "REGULAR")
+    table_schemas = {}
+    table_schemas = get_bq_job_config(transformersTablesSchema, "REGULAR")
 
     # Counting all processed files
     fileCounter = 0
 
     # For all expected tables we will look for related OS files. So, we will process all files related to a given expected tableName, then move to the next
-    for tableName in tableSchemas:
+    for tableName in table_schemas:
 
         fileCounter = fileCounter + 1
 
         # Using the expected tableName to look for files in the OS in the directory passed in --files-location (default dbResults)
-        csvFilesLocationPattern = str(getattr(args, "files_location")) + "/opdb*" + str(tableName) + "*.csv"
+        csvFilesLocationPattern = f"{args.files_location}/opdb*{str(tableName)}*.csv"
 
         # Generating a list with all found OS filenames
         fileList = list_files(csvFilesLocationPattern)
@@ -226,11 +231,11 @@ def createOptimusPrimeViewsFromOS(gcpProjectName, bqDataset):
         return True
 
 
-def list_files(filePattern):
+def list_files(pattern: str) -> list:
     # This function intends to get the name of all files in the OS and return a list of strings
 
     # Get all matching files and creates a list returning it
-    return glob.glob(filePattern)
+    return glob.glob(pattern)
 
 
 def importAllDataframeToBQ(
@@ -593,13 +598,14 @@ def importCSVToBQ(
         try:
             load_job = client.load_table_from_file(source_file, table_id, job_config=job_config)
         except Exception as e:
-            print(
-                '\n FAILED: Optimus Prime could not import the filename "{}" into "{}" because of the error "{}".\n'.format(
-                    file_name, table_id, e
-                )
+            logger.error(
+                'Optimus Prime could not import the filename "%s" into "%s" because of the error "%s"',
+                file_name,
+                table_id,
+                e,
             )
 
-            print("   Table Schema = {}".format(schema))
+            logger.error("... Table Schema = %s", schema)
 
             import_results = populate_summary(
                 table_name,
@@ -617,10 +623,11 @@ def importCSVToBQ(
     try:
         load_job.result()  # Waits for the job to complete.
     except Exception as e:
-        print(
-            '\n FAILED: Optimus Prime could not import the filename "{}" into "{}" because of the error "{}".\n'.format(
-                file_name, table_id, e
-            )
+        logger.error(
+            'Optimus Prime could not import the filename "%s" into "%s" because of the error "%s".',
+            file_name,
+            table_id,
+            e,
         )
         import_results = populate_summary(
             table_name,
@@ -674,7 +681,7 @@ def get_obj_name_from_files(file_name, splitter_char, pos):
     return None
 
 
-def get_bq_job_config(table_schemas, job_type):
+def get_bq_job_config(table_schemas, job_type) -> dict:
 
     bq_tables_job_config = {}
 

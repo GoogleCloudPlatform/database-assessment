@@ -29,7 +29,7 @@ python = ">=3.8,<3.11"
 duckdb = "*"
 duckdb-engine = "*"
 aiosql = "*"
-pydantic = {version="*", extras=["dotenv","typing_extensions","email"]}
+pydantic = {version=">=1.9.0", extras=["dotenv","typing_extensions","email"]}
 typer = "*"
 sqlalchemy = "*"
 sqlalchemy-bigquery = "*"
@@ -53,7 +53,7 @@ universal_pathlib = "*"
 beautifultable ="*"
 requests = "*"
 invoke = "*"
-# functions-framework = ">=3.2.0"
+functions-framework = "^3.2.0"
 
 [tool.poetry.group.dev.dependencies]
 bump2version = "*"
