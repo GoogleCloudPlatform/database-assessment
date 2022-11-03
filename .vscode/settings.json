@@ -52,6 +52,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "cSpell.words": [
+    "archlogs",
     "astype",
     "awrhistcmdtypes",
     "awrhistosstat",
@@ -122,5 +123,8 @@
   "python.linting.banditEnabled": true,
   "python.linting.banditArgs": ["-r", "-c", "pyproject.toml"],
   "python.linting.mypyEnabled": true,
-  "mypy.runUsingActiveInterpreter": true
+  "mypy.runUsingActiveInterpreter": true,
+  "[toml]": {
+    "editor.defaultFormatter": "be5invis.toml"
+  }
 }

@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from importlib.machinery import SourceFileLoader
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, Final
+from typing import TYPE_CHECKING, Any, Dict, Final, Union
 
 import pandas as pd
 
@@ -64,7 +64,7 @@ class RunConfig:
     table_schemas = Dict[str, Any]
 
 
-def run_main(args: "AppConfig") -> None:
+def run_main(args: Union["AppConfig", "argparse.Namespace"]) -> None:
     """Main program"""
     run_config: Dict[str, Any] = rules_engine.load_from_config(args.config_path)
     rules: Dict[str, Any] = run_config["rules"]
@@ -225,13 +225,13 @@ def run_main(args: "AppConfig") -> None:
             sys.exit()
 
         # Import the CSV files into Big Query
-        gcpProjectName = args.project_name
-        bqDataset = str(args.dataset)
+        project_name = args.project_name
+        bq_dataset = str(args.dataset)
 
         # Delete the dataset before importing new data
         if args.delete_dataset:
             if args.project_name is not None:
-                import_db_assessment.delete_dataset(bqDataset, gcpProjectName)
+                import_db_assessment.delete_dataset(bq_dataset, project_name)
             else:
                 logger.fatal(
                     "WARNING: The database %s will not be deleted "
@@ -243,7 +243,7 @@ def run_main(args: "AppConfig") -> None:
                 sys.exit()
 
         # Create the dataset to import the CSV data
-        import_db_assessment.create_dataset(bqDataset, gcpProjectName)
+        import_db_assessment.create_dataset(bq_dataset, project_name)
 
         # STEP: Processing parameters
         # which create internal variables(run_parameters)
@@ -303,8 +303,8 @@ def run_main(args: "AppConfig") -> None:
             file_list,
             executed_rules,
             run_parameters,
-            gcpProjectName,
-            bqDataset,
+            project_name,
+            bq_dataset,
         )
 
         # STEP: Import ALL data to Big Query
@@ -319,7 +319,7 @@ def run_main(args: "AppConfig") -> None:
             # # Insert Invalid Files to BQ
             if "OPKEYLOG" in db_assessment_dataframes:
                 op_df = db_assessment_dataframes["OPKEYLOG"]
-                import_db_assessment.insert_errors(invalid_files, op_df, gcpProjectName, bqDataset)
+                import_db_assessment.insert_errors(invalid_files, op_df, project_name, bq_dataset)
                 import_results = import_db_assessment.populate_summary(
                     "notabname",
                     "nodataframe",
@@ -335,8 +335,8 @@ def run_main(args: "AppConfig") -> None:
 
             (_, _, import_results,) = import_db_assessment.import_all_df_to_bq(
                 args,
-                gcpProjectName,
-                bqDataset,
+                project_name,
+                bq_dataset,
                 table_schema,
                 db_assessment_dataframes,
                 run_parameters,
@@ -347,8 +347,8 @@ def run_main(args: "AppConfig") -> None:
 
             # Import the CSV data found in the OS
             _, import_results = import_db_assessment.import_all_csvs_to_bq(
-                gcpProjectName,
-                bqDataset,
+                project_name,
+                bq_dataset,
                 file_list,
                 table_schema,
                 2,
@@ -358,8 +358,8 @@ def run_main(args: "AppConfig") -> None:
             )
             # Import all Optimus Prime CSV configuration
             _, import_results = import_db_assessment.import_all_csvs_to_bq(
-                gcpProjectName,
-                bqDataset,
+                project_name,
+                bq_dataset,
                 files_list,
                 table_schema,
                 1,
@@ -379,12 +379,12 @@ def run_main(args: "AppConfig") -> None:
             file_list,
             executed_rules,
             run_parameters,
-            gcpProjectName,
-            bqDataset,
+            project_name,
+            bq_dataset,
         )
 
         # Create Optimus Prime Views
-        import_db_assessment.create_views_from_os(gcpProjectName, bqDataset)
+        import_db_assessment.create_views_from_os(project_name, bq_dataset)
 
         # Call BT for import summary table
         import_db_assessment.print_results(import_results)

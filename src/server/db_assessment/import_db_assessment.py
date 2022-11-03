@@ -36,6 +36,26 @@ ct = datetime.datetime.now()
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
 
+__all__ = [
+    "consolidate_collection",
+    "create_views",
+    "create_views_from_os",
+    "list_files",
+    "import_all_df_to_bq",
+    "import_dataframe_to_bq",
+    "add_details",
+    "import_all_csvs_to_bq",
+    "import_csv_to_bq",
+    "get_table_ref",
+    "get_obj_name_from_files",
+    "create_dataset",
+    "get_bq_job_config",
+    "create_dataset",
+    "delete_dataset",
+    "insert_errors",
+    "print_results",
+]
+
 
 def consolidate_collection(args: "AppConfig", table_schemas) -> bool:
     """Consolidated Files into a Single Combined Set of CSVs"""
@@ -489,25 +509,41 @@ def add_details(file_name, args, params, table_header) -> None:
 def import_all_csvs_to_bq(
     gcp_project_name,
     bq_dataset,
-    fileList,
-    transformersTablesSchema,
+    file_list,
+    table_schema,
     skip_leading_rows,
-    transformersParameters,
+    transformer_params,
     args,
     import_results,
 ):
-    # This function receives a list of files to import to Big Query, then it calls importCSVToBQ to import table/file by table/file
+    """_summary_
+
+    Args:
+        gcp_project_name (_type_): _description_
+        bq_dataset (_type_): _description_
+        file_list (_type_): _description_
+        table_schema (_type_): _description_
+        skip_leading_rows (_type_): _description_
+        transformer_params (_type_): _description_
+        args (_type_): _description_
+        import_results (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    # This function receives a list of files to import to Big Query,
+    # then it calls importCSVToBQ to import table/file by table/file
 
     logger.info("Preparing to upload CSV files")
 
     # Creating Hash Table with all expected table schemas to be imported
     table_schemas = {}
-    table_schemas = get_bq_job_config(transformersTablesSchema, "REGULAR")
+    table_schemas = get_bq_job_config(table_schema, "REGULAR")
 
-    fileList.sort()
+    file_list.sort()
 
     # Getting the name of the target table_name to import the data based on the filename from OS
-    for file_name in fileList:
+    for file_name in file_list:
 
         # Default Big Query Job Configurations for Optimus Prime CSV files
         auto_detect = "True"
@@ -515,15 +551,14 @@ def import_all_csvs_to_bq(
         # Final table name from the CSV file names
         table_name = get_obj_name_from_files(file_name, "__", 1)
 
-        import_exclude_list = [table.strip().lower() for table in transformersParameters["do_not_import"]]
+        import_exclude_list = [table.strip().lower() for table in transformer_params["do_not_import"]]
 
         if str(table_name).lower() == "opkeylog":
             # #skipLeadingRows=1
             table_header = [
-                header.upper()
-                for header in rules_engine.get_headers_from_config(str(table_name).lower(), transformersTablesSchema)
+                header.upper() for header in rules_engine.get_headers_from_config(str(table_name).lower(), table_schema)
             ]
-            add_details(file_name, args, transformersParameters, table_header)
+            add_details(file_name, args, transformer_params, table_header)
 
         if table_name.lower() not in import_exclude_list:
 
@@ -564,6 +599,22 @@ def import_csv_to_bq(
     args,
     import_results,
 ):
+    """_summary_
+
+    Args:
+        gcp_project_name (_type_): _description_
+        bq_dataset (_type_): _description_
+        table_name (_type_): _description_
+        file_name (_type_): _description_
+        skip_leading_rows (_type_): _description_
+        auto_detect (_type_): _description_
+        table_schemas (_type_): _description_
+        args (_type_): _description_
+        import_results (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     # This function will import the CSV file into the Big Query using the proper project.dataset.tablename
     # A Big Query Job is created for it
 

@@ -1,23 +1,23 @@
 [tool.poetry]
-authors = ["Eri Santos <erisantos@google.com>","Cody Fincher <codyfincher@google.com>"]
-maintainers = ["Cody Fincher <codyfincher@google.com>"]
-description =  "A tool to enable collection of data from Oracle databases for homogeneous and heterogeneous database migration assessment"
-license = "Apache"
-name = "db-migration-advisor"
-readme = "README.md"
-homepage = "https://github.com/GoogleCloudPlatform/oracle-database-assessment"
-repository = "https://github.com/GoogleCloudPlatform/oracle-database-assessment"
-documentation = "https://github.com/GoogleCloudPlatform/oracle-database-assessment"
-keywords = ["db_assessment","gcp","google","databases","cloud"]
+authors = ["Eri Santos <erisantos@google.com>", "Cody Fincher <codyfincher@google.com>"]
 classifiers = [
-        "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Operating System :: OS Independent",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Operating System :: OS Independent",
 ]
-packages = [{include = "db_assessment", from = "src/server"},{include = "dbma", from = "src/server"}]
+description = "A tool to enable collection of data from Oracle databases for homogeneous and heterogeneous database migration assessment"
+documentation = "https://github.com/GoogleCloudPlatform/oracle-database-assessment"
+homepage = "https://github.com/GoogleCloudPlatform/oracle-database-assessment"
+keywords = ["db_assessment", "gcp", "google", "databases", "cloud"]
+license = "Apache"
+maintainers = ["Cody Fincher <codyfincher@google.com>"]
+name = "db-migration-advisor"
+packages = [{include = "db_assessment", from = "src/server"}, {include = "dbma", from = "src/server"}]
+readme = "README.md"
+repository = "https://github.com/GoogleCloudPlatform/oracle-database-assessment"
 version = "3.0.8"
 
 [tool.poetry.scripts]
@@ -25,49 +25,49 @@ dbma = "dbma.__main__:main"
 optimus-prime = "db_assessment.optimusprime:main"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+aiosql = "*"
+beautifultable = "*"
 duckdb = "*"
 duckdb-engine = "*"
-aiosql = "*"
-pydantic = {version=">=1.9.0", extras=["dotenv","typing_extensions","email"]}
-typer = "*"
-sqlalchemy = "*"
-sqlalchemy-bigquery = "*"
-rich = "*"
-protobuf = ">=4.0.0"
-orjson = "*"
-httpx = "*"
-google-api-core ="*"
+flask = "*"
+fsspec = ">=2022.8.2"
+functions-framework = ">=3.2.0"
+gcsfs = ">=2022.8.2"
+google-api-core = "*"
 google-cloud-bigquery = ">=1.28.0"
 google-cloud-secret-manager = "*"
-google-resumable-media = ">=2.0.0"
 google-cloud-storage = "*"
-numpy ="*"
-pandas ="*"
-pyarrow ="*"
-flask ="*"
-gunicorn ="*"
-gcsfs = ">=2022.8.2"
-fsspec = ">=2022.8.2"
-universal_pathlib = "*"
-beautifultable ="*"
-requests = "*"
+google-resumable-media = ">=2.0.0"
+gunicorn = "*"
+httpx = "*"
 invoke = "*"
-functions-framework = "^3.2.0"
+numpy = "*"
+orjson = "*"
+pandas = "*"
+protobuf = ">=4.0.0"
+pyarrow = "*"
+pydantic = {version = ">=1.9.0", extras = ["dotenv", "typing_extensions", "email"]}
+python = ">=3.8,<3.11"
+requests = "*"
+rich = "*"
+sqlalchemy = {version = ">=1.4.42", allow-prereleases = true}
+sqlalchemy-bigquery = {git = "https://github.com/googleapis/python-bigquery-sqlalchemy.git", branch = "version-fix"}
+typer = "*"
+universal_pathlib = "*"
 
 [tool.poetry.group.dev.dependencies]
 bump2version = "*"
 coverage = {extras = ["toml"], version = "*"}
 cython = "*"
+invoke = "*"
+ipykernel = "*"
+ipython = "*"
+ipython-sql = "*"
+notebook = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-dotenv = "*"
 pytest-mock = "*"
-invoke = "*"
-ipython-sql = "*"
-ipython = "*"
-ipykernel = "*"
-notebook = "*"
 
 [tool.poetry.group.docs]
 optional = true
@@ -78,19 +78,14 @@ mkdocs-material = "*"
 mkdocstrings = "*"
 mkdocstrings-python = "*"
 
-
 [tool.poetry.group.linting]
 optional = true
 
 [tool.poetry.group.linting.dependencies]
-pre-commit = "*"
-isort = "*"
-pylint = "*"
-mypy = "*"
-types-click = "*"
-types-freezegun = "*"
-types-pyyaml = "*"
-types-requests = "*"
+autoflake = "*"
+bandit = "*"
+black = "*"
+blacken-docs = "*"
 flake8 = "*"
 flake8-bugbear = "*"
 flake8-comprehensions = "*"
@@ -99,14 +94,18 @@ flake8-print = "*"
 flake8-simplify = "*"
 flake8-type-checking = "*"
 freezegun = "*"
-pyupgrade = "*"
-autoflake = "*"
-bandit = "*"
-black = "*"
-slotscheck = "*"
-blacken-docs = "*"
+isort = "*"
+mypy = "*"
 pandas-stubs = "*"
+pre-commit = "*"
+pylint = "*"
+pyupgrade = "*"
+slotscheck = "*"
 sqlalchemy2-stubs = "*"
+types-click = "*"
+types-freezegun = "*"
+types-pyyaml = "*"
+types-requests = "*"
 
 [build-system]
 build-backend = "poetry.core.masonry.api"
@@ -136,9 +135,9 @@ line-length = 120
 line_length = 119
 multi_line_output = 3
 profile = "black"
-skip = [ ".venv"]
+skip = [".venv"]
 skip_gitignore = true
-src_paths = ["src/server" ]
+src_paths = ["src/server"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -151,7 +150,7 @@ show_missing = true
 [tool.coverage.run]
 omit = [
   "tests/server/*",
- ]
+]
 
 [tool.pytest.ini_options]
 addopts = "--cov=opdba -v --doctest-modules --doctest-glob=*.md --ignore=gunicorn.conf.py --ignore=alembic"

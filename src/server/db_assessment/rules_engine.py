@@ -933,6 +933,20 @@ def create_csv_from_dataframe(
     table_name,
     fix_dataframe_columns,
 ):
+    """_summary_
+
+    Args:
+        df (_type_): _description_
+        transformers_parameters (_type_): _description_
+        args (_type_): _description_
+        file_name (_type_): _description_
+        table_schema (_type_): _description_
+        table_name (_type_): _description_
+        fix_dataframe_columns (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     if transformers_parameters["store"] in ("CSV_ONLY", "BIGQUERY"):
 

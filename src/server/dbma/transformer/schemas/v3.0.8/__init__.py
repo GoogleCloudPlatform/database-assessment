@@ -67,5 +67,6 @@ class CollectionFiles(_CollectionFiles):
     db_constraint_summary: Path = Field(..., alias="tablesnopk")
     db_used_space_details: Path = Field(..., alias="usedspacedetails")
     db_user_tablespace_segments: Path = Field(..., alias="usrsegatt")
+    db_archive_logs: Path = Field(..., alias="archlogs")
     # key_log: Optional[Path] = Field(..., alias="opkeylog")
     _delimiter = "|"

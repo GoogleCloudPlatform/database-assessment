@@ -31,7 +31,7 @@ mapper = [
         config=CollectionConfig(
             delimiter="|",
             collection_files_schema=v4xx.CollectionFiles,
-            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v4xx" / "sql")),
+            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v4.0.0" / "sql")),
         ),
     ),
     CollectionVersionConfig(
@@ -40,7 +40,7 @@ mapper = [
         config=CollectionConfig(
             delimiter="|",
             collection_files_schema=v38x.CollectionFiles,
-            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v38x" / "sql")),
+            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v3.0.8" / "sql")),
         ),
     ),
     CollectionVersionConfig(
@@ -49,7 +49,7 @@ mapper = [
         config=CollectionConfig(
             delimiter="|",
             collection_files_schema=v3xx.CollectionFiles,
-            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v3xx" / "sql")),
+            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v2.0.6" / "sql")),
         ),
     ),
     CollectionVersionConfig(
@@ -58,7 +58,7 @@ mapper = [
         config=CollectionConfig(
             delimiter=",",
             collection_files_schema=v2xx.CollectionFiles,
-            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v2xx" / "sql")),
+            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v0.0.0" / "sql")),
         ),
     ),
 ]
