@@ -14,6 +14,7 @@
 
 
 # Messages handling
+
 import logging
 import os
 from typing import TYPE_CHECKING, Optional
@@ -25,8 +26,7 @@ import requests
 from db_assessment import import_db_assessment
 
 if TYPE_CHECKING:
-    from db_assessment.api import AppConfig
-
+    from argparse import Namespace
 logger = logging.getLogger()
 logger.setLevel(level=logging.INFO)
 
@@ -38,7 +38,7 @@ def get_id_token() -> Optional[str]:
     return credentials.id_token
 
 
-def run_remote(args: "AppConfig") -> None:
+def run_remote(args: "Namespace") -> None:
     """Run remote execution"""
     id_token = os.getenv("ID_TOKEN") or get_id_token()
     headers = {"Authorization": f"Bearer {id_token}"}

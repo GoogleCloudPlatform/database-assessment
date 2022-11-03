@@ -1,3 +1,4 @@
+# type: ignore[no-untyped-def] # pylint: disable=[broad-except,eval-used,unused-arg]
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,24 +60,43 @@ def run_rules(
     single_rule,
     args: "AppConfig",
     collection_key,
-    transformersTablesSchema,
-    fileList,
-    rulesAlreadyExecuted,
-    transformersParameters,
-    gcpProjectName,
+    transformers_table_schema,
+    file_list,
+    executed_rules,
+    transformers_parameters,
+    project_name,
     bq_dataset,
 ):
+    """_summary_
+
+    Args:
+        execution_group (_type_): _description_
+        transformer_rules (_type_): _description_
+        dataframes (_type_): _description_
+        single_rule (_type_): _description_
+        args (AppConfig): _description_
+        collection_key (_type_): _description_
+        transformers_table_schema (_type_): _description_
+        file_list (_type_): _description_
+        executed_rules (_type_): _description_
+        transformers_parameters (_type_): _description_
+        project_name (_type_): _description_
+        bq_dataset (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     # Variable to keep track of rules executed and its results and status
-    transformerResults = {}
+    transformer_results = {}
     # Variable to keep track and make available all the variables from the JSON file
-    transformersRulesVariables = {}
+    rules_vars = {}
 
     # Standardize Statuses
     # Executed
-    EXECUTED_STATUS = "EXECUTED"
-    FAILED_STATUS = "FAILED"
-    SKIPPED_STATUS = "SKIPPED"
+    EXECUTED_STATUS = "EXECUTED"  # pylint: disable=[invalid-name]
+    FAILED_STATUS = "FAILED"  # pylint: disable=[invalid-name]
+    SKIPPED_STATUS = "SKIPPED"  # pylint: disable=[invalid-name]
 
     if single_rule:
         # If parameter is set then we will run only 1 rule
@@ -96,17 +116,17 @@ def run_rules(
 
             if str(transformer_rules[rule_item]["execution_group"]).upper() == str(execution_group).upper():
 
-                if int(str(transformersParameters["db_version"]).replace(".", "")[:3]) in range(
+                if int(str(transformers_parameters["db_version"]).replace(".", "")[:3]) in range(
                     int(str(transformer_rules[rule_item]["min_db_version"]).replace(".", "")[:3]),
                     int(str(transformer_rules[rule_item]["max_db_version"]).replace(".", "")[:3]) + 1,
                 ):
 
-                    if int(str(transformersParameters["collection_version"]).replace(".", "")[:3]) in range(
+                    if int(str(transformers_parameters["collection_version"]).replace(".", "")[:3]) in range(
                         int(str(transformer_rules[rule_item]["min_sql_script_version"]).replace(".", "")[:3]),
                         int(str(transformer_rules[rule_item]["max_sql_script_version"]).replace(".", "")[:3]) + 1,
                     ):
 
-                        if rule_item not in rulesAlreadyExecuted:
+                        if rule_item not in executed_rules:
 
                             logger.info(
                                 'Processing rule  "%s"  with priority %s',
@@ -121,23 +141,21 @@ def run_rules(
                                 # transformers.json asking to create a variable which is a dictionary
 
                                 try:
-                                    transformerResults[rule_item] = {
+                                    transformer_results[rule_item] = {
                                         "Status": EXECUTED_STATUS,
                                         "Result Value": coerce_data_type(transformer_rules[rule_item]),
                                     }
-                                    transformersRulesVariables[
+                                    rules_vars[
                                         transformer_rules[rule_item]["action_details"]["varname"]
-                                    ] = transformerResults[rule_item]["Result Value"]
+                                    ] = transformer_results[rule_item]["Result Value"]
 
                                 except Exception:  # pylint: disable=[broad-except]
                                     # In case of any issue the rule will be marked as FAILEDSTATUS
-                                    transformerResults[rule_item] = {
+                                    transformer_results[rule_item] = {
                                         "Status": FAILED_STATUS,
                                         "Result Value": None,
                                     }
-                                    transformersRulesVariables[
-                                        transformer_rules[rule_item]["action_details"]["varname"]
-                                    ] = None
+                                    rules_vars[transformer_rules[rule_item]["action_details"]["varname"]] = None
 
                             elif (
                                 str(transformer_rules[rule_item]["action_details"]["type"]).upper()
@@ -145,30 +163,31 @@ def run_rules(
                                 and str(transformer_rules[rule_item]["action_details"]["action"]).upper()
                                 == "ADD_OR_UPDATE_COLUMN"
                             ):
-                                # transformers.json asking to add a column that is type number meaning it can be a calculation and the column to be added is NUMBER too
+                                # transformers.json asking to add a column that is type number
+                                # meaning it can be a calculation and the column to be added is NUMBER too
 
                                 # Where the result of expr1 will be saved initially
-                                dfTargetName = transformer_rules[rule_item]["action_details"]["dataframe_name"]
-                                columnTargetName = transformer_rules[rule_item]["action_details"]["column_name"]
+                                df_target_name = transformer_rules[rule_item]["action_details"]["dataframe_name"]
+                                column_target_name = transformer_rules[rule_item]["action_details"]["column_name"]
                                 rule_condition = True
 
                                 try:
-                                    ruleConditionString = str(
+                                    rule_condition_string = str(
                                         transformer_rules[rule_item]["action_details"]["ifcondition1"]
                                     )
                                 except KeyError:
-                                    ruleConditionString = None
+                                    rule_condition_string = None
 
                                 # In case ifcondition1 (transformers.json) is set for the rule
-                                if ruleConditionString is not None and ruleConditionString != "":
+                                if rule_condition_string is not None and rule_condition_string != "":
 
                                     try:
-                                        rule_condition = eval(ruleConditionString)
+                                        rule_condition = eval(rule_condition_string)
                                         logger.info("ruleCondition = %s", rule_condition)
                                     except Exception:  # pylint: disable=[broad-except]
                                         logger.warning(
-                                            'Error processing ifcondition1 "%s" for rule "%s". So, this rule will be skipped',
-                                            ruleConditionString,
+                                            'Error processing ifcondition1 "%s" for rule "%s". So, this rule will be skipped',  # pylint: disable=[line-too-long]
+                                            rule_condition_string,
                                             rule_item,
                                         )
 
@@ -176,21 +195,21 @@ def run_rules(
 
                                 if not rule_condition:
                                     logger.warning(
-                                        'This rule "%s" will be skipped because of "ifcondition1" from transformers.json is FALSE.',
+                                        'This rule "%s" will be skipped because of "ifcondition1" from transformers.json is FALSE.',  # pylint: disable=[line-too-long]
                                         rule_item,
                                     )
                                     continue
 
                                 try:
-                                    dataframes[str(dfTargetName).upper()][
-                                        str(columnTargetName).upper()
-                                    ] = execStringExpression(str_expression, if_error_expression, dataframes)
-                                    df = dataframes[str(dfTargetName).upper()]
+                                    dataframes[str(df_target_name).upper()].loc[
+                                        str(column_target_name).upper()
+                                    ] = exec_string_expr(str_expression, if_error_expression, dataframes)
+                                    df = dataframes[str(df_target_name).upper()]
                                 except KeyError:
                                     logger.warning(
-                                        'The rule "%s" could not be executed because the variable "%s" used in the transformers.json could not be found.',
+                                        'The rule "%s" could not be executed because the variable "%s" used in the transformers.json could not be found.',  # pylint: disable=[line-too-long]
                                         rule_item,
-                                        str(dfTargetName).upper(),
+                                        str(df_target_name).upper(),
                                     )
                                     continue
 
@@ -205,12 +224,12 @@ def run_rules(
                                     + collection_key
                                 )
 
-                                (csv_created, transformersTablesSchema,) = create_csv_from_dataframe(
+                                (csv_created, transformers_table_schema,) = create_csv_from_dataframe(
                                     df,
                                     transformer_rules[rule_item]["action_details"],
                                     args,
                                     file_name,
-                                    transformersTablesSchema,
+                                    transformers_table_schema,
                                     new_table_name,
                                     False,
                                 )
@@ -219,8 +238,9 @@ def run_rules(
                                 dataframes[str(new_table_name).upper()] = df
 
                                 if csv_created:
-                                    # If CSV creation was successfully then we will add this to the list of files to be imported
-                                    fileList.append(file_name)
+                                    # If CSV creation was successfully
+                                    # then we will add this to the list of files to be imported
+                                    file_list.append(file_name)
 
                             elif (
                                 str(transformer_rules[rule_item]["action_details"]["type"]).upper() == "FREESTYLE"
@@ -229,11 +249,11 @@ def run_rules(
                             ):
                                 #
 
-                                df = execStringExpression(str_expression, if_error_expression, dataframes)
+                                df = exec_string_expr(str_expression, if_error_expression, dataframes)
 
                                 if df is None:
                                     logger.warning(
-                                        'The rule "%s" could not be executed because the expression "%s" used in the transformers.json could not be executed.',
+                                        'The rule "%s" could not be executed because the expression "%s" used in the transformers.json could not be executed.',  # pylint: disable=[line-too-long]
                                         rule_item,
                                         str_expression,
                                     )
@@ -250,12 +270,12 @@ def run_rules(
                                     + collection_key
                                 )
 
-                                (csv_created, transformersTablesSchema,) = create_csv_from_dataframe(
+                                (csv_created, transformers_table_schema,) = create_csv_from_dataframe(
                                     df,
                                     transformer_rules[rule_item]["action_details"],
                                     args,
                                     file_name,
-                                    transformersTablesSchema,
+                                    transformers_table_schema,
                                     new_table_name,
                                     False,
                                 )
@@ -266,8 +286,9 @@ def run_rules(
                                 ] = df
 
                                 if csv_created:
-                                    # If CSV creation was successfully then we will add this to the list of files to be imported
-                                    fileList.append(file_name)
+                                    # If CSV creation was successfully
+                                    # then we will add this to the list of files to be imported
+                                    file_list.append(file_name)
 
                             elif (
                                 str(transformer_rules[rule_item]["action_details"]["type"]).upper() == "FREESTYLE"
@@ -278,7 +299,7 @@ def run_rules(
                                     eval(str_expression)
                                 except KeyError:
                                     logger.warning(
-                                        'The rule "%s" could not be executed because the expression "%s" used in the transformers.json could not be executed.',
+                                        'The rule "%s" could not be executed because the expression "%s" used in the transformers.json could not be executed.',  # pylint: disable=[line-too-long]
                                         rule_item,
                                         str_expression,
                                     )
@@ -295,12 +316,12 @@ def run_rules(
                                     + collection_key
                                 )
 
-                                (csv_created, transformersTablesSchema,) = create_csv_from_dataframe(
+                                (csv_created, transformers_table_schema,) = create_csv_from_dataframe(
                                     df,
                                     transformer_rules[rule_item]["action_details"],
                                     args,
                                     file_name,
-                                    transformersTablesSchema,
+                                    transformers_table_schema,
                                     new_table_name,
                                     False,
                                 )
@@ -310,7 +331,7 @@ def run_rules(
 
                                 if csv_created:
                                     # If CSV creation was successfully then add this to the list of files to be imported
-                                    fileList.append(file_name)
+                                    file_list.append(file_name)
 
                             elif (
                                 str(transformer_rules[rule_item]["action_details"]["type"]).upper() == "CREATE VIEW"
@@ -322,52 +343,62 @@ def run_rules(
                                 view_sql_query = transformer_rules[rule_item]["action_details"]["expr1"]
                                 view_sql_query = "".join(view_sql_query)
 
-                                import_db_assessment.create_views(gcpProjectName, bq_dataset, view_name, view_sql_query)
+                                import_db_assessment.create_views(project_name, bq_dataset, view_name, view_sql_query)
 
                     else:
-                        logger.warning(
-                            'The rule "%s" is being skipped because of the Optimus Prime SQL Version is %s and not eligible for this rule based on transformers.json configuration file',
+                        logger.debug(
+                            'The rule "%s" is being skipped because of the Optimus Prime SQL Version is %s and not eligible for this rule based on transformers.json configuration file',  # pylint: disable=[line-too-long]
                             rule_item,
-                            str(transformersParameters["collection_version"]).replace(".", "")[:3],
+                            str(transformers_parameters["collection_version"]).replace(".", "")[:3],
                         )
 
-                        transformerResults[rule_item] = {
+                        transformer_results[rule_item] = {
                             "Status": SKIPPED_STATUS,
                             "Result Value": "Due to Optimus Prime SQL Version configuration on transformers.json",
                         }
 
                 else:
-                    logger.warning(
-                        'The rule "%s" is being skipped because the Database Version is %s and not eligible for this rule based on transformers.json configuration file',
+                    logger.debug(
+                        'The rule "%s" is being skipped because the Database Version is %s and not eligible for this rule based on transformers.json configuration file',  # pylint: disable=[line-too-long]
                         rule_item,
-                        str(transformersParameters["db_version"]).replace(".", "")[:3],
+                        str(transformers_parameters["db_version"]).replace(".", "")[:3],
                     )
 
-                    transformerResults[rule_item] = {
+                    transformer_results[rule_item] = {
                         "Status": SKIPPED_STATUS,
                         "Result Value": "Due to the Database Version configuration on transformers.json",
                     }
             else:
-                transformerResults[rule_item] = {
+                transformer_results[rule_item] = {
                     "Status": SKIPPED_STATUS,
                     "Result Value": "Due to the EXECUTION GROUP configuration on transformers.json",
                 }
 
         else:
-            logger.warning(
+            logger.debug(
                 'The rule "%s" is being skipped because it is DISABLED in transformers.json configuration file',
                 rule_item,
             )
 
-            transformerResults[rule_item] = {
+            transformer_results[rule_item] = {
                 "Status": SKIPPED_STATUS,
                 "Result Value": "Due to the STATUS configuration on transformers.json",
             }
 
-    return transformerResults, transformersRulesVariables, fileList, dataframes
+    return transformer_results, rules_vars, file_list, dataframes
 
 
-def execStringExpression(str_expression, if_error_expression, dataframes):
+def exec_string_expr(str_expression, if_error_expression, dataframes):
+    """_summary_
+
+    Args:
+        str_expression (_type_): _description_
+        if_error_expression (_type_): _description_
+        dataframes (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     try:
         res = eval(str_expression)
@@ -380,21 +411,25 @@ def execStringExpression(str_expression, if_error_expression, dataframes):
     return res
 
 
-def get_rule_expression(ruleExpr):
-    # Function to get a clean string to be executed in eval function. The input is a string with many components separated by ; coming from transformers.json
+def get_rule_expression(rule_expr) -> str:
+    """_summary_
 
-    ruleComponents = []
-    ruleComponents = str(ruleExpr).split(";")
+    Args:
+        rule_expr (_type_): _description_
 
-    finalExpression = ""
+    Returns:
+        str: _description_
+    """
+    # Function to get a clean string to be executed in eval function.
+    # The input is a string with many components separated by ; coming from transformers.json
 
-    for ruleItem in ruleComponents:
+    rule_components = str(rule_expr).split(";")
 
-        ruleItem = ruleItem.strip()
+    final_expr = ""
+    for rule_item in rule_components:
+        final_expr = f"{final_expr}{rule_item.strip()} "
 
-        finalExpression = str(finalExpression) + str(ruleItem) + " "
-
-    return finalExpression
+    return final_expr
 
 
 def load_from_config(config_path: str):
@@ -411,8 +446,8 @@ def parse_data(
 ):
     """Read CSV files from OS and turn it into a dataframe"""
 
-    paramCleanDFHeaders = False
-    paramGetHeadersFromConfig = True
+    param_clean_df_headers = False
+    param_get_headers_from_config = True
 
     # Configuration files always will be ,
     if "opConfig" in csv_filename:
@@ -422,14 +457,13 @@ def parse_data(
 
     try:
 
-        if paramGetHeadersFromConfig:
+        if param_get_headers_from_config:
 
             if table_schema.get(table_name):
 
                 try:
 
                     table_headers = [header.upper() for header in get_headers_from_config(table_name, table_schema)]
-                    # df = pd.read_csv(csvFileName, skiprows=skipRows+1, header=None, names=tableHeaders, keep_default_na=False, na_filter= False)
                     df = pd.read_csv(
                         csv_filename,
                         skiprows=skip_rows + 1,
@@ -449,7 +483,7 @@ def parse_data(
                         table_name,
                         table_headers,
                     )
-                    paramCleanDFHeaders = True
+                    param_clean_df_headers = True
                     # df = pd.read_csv(csvFileName, skiprows=skipRows, keep_default_na=False, na_filter= False)
                     df = pd.read_csv(
                         csv_filename,
@@ -476,27 +510,36 @@ def parse_data(
         df.reset_index(drop=True, inplace=True)
 
         # In case we need to clean some headers from dataframe
-        if paramCleanDFHeaders:
+        if param_clean_df_headers:
             column_list = clean_csv_headers(df.columns.values.tolist()).split(",")
             df.columns = [column.strip() for column in column_list]
 
     except Exception:
-        logger.warning("The filename {} is most likely empty.".format(csv_filename))
+        logger.warning("The filename %s is most likely empty.", csv_filename)
         return False
 
     return df
 
 
-def get_headers_from_config(tableName, transformersTablesSchema):
+def get_headers_from_config(table_name, transformer_tables_schema):
+    """_summary_
 
-    tableConfig = transformersTablesSchema.get(tableName)
+    Args:
+        table_name (_type_): _description_
+        transformer_tables_schema (_type_): _description_
 
-    tableHeaders = [header[0] for header in tableConfig]
+    Returns:
+        _type_: _description_
+    """
 
-    return tableHeaders
+    table_config = transformer_tables_schema.get(table_name)
+
+    headers = [header[0] for header in table_config]
+
+    return headers
 
 
-def getAllDataFrames(
+def get_all_dataframes(
     file_list,
     skip_rows,
     collection_key,
@@ -507,7 +550,23 @@ def getAllDataFrames(
     invalid_files,
     skip_validations,
 ):
-    # Fuction to read from CSVs and store the data into a dataframe. The dataframe is placed then into a Hash Table.
+    """_summary_
+
+    Args:
+        file_list (_type_): _description_
+        skip_rows (_type_): _description_
+        collection_key (_type_): _description_
+        args (AppConfig): _description_
+        transformers_table_schema (_type_): _description_
+        db_assessment_dataframes (_type_): _description_
+        transformer_parameters (_type_): _description_
+        invalid_files (_type_): _description_
+        skip_validations (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    # Function to read from CSVs and store the data into a dataframe. The dataframe is placed then into a Hash Table.
     # This function returns a dictionary with dataframes from CSVs
 
     # Hash table to store dataframes after being loaded from CSVs
@@ -516,12 +575,16 @@ def getAllDataFrames(
     file_list.sort()
     for file_name in file_list:
 
-        # Verifying if the file is a file that came from the SQL Script or is this is a result of a previous execution from transformers.json in which a file had been saved. I.E: Reshaped Dataframes
+        # Verifying if the file is a file that came from the SQL Script
+        # or is this is a result of a previous execution from transformers.json
+        # in which a file had been saved. I.E: Reshaped Dataframes
         collection_type = import_db_assessment.get_obj_name_from_files(str(file_name), "__", 0)
         collection_type = collection_type.split("/")[-1]
 
         if collection_type == "opdbt":
-            # This file is not from SQL Script. Meaning this is a file generated by Optimus Prime in a prior execution. Skipping CSV files that are result of a previous transformation execution
+            # This file is not from SQL Script.
+            # Meaning this is a file generated by Optimus Prime in a prior execution.
+            # Skipping CSV files that are result of a previous transformation execution
 
             continue
 
@@ -531,7 +594,7 @@ def getAllDataFrames(
         if str(table_name).lower() in transformer_parameters["do_not_import"]:
 
             logger.info(
-                "This table name %s for filename %s is being SKIPPED due to do_not_import parameter in transformers.json configuration file",
+                "This table name %s for filename %s is being SKIPPED due to do_not_import parameter in transformers.json configuration file",  # pylint: disable=[line-too-long]
                 table_name,
                 Path(file_name).stem,
             )
@@ -588,6 +651,18 @@ def detect_schema(
     table_name,
     df,
 ):
+    """_summary_
+
+    Args:
+        schema_detection (str): _description_
+        transformers_tables_schema (_type_): _description_
+        transformers_parameters (_type_): _description_
+        table_name (_type_): _description_
+        df (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     if schema_detection.upper() == "AUTO":
         # In the arguments if we want to use AUTO schema detection
@@ -607,6 +682,16 @@ def detect_schema(
 
 
 def validate_csv(file_name: str, table_header, args):
+    """_summary_
+
+    Args:
+        file_name (str): _description_
+        table_header (_type_): _description_
+        args (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     file_error = None
     try:
         df = pd.read_csv(
@@ -621,10 +706,10 @@ def validate_csv(file_name: str, table_header, args):
             index_col=False,
         )
         if df.empty:
-            ## If file has header but no rows
+            # If file has header but no rows
             file_error = "File seems to be Empty"
         else:
-            with open(file_name, "r") as f:
+            with open(file_name, "r", encoding="utf-8") as f:
                 lines = f.readlines()
                 last_line = lines[-1]
                 # if 'ORA-' in f.read():
@@ -633,7 +718,7 @@ def validate_csv(file_name: str, table_header, args):
                 if last_line.startswith("Elapsed:"):
                     file_error = "File has Elapsed time message from Oracle, Please remove the message and reprocess"
     except pd.errors.EmptyDataError:
-        ## If file has no records
+        # If file has no records
         file_error = "File seems to be Empty"
     except UnicodeDecodeError:
         file_error = "File seems to be of improper format"
@@ -644,6 +729,15 @@ def validate_csv(file_name: str, table_header, args):
 
 
 def add_bq_data_type(column_list, data_type):
+    """_summary_
+
+    Args:
+        column_list (_type_): _description_
+        data_type (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     new_column_list = []
 
@@ -657,8 +751,15 @@ def add_bq_data_type(column_list, data_type):
     return new_column_list
 
 
-def clean_csv_headers(header_string: str):
+def clean_csv_headers(header_string: str) -> str:
+    """Clean Headers
 
+    Args:
+        header_string (str): _description_
+
+    Returns:
+        str: _description_
+    """
     header_string = (
         str(header_string)
         .replace("'||", "")
@@ -691,42 +792,56 @@ def trim_dataframe(df):
     return df
 
 
-def getAllReShapedDataframes(
+def get_all_reshaped_dataframes(
     dataframes,
     table_schema,
-    transformersParameters,
-    transformerRulesConfig,
+    transformers_params,
+    rules_config,
     args,
-    collectionKey,
-    fileList,
+    collection_key,
+    file_list,
 ):
+    """_summary_
+
+    Args:
+        dataframes (_type_): _description_
+        table_schema (_type_): _description_
+        transformers_params (_type_): _description_
+        rules_config (_type_): _description_
+        args (_type_): _description_
+        collection_key (_type_): _description_
+        file_list (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     # Function to iterate on getReShapedDataframe to reShape some dataframes accordingly with targetTableNames
     # dataframes is expected to be a Hash Table of dataframes
     # targetTableNames is expected to be a list with the right keys from the Hash table dataframes
 
-    if transformersParameters.get("op_enable_reshape_for") is not None:
+    if transformers_params.get("op_enable_reshape_for") is not None:
         # if the parameter is set to any value
 
-        executed_rules_list = []
+        executed_rules_list: list[Any] = []
 
-        for table_name_rule_id in transformersParameters.get("op_enable_reshape_for").split(","):
+        for table_name_rule_id in transformers_params.get("op_enable_reshape_for").split(","):
             # This parameter accepted multiple values
 
-            table_name = str(table_name_rule_id).split(":")[0]
+            table_name = str(table_name_rule_id).split(":", maxsplit=1)[0]
             rule_id = str(table_name_rule_id).split(":")[1]
             csv_created = False
 
-            (transformer_parameter_results, transformers_results, fileList, dataframes,) = run_rules(
+            (transformer_parameter_results, transformers_results, file_list, dataframes,) = run_rules(
                 "0",
-                transformerRulesConfig,
+                rules_config,
                 dataframes,
                 rule_id,
                 args,
                 None,
                 table_schema,
-                fileList,
+                file_list,
                 executed_rules_list,
-                transformersParameters,
+                transformers_params,
                 None,
                 None,
             )
@@ -762,7 +877,7 @@ def getAllReShapedDataframes(
                             + "/opdbt__"
                             + reshaped_table_name
                             + "__"
-                            + str(collectionKey)
+                            + str(collection_key)
                         )
 
                         if df is not None:
@@ -780,13 +895,13 @@ def getAllReShapedDataframes(
                         if csv_created:
                             # If CSV creation was successfully then we will add this to the list of files to be imported
 
-                            fileList.append(file_name)
+                            file_list.append(file_name)
 
                     # For cases in which we are trying to reshape a variable that does not exist
                     else:
 
                         logger.warning("There is no parameter set to define the reshape process for: %s", table_name)
-                        logger.info("This is all valid reshape configurations found: %s", transformersParameters.keys())
+                        logger.info("This is all valid reshape configurations found: %s", transformers_params.keys())
 
                 # For rules that were not executed successfully
                 else:
@@ -805,7 +920,7 @@ def getAllReShapedDataframes(
                 logger.warning("There is no data parsed from CSVs named %s", table_name)
                 logger.info("This is all valid CSVs names %s", dataframes.keys())
 
-    return dataframes, fileList, table_schema, executed_rules_list
+    return dataframes, file_list, table_schema, executed_rules_list
 
 
 def create_csv_from_dataframe(
@@ -822,14 +937,15 @@ def create_csv_from_dataframe(
 
         # STEP: Creating 1 row empty in the file
 
-        # Make sure file will have same format (skipping first line as others) as the ones coming from oracle_db_assessment.sql
+        # Make sure file will have same format (skipping first line as others)
+        # as the ones coming from oracle_db_assessment.sql
         df1 = pd.DataFrame({"a": [np.nan] * 1})
         df1.to_csv(file_name, sep=str(args.sep), index=False, header=None)
 
         # STEP: Transform a multi-index/column (hierarchical columns) into regular columns
         if fix_dataframe_columns:
             multi_index_columns = df.columns
-            df.columns = getNewNamesFromMultiColumns(
+            df.columns = get_new_names_from_multi_columns(
                 transformers_parameters["from_to_rows_to_columns"],
                 multi_index_columns,
                 True,
@@ -858,7 +974,17 @@ def create_csv_from_dataframe(
 
 
 def get_reshaped_dataframe(df, transformer_parameters):
-    # Function to get a dataframe in one format and reshape it to another one that would make a lot simpler to create rules on.
+    """_summary_
+
+    Args:
+        df (_type_): _description_
+        transformer_parameters (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    # Function to get a dataframe in one format and reshape it to
+    # another one that would make a lot simpler to create rules on.
     # Input dataframe to be reshaped example:
     #
     # FROM:
@@ -883,46 +1009,43 @@ def get_reshaped_dataframe(df, transformer_parameters):
         return df
 
     # Columns that will remain in a row format as indexes
-    frozenIndex = []
-    frozenIndex = transformer_parameters["INDEX_COLUMNS"]
+    frozen_idx = transformer_parameters["INDEX_COLUMNS"]
 
     # Column in which its content will be pivoted to columns
     # For example: TARGET_COLUMN = 'IOPS'
-    targetColumn = ""
-    targetColumn = transformer_parameters["TARGET_COLUMN"]
+    target_column = transformer_parameters["TARGET_COLUMN"]
 
-    # Values refered to the TARGET_COLUMN that will be shown (as second level column)
+    # Values referred to the TARGET_COLUMN that will be shown (as second level column)
     # For example: TARGET_COLUMN = 'IOPS' & TARGET_STATS_COLUMNS = 'AVG' THEN it means that we will get AVG IOPs
-    targetStatsColumn = []
-    targetStatsColumn = transformer_parameters["TARGET_STATS_COLUMNS"]
+    target_stats_column = transformer_parameters["TARGET_STATS_COLUMNS"]
 
     # Check if dataframe needs to be filtered
     if str(transformer_parameters["filterrows"]).upper() == "YES":
 
         # Using the keys from the dictionary which are the affected rows to be pivoted to columns as filters
-        filterLIst = transformer_parameters["from_to_rows_to_columns"].keys()
-        booleanFilteredSeries = df[targetColumn].isin(filterLIst)
-        df = df[booleanFilteredSeries]
+        filter_list = transformer_parameters["from_to_rows_to_columns"].keys()
+        filtered_series = df[target_column].isin(filter_list)
+        df = df[filtered_series]
 
         if df.empty:
             logger.warning(
-                "After filtering the dataframe using: %s, The dataframe became empty. Check parameter from_to_rows_to_columns from transformers.json.",
+                "After filtering the dataframe using: %s, The dataframe became empty. Check parameter from_to_rows_to_columns from transformers.json.",  # pylint: disable=[line-too-long]
                 transformer_parameters["from_to_rows_to_columns"].keys(),
             )
 
-    # Pivoting daframe following the parameters given
-    pivoted_df = df.pivot(index=frozenIndex, columns=targetColumn, values=targetStatsColumn)
+    # Pivoting dataframe following the parameters given
+    pivoted_df = df.pivot(index=frozen_idx, columns=target_column, values=target_stats_column)
 
     # Getting Columns names and levels to change it
-    multiIndexColumns = pivoted_df.columns
+    multi_index_columns = pivoted_df.columns
 
     # Function to change dataframe column names accordingly with the parameters in transformersParameters['from_to_rows_to_columns']
-    multiIndexColumns = getNewNamesFromMultiColumns(
-        transformer_parameters["from_to_rows_to_columns"], multiIndexColumns, False
+    multi_index_columns = get_new_names_from_multi_columns(
+        transformer_parameters["from_to_rows_to_columns"], multi_index_columns, False
     )
 
     # Changing columns and its levels
-    pivoted_df.columns = multiIndexColumns
+    pivoted_df.columns = multi_index_columns
 
     # Resetting MultiIndex Frozen
     pivoted_df.reset_index(inplace=True)
@@ -930,8 +1053,19 @@ def get_reshaped_dataframe(df, transformer_parameters):
     return pivoted_df
 
 
-def getNewNamesFromMultiColumns(newNamesMapping, multiIndex, convertColumns):
-    # Function to change the column names for a multi index / hierarchical columns dataframe based on a hash table with from/to names
+def get_new_names_from_multi_columns(new_names_mapping, multi_index, convert_columns):
+    """_summary_
+
+    Args:
+        new_names_mapping (_type_): _description_
+        multi_index (_type_): _description_
+        convert_columns (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    # Function to change the column names for a multi index /
+    # hierarchical columns dataframe based on a hash table with from/to names
     # Example of multiIndex:
     # MultiIndex([('PERC90',                       'Average Active Sessions'),
     #            ('PERC90', 'Average Synchronous Single-Block Read Latency'),
@@ -940,57 +1074,61 @@ def getNewNamesFromMultiColumns(newNamesMapping, multiIndex, convertColumns):
     #            ('PERC90',                      'DB Block Changes Per Txn'),
     #            ('PERC90',                      'Enqueue Requests Per Txn'),],
     #           )
-    # If convertColumns == TRUE we are writing to CSV else we are manopulating a dataframe
+    # If convertColumns == TRUE we are writing to CSV else we are manipulating a dataframe
 
     # Turning a tuple into a list in order to be changed
-    multiIndex = list(multiIndex)
+    multi_index = list(multi_index)
 
     # Converted list from hierarchical columns
-    normalizedColumnsList = []
+    normalized_column_list = []
 
     # Variable to be used in the return accordingly with parameter convertColumns
-    resultColumns = None
+    result_columns = None
 
-    for index in range(len(multiIndex)):
+    for index in range(len(multi_index)):
 
-        if newNamesMapping.get(multiIndex[index][1]) is not None:
-            # If the column name in the database (coming from multiIndex) exists in the hash table, then it means we need to change current column name.
+        if new_names_mapping.get(multi_index[index][1]) is not None:
+            # If the column name in the database (coming from multiIndex)
+            # exists in the hash table, then it means we need to change current column name.
 
             # Turning a tuple into a list in order to be changed
-            tempList = list(multiIndex[index])
+            temp_list = list(multi_index[index])
 
             # Getting new column name
-            tempList[1] = newNamesMapping.get(multiIndex[index][1])
+            temp_list[1] = new_names_mapping.get(multi_index[index][1])
 
             # After the change tuning it back into a tuple
-            multiIndex[index] = tuple(tempList)
+            multi_index[index] = tuple(temp_list)
 
             # Creates the normalized dataframe column names. Using new column name
-            normalizedColumnsList.append(str(tempList[1]) + "_" + str(multiIndex[index][0]))
+            normalized_column_list.append(str(temp_list[1]) + "_" + str(multi_index[index][0]))
 
         else:
-            # Nothing to do related to changing the column names and we use the current dataframe column names to create a non hierarchical columns
+            # Nothing to do related to changing the column names
+            # and we use the current dataframe column names to create a non hierarchical columns
 
             # if str(multiIndex[index][1]) != '':
-            # str(multiIndex[index][1]) == '' then the column used to be index for the dataframe and therefore not part of the hierarchical columns structure
+            # str(multiIndex[index][1]) == '' then the column used to be index
+            # for the dataframe and therefore not part of the hierarchical columns structure
 
             # Creates the normalized dataframe column names. For columns that are hierarchical
-            normalizedColumnsList.append(str(multiIndex[index][1]) + "_" + str(multiIndex[index][0]))
+            normalized_column_list.append(str(multi_index[index][1]) + "_" + str(multi_index[index][0]))
             # else:
-            # Creates the normalized dataframe column names. For columns that are NON hierarchical (Used to be dataframe index)
+            # Creates the normalized dataframe column names.
+            # For columns that are NON hierarchical (Used to be dataframe index)
             # normalizedColumnsList.append(str(multiIndex[index][0]))
 
     # Processing conversion of columns
-    if convertColumns:
+    if convert_columns:
         # If converting from hierarchical columns to non hierarchical
 
-        resultColumns = normalizedColumnsList
+        result_columns = normalized_column_list
 
     else:
         # if keeping it hierarchical columns
 
         # Retuning a tuple again
-        resultColumns = tuple(multiIndex)
+        result_columns = tuple(multi_index)
 
     # To be used as dataframe columns. I.E: newdf.columns = resultColumns
-    return resultColumns
+    return result_columns
