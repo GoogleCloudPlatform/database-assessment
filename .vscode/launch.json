@@ -25,7 +25,7 @@
       "module": "db_assessment.optimusprime",
       "args": [
         "--collection-id",
-        "110222090840",
+        "",
         "--project-name",
         "optimus-prime-ci",
         "--dataset",
@@ -35,8 +35,7 @@
         "--sep",
         "|",
         "--delete-dataset",
-        "--collection-version",
-        "4.0.0"
+        "--consolidate-logs"
       ],
       "envFile": "${workspaceFolder}/.env",
       "justMyCode": true,
