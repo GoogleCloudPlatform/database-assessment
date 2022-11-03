@@ -201,7 +201,7 @@ def run_rules(
                                     continue
 
                                 try:
-                                    dataframes[str(df_target_name).upper()].loc[
+                                    dataframes[str(df_target_name).upper()][
                                         str(column_target_name).upper()
                                     ] = exec_string_expr(str_expression, if_error_expression, dataframes)
                                     df = dataframes[str(df_target_name).upper()]
@@ -908,7 +908,7 @@ def get_all_reshaped_dataframes(
 
                     if transformer_parameter_results[rule_id]["Status"] == "SKIPPED":
 
-                        logger.info("The rule %s was SKIPPED due to transformers.json", rule_id)
+                        logger.debug("The rule %s was SKIPPED due to transformers.json", rule_id)
 
                     elif transformer_parameter_results[rule_id]["Status"] == "FAILED":
 

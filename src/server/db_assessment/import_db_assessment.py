@@ -526,10 +526,7 @@ def import_csv_to_bq(
         schema = table_schemas[table_name]
     except KeyError:
         # In case there is not expected table schema found in getBQJobConfig function
-        logger.warning('The filename "%s" could not be imported to Big Query.', Path(file_name).stem)
-        logger.warning(
-            'The table name "%s" cannot be imported because it does not have table schema in transformers.json.',
-        )
+        logger.debug('The filename "%s" could not be imported to Big Query.', Path(file_name).stem)
         return False
 
     if str(table_name).lower() == "opkeylog":
