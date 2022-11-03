@@ -1,4 +1,4 @@
-# # pylint: disable=[broad-except,eval-used]
+# type: ignore  # pylint: disable=[broad-except,eval-used]
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -155,6 +155,15 @@ def create_views(project_name: Optional[str], bq_dataset: str, view_name: str, v
 
 
 def create_views_from_os(project_name, bq_dataset):
+    """_summary_
+
+    Args:
+        project_name (_type_): _description_
+        bq_dataset (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     # This function intents to create all views found in the opViews directory.
     # The views creation must follow opViews/<filename> order
 
@@ -227,6 +236,20 @@ def import_all_df_to_bq(
     transformers_params,
     import_results,
 ):
+    """_summary_
+
+    Args:
+        args (_type_): _description_
+        project_name (_type_): _description_
+        bq_dataset (_type_): _description_
+        tables_schema (_type_): _description_
+        db_assessment_dataframes (_type_): _description_
+        transformers_params (_type_): _description_
+        import_results (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     # Tracking tableNames Imported to Big Query
     tables_imported = {}
@@ -289,6 +312,21 @@ def import_dataframe_to_bq(
     args,
     import_results,
 ):
+    """_summary_
+
+    Args:
+        project_name (_type_): _description_
+        bq_dataset (_type_): _description_
+        table_name (_type_): _description_
+        table_schemas (_type_): _description_
+        df (_type_): _description_
+        transformers_params (_type_): _description_
+        args (_type_): _description_
+        import_results (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
 
     # Getting table schema
     try:
@@ -418,6 +456,14 @@ def import_dataframe_to_bq(
 
 
 def add_details(file_name, args, params, table_header) -> None:
+    """_summary_
+
+    Args:
+        file_name (_type_): _description_
+        args (_type_): _description_
+        params (_type_): _description_
+        table_header (_type_): _description_
+    """
     df = pd.read_csv(
         file_name,
         sep=str(args.sep),
@@ -970,5 +1016,4 @@ def print_results(import_results) -> None:
             import_log_final_table.rows.append(row)
 
     import_log_final_table.set_style(BeautifulTable.STYLE_BOX_ROUNDED)
-    logger.info("Import Completed....")
-    logger.info(import_log_final_table)
+    logger.info("Import Completed....\n%s", import_log_final_table)

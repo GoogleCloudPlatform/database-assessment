@@ -14,7 +14,7 @@
  # limitations under the License.
  */
 --name: transform-05!
-create or replace table T_DS_Database_Metrics as WITH vcputimemodel as (
+Create or replace table T_DS_Database_Metrics as WITH vcputimemodel as (
         SELECT pkey,
             dbid,
             instance_number,

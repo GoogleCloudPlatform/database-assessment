@@ -27,6 +27,7 @@ from db_assessment import import_db_assessment
 if TYPE_CHECKING:
     from .api import AppConfig
 
+pd.options.mode.chained_assignment = None  # suppress SettingWithCopyWarning messages
 warnings.simplefilter("error", pd.errors.ParserWarning)
 warnings.simplefilter(action="ignore", category=FutureWarning)
 
@@ -204,7 +205,7 @@ def run_rules(
                                     dataframes[str(df_target_name).upper()][
                                         str(column_target_name).upper()
                                     ] = exec_string_expr(str_expression, if_error_expression, dataframes)
-                                    df = dataframes[str(df_target_name).upper()]
+                                    df = dataframes[str(df_target_name).upper()].copy()
                                 except KeyError:
                                     logger.warning(
                                         'The rule "%s" could not be executed because the variable "%s" used in the transformers.json could not be found.',  # pylint: disable=[line-too-long]
@@ -966,7 +967,7 @@ def create_csv_from_dataframe(
         df.to_csv(file_name, sep=str(args.sep), header=True, index=False, mode="a")
         # df.to_hdf(fileName, key='optimus')
 
-        logger.info("Successfully created '%s' for table name '%s'", Path(file_name).stem, table_name)
+        logger.debug("Modified '%s' for table name '%s'", Path(file_name).stem, table_name)
 
         return True, table_schema
 

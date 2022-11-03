@@ -18,7 +18,7 @@ from packaging.version import parse as parse_version
 from dbma import log
 from dbma.__version__ import __version__
 from dbma.config import BASE_DIR
-from dbma.transformer.schemas import v1xx, v2xx, v3xx, v4xx
+from dbma.transformer.schemas import v2xx, v3xx, v4xx, v38x
 from dbma.transformer.schemas.base import CollectionConfig, CollectionVersionConfig
 
 logger = log.get_logger()
@@ -35,8 +35,17 @@ mapper = [
         ),
     ),
     CollectionVersionConfig(
-        min_version=parse_version("2.0.6"),
+        min_version=parse_version("3.0.8"),
         max_version=parse_version("3.99.99"),
+        config=CollectionConfig(
+            delimiter="|",
+            collection_files_schema=v38x.CollectionFiles,
+            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v38x" / "sql")),
+        ),
+    ),
+    CollectionVersionConfig(
+        min_version=parse_version("2.0.6"),
+        max_version=parse_version("3.0.7"),
         config=CollectionConfig(
             delimiter="|",
             collection_files_schema=v3xx.CollectionFiles,
@@ -44,20 +53,11 @@ mapper = [
         ),
     ),
     CollectionVersionConfig(
-        min_version=parse_version("2.0.0"),
+        min_version=parse_version("0.0.0"),
         max_version=parse_version("2.0.5"),
         config=CollectionConfig(
             delimiter=",",
             collection_files_schema=v2xx.CollectionFiles,
-            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v2xx" / "sql")),
-        ),
-    ),
-    CollectionVersionConfig(
-        min_version=parse_version("0.0.0"),
-        max_version=parse_version("1.99.99"),
-        config=CollectionConfig(
-            delimiter=",",
-            collection_files_schema=v1xx.CollectionFiles,
             sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v2xx" / "sql")),
         ),
     ),
