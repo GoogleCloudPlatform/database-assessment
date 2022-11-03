@@ -13,15 +13,15 @@ nav:
   - Home: index.md
   - User Guide:
       - Data Collection: user_guide/collection_scripts.md
-      - Migration Assessment: user_guide/db_assessment.md
-  - Developer Guide:
-      - Contributing: contributing.md
-      - Developer Setup: developer_guide/developer_setup.md
-      - Commands: developer_guide/commands.md
-      - Workflows: developer_guide/workflows.md
-      - Releases: developer_guide/releases.md
+      # - Migration Assessment: user_guide/db_assessment.md
+  # - Developer Guide:
+  #     - Contributing: contributing.md
+  #     - Developer Setup: developer_guide/developer_setup.md
+  #     - Commands: developer_guide/commands.md
+  #     - Workflows: developer_guide/workflows.md
+  #     - Releases: developer_guide/releases.md
   - Extras:
       - Database User Scripts: user_guide/db_user_create.md
       - Permissions Required: user_guide/db_user_create.md
-      - Manually Load Collection: user_guide/manual_load_process.md
+      # - Manually Load Collection: user_guide/manual_load_process.md
   - Code Of Conduct: code-of-conduct.md
