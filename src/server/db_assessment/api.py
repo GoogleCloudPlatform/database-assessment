@@ -21,6 +21,7 @@ from flask import Flask, request
 from werkzeug.utils import secure_filename
 
 from db_assessment.optimusprime import CONFIG_PATH, run_main
+from db_assessment.version import __version__
 
 app = Flask(__name__)
 logger = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ class AppConfig:
     db_version: Optional[str] = None
     files_location: str = "dbResults"
     sep: str = "|"
-    collection_version: str = "0.0.0"
+    collection_version: str = __version__
     schema_detection: Literal["AUTO", "FILLGAP"] = "FILLGAP"
     delete_dataset: bool = False
     from_dataframe: bool = False

@@ -13053,9 +13053,9 @@
           ["ebs_owner", "STRING"],
           ["siebel_owner", "STRING"],
           ["psft_owner", "STRING"],
-	  ["rds_flag", "STRING"],
-	  ["oci_autonomous_flag", "STRING"],
-	  ["dbms_cloud_pkg_installed", "STRING"]
+          ["rds_flag", "STRING"],
+          ["oci_autonomous_flag", "STRING"],
+          ["dbms_cloud_pkg_installed", "STRING"]
         ],
         "dboverview": [
           ["pkey", "STRING"],

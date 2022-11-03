@@ -1,3 +1,4 @@
+# # pylint: disable=[broad-except,eval-used]
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +29,7 @@ import pandas as pd
 
 from db_assessment import import_db_assessment, rules_engine
 from db_assessment.remote import run_remote
+from db_assessment.version import __version__
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -69,8 +71,6 @@ def run_main(args: "AppConfig") -> None:
     run_parameters: Dict[str, Any] = run_config["parameters"]
     schema_config: Dict[str, Any] = run_config["table_schemas"]
 
-    table_schema = None
-
     # For all cases in which those attributes are <> None it means
     #  the user wants to import data to Big Query
     # No need to further messaging for mandatory options because
@@ -86,6 +86,10 @@ def run_main(args: "AppConfig") -> None:
         # This is broken needs to be fixed in upcoming versions
         if args.consolidate_logs:
             # It is True if no fatal errors were found
+            table_schema: dict[str, Any] = {}
+            for _, val in schema_config[__version__].items():
+                table_schema.update(val)
+                break  # break after fetching the first
             import_db_assessment.consolidate_collection(
                 args,
                 table_schema,
@@ -142,42 +146,44 @@ def run_main(args: "AppConfig") -> None:
             )
             sys.exit()
 
-        sql_versions = {f.split("__")[2].split("_")[1] for f in file_list}
-        if len(sql_versions) > 1:
-            logger.fatal(
-                "Importing multiple SQL versions is not supported. "
-                "Please use flag --filter-by-sql-version to filter SQL versions, "
-                "For example: --filter-by-sql-version 2.0.3"
-            )
-            sys.exit()
+        if not args.consolidate_logs:
+            sql_versions = {f.split("__")[2].split("_")[1] for f in file_list}
+            if len(sql_versions) > 1:
+                logger.fatal(
+                    "Importing multiple SQL versions is not supported. "
+                    "Please use flag --filter-by-sql-version to filter SQL versions, "
+                    "For example: --filter-by-sql-version 2.0.3"
+                )
+                sys.exit()
 
         # Getting file pattern for find config files in the OS to be imported
-        csvFilesLocationPatternOPConfig = f"{str(BASE_DIR)}/opConfig/*.csv"
+        csv_files_location_pattern = f"{str(BASE_DIR)}/opConfig/*.csv"
 
         # Getting a list of files from OS based on the pattern provided
-        fileListOPConfig = import_db_assessment.list_files(csvFilesLocationPatternOPConfig)
+        files_list = import_db_assessment.list_files(csv_files_location_pattern)
 
         # Variable to track the collection id. To be used mostly when new CSV files are generated from processing rules
-        collectionKey = import_db_assessment.get_obj_name_from_files(str(file_list[0]), "__", 2)
-        run_parameters["collectionKey"] = collectionKey
+        collection_key = import_db_assessment.get_obj_name_from_files(str(file_list[0]), "__", 2)
+        run_parameters["collectionKey"] = collection_key
 
         # Verify if the script has any version on it (only old script versions should not have 3 parts)
         if args.db_version is not None:
             run_parameters["db_version"] = str(args.db_version)
-        elif len(collectionKey.split("_")) >= 3 and args.db_version is None:  # bug #23. Changed == to >=.
-            run_parameters["db_version"] = import_db_assessment.get_obj_name_from_files(collectionKey, "_", 0)
+        elif len(collection_key.split("_")) >= 3 and args.db_version is None:  # bug #23. Changed == to >=.
+            run_parameters["db_version"] = import_db_assessment.get_obj_name_from_files(collection_key, "_", 0)
+        elif args.consolidate_logs:
+            run_parameters["db_version"] = "all"
         else:
             logger.fatal(
-                "FATAL ERROR: Please use --db-version and --collection-version."
-                " (i.e --db-version 122 --collection-version 2.0.3)"
+                "Please use --db-version and --collection-version." " (i.e --db-version 122 --collection-version 2.0.3)"
             )
             sys.exit()
 
         if args.import_comment is not None:
             run_parameters["import_comment"] = args.import_comment
 
-        if len(collectionKey.split("_")) >= 3:  # bug #23. Changed == to >=.
-            run_parameters["collection_version"] = import_db_assessment.get_obj_name_from_files(collectionKey, "_", 1)
+        if len(collection_key.split("_")) >= 3:  # bug #23. Changed == to >=.
+            run_parameters["collection_version"] = import_db_assessment.get_obj_name_from_files(collection_key, "_", 1)
         else:
             run_parameters["collection_version"] = args.collection_version
 
@@ -231,7 +237,7 @@ def run_main(args: "AppConfig") -> None:
                     "WARNING: The database %s will not be deleted "
                     "because the option --project-name is omitted. "
                     "Please try again either "
-                    "providing --project-name OR removing -delete_dataset.",
+                    "providing --project-name OR removing --delete-dataset.",
                     args.delete_dataset,
                 )
                 sys.exit()
@@ -247,60 +253,55 @@ def run_main(args: "AppConfig") -> None:
 
         # STEP: Loading all CSV files in memory into dataframes
 
-        dbAssessmentDataframes = {}
-        invalidfiles = {}
-        (dbAssessmentDataframes, table_schema,) = rules_engine.getAllDataFrames(
+        db_assessment_dataframes = {}
+        invalid_files = {}
+        (db_assessment_dataframes, table_schema,) = rules_engine.get_all_dataframes(
             file_list,
             1,
-            collectionKey,
+            collection_key,
             args,
             table_schema,
-            dbAssessmentDataframes,
+            db_assessment_dataframes,
             run_parameters,
-            invalidfiles,
+            invalid_files,
             args.skip_validations,
         )
-        (dbAssessmentDataframes, table_schema,) = rules_engine.getAllDataFrames(
-            fileListOPConfig,
+        (db_assessment_dataframes, table_schema,) = rules_engine.get_all_dataframes(
+            files_list,
             0,
-            collectionKey,
+            collection_key,
             args,
             table_schema,
-            dbAssessmentDataframes,
+            db_assessment_dataframes,
             run_parameters,
-            invalidfiles,
+            invalid_files,
             args.skip_validations,
         )
 
         # STEP: Reshape Dataframes when necessary based on the run_parameters
 
-        (
-            dbAssessmentDataframes,
-            file_list,
-            table_schema,
-            rulesAlreadyExecuted,
-        ) = rules_engine.getAllReShapedDataframes(
-            dbAssessmentDataframes,
+        (db_assessment_dataframes, file_list, table_schema, executed_rules,) = rules_engine.get_all_reshaped_dataframes(
+            db_assessment_dataframes,
             table_schema,
             run_parameters,
             rules,
             args,
-            collectionKey,
+            collection_key,
             file_list,
         )
 
         # STEP: Run rules engine
 
-        (_, _, file_list, dbAssessmentDataframes,) = rules_engine.run_rules(
+        (_, _, file_list, db_assessment_dataframes,) = rules_engine.run_rules(
             "1",
             rules,
-            dbAssessmentDataframes,
+            db_assessment_dataframes,
             None,
             args,
-            collectionKey,
+            collection_key,
             table_schema,
             file_list,
-            rulesAlreadyExecuted,
+            executed_rules,
             run_parameters,
             gcpProjectName,
             bqDataset,
@@ -312,18 +313,18 @@ def run_main(args: "AppConfig") -> None:
 
         # Eliminating duplicated entries from transformers.json processing
         file_list = list(set(file_list))
-        if len(invalidfiles) > 0:
-            logger.info("Invalid files: %s", {f"{key}:{value}" for key, value in invalidfiles.items()})
-            file_list = [file for file in file_list if file not in invalidfiles.keys()]
-            ## Insert Invalid Files to BQ
-            if "OPKEYLOG" in dbAssessmentDataframes.keys():
-                op_df = dbAssessmentDataframes["OPKEYLOG"]
-                import_db_assessment.insert_errors(invalidfiles, op_df, gcpProjectName, bqDataset)
+        if len(invalid_files) > 0:
+            logger.info("Invalid files: %s", {f"{key}:{value}" for key, value in invalid_files.items()})
+            file_list = [file for file in file_list if file not in invalid_files]
+            # # Insert Invalid Files to BQ
+            if "OPKEYLOG" in db_assessment_dataframes:
+                op_df = db_assessment_dataframes["OPKEYLOG"]
+                import_db_assessment.insert_errors(invalid_files, op_df, gcpProjectName, bqDataset)
                 import_results = import_db_assessment.populate_summary(
                     "notabname",
                     "nodataframe",
                     "yes",
-                    invalidfiles,
+                    invalid_files,
                     "invalidfiles",
                     -1,
                     import_results,
@@ -337,7 +338,7 @@ def run_main(args: "AppConfig") -> None:
                 gcpProjectName,
                 bqDataset,
                 table_schema,
-                dbAssessmentDataframes,
+                db_assessment_dataframes,
                 run_parameters,
                 import_results,
             )
@@ -355,11 +356,11 @@ def run_main(args: "AppConfig") -> None:
                 args,
                 import_results,
             )
-            # Import all Optimus Prime CSV configutation
+            # Import all Optimus Prime CSV configuration
             _, import_results = import_db_assessment.import_all_csvs_to_bq(
                 gcpProjectName,
                 bqDataset,
-                fileListOPConfig,
+                files_list,
                 table_schema,
                 1,
                 run_parameters,
@@ -367,23 +368,23 @@ def run_main(args: "AppConfig") -> None:
                 import_results,
             )
 
-        (_, _, file_list, dbAssessmentDataframes,) = rules_engine.run_rules(
+        (_, _, file_list, db_assessment_dataframes,) = rules_engine.run_rules(
             "2",
             rules,
-            dbAssessmentDataframes,
+            db_assessment_dataframes,
             None,
             args,
-            collectionKey,
+            collection_key,
             table_schema,
             file_list,
-            rulesAlreadyExecuted,
+            executed_rules,
             run_parameters,
             gcpProjectName,
             bqDataset,
         )
 
         # Create Optimus Prime Views
-        import_db_assessment.createOptimusPrimeViewsFromOS(gcpProjectName, bqDataset)
+        import_db_assessment.create_views_from_os(gcpProjectName, bqDataset)
 
         # Call BT for import summary table
         import_db_assessment.print_results(import_results)
@@ -453,7 +454,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--collection-version",
         type=str,
-        default="0.0.0",
+        default=__version__,
         help="script collection version used",
     )
 
@@ -509,7 +510,7 @@ def parse_arguments() -> argparse.Namespace:
 
     # Consolidates different collection IDs found in the OS (dbResults/*log) into a single CSV per file type.
     # For example: dbResults has 52 files. Meaning, 2 collection IDs (each one has 26 different file types).
-    # After the consolidation it produces 26 *consolidatedlogs.csv which would have data from both collection IDs
+    # After the consolidation it produces 26 *consolidated.csv which would have data from both collection IDs
     parser.add_argument(
         "-cl",
         "--consolidate-logs",
