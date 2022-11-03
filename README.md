@@ -12,7 +12,7 @@ The Optimus Prime Database Assessment tool is used to assess homogenous migratio
 
 ### Step 1 - Database setup (Create readonly user with required privileges)
 
-1.1. Database user creation.
+#### Database user creation.
 
 Create an Oracle database user -or- choose an existing user account .
 
@@ -32,14 +32,14 @@ if creating a application user within a PDB create a regular user
 create user optimusprime identified by "mysecretPa33w0rd";
 ```
 
-1.2. Clone _optimus prime_ into your work directory in a client machine that has connectivity to your databases
+#### Clone _optimus prime_ into your work directory in a client machine that has connectivity to your databases
 
 ```shell
 cd <work-directory>
 git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
 ```
 
-1.3. Verify 3 Grants scripts under (@/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/)
+#### Verify 3 Grants scripts under (@/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/)
 
 - grants_wrapper.sql
 - minimum_select_grants_for_targets_12c_AND_ABOVE.sql
@@ -71,7 +71,7 @@ For Database version 12c and above
 @/<work-directory>/oracle-database-assessment/db_assessment/dbSQLCollector/minimum_select_grants_for_targets_12c_AND_ABOVE.sql
 ```
 
-1.4. Execute /home/oracle/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh to start collecting the data.
+#### Execute /home/oracle/oracle-database-assessment/db_assessment/dbSQLCollector/collectData-Step1.sh to start collecting the data.
 
 - Execute this from a system that can access your database via sqlplus
 - Pass connect string as input to this script (see below for example)
@@ -80,10 +80,10 @@ For Database version 12c and above
 ```shell
 cd /<work-directory>/oracle-database-assessment
 
-/<work-directory>/db_assessment/dbSQLCollector/collectData-Step1.sh optimusprime/mysecretPa33w0rd@//<serverhost>/<servicename>
+./scripts/collectData-Step1.sh optimusprime/mysecretPa33w0rd@//<serverhost>/<servicename>
 ```
 
-1.5. Once the script is executed you should see many opdb\*.log output files generated. It is recommended to zip/tar these files.
+#### Once the script is executed you should see many opdb\*.log output files generated. It is recommended to zip/tar these files.
 
 - All the generated files follow this standard `opdb__<queryname>__<dbversion>_<scriptversion>_<hostname>_<dbname>_<instancename>_<datetime>.log`
 - Use meaningful names when zip/tar the files.
