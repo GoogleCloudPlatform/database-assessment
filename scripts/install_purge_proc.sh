@@ -34,6 +34,18 @@ if [ ${retval} -ne 0 ]; then
    exit 1
 fi
 echo ""
-echo "Purge procedure created"
+echo "Purge collection procedure created"
+
+THESQL=$(cat "${SCRIPT_DIR}/purge_host.sql" | sed "s/projectID.dataset/${PROJECTNAME}.${DSNAME}/g" )
+
+echo ${THESQL} | bq query  --use_legacy_sql=false 
+
+retval=$?
+if [ ${retval} -ne 0 ]; then
+   echo "Error loading creating purge procedure in BigQuery.  Exiting...."
+   exit 1
+fi
+echo ""
+echo "Purge host procedure created"
 exit 0
 
