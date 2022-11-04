@@ -69,7 +69,9 @@
     "pkey",
     "pkeys",
     "statspack",
-    "SYSSTAT"
+    "SUBPARTITIONS",
+    "SYSSTAT",
+    "TABLESPACES"
   ],
   "[sql]": {
     "editor.defaultFormatter": "mtxr.sqltools"
