@@ -29,7 +29,7 @@ fi
 source ${VENV_DIR}/bin/activate
 pip3 install -U pip wheel setuptools
 #pip3 install .
-pip3 install -U ${BASE_DIR}
+pip3 install -U -e ${BASE_DIR}
 cd ${BASE_DIR}
 
 exit 0
