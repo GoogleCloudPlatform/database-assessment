@@ -66,6 +66,7 @@ class CollectionConfig(BaseSchema):
     pre_process_files: bool = False
     collection_files_schema: Type[CollectionFiles]
     sql_files_path: str
+    canonical_path: str
 
 
 class CollectionVersionConfig(BaseSchema):

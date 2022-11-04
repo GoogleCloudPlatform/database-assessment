@@ -35,15 +35,15 @@ logger = log.get_logger()
 class SQLManager:
     """Stores the queries for a version of the collection"""
 
-    def __init__(self, db: "DuckDBPyConnection", sql_files_path: str) -> None:
+    def __init__(self, db: "DuckDBPyConnection", sql_files_path: str, canonical_path: str) -> None:
 
         self.db = db
         self.sql_files_path = sql_files_path
         self._queries: "List[Queries]" = []
         self._count: Dict[str, int] = {}
         self._available_queries: Set[str] = set()
-        if sql_files_path:
-            self.add_sql_from_path(sql_files_path)
+        self.add_sql_from_path(canonical_path)
+        self.add_sql_from_path(sql_files_path)
 
     def add_sql_from_path(self, fn: str) -> None:
         """Load queries from a file or directory."""

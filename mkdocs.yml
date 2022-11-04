@@ -1,4 +1,4 @@
-site_name: Optimus Prime Database Migration Advisor
+site_name: Database Migration Advisor
 repo_url: https://github.com/GoogleCloudPlatform/oracle-database-assessment
 edit_uri: ./edit/main/docs
 
@@ -13,15 +13,13 @@ nav:
   - Home: index.md
   - User Guide:
       - Data Collection: user_guide/collection_scripts.md
-      # - Migration Assessment: user_guide/db_assessment.md
-  # - Developer Guide:
-  #     - Contributing: contributing.md
-  #     - Developer Setup: developer_guide/developer_setup.md
-  #     - Commands: developer_guide/commands.md
-  #     - Workflows: developer_guide/workflows.md
-  #     - Releases: developer_guide/releases.md
-  - Extras:
+      - Permissions Required: user_guide/permissions.md
       - Database User Scripts: user_guide/db_user_create.md
-      - Permissions Required: user_guide/db_user_create.md
-      # - Manually Load Collection: user_guide/manual_load_process.md
-  - Code Of Conduct: code-of-conduct.md
+      # - Migration Assessment: user_guide/db_assessment.md
+  - Developer Guide:
+      - Contributing: contributing.md
+      - Code Of Conduct: code-of-conduct.md
+      - Developer Setup: developer_guide/developer_setup.md
+      # - Commands: developer_guide/commands.md
+      # - Workflows: developer_guide/workflows.md
+      # - Releases: developer_guide/releases.md

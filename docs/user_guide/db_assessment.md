@@ -1,6 +1,6 @@
 # Usage
 
-## Importing the data collected into Google BigQuery for analysis
+## Upload & Process Collections
 
 Much of the data import and report generation has been automated. Follow section 2.1 to use the automated process. Section 2.2 provides instructions for the manual process if that is your preference. Both processes assume you have rights to create datasets in a Big Query project and access to Data Studio.
 
@@ -14,22 +14,28 @@ These instructions are written for running in a Cloud Shell environment. Ensure 
 gcloud config set project [PROJECT_ID]
 ```
 
-### Clone the Optimus Prime codebase to a working directory
+### Create a workspace for processing
 
-Create a working directory for the code base, then clone the repository from Github.
-
-Ex:
+Create a folder where you upload collections and install the latest collection command line processing utility.
 
 ```shell
-mkdir -p ~/code/op
-cd ~/code/op
-git clone https://github.com/GoogleCloudPlatform/oracle-database-assessment
+export WORKING_DIR=./migration_advisor
+mkdir -p $WORKING_DIR/data
+cd $WORKING_DIR
+if [ ! -f .venv/bin/activate ]; then
+  echo "Creating new virtual environment."
+  python3 -m venv .venv
+fi
+source .venv/bin/activate
+pip install -U wheel setuptools cython pip
+pip install -U git+https://github.com/GoogleCloudPlatform/oracle-database-assessment.git@main
 ```
 
-### Create a data directory and upload files from the client
+> TIP: Google Cloud Shell is a great place to execute these commands.
 
-Create a directory to hold the output files for processing, then upload the files to that location and decompress.
+### Prepare Collections
 
+The utility expects to receive the compressed archives for processing.
 Ex:
 
 ```shell

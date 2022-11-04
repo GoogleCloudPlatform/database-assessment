@@ -11,9 +11,9 @@ gcloud config set project <project id>
 ## Export Environment variables. (Step 1.2 has working directory created)
 
 ```shell
-export OP_WORKDING_DIR=$(pwd)
+export OP_WORKING_DIR=$(pwd)
 export OP_BQ_DATASET=[Dataset Name]
-export OP_OUTPUT_DIR=/$OP_WORKDING_DIR/oracle-database-assessment-output/<assessment output directory>
+export OP_OUTPUT_DIR=/$OP_WORKING_DIR/oracle-database-assessment-output/<assessment output directory>
 mkdir $OP_OUTPUT_DIR/log
 export OP_LOG_DIR=$OP_OUTPUT_DIR/log
 ```
@@ -21,7 +21,7 @@ export OP_LOG_DIR=$OP_OUTPUT_DIR/log
 ## Create working directory (Skip if you have followed step 1.2 on same server)
 
 ```shell
-mkdir $OP_WORKDING_DIR
+mkdir $OP_WORKING_DIR
 ```
 
 ## Clone Github repository (Skip if you have followed step 1.2 on same server)
@@ -47,15 +47,15 @@ unzip <zip files>
 
 ## [Create a service account and download the key](https://cloud.google.com/iam/docs/creating-managing-service-accounts#before-you-begin)
 
-- Set GOOGLE_APPLICATION_CREDENTIALS to point to the downloaded key. Make sure the service account has BigQuery Admin privelege.
+- Set GOOGLE_APPLICATION_CREDENTIALS to point to the downloaded key. Make sure the service account has BigQuery Admin privilege.
 - NOTE: This step can be skipped if using [Cloud Shell](https://ssh.cloud.google.com/cloudshell/)
 
 ## Create a python virtual environment to install dependencies and execute the `optimusprime.py` script
 
 ```shell
- python3 -m venv $OP_WORKDING_DIR/.venv
- source $OP_WORKDING_DIR/.venv/bin/activate
- cd $OP_WORKDING_DIR/oracle-database-assessment/
+ python3 -m venv $OP_WORKING_DIR/.venv
+ source $OP_WORKING_DIR/.venv/bin/activate
+ cd $OP_WORKING_DIR/oracle-database-assessment/
 
  pip3 install pip wheel setuptools --upgrade
  pip3 install .
@@ -82,7 +82,7 @@ unzip <zip files>
 - In this example of a filename `opdb__usedspacedetails__121_0.1.0_mydbhost.mycompany.com.ORCLDB.orcl1.071621111714.log` the file identification is `071621111714`.
 - `--files-location`: The location in which the opdb\*log were saved.
 - `--project-name`: The GCP project in which the data will be loaded.
-- `--delete-dataset`: This an optinal. In case you want to delete the whole existing dataset before importing the data.
+- `--delete-dataset`: This an optional. In case you want to delete the whole existing dataset before importing the data.
   - WARNING: It will DELETE permanently ALL tables previously in the dataset. No further confirmation will be required. Use it with caution.
 - `--import-comment`: This an optional. In case you want to store any comment about the load in opkeylog table. Eg: "This is for Production import"
 - `--filter-by-sql-version`: This an optional. In case you have files from multiple sql versions in the folder and you want to load only specific sql version files

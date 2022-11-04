@@ -89,7 +89,7 @@ def find_collections(
                         "collection_key": collection_key,
                         "script_version": script_version,
                         "db_version": db_version,
-                        "queries": manager.SQLManager(db, version_config.sql_files_path),
+                        "queries": manager.SQLManager(db, version_config.sql_files_path, version_config.canonical_path),
                     }
                 )
             )

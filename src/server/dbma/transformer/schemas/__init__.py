@@ -11,15 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from dbma.transformer.schemas import v2xx, v3xx, v4xx, v38x
+from dbma.transformer.schemas import canonical, v000, v206, v308
 from dbma.transformer.schemas.base import Collection, CollectionConfig, CollectionFiles
 from dbma.transformer.schemas.config import get_config_for_version, mapper
 
 __all__ = [
-    "v38x",
-    "v2xx",
-    "v3xx",
-    "v4xx",
+    "canonical",
+    "v000",
+    "v206",
+    "v308",
     "CollectionFiles",
     "Collection",
     "CollectionConfig",

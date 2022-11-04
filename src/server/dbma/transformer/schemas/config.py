@@ -12,35 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from pathlib import Path
+from typing import Final
 
 from packaging.version import parse as parse_version
 
 from dbma import log
 from dbma.__version__ import __version__
 from dbma.config import BASE_DIR
-from dbma.transformer.schemas import v2xx, v3xx, v4xx, v38x
+from dbma.transformer.schemas import v000, v206, v308
 from dbma.transformer.schemas.base import CollectionConfig, CollectionVersionConfig
 
 logger = log.get_logger()
-
+CANONICAL_PATH: Final = str(Path(BASE_DIR / "transformer" / "schemas" / "canonical" / "sql"))
 mapper = [
     # we put the most recent version first so that is the most likely config to be used
     CollectionVersionConfig(
-        min_version=parse_version("4.0.0"),
+        min_version=parse_version("3.0.8"),
         max_version=parse_version(__version__),
         config=CollectionConfig(
             delimiter="|",
-            collection_files_schema=v4xx.CollectionFiles,
-            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v4.0.0" / "sql")),
-        ),
-    ),
-    CollectionVersionConfig(
-        min_version=parse_version("3.0.8"),
-        max_version=parse_version("3.99.99"),
-        config=CollectionConfig(
-            delimiter="|",
-            collection_files_schema=v38x.CollectionFiles,
-            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v3.0.8" / "sql")),
+            collection_files_schema=v308.CollectionFiles,
+            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v308" / "sql")),
+            canonical_path=CANONICAL_PATH,
         ),
     ),
     CollectionVersionConfig(
@@ -48,8 +41,9 @@ mapper = [
         max_version=parse_version("3.0.7"),
         config=CollectionConfig(
             delimiter="|",
-            collection_files_schema=v3xx.CollectionFiles,
-            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v2.0.6" / "sql")),
+            collection_files_schema=v206.CollectionFiles,
+            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v206" / "sql")),
+            canonical_path=CANONICAL_PATH,
         ),
     ),
     CollectionVersionConfig(
@@ -57,8 +51,9 @@ mapper = [
         max_version=parse_version("2.0.5"),
         config=CollectionConfig(
             delimiter=",",
-            collection_files_schema=v2xx.CollectionFiles,
-            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v0.0.0" / "sql")),
+            collection_files_schema=v000.CollectionFiles,
+            sql_files_path=str(Path(BASE_DIR / "transformer" / "schemas" / "v000" / "sql")),
+            canonical_path=CANONICAL_PATH,
         ),
     ),
 ]
