@@ -24,11 +24,12 @@ if [ ${retval} -ne 0 ]; then
    exit 1
 fi
 
-bq query  --use_legacy_sql=false < ${TMP_DIR}/op_etl_${DSNAME}.sql  | tee ${LOG_DIR}/op_etl_${DSNAME}.log
+RUNID=$(date +%Y%m%d%H%M%S)
+bq query  --use_legacy_sql=false < ${TMP_DIR}/op_etl_${DSNAME}.sql  |& tee ${LOG_DIR}/op_etl_${DSNAME}-${RUNID}.log
 if [ ${retval} -ne 0 ]; then
    echo "Error loading Optimus Prime Collection into BigQuery.  Exiting...."
    exit 1
 fi
 echo ""
-echo "A log of this process is available at ${LOG_DIR}/op_etl_${DSNAME}.log"
+echo "A log of this process is available at ${LOG_DIR}/op_etl_${DSNAME}-${RUNID}.log"
 exit 0

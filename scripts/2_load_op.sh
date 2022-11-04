@@ -18,12 +18,13 @@ fi
 
 source ${SCRIPT_DIR}/_configure_op_env.sh
 
+RUNID=$(date +%Y%m%d%H%M%S)
 ${VENV_DIR}/bin/optimus-prime --sep "${COLSEP}" --dataset ${DSNAME} --delete-dataset --files-location ${OPOUTPUTDIR} \
-   --project-name ${PROJECTNAME} --collection-id "" --collection-version ${COLLECTION_VERSION} |& tee ${LOG_DIR}/opload-${DSNAME}-${COLID}.log
+   --project-name ${PROJECTNAME} --collection-id "" --collection-version ${COLLECTION_VERSION} |& tee ${LOG_DIR}/opload-${DSNAME}-${RUNID}.log
 echo ""
-echo "Logs of this upload are available at:"
+echo "The log of this upload is available at:"
 echo ""
-ls -l ${LOG_DIR}/opload-${DSNAME}-*.log
+ls -lrt ${LOG_DIR}/opload-${DSNAME}-${RUNID}.log
 echo ""
 cd ${SCRIPT_DIR}
 exit 0
