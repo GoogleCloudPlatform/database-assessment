@@ -1,3 +1,4 @@
+# type: ignore
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -61,7 +62,7 @@ def load_assessment():
     with TemporaryDirectory() as temp_dir:
         for file in request.files.values():
             app.logger.info(f"saved {file.filename}")
-            file_path = os.path.join(temp_dir, secure_filename(file.filename))
+            file_path = os.path.join(temp_dir, secure_filename(file.filename))  # type: ignore
             app.logger.info(f"saved {file.filename} as {file_path}")
             file.save(file_path)
 

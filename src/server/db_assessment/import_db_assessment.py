@@ -27,6 +27,8 @@ from beautifultable import BeautifulTable
 from google.api_core.exceptions import Conflict
 from google.cloud import bigquery
 
+from db_assessment import rules_engine, set_client_info
+
 if TYPE_CHECKING:
     from .api import AppConfig
 
@@ -433,7 +435,6 @@ def import_dataframe_to_bq(
     # Changed default to from WRITE_TRUNCATE to WRITE_APPEND in args.load_type.
     write_disposition = str(args.load_type).upper()
     schema_update_options = []
-    file_format = bigquery.SourceFormat.CSV
     if str(table_name).lower() == "opkeylog":
         # OpkeyLog is a load stats table so rows would be appended and if any schema change is there,
         # the update of schema would be allowed
@@ -648,7 +649,7 @@ def import_csv_to_bq(
     write_disposition = str(args.load_type).upper()
 
     if str(table_name).lower() == "opkeylog":
-        # OpkeyLog is a load stats table so rows would be appended
+        # op_key_log is a load stats table so rows would be appended
         # and if any schema change is there, the update of schema would be allowed
         schema_update_options = [bigquery.SchemaUpdateOption.ALLOW_FIELD_ADDITION]
 
@@ -938,7 +939,7 @@ def populate_summary(
         _type_: _description_
     """
     # Function to populate the import results list which will be used to print using Beautiful Table
-    # rowsimported of <0 is used to indicate a FAILED status
+    # rows imported of <0 is used to indicate a FAILED status
     tmp_dataframe = pd.DataFrame()
 
     if "opConfig/" in invalid_files:

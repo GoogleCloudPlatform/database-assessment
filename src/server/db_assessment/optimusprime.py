@@ -1,4 +1,4 @@
-# # pylint: disable=[broad-except,eval-used]
+# type: ignore # pylint: disable=[broad-except,eval-used]
 # Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

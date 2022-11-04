@@ -13,14 +13,15 @@
 # limitations under the License.
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 import duckdb
 import typer
 from rich.console import Console
 from rich.traceback import install as rich_tracebacks
 
-from dbma import log, storage, transformer, utils
+from dbma import log, transformer, utils
+from dbma.__version__ import __version__ as current_version
 from dbma.config import settings
 
 if TYPE_CHECKING:
@@ -78,18 +79,8 @@ def upload_collection(
     """Upload a collection to Google"""
     if google_project_id:
         settings.google_project_id = google_project_id
-    if collection.is_dir():
-        # The path is a directory.  We need to check for zipped archives
-        logger.info("🔎 Searching for collection archives in the specified directory")
-        archives = list(collection.glob("*.tar.gz")) + list(collection.glob("*.zip"))
-        if len(archives) < 1:
-            logger.error("⚠️ No collection files were found in the specified directory")
-            sys.exit(1)
-    else:
-        archives = [collection]
-    console.log(collection)
-    for collection_archive in archives:
-        storage.engine.fs.put_file(collection_archive, f"{settings.collections_path}/upload/")
+    archives = _handle_collection_input(collection)
+    transformer.engine.upload_to_storage_backend(archives)
 
 
 @app.command(
@@ -132,24 +123,29 @@ def process_collection(
     logger.info("Configuring SQL Workspace at %s", settings.duckdb_path)
     working_path = settings.temp_path or next(utils.file_helpers.get_temp_dir())
     logger.info("Working Directory set to %s", str(working_path))
-    archives = _handle_collection_input(collection)
 
+    current_config = transformer.schemas.get_config_for_version(current_version)
+    archives = _handle_collection_input(collection)
     db = duckdb.connect(database=settings.duckdb_path, read_only=False, config={"memory_limit": "500mb"})
 
+    sql = transformer.manager.SQLManager(db, current_config.sql_files_path, current_config.canonical_path)
     transformer.engine.upload_to_storage_backend(archives)
     collections_to_process: "list[schemas.Collection]" = transformer.engine.find_collections(db, archives, working_path)
     transformer.engine.stage_collection_data(collections_to_process)
-    # transformer.engine.run_assessment(sql)
+    transformer.engine.run_assessment(sql)
 
 
 def _handle_collection_input(collection: Path) -> list[Path]:
     """_summary_
 
     Args:
-        collection (Path): _description_
+        collection (Path): A directory to search for collections or the location to a single file
+
+    Returns:
+        list[Path]: a valid list of paths to collections to extract and process
     """
     # setup configuration based on user input
-    archive_prefix = "opdb__"
+    archive_prefix: Final = "opdb__"
     if collection.is_dir():
         # The path is a directory.  We need to check for zipped archives
         logger.info("🔎 Searching for collection archives in the specified directory")
