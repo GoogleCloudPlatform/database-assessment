@@ -24,11 +24,8 @@ if [ $retval -ne 0 ]; then
    echo "BigQuery Dataset creation has failed.  Exiting...."
    exit 1
 fi
-for COLID in $(ls -1 ${OPOUTPUTDIR}/opdb__*.csv| rev | cut -d '.' -f 2 | rev | sort | uniq)
-do
-   ${VENV_DIR}/bin/optimus-prime --sep "${COLSEP}" --dataset ${DSNAME} --files-location ${OPOUTPUTDIR} \
-   --project-name ${PROJECTNAME} --collection-id ${COLID} | tee ${LOG_DIR}/opload-${DSNAME}-${COLID}.log
-done
+${VENV_DIR}/bin/optimus-prime --sep "${COLSEP}" --dataset ${DSNAME} --files-location ${OPOUTPUTDIR} \
+   --project-name ${PROJECTNAME} --collection-id "" --collection-version ${COLLECTION_VERSION} | tee ${LOG_DIR}/opload-${DSNAME}-${COLID}.log
 echo ""
 echo "Logs of this upload are available at:"
 echo ""
