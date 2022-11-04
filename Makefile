@@ -104,7 +104,8 @@ build-collector: clean-collector          ## Build the collector SQL scripts.
 	@echo "=> Building Advisor Data Collection Scripts..."
 	
 	mkdir -p $(BUILD_DIR)/collector/sql/extracts
-	cp src/collector/sql/*.{sql,sed} $(BUILD_DIR)/collector/sql
+	cp src/collector/sql/*.sql $(BUILD_DIR)/collector/sql
+	cp src/collector/sql/*.sed $(BUILD_DIR)/collector/sql
 	cp src/collector/sql/extracts/*.sql $(BUILD_DIR)/collector/sql/extracts
 	cp src/collector/collect-data.sh $(BUILD_DIR)/collector
 	cp src/collector/README.txt $(BUILD_DIR)/collector
