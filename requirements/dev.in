@@ -1,5 +1,0 @@
--r base.in
-invoke
-google-auth
-requests
-pip-tools

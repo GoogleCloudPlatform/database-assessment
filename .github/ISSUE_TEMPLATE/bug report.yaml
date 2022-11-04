@@ -1,4 +1,4 @@
-name  :  "\U0001F41B Bug"
+name: "\U0001F41B Bug"
 description: File a bug report
 title: "BUG: "
 labels: ["bug,priority:0"]
@@ -13,7 +13,7 @@ body:
     id: description
     attributes:
       label: Description
-      description: Dont forget to remove any sensitive data
+      description: Dont' forget to remove any sensitive data
       placeholder: Tell us what you see!
       value: "A bug happened!"
     validations:
@@ -24,8 +24,9 @@ body:
       label: Version
       description: What version of optimus version  are you running?
       options:
-        - 1.0.2 (Default)
-        - 1.0.3 (Edge)
+        - v4 (Default)
+        - v3
+        - v2 (Legacy)
     validations:
       required: false
   - type: dropdown

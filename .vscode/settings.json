@@ -4,6 +4,7 @@
     "**/*.pyc": {
       "when": "$(basename).py"
     },
+    ".mypy_cache": true,
     "**/__pycache__": true,
     ".venv": true,
     ".idea": true,
@@ -12,7 +13,8 @@
     ".nova": true,
     ".cache": true,
     ".dist": true,
-    "**/.pytest_cache": true
+    "**/.pytest_cache": true,
+    "site": true
   },
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -29,7 +31,7 @@
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "python.envFile": "${workspaceFolder}/.env",
-  "python.sortImports.args": ["--profile", "black"],
+  "isort.args": ["--profile", "black"],
   "python.formatting.provider": "none",
   "python.analysis.extraPaths": ["${workspaceFolder}"],
   "[python]": {
@@ -49,10 +51,42 @@
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "cSpell.words": ["dbping", "highwater", "isdefault", "opname", "skiprows"],
+  "cSpell.words": [
+    "dataguard",
+    "invalidfiles",
+    "IOSTAT",
+    "LOADDATE",
+    "machinesizes",
+    "nodataframe",
+    "notabname",
+    "opalldb",
+    "opdb",
+    "opdbt",
+    "operrors",
+    "opkeylog",
+    "optimusconfig",
+    "OSSTAT",
+    "pdbs",
+    "pkey",
+    "pkeys",
+    "SESS",
+    "SQLSTAT",
+    "SQLTEXT",
+    "statspack",
+    "SUBPARTITIONS",
+    "SYSMETRIC",
+    "SYSSTAT",
+    "TABLESPACES"
+  ],
   "[sql]": {
-    "editor.defaultFormatter": "adpyke.vscode-sql-formatter"
+    "editor.defaultFormatter": "mtxr.sqltools"
   },
-  "python.linting.banditEnabled": false,
-  "python.linting.mypyEnabled": false
+  "python.linting.lintOnSave": true,
+  "python.linting.banditEnabled": true,
+  "python.linting.banditArgs": ["-r", "-c", "pyproject.toml"],
+  "python.linting.mypyEnabled": true,
+  "mypy.runUsingActiveInterpreter": true,
+  "[toml]": {
+    "editor.defaultFormatter": "be5invis.toml"
+  }
 }

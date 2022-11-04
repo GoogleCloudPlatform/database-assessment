@@ -1,51 +1,35 @@
 timeout: "1800s"
 steps:
+  # pull the existing image so we can utilize cache
+  - name: "gcr.io/cloud-builders/docker"
+    entrypoint: "bash"
+    args:
+      [
+        "-c",
+        "docker pull us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-api:latest || exit 0",
+      ]
   - name: "gcr.io/cloud-builders/docker"
     args:
       [
         "build",
         "-t",
-        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID",
+        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-api:latest",
+        "--cache-from",
+        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-api:latest",
         ".",
-        "-f",
-        "deploy/docker/cloudbuild/Dockerfile",
-      ]
-  - name: "gcr.io/cloud-builders/docker"
-    args:
-      [
-        "push",
-        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID",
-      ]
-  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
-    entrypoint: python3
-    args: ["-m", "pip", "install", "-U", "wheel", "setuptools", "pip", "--user"]
-  # Build the container image
-  - name: "gcr.io/cloud-builders/docker"
-    args:
-      [
-        "build",
-        "-t",
-        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-api:$BUILD_ID",
-        ".",
-      ]
-  # Push the container image to Container Registry
-  - name: "gcr.io/cloud-builders/docker"
-    args:
-      [
-        "push",
-        "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-api:$BUILD_ID",
       ]
   # Deploy container image to Cloud Run
-
-  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
-    entrypoint: python3
-    args: ["-m", "pip", "install", "-r", "requirements/dev.txt", "--user"]
-  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+    entrypoint: pip
+    args: ["install", "-U", ".", "--user"]
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: python3
     args: ["-m", "invoke", "pull-config"]
-  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: python3
-    args: ["-m", "invoke", "deploy", "--tag=$BUILD_ID"]
-  - name: "us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-client:$BUILD_ID"
+    args: ["-m", "invoke", "deploy", "--tag=latest"]
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: python3
     args: ["-m", "invoke", "test"]
+images:
+  - us-central1-docker.pkg.dev/optimus-prime-ci/cloud-run-source-deploy/op-api:latest

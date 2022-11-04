@@ -17,12 +17,12 @@
 
 - Build a wheel distribution, build a docker image, create a github release, and publish to PyPI and Docker Hub whenever a new tag is created.
 - Linting and testing steps must pass before the release steps can begin.
-- Documentation is automatically published to the _docs_ branch and hosted on github pages.
+- Documentation is automatically published to the `gh-pages` branch and hosted on github pages.
 - All github release tags, docker image tags, and PyPI version numbers are in agreement with one another and follow semantic versioning standards.
 
 ## Build and Publish Docs
 
-- Build the documentation, publish to the _docs_ branch, and release to github pages.
+- Build the documentation, publish to the `gh-pages` branch, and release to github pages.
 - Runs only on a manual trigger in the github actions tab.
 
 ## Build and Publish Docker Image

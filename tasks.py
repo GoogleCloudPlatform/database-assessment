@@ -1,10 +1,14 @@
+# type: ignore
 import json
 import logging
+from typing import Final
 
 import requests
 from invoke.tasks import task
 
 logger = logging.getLogger()
+
+PROJECT: Final = "optimus-prime-ci"
 
 
 @task
@@ -33,7 +37,7 @@ def test(ctx, base_url=None, local=False):
         base_url = get_beta_url(ctx)
     logger.info(base_url)
     id_token = authenticate(ctx, local)
-    cmd = f"python3 -m db_assessment.optimusprime --remote --files-location sample/datacollection --dataset {ctx.dataset} --project {ctx.project} --collection-id {ctx.collection_id} --remote-url {base_url}"
+    cmd = f"python3 -m db_assessment.optimusprime --remote --files-location sample/datacollection --dataset {ctx.dataset} --project {ctx.project} --collection-id {ctx.collection_id} --remote-url {base_url}"  # pylint: disable=[line-too-long]
     logger.info(cmd)
     ctx.run(cmd, env={"ID_TOKEN": id_token})
 
@@ -41,7 +45,7 @@ def test(ctx, base_url=None, local=False):
 @task
 def deploy(ctx, tag="latest"):
     ctx.run(
-        f"gcloud run deploy {ctx.service} --image {ctx.image}:{tag} --region {ctx.region} --project {ctx.project} --no-traffic --tag beta"
+        f"gcloud run deploy {ctx.service} --image {ctx.image}:{tag} --region {ctx.region} --project {ctx.project} --no-traffic --tag beta"  # pylint: disable=[line-too-long]
     )
 
 
@@ -60,11 +64,7 @@ def get_beta_url(ctx):
         hide=True,
     ).stdout
     service = json.loads(json_output)
-    beta = [
-        revision["url"]
-        for revision in service["status"]["traffic"]
-        if revision.get("tag", None) == "beta"
-    ]
+    beta = [revision["url"] for revision in service["status"]["traffic"] if revision.get("tag", None) == "beta"]
     return beta[0]
 
 
@@ -82,14 +82,13 @@ def authenticate(ctx, local=False):
     if local:
         token_cmd = ctx.run("gcloud auth print-identity-token", hide=True)
         return token_cmd.stdout.replace("\n", "")
-    METADATA_SERVER_URL = "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes=https://www.googleapis.com/auth/iam"
-    METADATA_REQUEST_HEADERS = {"Metadata-Flavor": "Google"}
-    ID_TOKEN_URL = f"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{ctx.invoker_sa}:generateIdToken"
-
-    # Get the access token for the Cloud build account
-    access_token_request = requests.get(
-        METADATA_SERVER_URL, headers=METADATA_REQUEST_HEADERS, timeout=10
+    METADATA_SERVER_URL: Final = "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes=https://www.googleapis.com/auth/iam"  # pylint: disable=[line-too-long, invalid-name]
+    METADATA_REQUEST_HEADERS: Final = {"Metadata-Flavor": "Google"}  # pylint: disable=[invalid-name]
+    ID_TOKEN_URL: Final = (  # pylint: disable=[invalid-name]
+        f"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{ctx.invoker_sa}:generateIdToken"
     )
+    # Get the access token for the Cloud build account
+    access_token_request = requests.get(METADATA_SERVER_URL, headers=METADATA_REQUEST_HEADERS, timeout=10)
     access_token = access_token_request.json()["access_token"]
     logger.info("Got access token")
     identity_token_resp = requests.post(
@@ -106,20 +105,11 @@ def authenticate(ctx, local=False):
     return identity_token
 
 
-PROJECT = "optimus-prime-ci"
-
-
 @task
 def pull_config(ctx):
-    ctx.run(
-        "gcloud secrets versions access latest "
-        f'--secret="op-api-config" --project {PROJECT} > invoke.yml'
-    )
+    ctx.run("gcloud secrets versions access latest " f'--secret="op-api-config" --project {PROJECT} > invoke.yml')
 
 
 @task
 def push_config(ctx):
-    ctx.run(
-        "gcloud secrets versions add op-api-config "
-        f"--data-file=invoke.yml --project {PROJECT}"
-    )
+    ctx.run("gcloud secrets versions add op-api-config " f"--data-file=invoke.yml --project {PROJECT}")

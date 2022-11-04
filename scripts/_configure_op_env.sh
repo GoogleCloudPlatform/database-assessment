@@ -21,6 +21,10 @@ if [ "${OPOUTPUTDIR}" == "" ] || [ -z "${OPOUTPUTDIR}" ]; then
     echo "Please ensure OPOUTPUTDIR environment variable is set properly."
     exit 1
 fi
+if [ "${COLLECTION_VERSION}" == "" ] || [ -z "${COLLECTION_VERSION}" ]; then
+    echo "Please ensure COLLECTION_VERSION environment variable is set properly."
+    exit 1
+fi
 
 
 # Default these variables if they are not set.

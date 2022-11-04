@@ -25,7 +25,7 @@ body:
       description: What version of Optimus Prime are you running?
       options:
         - 1.0.2
-        - 1.0.3 
+        - 1.0.3
   - type: dropdown
     id: oracledbversion
     attributes:
@@ -52,4 +52,3 @@ body:
       label: Relevant example
       description: Please share ideally , what the new feature would look like in the end.
       render: shell
-

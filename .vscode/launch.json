@@ -5,13 +5,27 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "DBMA: Database Migration Advisor",
+      "type": "python",
+      "request": "launch",
+      "module": "dbma.__main__",
+      "envFile": "${workspaceFolder}/.env",
+      "args": [
+        "process-collection",
+        "-c",
+        "${workspaceFolder}/notebooks/data/"
+      ],
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    },
+    {
       "name": "OP: Sample File Load",
       "type": "python",
       "request": "launch",
-      "program": "db_assessment/optimusprime.py",
+      "module": "db_assessment.optimusprime",
       "args": [
         "--collection-id",
-        "",
+        "110222090840",
         "--project-name",
         "optimus-prime-ci",
         "--dataset",
@@ -22,6 +36,7 @@
         "|",
         "--delete-dataset"
       ],
+      "envFile": "${workspaceFolder}/.env",
       "justMyCode": true,
       "console": "integratedTerminal"
     },

@@ -74,6 +74,7 @@ docs/_build/
 
 # PyBuilder
 target/
+!src/server/dbma/transformer/schemas/*/sql/target
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -154,4 +155,8 @@ db_assessment/op_etl*.sql
 *.csv
 tmp
 tmp/*
+local.db
+local.db.wal
+notebooks/data/*.tgz
 *.tgz
+!optconfig*.csv
