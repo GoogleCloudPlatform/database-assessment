@@ -10200,9 +10200,7 @@
           ["instance_name", "STRING"],
           ["collection_time", "STRING"],
           ["dbid", "STRING"],
-          ["cmnt", "STRING"],
-          ["loadtobqdate", "STRING"],
-          ["jobparams", "STRING"]
+          ["cmnt", "STRING"]
         ],
         "dbsummary": [
           ["pkey", "STRING"],
@@ -10905,9 +10903,7 @@
           ["instance_name", "STRING"],
           ["collection_time", "STRING"],
           ["dbid", "STRING"],
-          ["cmnt", "STRING"],
-          ["loadtobqdate", "STRING"],
-          ["jobparams", "STRING"]
+          ["cmnt", "STRING"]
         ],
         "dbsummary": [
           ["pkey", "STRING"],
@@ -11610,9 +11606,7 @@
           ["instance_name", "STRING"],
           ["collection_time", "STRING"],
           ["dbid", "STRING"],
-          ["cmnt", "STRING"],
-          ["loadtobqdate", "STRING"],
-          ["jobparams", "STRING"]
+          ["cmnt", "STRING"]
         ],
         "dbsummary": [
           ["pkey", "STRING"],
@@ -12315,9 +12309,7 @@
           ["instance_name", "STRING"],
           ["collection_time", "STRING"],
           ["dbid", "STRING"],
-          ["cmnt", "STRING"],
-          ["loadtobqdate", "STRING"],
-          ["jobparams", "STRING"]
+          ["cmnt", "STRING"]
         ],
         "dbsummary": [
           ["pkey", "STRING"],
@@ -13020,9 +13012,7 @@
           ["instance_name", "STRING"],
           ["collection_time", "STRING"],
           ["dbid", "STRING"],
-          ["cmnt", "STRING"],
-          ["loadtobqdate", "STRING"],
-          ["jobparams", "STRING"]
+          ["cmnt", "STRING"]
         ],
         "dbsummary": [
           ["pkey", "STRING"],
@@ -14814,7 +14804,7 @@
         "target_object_name": "vcompressbytable",
         "store": "BIGQUERY"
       },
-      "status": "ENABLED",
+      "status": "DISABLED",
       "tags": ["DATAFRAMERESHAPE"],
       "description": ""
     },
