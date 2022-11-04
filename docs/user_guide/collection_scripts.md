@@ -2,7 +2,7 @@
 
 ## Execute collection script
 
-Download the latest collection scripts here.
+Download the latest collection scripts [here](https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest/download/collection_scripts.tar.bz2).
 
 Extract these files to a location that has access to the database from SQL\*Plus
 

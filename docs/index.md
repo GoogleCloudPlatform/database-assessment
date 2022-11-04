@@ -9,6 +9,6 @@
 
 ## Quick Start
 
-Grab the collection scripts from the latest release [here](https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest).
+Grab the collection scripts from the latest release [here](https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest/download/collection_scripts.tar.bz2).
 
 Instructions for execution are included in the README bundled with the collection scripts.
