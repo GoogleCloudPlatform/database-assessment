@@ -6,13 +6,20 @@ Download the latest collection scripts [here](https://github.com/GoogleCloudPlat
 
 Extract these files to a location that has access to the database from SQL\*Plus
 
+```shell
+tar xvf collection_scripts.tar.bz2
+cd collector
+
+```
+
+Launch the collection script
+
 - Execute this from a system that can access your database via sqlplus
 - Pass connect string as input to this script (see below for example)
 - NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
 
 ```shell
-cd /collector
-./collectData-Step1.sh \
+./collect-data.sh \
  optimusprime/Pa55w__rd123@//{db host/scan address}/{service name}
 ```
 

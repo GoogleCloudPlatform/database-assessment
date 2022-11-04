@@ -14,10 +14,10 @@ NODE_MODULES_EXISTS=$(shell python3 -c "if __import__('pathlib').Path('node_modu
 VERSION := $(shell grep -m 1 version pyproject.toml | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)
 GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
 COLLECTOR_SRC_DIR=src/collector
-COLLECTOR_BUILD_DIR=dist/collector
+BUILD_DIR=dist
 COLLECTOR_PACKAGE=collection_scripts.tar
-SERVER_SRC_DIR=src/server
-SERVER_BUILD_DIR=dist
+BUILD_DIR=dist
+
 .EXPORT_ALL_VARIABLES:
 
 ifndef VERBOSE
@@ -89,27 +89,27 @@ clean:       ## remove all build, testing, and static documentation files
 ###############
 # builds      #
 ###############
-build-server: $(SERVER_BUILD_DIR)
+build-server: $(BUILD_DIR)
 
-$(SERVER_BUILD_DIR): $(shell find $(SERVER_SRC_DIR))
+$(BUILD_DIR): $(shell find $(SERVER_SRC_DIR))
 	@poetry build
 
 clean-collector:
 	@echo  "=> Cleaning previous build artifcats for data collector scripts..."
-	rm -Rf $(COLLECTOR_BUILD_DIR)/*
+	rm -Rf $(BUILD_DIR)/collector/*
 
 
 
 build-collector: clean-collector          ## Build the collector SQL scripts.
 	@echo "=> Building Advisor Data Collection Scripts..."
 	
-	mkdir -p $(COLLECTOR_BUILD_DIR)/sql/extracts
-	cp src/collector/sql/*.{sql,sed} $(COLLECTOR_BUILD_DIR)/sql
-	cp src/collector/sql/extracts/*.sql $(COLLECTOR_BUILD_DIR)/sql/extracts
-	cp src/collector/collect-data.sh $(COLLECTOR_BUILD_DIR)
-	cp src/collector/README.txt $(COLLECTOR_BUILD_DIR)
-	cp  LICENSE $(COLLECTOR_BUILD_DIR)
-	echo "Advisor Data Extractor version $(VERSION) ($(COMMIT_SHA))" > $(COLLECTOR_BUILD_DIR)/VERSION.txt
+	mkdir -p $(BUILD_DIR)/collector/sql/extracts
+	cp src/collector/sql/*.{sql,sed} $(BUILD_DIR)/collector/sql
+	cp src/collector/sql/extracts/*.sql $(BUILD_DIR)/collector/sql/extracts
+	cp src/collector/collect-data.sh $(BUILD_DIR)/collector
+	cp src/collector/README.txt $(BUILD_DIR)/collector
+	cp  LICENSE $(BUILD_DIR)/collector
+	echo "Advisor Data Extractor version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/VERSION.txt
 
 
 .PHONY: build
@@ -117,8 +117,8 @@ build: build-collector build-server          ## Install the project in dev mode.
 
 package-collector:
 	@echo  "=> Packaging Data Extractor..."
-	rm -f ./dist/$(COLLECTOR_PACKAGE).bz2
-	tar -cjf  ./dist/$(COLLECTOR_PACKAGE).bz2  $(COLLECTOR_BUILD_DIR)
+	rm -f ./$(BUILD_DIR)/$(COLLECTOR_PACKAGE).bz2
+	tar -C ./$(BUILD_DIR) -cjf  $(BUILD_DIR)/$(COLLECTOR_PACKAGE).bz2  collector/
 
 
 
