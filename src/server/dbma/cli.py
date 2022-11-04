@@ -13,7 +13,7 @@
 # limitations under the License.
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 import duckdb
 import typer
@@ -23,9 +23,6 @@ from rich.traceback import install as rich_tracebacks
 from dbma import log, transformer, utils
 from dbma.__version__ import __version__ as current_version
 from dbma.config import settings
-
-if TYPE_CHECKING:
-    from dbma.transformer import schemas
 
 __all__ = ["console", "app"]
 
@@ -131,7 +128,7 @@ def process_collection(
     sql = transformer.manager.SQLManager(db, current_config.sql_files_path, current_config.canonical_path)
     sql.execute_pre_processing_scripts()
 
-    collections_to_process: "list[schemas.Collection]" = transformer.engine.find_collections(db, archives, working_path)
+    collections_to_process = transformer.engine.find_collections(db, archives, working_path)
     transformer.engine.stage_collection_data(collections_to_process)
     transformer.engine.run_assessment(sql)
 
