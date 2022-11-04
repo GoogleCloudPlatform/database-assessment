@@ -19,6 +19,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Any, Union
 
+import fsspec
 from packaging.version import LegacyVersion, Version
 from pydantic import ValidationError
 
@@ -36,6 +37,9 @@ __all__ = ["run_assessment", "find_collections", "upload_to_storage_backend", "s
 logger = log.get_logger()
 
 ScriptVersionType = Union[Version, LegacyVersion]
+
+
+local_fs = fsspec.filesystem("file")
 
 
 def stage_collection_data(collections_to_process: "list[schemas.Collection]") -> None:
@@ -59,7 +63,6 @@ def stage_collection_data(collections_to_process: "list[schemas.Collection]") ->
         logger.info("converted all files to parquet for collection %s", collection.collection_id)
 
     for collection in collections_to_process:
-        collection.queries.execute_pre_processing_scripts()
         collection.queries.execute_load_scripts(collection)
 
 

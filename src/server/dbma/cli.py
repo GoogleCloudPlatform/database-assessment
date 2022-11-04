@@ -126,10 +126,11 @@ def process_collection(
 
     current_config = transformer.schemas.get_config_for_version(current_version)
     archives = _handle_collection_input(collection)
-    db = duckdb.connect(database=settings.duckdb_path, read_only=False, config={"memory_limit": "500mb"})
-
-    sql = transformer.manager.SQLManager(db, current_config.sql_files_path, current_config.canonical_path)
     transformer.engine.upload_to_storage_backend(archives)
+    db = duckdb.connect(database=settings.duckdb_path, read_only=False, config={"memory_limit": "500mb"})
+    sql = transformer.manager.SQLManager(db, current_config.sql_files_path, current_config.canonical_path)
+    sql.execute_pre_processing_scripts()
+
     collections_to_process: "list[schemas.Collection]" = transformer.engine.find_collections(db, archives, working_path)
     transformer.engine.stage_collection_data(collections_to_process)
     transformer.engine.run_assessment(sql)
