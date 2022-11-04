@@ -18,14 +18,8 @@ fi
 
 source ${SCRIPT_DIR}/_configure_op_env.sh
 
-bq mk --dataset --force=TRUE --data_location=${DSLOC} ${DSNAME}
-retval=$?
-if [ $retval -ne 0 ]; then
-   echo "BigQuery Dataset creation has failed.  Exiting...."
-   exit 1
-fi
-${VENV_DIR}/bin/optimus-prime --sep "${COLSEP}" --dataset ${DSNAME} --files-location ${OPOUTPUTDIR} \
-   --project-name ${PROJECTNAME} --collection-id "" --collection-version ${COLLECTION_VERSION} | tee ${LOG_DIR}/opload-${DSNAME}-${COLID}.log
+${VENV_DIR}/bin/optimus-prime --sep "${COLSEP}" --dataset ${DSNAME} --delete-dataset --files-location ${OPOUTPUTDIR} \
+   --project-name ${PROJECTNAME} --collection-id "" --collection-version ${COLLECTION_VERSION} |& tee ${LOG_DIR}/opload-${DSNAME}-${COLID}.log
 echo ""
 echo "Logs of this upload are available at:"
 echo ""

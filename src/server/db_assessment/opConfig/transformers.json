@@ -164,7 +164,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -190,21 +190,21 @@
           ["owner", "STRING"],
           ["partition", "STRING"],
           ["subpartition", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "indexestypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -284,7 +284,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -306,13 +306,13 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -530,7 +530,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -770,7 +770,7 @@
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["objecttype", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"]
         ],
@@ -792,19 +792,19 @@
           ["owner", "STRING"],
           ["partition", "STRING"],
           ["subpartition", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "indexestypes": [
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -881,7 +881,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -902,13 +902,13 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -950,7 +950,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -1205,7 +1205,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -1231,21 +1231,21 @@
           ["owner", "STRING"],
           ["partition", "STRING"],
           ["subpartition", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "indexestypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -1324,7 +1324,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -1346,13 +1346,13 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -1570,7 +1570,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -1817,7 +1817,7 @@
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["objecttype", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"]
         ],
@@ -1839,19 +1839,19 @@
           ["owner", "STRING"],
           ["partition", "STRING"],
           ["subpartition", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "indexestypes": [
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -1928,7 +1928,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -1949,13 +1949,13 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -1997,7 +1997,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -2264,7 +2264,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -2290,21 +2290,21 @@
           ["owner", "STRING"],
           ["partition", "STRING"],
           ["subpartition", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "indexestypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -2384,7 +2384,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -2406,13 +2406,13 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -2630,7 +2630,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -2877,7 +2877,7 @@
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["objecttype", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"]
         ],
@@ -2899,19 +2899,19 @@
           ["owner", "STRING"],
           ["partition", "STRING"],
           ["subpartition", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "indexestypes": [
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -2988,7 +2988,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -3009,13 +3009,13 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistcmdtypes": [
           ["pkey", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -3057,7 +3057,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -3325,7 +3325,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -3351,21 +3351,21 @@
           ["owner", "STRING"],
           ["partition", "STRING"],
           ["subpartition", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "indexestypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -3444,7 +3444,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -3471,7 +3471,7 @@
           ["con_id", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -3689,7 +3689,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -3971,7 +3971,7 @@
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["objecttype", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"]
         ],
@@ -3993,19 +3993,19 @@
           ["owner", "STRING"],
           ["partition", "STRING"],
           ["subpartition", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "indexestypes": [
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -4082,7 +4082,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -4108,7 +4108,7 @@
           ["pkey", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -4150,7 +4150,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -4451,7 +4451,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -4477,21 +4477,21 @@
           ["owner", "STRING"],
           ["partition", "STRING"],
           ["subpartition", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "indexestypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -4570,7 +4570,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -4597,7 +4597,7 @@
           ["con_id", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -4815,7 +4815,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -5097,7 +5097,7 @@
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["objecttype", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"]
         ],
@@ -5119,19 +5119,19 @@
           ["owner", "STRING"],
           ["partition", "STRING"],
           ["subpartition", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "indexestypes": [
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -5208,7 +5208,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -5234,7 +5234,7 @@
           ["pkey", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -5276,7 +5276,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -5577,7 +5577,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -5603,21 +5603,21 @@
           ["owner", "STRING"],
           ["partition", "STRING"],
           ["subpartition", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "indexestypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -5696,7 +5696,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -5724,7 +5724,7 @@
           ["con_id", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -5942,7 +5942,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -6223,7 +6223,7 @@
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["objecttype", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"]
         ],
@@ -6245,19 +6245,19 @@
           ["owner", "STRING"],
           ["partition", "STRING"],
           ["subpartition", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "indexestypes": [
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -6334,7 +6334,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -6361,7 +6361,7 @@
           ["pkey", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -6403,7 +6403,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -6716,7 +6716,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -6742,21 +6742,21 @@
           ["owner", "STRING"],
           ["partition", "STRING"],
           ["subpartition", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "indexestypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -6855,7 +6855,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRG"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -6883,7 +6883,7 @@
           ["con_id", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -7101,7 +7101,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -7413,7 +7413,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -7439,21 +7439,21 @@
           ["owner", "STRING"],
           ["partition", "STRING"],
           ["subpartition", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "indexestypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -7552,7 +7552,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRG"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -7580,7 +7580,7 @@
           ["con_id", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -7798,7 +7798,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -8206,7 +8206,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -8231,14 +8231,14 @@
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -8320,7 +8320,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRG"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -8348,7 +8348,7 @@
           ["con_id", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -8553,7 +8553,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -8893,7 +8893,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -8918,14 +8918,14 @@
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -9007,7 +9007,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRG"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -9035,7 +9035,7 @@
           ["con_id", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -9240,7 +9240,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -9598,7 +9598,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -9623,14 +9623,14 @@
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -9712,7 +9712,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRG"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -9740,7 +9740,7 @@
           ["con_id", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -9945,7 +9945,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -10301,7 +10301,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -10326,14 +10326,14 @@
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -10415,7 +10415,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRG"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -10443,7 +10443,7 @@
           ["con_id", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -10648,7 +10648,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -11004,7 +11004,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -11029,14 +11029,14 @@
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -11118,7 +11118,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRG"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -11146,7 +11146,7 @@
           ["con_id", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -11351,7 +11351,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -11707,7 +11707,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -11732,14 +11732,14 @@
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["data_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "cpucoresusage": [
           ["pkey", "STRING"],
@@ -11821,7 +11821,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRG"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -11849,7 +11849,7 @@
           ["con_id", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -12054,7 +12054,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -12410,7 +12410,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -12435,7 +12435,7 @@
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
@@ -12524,7 +12524,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRG"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -12552,7 +12552,7 @@
           ["con_id", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -12757,7 +12757,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -13122,7 +13122,7 @@
           ["owner", "STRING"],
           ["objecttype", "STRING"],
           ["editionable", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["in_con_id", "STRING"],
           ["in_owner", "STRING"],
           ["in_object_type", "STRING"],
@@ -13147,7 +13147,7 @@
           ["con_id", "STRING"],
           ["owner", "STRING"],
           ["index_type", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "datatypes": [
           ["pkey", "STRING"],
@@ -13241,7 +13241,7 @@
           ["min_value", "STRING"],
           ["max_value", "STRING"],
           ["sum_value", "STRG"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "awrhistosstat": [
           ["pkey", "STRING"],
@@ -13269,7 +13269,7 @@
           ["con_id", "STRING"],
           ["hour", "STRING"],
           ["command_type", "STRING"],
-          ["coun", "STRING"],
+          ["cnt", "STRING"],
           ["avg_buffer_gets", "STRING"],
           ["avg_elapsed_time", "STRING"],
           ["avg_rows_processed", "STRING"],
@@ -13474,7 +13474,7 @@
           ["program", "STRING"],
           ["module", "STRING"],
           ["machine", "STRING"],
-          ["coun", "STRING"]
+          ["cnt", "STRING"]
         ],
         "ashsqlwaits": [
           ["pkey", "STRING"],
@@ -13920,12 +13920,7 @@
           "       CAST(TRIM(db_size_allocated_gb) AS NUMERIC)   db_size_allocated_gb,",
           "       TRIM(dg_database_role)                        dg_database_role,",
           "       TRIM(dg_protection_mode)                      dg_protection_mode,",
-          "       TRIM(dg_protection_level)                     dg_protection_level,",
-          "       CAST(TRIM(db_size_temp_allocated_gb) AS NUMERIC) db_size_temp_allocated_gb,",
-          "       CAST(TRIM(db_size_redo_allocated_gb) AS NUMERIC) db_size_redo_allocated_gb,",
-          "       TRIM(ebs_owner)                                  ebs_owner,",
-          "       TRIM(siebel_owner)                               siebel_owner,",
-          "       TRIM(psft_owner)                                 psft_owner",
+          "       TRIM(dg_protection_level)                     dg_protection_level",
           " FROM   ${project_name}.${dataset}.dbsummary a"
         ],
         "if_error": "None",
@@ -13986,8 +13981,7 @@
           "cast(con_id as numeric) con_id,",
           "cast(hour as numeric) hour,",
           "cast(command_type as numeric) command_type,",
-          "cast(coun as numeric) coun,",
-          "cast(coun as numeric) cnt,",
+          "cast(a.cnt as numeric) cnt,",
           "round(cast(replace(avg_buffer_gets,'nan','-1') as numeric),2) avg_buffer_gets,",
           "round(cast(replace(avg_elapsed_time,'nan','-1') as numeric),2) avg_elapsed_time,",
           "round(cast(replace(avg_rows_processed,'nan','-1') as numeric),2) avg_rows_processed,",
@@ -14933,7 +14927,7 @@
           "        trim(owner) owner,",
           "        trim(objecttype) objecttype,",
           "        trim(editionable) editionable,",
-          "        cast(coun as numeric) cnt,",
+          "        cast(cnt as numeric) cnt,",
           "        cast(replace(trim(in_con_id),'N/A','-1') as numeric) in_con_id,",
           "        cast(in_owner as numeric) in_owner,",
           "        cast(in_object_type as numeric) in_object_type,",
@@ -15098,7 +15092,7 @@
           "        cast(con_id as numeric) con_id,",
           "        trim(owner) owner,",
           "        trim(index_type) index_type,",
-          "        cast(coun as numeric) cnt",
+          "        cast(cnt as numeric) cnt",
           " FROM ${project_name}.${dataset}.indexestypes a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
@@ -15178,7 +15172,7 @@
           "        trim(owner) owner,",
           "        trim(`partition`) partition_type,",
           "        trim(subpartition) subpartition,",
-          "        cast(coun as numeric) cnt",
+          "        cast(cnt as numeric) cnt",
           " FROM ${project_name}.${dataset}.partsubparttypes a",
           " where trim(a.pkey) in",
           "      ( select trim(pkey)",
