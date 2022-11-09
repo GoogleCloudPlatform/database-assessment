@@ -47,6 +47,7 @@ grant select on sys.cdb_tablespaces to &&dbusername ;
 grant select on sys.cdb_data_files to &&dbusername ;
 grant select on sys.cdb_free_space to &&dbusername ;
 grant select on sys.v_$temp_space_header to &&dbusername ;
+grant select on sys.v_$parameter to &&dbusername ;
 grant select on sys.gv_$parameter to &&dbusername ;
 grant select on sys.cdb_feature_usage_statistics to &&dbusername ;
 grant select on sys.dba_high_water_mark_statistics to &&dbusername ;
@@ -113,4 +114,6 @@ grant select on sys.v_$rman_backup_job_details to &&dbusername ;
 grant select on sys.v_$logfile to &&dbusername ;
 grant select on sys.dba_temp_files to &&dbusername ;
 grant select on sys.cdb_temp_files to &&dbusername ;
+grant select on sys.cdb_views to  &&dbusername ;
+alter user  &&dbusername set container_data=all container = current;
 

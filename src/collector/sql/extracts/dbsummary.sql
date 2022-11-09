@@ -127,16 +127,16 @@ SELECT '&&v_host'
         )
         ) as psft_owner,
         (SELECT RPAD('Y',30)
-         FROM dba_objects 
+         FROM &v_tblprefix._objects 
          WHERE owner = 'RDSADMIN'
            AND object_name = 'RDAADMIN_UTIL' 
            AND ROWNUM = 1) AS rds_flag,
          (SELECT RPAD('Y',30)
-          FROM dba_views 
+          FROM &v_tblprefix._views 
           WHERE view_name ='OCI_AUTONOMOUS_DATABASES'
             AND ROWNUM = 1) AS oci_autonomous_flag,
          (SELECT RPAD('Y',30)
-          FROM dba_objects 
+          FROM &v_tblprefix._objects 
           WHERE object_name = 'DBMS_CLOUD'
             AND owner = (SELECT value 
                          FROM v$parameter 
