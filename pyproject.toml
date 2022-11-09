@@ -18,7 +18,7 @@ name = "db-migration-advisor"
 packages = [{include = "db_assessment", from = "src/server"}, {include = "dbma", from = "src/server"}]
 readme = "README.md"
 repository = "https://github.com/GoogleCloudPlatform/oracle-database-assessment"
-version = "3.0.8"
+version = "3.0.9"
 
 [tool.poetry.scripts]
 dbma = "dbma.__main__:main"
