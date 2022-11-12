@@ -13,13 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
-/*
-
-Version: 2.0.4
-Date: 2022-03-15
-
-*/
+ 
 
 set verify off
 

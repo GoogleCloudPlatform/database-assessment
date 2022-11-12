@@ -14,12 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-/*
 
-Version: 2.0.3
-Date: 2022-03-10
-
-*/
 
 set verify off
 
