@@ -4,13 +4,7 @@
 
 - `make clean` - Remove all build, testing, and static documentation files.
 
-- `make format-source` - Formats the source code with isort and black.
-
-- `make upgrade-dependencies` - Upgrades all dependencies to the latest compatible version.
-
-- `make build-collection` - Build a folder containing a set of the latest database collection scripts.
-
-- `make package-collection` - Generate an archive of the database collection scripts. To be used after executing build
+- `make build` - Build a folder containing a set of the latest database collection scripts.
 
 - `make gen-docs` - Generate HTML documentation.
 
