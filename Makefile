@@ -101,6 +101,6 @@ pre-release:       ## bump the version and create the release tag
 	make gen-docs
 	make clean
 	./.venv/bin/bump2version $(increment)
-	head .bumpversion.cfg | grep version
+	head .bumpversion.cfg | grep ^current_version
 	make build
  
