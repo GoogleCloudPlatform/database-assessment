@@ -98,12 +98,9 @@ docs:       ## generate HTML documentation and serve it to the browser
 
 .PHONY: pre-release
 pre-release:       ## bump the version and create the release tag
-	make install
-	make check
 	make gen-docs
 	make clean
 	./.venv/bin/bump2version $(increment)
-	git describe --tags --abbrev=0
 	head .bumpversion.cfg | grep version
 	make build
  
