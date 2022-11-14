@@ -10,10 +10,5 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-      - name: Building Collector
-        run: make build-collector
-      - name: Packaging collector
-        run: make package-collector
+      - name: Building Collection scripts
+        run: make build
