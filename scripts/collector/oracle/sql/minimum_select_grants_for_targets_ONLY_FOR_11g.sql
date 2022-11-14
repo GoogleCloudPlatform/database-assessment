@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
- 
+
 
 set verify off
 
@@ -49,6 +49,7 @@ grant select on sys.dba_objects to &&dbusername;
 grant select on sys.dba_source to &&dbusername;
 grant select on sys.dba_part_tables to &&dbusername;
 grant select on sys.dba_indexes to &&dbusername;
+grant select on sys.dba_tab_cols to &&dbusername;
 grant select on sys.dba_tab_columns to &&dbusername;
 grant select on sys.dba_constraints to &&dbusername;
 grant select on sys.aux_stats$ to &&dbusername;
@@ -93,4 +94,7 @@ grant select on sys.v_$rman_backup_job_details to &&dbusername ;
 grant select on sys.v_$logfile to &&dbusername ;
 grant select on sys.dba_temp_files to &&dbusername ;
 grant select on sys.dba_views to &&dbusername ;
-
+grant select on sys.dba_lobs to &&dbusername ;
+grant select on sys.dba_lob_partitions to &&dbusername ;
+grant select on sys.dba_lob_subpartitions to &&dbusername ;
+grant select on sys.dba_triggers to &&dbusername ;

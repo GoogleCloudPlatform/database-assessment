@@ -20,7 +20,7 @@ prompt *************************************************************************
 prompt
 prompt !!! ATTENTION !!!
 prompt
-prompt the Database Migration Assessment scripts utilize views and packages that are licensed 
+prompt The Database Migration Assessment scripts utilize views and packages that are licensed 
 prompt separately under the Oracle Diagnostics Pack and Oracle Tuning Pack. Please ensure 
 prompt you have the correct licenses to run this utility. See the README for further details.
 prompt
@@ -30,7 +30,7 @@ prompt
 
 prompt Initializing Database Migration Assessment Collector...
 prompt
-
+SET DEFINE "&"
 DEFINE SQLDIR=&2
 DEFINE EXTRACTSDIR=&SQLDIR/extracts
 set termout off

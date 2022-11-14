@@ -108,6 +108,10 @@ if [[ ${ERRCNT} -ne 0 ]]
 then
   V_ERR_TAG="_ERROR"
   retval=1
+  echo "Errors reported during collection:"
+  cat ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
+  echo " "
+  echo "Please rerun the extract after correcting the error condition."
 fi
 
 cd ${OUTPUT_DIR}; tar czf opdb__${V_FILE_TAG}${V_ERR_TAG}.tgz --remove-files *csv *.log
@@ -142,7 +146,9 @@ echo "==========================================================================
 
 if [ $retval -eq 0 ]; then
   if [ "$(echo ${sqlcmd_result} | grep -E '(ORA-|SP2-)')" != "" ]; then
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo "Database version check returned error ${sqlcmd_result}"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo "Exiting...."
     exit 255
   else
@@ -151,21 +157,27 @@ if [ $retval -eq 0 ]; then
     executeOP "${connectString}" ${OpVersion}
     retval=$?
     if [ $retval -ne 0 ]; then
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Optimus Prime extract reported an error.  Please check the error log in directory ${OUTPUT_DIR}"
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Exiting...."
       exit 255
     fi
     cleanupOpOutput $(echo ${V_TAG} | sed 's/.csv//g')
     retval=$?
     if [ $retval -ne 0 ]; then
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Optimus Prime data sanitation reported an error. Please check the error log in directory ${OUTPUT_DIR}"
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Exiting...."
       exit 255
     fi
     compressOpFiles $(echo ${V_TAG} | sed 's/.csv//g')
     retval=$?
     if [ $retval -ne 0 ]; then
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Optimus Prime data file archive encountered a problem.  Exiting...."
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       exit 255
     fi
     echo ""

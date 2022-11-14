@@ -15,7 +15,6 @@ limitations under the License.
 */
 
 
-
 set verify off
 
 accept dbusername char prompt "Please enter the DB Local Username(Or CDB Username) to receive all required grants: "
@@ -48,10 +47,12 @@ grant select on sys.cdb_feature_usage_statistics to &&dbusername ;
 grant select on sys.dba_high_water_mark_statistics to &&dbusername ;
 grant select on sys.cdb_high_water_mark_statistics to &&dbusername ;
 grant select on sys.dba_cpu_usage_statistics to &&dbusername ;
+grant select on sys.cdb_cpu_usage_statistics to &&dbusername ;
 grant select on sys.cdb_objects to &&dbusername ;
 grant select on sys.cdb_source to &&dbusername ;
 grant select on sys.cdb_part_tables to &&dbusername ;
 grant select on sys.cdb_indexes to &&dbusername ;
+grant select on sys.cdb_tab_cols to &&dbusername ;
 grant select on sys.cdb_tab_columns to &&dbusername ;
 grant select on sys.cdb_constraints to &&dbusername ;
 grant select on sys.aux_stats$ to &&dbusername ;
@@ -110,5 +111,10 @@ grant select on sys.v_$logfile to &&dbusername ;
 grant select on sys.dba_temp_files to &&dbusername ;
 grant select on sys.cdb_temp_files to &&dbusername ;
 grant select on sys.cdb_views to  &&dbusername ;
+grant select on sys.cdb_lobs to &&dbusername ;
+grant select on sys.cdb_lob_partitions to &&dbusername ;
+grant select on sys.cdb_lob_subpartitions to &&dbusername ;
+grant select on sys.cdb_triggers to &&dbusername ;
+
 alter user  &&dbusername set container_data=all container = current;
 
