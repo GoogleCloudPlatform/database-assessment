@@ -18,21 +18,22 @@ set termout on pause on
 prompt
 prompt ***********************************************************************************
 prompt
-prompt !!! ATTENTION !!!
+prompt !!! WARNING !!!
 prompt
-prompt the Database Migration Assessment scripts utilize views and packages that are licensed 
-prompt separately under the Oracle Diagnostics Pack and Oracle Tuning Pack. Please ensure 
-prompt you have the correct licenses to run this utility. See the README for further details.
+prompt Optimus prime accesses views and packages that are licensed separately under
+prompt the Oracle Diagnostics Pack and Oracle Tuning Pack. Please ensure you have
+prompt the correct licenses to run this utility. See the README for further details.
 prompt
 prompt
 prompt ***********************************************************************************
 prompt
 
-prompt Initializing Database Migration Assessment Collector...
+prompt Initializing Optimus Prime Collector...
 prompt
-
+SET DEFINE "&"
 DEFINE SQLDIR=&2
 DEFINE EXTRACTSDIR=&SQLDIR/extracts
+@@check_privs.sql
 set termout off
 @@op_collect_init.sql
 set termout on
@@ -41,7 +42,7 @@ prompt Step completed.
 
 
 prompt
-prompt Collecting Database Migration Assessment data...
+prompt Collecting Optimus Prime data...
 prompt
 
 set termout off
@@ -50,7 +51,7 @@ set termout off
 set termout on
 prompt Step completed.
 prompt
-prompt Database Migration Assessment data successfully extracted.
+prompt Optimus Prime data successfully extracted.
 prompt
 exit
 

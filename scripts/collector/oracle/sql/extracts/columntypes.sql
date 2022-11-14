@@ -57,13 +57,17 @@ FROM
         'VARCHAR2',
         'XMLTYPE',
         'UNDEFINED'
-    ) then 'USER_DEFINED' ELSE data_type END as data_type
+    )
+      AND data_type_owner NOT IN ('MDSYS')
+    THEN 'USER_DEFINED' ELSE CASE WHEN data_type_owner ='MDSYS' THEN 'SPATIAL' ELSE data_type END 
+    END as data_type
       FROM (
         SELECT
             &v_a_con_id AS con_id,
             owner,
             table_name,
             regexp_replace(data_type, '\([[:digit:]]\)', '(x)') AS data_type,
+            data_type_owner,
             1                                                 AS col_count
         FROM
             &v_tblprefix._tab_columns a
@@ -91,26 +95,27 @@ FROM
          'CLOB' AS                                  "CLOB",
          'DATE' AS                                  "DATE",
          'FLOAT' AS                                 "FLOAT",
-         'INTERVAL DAY(x) TO SECOND(x)' AS          "INTERVAL DAY(x) TO SECOND(x)",
-         'INTERVAL YEAR(x) TO MONTH' AS             "INTERVAL YEAR(x) TO MONTH",
+         'INTERVAL DAY(x) TO SECOND(x)' AS          "INTERVAL_DAY_TO_SECOND",
+         'INTERVAL YEAR(x) TO MONTH' AS             "INTERVAL_YEAR_TO_MONTH",
          'JSON'  AS                                 "JSON" ,
-         'LONG RAW' AS                              "LONG RAW",
+         'LONG RAW' AS                              "LONG_RAW",
          'LONG' AS                                  "LONG",
          'MLSLABEL' AS                              "MLSLABEL",
-         'NCHAR VARYING' AS                         "NCHAR VARYING",
+         'NCHAR VARYING' AS                         "NCHAR_VARYING",
          'NCHAR' AS                                 "NCHAR",
          'NCLOB' AS                                 "NCLOB",
          'NUMBER' AS                                "NUMBER",
          'NVARCHAR2' AS                             "NVARCHAR2",
          'RAW' AS                                   "RAW",
          'ROWID' AS                                 "ROWID",
-         'TIME(x) WITH TIME ZONE' AS                "TIME(x) WITH TIME ZONE",
-         'TIME(x)' AS                               "TIME(x)",
-         'TIMESTAMP(x) WITH LOCAL TIME ZONE' AS     "TIMESTAMP(x) WITH LOCAL TIME Z",
-         'TIMESTAMP(x) WITH TIME ZONE' AS           "TIMESTAMP(x) WITH TIME ZONE",
-         'TIMESTAMP(x)' AS                          "TIMESTAMP(x)",
+         'SPATIAL' AS                               "SPATIAL",
+         'TIME(x) WITH TIME ZONE' AS                "TIME_WITH_TIME_ZONE",
+         'TIME(x)' AS                               "TIME",
+         'TIMESTAMP(x) WITH LOCAL TIME ZONE' AS     "TIMESTAMP_WITH_LOCAL_TIME_Z",
+         'TIMESTAMP(x) WITH TIME ZONE' AS           "TIMESTAMP_WITH_TIME_ZONE",
+         'TIMESTAMP(x)' AS                          "TIMESTAMP",
          'UROWID' AS                                "UROWID",
-         'VARCHAR(x)' AS                            "VARCHAR(x)",
+         'VARCHAR(x)' AS                            "VARCHAR",
          'VARCHAR2' AS                              "VARCHAR2",
          'XMLTYPE' AS                               "XMLTYPE",
          'UNDEFINED' AS                             "UNDEFINED",

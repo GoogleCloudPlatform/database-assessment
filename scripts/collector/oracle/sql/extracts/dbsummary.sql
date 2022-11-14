@@ -141,13 +141,20 @@ SELECT '&&v_host'
             AND owner = (SELECT value 
                          FROM v$parameter 
                          WHERE name = 'common_user_prefix') || 'CLOUD$SERVICE'
-            AND ROWNUM = 1) AS dbms_cloud_pkg_installed
+            AND ROWNUM = 1) AS dbms_cloud_pkg_installed,
+         (SELECT RPAD('Y',30)
+          FROM &v_tblprefix._objects 
+          WHERE object_name = 'WWV_FLOW'
+            AND object_type = 'PACKAGE'
+            AND ROWNUM = 1
+            AND EXISTS (SELECT 1 FROM &v_tblprefix._users WHERE username ='apex_public_user')) AS apex_installed
 FROM   dual)
 SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , force_logging ,
        redo_gb_per_day , rac_dbinstaces , characterset , platform_name , startup_time , user_schemas ,
 	   buffer_cache_mb , shared_pool_mb , total_pga_allocated_mb , db_size_allocated_gb , db_size_in_use_gb ,
 	   db_long_size_gb , dg_database_role , dg_protection_mode , dg_protection_level, 
            db_size_temp_allocated_gb, db_size_redo_allocated_gb,
-           ebs_owner, siebel_owner, psft_owner, rds_flag, oci_autonomous_flag, dbms_cloud_pkg_installed
+           ebs_owner, siebel_owner, psft_owner, rds_flag, oci_autonomous_flag, dbms_cloud_pkg_installed,
+           apex_installed
 FROM vdbsummary;
 spool off
