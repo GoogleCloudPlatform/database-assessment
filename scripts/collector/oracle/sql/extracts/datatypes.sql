@@ -32,10 +32,7 @@ SELECT '&&v_host'
        count(distinct &v_a_con_id||owner||table_name) as distinct_table_count
 FROM   &v_tblprefix._tab_columns a
 WHERE  owner NOT IN
-                     (
-                     SELECT name
-                     FROM   SYSTEM.logstdby$skip_support
-                     WHERE  action=0)
+@&EXTRACTSDIR/exclude_schemas.sql
 GROUP  BY '&&v_host'
           || '_'
           || '&&v_dbname'

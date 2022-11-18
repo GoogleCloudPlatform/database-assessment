@@ -29,9 +29,8 @@ WITH vuseg AS (
  FROM &v_tblprefix._segments a
  WHERE tablespace_name IN ('SYSAUX', 'SYSTEM')
  AND owner NOT IN
- (SELECT name
-  FROM system.logstdby$skip_support
-  WHERE action=0))
+@&EXTRACTSDIR/exclude_schemas.sql
+)
 SELECT pkey , con_id , owner , segment_name , segment_type , tablespace_name
 FROM vuseg;
 spool off

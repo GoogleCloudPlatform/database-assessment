@@ -26,13 +26,6 @@ SELECT '&&v_host'
        count(1) count
 FROM   &v_tblprefix._db_links a
 WHERE username IS NOT NULL
-/*
-WHERE  owner NOT IN
-                     (
-                     SELECT name
-                     FROM   SYSTEM.logstdby$skip_support
-                     WHERE  action=0)
-*/
 GROUP BY '&&v_host'
        || '_'
        || '&&v_dbname'

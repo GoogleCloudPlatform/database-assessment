@@ -57,10 +57,7 @@ FROM   (SELECT '&&v_host'
                COUNT(1)      count_total
         FROM   &v_tblprefix._source a
         WHERE  owner NOT IN
-                            (
-                            SELECT name
-                            FROM   SYSTEM.logstdby$skip_support
-                            WHERE  action=0)
+@&EXTRACTSDIR/exclude_schemas.sql
         GROUP  BY '&&v_host'
                   || '_'
                   || '&&v_dbname'
