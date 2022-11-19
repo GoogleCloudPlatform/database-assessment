@@ -76,7 +76,14 @@ WHERE  s.snap_id = g.snap_id
        or LOWER(stat_name) LIKE '%db%block%'
        or LOWER(stat_name) LIKE '%execute%'
       -- or LOWER(stat_name) LIKE '%lob%'
-       or LOWER(stat_name) LIKE 'user%')
+       or LOWER(stat_name) LIKE 'user%'
+       or LOWER(stat_name) IN (
+                               'physical read total io requests',
+                               'physical read total multi block requests',
+                               'table fetch by rowid',
+                               'table scan blocks gotten',
+                               'table scan rows gotten',
+                               'consistent gets'))
 )
 GROUP BY
           '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora',
