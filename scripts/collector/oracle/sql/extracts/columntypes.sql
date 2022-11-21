@@ -72,14 +72,9 @@ FROM
         FROM
             &v_tblprefix._tab_columns a
         WHERE
-            owner NOT IN (
-                SELECT
-                    name
-                FROM
-                    system.logstdby$skip_support
-                WHERE
-                    action = 0
-            ) )
+            owner NOT IN 
+@&EXTRACTSDIR/exclude_schemas.sql
+           ) 
     ) PIVOT (
         SUM(col_count)
     AS col_count
@@ -132,14 +127,8 @@ SELECT
 FROM
     &v_tblprefix._segments a
 WHERE
-    owner NOT IN (
-        SELECT
-            name
-        FROM
-            system.logstdby$skip_support
-        WHERE
-            action = 0
-    )
+    owner NOT IN 
+@&EXTRACTSDIR/exclude_schemas.sql
 GROUP BY
     &v_a_con_id,
     owner,

@@ -41,10 +41,7 @@ SELECT '&&v_host'
        COUNT(1) as cnt
 FROM   &v_tblprefix._indexes a
 WHERE  owner NOT IN
-                     (
-                     SELECT name
-                     FROM   SYSTEM.logstdby$skip_support
-                     WHERE  action=0)
+@&EXTRACTSDIR/exclude_schemas.sql
 GROUP  BY '&&v_host'
           || '_'
           || '&&v_dbname'

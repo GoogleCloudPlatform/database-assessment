@@ -42,6 +42,7 @@ set termout off
 @&EXTRACTSDIR/ioevents.sql
 @&EXTRACTSDIR/iofunction.sql
 @&EXTRACTSDIR/lobsizing.sql
+@&EXTRACTSDIR/mviewtypes.sql
 @&EXTRACTSDIR/opkeylog.sql
 @&EXTRACTSDIR/sourcecode.sql
 @&EXTRACTSDIR/sourceconn.sql

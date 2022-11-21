@@ -63,9 +63,10 @@ SELECT '&&v_host'
         FROM   v$instance)                                                      AS startup_time,
        (SELECT COUNT(1)
         FROM   &v_tblprefix._users
-        WHERE  username NOT IN (SELECT name
-                                FROM   SYSTEM.logstdby$skip_support
-                                WHERE  action = 0))                             AS user_schemas,
+        WHERE  username NOT IN
+@&EXTRACTSDIR/exclude_schemas.sql
+       )
+                                                                               AS user_schemas,
        (SELECT ROUND(SUM(bytes / 1024 / 1024))
         FROM   v$sgastat
         WHERE  name = 'buffer_cache')                                           buffer_cache_mb,

@@ -112,9 +112,7 @@ FROM
 WHERE
     c.data_type LIKE '%LOB%'
     AND c.owner NOT IN (
-        SELECT name
-        FROM system.logstdby$skip_support
-        WHERE action = 0
+@&EXTRACTSDIR/exclude_schemas.sql
     )
 )
 SELECT '&&v_tag' pkey, 

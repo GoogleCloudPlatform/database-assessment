@@ -115,6 +115,7 @@ grant select on sys.cdb_lobs to &&dbusername ;
 grant select on sys.cdb_lob_partitions to &&dbusername ;
 grant select on sys.cdb_lob_subpartitions to &&dbusername ;
 grant select on sys.cdb_triggers to &&dbusername ;
+grant select on sys.cdb_mviews to &&dbusername ;
 
 alter user  &&dbusername set container_data=all container = current;
 

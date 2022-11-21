@@ -37,9 +37,7 @@ SELECT
     COUNT(1) AS table_count
 FROM &v_tblprefix._tables a
 WHERE a.owner NOT IN (
-        SELECT name
-        FROM system.logstdby$skip_support
-        WHERE action = 0
+@&EXTRACTSDIR/exclude_schemas.sql
        )  
 GROUP BY
     &v_a_con_id,
