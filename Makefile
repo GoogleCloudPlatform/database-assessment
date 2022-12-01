@@ -61,7 +61,7 @@ clean-collector:
 
 .PHONY: build-collector
 build-collector: clean-collector      ## Build the collector SQL scripts.
-	@echo "=> Building Advisor Data Collection Scripts for Oracle version $(VERSION)..."
+	@echo "=> Building Assessment Data Collection Scripts for Oracle version $(VERSION)..."
 	mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts
 	cp scripts/collector/oracle/sql/*.sql $(BUILD_DIR)/collector/oracle/sql
 	cp scripts/collector/oracle/sql/*.sed $(BUILD_DIR)/collector/oracle/sql
