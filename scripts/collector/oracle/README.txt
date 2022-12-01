@@ -1,17 +1,17 @@
 README
 ======
-Instructions on how to prepare and run Google Database Migration Advisor Data Extractor to extract the data required
-for analysis by Database Migration Advisor.
+Instructions on how to prepare and run Google Database Migration Assessment Data Extractor to extract the data required
+for analysis by Database Migration Assessment.
 
 1. Background
 -------------
 
     This utility extracts metadata about the tables, partitions and SQL workload in a database into CSV files.
-    These CSV files are then used by Database Migration Advisor internally to analyze the data with Google Database Migration Advisor.
+    These CSV files are then used by Database Migration Assessment internally to analyze the data with Google Database Migration Assessment.
 
     a) License Requirements
     -----------------------
-    !!! IMPORTANT !!! Google Database Migration Advisor accesses DBA_HIST% views that are licensed
+    !!! IMPORTANT !!! Google Database Migration Assessment accesses DBA_HIST% views that are licensed
     separately under the Oracle Diagnostics Pack and DBMS_SQLTUNE/DBMS_SQL_MONITOR packages
     to generate Real-Time SQL Monitoring reports that are licensed separately under the
     Oracle Tuning Pack. Please ensure you have the correct licenses to run this utility.
@@ -132,7 +132,7 @@ for analysis by Database Migration Advisor.
     c) Follow the prompt at the end of the warning message to either continue or cancel the execution
 
         Notes:
-            1) Google Database Migration Advisor Data Extractor extracts data for the entire database. In multitenant
+            1) Google Database Migration Assessment Data Extractor extracts data for the entire database. In multitenant
                CDB databases, you must connect to the container database.  Running this from within a 
                pluggable database will not collect the proper data.
 
