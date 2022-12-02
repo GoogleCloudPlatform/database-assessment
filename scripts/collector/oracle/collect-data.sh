@@ -79,12 +79,6 @@ if [ $retval -ne 0 ]; then
   echo "Error processing ${SCRIPT_DIR}/sql/op_sed_cleanup.sed.  Exiting..."
   return $retval
 fi
-sed -i -r '1i\ ' ${OUTPUT_DIR}/*csv
-retval=$?
-if [ $retval -ne 0 ]; then
-  echo "Error adding newline to top of Optimus Prime extract files.  Exiting..."
-  return $retval
-fi
 grep -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
 retval=$?
 if [ $retval -eq 1 ]; then 
@@ -141,7 +135,7 @@ retval=$?
 
 echo ""
 echo "==================================================================================="
-echo "Optimus Prime Database Assessment Collector Version ${OpVersion}"
+echo "Oracle Database Migration Assessment Collector Version ${OpVersion}"
 echo "==================================================================================="
 
 if [ $retval -eq 0 ]; then
@@ -158,7 +152,7 @@ if [ $retval -eq 0 ]; then
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Optimus Prime extract reported an error.  Please check the error log in directory ${OUTPUT_DIR}"
+      echo "Database Migration Assessment Collector reported an error.  Please check the error log in directory ${OUTPUT_DIR}"
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Exiting...."
       exit 255
@@ -167,7 +161,7 @@ if [ $retval -eq 0 ]; then
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Optimus Prime data sanitation reported an error. Please check the error log in directory ${OUTPUT_DIR}"
+      echo "Database Migration Assessment Collector data sanitation process reported an error. Please check the error log in directory ${OUTPUT_DIR}"
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Exiting...."
       exit 255
@@ -176,13 +170,13 @@ if [ $retval -eq 0 ]; then
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Optimus Prime data file archive encountered a problem.  Exiting...."
+      echo "Database Migration Assessment Collector data file archive encountered a problem.  Exiting...."
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       exit 255
     fi
     echo ""
     echo "==================================================================================="
-    echo "Optimus Prime Database Assessment Collector completed."
+    echo "Database Migration Assessment Collector completed collection process."
     echo "Data collection located at ${OUTPUT_DIR}/opdb__${V_FILE_TAG}.tgz"
     echo "==================================================================================="
     echo ""
