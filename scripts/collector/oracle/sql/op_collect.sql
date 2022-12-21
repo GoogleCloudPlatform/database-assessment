@@ -32,6 +32,7 @@ prompt Initializing Database Migration Assessment Collector...
 prompt
 SET DEFINE "&"
 DEFINE SQLDIR=&2
+DEFINE v_dodiagnostics=&3
 DEFINE EXTRACTSDIR=&SQLDIR/extracts
 set termout off
 @@op_collect_init.sql

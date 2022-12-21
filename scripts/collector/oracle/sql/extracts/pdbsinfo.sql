@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+define cdbjoin = "AND con_id = p.con_id"
 spool &outputdir/opdb__pdbsinfo__&v_tag
 
 WITH vpdbinfo AS (
@@ -25,8 +26,11 @@ SELECT '&&v_host'
        pdb_id,
        pdb_name,
        status,
-       logging
-FROM   &v_tblprefix._pdbs )
-SELECT pkey , dbid , pdb_id , pdb_name , status , logging
+       logging,
+       con_id,
+       con_uid,
+@&EXTRACTSDIR/app_schemas.sql
+FROM   &v_tblprefix._pdbs p)
+SELECT *
 FROM  vpdbinfo;
 spool off

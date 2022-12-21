@@ -17,7 +17,7 @@ This script access Automatic Repository Workload (AWR) views in the database dic
 Please ensure you have proper licensing. For more information consult Oracle Support Doc ID 1490798.1
 
 */
-
+prompt Param1 = &1
 
 define version = '&1'
 define dtrange = 30
@@ -36,13 +36,15 @@ set scan on
 set pause off
 set wrap on
 set echo off
-set appinfo 'OPTIMUS_PRIME'
+set appinfo 'DB MIGRATION ASSESSMENT'
 set colsep '|'
-set numwidth 48
 set timing off
 set time off
+alter session set nls_numeric_characters='.,';
 
-whenever sqlerror continue
+
+
+whenever sqlerror exit failure
 whenever oserror continue
 
 HOS echo define outputdir=$OUTPUT_DIR > /tmp/dirs.sql
@@ -53,6 +55,10 @@ select '&outputdir' as outputdir from dual;
 select '&seddir' as seddir from dual;
 select '&v_tag' as v_tag from dual;
 HOS rm -rf /tmp/dirs.sql
+
+variable minsnap NUMBER;
+variable maxsnap NUMBER;
+variable umfflag VARCHAR2(100);
 
 column instnc new_value v_inst noprint
 column hostnc new_value v_host noprint
@@ -69,6 +75,7 @@ column p_dbparam_dflt_col new_value v_dbparam_dflt_col noprint
 column p_editionable_col new_value v_editionable_col noprint
 column p_dopluggable new_value v_dopluggable noprint
 column p_db_container_col new_value v_db_container_col
+
 
 SELECT host_name     hostnc,
        instance_name instnc
@@ -117,9 +124,24 @@ FROM control_params WHERE ('&v_dbversion'  = '112' AND this_version = '&v_dbvers
                        OR ('&v_dbversion' != '112' AND this_version = 'OTHER')
 /
 
+DECLARE cnt NUMBER;
+BEGIN
+  SELECT count(1) INTO cnt FROM v$database WHERE database_role = 'PHYSICAL STANDBY';
+  dbms_output.put_line('Physical standby count = ' || cnt);
+  IF (cnt != 0) THEN
+    SELECT count(1) INTO cnt FROM all_objects WHERE object_name = 'DBMS_UMF';
+    IF (cnt > 0) THEN :umfflag := 'dbms_umf.get_node_id_local';
+    ELSE raise_application_error(-20002, 'This physical standby database is not configured to store historical performance data or this user does not have correct privileges.');
+    END IF;
+  ELSE :umfflag := 'dbid';
+  END IF;
+END;
+/
+
 SELECT
-CASE WHEN database_role = 'PHYSICAL STANDBY' THEN 'dbms_umf.get_node_id_local' ELSE 'dbid' END AS umf_test
-FROM v$database;
+:umfflag umf_test
+FROM dual
+/
 
 
 SELECT &v_umf_test p_dbid
@@ -127,16 +149,21 @@ FROM   v$database
 /
 
 
-SELECT MIN(snap_id) min_snapid,
-       MAX(snap_id) max_snapid
-FROM   &v_tblprefix._hist_snapshot
-WHERE  begin_interval_time > ( SYSDATE - '&&dtrange' )
-AND dbid = '&&v_dbid'
+BEGIN 
+  SELECT min(snap_id) , max(snap_id) INTO :minsnap, :maxsnap FROM dba_hist_snapshot WHERE begin_interval_time >= (sysdate- &&dtrange ) AND dbid = '&&v_dbid';
+  IF :minsnap IS NULL OR :maxsnap IS NULL THEN
+    raise_application_error(-20001, 'Unable to get snapshot IDs, please verify this user has the correct privileges granted.');
+  END IF;
+END;
 /
 
-PROMPT Collecting data for '&&v_dbid' between snaps &v_min_snapid and &v_max_snapid
+SELECT :minsnap min_snapid, :maxsnap max_snapid FROM dual;
+
+set termout on
+PROMPT Collecting data for database &v_dbname '&&v_dbid' between snaps &v_min_snapid and &v_max_snapid
 PROMPT
 
+set termout off
 
 COLUMN min_snapid clear
 COLUMN max_snapid clear
@@ -149,3 +176,4 @@ SELECT CASE WHEN &v_is_container != 0 THEN 'a.con_id' ELSE '''N/A''' END as a_co
        CASE WHEN &v_is_container != 0 THEN 'c.con_id' ELSE '''N/A''' END as c_con_id
 FROM DUAL;
 
+set numwidth 48

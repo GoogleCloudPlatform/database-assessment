@@ -32,7 +32,7 @@ fi
 if [ ! -d ${OUTPUT_DIR} ]; then
    mkdir -p ${OUTPUT_DIR}
 fi
-OpVersion="4.0.0"
+OpVersion="4.1.0"
 ### Import logging & helper functions
 #############################################################################
 
@@ -57,6 +57,7 @@ EOF
 function executeOP(){
 connectString="$1"
 OpVersion=$2
+DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
 
 if ! [ -x "$(command -v sqlplus)" ]; then
   echo "Could not find sqlplus command. Source in environment and try again"
@@ -65,7 +66,7 @@ fi
 
 sqlplus -s /nolog << EOF
 connect ${connectString}
-@${SCRIPT_DIR}/sql/op_collect.sql ${OpVersion} ${SQL_DIR}
+@${SCRIPT_DIR}/sql/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack}
 exit;
 EOF
 }
@@ -114,7 +115,8 @@ then
   echo "Please rerun the extract after correcting the error condition."
 fi
 
-cd ${OUTPUT_DIR}; tar czf opdb__${V_FILE_TAG}${V_ERR_TAG}.tgz --remove-files *csv *.log
+TARFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tgz
+cd ${OUTPUT_DIR}; tar czf ${TARFILE} --remove-files *csv *.log
 cd ${CURRENT_WORKING_DIR}
 echo ""
 echo "Step completed."
@@ -125,12 +127,24 @@ return $retval
 ### Validate input
 #############################################################################
 
-if [ "$#" -ne 1 ]; then
-  echo "Usage: $0 <connect string>" >&2
-  echo "example: $0 scott/tiger@myoraclehost:1521/myservice"
+if [ "$#" -ne 2 ]; then
+  echo 
+  echo "Please supply all the required parameters"
+  echo "Usage: $0 <connect string> UseDiagnostics|NoDiagnostics" >&2
+  echo "example: $0 scott/tiger@myoraclehost:1521/myservice UseDiagnostics"
   exit 1
 fi
 
+if ! [[ "$2" = "UseDiagnostics" || "$2" = "NoDiagnostics" ]] ; then
+  echo 
+  echo "You must indicate whether or not to use the Diagnostics Pack views."
+  echo "If this database is licensed to use the Diagnostics pack:"
+  echo "  $0 $1 UseDiagnostics"
+  echo " "
+  echo "If this database is NOT licensed to use the Diagnostics pack:"
+  echo "  $0 $1 NoDiagnostics"
+  exit 1
+fi
 
 # MAIN
 #############################################################################
@@ -138,6 +152,8 @@ fi
 connectString="$1"
 sqlcmd_result=$(checkVersion "${connectString}" "${OpVersion}")
 retval=$?
+
+DIAGPACKACCESS="$2"
 
 echo ""
 echo "==================================================================================="
@@ -154,7 +170,7 @@ if [ $retval -eq 0 ]; then
   else
     echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    executeOP "${connectString}" ${OpVersion}
+    executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS}
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -183,7 +199,7 @@ if [ $retval -eq 0 ]; then
     echo ""
     echo "==================================================================================="
     echo "Optimus Prime Database Assessment Collector completed."
-    echo "Data collection located at ${OUTPUT_DIR}/opdb__${V_FILE_TAG}.tgz"
+    echo "Data collection located at ${OUTPUT_DIR}/${TARFILE}"
     echo "==================================================================================="
     echo ""
     exit 0

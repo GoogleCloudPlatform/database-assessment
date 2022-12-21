@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+define cdbjoin = "AND 1=1"
+column FORCE_LOGGING format A15
 spool &outputdir/opdb__dbsummary__&v_tag
 
 WITH vdbsummary AS (
@@ -59,7 +61,7 @@ SELECT '&&v_host'
            WHERE  a.parameter = 'NLS_CHARACTERSET')                             AS characterset,
        (SELECT platform_name
         FROM   v$database)                                                      AS platform_name,
-       (SELECT TO_CHAR(startup_time, 'mm/dd/rr hh24:mi:ss')
+       (SELECT TO_CHAR(startup_time, 'YYYY-MM-DD HH24:MI:SS')
         FROM   v$instance)                                                      AS startup_time,
        (SELECT COUNT(1)
         FROM   &v_tblprefix._users
@@ -100,55 +102,7 @@ SELECT '&&v_host'
         FROM v$log l,
              v$logfile f
         WHERE f.group# = l.group#     )                                         AS db_size_redo_allocated_gb,
-        (
-        SELECT CASE WHEN table_name = 'FND_PRODUCT_GROUPS' AND column_name = 'RELEASE_NAME' AND data_type = 'VARCHAR2' THEN owner END AS ebs_owner
-        FROM &v_tblprefix._tab_columns
-        WHERE ( table_name = 'FND_PRODUCT_GROUPS'  -- EBS
-           AND column_name = 'RELEASE_NAME'
-           AND data_type = 'VARCHAR2'
-           AND rownum = 1
-           )
-           ) as ebs_owner,
-        (
-        SELECT CASE WHEN table_name = 'S_REPOSITORY'       AND column_name = 'ROW_ID'       AND data_type = 'VARCHAR2' THEN owner END AS siebel_owner
-        FROM &v_tblprefix._tab_columns
-        WHERE ( table_name = 'S_REPOSITORY'           -- Siebel
-           AND column_name = 'ROW_ID'
-           AND data_type = 'VARCHAR2'
-           AND rownum = 1
-           )
-           ) as siebel_owner,
-          (
-        SELECT CASE WHEN table_name = 'PSSTATUS'           AND column_name = 'TOOLSREL'     AND data_type = 'VARCHAR2' THEN owner END AS psft_owner
-        FROM &v_tblprefix._tab_columns
-        WHERE ( table_name = 'PSSTATUS'               -- PeopleSoft
-           AND column_name = 'TOOLSREL'
-           AND data_type = 'VARCHAR2'
-           AND rownum = 1
-        )
-        ) as psft_owner,
-        (SELECT RPAD('Y',30)
-         FROM &v_tblprefix._objects 
-         WHERE owner = 'RDSADMIN'
-           AND object_name = 'RDAADMIN_UTIL' 
-           AND ROWNUM = 1) AS rds_flag,
-         (SELECT RPAD('Y',30)
-          FROM &v_tblprefix._views 
-          WHERE view_name ='OCI_AUTONOMOUS_DATABASES'
-            AND ROWNUM = 1) AS oci_autonomous_flag,
-         (SELECT RPAD('Y',30)
-          FROM &v_tblprefix._objects 
-          WHERE object_name = 'DBMS_CLOUD'
-            AND owner = (SELECT value 
-                         FROM v$parameter 
-                         WHERE name = 'common_user_prefix') || 'CLOUD$SERVICE'
-            AND ROWNUM = 1) AS dbms_cloud_pkg_installed,
-         (SELECT RPAD('Y',30)
-          FROM &v_tblprefix._objects 
-          WHERE object_name = 'WWV_FLOW'
-            AND object_type = 'PACKAGE'
-            AND ROWNUM = 1
-            AND EXISTS (SELECT 1 FROM &v_tblprefix._users WHERE username ='apex_public_user')) AS apex_installed
+@&EXTRACTSDIR/app_schemas.sql
 FROM   dual)
 SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , force_logging ,
        redo_gb_per_day , rac_dbinstaces , characterset , platform_name , startup_time , user_schemas ,
@@ -156,6 +110,6 @@ SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , fo
 	   db_long_size_gb , dg_database_role , dg_protection_mode , dg_protection_level, 
            db_size_temp_allocated_gb, db_size_redo_allocated_gb,
            ebs_owner, siebel_owner, psft_owner, rds_flag, oci_autonomous_flag, dbms_cloud_pkg_installed,
-           apex_installed
+           apex_installed, sap_owner
 FROM vdbsummary;
 spool off

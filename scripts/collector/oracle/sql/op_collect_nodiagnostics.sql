@@ -13,20 +13,5 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-spool &outputdir/opdb__pdbsopenmode__&v_tag
 
-WITH vpdbmode as (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'                   AS pkey,
-       con_id,
-       name,
-       open_mode,
-       total_size / 1024 / 1024 / 1024 TOTAL_GB,
-       con_uid
-FROM   v$pdbs )
-SELECT pkey , con_id , name , open_mode , TOTAL_GB, con_uid
-FROM vpdbmode;
-spool off
+Prompt Skipping collection of statstics requiring the Oracle Diagnostics Pack license.
