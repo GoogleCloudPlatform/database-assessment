@@ -145,9 +145,9 @@ SELECT
        || '&&v_dbname'
        || '_'
        || '&&v_hora' AS pkey,
-    c.*, s.bytes
+    c.*, NVL(s.bytes,0) as bytes
 FROM  coltypes c 
-JOIN segs s ON c.con_id = s.con_id and s.owner = c.owner and s.segment_name = c.table_name 
+LEFT JOIN segs s ON c.con_id = s.con_id and s.owner = c.owner and s.segment_name = c.table_name 
 ORDER BY 1,2,3
 ;
 

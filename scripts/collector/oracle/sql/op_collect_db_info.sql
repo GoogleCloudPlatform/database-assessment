@@ -23,8 +23,6 @@ set termout off
 @&EXTRACTSDIR/cpucoresusage.sql
 @&EXTRACTSDIR/dataguard.sql
 @&EXTRACTSDIR/datatypes.sql
-@&EXTRACTSDIR/dbahistsysstat.sql
-@&EXTRACTSDIR/dbahistsystimemodel.sql
 @&EXTRACTSDIR/dbfeatures.sql
 @&EXTRACTSDIR/dbhwmarkstatistics.sql
 @&EXTRACTSDIR/dbinstances.sql
