@@ -16,10 +16,6 @@ limitations under the License.
 
 set termout off
 @&EXTRACTSDIR/archlogs.sql
-@&EXTRACTSDIR/awrhistcmdtypes.sql
-@&EXTRACTSDIR/awrhistosstat.sql
-@&EXTRACTSDIR/awrhistsysmetrichist.sql
-@&EXTRACTSDIR/awrhistsysmetricsumm.sql
 @&EXTRACTSDIR/awrsnapdetails.sql
 @&EXTRACTSDIR/backups.sql
 @&EXTRACTSDIR/columntypes.sql
@@ -27,8 +23,6 @@ set termout off
 @&EXTRACTSDIR/cpucoresusage.sql
 @&EXTRACTSDIR/dataguard.sql
 @&EXTRACTSDIR/datatypes.sql
-@&EXTRACTSDIR/dbahistsysstat.sql
-@&EXTRACTSDIR/dbahistsystimemodel.sql
 @&EXTRACTSDIR/dbfeatures.sql
 @&EXTRACTSDIR/dbhwmarkstatistics.sql
 @&EXTRACTSDIR/dbinstances.sql
@@ -39,17 +33,14 @@ set termout off
 @&EXTRACTSDIR/exttab.sql
 @&EXTRACTSDIR/idxpertable.sql
 @&EXTRACTSDIR/indextypes.sql
-@&EXTRACTSDIR/ioevents.sql
-@&EXTRACTSDIR/iofunction.sql
 @&EXTRACTSDIR/lobsizing.sql
 @&EXTRACTSDIR/mviewtypes.sql
 @&EXTRACTSDIR/opkeylog.sql
 @&EXTRACTSDIR/sourcecode.sql
-@&EXTRACTSDIR/sourceconn.sql
-@&EXTRACTSDIR/sqlstats.sql
 @&EXTRACTSDIR/tablesnopk.sql
 @&EXTRACTSDIR/tabletypes.sql
 @&EXTRACTSDIR/triggers.sql
 @&EXTRACTSDIR/usedspacedetails.sql
 @&EXTRACTSDIR/usrsegatt.sql
-@&SQLDIR/&v_dopluggable
+@&SQLDIR/op_collect_&v_dopluggable
+@&SQLDIR/op_collect_&v_dodiagnostics

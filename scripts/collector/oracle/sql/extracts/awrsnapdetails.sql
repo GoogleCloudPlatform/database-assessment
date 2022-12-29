@@ -13,6 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+COLUMN HOUR FORMAT A4
+COLUMN MIN_BEGIN_INTERVAL_TIME FORMAT A26
+COLUMN MAX_BEGIN_INTERVAL_TIME FORMAT A26
+
 spool &outputdir/opdb__awrsnapdetails__&v_tag
 
 WITH vawrsnap as (
@@ -23,8 +27,8 @@ SELECT  '&&v_host'
         || '&&v_hora'                                                            AS pkey,
         dbid, instance_number, hour,
         min(snap_id) min_snap_id, max(snap_id) max_snap_id,
-        TO_CHAR(min(begin_interval_time), 'DD-MON-RR HH.MI.SSXFF AM') min_begin_interval_time, 
-        TO_CHAR(max(begin_interval_time), 'DD-MON-RR HH.MI.SSXFF AM') max_begin_interval_time,
+        TO_CHAR(min(begin_interval_time), 'YYYY-MM-DD HH24:MI:SS') min_begin_interval_time, 
+        TO_CHAR(max(begin_interval_time), 'YYYY-MM-DD HH24:MI:SS') max_begin_interval_time,
         count(1) cnt,ROUND(SUM(snaps_diff_secs),0) sum_snaps_diff_secs,
         ROUND(avg(snaps_diff_secs),0) avg_snaps_diff_secs,
         ROUND(median(snaps_diff_secs),0) median_snaps_diff_secs,

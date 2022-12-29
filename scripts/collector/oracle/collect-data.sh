@@ -32,7 +32,7 @@ fi
 if [ ! -d ${OUTPUT_DIR} ]; then
    mkdir -p ${OUTPUT_DIR}
 fi
-OpVersion="4.0.0"
+OpVersion="4.1.0"
 ### Import logging & helper functions
 #############################################################################
 
@@ -57,6 +57,7 @@ EOF
 function executeOP(){
 connectString="$1"
 OpVersion=$2
+DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
 
 if ! [ -x "$(command -v sqlplus)" ]; then
   echo "Could not find sqlplus command. Source in environment and try again"
@@ -65,7 +66,7 @@ fi
 
 sqlplus -s /nolog << EOF
 connect ${connectString}
-@${SCRIPT_DIR}/sql/op_collect.sql ${OpVersion} ${SQL_DIR}
+@${SCRIPT_DIR}/sql/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack}
 exit;
 EOF
 }
@@ -82,7 +83,7 @@ fi
 sed -i -r '1i\ ' ${OUTPUT_DIR}/*csv
 retval=$?
 if [ $retval -ne 0 ]; then
-  echo "Error adding newline to top of Optimus Prime extract files.  Exiting..."
+  echo "Error adding newline to top of Database Migration Assessment extract files.  Exiting..."
   return $retval
 fi
 grep -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
@@ -114,7 +115,8 @@ then
   echo "Please rerun the extract after correcting the error condition."
 fi
 
-cd ${OUTPUT_DIR}; tar czf opdb__${V_FILE_TAG}${V_ERR_TAG}.tgz --remove-files *csv *.log
+TARFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tgz
+cd ${OUTPUT_DIR}; tar czf ${TARFILE} --remove-files *csv *.log
 cd ${CURRENT_WORKING_DIR}
 echo ""
 echo "Step completed."
@@ -125,12 +127,18 @@ return $retval
 ### Validate input
 #############################################################################
 
-if [ "$#" -ne 1 ]; then
-  echo "Usage: $0 <connect string>" >&2
-  echo "example: $0 scott/tiger@myoraclehost:1521/myservice"
+if [[  $# -ne 2  || (  "$2" != "UseDiagnostics" && "$2" != "NoDiagnostics" ) ]]
+ then
+  echo 
+  echo "You must indicate whether or not to use the Diagnostics Pack views."
+  echo "If this database is licensed to use the Diagnostics pack:"
+  echo "  $0 $1 UseDiagnostics"
+  echo " "
+  echo "If this database is NOT licensed to use the Diagnostics pack:"
+  echo "  $0 $1 NoDiagnostics"
+  echo " "
   exit 1
 fi
-
 
 # MAIN
 #############################################################################
@@ -139,9 +147,11 @@ connectString="$1"
 sqlcmd_result=$(checkVersion "${connectString}" "${OpVersion}")
 retval=$?
 
+DIAGPACKACCESS="$2"
+
 echo ""
 echo "==================================================================================="
-echo "Optimus Prime Database Assessment Collector Version ${OpVersion}"
+echo "Database Migration Assessment Database Assessment Collector Version ${OpVersion}"
 echo "==================================================================================="
 
 if [ $retval -eq 0 ]; then
@@ -154,11 +164,11 @@ if [ $retval -eq 0 ]; then
   else
     echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    executeOP "${connectString}" ${OpVersion}
+    executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS}
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Optimus Prime extract reported an error.  Please check the error log in directory ${OUTPUT_DIR}"
+      echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${OUTPUT_DIR}"
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Exiting...."
       exit 255
@@ -167,7 +177,7 @@ if [ $retval -eq 0 ]; then
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Optimus Prime data sanitation reported an error. Please check the error log in directory ${OUTPUT_DIR}"
+      echo "Database Migration Assessment data sanitation reported an error. Please check the error log in directory ${OUTPUT_DIR}"
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Exiting...."
       exit 255
@@ -176,14 +186,14 @@ if [ $retval -eq 0 ]; then
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Optimus Prime data file archive encountered a problem.  Exiting...."
+      echo "Database Migration Assessment data file archive encountered a problem.  Exiting...."
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       exit 255
     fi
     echo ""
     echo "==================================================================================="
-    echo "Optimus Prime Database Assessment Collector completed."
-    echo "Data collection located at ${OUTPUT_DIR}/opdb__${V_FILE_TAG}.tgz"
+    echo "Database Migration Assessment Database Assessment Collector completed."
+    echo "Data collection located at ${OUTPUT_DIR}/${TARFILE}"
     echo "==================================================================================="
     echo ""
     exit 0

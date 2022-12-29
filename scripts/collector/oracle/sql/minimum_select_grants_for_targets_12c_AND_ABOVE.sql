@@ -117,5 +117,8 @@ grant select on sys.cdb_lob_subpartitions to &&dbusername ;
 grant select on sys.cdb_triggers to &&dbusername ;
 grant select on sys.cdb_mviews to &&dbusername ;
 
+-- This one is ok to fail if umf is not installed and configured
+grant execute on sys.dbms_umf to &&dbusername ;
+
 alter user  &&dbusername set container_data=all container = current;
 

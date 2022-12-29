@@ -13,6 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
+COLUMN INTERVAL_DAY_TO_SECOND_COL_COU HEADING INTERVAL_DAY_TO_SECOND_COL_COUNT FORMAT A40
+COLUMN INTERVAL_YEAR_TO_MONTH_COL_COU HEADING INTERVAL_YEAR_TO_MONTH_COL_COUNT FORMAT A40
+COLUMN TIMESTAMP_WITH_LOCAL_TIME_Z_CO HEADING TIMESTAMP_WITH_LOCAL_TIME_Z_COUNT FORMAT A40
+COLUMN TIMESTAMP_WITH_TIME_ZONE_COL_C HEADING TIMESTAMP_WITH_TIME_ZONE_COL_COUNT FORMAT A40
+
 spool &outputdir/opdb__columntypes__&v_tag
 
 WITH coltypes AS (
@@ -139,10 +145,16 @@ SELECT
        || '&&v_dbname'
        || '_'
        || '&&v_hora' AS pkey,
-    c.*, s.bytes
+    c.*, NVL(s.bytes,0) as bytes
 FROM  coltypes c 
-JOIN segs s ON c.con_id = s.con_id and s.owner = c.owner and s.segment_name = c.table_name 
+LEFT JOIN segs s ON c.con_id = s.con_id and s.owner = c.owner and s.segment_name = c.table_name 
 ORDER BY 1,2,3
 ;
 
 spool off
+
+COLUMN INTERVAL_DAY_TO_SECOND_COL_COU CLEAR
+COLUMN INTERVAL_YEAR_TO_MONTH_COL_COU CLEAR
+COLUMN TIMESTAMP_WITH_LOCAL_TIME_Z_CO CLEAR
+COLUMN TIMESTAMP_WITH_TIME_ZONE_COL_C CLEAR
+
