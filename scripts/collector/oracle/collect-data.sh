@@ -127,15 +127,8 @@ return $retval
 ### Validate input
 #############################################################################
 
-if [ "$#" -ne 2 ]; then
-  echo 
-  echo "Please supply all the required parameters"
-  echo "Usage: $0 <connect string> UseDiagnostics|NoDiagnostics" >&2
-  echo "example: $0 scott/tiger@myoraclehost:1521/myservice UseDiagnostics"
-  exit 1
-fi
-
-if ! [[ "$2" = "UseDiagnostics" || "$2" = "NoDiagnostics" ]] ; then
+if [[  $# -ne 2  || (  "$2" != "UseDiagnostics" && "$2" != "NoDiagnostics" ) ]]
+ then
   echo 
   echo "You must indicate whether or not to use the Diagnostics Pack views."
   echo "If this database is licensed to use the Diagnostics pack:"
@@ -143,6 +136,7 @@ if ! [[ "$2" = "UseDiagnostics" || "$2" = "NoDiagnostics" ]] ; then
   echo " "
   echo "If this database is NOT licensed to use the Diagnostics pack:"
   echo "  $0 $1 NoDiagnostics"
+  echo " "
   exit 1
 fi
 

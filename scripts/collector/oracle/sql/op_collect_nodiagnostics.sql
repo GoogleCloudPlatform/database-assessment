@@ -13,5 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
+set termout on
 Prompt Skipping collection of statstics requiring the Oracle Diagnostics Pack license.
+set termout off

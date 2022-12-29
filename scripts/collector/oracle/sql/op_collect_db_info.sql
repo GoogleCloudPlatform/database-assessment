@@ -44,5 +44,5 @@ set termout off
 @&EXTRACTSDIR/triggers.sql
 @&EXTRACTSDIR/usedspacedetails.sql
 @&EXTRACTSDIR/usrsegatt.sql
-@&SQLDIR/&v_dopluggable
-@&SQLDIR/&v_dodiagnostics
+@&SQLDIR/op_collect_&v_dopluggable
+@&SQLDIR/op_collect_&v_dodiagnostics
