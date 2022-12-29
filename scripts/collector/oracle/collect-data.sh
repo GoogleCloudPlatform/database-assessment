@@ -83,7 +83,7 @@ fi
 sed -i -r '1i\ ' ${OUTPUT_DIR}/*csv
 retval=$?
 if [ $retval -ne 0 ]; then
-  echo "Error adding newline to top of Optimus Prime extract files.  Exiting..."
+  echo "Error adding newline to top of Database Migration Assessment extract files.  Exiting..."
   return $retval
 fi
 grep -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
@@ -151,7 +151,7 @@ DIAGPACKACCESS="$2"
 
 echo ""
 echo "==================================================================================="
-echo "Optimus Prime Database Assessment Collector Version ${OpVersion}"
+echo "Database Migration Assessment Database Assessment Collector Version ${OpVersion}"
 echo "==================================================================================="
 
 if [ $retval -eq 0 ]; then
@@ -168,7 +168,7 @@ if [ $retval -eq 0 ]; then
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Optimus Prime extract reported an error.  Please check the error log in directory ${OUTPUT_DIR}"
+      echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${OUTPUT_DIR}"
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Exiting...."
       exit 255
@@ -177,7 +177,7 @@ if [ $retval -eq 0 ]; then
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Optimus Prime data sanitation reported an error. Please check the error log in directory ${OUTPUT_DIR}"
+      echo "Database Migration Assessment data sanitation reported an error. Please check the error log in directory ${OUTPUT_DIR}"
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Exiting...."
       exit 255
@@ -186,13 +186,13 @@ if [ $retval -eq 0 ]; then
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Optimus Prime data file archive encountered a problem.  Exiting...."
+      echo "Database Migration Assessment data file archive encountered a problem.  Exiting...."
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       exit 255
     fi
     echo ""
     echo "==================================================================================="
-    echo "Optimus Prime Database Assessment Collector completed."
+    echo "Database Migration Assessment Database Assessment Collector completed."
     echo "Data collection located at ${OUTPUT_DIR}/${TARFILE}"
     echo "==================================================================================="
     echo ""
