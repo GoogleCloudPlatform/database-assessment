@@ -103,6 +103,8 @@ SELECT '&&v_host'
              v$logfile f
         WHERE f.group# = l.group#     )                                         AS db_size_redo_allocated_gb,
 @&EXTRACTSDIR/app_schemas.sql
+        , (SELECT db_unique_name
+           FROM v$database)                                                     AS db_unique_name
 FROM   dual)
 SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , force_logging ,
        redo_gb_per_day , rac_dbinstaces , characterset , platform_name , startup_time , user_schemas ,
@@ -110,6 +112,6 @@ SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , fo
 	   db_long_size_gb , dg_database_role , dg_protection_mode , dg_protection_level, 
            db_size_temp_allocated_gb, db_size_redo_allocated_gb,
            ebs_owner, siebel_owner, psft_owner, rds_flag, oci_autonomous_flag, dbms_cloud_pkg_installed,
-           apex_installed, sap_owner
+           apex_installed, sap_owner, db_unique_name
 FROM vdbsummary;
 spool off

@@ -32,7 +32,7 @@ fi
 if [ ! -d ${OUTPUT_DIR} ]; then
    mkdir -p ${OUTPUT_DIR}
 fi
-OpVersion="4.1.0"
+OpVersion="4.1.1"
 ### Import logging & helper functions
 #############################################################################
 
@@ -71,6 +71,20 @@ exit;
 EOF
 }
 
+function createErrorLog(){
+V_FILE_TAG=$1
+echo "Checking for errors..."
+grep -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+retval=$?
+if [ $retval -eq 1 ]; then 
+  retval=0
+fi
+if [ $retval -gt 1 ]; then
+  echo "Error creating error log.  Exiting..."
+  return $retval
+fi
+}
+
 function cleanupOpOutput(){
 V_FILE_TAG=$1
 echo "Preparing files for compression."
@@ -84,15 +98,6 @@ sed -i -r '1i\ ' ${OUTPUT_DIR}/*csv
 retval=$?
 if [ $retval -ne 0 ]; then
   echo "Error adding newline to top of Database Migration Assessment extract files.  Exiting..."
-  return $retval
-fi
-grep -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
-retval=$?
-if [ $retval -eq 1 ]; then 
-  retval=0
-fi
-if [ $retval -gt 1 ]; then
-  echo "Error creating error log.  Exiting..."
   return $retval
 fi
 }
@@ -167,12 +172,15 @@ if [ $retval -eq 0 ]; then
     executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS}
     retval=$?
     if [ $retval -ne 0 ]; then
+      createErrorLog  $(echo ${V_TAG} | sed 's/.csv//g')
+      compressOpFiles $(echo ${V_TAG} | sed 's/.csv//g')
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${OUTPUT_DIR}"
+      echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${LOG_DIR}"
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Exiting...."
       exit 255
     fi
+    createErrorLog  $(echo ${V_TAG} | sed 's/.csv//g')
     cleanupOpOutput $(echo ${V_TAG} | sed 's/.csv//g')
     retval=$?
     if [ $retval -ne 0 ]; then

@@ -27,7 +27,7 @@ SELECT '&&v_host'
        TRANSLATE(SUBSTR(value, 1, 60), chr(124)||chr(10)||chr(13)||chr(39), ' ')         value,
        TRANSLATE(SUBSTR(&v_dbparam_dflt_col, 1, 30), chr(124)||chr(10)||chr(13)||chr(39), ' ')  default_value,
        isdefault
-FROM   gv$parameter a
+FROM   gv$system_parameter a
 ORDER  BY 2,3 )
 SELECT pkey , inst_id , con_id , name , value , default_value , isdefault
 FROM vparam;
