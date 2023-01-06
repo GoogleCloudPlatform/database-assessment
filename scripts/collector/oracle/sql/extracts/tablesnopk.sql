@@ -58,7 +58,10 @@ FROM   (SELECT &v_a_con_id AS con_id,
                left outer join &v_tblprefix._constraints b
                             ON &v_a_con_id = &v_b_con_id
                                AND a.owner = b.owner
-                               AND a.table_name = b.table_name)
+                               AND a.table_name = b.table_name
+        WHERE a.owner NOT IN 
+@&EXTRACTSDIR/exclude_schemas.sql
+       )
 GROUP  BY '&&v_host'
           || '_'
           || '&&v_dbname'

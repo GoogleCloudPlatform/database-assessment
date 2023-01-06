@@ -30,7 +30,26 @@ SELECT '&&v_host'
        con_id,
        con_uid,
 @&EXTRACTSDIR/app_schemas.sql
-FROM   &v_tblprefix._pdbs p)
-SELECT *
-FROM  vpdbinfo;
+FROM   &v_tblprefix._pdbs p),
+pdb_sga AS (
+            SELECT con_id, inst_id, SUM(bytes) AS sga_allocated_bytes
+            FROM  gv$sgastat
+            GROUP BY con_id, inst_id
+            ORDER BY  con_id, inst_id
+           ),
+pdb_pga AS (
+            SELECT con_id, inst_id, SUM(pga_used_mem) AS pga_used_bytes , SUM(pga_alloc_mem) as pga_allocated_bytes, SUM(pga_max_mem) as pga_max_bytes
+            FROM  gv$process
+            GROUP BY con_id, inst_id
+            ORDER BY  con_id, inst_id
+           ),
+mem_stats AS (
+              SELECT s.con_id, s.inst_id, s.sga_allocated_bytes, p.pga_used_bytes, p.pga_allocated_bytes, p.pga_max_bytes
+              FROM pdb_sga s 
+              LEFT OUTER JOIN pdb_pga p 
+                ON (s.con_id = p.con_id AND s.inst_id = p.inst_id)
+             )
+SELECT i.*, m.sga_allocated_bytes, m.pga_used_bytes, m.pga_allocated_bytes, m.pga_max_bytes
+FROM  vpdbinfo i
+      LEFT OUTER JOIN mem_stats m ON i.con_id = m.con_id;
 spool off
