@@ -38,7 +38,7 @@ DECLARE
       v_pdb_count NUMBER := 0;
     BEGIN
       dbms_output.put_line(v_infosep);
-      dbms_output.put_line('-- This extract will include the below pluggable databases:');
+      dbms_output.put_line('-- Privileges verified for the below pluggable databases:');
       OPEN v_pdb_list FOR 'SELECT pdb_name FROM cdb_pdbs WHERE pdb_name != :seedname ORDER BY 1' USING 'PDB$SEED';
       LOOP
         FETCH v_pdb_list INTO v_pdb_name;
@@ -175,7 +175,7 @@ BEGIN
       rectype_('SYS','CDB_TRIGGERS','SELECT'),
       rectype_('SYS','CDB_USERS','SELECT'),
       rectype_('SYS','CDB_VIEWS','SELECT'),
-      rectype_('SYS','DBA_VIEWS','SELECT'),
+   --   rectype_('SYS','DBA_VIEWS','SELECT'),
       rectype_('SYS','GV_$ARCHIVED_LOG','SELECT'),
       rectype_('SYS','GV_$ARCHIVE_DEST','SELECT'),
       rectype_('SYS','GV_$INSTANCE','SELECT'),
@@ -193,7 +193,13 @@ BEGIN
       rectype_('SYS','V_$SGASTAT','SELECT'),
       rectype_('SYS','V_$SQLCOMMAND','SELECT'),
       rectype_('SYS','V_$VERSION','SELECT'),
-      rectype_('SYSTEM','LOGSTDBY$SKIP_SUPPORT','SELECT')
+      rectype_('SYSTEM','LOGSTDBY$SKIP_SUPPORT','SELECT'),
+      rectype_('SYS','GV_$SGASTAT','SELECT'),
+      rectype_('SYS','GV_$PGASTAT','SELECT'),
+      rectype_('SYS','GV_$PROCESS','SELECT'),
+      rectype_('SYS','CDB_OBJECT_TABLES','SELECT'),
+      rectype_('SYS','CDB_XML_TABLES','SELECT'),
+      rectype_('SYS','GV_$SYSTEM_PARAMETER','SELECT')
       );
   ELSE
       v_source_table_list := t_source_table_list(
@@ -248,7 +254,13 @@ BEGIN
       rectype_('SYS','V_$SGASTAT','SELECT'),
       rectype_('SYS','V_$SQLCOMMAND','SELECT'),
       rectype_('SYS','V_$VERSION','SELECT'),
-      rectype_('SYSTEM','LOGSTDBY$SKIP_SUPPORT','SELECT')
+      rectype_('SYSTEM','LOGSTDBY$SKIP_SUPPORT','SELECT'),
+      rectype_('SYS','GV_$SGASTAT','SELECT'),
+      rectype_('SYS','GV_$PGASTAT','SELECT'),
+      rectype_('SYS','GV_$PROCESS','SELECT'),
+      rectype_('SYS','DBA_OBJECT_TABLES','SELECT'),
+      rectype_('SYS','DBA_XML_TABLES','SELECT'),
+      rectype_('SYS','GV_$SYSTEM_PARAMETER','SELECT')
       );
       
   END IF;
