@@ -3,3 +3,4 @@ mkdocs-material
 mkdocstrings 
 mkdocstrings-python
 bump2version
+pre-commit
