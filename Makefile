@@ -76,8 +76,9 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 package-collector:
 	@echo  "=> Packaging Database Migration Assessment Collector for Oracle..."
 	rm -f ./$(BUILD_DIR)/$(COLLECTOR_PACKAGE)*.bz2
-	tar -C ./$(BUILD_DIR)/collector/oracle -cjf  $(BUILD_DIR)/$(COLLECTOR_PACKAGE)-oracle.tar.bz2  .
-
+	rm -f ./$(BUILD_DIR)/$(COLLECTOR_PACKAGE)*.zip
+	@echo "Zipping files in ./$(BUILD_DIR)/collector/oracle"
+	cd ./$(BUILD_DIR)/collector/oracle; zip -r ../../../$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-oracle.zip  *
 
 
 .PHONY: build

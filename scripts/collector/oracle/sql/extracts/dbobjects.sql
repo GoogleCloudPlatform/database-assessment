@@ -21,24 +21,34 @@ vdbobji AS (
                &v_a_con_id AS con_id,
                owner,
                object_type,
-               &v_editionable_col AS editionable
+               &v_editionable_col AS editionable,
+               object_name
         FROM &v_tblprefix._objects a
         WHERE  owner NOT IN
 @&EXTRACTSDIR/exclude_schemas.sql
-),       
+),
+vdbobjx AS (
+        SELECT 'SYNONYM' as object_type, owner, synonym_name  ,  &v_b_con_id AS con_id
+        FROM &v_tblprefix._synonyms b
+        WHERE owner = 'PUBLIC' and 
+              table_owner in 
+@&EXTRACTSDIR/exclude_schemas.sql
+              ),
 vdbobj AS (
         SELECT '&&v_host'
                || '_'
                || '&&v_dbname'
                || '_'
                || '&&v_hora' AS pkey,
-               con_id,
-               owner,
-               object_type,
-               editionable,
+               i.con_id,
+               i.owner,
+               i.object_type,
+               i.editionable,
                COUNT(1)              count
-        FROM vdbobji
-        GROUP  BY  con_id, owner, editionable , object_type
+        FROM vdbobji i
+        LEFT OUTER JOIN vdbobjx x ON i.object_type = x.object_type AND i.owner = x.owner AND i.object_name = x.synonym_name AND i.con_id = x.con_id
+        WHERE x.object_type IS NULL
+        GROUP  BY  i.con_id, i.owner, i.editionable , i.object_type
 )
 SELECT pkey , 
        con_id , 
