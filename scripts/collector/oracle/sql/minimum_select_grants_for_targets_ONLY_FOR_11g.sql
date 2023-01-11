@@ -107,4 +107,5 @@ grant select on sys.dba_triggers to &&dbusername ;
 grant select on sys.dba_mviews to &&dbusername ;
 grant select on sys.dba_tab_cols to &&dbusername ;
 grant select on sys.dba_triggers to &&dbusername ;
+grant select on sys.dba_synonyms to &&dbusername ;
 

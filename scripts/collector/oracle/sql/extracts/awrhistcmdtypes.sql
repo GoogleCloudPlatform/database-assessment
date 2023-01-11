@@ -35,7 +35,8 @@ SELECT '&&v_host'
        ROUND(AVG(clwait_delta))                      AVG_CLWAIT,
        ROUND(AVG(apwait_delta))                      AVG_APWAIT,
        ROUND(AVG(ccwait_delta))                      AVG_CCWAIT,
-       ROUND(AVG(plsexec_time_delta))                AVG_PLSEXEC_TIME
+       ROUND(AVG(plsexec_time_delta))                AVG_PLSEXEC_TIME,
+       aa.name                                       COMMAND_NAME
 FROM   &v_tblprefix._hist_sqlstat a
        inner join &v_tblprefix._hist_sqltext b
                ON ( &v_a_con_id = &v_b_con_id
@@ -46,6 +47,7 @@ FROM   &v_tblprefix._hist_sqlstat a
                a.snap_id = c.snap_id
                AND a.dbid = c.dbid
                AND a.instance_number = c.instance_number)
+       left outer join audit_actions aa on b.command_type = aa.action
 WHERE  a.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
 AND a.dbid = &&v_dbid
 GROUP  BY '&&v_host'
@@ -55,9 +57,9 @@ GROUP  BY '&&v_host'
           || '&&v_hora',
           &v_a_con_id,
           TO_CHAR(c.begin_interval_time, 'hh24'),
-          b.command_type)
+          b.command_type, aa.name)
 SELECT pkey , con_id , hh24 , command_type , cnt , avg_buffer_gets , avg_elasped_time ,
        avg_rows_processed , avg_executions , avg_cpu_time , avg_iowait , avg_clwait ,
-       avg_apwait , avg_ccwait , avg_plsexec_time
+       avg_apwait , avg_ccwait , avg_plsexec_time, command_name
 FROM vcmdtype;
 spool off

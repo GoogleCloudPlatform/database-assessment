@@ -123,8 +123,16 @@ grant select on sys.cdb_lob_partitions to &&dbusername ;
 grant select on sys.cdb_lob_subpartitions to &&dbusername ;
 grant select on sys.cdb_triggers to &&dbusername ;
 grant select on sys.cdb_mviews to &&dbusername ;
+grant select on sys.v_$system_parameter to &&dbusername ;
+grant select on sys.cdb_object_tables  to &&dbusername ;
+grant select on sys.dba_object_tables  to &&dbusername ;
+grant select on sys.cdb_xml_tables  to &&dbusername ;
+grant select on sys.dba_xml_tables  to &&dbusername ;
+grant select on sys.cdb_synonyms to &&dbusername ;
+grant select on sys.dba_synonyms to &&dbusername ;
 
 -- This one is ok to fail if umf is not installed and configured
+Prompt It is not an error if this grant fails due to dbms_umf not being installed and configured.  It is used only when extracting from a physical standby.
 grant execute on sys.dbms_umf to &&dbusername ;
 
 alter user  &&dbusername set container_data=all container = current;
