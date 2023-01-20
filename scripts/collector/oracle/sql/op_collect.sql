@@ -19,6 +19,9 @@ SET DEFINE "&"
 DEFINE SQLDIR=&2
 DEFINE v_dodiagnostics=&3
 DEFINE EXTRACTSDIR=&SQLDIR/extracts
+DEFINE STATSPACKDIR=&SQLDIR/statspack
+DEFINE TERMOUTOFF=OFF
+--DEFINE TERMOUTOFF=ON
 prompt
 prompt ***********************************************************************************
 prompt
@@ -32,7 +35,7 @@ prompt
 
 prompt Initializing Database Migration Assessment Collector...
 prompt
-set termout off
+set termout &TERMOUTOFF
 @@op_collect_init.sql
 set termout on
 prompt
@@ -43,11 +46,12 @@ prompt
 prompt Collecting Database Migration Assessment data...
 prompt
 
-set termout off
+set termout &TERMOUTOFF
 @&SQLDIR/op_collect_db_info.sql &SQLDIR
 
 set termout on
 prompt Step completed.
+@@defines.sql
 prompt
 prompt Database Migration Assessment data successfully extracted.
 prompt

@@ -15,4 +15,10 @@ limitations under the License.
 */
 set termout on
 Prompt Skipping collection of statstics requiring the Oracle Diagnostics Pack license.
-set termout off
+Prompt Will use STATSPACK data if available...
+set termout &TERMOUTOFF
+
+PROMPT Running script &p_sp_script for STATSPACK
+
+@&SQLDIR/&p_sp_script
+

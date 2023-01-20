@@ -64,11 +64,19 @@ if ! [ -x "$(command -v sqlplus)" ]; then
   echo "Exiting..."
 fi
 
+
+echo define outputdir=$OUTPUT_DIR > /tmp/dirs.sql
+echo define seddir=$BASE_DIR/db_assessment/dbSQLCollector >> /tmp/dirs.sql
+echo define v_tag=$V_TAG >> /tmp/dirs.sql
+
+
 sqlplus -s /nolog << EOF
 connect ${connectString}
 @${SCRIPT_DIR}/sql/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack}
 exit;
 EOF
+
+rm /tmp/dirs.sql
 }
 
 function createErrorLog(){
@@ -97,7 +105,7 @@ fi
 sed -i -r '1i\ ' ${OUTPUT_DIR}/*csv
 retval=$?
 if [ $retval -ne 0 ]; then
-  echo "Error adding newline to top of Database Migration Assessment extract files.  Exiting..."
+ echo "Error adding newline to top of Database Migration Assessment extract files.  Exiting..."
   return $retval
 fi
 }
@@ -109,6 +117,11 @@ echo ""
 echo "Archiving output files"
 CURRENT_WORKING_DIR=$(pwd)
 cp ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
+if [ -f VERSION.txt ]; then
+  cp VERSION.txt ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
+else 
+  echo "No Version file found" >  ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
+fi
 ERRCNT=$(wc -l < ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log)
 if [[ ${ERRCNT} -ne 0 ]]
 then
@@ -121,12 +134,41 @@ then
 fi
 
 TARFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tgz
-cd ${OUTPUT_DIR}; tar czf ${TARFILE} --remove-files *csv *.log
+cd ${OUTPUT_DIR}; tar czf ${TARFILE} --remove-files *csv *.log *.txt
 cd ${CURRENT_WORKING_DIR}
 echo ""
 echo "Step completed."
 echo ""
 return $retval
+}
+
+function getVersion(){
+  if [ -f VERSION.txt ]; then
+   githash=$(cat VERSION.txt | cut -d '(' -f 2 | tr -d ')' )
+  else githash="NONE"
+  fi
+  echo "$githash"
+}
+
+function printExtractorVersion()
+{
+if [ "$1" == "NONE" ];
+then
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "This appears to be an unsupported version of this code. "
+  echo "Please download the latest stable version from "
+  echo "https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+else
+  echo "Using release version $1"
+fi
+
 }
 
 ### Validate input
@@ -154,9 +196,12 @@ retval=$?
 
 DIAGPACKACCESS="$2"
 
+extractorVersion="$(getVersion)"
+
 echo ""
 echo "==================================================================================="
 echo "Database Migration Assessment Database Assessment Collector Version ${OpVersion}"
+printExtractorVersion "${extractorVersion}"
 echo "==================================================================================="
 
 if [ $retval -eq 0 ]; then
@@ -204,6 +249,7 @@ if [ $retval -eq 0 ]; then
     echo "Data collection located at ${OUTPUT_DIR}/${TARFILE}"
     echo "==================================================================================="
     echo ""
+    printExtractorVersion "${extractorVersion}"
     exit 0
   fi
 else

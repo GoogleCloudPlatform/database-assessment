@@ -27,7 +27,8 @@ clear col comp brea
 set headsep off
 set trimspool on
 set lines 32000
-set pagesize 50000
+set pagesize 0 embedded on
+--set pagesize 50000
 set feed off
 set underline off
 set verify off
@@ -36,25 +37,19 @@ set scan on
 set pause off
 set wrap on
 set echo off
-set appinfo 'DB MIGRATION ASSESSMENT'
+set appinfo 'DB MIGRATION ASSESSMENT' 
 set colsep '|'
 set timing off
 set time off
 alter session set nls_numeric_characters='.,';
 
-
-
 whenever sqlerror exit failure
 whenever oserror continue
 
-HOS echo define outputdir=$OUTPUT_DIR > /tmp/dirs.sql
-HOS echo define seddir=$BASE_DIR/db_assessment/dbSQLCollector >> /tmp/dirs.sql
-HOS echo define v_tag=$V_TAG >> /tmp/dirs.sql
 @/tmp/dirs.sql
 select '&outputdir' as outputdir from dual;
-select '&seddir' as seddir from dual;
+--select '&seddir' as seddir from dual;
 select '&v_tag' as v_tag from dual;
-HOS rm -rf /tmp/dirs.sql
 
 variable minsnap NUMBER;
 variable maxsnap NUMBER;
@@ -163,7 +158,7 @@ set termout on
 PROMPT Collecting data for database &v_dbname '&&v_dbid' between snaps &v_min_snapid and &v_max_snapid
 PROMPT
 
-set termout off
+set termout &TERMOUTOFF
 
 COLUMN min_snapid clear
 COLUMN max_snapid clear
@@ -176,4 +171,20 @@ SELECT CASE WHEN &v_is_container != 0 THEN 'a.con_id' ELSE '''N/A''' END as a_co
        CASE WHEN &v_is_container != 0 THEN 'c.con_id' ELSE '''N/A''' END as c_con_id
 FROM DUAL;
 
+variable sp VARCHAR2(100);
+column sp_script new_value p_sp_script noprint
+DECLARE
+ cnt NUMBER;
+BEGIN
+  :sp  := 'prompt_nostatspack.sql';
+  SELECT count(1) INTO cnt FROM all_tables WHERE owner ='PERFSTAT';
+  IF cnt > 0 THEN :sp := 'op_collect_statspack.sql';
+  END IF;
+END;
+/
+
+SELECT :sp AS sp_script FROM DUAL;
+
+
 set numwidth 48
+

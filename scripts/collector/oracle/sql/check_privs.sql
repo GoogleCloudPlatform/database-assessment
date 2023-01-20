@@ -1,4 +1,4 @@
-set serveroutput on
+set serveroutput on size 10000
 set termout on
 set lines 100
 set feedback off
@@ -29,6 +29,10 @@ DECLARE
 
     v_infosep           VARCHAR2(100) := rpad('-', 100, '-');
     v_errsep            VARCHAR2(100) := rpad('!', 100, '!');
+    v_blanksep          VARCHAR2(100) := rpad('.', 100, ' ');
+
+    v_dbname            VARCHAR2(100);
+    v_dyn_sql           VARCHAR2(1000);
 
     PROCEDURE list_pdbs
     IS
@@ -38,11 +42,13 @@ DECLARE
       v_pdb_count NUMBER := 0;
     BEGIN
       dbms_output.put_line(v_infosep);
-      dbms_output.put_line('-- Privileges verified for the below pluggable databases:');
       OPEN v_pdb_list FOR 'SELECT pdb_name FROM cdb_pdbs WHERE pdb_name != :seedname ORDER BY 1' USING 'PDB$SEED';
       LOOP
         FETCH v_pdb_list INTO v_pdb_name;
         EXIT WHEN v_pdb_list%NOTFOUND;
+        IF v_pdb_count = 0 THEN 
+          dbms_output.put_line('-- Privileges verified for the below pluggable databases:');
+        END IF;
         dbms_output.put_line('   ' || v_pdb_name);
         v_pdb_count := v_pdb_count + 1;
       END LOOP;
@@ -127,8 +133,21 @@ DECLARE
     
 BEGIN
   BEGIN
+    dbms_output.put_line(v_blanksep);
+    dbms_output.put_line(v_blanksep);
+    dbms_output.put_line(v_blanksep);
+    dbms_output.put_line(v_blanksep);
+    dbms_output.put_line(v_blanksep);
+    SELECT name INTO v_dbname FROM v$database;
+    dbms_output.put_line('Checking privileges in database ' || v_dbname || ' ...');
     SELECT count(1) INTO v_cnt FROM all_tab_columns WHERE OWNER ='SYS' AND table_name ='V_$DATABASE' AND column_name ='CDB';
-    IF v_cnt = 1 THEN v_container_db := TRUE;
+    IF v_cnt = 1 THEN 
+      BEGIN
+        v_dyn_sql := 'SELECT count(1) FROM v$database WHERE cdb = ''YES'' ';
+        EXECUTE IMMEDIATE v_dyn_sql INTO v_cnt;
+        IF v_cnt = 1 THEN v_container_db := TRUE;
+        END IF;
+      END;
     END IF;
   EXCEPTION WHEN OTHERS THEN
     raise_application_error(-20001, 'This user must have SELECT privileges on V$DATABASE to continue.');

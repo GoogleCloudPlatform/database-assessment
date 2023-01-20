@@ -7,7 +7,7 @@ The collection scripts can be executed with any DBA account. Alternately, a new 
 ### PDB (Recommended)
 
 ```sql
-create user optimusprime identified by "Pa55w__rd123";
+create user dmacollector identified by "Pa55w__rd123";
 ```
 
 ### CDB
@@ -15,7 +15,7 @@ create user optimusprime identified by "Pa55w__rd123";
 ```sql
 select * from v$system_parameter where name='common_user_prefix';
 --C##
-create user C##optimusprime identified by "Pa55w__rd123";
+create user C##dmacollector identified by "Pa55w__rd123";
 ```
 
 ## Grants
@@ -30,3 +30,5 @@ From the directory you extracted the collector scripts:
 > NOTE: grants_wrapper.sql has provided variable db_awr_license which is set default to Y to access AWR tables.
 >
 > AWR is a licensed feature of Oracle. If you don't have license to run AWR you can disable flag and it will execute script minimum_select_grants_for_targets_ONLY_FOR_11g.sql.
+> If you have STATSPACK enabled, run the additional script ```minimum_select_grants_for_statspack.sql``` to allow use of STATSPACK data.
+

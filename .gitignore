@@ -160,3 +160,7 @@ local.db.wal
 notebooks/data/*.tgz
 *.tgz
 !optconfig*.csv
+scripts/collector/oracle/output/
+scripts/collector/oracle/privs.sql
+scripts/collector/oracle/VERSION.txt
+

@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-set termout off
+set termout &TERMOUTOFF
 @&EXTRACTSDIR/archlogs.sql
 @&EXTRACTSDIR/awrsnapdetails.sql
 @&EXTRACTSDIR/backups.sql
