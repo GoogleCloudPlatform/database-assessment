@@ -26,24 +26,33 @@ SELECT '&&v_host'
        TO_CHAR(dhsnap.snap_time, 'hh24')          hour,
        hsm.name as metric_name,
        null as metric_unit,
-       ROUND(AVG(hsm.value))                           avg_value,
-       ROUND(STATS_MODE(hsm.value))                    mode_value,
-       ROUND(MEDIAN(hsm.value))                        median_value,
-       ROUND(MIN(hsm.value))                           min_value,
-       ROUND(MAX(hsm.value))                           max_value,
-       ROUND(SUM(hsm.value))                           sum_value,
+       ROUND(AVG(hsm.delta_value))                           avg_value,
+       ROUND(STATS_MODE(hsm.delta_value))                    mode_value,
+       ROUND(MEDIAN(hsm.delta_value))                        median_value,
+       ROUND(MIN(hsm.delta_value))                           min_value,
+       ROUND(MAX(hsm.delta_value))                           max_value,
+       ROUND(SUM(hsm.delta_value))                           sum_value,
        ROUND(PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY hsm.value DESC)) AS "PERC50",
+         within GROUP (ORDER BY hsm.delta_value DESC)) AS "PERC50",
        ROUND(PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY hsm.value DESC)) AS "PERC75",
+         within GROUP (ORDER BY hsm.delta_value DESC)) AS "PERC75",
        ROUND(PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY hsm.value DESC)) AS "PERC90",
+         within GROUP (ORDER BY hsm.delta_value DESC)) AS "PERC90",
        ROUND(PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY hsm.value DESC)) AS "PERC95",
+         within GROUP (ORDER BY hsm.delta_value DESC)) AS "PERC95",
        ROUND(PERCENTILE_CONT(0)
-         within GROUP (ORDER BY hsm.value DESC)) AS "PERC100"
-FROM   stats$sysstat hsm
-       inner join stats$snapshot dhsnap
+         within GROUP (ORDER BY hsm.delta_value DESC)) AS "PERC100"
+FROM   (
+        SELECT s.snap_id, s.dbid, s.instance_number, s.name, s.value, 
+               NVL(
+                   DECODE(
+                         GREATEST(value, NVL( LAG(value) OVER ( PARTITION BY s.dbid, s.instance_number, s.name ORDER BY s.snap_id), 0)),
+                         value, 
+                         value - LAG(value) OVER ( PARTITION BY s.dbid, s.instance_number, s.name ORDER BY s.snap_id),
+                        0), 
+                 0) AS delta_value  
+           FROM perfstat.stats$sysstat s ) hsm
+       INNER JOIN stats$snapshot dhsnap
                ON hsm.snap_id = dhsnap.snap_id
                   AND hsm.instance_number = dhsnap.instance_number
                   AND hsm.dbid = dhsnap.dbid

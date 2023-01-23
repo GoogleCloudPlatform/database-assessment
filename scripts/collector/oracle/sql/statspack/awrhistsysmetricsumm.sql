@@ -42,8 +42,17 @@ SELECT '&&v_host'
        --                      AND ( MINVAL = 0 AND AVERAGE = MAXVAL )  then 0 else standard_deviation end ) "PERC95",
        AVG(value) OVER (PARTITION BY hsm.dbid, hsm.instance_number,  TO_CHAR(dhsnap.snap_time, 'hh24')  , hsm.name) + (2 * STDDEV (value)  OVER (PARTITION BY hsm.dbid, hsm.instance_number,  TO_CHAR(dhsnap.snap_time, 'hh24')  , hsm.name)) AS "PERC95",
        NULL                                   "PERC100"
-FROM   stats$sysstat hsm
-       inner join stats$snapshot dhsnap
+FROM (
+      SELECT s.snap_id, s.dbid, s.instance_number, s.name, s.value, 
+             NVL(
+                 DECODE(
+                        GREATEST(value, NVL( LAG(value) OVER ( PARTITION BY s.dbid, s.instance_number, s.name ORDER BY s.snap_id), 0)),
+                        value, 
+                        value - LAG(value) OVER ( PARTITION BY s.dbid, s.instance_number, s.name ORDER BY s.snap_id),
+                       0), 
+                0) AS delta_value  
+       FROM perfstat.stats$sysstat s )   hsm
+       INNER JOIN stats$snapshot dhsnap
                ON hsm.snap_id = dhsnap.snap_id
                   AND hsm.instance_number = dhsnap.instance_number
                   AND hsm.dbid = dhsnap.dbid
