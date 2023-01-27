@@ -132,7 +132,6 @@ DECLARE
 BEGIN
   IF '&v_dbversion'  = '121' THEN
     SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner ='SYS' AND table_name ='V_$SYSTEM_PARAMETER' AND column_name ='DEFAULT_VALUE';
---    dbms_output.put_line('Count of columns named DEFAULT_VALUE = ' || cnt);
     IF cnt = 0 THEN
       :dflt_value_flag := 'N';
     ELSE
@@ -140,7 +139,6 @@ BEGIN
     END IF;
 
     SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner = 'SYS' AND table_name ='DBA_PDBS' AND column_name ='LOGGING';
---    dbms_output.put_line('Count of columns named LOGGING       = ' || cnt);
     IF cnt = 0 THEN
       :pdb_logging_flag := 'N';
     ELSE
@@ -158,9 +156,6 @@ SELECT CASE WHEN :dflt_value_flag = 'N' THEN '''N/A''' ELSE 'DEFAULT_VALUE' END 
        CASE WHEN :pdb_logging_flag = 'N' THEN  '''N/A''' ELSE 'LOGGING' END AS p_pluggablelogging
 FROM DUAL;
 
---prompt O_12.1 Params:
---prompt Default value column      =  &v_dbparam_dflt_col
---prompt Pluggable logging column  = &v_pluggablelogging
 
 DECLARE cnt NUMBER;
 BEGIN
