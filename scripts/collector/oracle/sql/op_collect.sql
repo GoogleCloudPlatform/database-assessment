@@ -48,10 +48,10 @@ prompt
 
 set termout &TERMOUTOFF
 @&SQLDIR/op_collect_db_info.sql &SQLDIR
+@@defines.sql
 
 set termout on
 prompt Step completed.
-@@defines.sql
 prompt
 prompt Database Migration Assessment data successfully extracted.
 prompt

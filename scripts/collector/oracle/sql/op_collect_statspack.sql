@@ -1,5 +1,4 @@
 prompt statspackdir = &STATSPACKDIR
-@&STATSPACKDIR/get_snap_range.sql
 @&STATSPACKDIR/awrsnapdetails.sql
 @&STATSPACKDIR/awrhistcmdtypes.sql
 @&STATSPACKDIR/awrhistosstat.sql
@@ -9,5 +8,4 @@ prompt statspackdir = &STATSPACKDIR
 @&STATSPACKDIR/dbahistsystimemodel.sql
 @&STATSPACKDIR/ioevents.sql
 @&STATSPACKDIR/iofunction.sql
---@&STATSPACKDIR/sourceconn.sql
 @&STATSPACKDIR/sqlstats.sql

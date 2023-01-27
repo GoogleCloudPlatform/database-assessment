@@ -22,7 +22,7 @@ SELECT '&&v_host'
        || '&&v_dbname'
        || '_'
        || '&&v_hora'                     AS pkey,
-       &v_a_con_id                       AS con_id,
+       'N/A'                       AS con_id,
        TO_CHAR(sn.snap_time, 'hh24')     AS hh24,
        ss.command_type, 
        COUNT(1)                          AS cnt,
@@ -168,14 +168,13 @@ From STATS$SQL_SUMMARY s
          AND ss.instance_number = sn.instance_number
     LEFT OUTER join audit_actions aa
                  ON ss.command_type = aa.action
-    JOIN v$containers a ON 1=1
 WHERE sn.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
 GROUP BY '&&v_host'
          || '_'
          || '&&v_dbname'
          || '_'
          || '&&v_hora'  ,
-          &v_a_con_id , TO_CHAR(sn.snap_time, 'hh24'),  ss.command_type, aa.name
+          'N/A' , TO_CHAR(sn.snap_time, 'hh24'),  ss.command_type, aa.name
 )
 SELECT pkey , con_id , hh24 , command_type , cnt , avg_buffer_gets , avg_elapsed_time ,
        avg_rows_processed , avg_executions , avg_cpu_time , avg_iowait , avg_clwait ,

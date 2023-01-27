@@ -21,6 +21,7 @@ prompt Param1 = &1
 
 define version = '&1'
 define dtrange = 30
+define dtrange = 1
 define colspr = '|'
 
 clear col comp brea
@@ -119,6 +120,7 @@ FROM control_params WHERE ('&v_dbversion'  = '112' AND this_version = '&v_dbvers
                        OR ('&v_dbversion' != '112' AND this_version = 'OTHER')
 /
 
+set serveroutput on
 DECLARE cnt NUMBER;
 BEGIN
   SELECT count(1) INTO cnt FROM v$database WHERE database_role = 'PHYSICAL STANDBY';
@@ -143,19 +145,54 @@ SELECT &v_umf_test p_dbid
 FROM   v$database
 /
 
+variable sp VARCHAR2(100);
+variable v_info_prompt VARCHAR2(200);
+column sp_script new_value p_sp_script noprint
+column info_prompt new_value p_info_prompt noprint
 
+set serveroutput on
+DECLARE
+  cnt NUMBER;
+  l_tab_name VARCHAR2(100) := 'NONE';
+  l_col_name VARCHAR2(100);
+  the_sql VARCHAR2(1000) := 'NONE';
 BEGIN 
-  SELECT min(snap_id) , max(snap_id) INTO :minsnap, :maxsnap FROM dba_hist_snapshot WHERE begin_interval_time >= (sysdate- &&dtrange ) AND dbid = '&&v_dbid';
-  IF :minsnap IS NULL OR :maxsnap IS NULL THEN
-    raise_application_error(-20001, 'Unable to get snapshot IDs, please verify this user has the correct privileges granted.');
+  :sp  := 'prompt_nostatspack.sql';
+  IF '&v_dodiagnostics' = 'usediagnostics' THEN 
+     l_tab_name := 'dba_hist_snapshot'; 
+     l_col_name := 'begin_interval_time';
+  ELSE IF '&v_dodiagnostics' = 'nodiagnostics' THEN
+         SELECT count(1) INTO cnt FROM all_tables WHERE owner ='PERFSTAT';
+         IF cnt > 0 THEN 
+           :sp := 'op_collect_statspack.sql';
+           l_tab_name := 'STATS$SNAPSHOT'; 
+           l_col_name := 'snap_time';
+         END IF;
+       ELSE l_tab_name :=  'ERROR - Unexpected parameter: &v_dodiagnostics';
+       END IF;
+  END IF; 
+  IF (l_tab_name != 'NONE' AND l_tab_name NOT LIKE 'ERROR%') THEN
+     THE_SQL := 'SELECT min(snap_id) , max(snap_id) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
+     dbms_output.put_line(the_sql);
+     EXECUTE IMMEDIATE the_sql INTO  :minsnap, :maxsnap USING '&&v_dbid' ;
+     IF :minsnap IS NULL THEN
+        dbms_output.put_line('Warning: No snapshots found within the last &&dtrange days.  No performance data will be extracted.');
+        :v_info_prompt := 'without performance data';
+     ELSE
+        :v_info_prompt := 'between snaps ' || :minsnap || ' and ' || :maxsnap;
+     END IF;
+  ELSE
+     :v_info_prompt := 'without performance data';
   END IF;
+  dbms_output.put_line('v_dodiagnostics = &v_dodiagnostics, l_tab_name = ' || l_tab_name || ', the_sql = ' );
+  dbms_output.put_line(the_sql);
 END;
 /
 
-SELECT :minsnap min_snapid, :maxsnap max_snapid FROM dual;
+SELECT :minsnap min_snapid, :maxsnap max_snapid, :sp sp_script, :v_info_prompt info_prompt FROM dual;
 
 set termout on
-PROMPT Collecting data for database &v_dbname '&&v_dbid' between snaps &v_min_snapid and &v_max_snapid
+PROMPT Collecting data for database &v_dbname '&&v_dbid' &p_info_prompt
 PROMPT
 
 set termout &TERMOUTOFF
@@ -170,20 +207,6 @@ SELECT CASE WHEN &v_is_container != 0 THEN 'a.con_id' ELSE '''N/A''' END as a_co
        CASE WHEN &v_is_container != 0 THEN 'b.con_id' ELSE '''N/A''' END as b_con_id,
        CASE WHEN &v_is_container != 0 THEN 'c.con_id' ELSE '''N/A''' END as c_con_id
 FROM DUAL;
-
-variable sp VARCHAR2(100);
-column sp_script new_value p_sp_script noprint
-DECLARE
- cnt NUMBER;
-BEGIN
-  :sp  := 'prompt_nostatspack.sql';
-  SELECT count(1) INTO cnt FROM all_tables WHERE owner ='PERFSTAT';
-  IF cnt > 0 THEN :sp := 'op_collect_statspack.sql';
-  END IF;
-END;
-/
-
-SELECT :sp AS sp_script FROM DUAL;
 
 
 set numwidth 48

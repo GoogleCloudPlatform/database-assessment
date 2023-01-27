@@ -16,7 +16,7 @@ limitations under the License.
 
 set termout &TERMOUTOFF
 @&EXTRACTSDIR/archlogs.sql
-@&EXTRACTSDIR/awrsnapdetails.sql
+--@&EXTRACTSDIR/awrsnapdetails.sql
 @&EXTRACTSDIR/backups.sql
 @&EXTRACTSDIR/columntypes.sql
 @&EXTRACTSDIR/compressbytype.sql

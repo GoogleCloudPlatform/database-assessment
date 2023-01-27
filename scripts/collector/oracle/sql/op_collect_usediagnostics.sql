@@ -1,3 +1,4 @@
+@&EXTRACTSDIR/awrsnapdetails.sql
 @&EXTRACTSDIR/awrhistcmdtypes.sql
 @&EXTRACTSDIR/awrhistosstat.sql
 @&EXTRACTSDIR/awrhistsysmetrichist.sql

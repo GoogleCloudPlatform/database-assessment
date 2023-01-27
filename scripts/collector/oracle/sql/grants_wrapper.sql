@@ -33,6 +33,8 @@ def db_awr_license='Y'
 var db_version varchar2(3)
 var v_awr_license varchar2(3)
 var db_script varchar2(100)
+var v_statspack varchar2(100)
+
 column script new_val EXEC_SCRIPT
 
 /* Find Current Database Version */
@@ -40,8 +42,8 @@ BEGIN
 SELECT
     CASE
         WHEN banner LIKE '%12%' OR banner LIKE '%19.%' OR banner LIKE '%20.%' OR banner LIKE '%21%'
-        THEN '19C'
-        ELSE 'OLD'
+        THEN '12+'
+        ELSE '11g'
     END ver
  INTO :db_version
  FROM v$version
@@ -55,8 +57,8 @@ BEGIN
 SELECT
     CASE
         WHEN (value LIKE 'DIAG' OR value LIKE 'TUNING' ) OR '&db_awr_license'='Y'
-        THEN '19C'
-        ELSE 'OLD'
+        THEN 'AWR'
+        ELSE 'NOAWR'
     END ver
  INTO :v_awr_license
  FROM v$parameter
@@ -64,12 +66,27 @@ WHERE UPPER(name) = 'CONTROL_MANAGEMENT_PACK_ACCESS';
 END;
 /
 
+/* Is there a statpack installation */
+DECLARE 
+  CNT NUMBER;
+BEGIN
+  SELECT count(1) INTO cnt FROM dba_users WHERE username ='PERFSTAT';
+  IF cnt > 0 THEN 
+    :v_statspack := 'Y';
+  END IF;
+END;
+/
+
+
 print :v_awr_license
 BEGIN
- IF :db_version = '19C' and :v_awr_license = '19C' then
+ IF :db_version = '12+' and :v_awr_license = 'AWR' then
         :db_script := 'minimum_select_grants_for_targets_12c_AND_ABOVE.sql';
- ELSE
+ ELSE IF :v_statspack = 'Y' THEN
+        :db_script := 'minimum_select_grants_for_statspack.sql';
+      ELSE
         :db_script := 'minimum_select_grants_for_targets_ONLY_FOR_11g.sql';
+      END IF;
  END IF;
 END;
 /

@@ -21,8 +21,6 @@ accept dbusername char prompt "Please enter the DB Local Username(Or CDB Usernam
 
 GRANT SELECT ON stats$snapshot TO  &&dbusername;
 GRANT SELECT ON stats$sql_summary TO  &&dbusername;
-GRANT SELECT ON SYS.v_$containers TO  &&dbusername;
-GRANT SELECT ON SYS.gv_$containers TO  &&dbusername;
 GRANT SELECT ON STATS$OSSTAT  TO  &&dbusername;
 GRANT SELECT ON STATS$OSSTATNAME  TO  &&dbusername;
 GRANT SELECT ON STATS$SYSSTAT  TO  &&dbusername;
@@ -65,6 +63,21 @@ GRANT SELECT ON dba_object_tables TO  &&dbusername;
 GRANT SELECT ON dba_xml_tables TO  &&dbusername;
 GRANT SELECT ON dba_triggers TO  &&dbusername;
 
+GRANT SELECT ON dba_data_files  TO  &&dbusername;
+GRANT SELECT ON dba_segments  TO  &&dbusername;
+GRANT SELECT ON dba_temp_files  TO  &&dbusername;
+
+GRANT SELECT ON v_$version  TO  &&dbusername;
+GRANT SELECT ON v_$log_history  TO  &&dbusername;
+GRANT SELECT ON nls_database_parameters  TO  &&dbusername;
+GRANT SELECT ON v_$sgastat  TO  &&dbusername;
+GRANT SELECT ON gv_$sgastat  TO  &&dbusername;
+GRANT SELECT ON v_$pgastat  TO  &&dbusername;
+GRANT SELECT ON gv_$pgastat  TO  &&dbusername;
+GRANT SELECT ON v_$log  TO  &&dbusername;
+GRANT SELECT ON v_$logfile  TO  &&dbusername;
+GRANT SELECT ON gv_$process TO  &&dbusername;
+
 
 GRANT SELECT ON gv_$parameter TO  &&dbusername;
 GRANT SELECT ON gv_$archive_dest TO  &&dbusername;
@@ -73,6 +86,9 @@ GRANT SELECT ON v_$archive_dest TO  &&dbusername;
 GRANT SELECT ON v_$system_parameter TO  &&dbusername;
 GRANT SELECT ON gv_$system_parameter TO  &&dbusername;
 
+PROMPT The below grants are required only for container databases.
+GRANT SELECT ON SYS.v_$containers TO  &&dbusername;
+GRANT SELECT ON SYS.gv_$containers TO  &&dbusername;
 GRANT SELECT ON cdb_tab_cols  TO  &&dbusername;
 GRANT SELECT ON cdb_tab_columns  TO  &&dbusername;
 GRANT SELECT ON cdb_segments TO  &&dbusername;
@@ -102,30 +118,9 @@ GRANT SELECT ON v_$pdbs TO  &&dbusername;
 
 GRANT SELECT ON cdb_cpu_usage_statistics  TO  &&dbusername;
 
--- Remove this 
-GRANT SELECT ON dba_hist_snapshot  TO  &&dbusername;
-GRANT SELECT ON cdb_hist_snapshot  TO  &&dbusername;
-
-
-
-GRANT SELECT ON  v_$version  TO  &&dbusername;
-GRANT SELECT ON  v_$log_history  TO  &&dbusername;
-GRANT SELECT ON  nls_database_parameters  TO  &&dbusername;
-GRANT SELECT ON  v_$sgastat  TO  &&dbusername;
-GRANT SELECT ON  gv_$sgastat  TO  &&dbusername;
-GRANT SELECT ON  v_$pgastat  TO  &&dbusername;
-GRANT SELECT ON  gv_$pgastat  TO  &&dbusername;
-GRANT SELECT ON  v_$log  TO  &&dbusername;
-GRANT SELECT ON  v_$logfile  TO  &&dbusername;
-GRANT SELECT ON  gv_$process TO  &&dbusername;
-
-GRANT SELECT ON  dba_data_files  TO  &&dbusername;
-GRANT SELECT ON  dba_segments  TO  &&dbusername;
-GRANT SELECT ON  dba_temp_files  TO  &&dbusername;
-
-GRANT SELECT ON  cdb_data_files  TO  &&dbusername;
-GRANT SELECT ON  cdb_segments  TO  &&dbusername;
-GRANT SELECT ON  cdb_temp_files  TO  &&dbusername;
+GRANT SELECT ON cdb_data_files  TO  &&dbusername;
+GRANT SELECT ON cdb_segments  TO  &&dbusername;
+GRANT SELECT ON cdb_temp_files  TO  &&dbusername;
 
 exit
 
