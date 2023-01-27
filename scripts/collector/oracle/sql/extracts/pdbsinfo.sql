@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 define cdbjoin = "AND con_id = p.con_id"
+column logging format a10
 spool &outputdir/opdb__pdbsinfo__&v_tag
 
 WITH vpdbinfo AS (
@@ -26,7 +27,7 @@ SELECT '&&v_host'
        pdb_id,
        pdb_name,
        status,
-       logging,
+       &v_pluggablelogging AS logging,
        con_id,
        con_uid,
 @&EXTRACTSDIR/app_schemas.sql
@@ -53,3 +54,5 @@ SELECT i.*, m.sga_allocated_bytes, m.pga_used_bytes, m.pga_allocated_bytes, m.pg
 FROM  vpdbinfo i
       LEFT OUTER JOIN mem_stats m ON i.con_id = m.con_id;
 spool off
+column logging clear
+

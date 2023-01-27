@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+column default_value format a255
 spool &outputdir/opdb__dbparameters__&v_tag
 
 WITH vparam AS (
@@ -32,3 +33,5 @@ ORDER  BY 2,3 )
 SELECT pkey , inst_id , con_id , name , value , default_value , isdefault
 FROM vparam;
 spool off
+column default_value clear
+
