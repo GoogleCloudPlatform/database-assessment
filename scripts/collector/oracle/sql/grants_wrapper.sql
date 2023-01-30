@@ -30,27 +30,33 @@ accept dbusername char prompt "Please enter the DB Local Username(Or CDB Usernam
 
 def db_awr_license='Y'
 
-var db_version varchar2(3)
+var v_db_version varchar2(3)
 var v_awr_license varchar2(3)
-var db_script varchar2(100)
-var v_statspack varchar2(100)
+var v_container varchar2(3)
+var v_statspack varchar2(3)
 
-column script new_val EXEC_SCRIPT
+var v_db_script varchar2(100)
+var v_con_script varchar2(100)
+var v_sp_script varchar2(100)
+
+column db_script  new_val DB_SCRIPT_NAME
+column con_script new_val CON_SCRIPT_NAME
+column sp_script  new_val SP_SCRIPT_NAME
 
 /* Find Current Database Version */
 BEGIN
 SELECT
     CASE
-        WHEN banner LIKE '%12%' OR banner LIKE '%19.%' OR banner LIKE '%20.%' OR banner LIKE '%21%'
+        WHEN version LIKE '12%' OR version LIKE '19.%' OR version LIKE '20.%' OR version LIKE '21%'
         THEN '12+'
         ELSE '11g'
     END ver
- INTO :db_version
- FROM v$version
+ INTO :v_db_version
+ FROM v$instance
  WHERE ROWNUM=1;
 END;
 /
-print :db_version
+print :v_db_version
 
 /* Find AWR Licensed Usage */
 BEGIN
@@ -59,7 +65,7 @@ SELECT
         WHEN (value LIKE 'DIAG' OR value LIKE 'TUNING' ) OR '&db_awr_license'='Y'
         THEN 'AWR'
         ELSE 'NOAWR'
-    END ver
+    END CASE 
  INTO :v_awr_license
  FROM v$parameter
 WHERE UPPER(name) = 'CONTROL_MANAGEMENT_PACK_ACCESS';
@@ -77,19 +83,50 @@ BEGIN
 END;
 /
 
-
-print :v_awr_license
+/* Is this potentailly a container datbase */
+DECLARE
+  CNT NUMBER;
 BEGIN
- IF :db_version = '12+' and :v_awr_license = 'AWR' then
-        :db_script := 'minimum_select_grants_for_targets_12c_AND_ABOVE.sql';
- ELSE IF :v_statspack = 'Y' THEN
-        :db_script := 'minimum_select_grants_for_statspack.sql';
-      ELSE
-        :db_script := 'minimum_select_grants_for_targets_ONLY_FOR_11g.sql';
-      END IF;
- END IF;
+  SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner = 'SYS' AND table_name = 'V_$DATABASE' AND column_name = 'CDB';
+  IF cnt > 0 THEN
+    :v_container := 'Y';
+  END IF;
 END;
 /
-select :db_script script from dual;
-@&EXEC_SCRIPT
+
+
+print :v_awr_license
+set echo on termout on 
+BEGIN
+ CASE
+   WHEN :v_db_version = '12+' AND :v_awr_license = 'AWR' THEN
+        :v_db_script := 'minimum_select_grants_for_targets_12c_AND_ABOVE.sql';
+   WHEN :v_db_version = '11g' AND :v_awr_license = 'AWR' THEN
+        :v_db_script := 'minimum_select_grants_for_targets_ONLY_FOR_11g.sql';
+   ELSE 
+        :v_db_script := 'noop.sql "Skipping AWR grants"';
+ END CASE;
+ CASE
+   WHEN :v_statspack = 'Y' THEN
+        :v_sp_script := 'minimum_select_grants_for_statspack.sql';
+   ELSE 
+        :v_sp_script := 'noop.sql "Skipping STATSPACK grants"';
+   END CASE;
+ CASE
+   WHEN :v_container = 'Y' THEN
+        :v_con_script := 'minimum_select_grants_for_targets_12c_AND_ABOVE_containers.sql';
+   ELSE
+        :v_con_script := 'noop.sql "Skipping container grants"';
+ END CASE;
+END;
+/
+select :v_db_script db_script, :v_sp_script sp_script, :v_con_script con_script from dual;
+
+PROMPT &DB_SCRIPT_NAME
+PROMPT &CON_SCRIPT_NAME
+PROMPT &SP_SCRIPT_NAME
+
+@&DB_SCRIPT_NAME
+@&CON_SCRIPT_NAME
+@&SP_SCRIPT_NAME
 exit;

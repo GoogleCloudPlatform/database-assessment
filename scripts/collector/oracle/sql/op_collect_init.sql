@@ -21,7 +21,6 @@ prompt Param1 = &1
 
 define version = '&1'
 define dtrange = 30
-define dtrange = 1
 define colspr = '|'
 
 clear col comp brea
@@ -29,7 +28,6 @@ set headsep off
 set trimspool on
 set lines 32000
 set pagesize 0 embedded on
---set pagesize 50000
 set feed off
 set underline off
 set verify off
@@ -49,12 +47,13 @@ whenever oserror continue
 
 @/tmp/dirs.sql
 select '&outputdir' as outputdir from dual;
---select '&seddir' as seddir from dual;
 select '&v_tag' as v_tag from dual;
 
 variable minsnap NUMBER;
 variable maxsnap NUMBER;
 variable umfflag VARCHAR2(100);
+variable pdb_logging_flag VARCHAR2(1);
+variable dflt_value_flag  VARCHAR2(1);
 
 column instnc new_value v_inst noprint
 column hostnc new_value v_host noprint
@@ -71,6 +70,7 @@ column p_dbparam_dflt_col new_value v_dbparam_dflt_col noprint
 column p_editionable_col new_value v_editionable_col noprint
 column p_dopluggable new_value v_dopluggable noprint
 column p_db_container_col new_value v_db_container_col
+column p_pluggablelogging new_value v_pluggablelogging noprint
 
 
 SELECT host_name     hostnc,
@@ -119,6 +119,36 @@ SELECT tblprefix AS p_tblprefix,
 FROM control_params WHERE ('&v_dbversion'  = '112' AND this_version = '&v_dbversion') 
                        OR ('&v_dbversion' != '112' AND this_version = 'OTHER')
 /
+
+DECLARE 
+  cnt NUMBER;
+BEGIN
+  IF '&v_dbversion'  = '121' THEN
+    SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner ='SYS' AND table_name ='V_$SYSTEM_PARAMETER' AND column_name ='DEFAULT_VALUE';
+    IF cnt = 0 THEN
+      :dflt_value_flag := 'N';
+    ELSE
+      :dflt_value_flag := 'Y';
+    END IF;
+
+    SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner = 'SYS' AND table_name ='DBA_PDBS' AND column_name ='LOGGING';
+    IF cnt = 0 THEN
+      :pdb_logging_flag := 'N';
+    ELSE
+      :pdb_logging_flag := 'Y';
+    END IF; 
+  ELSE IF  '&v_dbversion'  = '112' THEN
+          :dflt_value_flag := 'N';
+          :pdb_logging_flag := 'N';
+       END IF;
+  END IF;
+END;
+/
+
+SELECT CASE WHEN :dflt_value_flag = 'N' THEN '''N/A''' ELSE 'DEFAULT_VALUE' END as p_dbparam_dflt_col ,
+       CASE WHEN :pdb_logging_flag = 'N' THEN  '''N/A''' ELSE 'LOGGING' END AS p_pluggablelogging
+FROM DUAL;
+
 
 set serveroutput on
 DECLARE cnt NUMBER;

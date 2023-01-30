@@ -21,7 +21,6 @@ DEFINE v_dodiagnostics=&3
 DEFINE EXTRACTSDIR=&SQLDIR/extracts
 DEFINE STATSPACKDIR=&SQLDIR/statspack
 DEFINE TERMOUTOFF=OFF
---DEFINE TERMOUTOFF=ON
 prompt
 prompt ***********************************************************************************
 prompt
