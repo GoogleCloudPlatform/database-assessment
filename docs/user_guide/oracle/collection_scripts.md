@@ -29,4 +29,4 @@ unzip db-migration-assessment-collection-scripts-oracle.zip
 
 ## Upload Collections
 
-Upon completion, the tool will automatically create an archive of the extracted metrics.
+Upon completion, the tool will automatically create an archive of the extracted metrics that can be uploaded into the assessment tool.
