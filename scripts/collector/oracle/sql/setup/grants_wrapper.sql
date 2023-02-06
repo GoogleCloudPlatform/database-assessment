@@ -14,8 +14,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+whenever sqlerror exit failure
+whenever oserror exit failure
 
 set verify off
+set feedback off
+set echo off
+accept dbusername char prompt "Please enter the DB Local Username(Or CDB Username) to receive all required grants: "
+
+DECLARE 
+  cnt NUMBER;
+BEGIN
+  SELECT count(1) INTO cnt FROM dba_users WHERE upper(username) = upper('&&dbusername');
+  IF cnt = 0 THEN
+    raise_application_error(-1917, 'User &&dbusername does not exist. please verify the username and ensure the account is created.');
+  END IF;
+END;
+/
+
+set feedback on
+prompt
+prompt
+prompt Granting required privileges for user &&dbusername
+set feedback off
 
 /*
 accept dbusername char prompt "Please enter the DB Local Username(Or CDB Username) to receive all required grants: "
@@ -32,16 +53,17 @@ def db_awr_license='Y'
 
 var v_db_version varchar2(3)
 var v_awr_license varchar2(3)
-var v_container varchar2(3)
 var v_statspack varchar2(3)
+var v_is_container varchar2(3)
+var v_use_umf varchar2(3)
 
 var v_db_script varchar2(100)
 var v_con_script varchar2(100)
 var v_sp_script varchar2(100)
 
-column db_script  new_val DB_SCRIPT_NAME
-column con_script new_val CON_SCRIPT_NAME
-column sp_script  new_val SP_SCRIPT_NAME
+column db_script  new_val DB_SCRIPT_NAME noprint
+column con_script new_val CON_SCRIPT_NAME noprint
+column sp_script  new_val SP_SCRIPT_NAME noprint
 
 /* Find Current Database Version */
 BEGIN
@@ -56,7 +78,6 @@ SELECT
  WHERE ROWNUM=1;
 END;
 /
-print :v_db_version
 
 /* Find AWR Licensed Usage */
 BEGIN
@@ -69,6 +90,7 @@ SELECT
  INTO :v_awr_license
  FROM v$parameter
 WHERE UPPER(name) = 'CONTROL_MANAGEMENT_PACK_ACCESS';
+dbms_output.put_line('AWR License flag = ' || :v_awr_license);
 END;
 /
 
@@ -83,50 +105,67 @@ BEGIN
 END;
 /
 
-/* Is this potentailly a container datbase */
+/* Is this a container database */
 DECLARE
   CNT NUMBER;
 BEGIN
   SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner = 'SYS' AND table_name = 'V_$DATABASE' AND column_name = 'CDB';
   IF cnt > 0 THEN
-    :v_container := 'Y';
+    EXECUTE IMMEDIATE 'SELECT cdb FROM v_$database' INTO :v_is_container;
+  END IF;
+END;
+/
+
+/* Using UMF to collect stats from standby */
+DECLARE 
+  CNT NUMBER;
+BEGIN
+  SELECT count(1) INTO cnt FROM dba_objects WHERE owner ='SYS' AND object_name ='DBMS_UMF';
+  IF cnt > 0 THEN
+    :v_use_umf := 'Y';
   END IF;
 END;
 /
 
 
-print :v_awr_license
-set echo on termout on 
 BEGIN
  CASE
-   WHEN :v_db_version = '12+' AND :v_awr_license = 'AWR' THEN
-        :v_db_script := 'minimum_select_grants_for_targets_12c_AND_ABOVE.sql';
    WHEN :v_db_version = '11g' AND :v_awr_license = 'AWR' THEN
         :v_db_script := 'minimum_select_grants_for_targets_ONLY_FOR_11g.sql';
+   WHEN :v_db_version = '12+' AND :v_awr_license = 'AWR' THEN
+        :v_db_script := 'minimum_select_grants_for_targets_12c_AND_ABOVE.sql';
    ELSE 
-        :v_db_script := 'noop.sql "Skipping AWR grants"';
+        :v_db_script := 'noop.sql "AWR objects"';
  END CASE;
  CASE
    WHEN :v_statspack = 'Y' THEN
         :v_sp_script := 'minimum_select_grants_for_statspack.sql';
    ELSE 
-        :v_sp_script := 'noop.sql "Skipping STATSPACK grants"';
+        :v_sp_script := 'noop.sql "STATSPACK objects"';
    END CASE;
  CASE
-   WHEN :v_container = 'Y' THEN
+   WHEN :v_is_container = 'YES' THEN
         :v_con_script := 'minimum_select_grants_for_targets_12c_AND_ABOVE_containers.sql';
    ELSE
-        :v_con_script := 'noop.sql "Skipping container grants"';
+        :v_con_script := 'noop.sql "container objects"';
  END CASE;
 END;
 /
+
 select :v_db_script db_script, :v_sp_script sp_script, :v_con_script con_script from dual;
 
-PROMPT &DB_SCRIPT_NAME
-PROMPT &CON_SCRIPT_NAME
-PROMPT &SP_SCRIPT_NAME
-
+@&SP_SCRIPT_NAME
 @&DB_SCRIPT_NAME
 @&CON_SCRIPT_NAME
-@&SP_SCRIPT_NAME
+
+DECLARE 
+  the_sql VARCHAR2(200);
+BEGIN
+  IF :v_use_umf = 'Y' THEN
+    the_sql :=  'GRANT EXECUTE ON sys.dbms_umf TO &&dbusername';
+    EXECUTE IMMEDIATE the_sql;
+  END IF;
+END;
+/
+
 exit;

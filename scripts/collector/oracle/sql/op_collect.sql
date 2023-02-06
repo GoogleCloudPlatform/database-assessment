@@ -19,8 +19,10 @@ SET DEFINE "&"
 DEFINE SQLDIR=&2
 DEFINE v_dodiagnostics=&3
 DEFINE EXTRACTSDIR=&SQLDIR/extracts
-DEFINE STATSPACKDIR=&SQLDIR/statspack
+DEFINE AWRDIR=&EXTRACTSDIR/awr
+DEFINE STATSPACKDIR=&EXTRACTSDIR/statspack
 DEFINE TERMOUTOFF=OFF
+--DEFINE TERMOUTOFF=ON
 prompt
 prompt ***********************************************************************************
 prompt
@@ -46,8 +48,36 @@ prompt Collecting Database Migration Assessment data...
 prompt
 
 set termout &TERMOUTOFF
-@&SQLDIR/op_collect_db_info.sql &SQLDIR
-@@defines.sql
+@&EXTRACTSDIR/defines.sql
+@&EXTRACTSDIR/archlogs.sql
+@&EXTRACTSDIR/backups.sql
+@&EXTRACTSDIR/columntypes.sql
+@&EXTRACTSDIR/compressbytype.sql
+@&EXTRACTSDIR/cpucoresusage.sql
+@&EXTRACTSDIR/dataguard.sql
+@&EXTRACTSDIR/datatypes.sql
+@&EXTRACTSDIR/dbfeatures.sql
+@&EXTRACTSDIR/dbhwmarkstatistics.sql
+@&EXTRACTSDIR/dbinstances.sql
+@&EXTRACTSDIR/dblinks.sql
+@&EXTRACTSDIR/dbobjects.sql
+@&EXTRACTSDIR/dbparameters.sql
+@&EXTRACTSDIR/dbsummary.sql
+@&EXTRACTSDIR/exttab.sql
+@&EXTRACTSDIR/idxpertable.sql
+@&EXTRACTSDIR/indextypes.sql
+@&EXTRACTSDIR/lobsizing.sql
+@&EXTRACTSDIR/mviewtypes.sql
+@&EXTRACTSDIR/opkeylog.sql
+@&EXTRACTSDIR/sourcecode.sql
+@&EXTRACTSDIR/tablesnopk.sql
+@&EXTRACTSDIR/tabletypes.sql
+@&EXTRACTSDIR/triggers.sql
+@&EXTRACTSDIR/usedspacedetails.sql
+@&EXTRACTSDIR/usrsegatt.sql
+@&SQLDIR/&v_dopluggable
+@&SQLDIR/op_collect_&v_dodiagnostics
+
 
 set termout on
 prompt Step completed.

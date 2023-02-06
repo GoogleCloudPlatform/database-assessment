@@ -78,11 +78,13 @@ DECLARE
         v_table_priv  :=  p_priv_list(x).objpriv;
         IF v_table_priv = 'SELECT' THEN
           BEGIN
-            EXECUTE IMMEDIATE 'SELECT 1 FROM '
+/*            EXECUTE IMMEDIATE 'SELECT count(1) FROM user_tab_privs WHERE owner = '|| v_table_owner ||' AND table_name = ' || v_table_name
+                               'SELECT 1 FROM '
                               || v_table_owner ||'.'
                               || v_table_name
-                              || ' WHERE rownum < 2 '
-            INTO v_cnt;
+                              || ' WHERE rownum < 2 ' */
+            SELECT count(1) INTO v_cnt FROM user_tab_privs WHERE owner = v_table_owner AND table_name = v_table_name  AND privilege = 'SELECT' ;
+            
             EXCEPTION 
             WHEN NO_DATA_FOUND THEN CONTINUE;
             WHEN TABLE_DOES_NOT_EXIST THEN 

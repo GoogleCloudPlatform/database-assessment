@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#set -x
 # Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +33,7 @@ fi
 if [ ! -d ${OUTPUT_DIR} ]; then
    mkdir -p ${OUTPUT_DIR}
 fi
-OpVersion="4.1.2"
+OpVersion="4.2.0"
 ### Import logging & helper functions
 #############################################################################
 
@@ -96,7 +97,8 @@ fi
 function cleanupOpOutput(){
 V_FILE_TAG=$1
 echo "Preparing files for compression."
-sed -i -r -f ${SCRIPT_DIR}/sql/op_sed_cleanup.sed ${OUTPUT_DIR}/*csv
+#sed -i -r -f ${SCRIPT_DIR}/sql/op_sed_cleanup.sed ${OUTPUT_DIR}/*csv
+sed -i -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d' ${OUTPUT_DIR}/*csv
 retval=$?
 if [ $retval -ne 0 ]; then
   echo "Error processing ${SCRIPT_DIR}/sql/op_sed_cleanup.sed.  Exiting..."

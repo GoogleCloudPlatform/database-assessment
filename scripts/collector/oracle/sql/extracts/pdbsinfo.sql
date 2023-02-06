@@ -15,9 +15,9 @@ limitations under the License.
 */
 define cdbjoin = "AND con_id = p.con_id"
 column logging format a10
-spool &outputdir/opdb__pdbsinfo__&v_tag
 
-WITH vpdbinfo AS (
+spool &outputdir/opdb__pdbsinfo__&v_tag
+WITH opdbinfo AS (
 SELECT '&&v_host'
        || '_'
        || '&&v_dbname'
@@ -29,9 +29,36 @@ SELECT '&&v_host'
        status,
        &v_pluggablelogging AS logging,
        con_id,
-       con_uid,
+       con_uid
+FROM   &v_tblprefix._pdbs 
+UNION
+SELECT 
+       '&&v_host'
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora' AS pkey,
+       c.dbid, 
+       c.con_id# AS pdb_id, 
+       o.name, 
+       decode(c.status, 0, 'UNUSABLE', 
+                        1, 'NEW', 
+                        2, 'NORMAL', 
+                        3, 'UNPLUGGED',
+                        5, 'RELOCATING', 
+                        6, 'REFRESHING', 
+                        7, 'RELOCATED', 
+                        8, 'STUB',
+                           'UNDEFINED') AS status, 
+       decode(bitand(c.flags, 512), 512, 'NOLOGGING', 'LOGGING') AS logging, 
+       c.con_id# AS con_id, 
+       c.con_uid
+FROM sys.container$ c, sys.obj$ o
+WHERE o.obj# = c.obj# AND con_id#=1),
+vpdbinfo AS (
+            SELECT p.*,
 @&EXTRACTSDIR/app_schemas.sql
-FROM   &v_tblprefix._pdbs p),
+            FROM opdbinfo p ),
 pdb_sga AS (
             SELECT con_id, inst_id, SUM(bytes) AS sga_allocated_bytes
             FROM  gv$sgastat

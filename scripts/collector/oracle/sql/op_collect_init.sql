@@ -89,12 +89,11 @@ SELECT substr(replace(version,'.',''),0,3) dbversion
 from v$instance
 /
 
-
+/*
 WITH control_params AS 
 (
 SELECT 'dba' as tblprefix,
        0 as is_container,
-       '''N/A''' as dbparam_dflt_col,
        '''N/A''' as editionable_col,
        '112' as this_version,
        'op_collect_nopluggable_info.sql' as do_pluggable,
@@ -103,7 +102,6 @@ FROM DUAL
 UNION
 SELECT 'cdb' as tblprefix,
        1 as is_container,
-       'DEFAULT_VALUE' as dbparam_dflt_col,
        'EDITIONABLE' as editionable_col,
        'OTHER' as this_version,
        'op_collect_pluggable_info.sql' as do_pluggable,
@@ -112,13 +110,53 @@ FROM DUAL
 )
 SELECT tblprefix AS p_tblprefix,
        is_container AS p_is_container,
-       dbparam_dflt_col AS p_dbparam_dflt_col,
        editionable_col AS p_editionable_col, 
        do_pluggable AS p_dopluggable,
        db_container_col as p_db_container_col
 FROM control_params WHERE ('&v_dbversion'  = '112' AND this_version = '&v_dbversion') 
                        OR ('&v_dbversion' != '112' AND this_version = 'OTHER')
+*/
+
+var lv_tblprefix VARCHAR2(3);
+var lv_is_container NUMBER;
+var lv_editionable_col  VARCHAR2(20);
+var lv_do_pluggable     VARCHAR2(40);
+var lv_db_container_col VARCHAR2(30);
+
+DECLARE 
+  cnt NUMBER;
+BEGIN
+  :lv_tblprefix := 'dba';
+  :lv_is_container := 0;
+  :lv_editionable_col := '''N/A''';
+  :lv_do_pluggable := 'op_collect_nopluggable_info.sql';
+  :lv_db_container_col := '''N/A''';
+  
+  SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner ='SYS' AND table_name = 'V_$DATABASE' AND column_name = 'CDB';
+  IF cnt > 0 THEN 
+    EXECUTE IMMEDIATE 'SELECT count(1) FROM v$database WHERE cdb = ''YES'' ' INTO cnt;
+    IF cnt > 0 THEN 
+      :lv_tblprefix := 'cdb' ;
+      :lv_is_container := 1;
+      :lv_do_pluggable := 'op_collect_pluggable_info.sql';
+      :lv_db_container_col := 'cdb';
+    END IF;
+  END IF;
+
+  SELECT count(1) INTO cnt  FROM dba_tab_columns WHERE owner ='SYS' AND table_name = 'DBA_OBJECTS' AND column_name ='EDITIONABLE';
+  IF cnt > 0 THEN :lv_editionable_col := 'EDITIONABLE';
+  END IF;
+END;
 /
+  
+SELECT :lv_tblprefix AS p_tblprefix,
+       :lv_is_container AS p_is_container,
+       :lv_editionable_col AS p_editionable_col,
+       :lv_do_pluggable AS p_dopluggable,
+       :lv_db_container_col as p_db_container_col
+FROM DUAL;
+/
+
 
 DECLARE 
   cnt NUMBER;
@@ -180,6 +218,7 @@ variable v_info_prompt VARCHAR2(200);
 column sp_script new_value p_sp_script noprint
 column info_prompt new_value p_info_prompt noprint
 
+set termout on
 set serveroutput on
 DECLARE
   cnt NUMBER;
@@ -203,10 +242,12 @@ BEGIN
   END IF; 
   IF (l_tab_name != 'NONE' AND l_tab_name NOT LIKE 'ERROR%') THEN
      THE_SQL := 'SELECT min(snap_id) , max(snap_id) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
-     dbms_output.put_line(the_sql);
+--     dbms_output.put_line(the_sql);
      EXECUTE IMMEDIATE the_sql INTO  :minsnap, :maxsnap USING '&&v_dbid' ;
      IF :minsnap IS NULL THEN
         dbms_output.put_line('Warning: No snapshots found within the last &&dtrange days.  No performance data will be extracted.');
+        :minsnap := -1;
+        :maxsnap := -1;
         :v_info_prompt := 'without performance data';
      ELSE
         :v_info_prompt := 'between snaps ' || :minsnap || ' and ' || :maxsnap;
@@ -214,12 +255,12 @@ BEGIN
   ELSE
      :v_info_prompt := 'without performance data';
   END IF;
-  dbms_output.put_line('v_dodiagnostics = &v_dodiagnostics, l_tab_name = ' || l_tab_name || ', the_sql = ' );
-  dbms_output.put_line(the_sql);
+--  dbms_output.put_line('v_dodiagnostics = &v_dodiagnostics, l_tab_name = ' || l_tab_name || ', the_sql = ' );
+--  dbms_output.put_line(the_sql);
 END;
 /
-
-SELECT :minsnap min_snapid, :maxsnap max_snapid, :sp sp_script, :v_info_prompt info_prompt FROM dual;
+set termout off
+SELECT NVL(:minsnap, -1) min_snapid, NVL(:maxsnap, -1) max_snapid, :sp sp_script, :v_info_prompt info_prompt FROM dual;
 
 set termout on
 PROMPT Collecting data for database &v_dbname '&&v_dbid' &p_info_prompt
