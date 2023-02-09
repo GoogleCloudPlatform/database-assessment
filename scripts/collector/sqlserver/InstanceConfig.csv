@@ -1,0 +1,4 @@
+Step,Description,Category,Command
+1,List Installed Components,sqlcmd -H localhost,1433 -I -Q "sqlcmd -H localhost,1433 -i ComponentsInstalled.sql -o output\ComponentsInstalled.csv -s"|""
+2,List Server Properties,sqlcmd -H localhost,1433 -I -Q "sqlcmd -H localhost,1433 -i ServerProperties.sql -o output\ServerProperties.csv -s"|""
+3,List all Maintenance Plans,sqlcmd -H localhost,1433 -I -Q "sqlcmd -H localhost,1433 -i MaintenancePlan.sql -o output\MaintenancePlan.csv -s"|""

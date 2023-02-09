@@ -1,0 +1,10 @@
+name                                                                                                                            |collation_name                                                                                                                  
+--------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------
+master                                                                                                                          |SQL_Latin1_General_CP1_CI_AS                                                                                                    
+tempdb                                                                                                                          |SQL_Latin1_General_CP1_CI_AS                                                                                                    
+model                                                                                                                           |SQL_Latin1_General_CP1_CI_AS                                                                                                    
+msdb                                                                                                                            |SQL_Latin1_General_CP1_CI_AS                                                                                                    
+AdventureWorks2019                                                                                                              |SQL_Latin1_General_CP1_CI_AS                                                                                                    
+DBConvert                                                                                                                       |SQL_Latin1_General_CP1_CI_AS                                                                                                    
+
+(6 rows affected)

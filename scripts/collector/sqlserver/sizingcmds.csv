@@ -1,0 +1,4 @@
+Step,Description,Category,Command
+1,Sizing CPU usage,sqlcmd -H localhost,1433 -I -Q "sqlcmd -H localhost,1433 -i SizingCPU.sql -o output\SizingCPU.csv -s"|""
+2,Sizing memory usage,sqlcmd -H localhost,1433 -I -Q "sqlcmd -H localhost,1433 -i SizingMemory.sql -o output\SizingMemory.csv -s"|""
+3,Sizing IOPS usage,sqlcmd -H localhost,1433 -I -Q "sqlcmd -H localhost,1433 -i SizingIOPS.sql -o output\SizingIOPS.csv -s"|""
