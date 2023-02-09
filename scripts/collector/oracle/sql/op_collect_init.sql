@@ -175,7 +175,7 @@ BEGIN
     ELSE
       :pdb_logging_flag := 'Y';
     END IF; 
-  ELSE IF  '&v_dbversion'  = '112' THEN
+  ELSE IF  '&v_dbversion'  LIKE '11%' OR  '&v_dbversion'  LIKE '10%' THEN
           :dflt_value_flag := 'N';
           :pdb_logging_flag := 'N';
        END IF;
