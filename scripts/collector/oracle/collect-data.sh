@@ -24,6 +24,14 @@ TMP_DIR=${SCRIPT_DIR}/tmp
 LOG_DIR=${SCRIPT_DIR}/log
 SQL_DIR=${SCRIPT_DIR}/sql
 
+GREP=$(which grep)
+SED=$(which sed)
+if [ $(uname) = "SunOS" ]
+then
+      GREP=/usr/xpg4/bin/grep
+      SED=/usr/xpg4/bin/sed
+fi
+
 if [ ! -d ${TMP_DIR} ]; then
    mkdir -p ${LOG_DIR}
 fi
@@ -37,7 +45,7 @@ OpVersion="4.2.0"
 ### Import logging & helper functions
 #############################################################################
 
-function checkVersion(){
+function checkVersion  {
 connectString="$1"
 OpVersion=$2
 
@@ -55,7 +63,7 @@ exit;
 EOF
 }
 
-function executeOP(){
+function executeOP  {
 connectString="$1"
 OpVersion=$2
 DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
@@ -80,10 +88,10 @@ EOF
 rm /tmp/dirs.sql
 }
 
-function createErrorLog(){
+function createErrorLog  {
 V_FILE_TAG=$1
 echo "Checking for errors..."
-grep -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+$GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
 retval=$?
 if [ $retval -eq 1 ]; then 
   retval=0
@@ -94,25 +102,24 @@ if [ $retval -gt 1 ]; then
 fi
 }
 
-function cleanupOpOutput(){
+function cleanupOpOutput  {
 V_FILE_TAG=$1
 echo "Preparing files for compression."
-#sed -i -r -f ${SCRIPT_DIR}/sql/op_sed_cleanup.sed ${OUTPUT_DIR}/*csv
-sed -i -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d' ${OUTPUT_DIR}/*csv
+for outfile in  ${OUTPUT_DIR}/*csv
+do
+  sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed.tmp
+  cp sed.tmp ${outfile}
+  rm sed.tmp
+done
+
 retval=$?
 if [ $retval -ne 0 ]; then
   echo "Error processing ${SCRIPT_DIR}/sql/op_sed_cleanup.sed.  Exiting..."
   return $retval
 fi
-sed -i -r '1i\ ' ${OUTPUT_DIR}/*csv
-retval=$?
-if [ $retval -ne 0 ]; then
- echo "Error adding newline to top of Database Migration Assessment extract files.  Exiting..."
-  return $retval
-fi
 }
 
-function compressOpFiles(){
+function compressOpFiles  {
 V_FILE_TAG=$1
 V_ERR_TAG=""
 echo ""
@@ -135,8 +142,16 @@ then
   echo "Please rerun the extract after correcting the error condition."
 fi
 
-TARFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tgz
-cd ${OUTPUT_DIR}; tar czf ${TARFILE} --remove-files *csv *.log *.txt
+TARFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tar
+ZIPFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tgz
+cd ${OUTPUT_DIR}
+tar cf ${TARFILE}  *csv *.log *.txt
+zip $ZIPFILE $TARFILE
+if [ -f $ZIPFILE ]
+then
+  rm $TARFILE  opdb*.csv opdb*.log opdb*.txt
+fi
+
 cd ${CURRENT_WORKING_DIR}
 echo ""
 echo "Step completed."
@@ -144,7 +159,7 @@ echo ""
 return $retval
 }
 
-function getVersion(){
+function getVersion  {
   if [ -f VERSION.txt ]; then
    githash=$(cat VERSION.txt | cut -d '(' -f 2 | tr -d ')' )
   else githash="NONE"
@@ -152,7 +167,7 @@ function getVersion(){
   echo "$githash"
 }
 
-function printExtractorVersion()
+function printExtractorVersion  
 {
 if [ "$1" == "NONE" ];
 then
@@ -207,7 +222,7 @@ printExtractorVersion "${extractorVersion}"
 echo "==================================================================================="
 
 if [ $retval -eq 0 ]; then
-  if [ "$(echo ${sqlcmd_result} | grep -E '(ORA-|SP2-)')" != "" ]; then
+  if [ "$(echo ${sqlcmd_result} | $GREP -E '(ORA-|SP2-)')" != "" ]; then
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo "Database version check returned error ${sqlcmd_result}"
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
