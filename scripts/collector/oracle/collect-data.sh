@@ -107,9 +107,14 @@ V_FILE_TAG=$1
 echo "Preparing files for compression."
 for outfile in  ${OUTPUT_DIR}/*csv
 do
-  sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed.tmp
-  cp sed.tmp ${outfile}
-  rm sed.tmp
+  if [ $(uname) = "SunOS" ]
+  then
+    sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed.tmp
+    cp sed.tmp ${outfile}
+    rm sed.tmp
+  else
+    sed -i -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d' ${outfile}
+  fi
 done
 
 retval=$?
