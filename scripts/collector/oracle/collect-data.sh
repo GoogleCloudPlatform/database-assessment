@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+#set -x
 # Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +24,14 @@ TMP_DIR=${SCRIPT_DIR}/tmp
 LOG_DIR=${SCRIPT_DIR}/log
 SQL_DIR=${SCRIPT_DIR}/sql
 
+GREP=$(which grep)
+SED=$(which sed)
+if [ $(uname) = "SunOS" ]
+then
+      GREP=/usr/xpg4/bin/grep
+      SED=/usr/xpg4/bin/sed
+fi
+
 if [ ! -d ${TMP_DIR} ]; then
    mkdir -p ${LOG_DIR}
 fi
@@ -32,11 +41,11 @@ fi
 if [ ! -d ${OUTPUT_DIR} ]; then
    mkdir -p ${OUTPUT_DIR}
 fi
-OpVersion="4.1.2"
+OpVersion="4.2.0"
 ### Import logging & helper functions
 #############################################################################
 
-function checkVersion(){
+function checkVersion  {
 connectString="$1"
 OpVersion=$2
 
@@ -54,7 +63,7 @@ exit;
 EOF
 }
 
-function executeOP(){
+function executeOP  {
 connectString="$1"
 OpVersion=$2
 DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
@@ -64,17 +73,25 @@ if ! [ -x "$(command -v sqlplus)" ]; then
   echo "Exiting..."
 fi
 
+
+echo define outputdir=$OUTPUT_DIR > /tmp/dirs.sql
+echo define seddir=$BASE_DIR/db_assessment/dbSQLCollector >> /tmp/dirs.sql
+echo define v_tag=$V_TAG >> /tmp/dirs.sql
+
+
 sqlplus -s /nolog << EOF
 connect ${connectString}
 @${SCRIPT_DIR}/sql/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack}
 exit;
 EOF
+
+rm /tmp/dirs.sql
 }
 
-function createErrorLog(){
+function createErrorLog  {
 V_FILE_TAG=$1
 echo "Checking for errors..."
-grep -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+$GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
 retval=$?
 if [ $retval -eq 1 ]; then 
   retval=0
@@ -85,30 +102,35 @@ if [ $retval -gt 1 ]; then
 fi
 }
 
-function cleanupOpOutput(){
+function cleanupOpOutput  {
 V_FILE_TAG=$1
 echo "Preparing files for compression."
-sed -i -r -f ${SCRIPT_DIR}/sql/op_sed_cleanup.sed ${OUTPUT_DIR}/*csv
+for outfile in  ${OUTPUT_DIR}/*csv
+do
+  sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed.tmp
+  cp sed.tmp ${outfile}
+  rm sed.tmp
+done
+
 retval=$?
 if [ $retval -ne 0 ]; then
   echo "Error processing ${SCRIPT_DIR}/sql/op_sed_cleanup.sed.  Exiting..."
   return $retval
 fi
-sed -i -r '1i\ ' ${OUTPUT_DIR}/*csv
-retval=$?
-if [ $retval -ne 0 ]; then
-  echo "Error adding newline to top of Database Migration Assessment extract files.  Exiting..."
-  return $retval
-fi
 }
 
-function compressOpFiles(){
+function compressOpFiles  {
 V_FILE_TAG=$1
 V_ERR_TAG=""
 echo ""
 echo "Archiving output files"
 CURRENT_WORKING_DIR=$(pwd)
 cp ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
+if [ -f VERSION.txt ]; then
+  cp VERSION.txt ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
+else 
+  echo "No Version file found" >  ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
+fi
 ERRCNT=$(wc -l < ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log)
 if [[ ${ERRCNT} -ne 0 ]]
 then
@@ -120,13 +142,50 @@ then
   echo "Please rerun the extract after correcting the error condition."
 fi
 
-TARFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tgz
-cd ${OUTPUT_DIR}; tar czf ${TARFILE} --remove-files *csv *.log
+TARFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tar
+ZIPFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tgz
+cd ${OUTPUT_DIR}
+tar cf ${TARFILE}  *csv *.log *.txt
+zip $ZIPFILE $TARFILE
+if [ -f $ZIPFILE ]
+then
+  rm $TARFILE  opdb*.csv opdb*.log opdb*.txt
+fi
+
 cd ${CURRENT_WORKING_DIR}
 echo ""
 echo "Step completed."
 echo ""
 return $retval
+}
+
+function getVersion  {
+  if [ -f VERSION.txt ]; then
+   githash=$(cat VERSION.txt | cut -d '(' -f 2 | tr -d ')' )
+  else githash="NONE"
+  fi
+  echo "$githash"
+}
+
+function printExtractorVersion  
+{
+if [ "$1" == "NONE" ];
+then
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "This appears to be an unsupported version of this code. "
+  echo "Please download the latest stable version from "
+  echo "https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+else
+  echo "Using release version $1"
+fi
+
 }
 
 ### Validate input
@@ -154,13 +213,16 @@ retval=$?
 
 DIAGPACKACCESS="$2"
 
+extractorVersion="$(getVersion)"
+
 echo ""
 echo "==================================================================================="
 echo "Database Migration Assessment Database Assessment Collector Version ${OpVersion}"
+printExtractorVersion "${extractorVersion}"
 echo "==================================================================================="
 
 if [ $retval -eq 0 ]; then
-  if [ "$(echo ${sqlcmd_result} | grep -E '(ORA-|SP2-)')" != "" ]; then
+  if [ "$(echo ${sqlcmd_result} | $GREP -E '(ORA-|SP2-)')" != "" ]; then
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo "Database version check returned error ${sqlcmd_result}"
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -204,6 +266,7 @@ if [ $retval -eq 0 ]; then
     echo "Data collection located at ${OUTPUT_DIR}/${TARFILE}"
     echo "==================================================================================="
     echo ""
+    printExtractorVersion "${extractorVersion}"
     exit 0
   fi
 else
