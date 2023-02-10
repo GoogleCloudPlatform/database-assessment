@@ -66,7 +66,6 @@ set termout &TERMOUTOFF
 @&EXTRACTSDIR/exttab.sql
 @&EXTRACTSDIR/idxpertable.sql
 @&EXTRACTSDIR/indextypes.sql
-@&EXTRACTSDIR/lobsizing.sql
 @&EXTRACTSDIR/mviewtypes.sql
 @&EXTRACTSDIR/opkeylog.sql
 @&EXTRACTSDIR/sourcecode.sql
@@ -77,6 +76,7 @@ set termout &TERMOUTOFF
 @&EXTRACTSDIR/usrsegatt.sql
 @&SQLDIR/&v_dopluggable
 @&SQLDIR/op_collect_&v_dodiagnostics
+@&EXTRACTSDIR/lobsizing.sql
 
 
 set termout on
