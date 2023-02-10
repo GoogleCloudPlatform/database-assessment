@@ -111,7 +111,7 @@ for analysis by Database Migration Assessment.
 2. Preparation
 --------------
 
-    a) Unzip the install archive. A "collector" subdirectory will be created.
+    a) Unzip the install archive.
 
     b) Ensure sqlplus is in the path.
 
@@ -123,13 +123,11 @@ for analysis by Database Migration Assessment.
 3. Execution
 ------------
 
-    a) Change directory to the "collector" subdirectory.
-
-    b) Execute ./collect-data.sh, passing a database connection string as the only parameter:
+    a) Execute ./collect-data.sh, passing a database connection string as the only parameter:
 
         ./collect-data.sh 'username/password@//hostname.domain.com:1521/dbname.domain.com as sysdba'
 
-    c) Follow the prompt at the end of the warning message to either continue or cancel the execution
+    b) Follow the prompt at the end of the warning message to either continue or cancel the execution
 
         Notes:
             1) Google Database Migration Assessment Data Extractor extracts data for the entire database. In multitenant

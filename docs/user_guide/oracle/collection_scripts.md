@@ -33,4 +33,4 @@ To avoid using the licensed Oracle Tuning and Diasnostics pack data:
 
 ## Upload Collections
 
-Upon completion, the tool will automatically create an archive of the extracted metrics.  
+Upon completion, the tool will automatically create an archive of the extracted metrics that can be uploaded into the assessment tool.
