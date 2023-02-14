@@ -20,10 +20,6 @@ whenever oserror exit failure
 set verify off
 set feedback off
 set echo off
-set echo on
-set termout on
-set verify on
-set serveroutput on
 accept dbusername char prompt "Please enter the DB Local Username(Or CDB Username) to receive all required grants: "
 
 DECLARE 
@@ -80,7 +76,6 @@ SELECT
  INTO :v_db_version
  FROM v$instance
  WHERE ROWNUM=1;
-dbms_output.put_line('DB Version = ' || :v_db_version );
 END;
 /
 
@@ -99,7 +94,6 @@ WHERE UPPER(name) = 'CONTROL_MANAGEMENT_PACK_ACCESS';
 EXCEPTION WHEN no_data_found THEN
   SELECT 'AWR' INTO :v_awr_license FROM dual;
 END;
-dbms_output.put_line('AWR License flag = ' || :v_awr_license);
 END;
 /
 
