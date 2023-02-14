@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#set -x
+
 # Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,6 +32,12 @@ then
       SED=/usr/xpg4/bin/sed
 fi
 
+ZIP=$(which zip 2>/dev/null)
+if [ "${ZIP}" = "" ]
+ then
+  GZIP=$(which gzip 2>/dev/null)
+fi
+
 if [ ! -d ${TMP_DIR} ]; then
    mkdir -p ${LOG_DIR}
 fi
@@ -45,7 +51,7 @@ OpVersion="4.2.0"
 ### Import logging & helper functions
 #############################################################################
 
-function checkVersion  {
+function checkVersion {
 connectString="$1"
 OpVersion=$2
 
@@ -63,7 +69,7 @@ exit;
 EOF
 }
 
-function executeOP  {
+function executeOP {
 connectString="$1"
 OpVersion=$2
 DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
@@ -88,7 +94,7 @@ EOF
 rm /tmp/dirs.sql
 }
 
-function createErrorLog  {
+function createErrorLog {
 V_FILE_TAG=$1
 echo "Checking for errors..."
 $GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
@@ -112,16 +118,18 @@ do
     sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed.tmp
     cp sed.tmp ${outfile}
     rm sed.tmp
+  else if [ $(uname) = "AIX" ]
+  then
+    sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed.tmp
+    cp sed.tmp ${outfile}
+    rm sed.tmp
   else
-    sed -i -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d' ${outfile}
+    sed -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d' ${outfile} > sed.tmp
+    cp sed.tmp ${outfile}
+    rm sed.tmp
+  fi
   fi
 done
-
-retval=$?
-if [ $retval -ne 0 ]; then
-  echo "Error processing ${SCRIPT_DIR}/sql/op_sed_cleanup.sed.  Exiting..."
-  return $retval
-fi
 }
 
 function compressOpFiles  {
@@ -133,7 +141,7 @@ CURRENT_WORKING_DIR=$(pwd)
 cp ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
 if [ -f VERSION.txt ]; then
   cp VERSION.txt ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
-else 
+else
   echo "No Version file found" >  ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
 fi
 ERRCNT=$(wc -l < ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log)
@@ -148,13 +156,22 @@ then
 fi
 
 TARFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tar
-ZIPFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tgz
+ZIPFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.zip
+
 cd ${OUTPUT_DIR}
-tar cf ${TARFILE}  *csv *.log *.txt
-zip $ZIPFILE $TARFILE
-if [ -f $ZIPFILE ]
+if [ ! "${ZIP}" = "" ]
 then
-  rm $TARFILE  opdb*.csv opdb*.log opdb*.txt
+  $ZIP $ZIPFILE  *csv *.log *.txt
+  OUTFILE=$ZIPFILE
+else
+  tar cvf $TARFILE  *csv *.log *.txt
+  $GZIP $TARFILE
+  OUTFILE=${TARFILE}.gz
+fi
+
+if [ -f $OUTFILE ]
+then
+  rm  opdb*.csv opdb*.log opdb*.txt
 fi
 
 cd ${CURRENT_WORKING_DIR}
@@ -235,6 +252,12 @@ if [ $retval -eq 0 ]; then
     exit 255
   else
     echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
+    dbmajor=$((echo ${sqlcmd_result} | cut -d '|' -f1)  |cut -d '.' -f 1)
+    if [ "${dbmajor}" = "10" ]
+    then
+       echo "Oracle 10 is not supported yet, exiting."
+       exit
+    fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
     executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS}
     retval=$?
@@ -268,7 +291,7 @@ if [ $retval -eq 0 ]; then
     echo ""
     echo "==================================================================================="
     echo "Database Migration Assessment Database Assessment Collector completed."
-    echo "Data collection located at ${OUTPUT_DIR}/${TARFILE}"
+    echo "Data collection located at ${OUTPUT_DIR}/${OUTFILE}"
     echo "==================================================================================="
     echo ""
     printExtractorVersion "${extractorVersion}"

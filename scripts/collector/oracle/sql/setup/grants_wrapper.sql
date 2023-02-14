@@ -20,6 +20,10 @@ whenever oserror exit failure
 set verify off
 set feedback off
 set echo off
+set echo on
+set termout on
+set verify on
+set serveroutput on
 accept dbusername char prompt "Please enter the DB Local Username(Or CDB Username) to receive all required grants: "
 
 DECLARE 
@@ -69,17 +73,19 @@ column sp_script  new_val SP_SCRIPT_NAME noprint
 BEGIN
 SELECT
     CASE
-        WHEN version LIKE '12%' OR version LIKE '19.%' OR version LIKE '20.%' OR version LIKE '21%'
-        THEN '12+'
-        ELSE '11g'
+        WHEN version LIKE '10%' THEN '10g'
+        WHEN version LIKE '11%' THEN '11g'
+        ELSE '12+'
     END ver
  INTO :v_db_version
  FROM v$instance
  WHERE ROWNUM=1;
+dbms_output.put_line('DB Version = ' || :v_db_version );
 END;
 /
 
 /* Find AWR Licensed Usage */
+BEGIN
 BEGIN
 SELECT
     CASE
@@ -90,6 +96,9 @@ SELECT
  INTO :v_awr_license
  FROM v$parameter
 WHERE UPPER(name) = 'CONTROL_MANAGEMENT_PACK_ACCESS';
+EXCEPTION WHEN no_data_found THEN
+  SELECT 'AWR' INTO :v_awr_license FROM dual;
+END;
 dbms_output.put_line('AWR License flag = ' || :v_awr_license);
 END;
 /
@@ -130,6 +139,8 @@ END;
 
 BEGIN
  CASE
+   WHEN :v_db_version LIKE '10%' THEN
+    raise_application_error(-20001, 'Oracle 10g is not supported yet.');
    WHEN :v_db_version = '11g' AND :v_awr_license = 'AWR' THEN
         :v_db_script := 'minimum_select_grants_for_targets_ONLY_FOR_11g.sql';
    WHEN :v_db_version = '12+' AND :v_awr_license = 'AWR' THEN

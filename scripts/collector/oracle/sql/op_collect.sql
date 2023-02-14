@@ -22,7 +22,6 @@ DEFINE EXTRACTSDIR=&SQLDIR/extracts
 DEFINE AWRDIR=&EXTRACTSDIR/awr
 DEFINE STATSPACKDIR=&EXTRACTSDIR/statspack
 DEFINE TERMOUTOFF=OFF
---DEFINE TERMOUTOFF=ON
 prompt
 prompt ***********************************************************************************
 prompt
