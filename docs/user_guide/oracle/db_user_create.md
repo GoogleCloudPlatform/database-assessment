@@ -4,13 +4,13 @@ The collection scripts can be executed with any DBA account. Alternately, a new 
 
 ## Create User
 
-### PDB (Recommended)
+### Non-container database
 
 ```sql
 create user dmacollector identified by "Pa55w__rd123";
 ```
 
-### CDB
+### Container database
 
 ```sql
 select * from v$system_parameter where name='common_user_prefix';
@@ -20,10 +20,13 @@ create user C##dmacollector identified by "Pa55w__rd123";
 
 ## Grants
 
-From the directory you extracted the collector scripts:
-
+From the directory you extracted the collector scripts, change to the sql/setup directory:
+```shell
+cd sql/setup
+```
+Execute the grants_wrapper script
 ```sql
-@sql/grants_wrapper.sql
+@grants_wrapper.sql
 -- It will prompt for the user created above
 ```
 
