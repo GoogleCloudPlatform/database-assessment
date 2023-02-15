@@ -63,9 +63,14 @@ clean-collector:
 build-collector: clean-collector      ## Build the collector SQL scripts.
 	@echo "=> Building Assessment Data Collection Scripts for Oracle version $(VERSION)..."
 	mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts
+	mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts/awr
+	mkdir -p $(BUILD_DIR)/collector/oracle/sql/setup
+	mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts/statspack
 	cp scripts/collector/oracle/sql/*.sql $(BUILD_DIR)/collector/oracle/sql
-	cp scripts/collector/oracle/sql/*.sed $(BUILD_DIR)/collector/oracle/sql
 	cp scripts/collector/oracle/sql/extracts/*.sql $(BUILD_DIR)/collector/oracle/sql/extracts
+	cp scripts/collector/oracle/sql/extracts/awr/*.sql $(BUILD_DIR)/collector/oracle/sql/extracts/awr
+	cp scripts/collector/oracle/sql/setup/*.sql $(BUILD_DIR)/collector/oracle/sql/setup
+	cp scripts/collector/oracle/sql/extracts/statspack/*.sql $(BUILD_DIR)/collector/oracle/sql/extracts/statspack
 	cp scripts/collector/oracle/collect-data.sh $(BUILD_DIR)/collector/oracle/
 	cp scripts/collector/oracle/README.txt $(BUILD_DIR)/collector/oracle/
 	cp  LICENSE $(BUILD_DIR)/collector/oracle

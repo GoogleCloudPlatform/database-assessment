@@ -20,11 +20,6 @@ set feedback on
 prompt Granting privileges for 12+ container views
 set feedback off
 
-set termout on
-set echo on
-set feedback on
-set verify on
-
 GRANT SELECT ON sys.cdb_constraints TO &&dbusername;
 GRANT SELECT ON sys.cdb_cpu_usage_statistics TO &&dbusername;
 GRANT SELECT ON sys.cdb_data_files TO &&dbusername;

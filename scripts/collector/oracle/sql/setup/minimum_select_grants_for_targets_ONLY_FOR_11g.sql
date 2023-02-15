@@ -79,7 +79,6 @@ GRANT SELECT ON sys.nls_database_parameters TO &&dbusername;
 GRANT SELECT ON sys.registry$history TO &&dbusername;
 GRANT SELECT ON sys.v_$sqlcommand TO &&dbusername;
 GRANT SELECT ON sys.v_$database TO &&dbusername;
-GRANT SELECT ON sys.v_$diag_alert_ext TO &&dbusername;
 GRANT SELECT ON sys.v_$instance TO &&dbusername;
 GRANT SELECT ON sys.v_$log TO &&dbusername;
 GRANT SELECT ON sys.v_$log_history TO &&dbusername;
