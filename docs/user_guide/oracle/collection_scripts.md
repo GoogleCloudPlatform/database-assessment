@@ -1,5 +1,7 @@
 # Gather workload metadata
 
+The workload collection supports Oracle 11gR2 and newer.  Older versions of Oracle are not currently supported.
+
 ## Execute collection script
 
 Download the latest collection scripts [here](https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip).
