@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 set feedback on
-prompt Granting privileges for 11i+ tables
+prompt Granting privileges for 11.1 tables
 set feedback off
 
 set verify off
@@ -66,7 +66,6 @@ GRANT SELECT ON sys.gv_$sgastat TO &&dbusername;
 GRANT SELECT ON sys.gv_$system_parameter TO &&dbusername;
 GRANT SELECT ON sys.nls_database_parameters TO &&dbusername;
 GRANT SELECT ON sys.registry$history TO &&dbusername;
-GRANT SELECT ON sys.v_$sqlcommand TO &&dbusername;
 GRANT SELECT ON sys.v_$database TO &&dbusername;
 GRANT SELECT ON sys.v_$instance TO &&dbusername;
 GRANT SELECT ON sys.v_$log TO &&dbusername;

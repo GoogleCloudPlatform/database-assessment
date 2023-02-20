@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 set feedback on
-prompt Granting privileges for 11i+ tables
+prompt Granting privileges for 11.1 tables
 set feedback off
 
 set verify off
@@ -33,6 +33,17 @@ GRANT SELECT ON sys.dba_external_tables TO &&dbusername;
 GRANT SELECT ON sys.dba_feature_usage_statistics TO &&dbusername;
 GRANT SELECT ON sys.dba_free_space TO &&dbusername;
 GRANT SELECT ON sys.dba_high_water_mark_statistics TO &&dbusername;
+GRANT SELECT ON sys.dba_hist_active_sess_history TO &&dbusername;
+GRANT SELECT ON sys.dba_hist_iostat_function TO &&dbusername;
+GRANT SELECT ON sys.dba_hist_osstat TO &&dbusername;
+GRANT SELECT ON sys.dba_hist_snapshot TO &&dbusername;
+GRANT SELECT ON sys.dba_hist_sqlstat TO &&dbusername;
+GRANT SELECT ON sys.dba_hist_sqltext TO &&dbusername;
+GRANT SELECT ON sys.dba_hist_sys_time_model TO &&dbusername;
+GRANT SELECT ON sys.dba_hist_sysmetric_history TO &&dbusername;
+GRANT SELECT ON sys.dba_hist_sysmetric_summary TO &&dbusername;
+GRANT SELECT ON sys.dba_hist_sysstat TO &&dbusername;
+GRANT SELECT ON sys.dba_hist_system_event TO &&dbusername;
 GRANT SELECT ON sys.dba_indexes TO &&dbusername;
 GRANT SELECT ON sys.dba_lob_partitions TO &&dbusername;
 GRANT SELECT ON sys.dba_lob_subpartitions TO &&dbusername;
@@ -66,7 +77,6 @@ GRANT SELECT ON sys.gv_$sgastat TO &&dbusername;
 GRANT SELECT ON sys.gv_$system_parameter TO &&dbusername;
 GRANT SELECT ON sys.nls_database_parameters TO &&dbusername;
 GRANT SELECT ON sys.registry$history TO &&dbusername;
-GRANT SELECT ON sys.v_$sqlcommand TO &&dbusername;
 GRANT SELECT ON sys.v_$database TO &&dbusername;
 GRANT SELECT ON sys.v_$instance TO &&dbusername;
 GRANT SELECT ON sys.v_$log TO &&dbusername;

@@ -42,12 +42,11 @@ set timing off
 set time off
 alter session set nls_numeric_characters='.,';
 
+set termout on
 whenever sqlerror exit failure
 whenever oserror continue
 
 @/tmp/dirs.sql
-select '&outputdir' as outputdir from dual;
-select '&v_tag' as v_tag from dual;
 
 variable minsnap NUMBER;
 variable maxsnap NUMBER;
@@ -69,9 +68,9 @@ column p_is_container new_value v_is_container noprint
 column p_dbparam_dflt_col new_value v_dbparam_dflt_col noprint
 column p_editionable_col new_value v_editionable_col noprint
 column p_dopluggable new_value v_dopluggable noprint
-column p_db_container_col new_value v_db_container_col
+column p_db_container_col new_value v_db_container_col noprint
 column p_pluggablelogging new_value v_pluggablelogging noprint
-
+column p_sqlcmd new_value v_sqlcmd noprint
 
 SELECT host_name     hostnc,
        instance_name instnc
@@ -184,7 +183,8 @@ END;
 /
 
 SELECT CASE WHEN :dflt_value_flag = 'N' THEN '''N/A''' ELSE 'DEFAULT_VALUE' END as p_dbparam_dflt_col ,
-       CASE WHEN :pdb_logging_flag = 'N' THEN  '''N/A''' ELSE 'LOGGING' END AS p_pluggablelogging
+       CASE WHEN :pdb_logging_flag = 'N' THEN  '''N/A''' ELSE 'LOGGING' END AS p_pluggablelogging,
+       CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN 'sqlcmd10g.sql' ELSE 'sqlcmd.sql' END AS p_sqlcmd
 FROM DUAL;
 
 
@@ -192,7 +192,6 @@ set serveroutput on
 DECLARE cnt NUMBER;
 BEGIN
   SELECT count(1) INTO cnt FROM v$database WHERE database_role = 'PHYSICAL STANDBY';
-  dbms_output.put_line('Physical standby count = ' || cnt);
   IF (cnt != 0) THEN
     SELECT count(1) INTO cnt FROM all_objects WHERE object_name = 'DBMS_UMF';
     IF (cnt > 0) THEN :umfflag := 'dbms_umf.get_node_id_local';

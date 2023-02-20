@@ -5,7 +5,15 @@ column tp_con_id  new_value v_tp_con_id  noprint
 column tsp_con_id new_value v_tsp_con_id noprint
 column lp_con_id  new_value v_lp_con_id  noprint
 column lsp_con_id new_value v_lsp_con_id noprint
-column s_con_id   new_value v_s_con_id     noprint
+column s_con_id   new_value v_s_con_id   noprint
+
+column t_segment_created   new_value  v_t_segment_created  
+column tp_segment_created  new_value  v_tp_segment_created 
+column lp_segment_created  new_value  v_lp_segment_created 
+column tsp_segment_created new_value  v_tsp_segment_created
+column lsp_segment_created new_value  v_lsp_segment_created
+
+
 SELECT CASE WHEN &v_is_container != 0 THEN 'c.con_id'   ELSE '''N/A''' END as c_con_id,
        CASE WHEN &v_is_container != 0 THEN 't.con_id'   ELSE '''N/A''' END as t_con_id,
        CASE WHEN &v_is_container != 0 THEN 'l.con_id'   ELSE '''N/A''' END as l_con_id,
@@ -14,6 +22,13 @@ SELECT CASE WHEN &v_is_container != 0 THEN 'c.con_id'   ELSE '''N/A''' END as c_
        CASE WHEN &v_is_container != 0 THEN 'lp.con_id'  ELSE '''N/A''' END as lp_con_id,
        CASE WHEN &v_is_container != 0 THEN 'lsp.con_id' ELSE '''N/A''' END as lsp_con_id,
        CASE WHEN &v_is_container != 0 THEN 's.con_id'   ELSE '''N/A''' END as s_con_id
+FROM DUAL;
+
+SELECT  CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 't.segment_created'   END as t_segment_created,
+        CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 'tp.segment_created'  END as tp_segment_created,
+        CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 'lp.segment_created'  END as lp_segment_created,
+        CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 'tsp.segment_created' END as tsp_segment_created,
+        CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 'lsp.segment_created' END as lsp_segment_created
 FROM DUAL;
 
 
@@ -46,21 +61,21 @@ SELECT
     c.owner,
     c.table_name,
     t.num_rows                AS table_num_rows,
-    t.segment_created         AS table_seg_created,
+    &v_t_segment_created         AS table_seg_created,
     t.partitioned,
     c.column_name,
     c.data_type,
     tp.partition_name         AS table_partition_name,
-    tp.segment_created        AS table_partition_seg_created,
+    &v_tp_segment_created        AS table_partition_seg_created,
     tp.num_rows               AS partition_num_rows,
     lp.lob_partition_name     AS lob_partition_name,
-    lp.segment_created        AS lob_partition_seg_created,
+    &v_lp_segment_created        AS lob_partition_seg_created,
     tp.subpartition_count,
     tsp.subpartition_name     AS table_subpartition_name,
-    tsp.segment_created       AS table_subpartition_created,
+    &v_tsp_segment_created       AS table_subpartition_created,
     tsp.num_rows              AS subpartition_num_rows,
     lsp.lob_subpartition_name AS lob_subpartition_name,
-    lsp.segment_created       AS lob_subpartition_seg_created,
+    &v_lsp_segment_created       AS lob_subpartition_seg_created,
     l.segment_name            AS lob_seg_name,
     s.segment_name            AS seg_name,
     s.partition_name          AS seg_partition_name,
