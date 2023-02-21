@@ -116,18 +116,37 @@ for analysis by Database Migration Assessment.
     b) Ensure sqlplus is in the path.
 
     c) If the extract will be run by a user that does not have SYSDBA privilege, connect to the database 
-       as a user with SYSDBA privileges and execute grants_wrapper.sql.  You will be prompted for the
-       name of a database user to be granted SELECT privileges on the objects required for data collection.
+       as a user with SYSDBA privileges and create the user if needed.  If this is a multi-tenant database,
+       create the user as a common user in the root container. The Dma_collector does not currently support
+       running in individual pluggable databases.
 
+        sqlplus "sys/password@//hostname:port/dbservicename"
+        SQL> create user DMA_COLLECTOR identified by password;
+        SQL> grant connect, create session to DMA_COLLECTOR;
+
+    d) Execute grants_wrapper.sql.  You will be prompted for the name of a database user 
+       (Note that input is case-sensitive and must match the username created above) to be granted 
+       privileges on the objects required for data collection.
+       You will also be prompted whether or not to allow access to the AWR/ASH data.
+
+    Ex:
+        SQL> @grants_wrapper.sql
+
+        SQL> Please enter the DB Local Username(Or CDB Username) to receive all required grants: DMA_COLLECTOR
+        SQL> Please enter Y or N to allow or disallow use of the Tuning and Diagnostic Pack (AWR/ASH) data (Y) Y
+
+    e) The grant_wrapper script will grant privileges required and will output a list of what has been granted.
 
 3. Execution
 ------------
 
-    a) Execute ./collect-data.sh, passing a database connection string as the only parameter:
+    a) Execute collect-data.sh, passing the database connection string and indicator on whether to use AWR/ASH diagnostic data.
 
-        ./collect-data.sh 'username/password@//hostname.domain.com:1521/dbname.domain.com as sysdba'
+        To use the AWR/ASH data:
+        ./collect-data.sh 'username/password@//hostname.domain.com:1521/dbname.domain.com' UseDiagnostics
 
-    b) Follow the prompt at the end of the warning message to either continue or cancel the execution
+        To prevent use of AWR/ASH data and use STATSPACK data (if available) instead:
+        ./collect-data.sh 'username/password@//hostname.domain.com:1521/dbname.domain.com' NoDiagnostics
 
         Notes:
             1) Google Database Migration Assessment Data Extractor extracts data for the entire database. In multitenant

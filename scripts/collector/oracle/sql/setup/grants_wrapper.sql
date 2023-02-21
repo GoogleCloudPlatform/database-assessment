@@ -27,9 +27,9 @@ accept usediagnostics char default 'Y' prompt "Please enter Y or N to allow or d
 DECLARE
   cnt NUMBER;
 BEGIN
-  SELECT count(1) INTO cnt FROM dba_users WHERE upper(username) = upper('&&dbusername');
+  SELECT count(1) INTO cnt FROM dba_users WHERE username = '&&dbusername';
   IF cnt = 0 THEN
-    raise_application_error(-1917, 'User &&dbusername does not exist. please verify the username and ensure the account is created.');
+    raise_application_error(-1917, 'User "&&dbusername" does not exist. please verify the username and ensure the account is created.');
   END IF;
 END;
 /
@@ -40,7 +40,6 @@ set termout on
 set lines 200
 set feedback off
 whenever sqlerror exit failure
-spool privs.sql
 DECLARE
     TYPE rectype IS RECORD (
     objpriv varchar2(30),
@@ -87,7 +86,7 @@ DECLARE
         dbms_output.put_line(v_errsep);
         dbms_output.put_line('-- This user has no access to pluggable databases.');
         dbms_output.put_line('-- Please execute the below ALTER USER statement in the container database.');
-        dbms_output.put_line('ALTER USER &dbusername  SET CONTAINER_DATA=ALL CONTAINER = CURRENT;');
+        dbms_output.put_line('ALTER USER "&dbusername"  SET CONTAINER_DATA=ALL CONTAINER = CURRENT;');
         dbms_output.put_line(v_errsep);
         dbms_output.put_line(v_errsep);
         raise_application_error(-20002, 'No access to pluggable database information');
@@ -115,14 +114,14 @@ DECLARE
             AND object_name = v_table_name;
             
           IF v_cnt != 0 THEN
-            v_sql := 'GRANT ' || v_table_priv || ' ON ' || v_table_owner || '.' || v_table_name || ' TO &dbusername ' ;
+            v_sql := 'GRANT ' || v_table_priv || ' ON ' || v_table_owner || '.' || v_table_name || ' TO "&dbusername" ' ;
             dbms_output.put_line(v_sql || ';' );
             EXECUTE IMMEDIATE v_sql;
           END IF;  
         END;
      END LOOP;
     IF v_container_db THEN
-       v_sql := 'ALTER USER  &dbusername  SET CONTAINER_DATA=ALL CONTAINER = CURRENT';
+       v_sql := 'ALTER USER  "&dbusername"  SET CONTAINER_DATA=ALL CONTAINER = CURRENT';
        dbms_output.put_line(v_sql || ';' );
        EXECUTE IMMEDIATE v_sql;
        list_pdbs;
@@ -141,7 +140,7 @@ DECLARE
     
 BEGIN
 
-  IF '&usediagnostics' = 'Y' THEN
+  IF upper('&usediagnostics') = 'Y' THEN
   dbms_output.put_line('Granting privs for AWR/ASH data');
     v_source_table_list := t_source_table_list(
       rectype_('SELECT','SYS','CDB_HIST_ACTIVE_SESS_HISTORY'),
@@ -283,6 +282,5 @@ BEGIN
 
 END;
 /
-spool off
 exit
 

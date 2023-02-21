@@ -8,6 +8,7 @@ The collection scripts can be executed with any DBA account. Alternately, a new 
 
 ```sql
 create user dmacollector identified by "Pa55w__rd123";
+grant connect, create session to dmacollector;
 ```
 
 ### Container database
@@ -16,6 +17,7 @@ create user dmacollector identified by "Pa55w__rd123";
 select * from v$system_parameter where name='common_user_prefix';
 --C##
 create user C##dmacollector identified by "Pa55w__rd123";
+grant connect, create session to C##dmacollector;
 ```
 
 ## Grants
@@ -27,11 +29,10 @@ cd sql/setup
 Execute the grants_wrapper script
 ```sql
 @grants_wrapper.sql
--- It will prompt for the user created above
+-- It will prompt for the user created above (Note that input is case-sensitive and must match the username created above).
+-- You will also be prompted whether or not to allow access to the AWR data.
 ```
 
-> NOTE: grants_wrapper.sql has provided variable db_awr_license which is set default to Y to access AWR tables.
->
-> AWR is a licensed feature of Oracle. If you don't have license to run AWR you can disable flag and it will execute script minimum_select_grants_for_targets_ONLY_FOR_11g.sql.
-> If you have STATSPACK enabled, run the additional script ```minimum_select_grants_for_statspack.sql``` to allow use of STATSPACK data.
+
+> AWR is a licensed feature of Oracle. If you don't have license to run AWR you can answer "N" to the above prompt and it will exclude the AWR data from collection.  If STATSPACK data is avaible, it will use that instead.
 
