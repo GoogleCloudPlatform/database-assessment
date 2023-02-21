@@ -13,6 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+column t_sql_cmd   new_value  v_sql_cmd noprint
+column t_machine   new_value  v_machine noprint
+
+
+SELECT  CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '&AWRDIR/sqlcmd10.sql' ELSE '&AWRDIR/sqlcmd12.sql' END as t_sql_cmd,
+        CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 'has.machine' END as t_machine
+FROM DUAL;
+
 spool &outputdir/opdb__sourceconn__&v_tag
 
 WITH vsrcconn AS (
@@ -26,7 +34,7 @@ SELECT '&&v_host'
        TO_CHAR(dhsnap.begin_interval_time, 'hh24') hour,
        replace(has.program, '|', '_') program,
        replace(has.module, '|', '_') module,
-       replace(has.machine, '|', '_') machine,
+       replace(&v_machine, '|', '_') machine,
        scmd.command_name,
        count(1) cnt
 FROM &v_tblprefix._HIST_ACTIVE_SESS_HISTORY has
@@ -34,7 +42,7 @@ FROM &v_tblprefix._HIST_ACTIVE_SESS_HISTORY has
      ON has.snap_id = dhsnap.snap_id
      AND has.instance_number = dhsnap.instance_number
      AND has.dbid = dhsnap.dbid
-        INNER JOIN V$SQLCOMMAND scmd
+@&v_sql_cmd
         ON has.sql_opcode = scmd.COMMAND_TYPE
 WHERE  has.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
 AND has.dbid = &&v_dbid
@@ -49,7 +57,7 @@ group by '&&v_host'
        has.instance_number,
        has.program,
        has.module,
-       has.machine,
+       &v_machine,
        scmd.command_name)
 SELECT pkey , dbid , instance_number , hour , program ,
        module , machine , command_name , cnt

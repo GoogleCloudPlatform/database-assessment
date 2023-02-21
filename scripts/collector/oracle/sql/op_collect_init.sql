@@ -42,12 +42,11 @@ set timing off
 set time off
 alter session set nls_numeric_characters='.,';
 
+set termout on
 whenever sqlerror exit failure
 whenever oserror continue
 
 @/tmp/dirs.sql
-select '&outputdir' as outputdir from dual;
-select '&v_tag' as v_tag from dual;
 
 variable minsnap NUMBER;
 variable maxsnap NUMBER;
@@ -69,9 +68,9 @@ column p_is_container new_value v_is_container noprint
 column p_dbparam_dflt_col new_value v_dbparam_dflt_col noprint
 column p_editionable_col new_value v_editionable_col noprint
 column p_dopluggable new_value v_dopluggable noprint
-column p_db_container_col new_value v_db_container_col
+column p_db_container_col new_value v_db_container_col noprint
 column p_pluggablelogging new_value v_pluggablelogging noprint
-
+column p_sqlcmd new_value v_sqlcmd noprint
 
 SELECT host_name     hostnc,
        instance_name instnc
@@ -184,7 +183,8 @@ END;
 /
 
 SELECT CASE WHEN :dflt_value_flag = 'N' THEN '''N/A''' ELSE 'DEFAULT_VALUE' END as p_dbparam_dflt_col ,
-       CASE WHEN :pdb_logging_flag = 'N' THEN  '''N/A''' ELSE 'LOGGING' END AS p_pluggablelogging
+       CASE WHEN :pdb_logging_flag = 'N' THEN  '''N/A''' ELSE 'LOGGING' END AS p_pluggablelogging,
+       CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN 'sqlcmd10g.sql' ELSE 'sqlcmd.sql' END AS p_sqlcmd
 FROM DUAL;
 
 
@@ -192,7 +192,6 @@ set serveroutput on
 DECLARE cnt NUMBER;
 BEGIN
   SELECT count(1) INTO cnt FROM v$database WHERE database_role = 'PHYSICAL STANDBY';
-  dbms_output.put_line('Physical standby count = ' || cnt);
   IF (cnt != 0) THEN
     SELECT count(1) INTO cnt FROM all_objects WHERE object_name = 'DBMS_UMF';
     IF (cnt > 0) THEN :umfflag := 'dbms_umf.get_node_id_local';
@@ -228,7 +227,7 @@ DECLARE
 BEGIN 
   :sp  := 'prompt_nostatspack.sql';
   IF '&v_dodiagnostics' = 'usediagnostics' THEN 
-     l_tab_name := 'dba_hist_snapshot'; 
+     l_tab_name := 'DBA_HIST_SNAPSHOT'; 
      l_col_name := 'begin_interval_time';
   ELSE IF '&v_dodiagnostics' = 'nodiagnostics' THEN
          SELECT count(1) INTO cnt FROM all_tables WHERE owner ='PERFSTAT';
@@ -240,9 +239,18 @@ BEGIN
        ELSE l_tab_name :=  'ERROR - Unexpected parameter: &v_dodiagnostics';
        END IF;
   END IF; 
+  BEGIN
+    SELECT count(1) INTO cnt FROM user_tab_privs WHERE table_name = upper(l_tab_name);
+    IF cnt = 0 THEN
+      IF l_tab_name ='NONE' THEN
+        RAISE_APPLICATION_ERROR(-20001, 'This user does not have SELECT privileges on DBA_HIST_SNAPSHOT or STATS$SNAPSHOT.  Please ensure the grants_wrapper.sql script has been executed for this user.');
+      ELSE
+        RAISE_APPLICATION_ERROR(-20002, 'This user does not have SELECT privileges on ' || l_tab_name || '.  Please ensure the grants_wrapper.sql script has been executed for this user.');
+      END IF;
+    END IF;
+  END;
   IF (l_tab_name != 'NONE' AND l_tab_name NOT LIKE 'ERROR%') THEN
      THE_SQL := 'SELECT min(snap_id) , max(snap_id) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
---     dbms_output.put_line(the_sql);
      EXECUTE IMMEDIATE the_sql INTO  :minsnap, :maxsnap USING '&&v_dbid' ;
      IF :minsnap IS NULL THEN
         dbms_output.put_line('Warning: No snapshots found within the last &&dtrange days.  No performance data will be extracted.');
@@ -255,8 +263,6 @@ BEGIN
   ELSE
      :v_info_prompt := 'without performance data';
   END IF;
---  dbms_output.put_line('v_dodiagnostics = &v_dodiagnostics, l_tab_name = ' || l_tab_name || ', the_sql = ' );
---  dbms_output.put_line(the_sql);
 END;
 /
 set termout off

@@ -48,7 +48,7 @@ SELECT  '&&v_host'
         affirm, 
         REPLACE(valid_role ,'|', ' ') valid_role, 
         verify,
-        REPLACE(SUBSTR(CASE WHEN target = 'STANDBY' OR target = 'REMOTE' THEN (SELECT DECODE(listagg(value, ';') WITHIN GROUP (ORDER BY value), NULL, 'LOG_ARCHIVE_CONFIG_NOT_CONFIGURED', listagg(value, ';') WITHIN GROUP (ORDER BY value)) FROM gv$parameter WHERE UPPER(name) = 'LOG_ARCHIVE_CONFIG') ELSE 'LOCAL_DESTINATION_CONFIG_NOT_APPLICABLE' END, 1, 100), '|', ' ') log_archive_config
+        'N/A' log_archive_config
 FROM gv$archive_dest a
 WHERE destination IS NOT NULL)
 SELECT pkey , con_id , inst_id , log_archive_config , dest_id , dest_name , destination , status ,

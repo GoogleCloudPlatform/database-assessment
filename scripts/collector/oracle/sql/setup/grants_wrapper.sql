@@ -20,157 +20,267 @@ whenever oserror exit failure
 set verify off
 set feedback off
 set echo off
-accept dbusername char prompt "Please enter the DB Local Username(Or CDB Username) to receive all required grants: "
 
-DECLARE 
+accept dbusername    char prompt "Please enter the DB Local Username(Or CDB Username) to receive all required grants: "
+accept usediagnostics char default 'Y' prompt "Please enter Y or N to allow or disallow use of the Tuning and Diagnostic Pack (AWR/ASH) data (Y) "
+
+DECLARE
   cnt NUMBER;
 BEGIN
-  SELECT count(1) INTO cnt FROM dba_users WHERE upper(username) = upper('&&dbusername');
+  SELECT count(1) INTO cnt FROM dba_users WHERE username = '&&dbusername';
   IF cnt = 0 THEN
-    raise_application_error(-1917, 'User &&dbusername does not exist. please verify the username and ensure the account is created.');
+    raise_application_error(-1917, 'User "&&dbusername" does not exist. please verify the username and ensure the account is created.');
   END IF;
 END;
 /
 
-set feedback on
-prompt
-prompt
-prompt Granting required privileges for user &&dbusername
+
+set serveroutput on size 50000
+set termout on
+set lines 200
 set feedback off
-
-/*
-accept dbusername char prompt "Please enter the DB Local Username(Or CDB Username) to receive all required grants: "
-*/
-
-/*
-        Use db_awr_license variable to OVERRIDE license usage.
-        i.e. db_awr_license='Y' when you want to use AWR views irrespective of if you have license to run AWR or not
-        Keep db_awr_license='N' if you don't want to query any AWR tables.
-*/
-
-
-def db_awr_license='Y'
-
-var v_db_version varchar2(3)
-var v_awr_license varchar2(3)
-var v_statspack varchar2(3)
-var v_is_container varchar2(3)
-var v_use_umf varchar2(3)
-
-var v_db_script varchar2(100)
-var v_con_script varchar2(100)
-var v_sp_script varchar2(100)
-
-column db_script  new_val DB_SCRIPT_NAME noprint
-column con_script new_val CON_SCRIPT_NAME noprint
-column sp_script  new_val SP_SCRIPT_NAME noprint
-
-/* Find Current Database Version */
-BEGIN
-SELECT
-    CASE
-        WHEN version LIKE '10%' THEN '10g'
-        WHEN version LIKE '11%' THEN '11g'
-        ELSE '12+'
-    END ver
- INTO :v_db_version
- FROM v$instance
- WHERE ROWNUM=1;
-END;
-/
-
-/* Find AWR Licensed Usage */
-BEGIN
-BEGIN
-SELECT
-    CASE
-        WHEN (value LIKE 'DIAG' OR value LIKE 'TUNING' ) OR '&db_awr_license'='Y'
-        THEN 'AWR'
-        ELSE 'NOAWR'
-    END CASE 
- INTO :v_awr_license
- FROM v$parameter
-WHERE UPPER(name) = 'CONTROL_MANAGEMENT_PACK_ACCESS';
-EXCEPTION WHEN no_data_found THEN
-  SELECT 'AWR' INTO :v_awr_license FROM dual;
-END;
-END;
-/
-
-/* Is there a statpack installation */
-DECLARE 
-  CNT NUMBER;
-BEGIN
-  SELECT count(1) INTO cnt FROM dba_users WHERE username ='PERFSTAT';
-  IF cnt > 0 THEN 
-    :v_statspack := 'Y';
-  END IF;
-END;
-/
-
-/* Is this a container database */
+whenever sqlerror exit failure
 DECLARE
-  CNT NUMBER;
+    TYPE rectype IS RECORD (
+    objpriv varchar2(30),
+    objowner varchar2(30),
+    objname varchar2(30)
+    );
+    
+    TYPE t_source_table_list IS
+        TABLE OF rectype;
+
+    TABLE_DOES_NOT_EXIST EXCEPTION;
+    PRAGMA EXCEPTION_INIT(TABLE_DOES_NOT_EXIST, -00942);
+        
+    v_source_table_list t_source_table_list;
+    
+    v_table_owner       VARCHAR2(30);
+    v_table_name        VARCHAR2(30);
+    v_table_priv        VARCHAR2(30);
+    v_cnt               NUMBER;
+    v_err_ind           BOOLEAN := FALSE;
+    v_container_db      BOOLEAN := FALSE;
+
+    v_infosep           VARCHAR2(100) := rpad('-', 100, '-');
+    v_errsep            VARCHAR2(100) := rpad('!', 100, '!');
+
+    PROCEDURE list_pdbs
+    IS
+      TYPE c_pdb_list_type IS REF CURSOR;
+      v_pdb_list c_pdb_list_type;
+      v_pdb_name VARCHAR2(128);
+      v_pdb_count NUMBER := 0;
+    BEGIN
+      dbms_output.put_line(v_infosep);
+      dbms_output.put_line('-- Privileges verified for the below pluggable databases:');
+      OPEN v_pdb_list FOR 'SELECT pdb_name FROM cdb_pdbs WHERE pdb_name != :seedname ORDER BY 1' USING 'PDB$SEED';
+      LOOP
+        FETCH v_pdb_list INTO v_pdb_name;
+        EXIT WHEN v_pdb_list%NOTFOUND;
+        dbms_output.put_line('   ' || v_pdb_name);
+        v_pdb_count := v_pdb_count + 1;
+      END LOOP;
+      IF v_pdb_count = 0 THEN
+        dbms_output.put_line(v_errsep);
+        dbms_output.put_line(v_errsep);
+        dbms_output.put_line('-- This user has no access to pluggable databases.');
+        dbms_output.put_line('-- Please execute the below ALTER USER statement in the container database.');
+        dbms_output.put_line('ALTER USER "&dbusername"  SET CONTAINER_DATA=ALL CONTAINER = CURRENT;');
+        dbms_output.put_line(v_errsep);
+        dbms_output.put_line(v_errsep);
+        raise_application_error(-20002, 'No access to pluggable database information');
+      ELSE
+        dbms_output.put_line(v_infosep);
+      END IF;
+    END;
+
+
+    PROCEDURE grant_privs(p_priv_list t_source_table_list) 
+    IS
+      v_sql VARCHAR2(2000);
+    BEGIN
+
+     FOR x IN p_priv_list.first..p_priv_list.last LOOP
+        v_table_priv  :=  p_priv_list(x).objpriv;
+        v_table_owner :=  p_priv_list(x).objowner;
+        v_table_name  := p_priv_list(x).objname;
+
+        BEGIN
+          SELECT count(1) 
+          INTO v_cnt 
+          FROM dba_objects
+          WHERE owner = v_table_owner
+            AND object_name = v_table_name;
+            
+          IF v_cnt != 0 THEN
+            v_sql := 'GRANT ' || v_table_priv || ' ON ' || v_table_owner || '.' || v_table_name || ' TO "&dbusername" ' ;
+            dbms_output.put_line(v_sql || ';' );
+            EXECUTE IMMEDIATE v_sql;
+          END IF;  
+        END;
+     END LOOP;
+    IF v_container_db THEN
+       v_sql := 'ALTER USER  "&dbusername"  SET CONTAINER_DATA=ALL CONTAINER = CURRENT';
+       dbms_output.put_line(v_sql || ';' );
+       EXECUTE IMMEDIATE v_sql;
+       list_pdbs;
+    END IF;
+    END;
+  
+      
+    FUNCTION rectype_( p_objpriv VARCHAR2, p_objowner VARCHAR2, p_objname VARCHAR2) RETURN RECTYPE IS
+      retval rectype;
+    BEGIN
+      retval.objpriv  := p_objpriv;
+      retval.objowner := p_objowner;
+      retval.objname  := p_objname;
+      RETURN retval;
+    END;
+    
 BEGIN
-  SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner = 'SYS' AND table_name = 'V_$DATABASE' AND column_name = 'CDB';
-  IF cnt > 0 THEN
-    EXECUTE IMMEDIATE 'SELECT cdb FROM v_$database' INTO :v_is_container;
+
+  IF upper('&usediagnostics') = 'Y' THEN
+  dbms_output.put_line('Granting privs for AWR/ASH data');
+    v_source_table_list := t_source_table_list(
+      rectype_('SELECT','SYS','CDB_HIST_ACTIVE_SESS_HISTORY'),
+      rectype_('SELECT','SYS','CDB_HIST_IOSTAT_FUNCTION'),
+      rectype_('SELECT','SYS','CDB_HIST_OSSTAT'),
+      rectype_('SELECT','SYS','CDB_HIST_SNAPSHOT'),
+      rectype_('SELECT','SYS','CDB_HIST_SQLSTAT'),
+      rectype_('SELECT','SYS','CDB_HIST_SQLTEXT'),
+      rectype_('SELECT','SYS','CDB_HIST_SYSMETRIC_HISTORY'),
+      rectype_('SELECT','SYS','CDB_HIST_SYSMETRIC_SUMMARY'),
+      rectype_('SELECT','SYS','CDB_HIST_SYSSTAT'),
+      rectype_('SELECT','SYS','CDB_HIST_SYSTEM_EVENT'),
+      rectype_('SELECT','SYS','CDB_HIST_SYS_TIME_MODEL'),
+      rectype_('SELECT','SYS','DBA_HIST_ACTIVE_SESS_HISTORY'),
+      rectype_('SELECT','SYS','DBA_HIST_IOSTAT_FUNCTION'),
+      rectype_('SELECT','SYS','DBA_HIST_OSSTAT'),
+      rectype_('SELECT','SYS','DBA_HIST_SNAPSHOT'),
+      rectype_('SELECT','SYS','DBA_HIST_SQLSTAT'),
+      rectype_('SELECT','SYS','DBA_HIST_SQLTEXT'),
+      rectype_('SELECT','SYS','DBA_HIST_SYSMETRIC_HISTORY'),
+      rectype_('SELECT','SYS','DBA_HIST_SYSMETRIC_SUMMARY'),
+      rectype_('SELECT','SYS','DBA_HIST_SYSSTAT'),
+      rectype_('SELECT','SYS','DBA_HIST_SYSTEM_EVENT'),
+      rectype_('SELECT','SYS','DBA_HIST_SYS_TIME_MODEL')
+      );
+    grant_privs(v_source_table_list); 
   END IF;
+
+  v_source_table_list := t_source_table_list(
+      rectype_('EXECUTE','SYS','DBMS_UMF'),
+      rectype_('SELECT','PERFSTAT','STATS$IOSTAT_FUNCTION_NAME'),
+      rectype_('SELECT','PERFSTAT','STATS$IOSTAT_FUNCTION'),
+      rectype_('SELECT','PERFSTAT','STATS$OSSTATNAME'),
+      rectype_('SELECT','PERFSTAT','STATS$OSSTAT'),
+      rectype_('SELECT','PERFSTAT','STATS$SNAPSHOT'),
+      rectype_('SELECT','PERFSTAT','STATS$SQL_SUMMARY'),
+      rectype_('SELECT','PERFSTAT','STATS$SYSSTAT'),
+      rectype_('SELECT','PERFSTAT','STATS$SYSTEM_EVENT'),
+      rectype_('SELECT','PERFSTAT','STATS$SYS_TIME_MODEL'),
+      rectype_('SELECT','PERFSTAT','STATS$TIME_MODEL_STATNAME'),
+      rectype_('SELECT','SYS','AUX_STATS$'),
+      rectype_('SELECT','SYS','CDB_CONSTRAINTS'),
+      rectype_('SELECT','SYS','CDB_CPU_USAGE_STATISTICS'),
+      rectype_('SELECT','SYS','CDB_DATA_FILES'),
+      rectype_('SELECT','SYS','CDB_DB_LINKS'),
+      rectype_('SELECT','SYS','CDB_EXTERNAL_TABLES'),
+      rectype_('SELECT','SYS','CDB_FEATURE_USAGE_STATISTICS'),
+      rectype_('SELECT','SYS','CDB_FREE_SPACE'),
+      rectype_('SELECT','SYS','CDB_HIGH_WATER_MARK_STATISTICS'),
+      rectype_('SELECT','SYS','CDB_INDEXES'),
+      rectype_('SELECT','SYS','CDB_LOB_PARTITIONS'),
+      rectype_('SELECT','SYS','CDB_LOBS'),
+      rectype_('SELECT','SYS','CDB_LOB_SUBPARTITIONS'),
+      rectype_('SELECT','SYS','CDB_MVIEWS'),
+      rectype_('SELECT','SYS','CDB_OBJECTS'),
+      rectype_('SELECT','SYS','CDB_OBJECT_TABLES'),
+      rectype_('SELECT','SYS','CDB_PART_TABLES'),
+      rectype_('SELECT','SYS','CDB_PDBS'),
+      rectype_('SELECT','SYS','CDB_SEGMENTS'),
+      rectype_('SELECT','SYS','CDB_SERVICES'),
+      rectype_('SELECT','SYS','CDB_SOURCE'),
+      rectype_('SELECT','SYS','CDB_SYNONYMS'),
+      rectype_('SELECT','SYS','CDB_TAB_COLS'),
+      rectype_('SELECT','SYS','CDB_TAB_COLUMNS'),
+      rectype_('SELECT','SYS','CDB_TABLESPACES'),
+      rectype_('SELECT','SYS','CDB_TABLES'),
+      rectype_('SELECT','SYS','CDB_TAB_PARTITIONS'),
+      rectype_('SELECT','SYS','CDB_TAB_SUBPARTITIONS'),
+      rectype_('SELECT','SYS','CDB_TEMP_FILES'),
+      rectype_('SELECT','SYS','CDB_TRIGGERS'),
+      rectype_('SELECT','SYS','CDB_USERS'),
+      rectype_('SELECT','SYS','CDB_VIEWS'),
+      rectype_('SELECT','SYS','CDB_XML_TABLES'),
+      rectype_('SELECT','SYS','CONTAINER$'),
+      rectype_('SELECT','SYS','DBA_CONSTRAINTS'),
+      rectype_('SELECT','SYS','DBA_CPU_USAGE_STATISTICS'),
+      rectype_('SELECT','SYS','DBA_DATA_FILES'),
+      rectype_('SELECT','SYS','DBA_DB_LINKS'),
+      rectype_('SELECT','SYS','DBA_EXTERNAL_TABLES'),
+      rectype_('SELECT','SYS','DBA_FEATURE_USAGE_STATISTICS'),
+      rectype_('SELECT','SYS','DBA_FREE_SPACE'),
+      rectype_('SELECT','SYS','DBA_HIGH_WATER_MARK_STATISTICS'),
+      rectype_('SELECT','SYS','DBA_INDEXES'),
+      rectype_('SELECT','SYS','DBA_LOB_PARTITIONS'),
+      rectype_('SELECT','SYS','DBA_LOBS'),
+      rectype_('SELECT','SYS','DBA_LOB_SUBPARTITIONS'),
+      rectype_('SELECT','SYS','DBA_MVIEWS'),
+      rectype_('SELECT','SYS','DBA_OBJECTS'),
+      rectype_('SELECT','SYS','DBA_OBJECT_TABLES'),
+      rectype_('SELECT','SYS','DBA_PART_TABLES'),
+      rectype_('SELECT','SYS','DBA_REGISTRY_SQLPATCH'),
+      rectype_('SELECT','SYS','DBA_SEGMENTS'),
+      rectype_('SELECT','SYS','DBA_SERVICES'),
+      rectype_('SELECT','SYS','DBA_SOURCE'),
+      rectype_('SELECT','SYS','DBA_SYNONYMS'),
+      rectype_('SELECT','SYS','DBA_TAB_COLS'),
+      rectype_('SELECT','SYS','DBA_TAB_COLUMNS'),
+      rectype_('SELECT','SYS','DBA_TABLESPACES'),
+      rectype_('SELECT','SYS','DBA_TABLES'),
+      rectype_('SELECT','SYS','DBA_TAB_PARTITIONS'),
+      rectype_('SELECT','SYS','DBA_TAB_SUBPARTITIONS'),
+      rectype_('SELECT','SYS','DBA_TEMP_FILES'),
+      rectype_('SELECT','SYS','DBA_TRIGGERS'),
+      rectype_('SELECT','SYS','DBA_USERS'),
+      rectype_('SELECT','SYS','DBA_VIEWS'),
+      rectype_('SELECT','SYS','DBA_XML_TABLES'),
+      rectype_('SELECT','SYS','GV_$ARCHIVE_DEST'),
+      rectype_('SELECT','SYS','GV_$ARCHIVED_LOG'),
+      rectype_('SELECT','SYS','GV_$DATABASE'),
+      rectype_('SELECT','SYS','GV_$INSTANCE'),
+      rectype_('SELECT','SYS','GV_$PARAMETER'),
+      rectype_('SELECT','SYS','GV_$PDBS'),
+      rectype_('SELECT','SYS','GV_$PGASTAT'),
+      rectype_('SELECT','SYS','GV_$PROCESS'),
+      rectype_('SELECT','SYS','GV_$SGASTAT'),
+      rectype_('SELECT','SYS','GV_$SYSTEM_PARAMETER'),
+      rectype_('SELECT','SYS','NLS_DATABASE_PARAMETERS'),
+      rectype_('SELECT','SYS','OBJ$'),
+      rectype_('SELECT','SYS','REGISTRY$HISTORY'),
+      rectype_('SELECT','SYS','V_$ARCHIVE_DEST'),
+      rectype_('SELECT','SYS','V_$DATABASE'),
+      rectype_('SELECT','SYS','V_$EVENT_NAME'),
+      rectype_('SELECT','SYS','V_$INSTANCE'),
+      rectype_('SELECT','SYS','V_$LOGFILE'),
+      rectype_('SELECT','SYS','V_$LOG_HISTORY'),
+      rectype_('SELECT','SYS','V_$LOG'),
+      rectype_('SELECT','SYS','V_$PARAMETER'),
+      rectype_('SELECT','SYS','V_$PDBS'),
+      rectype_('SELECT','SYS','V_$PGASTAT'),
+      rectype_('SELECT','SYS','V_$RMAN_BACKUP_JOB_DETAILS'),
+      rectype_('SELECT','SYS','V_$SGASTAT'),
+      rectype_('SELECT','SYS','V_$SQLCOMMAND'),
+      rectype_('SELECT','SYS','V_$SYSTEM_PARAMETER'),
+      rectype_('SELECT','SYS','V_$TEMP_SPACE_HEADER'),
+      rectype_('SELECT','SYS','V_$VERSION'),
+      rectype_('SELECT','SYSTEM','LOGSTDBY$SKIP_SUPPORT')
+    );
+  grant_privs(v_source_table_list); 
+
 END;
 /
+exit
 
-/* Using UMF to collect stats from standby */
-DECLARE 
-  CNT NUMBER;
-BEGIN
-  SELECT count(1) INTO cnt FROM dba_objects WHERE owner ='SYS' AND object_name ='DBMS_UMF';
-  IF cnt > 0 THEN
-    :v_use_umf := 'Y';
-  END IF;
-END;
-/
-
-
-BEGIN
- CASE
-   WHEN :v_db_version LIKE '10%' THEN
-    raise_application_error(-20001, 'Oracle 10g is not supported yet.');
-   WHEN :v_db_version = '11g' AND :v_awr_license = 'AWR' THEN
-        :v_db_script := 'minimum_select_grants_for_targets_ONLY_FOR_11g.sql';
-   WHEN :v_db_version = '12+' AND :v_awr_license = 'AWR' THEN
-        :v_db_script := 'minimum_select_grants_for_targets_12c_AND_ABOVE.sql';
-   ELSE 
-        :v_db_script := 'noop.sql "AWR objects"';
- END CASE;
- CASE
-   WHEN :v_statspack = 'Y' THEN
-        :v_sp_script := 'minimum_select_grants_for_statspack.sql';
-   ELSE 
-        :v_sp_script := 'noop.sql "STATSPACK objects"';
-   END CASE;
- CASE
-   WHEN :v_is_container = 'YES' THEN
-        :v_con_script := 'minimum_select_grants_for_targets_12c_AND_ABOVE_containers.sql';
-   ELSE
-        :v_con_script := 'noop.sql "container objects"';
- END CASE;
-END;
-/
-
-select :v_db_script db_script, :v_sp_script sp_script, :v_con_script con_script from dual;
-
-@&SP_SCRIPT_NAME
-@&DB_SCRIPT_NAME
-@&CON_SCRIPT_NAME
-
-DECLARE 
-  the_sql VARCHAR2(200);
-BEGIN
-  IF :v_use_umf = 'Y' THEN
-    the_sql :=  'GRANT EXECUTE ON sys.dbms_umf TO &&dbusername';
-    EXECUTE IMMEDIATE the_sql;
-  END IF;
-END;
-/
-
-exit;

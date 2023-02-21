@@ -1,3 +1,8 @@
+column t_sqlstats   new_value  v_sqlstats noprint
+
+SELECT  CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '&AWRDIR/sqlstats111.sql' ELSE '&AWRDIR/sqlstats.sql' END as t_sqlstats
+FROM DUAL;
+
 @&AWRDIR/awrsnapdetails.sql
 @&AWRDIR/awrhistcmdtypes.sql
 @&AWRDIR/awrhistosstat.sql
@@ -8,4 +13,5 @@
 @&AWRDIR/ioevents.sql
 @&AWRDIR/iofunction.sql
 @&AWRDIR/sourceconn.sql
-@&AWRDIR/sqlstats.sql
+@&v_sqlstats
+
