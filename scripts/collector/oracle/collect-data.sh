@@ -111,8 +111,9 @@ fi
 function cleanupOpOutput  {
 V_FILE_TAG=$1
 echo "Preparing files for compression."
-for outfile in  ${OUTPUT_DIR}/*csv
+for outfile in  ${OUTPUT_DIR}/opdb*.csv
 do
+ if [ -f $outfile ] ; then
   if [ $(uname) = "SunOS" ]
   then
     sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed.tmp
@@ -129,6 +130,7 @@ do
     rm sed.tmp
   fi
   fi
+ fi
 done
 }
 
@@ -161,10 +163,10 @@ ZIPFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.zip
 cd ${OUTPUT_DIR}
 if [ ! "${ZIP}" = "" ]
 then
-  $ZIP $ZIPFILE  *csv *.log *.txt
+  $ZIP $ZIPFILE  opdb*.csv opdb*.log opdb*.txt
   OUTFILE=$ZIPFILE
 else
-  tar cvf $TARFILE  *csv *.log *.txt
+  tar cvf $TARFILE  opdb*.csv opdb*.log opdb*.txt
   $GZIP $TARFILE
   OUTFILE=${TARFILE}.gz
 fi
