@@ -1,6 +1,24 @@
 # Gather workload metadata
 
-The workload collection supports Oracle 11gR2 and newer.  Older versions of Oracle are not currently supported.
+The workload collection supports Oracle 11gR1 and newer.  Older versions of Oracle are not currently supported.
+
+## Sytem environment
+
+The collection script depends on the following to be available on the machine from which it is run:
+```shell
+	bash shell
+	cat
+	cut
+	dirname
+	grep
+	mkdir
+	sed
+	sqlplus
+	tar
+	tr
+        which
+	zip or gzip
+```
 
 ## Execute collection script
 

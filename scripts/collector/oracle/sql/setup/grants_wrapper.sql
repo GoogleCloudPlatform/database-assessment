@@ -140,6 +140,8 @@ DECLARE
     
 BEGIN
 
+  -- The rectype entries in the code blocks below are parsed to generate documentation.
+  -- Please follow the same format of one entry per line when adding new privileges.
   IF upper('&usediagnostics') = 'Y' THEN
   dbms_output.put_line('Granting privs for AWR/ASH data');
     v_source_table_list := t_source_table_list(
