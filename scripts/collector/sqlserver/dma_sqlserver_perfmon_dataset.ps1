@@ -402,9 +402,9 @@ if (!$operation) {
 	$operation = read-host -Prompt "Enter an operation: create, stop, delete, collect" 
 }
 if ($mssqlInstanceName) {
-	$datasetName = "DMA-SQLServerDataSet-$mssqlInstanceName"
+	$datasetName = "Google-DMA-SQLServerDataSet-$mssqlInstanceName"
 } else {
-	$datasetName = "DMA-SQLServerDataSet-DefaultInstance"
+	$datasetName = "Google-DMA-SQLServerDataSet-DefaultInstance"
 }
 if ($operation.ToLower() -eq "create") {
 	CreateDMAPerfmonDataSet -instanceName $mssqlInstanceName -dataSet $datasetName
