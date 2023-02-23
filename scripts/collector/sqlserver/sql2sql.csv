@@ -1,0 +1,21 @@
+Blocking Features
+Log Shipping
+Database Mail
+External Scripts Enabled
+Resource Governor Used
+Server level triggers Used
+Service Broker Tasks Used
+Endpoints Used
+External Assemblies Used
+CLR Enabled
+LinkedServers
+Policy Based Management
+
+#Blocked Services
+Intergration Service
+Reporting Service
+Analysis Service
+Full Text Search Service
+
+#Blocked Properties
+IsPolyBaseInstalled

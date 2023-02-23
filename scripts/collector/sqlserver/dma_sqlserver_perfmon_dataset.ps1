@@ -34,15 +34,17 @@
 param (
 	[Parameter(
 		Mandatory=$True,
-		HelpMessage="Enter one of create,stop,delete,collect",
-		Position=1
+		HelpMessage="Enter one of create,stop,delete,collect"
 	)][string]$operation,
 	[Parameter(
 		Mandatory=$False,
-		HelpMessage="The instance name if a named instance is used",
-		Position=2
-	)][string]$mssqlInstanceName=$null
-	)
+		HelpMessage="The instance name if a named instance is used"
+	)][string]$mssqlInstanceName=$null,
+	[Parameter(
+		Mandatory=$False,
+		HelpMessage="The instance name if a named instance is used"
+	)][string]$perfmonFilename=$null
+)
 function CreateDMAPerfmonDataSet 
 {
 param(
@@ -373,28 +375,34 @@ param(
 function CollectDMAPerfmonDataSet
 {
 param(
-	[string]$dataSet
+	[string]$dataSet,
+	[string]$outputFileName
 	)
 	Write-Output "Collecting results from the Google DMA SQL Server Perfmon Counter Data Set."
 	$perfmonDataSetRunning = logman.exe query -n $dataSet
-	$userDownloadsDir = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
+	#$userDownloadsDir = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
+	$outputDir = $PSScriptRoot + "\scripts\collector\sqlserver\output"
+
+	if (!(Test-Path -PathType container $outputDir)) {
+		New-Item -ItemType Directory -Path $outputDir
+	}
 
 	if ($perfmonDataSetRunning -like "*Status:               Running*") {
 		Write-Output ""
 		Write-Output "Google DMA SQL Server Perfmon Counter Data Set is running... Stopping Data Collector Set before deletion."
-		logman.exe stop -n $dataSet
+	#	logman.exe stop -n $dataSet
 	}
 	if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv) {
 		Write-Output ""
-		Write-Output "Moving perfmon datafiles to the $userDownloadsDir Directory"
-		Copy-Item -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataset*.csv -Destination $userDownloadsDir
-		Write-Output ""
-		Write-Output "Creating tar of perfmon datafiles in the $userDownloadsDir Directory"
-		tar.exe cvf $userDownloadsDir\$dataSet.tar -C $userDownloadsDir *$dataset*.csv
+		Write-Output "Moving perfmon datafiles to the $outputDir Directory"
+		Copy-Item -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataset*.csv -Destination $outputDir
 	} else {
 		Write-Output ""
 		Write-Output "No Perfmon Files exist in the $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet Directory"
 	}
+
+	Write-Output "Concatenating multiple files into one output"
+	((Get-Content -Path $outputDir\*$dataSet*.csv -Raw) -replace ',','|') | Set-Content -NoNewline -Path $outputDir\$outputFileName
 
 }
 
@@ -413,7 +421,7 @@ if ($operation.ToLower() -eq "create") {
 } elseif ($operation.ToLower() -eq "delete") {
 	DeleteDMAPerfmonDataSet -dataSet $datasetName
 } elseif ($operation.ToLower() -eq "collect") {
-	CollectDMAPerfmonDataSet -dataSet $datasetName
+	CollectDMAPerfmonDataSet -dataSet $datasetName -outputFileName $perfmonFilename
 } else {
 	Write-Output "Operation $operation specified is invalid"
 }
