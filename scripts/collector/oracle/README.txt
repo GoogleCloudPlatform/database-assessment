@@ -18,10 +18,25 @@ for analysis by Database Migration Assessment.
 
     b) Database Privileges
     ----------------------
-    This utility must be run as a database user with privileges to SELECT from certaint data dictionary views.
+    This utility must be run as a database user with privileges to SELECT from certain data dictionary views.
     The script sql/setup/grants_wrapper.sql is supplied to grant the required privileges.  Instructions for
     exeuting it are below.
 
+    c) System Requirements
+    ----------------------
+    The collection script depends on the following to be available on the machine from which it is run:
+    bash shell
+    cat
+    cut
+    dirname
+    grep 
+    mkdir
+    sed
+    sqlplus
+    tar
+    tr
+    which
+    zip or gzip
 
 
 2. Preparation
