@@ -1,6 +1,6 @@
 # Create a user for Collection
 
-The collection scripts can be executed with any DBA account. Alternately, a new user with the minimum privileges required for access with the following steps.
+The collection scripts can be executed with any DBA account. Alternatively, create a new user with the minimum privileges required.
 The included script sql/setup/grants_wrapper.sql will grant the privileges listed below.
 Please see the Database User Scripts page for information on how to create the user.
 

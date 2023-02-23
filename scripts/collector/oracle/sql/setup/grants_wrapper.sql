@@ -140,7 +140,7 @@ DECLARE
     
 BEGIN
 
-  -- The rectype entires in the code blocks below are parsed to generate documentation.
+  -- The rectype entries in the code blocks below are parsed to generate documentation.
   -- Please follow the same format of one entry per line when adding new privileges.
   IF upper('&usediagnostics') = 'Y' THEN
   dbms_output.put_line('Granting privs for AWR/ASH data');
