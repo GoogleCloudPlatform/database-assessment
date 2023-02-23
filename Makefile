@@ -93,6 +93,20 @@ build: build-collector        ## Build and package the collectors
 ###############
 # docs        #
 ###############
+.PHONY: doc-privs
+doc-privs:   ## Extract the list of privileges required from code and create the documentation
+	cat > docs/user_guide/oracle/permissions.md <<EOF
+	# Create a user for Collection
+	
+	 The collection scripts can be executed with any DBA account. Alternately, a new user with the minimum privileges required for access with the following steps.
+	 The included script sql/setup/grants_wrapper.sql will grant the privileges listed below.
+	 Please see the Database User Scripts page for information on how to create the user.
+	
+	## Permissions Required
+	
+	 EOF
+	 grep "rectype_(" scripts/collector/oracle/sql/setup/grants_wrapper.sql | grep -v FUNCTION | sed "s/rectype_(//g;s/),//g;s/)//g;s/'//g;s/,/ ON /1;s/,/./g" >> docs/user_guide/oracle/permissions.md
+
 .PHONY: gen-docs
 gen-docs:       ## generate HTML documentation
 	./.venv/bin/mkdocs build
