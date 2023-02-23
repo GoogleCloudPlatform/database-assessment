@@ -1,12 +1,54 @@
+# Copyright 2023 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+<#
+.SYNOPSIS
+    .
+.DESCRIPTION
+    Creates a perfmon dataset and subsequent data files to be uploaded to Google Database Migration Assistant for MS SQL Server.
+.PARAMETER operation
+    Enter one of create,stop,delete,collect (Mandatory)
+		create - creates the perfmon dataset and starts the collection.  The collection will stop automatically after 8 days
+		stop - stops the collection
+		delete - deletes the collection and leaves any data set collection files present int eh appropriate location
+		collect - moves the dataset collection to the downloads directory and creates a tar of the results
+.PARAMETER mssqlInstanceName
+    Enter the named instance name (Optional, unless using a named instance)
+	If collecting from a named instance, enter the instance name or the default instance will be used.
+.EXAMPLE
+    C:\dma_sqlserver_perfmon_dataset.ps1 -operation create -mssqlInstanceName [named Instance] / $null
+.NOTES
+    Author: Shane Borden
+    Date:   February 28, 2023    
+#>
 param (
-  [string]$operation, 
-  [string]$mssqlInstanceName=$null
-  )
+	[Parameter(
+		Mandatory=$True,
+		HelpMessage="Enter one of create,stop,delete,collect",
+		Position=1
+	)][string]$operation,
+	[Parameter(
+		Mandatory=$False,
+		HelpMessage="The instance name if a named instance is used",
+		Position=2
+	)][string]$mssqlInstanceName=$null
+	)
 function CreateDMAPerfmonDataSet 
 {
-    param(
-        [string]$instanceName=$null
-        )
+param(
+    [string]$instanceName=$null,
+	[string]$dataSet
+    )
 if ($instanceName) {
 $str = @'
 <DataCollectorSet>
@@ -22,7 +64,7 @@ $str = @'
 	</DisplayNameUnresolved>
 	<SchedulesEnabled>-1</SchedulesEnabled>
 	<LatestOutputLocation>C:\PerfLogs\Admin\DMA-SQLServerDataSet\</LatestOutputLocation>
-	<Name>DMA-SQLServerDataSet</Name>
+	<Name>$dataset</Name>
 	<OutputLocation>C:\PerfLogs\Admin\DMA-SQLServerDataSet\</OutputLocation>
 	<RootPath>%systemdrive%\PerfLogs\Admin\DMA-SQLServerDataSet</RootPath>
 	<Segment>0</Segment>
@@ -49,7 +91,7 @@ $str = @'
 	<PerformanceCounterDataCollector>
 		<DataCollectorType>0</DataCollectorType>
 		<Name>System Monitor Log</Name>
-		<FileName>DMA-SQLServerDataSet</FileName>
+		<FileName>$dataset</FileName>
 		<FileNameFormat>3</FileNameFormat>
 		<FileNameFormatPattern>NddMMyyyy</FileNameFormatPattern>
 		<LogAppend>0</LogAppend>
@@ -58,8 +100,8 @@ $str = @'
 		<LatestOutputLocation></LatestOutputLocation>
 		<DataSourceName>
 		</DataSourceName>
-		<SampleInterval>10</SampleInterval>
-		<SegmentMaxRecords>552960</SegmentMaxRecords>
+		<SampleInterval>60</SampleInterval>
+		<SegmentMaxRecords>11520</SegmentMaxRecords>
 		<LogFileFormat>0</LogFileFormat>
 		<Counter>\Memory\Available MBytes</Counter>
 		<Counter>\PhysicalDisk(_Total)\Avg. Disk Bytes/Read</Counter>
@@ -121,9 +163,10 @@ $str = @'
 		</EventsFileName>
 	</DataManager>
 </DataCollectorSet>
-'@ } else {
+'@ 
+} else {
 $str = @'
-<DataCollectorSet>
+	<DataCollectorSet>
 	<Status>1</Status>
 	<Duration>691200</Duration>
 	<Description>
@@ -136,7 +179,7 @@ $str = @'
 	</DisplayNameUnresolved>
 	<SchedulesEnabled>-1</SchedulesEnabled>
 	<LatestOutputLocation>C:\PerfLogs\Admin\DMA-SQLServerDataSet\</LatestOutputLocation>
-	<Name>DMA-SQLServerDataSet</Name>
+	<Name>$dataset</Name>
 	<OutputLocation>C:\PerfLogs\Admin\DMA-SQLServerDataSet\</OutputLocation>
 	<RootPath>%systemdrive%\PerfLogs\Admin\DMA-SQLServerDataSet</RootPath>
 	<Segment>0</Segment>
@@ -163,7 +206,7 @@ $str = @'
 	<PerformanceCounterDataCollector>
 		<DataCollectorType>0</DataCollectorType>
 		<Name>System Monitor Log</Name>
-		<FileName>DMA-SQLServerDataSet</FileName>
+		<FileName>$dataset</FileName>
 		<FileNameFormat>3</FileNameFormat>
 		<FileNameFormatPattern>NddMMyyyy</FileNameFormatPattern>
 		<LogAppend>0</LogAppend>
@@ -172,8 +215,8 @@ $str = @'
 		<LatestOutputLocation></LatestOutputLocation>
 		<DataSourceName>
 		</DataSourceName>
-		<SampleInterval>10</SampleInterval>
-		<SegmentMaxRecords>552960</SegmentMaxRecords>
+		<SampleInterval>60</SampleInterval>
+		<SegmentMaxRecords>11520</SegmentMaxRecords>
 		<LogFileFormat>0</LogFileFormat>
 		<Counter>\Memory\Available MBytes</Counter>
 		<Counter>\PhysicalDisk(_Total)\Avg. Disk Bytes/Read</Counter>
@@ -239,28 +282,28 @@ $str = @'
 }
 
 	$xmlTempDir = $env:TEMP
-	$instanceName = "MSSQL`$" + $instanceName
-	$perfmonDataSetExists = logman.exe query -n DMA-SQLServerDataSet
+	$metricInstanceName = "MSSQL`$" + $instanceName
+	$perfmonDataSetExists = logman.exe query -n $dataSet
 	if ($perfmonDataSetExists -Like "*Data Collector Set was not found*") {
 		Write-Output "Beginning Creation of the Google DMA SQL Server Perfmon Counter Data Set"
-		if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet\*.csv) {
+		if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet\*$dataSet*.csv) {
 			Write-Output ""
 			Write-Output "Removing old perfmon data files"
-			Remove-Item -Path $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet\*.csv
+			Remove-Item -Path $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet\*$dataSet*.csv
 		}
 	} else {
 		Write-Output ""
 		Write-Output "Google DMA SQL Server Perfmon Counter Data Set found....."
 		Write-Output ""
 		Write-Output "Stopping Google DMA SQL Server Perfmon Counter Data Set"
-		logman.exe stop -n DMA-SQLServerDataSet
+		logman.exe stop -n $dataSet
 		Write-Output ""
 		Write-Output "Deleting Google DMA SQL Server Perfmon Counter Data Set"
-		logman.exe delete -n DMA-SQLServerDataSet
-		if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet\*.csv) {
+		logman.exe delete -n $dataSet
+		if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet\*$dataSet*.csv) {
 			Write-Output ""
 			Write-Output "Removing old perfmon data files"
-			Remove-Item -Path $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet\*.csv
+			Remove-Item -Path $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet\*$dataSet*.csv
 		}
 		if (Test-Path -Path $env:TEMP\DMA-SQLServerPerfmonDataSet.xml) {
 			Write-Output ""
@@ -269,7 +312,8 @@ $str = @'
 		}
 	}
 	
-	$newXML = $str.Replace('$instance', $instanceName)
+	$newXML = $str.Replace('$instance', $metricInstanceName)
+	$newXML = $str.Replace('$dataset', $dataSet)
 	
 	Write-Output ""
 	Write-Output "Writing XML File to be used for import to perfmon"
@@ -277,11 +321,11 @@ $str = @'
 
 	Write-Output ""
 	Write-Output "Importing Google DMA SQL Server Perfmon Counter Data Set from Template"
-	logman.exe import -n DMA-SQLServerDataSet -xml (Get-ChildItem -Path $xmlTempDir\DMA-SQLServerPerfmonDataSet.xml | ForEach-Object { $_.FullName })
+	logman.exe import -n $dataSet -xml (Get-ChildItem -Path $xmlTempDir\DMA-SQLServerPerfmonDataSet.xml | ForEach-Object { $_.FullName })
 
 	Write-Output ""
 	Write-Output "Starting Google DMA SQL Server Perfmon Counter Data Set"
-	logman.exe start -n DMA-SQLServerDataSet
+	logman.exe start -n $dataSet
 
 	$debug_flag = $null
 
@@ -290,49 +334,59 @@ $str = @'
 		Write-Output $newXML
 		Write-Output "XML Output Directory: $xmlTempDir"
 		Write-Output "Passed in Instance Name: $instanceName"
+		Write-Output "Derived in Metric Instance Name: $metricInstanceName"
 		Write-Output "Directory Listing of $xmlTempDir"
+		Write-Output "Dataset Name is: $dataSet"
 			Get-ChildItem -Path $xmlTempDir\DMA-SQLServerPerfmonDataSet.xml
 		Write-Output "Directory Listing of $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet"
-			Get-ChildItem -Path $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet
+			Get-ChildItem -Path $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet\*$dataSet*.csv
 	}
-
 }
 function StopDMAPerfmonDataSet
 {
+param(
+    [string]$dataSet
+    )
 	Write-Output "Stopping Google DMA SQL Server Perfmon Counter Data Set"
-	logman.exe stop -n DMA-SQLServerDataSet
+	logman.exe stop -n $dataset
 }
 function DeleteDMAPerfmonDataSet
 {
-	$perfmonDataSetRunning = logman.exe query -n DMA-SQLServerDataSet
+param(
+	[string]$dataSet
+	)
+	$perfmonDataSetRunning = logman.exe query -n $dataset
 
 	if ($perfmonDataSetRunning -like "*Status:               Running*") {
 		Write-Output "Google DMA SQL Server Perfmon Counter Data Set is running... Stopping Data Collector Set before deletion."
-		logman.exe stop -n DMA-SQLServerDataSet
-		logman.exe delete -n DMA-SQLServerDataSet
+		logman.exe stop -n $dataset
+		logman.exe delete -n $dataset
 	} else {
 		Write-Output "Google DMA SQL Server Perfmon Counter Data Set found, but not running..... Deleting"
-		logman.exe delete -n DMA-SQLServerDataSet
+		logman.exe delete -n $dataset
 	}
 }
 function CollectDMAPerfmonDataSet
 {
+param(
+	[string]$dataSet
+	)
 	Write-Output "Collecting results from the Google DMA SQL Server Perfmon Counter Data Set."
-	$perfmonDataSetRunning = logman.exe query -n DMA-SQLServerDataSet
+	$perfmonDataSetRunning = logman.exe query -n $dataSet
 	$userDownloadsDir = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
 
 	if ($perfmonDataSetRunning -like "*Status:               Running*") {
 		Write-Output ""
 		Write-Output "Google DMA SQL Server Perfmon Counter Data Set is running... Stopping Data Collector Set before deletion."
-		logman.exe stop -n DMA-SQLServerDataSet
+		logman.exe stop -n $dataSet
 	}
-	if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet\*.csv) {
+	if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet\*$dataSet*.csv) {
 		Write-Output ""
 		Write-Output "Moving perfmon datafiles to the $userDownloadsDir Directory"
-		Copy-Item -Path $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet\*.csv -Destination $userDownloadsDir
+		Copy-Item -Path $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet\*$dataset*.csv -Destination $userDownloadsDir
 		Write-Output ""
 		Write-Output "Creating tar of perfmon datafiles in the $userDownloadsDir Directory"
-		tar.exe cvf $userDownloadsDir\DMA-SQLServerPerfmon.tar -C $userDownloadsDir MS-SERVER1_DMA*.csv
+		tar.exe cvf $userDownloadsDir\$dataSet.tar -C $userDownloadsDir *$dataset*.csv
 	} else {
 		Write-Output ""
 		Write-Output "No Perfmon Files exist in the $env:SystemDrive\PerfLogs\Admin\DMA-SQLServerDataSet Directory"
@@ -343,14 +397,19 @@ function CollectDMAPerfmonDataSet
 if (!$operation) {
 	$operation = read-host -Prompt "Enter an operation: create, stop, delete, collect" 
 }
+if ($mssqlInstanceName) {
+	$datasetName = "DMA-SQLServerDataSet-$mssqlInstanceName"
+} else {
+	$datasetName = "DMA-SQLServerDataSet-DefaultInstance"
+}
 if ($operation.ToLower() -eq "create") {
-	CreateDMAPerfmonDataSet -instanceName $mssqlInstanceName
+	CreateDMAPerfmonDataSet -instanceName $mssqlInstanceName -dataSet $datasetName
 } elseif ($operation.ToLower() -eq "stop") {
-	StopDMAPerfmonDataSet
+	StopDMAPerfmonDataSet -dataSet $datasetName
 } elseif ($operation.ToLower() -eq "delete") {
-	DeleteDMAPerfmonDataSet
+	DeleteDMAPerfmonDataSet -dataSet $datasetName
 } elseif ($operation.ToLower() -eq "collect") {
-	CollectDMAPerfmonDataSet
+	CollectDMAPerfmonDataSet -dataSet $datasetName
 } else {
 	Write-Output "Operation $operation specified is invalid"
 }
