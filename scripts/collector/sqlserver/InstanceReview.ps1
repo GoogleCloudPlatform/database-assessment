@@ -19,7 +19,7 @@ foreach($item in $objs) {
     $instancename = $values[3]
     $current_ts = $values[4]
 
-    $op_version = '4.2.1'
+    $op_version = (((Select-String -Path "..\..\..\.bumpversion.cfg" -SimpleMatch "current_version =").Line).split("=",2)[1]).trim()
 
     $foldername = 'opdb' + '_' + 'sqlsrv' + '_' + 'PerfCounter' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
 
