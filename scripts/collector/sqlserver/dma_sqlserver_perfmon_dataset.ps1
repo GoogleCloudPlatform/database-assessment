@@ -42,8 +42,12 @@ param (
 	)][string]$mssqlInstanceName=$null,
 	[Parameter(
 		Mandatory=$False,
-		HelpMessage="The instance name if a named instance is used"
-	)][string]$perfmonFilename=$null
+		HelpMessage="The dir name for the final perfmon combined file"
+	)][string]$perfmonOutDir=$null,
+	[Parameter(
+		Mandatory=$False,
+		HelpMessage="The file name for the final perfmon combined file"
+	)][string]$perfmonOutFile=$null
 )
 function CreateDMAPerfmonDataSet 
 {
@@ -376,42 +380,39 @@ function CollectDMAPerfmonDataSet
 {
 param(
 	[string]$dataSet,
-	[string]$outputFileName
+	[string]$perfmonOutDir,
+	[string]$perfmonOutFile
 	)
 	Write-Output "Collecting results from the Google DMA SQL Server Perfmon Counter Data Set."
-	$perfmonDataSetRunning = logman.exe query -n $dataSet
 	#$userDownloadsDir = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
-	$outputDir = $PSScriptRoot + "\scripts\collector\sqlserver\output"
+	$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
+	$outputFileName = $perfmonOutFile
 
 	if (!(Test-Path -PathType container $outputDir)) {
-		New-Item -ItemType Directory -Path $outputDir
+		Write-Output ""
+		Write-Output "Creating Output Directory"
+		$null = New-Item -ItemType Directory -Path $outputDir
 	}
 
-	if ($perfmonDataSetRunning -like "*Status:               Running*") {
-		Write-Output ""
-		Write-Output "Google DMA SQL Server Perfmon Counter Data Set is running... Stopping Data Collector Set before deletion."
-		logman.exe stop -n $dataSet
-	}
 	if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv) {
 		Write-Output ""
 		Write-Output "Moving perfmon datafiles to the $env:TEMP Directory Without Header"
-		foreach($file in Get-ChildItem -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet *$dataset*.csv)
+		foreach($file in Get-ChildItem -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataset*.csv)
 		{
 			$tempFileName = Split-Path $file -leaf
 			Get-Content -Path $file | Select-Object -Skip 1 | Set-Content -Path $env:TEMP\$tempFileName
 		}
-
 	} else {
 		Write-Output ""
 		Write-Output "No Perfmon Files exist in the $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet Directory"
 	}
 
-	Write-Output "Concatenating multiple files into one output without header into file $outputDir\$outputFileName" 
+	Write-Output "Concatenating and adding header to perfmon files to $outputFileName" 
 	((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\*$dataSet*.csv -Raw ) -replace ',','|') | Set-Content -NoNewline -Path $outputDir\$outputFileName
 	
-	Write-Output "Clean up Temp File area"
 	if (Test-Path -Path $outputDir\$outputFileName) {
-		Remove-Item -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv
+		Write-Output "Clean up Temp File area"
+		Remove-Item -Path $env:TEMP\*$dataSet*.csv
 	}
 }
 
@@ -430,7 +431,7 @@ if ($operation.ToLower() -eq "create") {
 } elseif ($operation.ToLower() -eq "delete") {
 	DeleteDMAPerfmonDataSet -dataSet $datasetName
 } elseif ($operation.ToLower() -eq "collect") {
-	CollectDMAPerfmonDataSet -dataSet $datasetName -outputFileName $perfmonFilename
+	CollectDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile
 } else {
 	Write-Output "Operation $operation specified is invalid"
 }
