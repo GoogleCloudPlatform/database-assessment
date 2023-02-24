@@ -122,10 +122,13 @@ DECLARE
     
     SELECT count(1) INTO v_cnt FROM dba_tab_columns WHERE table_name ='V_$DATABASE' AND column_name ='CDB';
     IF (v_cnt > 0) THEN
-       v_sql := 'ALTER USER  "&dbusername"  SET CONTAINER_DATA=ALL CONTAINER = CURRENT';
-       dbms_output.put_line(v_sql || ';' );
-       EXECUTE IMMEDIATE v_sql;
-       list_pdbs;
+       EXECUTE IMMEDIATE 'SELECT count(1) FROM v$containers' INTO v_cnt;
+       IF (v_cnt > 1) THEN
+         v_sql := 'ALTER USER  "&dbusername"  SET CONTAINER_DATA=ALL CONTAINER = CURRENT';
+         dbms_output.put_line(v_sql || ';' );
+         EXECUTE IMMEDIATE v_sql;
+         list_pdbs;
+       END IF;
     END IF;
     END;
   
