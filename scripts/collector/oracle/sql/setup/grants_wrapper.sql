@@ -60,7 +60,6 @@ DECLARE
     v_table_priv        VARCHAR2(30);
     v_cnt               NUMBER;
     v_err_ind           BOOLEAN := FALSE;
-    v_container_db      BOOLEAN := FALSE;
 
     v_infosep           VARCHAR2(100) := rpad('-', 100, '-');
     v_errsep            VARCHAR2(100) := rpad('!', 100, '!');
@@ -120,7 +119,9 @@ DECLARE
           END IF;  
         END;
      END LOOP;
-    IF v_container_db THEN
+    
+    SELECT count(1) INTO v_cnt FROM dba_tab_columns WHERE table_name ='V_$DATABASE' AND column_name ='CDB';
+    IF (v_cnt > 0) THEN
        v_sql := 'ALTER USER  "&dbusername"  SET CONTAINER_DATA=ALL CONTAINER = CURRENT';
        dbms_output.put_line(v_sql || ';' );
        EXECUTE IMMEDIATE v_sql;
