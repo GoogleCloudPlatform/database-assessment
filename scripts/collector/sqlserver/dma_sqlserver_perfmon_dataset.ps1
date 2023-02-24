@@ -390,20 +390,29 @@ param(
 	if ($perfmonDataSetRunning -like "*Status:               Running*") {
 		Write-Output ""
 		Write-Output "Google DMA SQL Server Perfmon Counter Data Set is running... Stopping Data Collector Set before deletion."
-	#	logman.exe stop -n $dataSet
+		logman.exe stop -n $dataSet
 	}
 	if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv) {
 		Write-Output ""
-		Write-Output "Moving perfmon datafiles to the $outputDir Directory"
-		Copy-Item -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataset*.csv -Destination $outputDir
+		Write-Output "Moving perfmon datafiles to the $env:TEMP Directory Without Header"
+		foreach($file in Get-ChildItem -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet *$dataset*.csv)
+		{
+			$tempFileName = Split-Path $file -leaf
+			Get-Content -Path $file | Select-Object -Skip 1 | Set-Content -Path $env:TEMP\$tempFileName
+		}
+
 	} else {
 		Write-Output ""
 		Write-Output "No Perfmon Files exist in the $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet Directory"
 	}
 
-	Write-Output "Concatenating multiple files into one output"
-	((Get-Content -Path $outputDir\*$dataSet*.csv -Raw) -replace ',','|') | Set-Content -NoNewline -Path $outputDir\$outputFileName
-
+	Write-Output "Concatenating multiple files into one output without header into file $outputDir\$outputFileName" 
+	((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\*$dataSet*.csv -Raw ) -replace ',','|') | Set-Content -NoNewline -Path $outputDir\$outputFileName
+	
+	Write-Output "Clean up Temp File area"
+	if (Test-Path -Path $outputDir\$outputFileName) {
+		Remove-Item -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv
+	}
 }
 
 if (!$operation) {
@@ -412,7 +421,7 @@ if (!$operation) {
 if ($mssqlInstanceName) {
 	$datasetName = "Google-DMA-SQLServerDataSet-$mssqlInstanceName"
 } else {
-	$datasetName = "Google-DMA-SQLServerDataSet-DefaultInstance"
+	$datasetName = "Google-DMA-SQLServerDataSet-MSSQLSERVER"
 }
 if ($operation.ToLower() -eq "create") {
 	CreateDMAPerfmonDataSet -instanceName $mssqlInstanceName -dataSet $datasetName

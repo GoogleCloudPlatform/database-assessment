@@ -12,14 +12,13 @@ foreach($item in $objs) {
     $splitobj = $obj[1].Split('')
     $values = $splitobj | ForEach-Object { if($_.Trim() -ne '') { $_ } }
 
-    $dbversion = $values[0]
+    $dbversion = $values[0].Replace('.','')
     $machinename = $values[1]
     $dbname = $values[2]
     $instancename = $values[3]
     $current_ts = $values[4]
 
     $op_version = '4.2.1'
-    $dbversion = $dbversion.Replace('.','')
 
     $foldername = 'opdb' + '_' + 'sqlsrv' + '_' + 'PerfCounter' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
 

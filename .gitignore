@@ -166,4 +166,5 @@ scripts/collector/oracle/VERSION.txt
 scripts/collector/sqlserver/output/
 !scripts/collector/sqlserver/sql2sql.csv
 !scripts/collector/sqlserver/sqlsrv.csv
+!scripts/collector/sqlserver/perfmon_header.csv
 
