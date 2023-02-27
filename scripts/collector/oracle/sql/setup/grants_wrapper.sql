@@ -60,7 +60,6 @@ DECLARE
     v_table_priv        VARCHAR2(30);
     v_cnt               NUMBER;
     v_err_ind           BOOLEAN := FALSE;
-    v_container_db      BOOLEAN := FALSE;
 
     v_infosep           VARCHAR2(100) := rpad('-', 100, '-');
     v_errsep            VARCHAR2(100) := rpad('!', 100, '!');
@@ -120,11 +119,16 @@ DECLARE
           END IF;  
         END;
      END LOOP;
-    IF v_container_db THEN
-       v_sql := 'ALTER USER  "&dbusername"  SET CONTAINER_DATA=ALL CONTAINER = CURRENT';
-       dbms_output.put_line(v_sql || ';' );
-       EXECUTE IMMEDIATE v_sql;
-       list_pdbs;
+    
+    SELECT count(1) INTO v_cnt FROM dba_tab_columns WHERE table_name ='V_$DATABASE' AND column_name ='CDB';
+    IF (v_cnt > 0) THEN
+       EXECUTE IMMEDIATE 'SELECT count(1) FROM v$containers' INTO v_cnt;
+       IF (v_cnt > 1) THEN
+         v_sql := 'ALTER USER  "&dbusername"  SET CONTAINER_DATA=ALL CONTAINER = CURRENT';
+         dbms_output.put_line(v_sql || ';' );
+         EXECUTE IMMEDIATE v_sql;
+         list_pdbs;
+       END IF;
     END IF;
     END;
   
@@ -140,6 +144,8 @@ DECLARE
     
 BEGIN
 
+  -- The rectype entries in the code blocks below are parsed to generate documentation.
+  -- Please follow the same format of one entry per line when adding new privileges.
   IF upper('&usediagnostics') = 'Y' THEN
   dbms_output.put_line('Granting privs for AWR/ASH data');
     v_source_table_list := t_source_table_list(

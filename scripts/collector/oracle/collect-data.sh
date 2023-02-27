@@ -47,7 +47,7 @@ fi
 if [ ! -d ${OUTPUT_DIR} ]; then
    mkdir -p ${OUTPUT_DIR}
 fi
-OpVersion="4.2.1"
+OpVersion="4.2.2"
 ### Import logging & helper functions
 #############################################################################
 
