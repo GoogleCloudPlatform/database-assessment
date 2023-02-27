@@ -163,4 +163,8 @@ notebooks/data/*.tgz
 scripts/collector/oracle/output/
 scripts/collector/oracle/privs.sql
 scripts/collector/oracle/VERSION.txt
+scripts/collector/sqlserver/output/
+!scripts/collector/sqlserver/sql2sql.csv
+!scripts/collector/sqlserver/sqlsrv.csv
+!scripts/collector/sqlserver/perfmon_header.csv
 

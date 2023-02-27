@@ -1,0 +1,1 @@
+PowerShell -nologo -NoExit -NoProfile -ExecutionPolicy Bypass -File ".\InstanceReview.ps1"
