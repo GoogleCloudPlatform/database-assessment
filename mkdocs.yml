@@ -17,7 +17,6 @@ nav:
       - Database User Scripts: user_guide/oracle/db_user_create.md
   - Microsoft SQL Server Data Collection:
       - Data Collection: user_guide/sqlserver/collection_scripts.md
-      - Permissions Required: user_guide/sqlserver/permissions.md
       - Database User Scripts: user_guide/sqlserver/db_user_create.md
       
   - Developers:
