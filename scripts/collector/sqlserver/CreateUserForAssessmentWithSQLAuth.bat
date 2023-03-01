@@ -25,7 +25,7 @@ if /i "%1" == "-serverUserName" set "saUser=%2"
 if /i "%1" == "-serverUserPass" set "saPass=%2"
 if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-CollectionUserPass" set "pass=%2"
-if /i "%1" == "-defaultCollectionCreds" set "defaultCreds=1"
+if /i "%1" == "-useDefaultCreds" set "defaultCreds=1"
 
 shift
 goto :loop
@@ -34,11 +34,12 @@ goto :loop
 if [%saUser%]==[] goto error
 if [%saPass%]==[] goto error
 if not [%user%]==[] goto execWithCustomCreds
-if %defaultCreds%==1 goto execWithDefaultCreds
+if "%defaultCreds%"=="0" goto defaultCredError
+if "%defaultCreds%"=="1" goto execWithDefaultCreds
 
 :execWithDefaultCreds
 echo "Creating Collection User with Default Credentials"
-PowerShell -nologo -NoExit -NoProfile -ExecutionPolicy Bypass -File .\createuserwithsqluser.ps1 -user %saUser% -pass %saPass%
+PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createuserwithsqluser.ps1 -user %saUser% -pass %saPass%
 goto done
 
 :execWithCustomCreds
@@ -51,6 +52,10 @@ goto done
 
 :error
 echo "Username or Password is not populated"
+goto done
+
+:defaultCredError
+echo "Please specify -defaultCollectionCreds flag when invoking the script"
 goto done
 
 :done
