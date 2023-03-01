@@ -49,7 +49,7 @@ echo "Username or Password is not populated"
 goto done
 
 :defaultCredError
-echo "Please specify -defaultCollectionCreds flag when invoking the script"
+echo "Please specify -useDefaultCreds flag when invoking the script"
 goto done
 
 :done

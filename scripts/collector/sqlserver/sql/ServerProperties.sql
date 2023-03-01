@@ -1,5 +1,5 @@
 SET NOCOUNT ON
-DECLARE @PKEY AS VARCHAR(100)
+DECLARE @PKEY AS VARCHAR(256)
 select @PKEY = @@SERVERNAME + '_' + 'master' + '_' + @@ServiceName + '_' + FORMAT(GETDATE() , 'MMddyyHHmmss');
 
 SELECT @PKEY as PKEY,'BuildClrVersion' AS Property, SERVERPROPERTY('BuildClrVersion') AS Value

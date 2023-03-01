@@ -21,18 +21,19 @@ set defaultUsr=0
 if "%1" == "" goto evaluateUser
 if /i "%1" == "-username" set "user=%2"
 if /i "%1" == "-password" set "pass=%2"
-if /i "%1" == "-defaultUser" set "defaultUsr=1"
+if /i "%1" == "-useDefaultCreds" set "defaultUsr=1"
 
 shift
 goto :loop
 
 :evaluateUser
 if not [%user%]==[] goto execWithCustomUser
-if %defaultUsr%==1 goto execWithDefaultUser
+if "%defaultUsr%"=="0" goto defaultCredError
+if "%defaultUsr%"=="1" goto execWithDefaultUser
 
 :execWithDefaultUser
 echo "Gathering Collection with Default User"
-PowerShell -nologo -NoExit -NoProfile -ExecutionPolicy Bypass -File ".\InstanceReview.ps1"
+PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File ".\InstanceReview.ps1"
 goto done
 
 :execWithCustomUser
@@ -45,6 +46,10 @@ goto done
 
 :error
 echo "Username or Password is not populated"
+goto done
+
+:defaultCredError
+echo "Please specify -useDefaultCreds flag when invoking the script"
 goto done
 
 :done

@@ -202,7 +202,7 @@ TRUNCATE TABLE #RegResult
 END
 /* -------------------------------------------------------------------------------------------------------------*/
 SELECT 
-CAST(@@SERVERNAME + '_' + 'master' + '_' + @@ServiceName + '_' + FORMAT(GETDATE() , 'MMddyyHHmmss') AS VARCHAR(100)) AS PKEY,
+CAST(@@SERVERNAME + '_' + 'master' + '_' + @@ServiceName + '_' + FORMAT(GETDATE() , 'MMddyyHHmmss') AS VARCHAR(256)) AS PKEY,
 PhysicalSrverName AS 'Physical Server Name' /*Display finding*/
 ,ServerName AS 'SQL Instance Name'
 ,ServiceName AS 'SQL Server Services'
