@@ -16,7 +16,6 @@ Param(
 [string]$pass = "P@ssword135"
 )
 
-
 $objs = Import-Csv -Delimiter "," sqlsrv.csv
 $foldername = ""
 foreach($item in $objs) {
@@ -36,8 +35,15 @@ foreach($item in $objs) {
 
     $foldername = 'opdb' + '_' + 'sqlsrv' + '_' + 'PerfCounter' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
 
-	Write-Output "Creating directory $foldername"
-    $null = New-Item -Name $foldername -ItemType Directory
+    $folderLength = ($PSScriptRoot + '\' + $foldername).Length
+    if ($folderLength -le 260) {
+        Write-Output "Creating directory $foldername"
+        $null = New-Item -Name $foldername -ItemType Directory
+    } else {
+        Write-Output "Folder length exceeds 260 characters.  Run collection tool from a"
+        Write-Output "Folder being created is: $PSScriptRoot\$foldername"
+        Exit
+    }
 
     $compFileName = 'opdb' + '__' + 'CompInstalled' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $srvFileName = 'opdb' + '__' + 'ServerProps' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
@@ -46,13 +52,13 @@ foreach($item in $objs) {
     $perfMonOutput = 'opdb' + '__' + 'PerfMonData' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 
 	Write-Output "Retriving SQL Server Installed Components..."
-	sqlcmd -S $sqlsrv -i sql\ComponentsInstalled.sql -U $user -P $pass -s"|" | findstr /v /c:"---" > $foldername\$compFileName
+	sqlcmd -S $sqlsrv -i sql\ComponentsInstalled.sql -U $user -P $pass -W -s"|" | findstr /v /c:"---" > $foldername\$compFileName
 	Write-Output "Retriving SQL Server Properties..."
-	sqlcmd -S $sqlsrv -i sql\ServerProperties.sql -U $user -P $pass -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
+	sqlcmd -S $sqlsrv -i sql\ServerProperties.sql -U $user -P $pass -W -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
 	Write-Output "Retriving SQL Server Features..."
-	sqlcmd -S $sqlsrv -i sql\Features.sql -U $user -P $pass -m 1 -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
+	sqlcmd -S $sqlsrv -i sql\Features.sql -U $user -P $pass -W -m 1 -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
 	Write-Output "Retriving SQL Server Linked Servers..."
-	sqlcmd -S $sqlsrv -i sql\LinkedServers.sql -U $user -P $pass -m 1 -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
+	sqlcmd -S $sqlsrv -i sql\LinkedServers.sql -U $user -P $pass -W -m 1 -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
 
 	if ($instancename -eq "MSSQLSERVER") {
 		.\dma_sqlserver_perfmon_dataset.ps1 -operation collect -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput
@@ -63,5 +69,8 @@ foreach($item in $objs) {
     $zippedopfolder = $foldername + '.zip'
 	Write-Output "Zipping Output to $zippedopfolder"
     Compress-Archive -Path $foldername\*.csv -DestinationPath $zippedopfolder
-    Remove-Item -Path $foldername -Recurse -Force
+    if (Test-Path -Path $zippedopfolder) {
+		Write-Output "Removing directory $foldername"
+        Remove-Item -Path $foldername -Recurse -Force
+    }
 }
