@@ -16,6 +16,11 @@
 
 ### Setup directories needed for execution
 #############################################################################
+OpVersion="4.3.0"
+
+LOCALE=$(echo $LANG | cut -d '.' -f 1)
+export LANG=C
+export LANG=${LOCALE}.UTF-8
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 OUTPUT_DIR=${SCRIPT_DIR}/output; export OUTPUT_DIR
@@ -47,7 +52,6 @@ fi
 if [ ! -d ${OUTPUT_DIR} ]; then
    mkdir -p ${OUTPUT_DIR}
 fi
-OpVersion="4.2.2"
 ### Import logging & helper functions
 #############################################################################
 
@@ -159,6 +163,8 @@ fi
 
 TARFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tar
 ZIPFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.zip
+
+locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
 
 cd ${OUTPUT_DIR}
 if [ ! "${ZIP}" = "" ]

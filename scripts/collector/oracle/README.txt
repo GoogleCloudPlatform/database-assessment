@@ -30,6 +30,7 @@ for analysis by Database Migration Assessment.
     cut
     dirname
     grep 
+    locale
     mkdir
     sed
     sqlplus

@@ -60,6 +60,7 @@ set termout &TERMOUTOFF
 @&EXTRACTSDIR/dbinstances.sql
 @&EXTRACTSDIR/dblinks.sql
 @&EXTRACTSDIR/dbobjects.sql
+@&EXTRACTSDIR/dbobjectnames.sql
 @&EXTRACTSDIR/dbparameters.sql
 @&EXTRACTSDIR/dbsummary.sql
 @&EXTRACTSDIR/exttab.sql
@@ -70,6 +71,7 @@ set termout &TERMOUTOFF
 @&EXTRACTSDIR/sourcecode.sql
 @&EXTRACTSDIR/tablesnopk.sql
 @&EXTRACTSDIR/tabletypes.sql
+@&EXTRACTSDIR/tabletypedtl.sql
 @&EXTRACTSDIR/triggers.sql
 @&EXTRACTSDIR/usedspacedetails.sql
 @&EXTRACTSDIR/usrsegatt.sql
