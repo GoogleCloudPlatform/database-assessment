@@ -15,10 +15,12 @@
 # Parameter help description
 Param(
 [Parameter(Mandatory=$true)][string]$user,
-[Parameter(Mandatory=$true)][string]$pass
+[Parameter(Mandatory=$true)][string]$pass,
+[Parameter(Mandatory=$false)][string]$collectionUserName="userfordma",
+[Parameter(Mandatory=$false)][string]$CollectionUserPass="P@ssword135"
 )
 $objs = Import-Csv -Delimiter "," sqlsrv.csv
 foreach($item in $objs) {
     $sqlsrv = $item.InstanceName
-    sqlcmd -H $sqlsrv -i sql\prereq_createsa.sql -U $user -P $pass -m 1
+    sqlcmd -H $sqlsrv -i sql\prereq_createsa.sql -U $user -P $pass -m 1 -v collectionUser=$collectionUserName CollectionPass=$CollectionUserPass
 }

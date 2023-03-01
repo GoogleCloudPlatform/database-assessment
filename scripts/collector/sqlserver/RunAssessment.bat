@@ -15,6 +15,7 @@
 @echo off
 set user=
 set pass=
+set defaultUsr=0
 
 :loop 
 if "%1" == "" goto evaluateUser

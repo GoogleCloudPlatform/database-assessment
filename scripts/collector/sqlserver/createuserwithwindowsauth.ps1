@@ -12,8 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+Param(
+[Parameter(Mandatory=$false)][string]$collectionUserName="userfordma",
+[Parameter(Mandatory=$false)][string]$CollectionUserPass="P@ssword135"
+)
+
 $objs = Import-Csv -Delimiter "," sqlsrv.csv
 foreach($item in $objs) {
     $sqlsrv = $item.InstanceName
-    sqlcmd -S $sqlsrv -i sql\prereq_createsa.sql -m 1
+    sqlcmd -S $sqlsrv -i sql\prereq_createsa.sql -m 1 -v collectionUser=$collectionUserName CollectionPass=$CollectionUserPass
 }
