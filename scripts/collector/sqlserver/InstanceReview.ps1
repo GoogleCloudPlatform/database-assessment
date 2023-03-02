@@ -73,4 +73,9 @@ foreach($item in $objs) {
 		Write-Output "Removing directory $foldername"
         Remove-Item -Path $foldername -Recurse -Force
     }
+
+    Write-Output ""
+    Write-Output ""
+    Write-Output "Return file $PSScriptRoot\$zippedopfolder"
+    Write-Output "to Google to complete assessment"
 }
