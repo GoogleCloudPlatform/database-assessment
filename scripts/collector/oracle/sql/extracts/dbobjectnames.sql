@@ -35,7 +35,8 @@ vdbobjx AS (
               table_owner in 
 @&EXTRACTSDIR/exclude_schemas.sql
               ),
-vsrc   AS (SELECT &v_c_con_id AS con_id, 
+vsrc   AS (SELECT 
+                  &v_c_con_id AS con_id, 
                   owner,
                   name,
                   type,
@@ -47,7 +48,8 @@ vsrc   AS (SELECT &v_c_con_id AS con_id,
            GROUP BY &v_c_con_id , owner, name, type
 ),
 vdbobj AS (
-        SELECT '&&v_host'
+        SELECT /*+ USE_HASH(i x s) */
+               '&&v_host'
                || '_'
                || '&&v_dbname'
                || '_'
@@ -61,7 +63,7 @@ vdbobj AS (
         FROM vdbobji i
         LEFT OUTER JOIN vdbobjx x ON i.object_type = x.object_type AND i.owner = x.owner AND i.object_name = x.synonym_name AND i.con_id = x.con_id
         LEFT OUTER JOIN vsrc s    ON i.object_type = s.type AND i.owner = s.owner AND i.object_name = s.name AND i.con_id = s.con_id
-        WHERE NOT ( i.object_type = 'SYNONYM' AND i.owner ='PUBLIC' AND ( i.object_name LIKE '/%' OR x.table_owner IS NOT NULL) )
+        WHERE NOT ( i.object_type = 'SYNONYM' AND i.owner ='PUBLIC' AND ( i.object_name LIKE '/%' OR x.table_owner IS NOT NULL OR x.table_owner ='SYS') )
         AND i.object_name NOT LIKE 'BIN$%'
 )
 SELECT pkey , 
