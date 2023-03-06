@@ -1,7 +1,6 @@
 SET NOCOUNT ON
 DECLARE @PKEY AS VARCHAR(256)
-select @PKEY = @@SERVERNAME + '_' + 'master' + '_' + @@ServiceName + '_' + FORMAT(GETDATE() , 'MMddyyHHmmss');
-
+select @PKEY = N'$(pkey)';
 SELECT @PKEY as PKEY,'BuildClrVersion' AS Property, SERVERPROPERTY('BuildClrVersion') AS Value
 UNION ALL
 SELECT @PKEY as PKEY,'Collation', SERVERPROPERTY('Collation')
@@ -82,4 +81,17 @@ SELECT @PKEY as PKEY,'FilestreamShareName', SERVERPROPERTY('FilestreamShareName'
 UNION ALL
 SELECT @PKEY as PKEY,'FilestreamConfiguredLevel', SERVERPROPERTY('FilestreamConfiguredLevel')
 UNION ALL
-SELECT @PKEY as PKEY,'FilestreamEffectiveLevel', SERVERPROPERTY('FilestreamEffectiveLevel');
+SELECT @PKEY as PKEY,'FilestreamEffectiveLevel', SERVERPROPERTY('FilestreamEffectiveLevel')
+UNION ALL
+SELECT @PKEY as PKEY,'HostPlatform', host_platform FROM sys.dm_os_host_info
+UNION ALL
+SELECT @PKEY as PKEY,'HostDistribution', host_distribution FROM sys.dm_os_host_info
+UNION ALL
+SELECT @PKEY as PKEY,'HostRelease', host_release FROM sys.dm_os_host_info
+UNION ALL
+SELECT @PKEY as PKEY,'HostServicePackLevel', host_service_pack_level FROM sys.dm_os_host_info
+UNION ALL
+SELECT @PKEY as PKEY,'HostOsLanguageVersion', os_language_version FROM sys.dm_os_host_info
+UNION ALL
+SELECT @PKEY as PKEY,'HostArchitectureType', host_architecture FROM sys.dm_os_host_info
+;

@@ -96,5 +96,6 @@ INSERT INTO #FeaturesEnabled VALUES (
 'Policy Based Management', @IS_PoliciesEnabled, @PoliciesEnabled_value );
 
 SELECT 
-CAST(@@SERVERNAME + '_' + 'master' + '_' + @@ServiceName + '_' + FORMAT(GETDATE() , 'MMddyyHHmmss') AS VARCHAR(256)) AS PKEY,
+N'$(pkey)' as PKEY,
+--CAST(@@SERVERNAME + '_' + 'master' + '_' + @@ServiceName + '_' + FORMAT(GETDATE() , 'MMddyyHHmmss') AS VARCHAR(256)) AS PKEY,
 * FROM #FeaturesEnabled;
