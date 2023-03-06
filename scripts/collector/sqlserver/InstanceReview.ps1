@@ -30,6 +30,7 @@ foreach($item in $objs) {
     $dbname = $values[2]
     $instancename = $values[3]
     $current_ts = $values[4]
+    $pkey = $values[5]
 
     $op_version = (((Select-String -Path "..\..\..\.bumpversion.cfg" -SimpleMatch "current_version =").Line).split("=",2)[1]).trim()
 
@@ -49,16 +50,22 @@ foreach($item in $objs) {
     $srvFileName = 'opdb' + '__' + 'ServerProps' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $blockingFeatures = 'opdb' + '__' + 'BlockFeatures' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $linkedServers = 'opdb' + '__' + 'LinkedSrvrs' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
+    $dbsizes = 'opdb' + '__' + 'DbSizes' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
+    $dbClusterNodes = 'opdb' + '__' + 'DbClusterNodes' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $perfMonOutput = 'opdb' + '__' + 'PerfMonData' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 
 	Write-Output "Retriving SQL Server Installed Components..."
-	sqlcmd -S $sqlsrv -i sql\ComponentsInstalled.sql -U $user -P $pass -W -s"|" | findstr /v /c:"---" > $foldername\$compFileName
+	sqlcmd -S $sqlsrv -i sql\componentsInstalled.sql -U $user -P $pass -W -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
 	Write-Output "Retriving SQL Server Properties..."
-	sqlcmd -S $sqlsrv -i sql\ServerProperties.sql -U $user -P $pass -W -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
+	sqlcmd -S $sqlsrv -i sql\serverProperties.sql -U $user -P $pass -W -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
 	Write-Output "Retriving SQL Server Features..."
-	sqlcmd -S $sqlsrv -i sql\Features.sql -U $user -P $pass -W -m 1 -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
+	sqlcmd -S $sqlsrv -i sql\features.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
 	Write-Output "Retriving SQL Server Linked Servers..."
-	sqlcmd -S $sqlsrv -i sql\LinkedServers.sql -U $user -P $pass -W -m 1 -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
+	sqlcmd -S $sqlsrv -i sql\linkedServers.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
+	Write-Output "Retriving SQL Server Database Sizes..."
+	sqlcmd -S $sqlsrv -i sql\dbSizes.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
+	Write-Output "Retriving SQL Server Cluster Nodes..."
+	sqlcmd -S $sqlsrv -i sql\dbClusterNodes.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
 
 	if ($instancename -eq "MSSQLSERVER") {
 		.\dma_sqlserver_perfmon_dataset.ps1 -operation collect -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput
