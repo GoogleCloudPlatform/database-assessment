@@ -53,6 +53,7 @@ foreach($item in $objs) {
     $dbsizes = 'opdb' + '__' + 'DbSizes' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $dbClusterNodes = 'opdb' + '__' + 'DbClusterNodes' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $objectList = 'opdb' + '__' + 'ObjectList' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
+    $tableList = 'opdb' + '__' + 'TableList' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $indexList = 'opdb' + '__' + 'IndexList' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $columnDatatypes = 'opdb' + '__' + 'ColumnDatatypes' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $perfMonOutput = 'opdb' + '__' + 'PerfMonData' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
@@ -71,7 +72,8 @@ foreach($item in $objs) {
 	sqlcmd -S $sqlsrv -i sql\dbClusterNodes.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
 	Write-Output "Retriving SQL Server Object Info..."
 	sqlcmd -S $sqlsrv -i sql\objectList.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$objectList
-	sqlcmd -S $sqlsrv -i sql\indexList.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$indexList
+	sqlcmd -S $sqlsrv -i sql\tableList.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$tableList
+    sqlcmd -S $sqlsrv -i sql\indexList.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$indexList
 	sqlcmd -S $sqlsrv -i sql\columnDatatypes.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
 
 
