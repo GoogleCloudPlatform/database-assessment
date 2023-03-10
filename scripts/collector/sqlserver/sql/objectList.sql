@@ -50,20 +50,20 @@ BEGIN
     DB_NAME(DB_ID()) as database_name 
     , schema_name
     , type 
-    , type_desc, 
-    , count(*) AS object_count, 
+    , type_desc
+    , count(*) AS object_count
     , SUM(LinesOfCode) AS lines_of_code 
     FROM 
     (
         SELECT
         s.name as schema_name,
-        o.type, 
+        TRIM(o.type) as type, 
         o.type_desc, 
         LEN(a.definition)- LEN(
             REPLACE(
             a.definition, 
             CHAR(10), 
-            ''
+            ''''
             )
         ) AS LinesOfCode, 
         OBJECT_NAME(o.object_id) AS NameOfObject 
@@ -93,6 +93,6 @@ END
 CLOSE db_cursor  
 DEALLOCATE db_cursor
 
-SELECT @PKEY as PKEY, a.* from #objectList a ORDER BY object_type, schema_name, object_name;
+SELECT @PKEY as PKEY, a.* from #objectList a ORDER BY database_name, schema_name, object_type;
 
 DROP TABLE #objectList;

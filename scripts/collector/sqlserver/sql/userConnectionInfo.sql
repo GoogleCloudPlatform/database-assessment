@@ -39,7 +39,7 @@ CREATE TABLE #connectionInfo(
     ,num_reads nvarchar(255)
     ,num_writes nvarchar(255)
     ,last_read nvarchar(255)
-    ,sdec.last_write nvarchar(255)
+    ,last_write nvarchar(255)
     ,reads nvarchar(255)
     ,logical_reads nvarchar(255)
     ,writes nvarchar(255)
@@ -57,6 +57,7 @@ WHILE @@FETCH_STATUS = 0
 BEGIN
 	exec ('
 	use [' + @dbname + '];
+	INSERT INTO #connectionInfo
     SELECT
         DB_NAME() as database_name
         ,sdes.is_user_process
@@ -85,6 +86,6 @@ END
 CLOSE db_cursor  
 DEALLOCATE db_cursor
 
-SELECT @PKEY as PKEY, a.* from #connectionInfo a ORDER BY database_name, schema_name, table_name;
+SELECT @PKEY as PKEY, a.* from #connectionInfo a ORDER BY database_name, login_name;
 
 DROP TABLE #connectionInfo;

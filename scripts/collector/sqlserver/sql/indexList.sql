@@ -38,9 +38,9 @@ CREATE TABLE #indexList(
    index_type nvarchar(255),
    is_primary_key nvarchar(10),
    is_unique nvarchar(10),
-   is_partitioned nvarchar(255)
-   total_space_mb nvarchar(255))
-   ;
+   is_partitioned nvarchar(255),
+   total_space_mb nvarchar(255)
+   );
 
 OPEN db_cursor  
 FETCH NEXT FROM db_cursor INTO @dbname  
