@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 Param(
 [string]$user = "userfordma",
 [string]$pass = "P@ssword135"
@@ -56,6 +57,7 @@ foreach($item in $objs) {
     $tableList = 'opdb' + '__' + 'TableList' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $indexList = 'opdb' + '__' + 'IndexList' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $columnDatatypes = 'opdb' + '__' + 'ColumnDatatypes' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
+    $userConnectionList = 'opdb' + '__' + 'UserConnections' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $perfMonOutput = 'opdb' + '__' + 'PerfMonData' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 
 	Write-Output "Retriving SQL Server Installed Components..."
@@ -75,7 +77,7 @@ foreach($item in $objs) {
 	sqlcmd -S $sqlsrv -i sql\tableList.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$tableList
     sqlcmd -S $sqlsrv -i sql\indexList.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$indexList
 	sqlcmd -S $sqlsrv -i sql\columnDatatypes.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
-
+	sqlcmd -S $sqlsrv -i sql\userConnectionInfo.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
 
 
 	if ($instancename -eq "MSSQLSERVER") {
