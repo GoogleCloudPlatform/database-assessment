@@ -47,7 +47,11 @@ param (
 	[Parameter(
 		Mandatory=$False,
 		HelpMessage="The file name for the final perfmon combined file"
-	)][string]$perfmonOutFile=$null
+	)][string]$perfmonOutFile=$null,
+	[Parameter(
+		Mandatory=$False,
+		HelpMessage="The pkey value for the final perfmon combined file"
+	)][string]$pkey=$null
 )
 function CreateDMAPerfmonDataSet 
 {
@@ -381,7 +385,8 @@ function CollectDMAPerfmonDataSet
 param(
 	[string]$dataSet,
 	[string]$perfmonOutDir,
-	[string]$perfmonOutFile
+	[string]$perfmonOutFile,
+	[string]$pkey
 	)
 	Write-Output "Collecting results from the Google DMA SQL Server Perfmon Counter Data Set."
 	#$userDownloadsDir = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
@@ -402,13 +407,19 @@ param(
 			$tempFileName = Split-Path $file -leaf
 			Get-Content -Path $file | Select-Object -Skip 1 | Set-Content -Encoding utf8 -Path $env:TEMP\$tempFileName
 		}
+		foreach($file in Get-ChildItem -Path $env:TEMP\*$dataSet*.csv) {
+			$tempFileName = 'PKEY_' + (Split-Path $file -leaf)
+			Get-Content -Path $file | ForEach-Object {
+				'"' + $pkey + '"|' + $_
+			} | Out-File -FilePath $env:TEMP\$tempFileName -Encoding utf8
+		}
 	} else {
 		Write-Output ""
 		Write-Output "No Perfmon Files exist in the $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet Directory"
 	}
 
 	Write-Output "Concatenating and adding header to perfmon files to $outputFileName" 
-	((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\*$dataSet*.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
+	((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\PKEY_*$dataSet*.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
 	
 	if (Test-Path -Path $outputDir\$outputFileName) {
 		Write-Output "Clean up Temp File area"
@@ -431,7 +442,7 @@ if ($operation.ToLower() -eq "create") {
 } elseif ($operation.ToLower() -eq "delete") {
 	DeleteDMAPerfmonDataSet -dataSet $datasetName
 } elseif ($operation.ToLower() -eq "collect") {
-	CollectDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile
+	CollectDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey
 } else {
 	Write-Output "Operation $operation specified is invalid"
 }

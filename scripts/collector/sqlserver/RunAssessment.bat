@@ -53,6 +53,6 @@ echo "Please specify -useDefaultCreds flag when invoking the script"
 goto done
 
 :done
-echo ""
-echo ""
+echo.
+echo.
 echo Script Complete!
