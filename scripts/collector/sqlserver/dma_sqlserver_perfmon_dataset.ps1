@@ -400,7 +400,7 @@ param(
 		foreach($file in Get-ChildItem -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataset*.csv)
 		{
 			$tempFileName = Split-Path $file -leaf
-			Get-Content -Path $file | Select-Object -Skip 1 | Set-Content -Path $env:TEMP\$tempFileName
+			Get-Content -Path $file | Select-Object -Skip 1 | Set-Content -Encoding utf8 -Path $env:TEMP\$tempFileName
 		}
 	} else {
 		Write-Output ""
@@ -408,7 +408,7 @@ param(
 	}
 
 	Write-Output "Concatenating and adding header to perfmon files to $outputFileName" 
-	((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\*$dataSet*.csv -Raw ) -replace ',','|') | Set-Content -NoNewline -Path $outputDir\$outputFileName
+	((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\*$dataSet*.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
 	
 	if (Test-Path -Path $outputDir\$outputFileName) {
 		Write-Output "Clean up Temp File area"

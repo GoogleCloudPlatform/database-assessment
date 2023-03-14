@@ -35,7 +35,7 @@ foreach($item in $objs) {
 
     $op_version = (((Select-String -Path "..\..\..\.bumpversion.cfg" -SimpleMatch "current_version =").Line).split("=",2)[1]).trim()
 
-    $foldername = 'opdb' + '_' + 'sqlsrv' + '_' + 'PerfCounter' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
+    $foldername = 'opdb' + '_' + 'mssql' + '_' + 'PerfCounter' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
 
     $folderLength = ($PSScriptRoot + '\' + $foldername).Length
     if ($folderLength -le 260) {
@@ -61,23 +61,23 @@ foreach($item in $objs) {
     $perfMonOutput = 'opdb' + '__' + 'PerfMonData' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 
 	Write-Output "Retriving SQL Server Installed Components..."
-	sqlcmd -S $sqlsrv -i sql\componentsInstalled.sql -U $user -P $pass -W -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
+	sqlcmd -S $sqlsrv -i sql\componentsInstalled.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
 	Write-Output "Retriving SQL Server Properties..."
-	sqlcmd -S $sqlsrv -i sql\serverProperties.sql -U $user -P $pass -W -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
+	sqlcmd -S $sqlsrv -i sql\serverProperties.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
 	Write-Output "Retriving SQL Server Features..."
-	sqlcmd -S $sqlsrv -i sql\features.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
+	sqlcmd -S $sqlsrv -i sql\features.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
 	Write-Output "Retriving SQL Server Linked Servers..."
-	sqlcmd -S $sqlsrv -i sql\linkedServers.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
+	sqlcmd -S $sqlsrv -i sql\linkedServers.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
 	Write-Output "Retriving SQL Server Database Sizes..."
-	sqlcmd -S $sqlsrv -i sql\dbSizes.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
+	sqlcmd -S $sqlsrv -i sql\dbSizes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
 	Write-Output "Retriving SQL Server Cluster Nodes..."
-	sqlcmd -S $sqlsrv -i sql\dbClusterNodes.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
+	sqlcmd -S $sqlsrv -i sql\dbClusterNodes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
 	Write-Output "Retriving SQL Server Object Info..."
-	sqlcmd -S $sqlsrv -i sql\objectList.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$objectList
-	sqlcmd -S $sqlsrv -i sql\tableList.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$tableList
-    sqlcmd -S $sqlsrv -i sql\indexList.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$indexList
-	sqlcmd -S $sqlsrv -i sql\columnDatatypes.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
-	sqlcmd -S $sqlsrv -i sql\userConnectionInfo.sql -U $user -P $pass -W -m 1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
+	sqlcmd -S $sqlsrv -i sql\objectList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$objectList
+	sqlcmd -S $sqlsrv -i sql\tableList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$tableList
+    sqlcmd -S $sqlsrv -i sql\indexList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$indexList
+	sqlcmd -S $sqlsrv -i sql\columnDatatypes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
+	sqlcmd -S $sqlsrv -i sql\userConnectionInfo.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
 
 
 	if ($instancename -eq "MSSQLSERVER") {
