@@ -117,5 +117,4 @@ INSERT INTO #FeaturesEnabled VALUES (
 
 SELECT 
 N'$(pkey)' as PKEY,
---CAST(@@SERVERNAME + '_' + 'master' + '_' + @@ServiceName + '_' + FORMAT(GETDATE() , 'MMddyyHHmmss') AS VARCHAR(256)) AS PKEY,
 * FROM #FeaturesEnabled;

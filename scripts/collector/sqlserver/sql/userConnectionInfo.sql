@@ -66,8 +66,8 @@ BEGIN
         ,sdes.login_name
         ,sdec.num_reads
         ,sdec.num_writes
-        ,sdec.last_read
-        ,sdec.last_write
+        ,FORMAT(sdec.last_read,''yyyy-MM-dd HH:mm:ss'') as last_read
+        ,FORMAT(sdec.last_write,''yyyy-MM-dd HH:mm:ss'') as last_write
         ,sdes.reads
         ,sdes.logical_reads
         ,sdes.writes
