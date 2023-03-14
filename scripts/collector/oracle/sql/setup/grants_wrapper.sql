@@ -178,6 +178,7 @@ BEGIN
 
   v_source_table_list := t_source_table_list(
       rectype_('EXECUTE','SYS','DBMS_UMF'),
+      rectype_('EXECUTE','SYS','DBMS_QOPATCH'),
       rectype_('SELECT','PERFSTAT','STATS$IOSTAT_FUNCTION_NAME'),
       rectype_('SELECT','PERFSTAT','STATS$IOSTAT_FUNCTION'),
       rectype_('SELECT','PERFSTAT','STATS$OSSTATNAME'),
