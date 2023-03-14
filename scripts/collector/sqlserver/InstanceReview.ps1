@@ -85,6 +85,9 @@ foreach($item in $objs) {
 		.\dma_sqlserver_perfmon_dataset.ps1 -operation collect -mssqlInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
 	}
 
+    foreach($file in Get-ChildItem -Path $foldername\*.csv) {
+        (Get-Content $file -Raw).Replace("`r`n","`n") | Set-Content $file -Encoding utf8 -Force
+    }
     $zippedopfolder = $foldername + '.zip'
 	Write-Output "Zipping Output to $zippedopfolder"
     Compress-Archive -Path $foldername\*.csv -DestinationPath $zippedopfolder
