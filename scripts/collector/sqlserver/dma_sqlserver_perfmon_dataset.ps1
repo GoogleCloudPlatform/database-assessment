@@ -389,7 +389,6 @@ param(
 	[string]$pkey
 	)
 	Write-Output "Collecting results from the Google DMA SQL Server Perfmon Counter Data Set."
-	#$userDownloadsDir = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
 	$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
 	$outputFileName = $perfmonOutFile
 
