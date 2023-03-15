@@ -1,13 +1,14 @@
 # Gather workload metadata
 
-The workload collection supports Microsoft SQL Server 2019 and newer.  Older versions of Microsoft SQL Server are not currently supported.
+The workload collection supports Microsoft SQL Server 2016 and newer.  Older versions of Microsoft SQL Server are not currently supported.
 
-## Sytem environment
+## System environment
 
 The collection script depends on the following to be available on the machine from which it is run:
-```command prompt
-	powershell
-	sqlcmd
+```shell
+command prompt
+powershell
+sqlcmd
 ```
 
 ## Download the latest collection scripts
@@ -40,7 +41,10 @@ An entry for a named instance would appear like:
 	MS-SERVER1\TESTINSTANCE
 ```
 
-If you a different username and password needs to be used for the collection you can either invoke the `InstanceReview.ps1` script directly, passing in the following parameters:
+#### Create a Collection User (Optional)
+Refer to the [db_user_create](db_user_create.md) page on how to create a collection user and the permisions required if an existing user is to be used.
+
+If a custom username and password needs to be used for the collection you can either invoke the `InstanceReview.ps1` script directly, passing in the following parameters:
 
 ```shell
 	InstanceReview.ps1 -user [username] -pass [password]
@@ -48,23 +52,37 @@ If you a different username and password needs to be used for the collection you
 
 Or modify the the `RunAssessment.bat` file directly and add the parameters to the execution.
 
-## Execute the collection script
+## Execute the collection scripts
 
-To invoke the collection script using `RunAssessment.bat`:
-```shell
-.\RunAssessment.bat
+#### Create the Perfmon Dataset
+
+In order to provide the necessary metrics to the assessment tool, a windows perfmon dataset must be created.  The tool will create a dataset with the required metrics, start the collection and automatically shut down after 8 days.  The collection samples only every 60 seconds to avoid being resource intensive.
+
+To create the perfmon dataset invoke powershell and execute the following script `dma_sqlserver_perfmon_dataset.ps1`.
+
+For a default instance:
+```powershell
+.\dma_sqlserver_perfmon_dataset.ps1 -create
 ```
-OR
-To invoke the powershell script directly using the default user and password:
-```shell
-.\InstanceReview.ps1
+For a named instance:
+```powershell
+.\dma_sqlserver_perfmon_dataset.ps1 -create -mssqlInstanceName [instance name]
 ```
-OR
-To invoke the powershell script directly using a custom user and password:
-```shell
-.\InstanceReview.ps1 -user [username] -pass [password]
+
+After an adequate amount of perfmon data has been collected, complete the collection by invoking the collection script `RunAssessment.bat`.
+
+If the default username / password provided in the `db_user_create` step is to be used:
+```powershell
+.\RunAssessment.bat -useDefaultCreds
 ```
+
+If the default username / password provided in the `db_user_create` step is to be used:
+```powershell
+.\RunAssessment.bat -username [username] -password [password]
+```
+
+If you do not wish to specify the password on the command line, the script will prompt for a password.
 
 ## Upload Collections
 
-Upon completion, the tool will automatically create an archive of the extracted metrics that can be uploaded into the assessment tool.
+Upon completion, the tool will automatically create an archive of the extracted metrics that can be uploaded into the assessment tool.  Deliver the archive to Google for proper analysis.
