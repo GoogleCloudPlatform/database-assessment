@@ -113,5 +113,9 @@ SELECT @PKEY as PKEY,'HostServicePackLevel', host_service_pack_level FROM sys.dm
 UNION ALL
 SELECT @PKEY as PKEY,'HostOsLanguageVersion', os_language_version FROM sys.dm_os_host_info
 UNION ALL
-SELECT @PKEY as PKEY,'HostArchitectureType', host_architecture FROM sys.dm_os_host_info
+SELECT @PKEY as PKEY,'IsRemoteLoginEnabled', is_remote_login_enabled FROM sys.servers WHERE name = @@SERVERNAME
+UNION ALL
+SELECT @PKEY as PKEY,'IsRpcOutEnabled', is_rpc_out_enabled FROM sys.servers WHERE name = @@SERVERNAME
+UNION ALL
+SELECT @PKEY as PKEY,'IsRemoteProcTransactionPromotionEnabled', is_remote_proc_transaction_promotion_enabled FROM sys.servers WHERE name = @@SERVERNAME
 ;

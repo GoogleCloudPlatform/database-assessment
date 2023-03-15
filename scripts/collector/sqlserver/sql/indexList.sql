@@ -38,7 +38,15 @@ CREATE TABLE #indexList(
    index_type nvarchar(255),
    is_primary_key nvarchar(10),
    is_unique nvarchar(10),
+   fill_factor nvarchar(10),
+   allow_page_locks nvarchar(10),
+   has_filter nvarchar(10),
+   data_compression nvarchar(10),
+   data_compression_desc nvarchar(255),
    is_partitioned nvarchar(255),
+   count_key_ordinal nvarchar(10),
+   count_partition_ordinal nvarchar(10),
+   count_is_included_column nvarchar(10),
    total_space_mb nvarchar(255)
    );
 
@@ -58,9 +66,18 @@ BEGIN
          ,i.type_desc index_type
          ,i.is_primary_key
          ,i.is_unique
+         ,i.fill_factor
+         ,i.allow_page_locks
+         ,i.has_filter
+         ,p.data_compression
+         ,p.data_compression_desc
          ,ISNULL (ps.name, ''Not Partitioned'') AS partition_scheme
+         ,ISNULL (SUM(ic.key_ordinal),0) AS count_key_ordinal
+         ,ISNULL (SUM(ic.partition_ordinal),0) AS count_partition_ordinal
+         ,ISNULL (COUNT(ic.is_included_column),0) as count_is_included_column
          ,CAST(ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2) AS NUMERIC(36, 2)) AS total_space_mb
-      FROM sys.indexes i 
+      FROM sys.indexes i
+      JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
       JOIN sys.tables t ON i.object_id = t.object_id
       JOIN sys.schemas s ON s.schema_id = t.schema_id
       JOIN sys.partitions AS p ON p.OBJECT_ID = i.OBJECT_ID AND p.index_id = i.index_id
@@ -73,6 +90,11 @@ BEGIN
          ,i.type_desc 
          ,i.is_primary_key
          ,i.is_unique
+         ,i.fill_factor
+         ,i.allow_page_locks
+         ,i.has_filter
+         ,p.data_compression
+         ,p.data_compression_desc
 	      ,ISNULL (ps.name, ''Not Partitioned'')');
     FETCH NEXT FROM db_cursor INTO @dbname 
 END 
