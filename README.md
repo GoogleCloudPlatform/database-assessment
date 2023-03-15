@@ -3,10 +3,11 @@
 
 ## Features
 
-- Get the recommended Google Cloud configuration your current Oracle environments.
+- Get the recommended Google Cloud configuration your current Oracle and Microsoft SQL Server environments.
 - Facts based approach to sizing that leverages metadata from your environment.
-- Support all flavors of Oracle from 11gR2 to 21c - Exadata, RDS, and OCI workloads included
-- Leverages AWR data (requires tuning and diagnostics pack for Oracle) or statspack for sizing.
+- Supports the following RDBMS types:
+    - Oracle from 11gR2 to 21c - Exadata, RDS, and OCI workloads included by leveraging AWR data (requires tuning and diagnostics pack for Oracle) or statspack for sizing.
+    - Microsoft SQL Server Versions 2016 to 2022
 
 ## Getting Started
 

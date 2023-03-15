@@ -74,8 +74,18 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 	cp scripts/collector/oracle/collect-data.sh $(BUILD_DIR)/collector/oracle/
 	cp scripts/collector/oracle/README.txt $(BUILD_DIR)/collector/oracle/
 	cp  LICENSE $(BUILD_DIR)/collector/oracle
-	make package-collector
 	echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/oracle/VERSION.txt
+	
+	@echo "=> Building Assessment Data Collection Scripts for Microsoft SQL Server version $(VERSION)..."
+	mkdir -p $(BUILD_DIR)/collector/sqlserver/sql/
+	cp scripts/collector/sqlserver/sql/*.sql $(BUILD_DIR)/collector/sqlserver/sql
+	cp scripts/collector/sqlserver/*.bat $(BUILD_DIR)/collector/sqlserver/
+	cp scripts/collector/sqlserver/*.ps1 $(BUILD_DIR)/collector/sqlserver/
+	cp scripts/collector/sqlserver/*.csv $(BUILD_DIR)/collector/sqlserver/
+	cp scripts/collector/sqlserver/README.txt $(BUILD_DIR)/collector/sqlserver/
+	cp  LICENSE $(BUILD_DIR)/collector/sqlserver
+	make package-collector
+	echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/sqlserver/VERSION.txt
 
 .PHONY: package-collector
 package-collector:
@@ -85,6 +95,9 @@ package-collector:
 	@echo "Zipping files in ./$(BUILD_DIR)/collector/oracle"
 	cd ./$(BUILD_DIR)/collector/oracle; zip -r ../../../$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-oracle.zip  *
 
+	@echo  "=> Packaging Database Migration Assessment Collector for Microsoft SQL Server..."
+	@echo "Zipping files in ./$(BUILD_DIR)/collector/sqlserver"
+	cd ./$(BUILD_DIR)/collector/sqlserver; zip -r ../../../$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-sqlserver.zip  *
 
 .PHONY: build
 build: build-collector        ## Build and package the collectors
