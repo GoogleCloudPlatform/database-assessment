@@ -96,8 +96,6 @@ package-collector:
 	cd ./$(BUILD_DIR)/collector/oracle; zip -r ../../../$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-oracle.zip  *
 
 	@echo  "=> Packaging Database Migration Assessment Collector for Microsoft SQL Server..."
-	rm -f ./$(BUILD_DIR)/$(COLLECTOR_PACKAGE)*.bz2
-	rm -f ./$(BUILD_DIR)/$(COLLECTOR_PACKAGE)*.zip
 	@echo "Zipping files in ./$(BUILD_DIR)/collector/sqlserver"
 	cd ./$(BUILD_DIR)/collector/sqlserver; zip -r ../../../$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-sqlserver.zip  *
 

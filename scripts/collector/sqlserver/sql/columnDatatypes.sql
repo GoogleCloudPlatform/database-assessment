@@ -31,15 +31,21 @@ IF OBJECT_ID('tempdb..#columnDatatypes') IS NOT NULL
    DROP TABLE #columnDatatypes;
 
 CREATE TABLE #columnDatatypes(
-    database_name nvarchar(255) DEFAULT db_name()
-    ,schema_name nvarchar(255)
-    ,table_name nvarchar(255)
-    ,datatype nvarchar(255)
-    ,max_length nvarchar(255)
-    ,precision nvarchar(255)
-    ,scale nvarchar(255)
-    ,column_count nvarchar(255)
-    );
+   database_name nvarchar(255) DEFAULT db_name()
+   ,schema_name nvarchar(255)
+   ,table_name nvarchar(255)
+   ,datatype nvarchar(255)
+   ,max_length nvarchar(255)
+   ,precision nvarchar(255)
+   ,scale nvarchar(255)
+   ,is_computed nvarchar(10)
+   ,is_filestream nvarchar(10)
+   ,is_masked nvarchar(10)
+   ,encryption_type nvarchar(10)
+   ,is_sparse nvarchar(10)
+   ,rule_object_id nvarchar(255)
+   ,column_count nvarchar(255)
+   );
 
 OPEN db_cursor  
 FETCH NEXT FROM db_cursor INTO @dbname  
@@ -55,6 +61,12 @@ BEGIN
       ,max_length
       ,precision
       ,scale
+      ,is_computed
+      ,is_filestream
+      ,is_masked
+      ,encryption_type
+      ,is_sparse
+      ,rule_object_id
       ,column_count 
    )
    SELECT s.name AS schema_name
@@ -63,6 +75,12 @@ BEGIN
          , c.max_length
          , c.precision
          , c.scale
+         , c.is_computed
+         , c.is_filestream
+         , c.is_masked
+         , ISNULL(c.encryption_type,0) AS encryption_type
+         , c.is_sparse
+         , c.rule_object_id
          , count(1) column_count
       FROM  sys.objects o 
       JOIN  sys.schemas s
@@ -79,6 +97,12 @@ BEGIN
          , c.max_length
          , c.precision
          , c.scale
+         , c.is_computed
+         , c.is_filestream
+         , c.is_masked
+         , c.encryption_type
+         , c.is_sparse
+         , c.rule_object_id
    ORDER BY s.name
          , o.name
          , t.name');

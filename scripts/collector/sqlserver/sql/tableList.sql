@@ -35,6 +35,13 @@ CREATE TABLE #tableList(
     ,schema_name nvarchar(255)
     ,table_name nvarchar(255)
     ,partition_count nvarchar(10)
+	,is_memory_optimized nvarchar(10)
+	,temporal_type nvarchar(10)
+	,is_external nvarchar(10)
+	,lock_escalation nvarchar(10)
+	,is_tracked_by_cdc nvarchar(10)
+	,text_in_row_limit nvarchar(10)
+	,is_replicated nvarchar(10)
     ,row_count nvarchar(255)
     ,data_compression nvarchar(255)
     ,total_space_mb nvarchar(255)
@@ -57,6 +64,13 @@ BEGIN
 			,[object_type]      = CASE WHEN i.[type] in (0,1,5) THEN ''TABLE'' ELSE ''INDEX''  END
 			,[index_type]       = i.[type_desc]
 			,[partition_count]  = p.partition_count
+			,[is_memory_optimized]  = t.is_memory_optimized
+			,[temporal_type]  = t.temporal_type
+			,[is_external]  = t.is_external
+			,[lock_escalation] = t.lock_escalation
+			,[is_tracked_by_cdc]  =  t.is_tracked_by_cdc
+			,[text_in_row_limit]  =  t.text_in_row_limit
+			,[is_replicated]  =  t.is_replicated
 			,[row_count]        = p.[rows]
 			,[data_compression] = CASE WHEN p.data_compression_cnt > 1 THEN ''Mixed''
 									ELSE (  SELECT DISTINCT p.data_compression_desc
@@ -89,6 +103,13 @@ BEGIN
 			schema_name,
             table_name,
             partition_count,
+			is_memory_optimized,
+			temporal_type,
+			is_external,
+			lock_escalation,
+			is_tracked_by_cdc,
+			text_in_row_limit,
+			is_replicated,
             row_count,
             data_compression,
             total_space_mb,
