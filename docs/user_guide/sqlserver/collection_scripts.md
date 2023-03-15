@@ -12,7 +12,7 @@ The collection script depends on the following to be available on the machine fr
 
 ## Download the latest collection scripts
 
-Download the latest collection scripts [here](https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip).
+Download the latest collection scripts [here](https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-sqlserver.zip).
 
 ```shell
 mkdir ./dbma_collector && cd dbma_collector
