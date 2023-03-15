@@ -57,7 +57,7 @@ vopatch as (
         extractvalue(rws.object_value, '/patch/patchDescription')      patch_descr,       
         extractvalue(rws.object_value, '/patch/patchType')             patch_type,
         extractvalue(rws.object_value, '/patch/appliedDate')             applied_date,
-        extractvalue(rws.object_value, '/patch/bugs[1]/bug[1]/description[1]')      bug_1
+        extractvalue(rws.object_value, '/patch/bugs[1]/bug[1]/description[1]')      bug_descr
     FROM
         xml                                                             x,
         TABLE ( xmlsequence(extract(x.x, '/InventoryInstance/patches/*')) )              rws 
@@ -68,6 +68,6 @@ SELECT '&&v_host'
        || '&&v_dbname'
        || '_'
        || '&&v_hora'                   AS pkey,
-       patch_id, unique_patch_id, patch_type, applied_date, patch_descr, bug_1
+       patch_id, unique_patch_id, patch_type, applied_date, patch_descr, bug_descr
 FROM vopatch;
 spool off
