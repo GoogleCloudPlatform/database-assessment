@@ -1,5 +1,5 @@
 site_name: Database Migration Assessment
-repo_url: https://github.com/GoogleCloudPlatform/oracle-database-assessment
+repo_url: https://github.com/GoogleCloudPlatform/database-assessment
 edit_uri: ./edit/main/docs
 
 theme:
