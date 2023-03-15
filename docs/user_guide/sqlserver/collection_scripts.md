@@ -16,7 +16,7 @@ Download the latest collection scripts [here](https://github.com/GoogleCloudPlat
 
 ```shell
 mkdir ./dbma_collector && cd dbma_collector
-wget https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip  
+wget https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-sqlserver.zip  
 unzip db-migration-assessment-collection-scripts-sqlserver.zip
 ```
 
