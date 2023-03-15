@@ -74,7 +74,7 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 	cp scripts/collector/oracle/collect-data.sh $(BUILD_DIR)/collector/oracle/
 	cp scripts/collector/oracle/README.txt $(BUILD_DIR)/collector/oracle/
 	cp  LICENSE $(BUILD_DIR)/collector/oracle
-	echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/sqlserver/VERSION.txt
+	echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/oracle/VERSION.txt
 	
 	@echo "=> Building Assessment Data Collection Scripts for Microsoft SQL Server version $(VERSION)..."
 	mkdir -p $(BUILD_DIR)/collector/sqlserver/sql/
