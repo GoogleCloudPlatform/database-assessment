@@ -4,19 +4,19 @@ The collection scripts can be executed with any DBA account. Alternately, a new 
 
 ## Create User
 
-#### Windows Authentication
+### Windows Authentication
 
 ```powershell
 .\CreateUserForAssessmentWithWindowsAuth.bat
 ```
 
-#### SQL Authentication
+### SQL Authentication
 
 ```powershell
 .\CreateUserForAssessmentWithSQLAuth.bat
 ```
 
-## Grants
+### Grants
 The user creation scripts will grant the appropriate permissions.  If the non default user is used, the sysadmin role must be granted:
 
 ```sql
