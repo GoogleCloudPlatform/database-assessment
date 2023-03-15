@@ -24,7 +24,7 @@ unzip db-migration-assessment-collection-scripts-sqlserver.zip
 - Currently this script needs to be executed from the system where the database is running
 - Execute from a user with DBA privileges or optionally use the provided user creation script
 
-If the extract will be run by a user that does not have DBA (SA) privilege, connect to the database as a user with DBA (SA) privileges and create the user if needed.  The "DMA Collector" currenlty connects to the master database does not currently support running in individual SQL Server databases.
+If the extract will be run by a user that does not have DBA (SA) privilege, connect to the database as a user with DBA (SA) privileges and create the user if needed.  The "DMA Collector" currently connects to the master database does not currently support running in individual SQL Server databases.
 
 If a user needs to be created, consult the section on user creation.
 
@@ -32,29 +32,29 @@ If a user needs to be created, consult the section on user creation.
 Update the `sqlsrv.csv` file to contain the instance name you would like to perform the collection against.  If there are multiple instances on the same host, list them line by line, leaving the header present.  For example an entry for the default instance:
 
 ```csv
-	InstanceName
-	MS-SERVER1\MSSQLSERVER
+InstanceName
+MS-SERVER1\MSSQLSERVER
 ```
 An entry for a named instance would appear like:
 ```csv
-	InstanceName
-	MS-SERVER1\TESTINSTANCE
+InstanceName
+MS-SERVER1\TESTINSTANCE
 ```
 
-#### Create a Collection User (Optional)
+## Create a Collection User (Optional)
 Refer to the [db_user_create](db_user_create.md) page on how to create a collection user and the permisions required if an existing user is to be used.
 
 If a custom username and password needs to be used for the collection you can either invoke the `InstanceReview.ps1` script directly, passing in the following parameters:
 
 ```shell
-	InstanceReview.ps1 -user [username] -pass [password]
+InstanceReview.ps1 -user [username] -pass [password]
 ```
 
 Or modify the the `RunAssessment.bat` file directly and add the parameters to the execution.
 
 ## Execute the collection scripts
 
-#### Create the Perfmon Dataset
+### Create the Perfmon Dataset
 
 In order to provide the necessary metrics to the assessment tool, a windows perfmon dataset must be created.  The tool will create a dataset with the required metrics, start the collection and automatically shut down after 8 days.  The collection samples only every 60 seconds to avoid being resource intensive.
 
