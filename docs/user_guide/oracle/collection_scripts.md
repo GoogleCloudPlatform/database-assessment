@@ -23,11 +23,11 @@ The collection script depends on the following to be available on the machine fr
 
 ## Execute collection script
 
-Download the latest collection scripts [here](https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip).
+Download the latest collection scripts [here](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip).
 
 ```shell
 mkdir ./dbma_collector && cd dbma_collector
-wget https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip  
+wget https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip  
 unzip db-migration-assessment-collection-scripts-oracle.zip
 ```
 
@@ -65,17 +65,17 @@ Launch the collection script
 
 - Pass connect string as input to this script and either UseDiagnostics or NoDiagnostics to match the permissions granted. (see below for example)
 - NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
--       If you are licensed for the Oracle Tuning and Diasnostics packs, pass the parameter UseDiagnostics to use the AWR data.
--       If you are NOT licensed for the  Oracle Tuning and Diasnostics packs, pass the parameter NoDiagnositcs to exclude the AWR data.  The script will attempt to use STATSPACK data if available.
+-       If you are licensed for the Oracle Tuning and Diagnostics packs, pass the parameter UseDiagnostics to use the AWR data.
+-       If you are NOT licensed for the  Oracle Tuning and Diagnostics packs, pass the parameter NoDiagnostics to exclude the AWR data.  The script will attempt to use STATSPACK data if available.
 
 
 
-To use the licensed Oracle Tuning and Diasnostics pack data:
+To use the licensed Oracle Tuning and Diagnostics pack data:
 ```shell
 ./collect-data.sh {user}/{password}@//{db host/scan address}/{service name} UseDiagnostics
 ```
 OR
-To avoid using the licensed Oracle Tuning and Diasnostics pack data:
+To avoid using the licensed Oracle Tuning and Diagnostics pack data:
 ```shell
 ./collect-data.sh {user}/{password}@//{db host/scan address}/{service name} NoDiagnostics
 ```
