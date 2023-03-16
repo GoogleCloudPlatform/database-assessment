@@ -21,7 +21,8 @@ set verify off
 set feedback off
 set echo off
 
-accept dbusername    char prompt "Please enter the DB Local Username(Or CDB Username) to receive all required grants: "
+prompt "Please enter the database local username (or CDB username) to receive all required grants. "
+accept dbusername    char prompt "Enter exactly as defined in the database, upper/lower case must match: "
 accept usediagnostics char default 'Y' prompt "Please enter Y or N to allow or disallow use of the Tuning and Diagnostic Pack (AWR/ASH) data (Y) "
 
 DECLARE
@@ -29,7 +30,7 @@ DECLARE
 BEGIN
   SELECT count(1) INTO cnt FROM dba_users WHERE username = '&&dbusername';
   IF cnt = 0 THEN
-    raise_application_error(-1917, 'User "&&dbusername" does not exist. please verify the username and ensure the account is created.');
+    raise_application_error(-20001, 'User "&&dbusername" does not exist. please verify the username and ensure the account is created.');
   END IF;
 END;
 /
@@ -177,6 +178,7 @@ BEGIN
 
   v_source_table_list := t_source_table_list(
       rectype_('EXECUTE','SYS','DBMS_UMF'),
+      rectype_('EXECUTE','SYS','DBMS_QOPATCH'),
       rectype_('SELECT','PERFSTAT','STATS$IOSTAT_FUNCTION_NAME'),
       rectype_('SELECT','PERFSTAT','STATS$IOSTAT_FUNCTION'),
       rectype_('SELECT','PERFSTAT','STATS$OSSTATNAME'),

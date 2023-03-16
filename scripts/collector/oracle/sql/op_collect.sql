@@ -60,22 +60,28 @@ set termout &TERMOUTOFF
 @&EXTRACTSDIR/dbinstances.sql
 @&EXTRACTSDIR/dblinks.sql
 @&EXTRACTSDIR/dbobjects.sql
+@&EXTRACTSDIR/dbobjectnames.sql
 @&EXTRACTSDIR/dbparameters.sql
 @&EXTRACTSDIR/dbsummary.sql
 @&EXTRACTSDIR/exttab.sql
 @&EXTRACTSDIR/idxpertable.sql
 @&EXTRACTSDIR/indextypes.sql
+@&EXTRACTSDIR/indextypedtl.sql
 @&EXTRACTSDIR/mviewtypes.sql
 @&EXTRACTSDIR/opkeylog.sql
 @&EXTRACTSDIR/sourcecode.sql
+@&EXTRACTSDIR/dtlsourcecode.sql
 @&EXTRACTSDIR/tablesnopk.sql
+@&EXTRACTSDIR/tableconstraints.sql
 @&EXTRACTSDIR/tabletypes.sql
+@&EXTRACTSDIR/tabletypedtl.sql
 @&EXTRACTSDIR/triggers.sql
 @&EXTRACTSDIR/usedspacedetails.sql
 @&EXTRACTSDIR/usrsegatt.sql
 @&SQLDIR/&v_dopluggable
 @&SQLDIR/op_collect_&v_dodiagnostics
 @&EXTRACTSDIR/lobsizing.sql
+@&EXTRACTSDIR/opatch.sql
 
 
 set termout on

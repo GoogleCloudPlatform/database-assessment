@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-spool &outputdir/opdb__dbobjects__&v_tag
+spool &outputdir/opdb__dbobjectnames__&v_tag
 
 WITH 
 vdbobji AS (
@@ -35,29 +35,44 @@ vdbobjx AS (
               table_owner in 
 @&EXTRACTSDIR/exclude_schemas.sql
               ),
+vsrc   AS (SELECT 
+                  &v_c_con_id AS con_id, 
+                  owner,
+                  name,
+                  type,
+                  max(line) as lines
+           FROM  &v_tblprefix._source  c
+           WHERE owner NOT IN (
+@&EXTRACTSDIR/exclude_schemas.sql
+           )
+           GROUP BY &v_c_con_id , owner, name, type
+),
 vdbobj AS (
-        SELECT '&&v_host'
+        SELECT /*+ USE_HASH(i x s) */
+               '&&v_host'
                || '_'
                || '&&v_dbname'
                || '_'
                || '&&v_hora' AS pkey,
                i.con_id,
                i.owner,
+               i.object_name,
                i.object_type,
                i.editionable,
-               COUNT(1)              count
+               s.lines
         FROM vdbobji i
         LEFT OUTER JOIN vdbobjx x ON i.object_type = x.object_type AND i.owner = x.owner AND i.object_name = x.synonym_name AND i.con_id = x.con_id
-        WHERE (CASE WHEN i.object_type = 'SYNONYM' and i.owner ='PUBLIC' and ( i.object_name like '/%' OR x.table_owner IS NOT NULL) THEN 0 ELSE 1 END = 1)
+        LEFT OUTER JOIN vsrc s    ON i.object_type = s.type AND i.owner = s.owner AND i.object_name = s.name AND i.con_id = s.con_id
+        WHERE NOT ( i.object_type = 'SYNONYM' AND i.owner ='PUBLIC' AND ( i.object_name LIKE '/%' OR x.table_owner IS NOT NULL OR x.table_owner ='SYS') )
         AND i.object_name NOT LIKE 'BIN$%'
-        GROUP  BY  i.con_id, i.owner, i.editionable , i.object_type
 )
 SELECT pkey , 
        con_id , 
        owner , 
+       object_name, 
        object_type , 
        editionable ,
-       count  
+       lines
 FROM vdbobj a;
 spool off
 

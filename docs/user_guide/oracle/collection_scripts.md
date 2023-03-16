@@ -11,6 +11,7 @@ The collection script depends on the following to be available on the machine fr
 	cut
 	dirname
 	grep
+	locale
 	mkdir
 	sed
 	sqlplus

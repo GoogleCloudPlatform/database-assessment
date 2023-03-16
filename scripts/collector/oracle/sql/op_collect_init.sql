@@ -280,9 +280,13 @@ COLUMN max_snapid clear
 column a_con_id new_value v_a_con_id noprint
 column b_con_id new_value v_b_con_id noprint
 column c_con_id new_value v_c_con_id noprint
+column d_con_id new_value v_d_con_id noprint
+column p_con_id new_value v_p_con_id noprint
 SELECT CASE WHEN &v_is_container != 0 THEN 'a.con_id' ELSE '''N/A''' END as a_con_id,
        CASE WHEN &v_is_container != 0 THEN 'b.con_id' ELSE '''N/A''' END as b_con_id,
-       CASE WHEN &v_is_container != 0 THEN 'c.con_id' ELSE '''N/A''' END as c_con_id
+       CASE WHEN &v_is_container != 0 THEN 'c.con_id' ELSE '''N/A''' END as c_con_id,
+       CASE WHEN &v_is_container != 0 THEN 'd.con_id' ELSE '''N/A''' END as d_con_id,
+       CASE WHEN &v_is_container != 0 THEN 'p.con_id' ELSE '''N/A''' END as p_con_id
 FROM DUAL;
 
 

@@ -16,6 +16,11 @@
 
 ### Setup directories needed for execution
 #############################################################################
+OpVersion="4.3.0"
+
+LOCALE=$(echo $LANG | cut -d '.' -f 1)
+export LANG=C
+export LANG=${LOCALE}.UTF-8
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 OUTPUT_DIR=${SCRIPT_DIR}/output; export OUTPUT_DIR
@@ -97,7 +102,7 @@ rm /tmp/dirs.sql
 function createErrorLog {
 V_FILE_TAG=$1
 echo "Checking for errors..."
-$GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+$GREP -E 'SP2-|ORA-' --exclude="*opatch*" ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
 retval=$?
 if [ $retval -eq 1 ]; then 
   retval=0
@@ -159,6 +164,8 @@ fi
 
 TARFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tar
 ZIPFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.zip
+
+locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
 
 cd ${OUTPUT_DIR}
 if [ ! "${ZIP}" = "" ]
