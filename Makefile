@@ -5,6 +5,7 @@ VERSION := $(shell grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -
 COLLECTOR_SRC_DIR=scripts/collector
 BUILD_DIR=dist
 COLLECTOR_PACKAGE=db-migration-assessment-collection-scripts
+BASE_DIR=$(shell pwd)
  
 
 .EXPORT_ALL_VARIABLES:
@@ -62,6 +63,7 @@ clean-collector:
 .PHONY: build-collector
 build-collector: clean-collector      ## Build the collector SQL scripts.
 	@echo "=> Building Assessment Data Collection Scripts for Oracle version $(VERSION)..."
+	rm -rf ./$(BUILD_DIR)/collector
 	mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts
 	mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts/awr
 	mkdir -p $(BUILD_DIR)/collector/oracle/sql/setup
@@ -84,20 +86,20 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 	cp scripts/collector/sqlserver/*.csv $(BUILD_DIR)/collector/sqlserver/
 	cp scripts/collector/sqlserver/README.txt $(BUILD_DIR)/collector/sqlserver/
 	cp  LICENSE $(BUILD_DIR)/collector/sqlserver
-	make package-collector
 	echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/sqlserver/VERSION.txt
+	make package-collector
 
 .PHONY: package-collector
 package-collector:
-	@echo  "=> Packaging Database Migration Assessment Collector for Oracle..."
+	@echo  "=> Packaging Database Migration Assessment Collector..."
 	rm -f ./$(BUILD_DIR)/$(COLLECTOR_PACKAGE)*.bz2
 	rm -f ./$(BUILD_DIR)/$(COLLECTOR_PACKAGE)*.zip
 	@echo "Zipping files in ./$(BUILD_DIR)/collector/oracle"
-	cd ./$(BUILD_DIR)/collector/oracle; zip -r ../../../$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-oracle.zip  *
+	cd $(BASE_DIR)/$(BUILD_DIR)/collector/oracle; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-oracle.zip  *
 
 	@echo  "=> Packaging Database Migration Assessment Collector for Microsoft SQL Server..."
 	@echo "Zipping files in ./$(BUILD_DIR)/collector/sqlserver"
-	cd ./$(BUILD_DIR)/collector/sqlserver; zip -r ../../../$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-sqlserver.zip  *
+	cd $(BASE_DIR)/$(BUILD_DIR)/collector/sqlserver; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-sqlserver.zip  *
 
 .PHONY: build
 build: build-collector        ## Build and package the collectors
