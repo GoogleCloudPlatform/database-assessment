@@ -18,6 +18,8 @@ Please ensure you have proper licensing. For more information consult Oracle Sup
 
 */
 
+/* sys.dm_os_host_info - Applies to: SQL Server 2017 (14.x) and later */
+
 SET NOCOUNT ON
 DECLARE @PKEY AS VARCHAR(256)
 select @PKEY = N'$(pkey)';

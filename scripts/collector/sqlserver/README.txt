@@ -88,14 +88,14 @@ for analysis by Database Migration Assessment.
     a) From a powershell session on the server you would like to collect data on, execute the following command:
     
         For a default instance:
-            .\dma_sqlserver_perfmon_dataset.ps1 -operation create
+            .\ManageSqlServerPerfmonDatset.bat -operation create
 
         For a named instance:
-            .\dma_sqlserver_perfmon_dataset.ps1 -operation create -mssqlInstanceName
+            .\ManageSqlServerPerfmonDatset.bat -operation create -mssqlInstanceName [instance name]
 
         The script will create a permon data set that will collect the above metrics at a 1 minute interval for 8 days.  The dataset will automatically stop after 8 days of collection.  To get the most accurate statistics, it would be good to have this collection run over the busiest time for the server.
 
-    b)  When the perfmon dataset completes or if you would like to execute the collection sooner, execute the following command and return the      subsequent .zip file to Google.
+    b)  When the perfmon dataset completes or if you would like to execute the collection sooner, execute the following command and return the subsequent .zip file to Google.
 
         If a custom collection user was created in the above step:
             .\RunAssessment.bat -username [collection user name] -password [collection user password]

@@ -57,7 +57,7 @@ BEGIN
     (
         SELECT
         s.name as schema_name,
-        TRIM(o.type) as type, 
+        RTRIM(LTRIM(o.type)) as type, 
         o.type_desc, 
         LEN(a.definition)- LEN(
             REPLACE(
