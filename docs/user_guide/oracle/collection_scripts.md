@@ -23,11 +23,11 @@ The collection script depends on the following to be available on the machine fr
 
 ## Execute collection script
 
-Download the latest collection scripts [here](https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip).
+Download the latest collection scripts [here](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip).
 
 ```shell
 mkdir ./dbma_collector && cd dbma_collector
-wget https://github.com/GoogleCloudPlatform/oracle-database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip  
+wget https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip  
 unzip db-migration-assessment-collection-scripts-oracle.zip
 ```
 

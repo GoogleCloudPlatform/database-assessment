@@ -46,7 +46,7 @@ set termout on
 whenever sqlerror exit failure
 whenever oserror continue
 
-@/tmp/dirs.sql
+--@/tmp/dirs.sql
 
 variable minsnap NUMBER;
 variable maxsnap NUMBER;

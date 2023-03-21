@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.0"
+OpVersion="4.3.1"
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
 export LANG=C
@@ -83,25 +83,24 @@ if ! [ -x "$(command -v sqlplus)" ]; then
   echo "Exiting..."
 fi
 
-
+if ! [ -f /tmp/dirs.sql ]; then
 echo define outputdir=$OUTPUT_DIR > /tmp/dirs.sql
-echo define seddir=$BASE_DIR/db_assessment/dbSQLCollector >> /tmp/dirs.sql
 echo define v_tag=$V_TAG >> /tmp/dirs.sql
-
+fi
 
 sqlplus -s /nolog << EOF
 connect ${connectString}
-@${SCRIPT_DIR}/sql/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack}
+@${SCRIPT_DIR}/sql/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${OUTPUT_DIR}
 exit;
 EOF
 
-rm /tmp/dirs.sql
+#rm /tmp/dirs.sql
 }
 
 function createErrorLog {
 V_FILE_TAG=$1
 echo "Checking for errors..."
-$GREP -E 'SP2-|ORA-' --exclude="*opatch*" ${OUTPUT_DIR}/opdb__*csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+$GREP -E 'SP2-|ORA-' --exclude="*opatch*" ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
 retval=$?
 if [ $retval -eq 1 ]; then 
   retval=0
@@ -115,23 +114,23 @@ fi
 function cleanupOpOutput  {
 V_FILE_TAG=$1
 echo "Preparing files for compression."
-for outfile in  ${OUTPUT_DIR}/opdb*.csv
+for outfile in  ${OUTPUT_DIR}/opdb*${V_FILE_TAG}.csv
 do
  if [ -f $outfile ] ; then
   if [ $(uname) = "SunOS" ]
   then
-    sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed.tmp
-    cp sed.tmp ${outfile}
-    rm sed.tmp
+    sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
+    cp sed_${V_FILE_TAG}.tmp ${outfile}
+    rm sed_${V_FILE_TAG}.tmp
   else if [ $(uname) = "AIX" ]
   then
-    sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed.tmp
-    cp sed.tmp ${outfile}
-    rm sed.tmp
+    sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
+    cp sed_${V_FILE_TAG}.tmp ${outfile}
+    rm sed_${V_FILE_TAG}.tmp
   else
-    sed -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d' ${outfile} > sed.tmp
-    cp sed.tmp ${outfile}
-    rm sed.tmp
+    sed -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d' ${outfile} > sed_${V_FILE_TAG}.tmp
+    cp sed_${V_FILE_TAG}.tmp ${outfile}
+    rm sed_${V_FILE_TAG}.tmp
   fi
   fi
  fi
@@ -169,17 +168,17 @@ locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
 cd ${OUTPUT_DIR}
 if [ ! "${ZIP}" = "" ]
 then
-  $ZIP $ZIPFILE  opdb*.csv opdb*.log opdb*.txt
+  $ZIP $ZIPFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
   OUTFILE=$ZIPFILE
 else
-  tar cvf $TARFILE  opdb*.csv opdb*.log opdb*.txt
+  tar cvf $TARFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
   $GZIP $TARFILE
   OUTFILE=${TARFILE}.gz
 fi
 
 if [ -f $OUTFILE ]
 then
-  rm  opdb*.csv opdb*.log opdb*.txt
+  rm  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
 fi
 
 cd ${CURRENT_WORKING_DIR}
@@ -264,7 +263,7 @@ if [ $retval -eq 0 ]; then
     if [ "${dbmajor}" = "10" ]
     then
        echo "Oracle 10 is not supported yet, exiting."
-       exit
+      exit
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
     executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS}
