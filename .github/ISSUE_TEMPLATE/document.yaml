@@ -2,8 +2,6 @@ name: "\U0001F4DD Documentation"
 description: Improve Documentation
 title: "DOC: "
 labels: ["documentation"]
-assignees:
-  - smpawar
 body:
   - type: markdown
     attributes:

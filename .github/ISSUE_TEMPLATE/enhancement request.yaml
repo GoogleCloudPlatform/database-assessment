@@ -2,8 +2,6 @@ name: "\U00002747 Enhancement Request"
 description: File an enhancement request
 title: "ER: "
 labels: ["enhancement"]
-assignees:
-  - smpawar
 body:
   - type: markdown
     attributes:
