@@ -2,8 +2,6 @@ name: "\U00002728 New Feature"
 description: File a New Feature Request
 title: "NF: "
 labels: ["new feature"]
-assignees:
-  - smpawar
 body:
   - type: markdown
     attributes:
