@@ -30,7 +30,7 @@ BEGIN
   FROM &v_tblprefix._views
   WHERE view_name = upper('&v_tblprefix._XML_TABLES');
 
-  IF cnt = 1 THEN
+  IF cnt > 0 THEN
     :xml_select_sql := '&v_tblprefix._XML_TABLES';
   ELSE
     :xml_select_sql := '(SELECT NULL AS con_id, NULL AS owner, NULL AS table_name FROM dual WHERE 1=2)';
