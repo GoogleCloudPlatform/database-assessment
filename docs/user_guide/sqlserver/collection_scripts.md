@@ -1,6 +1,6 @@
 # Gather workload metadata
 
-The workload collection supports Microsoft SQL Server 2016 and newer.  Older versions of Microsoft SQL Server are not currently supported.
+The workload collection supports Microsoft SQL Server 2017 and newer.  Older versions of Microsoft SQL Server are not currently supported.
 
 ## System environment
 
@@ -44,29 +44,21 @@ MS-SERVER1\TESTINSTANCE
 ## Create a Collection User (Optional)
 Refer to the [db_user_create](db_user_create.md) page on how to create a collection user and the permisions required if an existing user is to be used.
 
-If a custom username and password needs to be used for the collection you can either invoke the `InstanceReview.ps1` script directly, passing in the following parameters:
-
-```shell
-InstanceReview.ps1 -user [username] -pass [password]
-```
-
-Or modify the the `RunAssessment.bat` file directly and add the parameters to the execution.
-
 ## Execute the collection scripts
 
 ### Create the Perfmon Dataset
 
 In order to provide the necessary metrics to the assessment tool, a windows perfmon dataset must be created.  The tool will create a dataset with the required metrics, start the collection and automatically shut down after 8 days.  The collection samples only every 60 seconds to avoid being resource intensive.
 
-To create the perfmon dataset invoke powershell and execute the following script `dma_sqlserver_perfmon_dataset.ps1`.
+To create the perfmon dataset invoke powershell and execute the following script `ManageSqlServerPerfmonDataset.bat`.
 
 For a default instance:
 ```powershell
-.\dma_sqlserver_perfmon_dataset.ps1 -create
+.\ManageSqlServerPerfmonDataset.bat -operation create
 ```
 For a named instance:
 ```powershell
-.\dma_sqlserver_perfmon_dataset.ps1 -create -mssqlInstanceName [instance name]
+.\ManageSqlServerPerfmonDataset.bat -operation create -mssqlInstanceName [instance name]
 ```
 
 After an adequate amount of perfmon data has been collected, complete the collection by invoking the collection script `RunAssessment.bat`.
@@ -86,3 +78,28 @@ If you do not wish to specify the password on the command line, the script will 
 ## Upload Collections
 
 Upon completion, the tool will automatically create an archive of the extracted metrics that can be uploaded into the assessment tool.  Deliver the archive to Google for proper analysis.
+
+### Remove the Perfmon Dataset
+
+When the collection is completed and uploaded, you can remove the dataset by following the below instructions
+
+For a default instance:
+```powershell
+.\ManageSqlServerPerfmonDataset.bat -operation delete
+```
+For a named instance:
+```powershell
+.\ManageSqlServerPerfmonDataset.bat -operation delete -mssqlInstanceName [instance name]
+```
+### Manually Stopping the Perfmon Dataset
+
+If the perfmon dataset should need to be stopped for any reason it can be stopped by utilizing the below instructions:
+
+For a default instance:
+```powershell
+.\ManageSqlServerPerfmonDataset.bat -operation delete
+```
+For a named instance:
+```powershell
+.\ManageSqlServerPerfmonDataset.bat -operation delete -mssqlInstanceName [instance name]
+```
