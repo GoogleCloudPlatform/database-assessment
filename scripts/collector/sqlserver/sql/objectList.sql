@@ -52,7 +52,7 @@ BEGIN
     , type 
     , type_desc
     , count(*) AS object_count
-    , SUM(LinesOfCode) AS lines_of_code 
+    , ISNULL(SUM(LinesOfCode),0) AS lines_of_code
     FROM 
     (
         SELECT
@@ -68,16 +68,12 @@ BEGIN
         ) AS LinesOfCode, 
         OBJECT_NAME(o.object_id) AS NameOfObject 
         FROM 
-        sys.all_sql_modules a 
-        JOIN sys.objects o ON a.OBJECT_ID = o.object_id 
-        JOIN sys.schemas s ON s.schema_id = o.schema_id 
+        sys.objects o
+        JOIN sys.schemas s ON s.schema_id = o.schema_id
+		LEFT OUTER JOIN sys.all_sql_modules a ON a.OBJECT_ID = o.object_id
         WHERE 
         o.type NOT IN (
             ''S'' --SYSTEM_TABLE
-            , 
-            ''U'' --USER_TABLE
-            , 
-            ''ET'' --EXTERNAL_TABLE
             , 
             ''IT'' --INTERNAL_TABLE
             ) 
