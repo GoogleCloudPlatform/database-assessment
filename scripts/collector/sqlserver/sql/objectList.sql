@@ -70,7 +70,7 @@ BEGIN
         FROM 
         sys.objects o
         JOIN sys.schemas s ON s.schema_id = o.schema_id
-		LEFT OUTER JOIN sys.all_sql_modules a ON a.OBJECT_ID = o.object_id
+        LEFT OUTER JOIN sys.all_sql_modules a ON a.OBJECT_ID = o.object_id
         WHERE 
         o.type NOT IN (
             ''S'' --SYSTEM_TABLE
