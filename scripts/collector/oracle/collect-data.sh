@@ -102,16 +102,11 @@ V_FILE_TAG=$1
 echo "Checking for errors..."
 $GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
 retval=$?
-if [ $retval -eq 1 ]; then 
-  retval=0
-fi
-if [ $retval -gt 1 ]; then
+if [ ! -f  ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ]; then
   echo "Error creating error log.  Exiting..."
   return $retval
 fi
-if [ -f  ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv ]; then
 $GREP 'sys.dbms_qopatch.get_opatch_lsinventory' ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv >> ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
-fi
 }
 
 function cleanupOpOutput  {
