@@ -96,7 +96,27 @@ SELECT pkey,
        PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P95,
        PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P95
+         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P95,
+       PERCENTILE_CONT(0.00)
+         within GROUP (ORDER BY sm_read_mb_delta_value DESC) AS sm_read_mb_delta_value_P100,
+       PERCENTILE_CONT(0.00)
+         within GROUP (ORDER BY sm_write_mb_delta_value DESC) AS sm_write_mb_delta_value_P100,
+       PERCENTILE_CONT(0.00)
+         within GROUP (ORDER BY sm_read_rq_delta_value DESC) AS sm_read_rq_delta_value_P100,
+       PERCENTILE_CONT(0.00)
+         within GROUP (ORDER BY sm_write_rq_delta_value DESC) AS sm_write_rq_delta_value_P100,
+       PERCENTILE_CONT(0.00)
+         within GROUP (ORDER BY lg_read_mb_delta_value DESC) AS lg_read_mb_delta_value_P100,
+       PERCENTILE_CONT(0.00)
+         within GROUP (ORDER BY lg_write_mb_delta_value DESC) AS lg_write_mb_delta_value_P100,
+       PERCENTILE_CONT(0.00)
+         within GROUP (ORDER BY lg_read_rq_delta_value DESC) AS lg_read_rq_delta_value_P100,
+       PERCENTILE_CONT(0.00)
+         within GROUP (ORDER BY lg_write_rq_delta_value DESC) AS lg_write_rq_delta_value_P100,
+       PERCENTILE_CONT(0.00)
+         within GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P100,
+       PERCENTILE_CONT(0.00)
+         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P100
 FROM vrawiof
 GROUP BY pkey,
          dbid,
@@ -122,7 +142,21 @@ SELECT pkey,
        ROUND(sm_read_mb_delta_value_P95 + lg_read_mb_delta_value_P95) total_reads_mb_P95,
        ROUND(sm_read_rq_delta_value_P95 + lg_read_rq_delta_value_P95) total_reads_req_P95,
        ROUND(sm_write_mb_delta_value_P95 + lg_write_mb_delta_value_P95) total_writes_mb_P95,
-       ROUND(sm_write_rq_delta_value_P95 + lg_write_rq_delta_value_P95) total_write_req_P95
+       ROUND(sm_write_rq_delta_value_P95 + lg_write_rq_delta_value_P95) total_write_req_P95,
+       ROUND(sm_read_mb_delta_value_P100) sm_read_mb_delta_value_P100,
+       ROUND(sm_write_mb_delta_value_P100) sm_write_mb_delta_value_P100,
+       ROUND(sm_read_rq_delta_value_P100) sm_read_rq_delta_value_P100,
+       ROUND(sm_write_rq_delta_value_P100) sm_write_rq_delta_value_P100,
+       ROUND(lg_read_mb_delta_value_P100) lg_read_mb_delta_value_P100,
+       ROUND(lg_write_mb_delta_value_P100) lg_write_mb_delta_value_P100,
+       ROUND(lg_read_rq_delta_value_P100) lg_read_rq_delta_value_P100,
+       ROUND(lg_write_rq_delta_value_P100) lg_write_rq_delta_value_P100,
+       ROUND(no_iowait_delta_value_P100) no_iowait_delta_value_P100,
+       ROUND(tot_watime_delta_value_P100) tot_watime_delta_value_P100,
+       ROUND(sm_read_mb_delta_value_P100 + lg_read_mb_delta_value_P100) total_reads_mb_P100,
+       ROUND(sm_read_rq_delta_value_P100 + lg_read_rq_delta_value_P100) total_reads_req_P100,
+       ROUND(sm_write_mb_delta_value_P100 + lg_write_mb_delta_value_P100) total_writes_mb_P100,
+       ROUND(sm_write_rq_delta_value_P100 + lg_write_rq_delta_value_P100) total_write_req_P100
 FROM vperciof)
 SELECT pkey , dbid , instance_number , hour , function_name ,
        sm_read_mb_delta_value_P95 ,
@@ -138,6 +172,20 @@ SELECT pkey , dbid , instance_number , hour , function_name ,
        total_reads_mb_P95 ,
        total_reads_req_P95 ,
        total_writes_mb_P95 ,
-       total_write_req_P95
+       total_write_req_P95,
+       sm_read_mb_delta_value_P100 ,
+       sm_write_mb_delta_value_P100 ,
+       sm_read_rq_delta_value_P100 ,
+       sm_write_rq_delta_value_P100 ,
+       lg_read_mb_delta_value_P100 ,
+       lg_write_mb_delta_value_P100 ,
+       lg_read_rq_delta_value_P100 ,
+       lg_write_rq_delta_value_P100 ,
+       no_iowait_delta_value_P100 ,
+       tot_watime_delta_value_P100 ,
+       total_reads_mb_P100 ,
+       total_reads_req_P100 ,
+       total_writes_mb_P100 ,
+       total_write_req_P100
 FROM viof;
 spool off

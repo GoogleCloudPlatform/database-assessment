@@ -19,6 +19,27 @@ COLUMN NESTED    FORMAT A20
 COLUMN CLUSTERED_TABLE FORMAT A20
 COLUMN OBJECT_TABLE FORMAT A20
 COLUMN XML_TABLE FORMAT A20
+
+VARIABLE xml_select_sql VARCHAR2(100);
+COLUMN p_xml_select new_value v_xml_select noprint
+
+DECLARE
+  cnt NUMBER;
+BEGIN
+  SELECT count(1) INTO cnt
+  FROM &v_tblprefix._views
+  WHERE view_name = upper('&v_tblprefix._XML_TABLES');
+
+  IF cnt > 0 THEN
+    :xml_select_sql := '&v_tblprefix._XML_TABLES';
+  ELSE
+    :xml_select_sql := '(SELECT NULL AS con_id, NULL AS owner, NULL AS table_name FROM dual WHERE 1=2)';
+  END IF;
+END;
+/
+
+SELECT :xml_select_sql AS p_xml_select FROM dual;
+
 spool &outputdir/opdb__tabletypedtl__&v_tag
 WITH tblinfo AS (
 SELECT
@@ -55,7 +76,7 @@ SELECT
     'N' clustered_table,
     'N' AS object_table,
     'Y' AS xml_table
-FROM &v_tblprefix._XML_tables b
+FROM &v_xml_select b
 WHERE b.owner NOT IN (
 @&EXTRACTSDIR/exclude_schemas.sql
        )  
