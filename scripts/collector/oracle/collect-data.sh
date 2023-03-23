@@ -43,9 +43,6 @@ if [ "${ZIP}" = "" ]
   GZIP=$(which gzip 2>/dev/null)
 fi
 
-if [ ! -d ${TMP_DIR} ]; then
-   mkdir -p ${LOG_DIR}
-fi
 if [ ! -d ${LOG_DIR} ]; then
    mkdir -p ${LOG_DIR}
 fi
@@ -83,10 +80,6 @@ if ! [ -x "$(command -v sqlplus)" ]; then
   echo "Exiting..."
 fi
 
-if ! [ -f /tmp/dirs.sql ]; then
-echo define outputdir=$OUTPUT_DIR > /tmp/dirs.sql
-echo define v_tag=$V_TAG >> /tmp/dirs.sql
-fi
 
 sqlplus -s /nolog << EOF
 connect ${connectString}
@@ -94,7 +87,6 @@ connect ${connectString}
 exit;
 EOF
 
-#rm /tmp/dirs.sql
 }
 
 function createErrorLog {
