@@ -19,105 +19,124 @@ Please ensure you have proper licensing. For more information consult Oracle Sup
 */
 
 /* sys.dm_os_host_info - Applies to: SQL Server 2017 (14.x) and later */
-
 SET NOCOUNT ON
 DECLARE @PKEY AS VARCHAR(256)
-select @PKEY = N'$(pkey)';
-SELECT @PKEY as PKEY,'BuildClrVersion' AS Property, SERVERPROPERTY('BuildClrVersion') AS Value
+DECLARE @PRODUCT_VERSION AS VARCHAR(30)
+SELECT @PRODUCT_VERSION = PARSENAME(CAST(SERVERPROPERTY('productversion') AS varchar(20)), 4);
+SELECT @PKEY = N'$(pkey)';
+
+IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  
+   DROP TABLE #serverProperties;
+
+CREATE TABLE #serverProperties(
+    property_name nvarchar(255)
+    ,property_value nvarchar(255)
+);
+    
+INSERT INTO #serverProperties
+SELECT 'BuildClrVersion' AS Property, SERVERPROPERTY('BuildClrVersion') AS Value
 UNION ALL
-SELECT @PKEY as PKEY,'Collation', SERVERPROPERTY('Collation')
+SELECT 'Collation', SERVERPROPERTY('Collation')
 UNION ALL
-SELECT @PKEY as PKEY,'CollationID', SERVERPROPERTY('CollationID')
+SELECT 'CollationID', SERVERPROPERTY('CollationID')
 UNION ALL
-SELECT @PKEY as PKEY,'ComparisonStyle', SERVERPROPERTY('ComparisonStyle')
+SELECT 'ComparisonStyle', SERVERPROPERTY('ComparisonStyle')
 UNION ALL
-SELECT @PKEY as PKEY,'Edition', SERVERPROPERTY('Edition')
+SELECT 'Edition', SERVERPROPERTY('Edition')
 UNION ALL
-SELECT @PKEY as PKEY,'EditionID', SERVERPROPERTY('EditionID')
+SELECT 'EditionID', SERVERPROPERTY('EditionID')
 UNION ALL
-SELECT @PKEY as PKEY,'EngineEdition', SERVERPROPERTY('EngineEdition')
+SELECT 'EngineEdition', SERVERPROPERTY('EngineEdition')
 UNION ALL
-SELECT @PKEY as PKEY,'HadrManagerStatus', SERVERPROPERTY('HadrManagerStatus')
+SELECT 'HadrManagerStatus', SERVERPROPERTY('HadrManagerStatus')
 UNION ALL
-SELECT @PKEY as PKEY,'InstanceName', SERVERPROPERTY('InstanceName')
+SELECT 'InstanceName', SERVERPROPERTY('InstanceName')
 UNION ALL
-SELECT @PKEY as PKEY,'IsAdvancedAnalyticsInstalled', SERVERPROPERTY('IsAdvancedAnalyticsInstalled')
+SELECT 'IsAdvancedAnalyticsInstalled', SERVERPROPERTY('IsAdvancedAnalyticsInstalled')
 UNION ALL
-SELECT @PKEY as PKEY,'IsClustered', SERVERPROPERTY('IsClustered')
+SELECT 'IsClustered', SERVERPROPERTY('IsClustered')
 UNION ALL
-SELECT @PKEY as PKEY,'IsFullTextInstalled', SERVERPROPERTY('IsFullTextInstalled')
+SELECT 'IsFullTextInstalled', SERVERPROPERTY('IsFullTextInstalled')
 UNION ALL
-SELECT @PKEY as PKEY,'IsHadrEnabled', SERVERPROPERTY('IsHadrEnabled')
+SELECT 'IsHadrEnabled', SERVERPROPERTY('IsHadrEnabled')
 UNION ALL
-SELECT @PKEY as PKEY,'IsIntegratedSecurityOnly', SERVERPROPERTY('IsIntegratedSecurityOnly')
+SELECT 'IsIntegratedSecurityOnly', SERVERPROPERTY('IsIntegratedSecurityOnly')
 UNION ALL
-SELECT @PKEY as PKEY,'IsLocalDB', SERVERPROPERTY('IsLocalDB')
+SELECT 'IsLocalDB', SERVERPROPERTY('IsLocalDB')
 UNION ALL
-SELECT @PKEY as PKEY,'IsPolyBaseInstalled', SERVERPROPERTY('IsPolyBaseInstalled')
+SELECT 'IsPolyBaseInstalled', SERVERPROPERTY('IsPolyBaseInstalled')
 UNION ALL
-SELECT @PKEY as PKEY,'IsSingleUser', SERVERPROPERTY('IsSingleUser')
+SELECT 'IsSingleUser', SERVERPROPERTY('IsSingleUser')
 UNION ALL
-SELECT @PKEY as PKEY,'IsXTPSupported', SERVERPROPERTY('IsXTPSupported')
+SELECT 'IsXTPSupported', SERVERPROPERTY('IsXTPSupported')
 UNION ALL
-SELECT @PKEY as PKEY,'LCID', SERVERPROPERTY('LCID')
+SELECT 'LCID', SERVERPROPERTY('LCID')
 UNION ALL
-SELECT @PKEY as PKEY,'LicenseType', SERVERPROPERTY('LicenseType')
+SELECT 'LicenseType', SERVERPROPERTY('LicenseType')
 UNION ALL
-SELECT @PKEY as PKEY,'MachineName', SERVERPROPERTY('MachineName')
+SELECT 'MachineName', SERVERPROPERTY('MachineName')
 UNION ALL
-SELECT @PKEY as PKEY,'NumLicenses', SERVERPROPERTY('NumLicenses')
+SELECT 'NumLicenses', SERVERPROPERTY('NumLicenses')
 UNION ALL
-SELECT @PKEY as PKEY,'ProcessID', SERVERPROPERTY('ProcessID')
+SELECT 'ProcessID', SERVERPROPERTY('ProcessID')
 UNION ALL
-SELECT @PKEY as PKEY,'ProductBuild', SERVERPROPERTY('ProductBuild')
+SELECT 'ProductBuild', SERVERPROPERTY('ProductBuild')
 UNION ALL
-SELECT @PKEY as PKEY,'ProductBuildType', SERVERPROPERTY('ProductBuildType')
+SELECT 'ProductBuildType', SERVERPROPERTY('ProductBuildType')
 UNION ALL
-SELECT @PKEY as PKEY,'ProductLevel', SERVERPROPERTY('ProductLevel')
+SELECT 'ProductLevel', SERVERPROPERTY('ProductLevel')
 UNION ALL
-SELECT @PKEY as PKEY,'ProductMajorVersion', SERVERPROPERTY('ProductMajorVersion')
+SELECT 'ProductMajorVersion', SERVERPROPERTY('ProductMajorVersion')
 UNION ALL
-SELECT @PKEY as PKEY,'ProductMinorVersion', SERVERPROPERTY('ProductMinorVersion')
+SELECT 'ProductMinorVersion', SERVERPROPERTY('ProductMinorVersion')
 UNION ALL
-SELECT @PKEY as PKEY,'ProductUpdateLevel', SERVERPROPERTY('ProductUpdateLevel')
+SELECT 'ProductUpdateLevel', SERVERPROPERTY('ProductUpdateLevel')
 UNION ALL
-SELECT @PKEY as PKEY,'ProductUpdateReference', SERVERPROPERTY('ProductUpdateReference')
+SELECT 'ProductUpdateReference', SERVERPROPERTY('ProductUpdateReference')
 UNION ALL
-SELECT @PKEY as PKEY,'ProductVersion', SERVERPROPERTY('ProductVersion')
+SELECT 'ProductVersion', SERVERPROPERTY('ProductVersion')
 UNION ALL
-SELECT @PKEY as PKEY,'ResourceLastUpdateDateTime', SERVERPROPERTY('ResourceLastUpdateDateTime')
+SELECT 'ResourceLastUpdateDateTime', SERVERPROPERTY('ResourceLastUpdateDateTime')
 UNION ALL
-SELECT @PKEY as PKEY,'ResourceVersion', SERVERPROPERTY('ResourceVersion')
+SELECT 'ResourceVersion', SERVERPROPERTY('ResourceVersion')
 UNION ALL
-SELECT @PKEY as PKEY,'ServerName', SERVERPROPERTY('ServerName')
+SELECT 'ServerName', SERVERPROPERTY('ServerName')
 UNION ALL
-SELECT @PKEY as PKEY,'SqlCharSet', SERVERPROPERTY('SqlCharSet')
+SELECT 'SqlCharSet', SERVERPROPERTY('SqlCharSet')
 UNION ALL
-SELECT @PKEY as PKEY,'SqlCharSetName', SERVERPROPERTY('SqlCharSetName')
+SELECT 'SqlCharSetName', SERVERPROPERTY('SqlCharSetName')
 UNION ALL
-SELECT @PKEY as PKEY,'SqlSortOrder', SERVERPROPERTY('SqlSortOrder')
+SELECT 'SqlSortOrder', SERVERPROPERTY('SqlSortOrder')
 UNION ALL
-SELECT @PKEY as PKEY,'SqlSortOrderName', SERVERPROPERTY('SqlSortOrderName')
+SELECT 'SqlSortOrderName', SERVERPROPERTY('SqlSortOrderName')
 UNION ALL
-SELECT @PKEY as PKEY,'FilestreamShareName', SERVERPROPERTY('FilestreamShareName')
+SELECT 'FilestreamShareName', SERVERPROPERTY('FilestreamShareName')
 UNION ALL
-SELECT @PKEY as PKEY,'FilestreamConfiguredLevel', SERVERPROPERTY('FilestreamConfiguredLevel')
+SELECT 'FilestreamConfiguredLevel', SERVERPROPERTY('FilestreamConfiguredLevel')
 UNION ALL
-SELECT @PKEY as PKEY,'FilestreamEffectiveLevel', SERVERPROPERTY('FilestreamEffectiveLevel')
+SELECT 'FilestreamEffectiveLevel', SERVERPROPERTY('FilestreamEffectiveLevel')
 UNION ALL
-SELECT @PKEY as PKEY,'HostPlatform', host_platform FROM sys.dm_os_host_info
+SELECT 'IsRpcOutEnabled', is_rpc_out_enabled FROM sys.servers WHERE name = @@SERVERNAME
 UNION ALL
-SELECT @PKEY as PKEY,'HostDistribution', host_distribution FROM sys.dm_os_host_info
+SELECT 'IsRemoteProcTransactionPromotionEnabled', is_remote_proc_transaction_promotion_enabled FROM sys.servers WHERE name = @@SERVERNAME
 UNION ALL
-SELECT @PKEY as PKEY,'HostRelease', host_release FROM sys.dm_os_host_info
+SELECT 'IsBufferPoolExtensionEnabled', state FROM sys.dm_os_buffer_pool_extension_configuration
 UNION ALL
-SELECT @PKEY as PKEY,'HostServicePackLevel', host_service_pack_level FROM sys.dm_os_host_info
-UNION ALL
-SELECT @PKEY as PKEY,'HostOsLanguageVersion', os_language_version FROM sys.dm_os_host_info
-UNION ALL
-SELECT @PKEY as PKEY,'IsRemoteLoginEnabled', is_remote_login_enabled FROM sys.servers WHERE name = @@SERVERNAME
-UNION ALL
-SELECT @PKEY as PKEY,'IsRpcOutEnabled', is_rpc_out_enabled FROM sys.servers WHERE name = @@SERVERNAME
-UNION ALL
-SELECT @PKEY as PKEY,'IsRemoteProcTransactionPromotionEnabled', is_remote_proc_transaction_promotion_enabled FROM sys.servers WHERE name = @@SERVERNAME
-;
+SELECT 'IsRemoteLoginEnabled', is_remote_login_enabled FROM sys.servers WHERE name = @@SERVERNAME;
+IF @PRODUCT_VERSION >= 15
+BEGIN
+ exec('INSERT INTO #serverProperties SELECT ''IsHybridBufferPoolEnabled'', CONVERT(varchar,is_enabled) from sys.server_memory_optimized_hybrid_buffer_pool_configuration /* SQL Server 2019 (15.x) and later versions */');
+END;
+IF @PRODUCT_VERSION >= 14
+BEGIN
+ exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', host_platform FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+ exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', host_distribution FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+ exec('INSERT INTO #serverProperties SELECT ''HostRelease'', host_release FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+ exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', host_service_pack_level FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+ exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'', os_language_version FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+END;
+
+SELECT @PKEY as PKEY, a.* FROM #serverProperties a;
+
+IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  
+   DROP TABLE #serverProperties;
