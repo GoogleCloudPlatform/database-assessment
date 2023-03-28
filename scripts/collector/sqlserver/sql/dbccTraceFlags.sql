@@ -32,7 +32,7 @@ CREATE TABLE #dbccTraceTable (
     [session] int
 );
 
-INSERT INTO #dbccTraceTable exec('dbcc tracestatus()')
+INSERT INTO #dbccTraceTable exec('dbcc tracestatus()');
 
 SELECT @PKEY as PKEY, a.* from #dbccTraceTable a;
 
