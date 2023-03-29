@@ -149,9 +149,13 @@ SELECT 'IsPolybaseEnabled', CONVERT(varchar, value_in_use) from sys.configuratio
 UNION ALL
 SELECT 'IsExternalScriptsEnabled', CONVERT(varchar, value_in_use) from sys.configurations where name = 'external scripts enabled'
 UNION ALL
+SELECT 'IsCLREnabled', CONVERT(varchar, value_in_use) from sys.configurations where name = 'clr enabled'
+UNION ALL
 SELECT 'IsResourceGovenorEnabled', CONVERT(varchar, is_enabled) from sys.resource_governor_configuration
 UNION ALL
 SELECT 'IsTDEInUse', CONVERT(nvarchar, count(*)) from sys.databases where is_encrypted <> 0
+UNION ALL
+SELECT 'IsDTCInUse', CONVERT(nvarchar, count(*)) from sys.availability_groups where dtc_support is not null
 UNION ALL
 WITH log_shipping_count AS (
     SELECT
