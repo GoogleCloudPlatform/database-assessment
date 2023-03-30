@@ -95,7 +95,7 @@ SELECT 'ProductUpdateReference', CONVERT(nvarchar, SERVERPROPERTY('ProductUpdate
 UNION ALL
 SELECT 'ProductVersion', CONVERT(nvarchar, SERVERPROPERTY('ProductVersion'))
 UNION ALL
-SELECT 'ResourceLastUpdateDateTime', CONVERT(nvarchar, SERVERPROPERTY('ResourceLastUpdateDateTime'))
+SELECT 'ResourceLastUpdateDateTime', LTRIM(RTRIM(REPLACE(CONVERT(nvarchar, SERVERPROPERTY('ResourceLastUpdateDateTime')),'  ',' ')))
 UNION ALL
 SELECT 'ResourceVersion', CONVERT(nvarchar, SERVERPROPERTY('ResourceVersion'))
 UNION ALL
@@ -157,6 +157,11 @@ SELECT 'IsTDEInUse', CONVERT(nvarchar, count(*)) from sys.databases where is_enc
 UNION ALL
 SELECT 'IsDTCInUse', CONVERT(nvarchar, count(*)) from sys.availability_groups where dtc_support is not null
 UNION ALL
+SELECT 'ServerLevelTriggers', CONVERT(varchar, count(*)) from sys.server_triggers
+UNION ALL
+SELECT 'CountServiceBrokerEndpoints', CONVERT(varchar, count(*)) from sys.service_broker_endpoints
+UNION ALL
+SELECT 'CountTSQLEndpoints', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535;
 WITH log_shipping_count AS (
     SELECT
         count(*) log_shipping
@@ -168,16 +173,10 @@ WITH log_shipping_count AS (
     FROM
         msdb..log_shipping_secondary_databases
 )
-SELECT
+INSERT INTO #serverProperties SELECT
     'IsLogShippingEnabled', CONVERT(varchar,sum(log_shipping))
 FROM
-    log_shipping_count
-UNION ALL
-SELECT 'ServerLevelTriggers', CONVERT(varchar, count(*)) from sys.server_triggers
-UNION ALL
-SELECT 'CountServiceBrokerEndpoints', CONVERT(varchar, count(*)) from sys.service_broker_endpoints
-UNION ALL
-SELECT 'CountTSQLEndpoints', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535;
+    log_shipping_count;
 IF @PRODUCT_VERSION >= 15
 BEGIN
  exec('INSERT INTO #serverProperties SELECT ''IsHybridBufferPoolEnabled'', CONVERT(nvarchar,is_enabled) from sys.server_memory_optimized_hybrid_buffer_pool_configuration /* SQL Server 2019 (15.x) and later versions */');
