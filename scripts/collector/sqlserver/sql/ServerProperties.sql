@@ -161,6 +161,10 @@ SELECT 'ServerLevelTriggers', CONVERT(varchar, count(*)) from sys.server_trigger
 UNION ALL
 SELECT 'CountServiceBrokerEndpoints', CONVERT(varchar, count(*)) from sys.service_broker_endpoints
 UNION ALL
+SELECT 'LogicalCpuCount', CONVERT(varchar, cpu_count) from sys.dm_os_sys_info
+UNION ALL
+SELECT 'PhysicalCpuCount', CONVERT(varchar, (cpu_count/hyperthread_ratio)) from sys.dm_os_sys_info
+UNION ALL
 SELECT 'CountTSQLEndpoints', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535;
 WITH log_shipping_count AS (
     SELECT
