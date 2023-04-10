@@ -33,7 +33,7 @@ foreach($item in $objs) {
     $current_ts = $values[4]
     $pkey = $values[5]
 
-    $op_version = "4.3.1"
+    $op_version = "4.3.2"
 
     $foldername = 'opdb' + '_' + 'mssql' + '_' + 'PerfCounter' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
 
