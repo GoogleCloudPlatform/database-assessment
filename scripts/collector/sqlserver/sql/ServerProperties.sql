@@ -125,6 +125,8 @@ SELECT 'IsRemoteLoginEnabled', CONVERT(nvarchar, is_remote_login_enabled) FROM s
 UNION ALL
 SELECT 'IsFileStreamEmabled', CONVERT(nvarchar, count(*)) FROM sys.database_filestream_options where non_transacted_access <> 0
 UNION ALL
+SELECT 'FullVersion', REPLACE(REPLACE(@@version, CHAR(13), ' '), CHAR(10), ' ')
+UNION ALL
 SELECT
     'MaintenancePlansEnabled',
     CONVERT(nvarchar, count(*))
@@ -165,6 +167,8 @@ SELECT 'LogicalCpuCount', CONVERT(varchar, cpu_count) from sys.dm_os_sys_info
 UNION ALL
 SELECT 'PhysicalCpuCount', CONVERT(varchar, (cpu_count/hyperthread_ratio)) from sys.dm_os_sys_info
 UNION ALL
+SELECT 'SqlServerStartTime', CONVERT(varchar, (sqlserver_start_time)) from sys.dm_os_sys_info
+UNION ALL
 SELECT 'CountTSQLEndpoints', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535;
 WITH log_shipping_count AS (
     SELECT
@@ -184,6 +188,14 @@ FROM
 IF @PRODUCT_VERSION >= 15
 BEGIN
  exec('INSERT INTO #serverProperties SELECT ''IsHybridBufferPoolEnabled'', CONVERT(nvarchar,is_enabled) from sys.server_memory_optimized_hybrid_buffer_pool_configuration /* SQL Server 2019 (15.x) and later versions */');
+END;
+IF @PRODUCT_VERSION < 14
+BEGIN
+ exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows'' FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
+ exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' '') /* SQL Server 2016 (13.x) and prior */');
+ exec('INSERT INTO #serverProperties SELECT ''HostRelease'', CONVERT(nvarchar,windows_release) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
+ exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', CONVERT(nvarchar,windows_service_pack_level) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
+ exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',CONVERT(nvarchar, os_language_version) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
 END;
 IF @PRODUCT_VERSION >= 14
 BEGIN
