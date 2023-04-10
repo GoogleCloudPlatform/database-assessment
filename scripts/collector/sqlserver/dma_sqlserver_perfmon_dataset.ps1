@@ -388,7 +388,7 @@ param(
 	[string]$perfmonOutFile,
 	[string]$pkey
 	)
-	Write-Output "Collecting results from the Google DMA SQL Server Perfmon Counter Data Set.."
+	Write-Output "Collecting results from the Google DMA SQL Server Perfmon Counter Data Set."
 	$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
 	$outputFileName = $perfmonOutFile
 
