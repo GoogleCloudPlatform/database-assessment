@@ -11,7 +11,8 @@ FROM DUAL;
 @&AWRDIR/dbahistsysstat.sql
 @&AWRDIR/dbahistsystimemodel.sql
 @&AWRDIR/ioevents.sql
-@&AWRDIR/iofunction.sql
+--@&AWRDIR/iofunction.sql
+@&AWRDIR/&v_io_function_sql
 @&AWRDIR/sourceconn.sql
 @&v_sqlstats
 

@@ -52,6 +52,18 @@ variable maxsnap NUMBER;
 variable umfflag VARCHAR2(100);
 variable pdb_logging_flag VARCHAR2(1);
 variable dflt_value_flag  VARCHAR2(1);
+variable b_compress_col VARCHAR2(20);
+
+variable b_lob_compression_col         VARCHAR2(30);
+variable b_lob_part_compression_col    VARCHAR2(30);
+variable b_lob_subpart_compression_col VARCHAR2(30);
+variable b_lob_dedup_col               VARCHAR2(30);
+variable b_lob_part_dedup_col          VARCHAR2(30);
+variable b_lob_subpart_dedup_col       VARCHAR2(30);
+
+variable b_index_visibility            VARCHAR2(30);
+
+variable b_io_function_sql             VARCHAR2(20);
 
 column instnc new_value v_inst noprint
 column hostnc new_value v_host noprint
@@ -70,6 +82,15 @@ column p_dopluggable new_value v_dopluggable noprint
 column p_db_container_col new_value v_db_container_col noprint
 column p_pluggablelogging new_value v_pluggablelogging noprint
 column p_sqlcmd new_value v_sqlcmd noprint
+column p_compress_col new_value v_compress_col noprint
+column p_lob_compression_col new_value v_lob_compression_col noprint
+column p_lob_part_compression_col new_value v_lob_part_compression_col noprint
+column p_lob_subpart_compression_col new_value v_lob_subpart_compression_col noprint
+column p_lob_dedup_col new_value v_lob_dedup_col noprint
+column p_lob_part_dedup_col new_value v_lob_part_dedup_col noprint
+column p_lob_subpart_dedup_col new_value v_lob_subpart_dedup_col noprint
+column p_index_visibility new_value v_index_visibility noprint
+column p_io_function_sql new_value v_io_function_sql noprint
 
 SELECT host_name     hostnc,
        instance_name instnc
@@ -186,6 +207,35 @@ SELECT CASE WHEN :dflt_value_flag = 'N' THEN '''N/A''' ELSE 'DEFAULT_VALUE' END 
        CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN 'sqlcmd10g.sql' ELSE 'sqlcmd.sql' END AS p_sqlcmd
 FROM DUAL;
 
+DECLARE 
+  cnt NUMBER;
+BEGIN
+  SELECT count(1) INTO cnt FROM dba_tab_columns WHERE table_name = 'DBA_TABLES' AND column_name ='COMPRESS_FOR';
+  IF cnt = 1 THEN :b_compress_col := 'COMPRESS_FOR';
+  ELSE
+    SELECT count(1) INTO cnt FROM dba_tab_columns WHERE table_name = 'DBA_TABLES' AND column_name = 'COMPRESSION';
+    IF cnt = 1 THEN :b_compress_col := 'COMPRESSION';
+    END IF;
+  END IF;
+END;
+/
+
+SELECT :b_compress_col AS p_compress_col FROM dual;
+
+
+DECLARE
+cnt NUMBER;
+BEGIN
+  SELECT count(1) INTO cnt FROM dba_tables WHERE table_name = 'DBA_HIST_IOSTAT_FUNCTION';
+  IF cnt = 1 OR (cnt = 1 AND '&v_dodiagnostics' = 'usediagnostics') THEN :b_io_function_sql := 'iofunction.sql';
+  ELSE 
+    :b_io_function_sql := 'noop.sql';
+  END IF;
+END;
+/
+
+SELECT :b_io_function_sql AS p_io_function_sql FROM dual;
+
 
 set serveroutput on
 DECLARE cnt NUMBER;
@@ -210,6 +260,51 @@ FROM dual
 SELECT &v_umf_test p_dbid
 FROM   v$database
 /
+
+DECLARE 
+  cnt NUMBER;
+BEGIN
+  SELECT count(1) INTO cnt FROM dba_tab_columns WHERE table_name = 'DBA_LOBS' AND column_name = 'COMPRESSION';
+  IF cnt = 1 THEN
+    :b_lob_compression_col         := 'l.compression';
+    :b_lob_part_compression_col    := 'lp.compression'; 
+    :b_lob_subpart_compression_col := 'lsp.compression'; 
+    :b_lob_dedup_col               := 'l.deduplication';
+    :b_lob_part_dedup_col          := 'lp.deduplication';
+    :b_lob_subpart_dedup_col       := 'lsp.deduplication';
+  ELSE
+    :b_lob_compression_col         := '''N/A''';
+    :b_lob_part_compression_col    := '''N/A''';
+    :b_lob_subpart_compression_col := '''N/A''';
+    :b_lob_dedup_col               := '''N/A''';
+    :b_lob_part_dedup_col          := '''N/A''';
+    :b_lob_subpart_dedup_col       := '''N/A''';
+  END IF;
+END;
+/
+
+SELECT 
+:b_lob_compression_col         AS p_lob_compression_col ,
+:b_lob_part_compression_col    AS p_lob_part_compression_col ,
+:b_lob_subpart_compression_col AS p_lob_subpart_compression_col ,
+:b_lob_dedup_col               AS p_lob_dedup_col ,
+:b_lob_part_dedup_col          AS p_lob_part_dedup_col ,
+:b_lob_subpart_dedup_col       AS p_lob_subpart_dedup_col 
+FROM DUAL;
+
+DECLARE
+  cnt NUMBER;
+BEGIN
+  SELECT count(1) INTO cnt FROM dba_tab_columns WHERE table_name = 'DBA_INDEXES' AND column_name = 'VISIBILITY';
+  IF cnt = 1 THEN 
+    :b_index_visibility := 'VISIBILITY';
+  ELSE
+    :b_index_visibility := '''N/A''';
+  END IF;
+END;
+/
+
+SELECT :b_index_visibility AS p_index_visibility FROM DUAL;
 
 variable sp VARCHAR2(100);
 variable v_info_prompt VARCHAR2(200);

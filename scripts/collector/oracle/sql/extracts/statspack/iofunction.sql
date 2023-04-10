@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+column hour format a4
 spool &outputdir/opdb__iofunction__&v_tag
 
 WITH vrawiof AS (
@@ -144,3 +145,5 @@ SELECT pkey , dbid , instance_number , hour , function_name ,
        total_write_req_P95
 FROM viof;
 spool off
+column hour clear
+

@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+column hour format a4
 spool &outputdir/opdb__ioevents__&v_tag
 
 WITH vrawev AS (
@@ -88,3 +89,4 @@ SELECT pkey , dbid , instance_number , hour , wait_class , event_name ,
        time_wa_us_delta_value_P95
 FROM vfev;
 spool off
+column hour clear

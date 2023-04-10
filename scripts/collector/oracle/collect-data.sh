@@ -98,7 +98,9 @@ if [ ! -f  ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ]; then
   echo "Error creating error log.  Exiting..."
   return $retval
 fi
-$GREP 'sys.dbms_qopatch.get_opatch_lsinventory' ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv >> ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+if [ -f  ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv ]; then
+  $GREP 'sys.dbms_qopatch.get_opatch_lsinventory' ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv >> ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+fi
 }
 
 function cleanupOpOutput  {
@@ -253,7 +255,7 @@ if [ $retval -eq 0 ]; then
     if [ "${dbmajor}" = "10" ]
     then
        echo "Oracle 10 is not supported yet, exiting."
-      exit
+      #exit
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
     executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS}
