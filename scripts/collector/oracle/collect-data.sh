@@ -62,8 +62,8 @@ if ! [ -x "$(command -v sqlplus)" ]; then
 fi
 
 sqlplus -s /nolog << EOF
-set pagesize 0 lines 400 feedback off verify off heading off echo off
 connect ${connectString}
+set pagesize 0 lines 400 feedback off verify off heading off echo off timing off
 select i.version||'|'||substr(replace(i.version,'.',''),0,3)||'_'||'${OpVersion}_'||i.host_name||'_'||d.name||'_'||i.instance_name||'_'||to_char(sysdate,'MMDDRRHH24MISS')
 from v\$instance i, v\$database d;
 exit;
