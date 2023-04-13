@@ -33,6 +33,7 @@ SELECT '&&v_host'
 FROM   &v_tblprefix._tab_columns a
 WHERE  owner NOT IN
 @&EXTRACTSDIR/exclude_schemas.sql
+  AND ( ( &v_a_con_id, owner, table_name) NOT IN (SELECT &v_a_con_id, owner, view_name FROM &v_tblprefix._views) )
 GROUP  BY '&&v_host'
           || '_'
           || '&&v_dbname'

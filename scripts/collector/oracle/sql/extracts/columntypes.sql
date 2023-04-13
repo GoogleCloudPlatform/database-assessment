@@ -80,6 +80,7 @@ FROM
         WHERE
             owner NOT IN 
 @&EXTRACTSDIR/exclude_schemas.sql
+          AND ( ( &v_a_con_id, owner, table_name) NOT IN (SELECT &v_a_con_id, owner, view_name FROM &v_tblprefix._views) )
            ) 
     ) PIVOT (
         SUM(col_count)

@@ -23,62 +23,7 @@ define version = '&1'
 define dtrange = 30
 define colspr = '|'
 
-clear col comp brea
-set arraysize 15
-set autocommit OFF
-set autoprint OFF
-set autorecovery OFF
-set autotrace OFF
-set blockterminator "."
-btitle OFF
-set cmdsep OFF
-set compatibility NATIVE
-set concat "."
-set copycommit 0
-set COPYTYPECHECK  ON
-set define "&"
-set describe DEPTH 1 LINENUM OFF INDENT ON
-set editfile "afiedt.buf"
-set embedded OFF
-set escape OFF
-set escchar OFF
-set exitcommit ON
-set flagger OFF
-set flush ON
-set linesize 80
-set loboffset 1
-set logsource ""
-set long 80
-set longchunksize 80
-set markup HTML OFF
-set newpage 1
-set null ""
-set numformat ""
-set numwidth 10
-set pno 0
-set recsep WRAP
-set recsepchar " "
-repfooter OFF
-repheader OFF
-set securedcol  OFF
-set serveroutput OFF
-set shiftinout INVISIBLE
-set showmode OFF
-set sqlblanklines OFF
-set sqlcase MIXED
-set sqlcontinue "> "
-set sqlnumber ON
-set sqlpluscompatibility 11.2.0
-set sqlprefix "#"
-set sqlprompt "SQL> "
-set sqlterminator ";"
-set suffix "sql"
-set tab ON
-set termout ON
-set trimout ON
-ttitle OFF
-set xmloptimizationcheck OFF
-set errorlogging  OFF
+@@op_set_sql_env.sql 
 
 set headsep off
 set trimspool on
