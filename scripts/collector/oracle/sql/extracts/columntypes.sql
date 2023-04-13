@@ -68,19 +68,19 @@ FROM
     THEN 'USER_DEFINED' ELSE CASE WHEN data_type_owner ='MDSYS' THEN 'SPATIAL' ELSE data_type END 
     END as data_type
       FROM (
-        SELECT
+        SELECT /*+MATERIALIZE */
             &v_a_con_id AS con_id,
-            owner,
+            a.owner,
             table_name,
             regexp_replace(data_type, '\([[:digit:]]\)', '(x)') AS data_type,
             data_type_owner,
             1                                                 AS col_count
         FROM
-            &v_tblprefix._tab_columns a
+            &v_tblprefix._tab_columns a LEFT OUTER JOIN &v_tblprefix._objects b ON &v_a_con_id = &v_b_con_id AND a.owner = b.owner AND a.table_name = b.object_name and b.object_type ='VIEW'
         WHERE
-            owner NOT IN 
+            a.owner NOT IN 
 @&EXTRACTSDIR/exclude_schemas.sql
-          AND ( ( &v_a_con_id, owner, table_name) NOT IN (SELECT &v_a_con_id, owner, view_name FROM &v_tblprefix._views) )
+            AND b.object_name IS NULL
            ) 
     ) PIVOT (
         SUM(col_count)

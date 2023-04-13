@@ -22,25 +22,25 @@ SELECT '&&v_host'
        || '_'
        || '&&v_hora' AS pkey,
        &v_a_con_id con_id,
-       owner,
+       a.owner,
        data_type,
        COUNT(1) as cnt,
        data_length, 
        data_precision, 
        data_scale, 
        avg_col_len,
-       count(distinct &v_a_con_id||owner||table_name) as distinct_table_count
-FROM   &v_tblprefix._tab_columns a
-WHERE  owner NOT IN
+       count(distinct &v_a_con_id||a.owner||table_name) as distinct_table_count
+FROM   &v_tblprefix._tab_columns a LEFT OUTER JOIN &v_tblprefix._objects b ON &v_a_con_id = &v_b_con_id AND a.owner = b.owner AND a.table_name = b.object_name AND b.object_type = 'VIEW'
+WHERE  a.owner NOT IN
 @&EXTRACTSDIR/exclude_schemas.sql
-  AND ( ( &v_a_con_id, owner, table_name) NOT IN (SELECT &v_a_con_id, owner, view_name FROM &v_tblprefix._views) )
+  AND b.object_name IS NULL
 GROUP  BY '&&v_host'
           || '_'
           || '&&v_dbname'
           || '_'
           || '&&v_hora',
           &v_a_con_id ,
-          owner,
+          a.owner,
           data_type,
           data_length,
           data_precision,

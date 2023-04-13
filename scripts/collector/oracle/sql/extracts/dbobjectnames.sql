@@ -22,7 +22,8 @@ vdbobji AS (
                owner,
                object_type,
                &v_editionable_col AS editionable,
-               object_name
+               object_name,
+               status
         FROM &v_tblprefix._objects a
         WHERE  (owner = 'SYS' AND object_type = 'DIRECTORY')
            OR owner NOT IN
@@ -59,7 +60,8 @@ vdbobj AS (
                i.object_name,
                i.object_type,
                i.editionable,
-               s.lines
+               s.lines,
+               i.status
         FROM vdbobji i
         LEFT OUTER JOIN vdbobjx x ON i.object_type = x.object_type AND i.owner = x.owner AND i.object_name = x.synonym_name AND i.con_id = x.con_id
         LEFT OUTER JOIN vsrc s    ON i.object_type = s.type AND i.owner = s.owner AND i.object_name = s.name AND i.con_id = s.con_id
@@ -72,7 +74,8 @@ SELECT pkey ,
        object_name, 
        object_type , 
        editionable ,
-       lines
+       lines,
+       status
 FROM vdbobj a;
 spool off
 
