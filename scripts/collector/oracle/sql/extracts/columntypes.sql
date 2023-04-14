@@ -68,7 +68,7 @@ FROM
     THEN 'USER_DEFINED' ELSE CASE WHEN data_type_owner ='MDSYS' THEN 'SPATIAL' ELSE data_type END 
     END as data_type
       FROM (
-        SELECT /*+MATERIALIZE */
+        SELECT /*+USE_HASH(b, a) NOPARALLEL */
             &v_a_con_id AS con_id,
             a.owner,
             table_name,
@@ -76,11 +76,10 @@ FROM
             data_type_owner,
             1                                                 AS col_count
         FROM
-            &v_tblprefix._tab_columns a LEFT OUTER JOIN &v_tblprefix._objects b ON &v_a_con_id = &v_b_con_id AND a.owner = b.owner AND a.table_name = b.object_name and b.object_type ='VIEW'
+            &v_tblprefix._tab_columns a INNER JOIN &v_tblprefix._objects b ON &v_a_con_id = &v_b_con_id AND a.owner = b.owner AND a.table_name = b.object_name and b.object_type != 'VIEW'
         WHERE
             a.owner NOT IN 
 @&EXTRACTSDIR/exclude_schemas.sql
-            AND b.object_name IS NULL
            ) 
     ) PIVOT (
         SUM(col_count)

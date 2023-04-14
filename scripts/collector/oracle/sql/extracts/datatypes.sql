@@ -16,7 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__datatypes__&v_tag
 
 WITH vdtype AS (
-SELECT '&&v_host'
+SELECT /*+USE_HASH(b a) NOPARALLEL */ '&&v_host'
        || '_'
        || '&&v_dbname'
        || '_'
@@ -30,10 +30,9 @@ SELECT '&&v_host'
        data_scale, 
        avg_col_len,
        count(distinct &v_a_con_id||a.owner||table_name) as distinct_table_count
-FROM   &v_tblprefix._tab_columns a LEFT OUTER JOIN &v_tblprefix._objects b ON &v_a_con_id = &v_b_con_id AND a.owner = b.owner AND a.table_name = b.object_name AND b.object_type = 'VIEW'
+FROM   &v_tblprefix._tab_columns a INNER JOIN &v_tblprefix._objects b ON &v_a_con_id = &v_b_con_id AND a.owner = b.owner AND a.table_name = b.object_name and b.object_type != 'VIEW'
 WHERE  a.owner NOT IN
 @&EXTRACTSDIR/exclude_schemas.sql
-  AND b.object_name IS NULL
 GROUP  BY '&&v_host'
           || '_'
           || '&&v_dbname'
