@@ -231,6 +231,12 @@ fi
 
 connectString="$1"
 sqlcmd_result=$(checkVersion "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | cut -d '~' -f 2)
+if [[ "${sqlcmd_result}" = "" ]];
+then
+  echo "Unable to connect to the target database using ${connectString}.  Please verify the connection information and target database status."
+  exit 255
+fi
+
 retval=$?
 
 DIAGPACKACCESS="$2"

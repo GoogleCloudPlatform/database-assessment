@@ -68,7 +68,7 @@ FROM
     THEN 'USER_DEFINED' ELSE CASE WHEN data_type_owner ='MDSYS' THEN 'SPATIAL' ELSE data_type END 
     END as data_type
       FROM (
-        SELECT /*+USE_HASH(b, a) NOPARALLEL */
+        SELECT /*+ USE_HASH(b a) NOPARALLEL */
             &v_a_con_id AS con_id,
             a.owner,
             table_name,

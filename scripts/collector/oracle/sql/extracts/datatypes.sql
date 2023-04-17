@@ -16,7 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__datatypes__&v_tag
 
 WITH vdtype AS (
-SELECT /*+USE_HASH(b a) NOPARALLEL */ '&&v_host'
+SELECT /*+ USE_HASH(b a) NOPARALLEL */ '&&v_host'
        || '_'
        || '&&v_dbname'
        || '_'
