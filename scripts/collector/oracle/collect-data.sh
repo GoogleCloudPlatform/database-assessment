@@ -59,12 +59,14 @@ OpVersion=$2
 if ! [ -x "$(command -v sqlplus)" ]; then
   echo "Could not find sqlplus command. Source in environment and try again"
   echo "Exiting..."
+  exit 1
 fi
 
 sqlplus -s /nolog << EOF
-set pagesize 0 lines 400 feedback off verify off heading off echo off
 connect ${connectString}
-select i.version||'|'||substr(replace(i.version,'.',''),0,3)||'_'||'${OpVersion}_'||i.host_name||'_'||d.name||'_'||i.instance_name||'_'||to_char(sysdate,'MMDDRRHH24MISS')
+@${SQL_DIR}/op_set_sql_env.sql 
+set pagesize 0 lines 400 feedback off verify off heading off echo off timing off time off
+select 'DMAFILETAG~'|| i.version||'|'||substr(replace(i.version,'.',''),0,3)||'_'||'${OpVersion}_'||i.host_name||'_'||d.name||'_'||i.instance_name||'_'||to_char(sysdate,'MMDDRRHH24MISS')||'~'
 from v\$instance i, v\$database d;
 exit;
 EOF
@@ -78,6 +80,7 @@ DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
 if ! [ -x "$(command -v sqlplus)" ]; then
   echo "Could not find sqlplus command. Source in environment and try again"
   echo "Exiting..."
+  exit 1
 fi
 
 
@@ -227,7 +230,13 @@ fi
 #############################################################################
 
 connectString="$1"
-sqlcmd_result=$(checkVersion "${connectString}" "${OpVersion}")
+sqlcmd_result=$(checkVersion "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | cut -d '~' -f 2)
+if [[ "${sqlcmd_result}" = "" ]];
+then
+  echo "Unable to connect to the target database using ${connectString}.  Please verify the connection information and target database status."
+  exit 255
+fi
+
 retval=$?
 
 DIAGPACKACCESS="$2"
