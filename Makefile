@@ -119,6 +119,8 @@ doc-privs:   ## Extract the list of privileges required from code and create the
 	
 	## Permissions Required
 	
+	The following permissions are required for the script execution:
+	
 	 EOF
 	 grep "rectype_(" scripts/collector/oracle/sql/setup/grants_wrapper.sql | grep -v FUNCTION | sed "s/rectype_(//g;s/),//g;s/)//g;s/'//g;s/,/ ON /1;s/,/./g" >> docs/user_guide/oracle/permissions.md
 

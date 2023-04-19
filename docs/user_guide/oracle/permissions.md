@@ -6,6 +6,8 @@ Please see the Database User Scripts page for information on how to create the u
 
 ## Permissions Required
 
+The following permissions are required for the script execution:
+
       SELECT ON SYS.CDB_HIST_ACTIVE_SESS_HISTORY
       SELECT ON SYS.CDB_HIST_OSSTAT
       SELECT ON SYS.CDB_HIST_SNAPSHOT
