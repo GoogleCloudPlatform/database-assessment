@@ -13,9 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-This script access Automatic Repository Workload (AWR) views in the database dictionary.
-Please ensure you have proper licensing. For more information consult Oracle Support Doc ID 1490798.1
-
 */
 
 /* sys.dm_os_host_info - Applies to: SQL Server 2017 (14.x) and later */
@@ -119,11 +116,7 @@ SELECT 'IsRpcOutEnabled', CONVERT(nvarchar, is_rpc_out_enabled) FROM sys.servers
 UNION ALL
 SELECT 'IsRemoteProcTransactionPromotionEnabled', CONVERT(nvarchar, is_remote_proc_transaction_promotion_enabled) FROM sys.servers WHERE name = @@SERVERNAME
 UNION ALL
-SELECT 'IsBufferPoolExtensionEnabled', CONVERT(nvarchar, state) FROM sys.dm_os_buffer_pool_extension_configuration
-UNION ALL
 SELECT 'IsRemoteLoginEnabled', CONVERT(nvarchar, is_remote_login_enabled) FROM sys.servers WHERE name = @@SERVERNAME
-UNION ALL
-SELECT 'IsFileStreamEmabled', CONVERT(nvarchar, count(*)) FROM sys.database_filestream_options where non_transacted_access <> 0
 UNION ALL
 SELECT 'FullVersion', REPLACE(REPLACE(@@version, CHAR(13), ' '), CHAR(10), ' ')
 UNION ALL
@@ -156,8 +149,6 @@ UNION ALL
 SELECT 'IsResourceGovenorEnabled', CONVERT(varchar, is_enabled) from sys.resource_governor_configuration
 UNION ALL
 SELECT 'IsTDEInUse', CONVERT(nvarchar, count(*)) from sys.databases where is_encrypted <> 0
-UNION ALL
-SELECT 'IsDTCInUse', CONVERT(nvarchar, count(*)) from sys.availability_groups where dtc_support is not null
 UNION ALL
 SELECT 'ServerLevelTriggers', CONVERT(varchar, count(*)) from sys.server_triggers
 UNION ALL
@@ -209,7 +200,18 @@ IF @PRODUCT_VERSION >= 13 AND @PRODUCT_VERSION <= 16
 BEGIN
 exec('INSERT INTO #serverProperties SELECT ''IsStretchDatabaseEnabled'', CONVERT(nvarchar, count(*)) FROM sys.remote_data_archive_databases /* SQL Server 2016 (13.x) and Up to 2022 */');
 END;
-
+IF @PRODUCT_VERSION >= 13
+BEGIN
+exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', CONVERT(nvarchar, count(*)) from sys.availability_groups where dtc_support is not null /* SQL Server 2016 (13.x) and above */');
+END;
+IF @PRODUCT_VERSION >= 12
+BEGIN
+exec('INSERT INTO #serverProperties SELECT ''IsBufferPoolExtensionEnabled'', CONVERT(nvarchar, state) FROM sys.dm_os_buffer_pool_extension_configuration /* SQL Server 2014 (13.x) above */');
+END;
+IF @PRODUCT_VERSION >= 11
+BEGIN
+exec('INSERT INTO #serverProperties SELECT ''IsFileStreamEmabled'', CONVERT(nvarchar, count(*)) FROM sys.database_filestream_options where non_transacted_access <> 0 /* SQL Server 2012 (11.x) above */');
+END;
 
 SELECT @PKEY as PKEY, a.* FROM #serverProperties a;
 

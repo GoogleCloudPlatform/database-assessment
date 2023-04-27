@@ -22,7 +22,7 @@ $foldername = ""
 foreach($item in $objs) {
     $sqlsrv = $item.InstanceName
 	Write-Output "Retrieving Metadata Information from $sqlsrv"
-    $obj = sqlcmd -S $sqlsrv -i sql\foldername.sql -U $user -P $pass | findstr /v /c:"---"
+    $obj = sqlcmd -S $sqlsrv -i sql\foldername.sql -U $user -P $pass -W -m 1 -u | findstr /v /c:"---"
     $splitobj = $obj[1].Split('')
     $values = $splitobj | ForEach-Object { if($_.Trim() -ne '') { $_ } }
 

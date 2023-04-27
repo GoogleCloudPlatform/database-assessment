@@ -13,15 +13,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-This script access Automatic Repository Workload (AWR) views in the database dictionary.
-Please ensure you have proper licensing. For more information consult Oracle Support Doc ID 1490798.1
-
 */
 
 SET NOCOUNT ON;
+/*  Modified to work with 2008R2
 SELECT CAST(SERVERPROPERTY('ProductVersion') AS VARCHAR(15)) AS Version, 
 CAST(SERVERPROPERTY('MachineName') AS VARCHAR(15)) as machinename, 
 'master'as databasename, 
 @@ServiceName as instancename, 
 FORMAT(GETDATE() , 'MMddyyHHmmss') as current_ts,
 @@SERVERNAME + '_' + 'master' + '_' + @@ServiceName + '_' + FORMAT(GETDATE() , 'MMddyyHHmmss') as pkey;
+*/
+SELECT CAST(SERVERPROPERTY('ProductVersion') AS VARCHAR(15)) AS Version, 
+CAST(SERVERPROPERTY('MachineName') AS VARCHAR(15)) as machinename, 
+'master'as databasename, 
+@@ServiceName as instancename, 
+replace(convert(varchar, getdate(),1),'/','') + replace(convert(varchar, getdate(),108),':','') as current_ts,
+@@SERVERNAME + '_' + 'master' + '_' + @@ServiceName + '_' + replace(convert(varchar, getdate(),1),'/','') + replace(convert(varchar, getdate(),108),':','') as pkey;
