@@ -33,7 +33,7 @@ foreach($item in $objs) {
     $current_ts = $values[4]
     $pkey = $values[5]
 
-    $op_version = "4.3.0"
+    $op_version = "4.3.2"
 
     $foldername = 'opdb' + '_' + 'mssql' + '_' + 'PerfCounter' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
 
@@ -59,6 +59,8 @@ foreach($item in $objs) {
     $columnDatatypes = 'opdb' + '__' + 'ColumnDatatypes' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $userConnectionList = 'opdb' + '__' + 'UserConnections' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $perfMonOutput = 'opdb' + '__' + 'PerfMonData' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
+    $dbccTraceFlg = 'opdb' + '__' + 'DbccTrace' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
+    $diskVolumeInfo = 'opdb' + '__' + 'DiskVolInfo' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 
 	Write-Output "Retriving SQL Server Installed Components..."
 	sqlcmd -S $sqlsrv -i sql\componentsInstalled.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
@@ -78,6 +80,39 @@ foreach($item in $objs) {
     sqlcmd -S $sqlsrv -i sql\indexList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$indexList
 	sqlcmd -S $sqlsrv -i sql\columnDatatypes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
 	sqlcmd -S $sqlsrv -i sql\userConnectionInfo.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
+    sqlcmd -S $sqlsrv -i sql\dbccTraceFlags.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
+    sqlcmd -S $sqlsrv -i sql\diskVolumeInfo.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
+
+    Write-Output "Retrieving OS Disk Cluster Information.."
+    if (Test-Path -Path $env:TEMP\tempDisk.csv) {
+        Remove-Item -Path $env:TEMP\tempDisk.csv
+    }
+    
+    Add-Content -Path $env:TEMP\tempDisk.csv -Value "PKEY|volume_mount_point|file_system_type|logical_volume_name|total_size_gb|available_size_gb|space_free_pct|cluster_block_size" -Encoding utf8
+    
+    foreach($drive in (Import-Csv -Delimiter '|' -Path $foldername\*DiskVolInfo*.csv | Select-Object -Property volume_mount_point).volume_mount_point) {
+        $blocksize = (Get-CimInstance -ClassName Win32_Volume | Select-Object Name, Label, BlockSize, FileSystem | `
+        Where-Object {($_.Name -Contains $drive) -and ($_.FileSystem -in 'NTFS')} | Select-Object -Property BlockSize).BlockSize
+        Get-Content -Path  $foldername\*DiskVolInfo*.csv | ForEach-Object {			
+            if ($_ -match ([regex]::Escape($drive))) {
+                if ([int]$blocksize -gt 0)
+                {
+                    $blockValue = $_ + '|' +$blocksize
+                    Add-Content -Path $env:TEMP\tempDisk.csv -Value $blockValue -Encoding utf8
+                }
+                else
+                {
+                    $blockValue = $_ + '|null'
+                    Add-Content -Path $env:TEMP\tempDisk.csv -Value $blockValue -Encoding utf8
+                }
+            }
+        } 
+    }
+    
+    foreach($file in Get-ChildItem -Path $foldername\*DiskVolInfo*.csv) {
+        $outputFileName=$file.name
+        Get-Content -Path $env:TEMP\tempDisk.csv | Set-Content -Encoding utf8 -Path $foldername\$outputFileName
+    }
 
 	if ($instancename -eq "MSSQLSERVER") {
 		.\dma_sqlserver_perfmon_dataset.ps1 -operation collect -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
@@ -85,6 +120,7 @@ foreach($item in $objs) {
 		.\dma_sqlserver_perfmon_dataset.ps1 -operation collect -mssqlInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
 	}
 
+    Write-Output "Remove special characters from extracted Files.."
     foreach($file in Get-ChildItem -Path $foldername\*.csv) {
         (Get-Content $file -Raw).Replace("`r`n","`n") | Set-Content $file -Encoding utf8 -Force
     }
@@ -94,6 +130,10 @@ foreach($item in $objs) {
     if (Test-Path -Path $zippedopfolder) {
 		Write-Output "Removing directory $foldername"
         Remove-Item -Path $foldername -Recurse -Force
+    }
+    if (Test-Path -Path $env:TEMP\tempDisk.csv) {
+        Write-Output "Clean up Temp File area"
+        Remove-Item -Path $env:TEMP\tempDisk.csv
     }
 
     Write-Output ""

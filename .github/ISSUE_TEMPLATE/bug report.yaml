@@ -11,7 +11,7 @@ body:
     id: description
     attributes:
       label: Description
-      description: Dont' forget to remove any sensitive data
+      description: Provide details about the bug, but please remove any sensitive data
       placeholder: Tell us what you see!
       value: "A bug happened!"
     validations:

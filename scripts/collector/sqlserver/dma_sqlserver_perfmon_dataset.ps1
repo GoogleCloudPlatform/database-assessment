@@ -421,7 +421,7 @@ param(
 	((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\PKEY_*$dataSet*.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
 	
 	if (Test-Path -Path $outputDir\$outputFileName) {
-		Write-Output "Clean up Temp File area"
+		Write-Output "Clean up Temp File area."
 		Remove-Item -Path $env:TEMP\*$dataSet*.csv
 	}
 }

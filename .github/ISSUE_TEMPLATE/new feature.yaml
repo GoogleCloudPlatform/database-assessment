@@ -11,7 +11,7 @@ body:
     id: why-required
     attributes:
       label: The expected benefit
-      description: Why current version is insufficent.
+      description: Why current version is insufficient.
       placeholder: Tell us what you see!
       value: "As an end user "
     validations:

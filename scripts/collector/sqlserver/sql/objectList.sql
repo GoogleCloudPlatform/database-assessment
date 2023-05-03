@@ -91,4 +91,5 @@ DEALLOCATE db_cursor
 
 SELECT @PKEY as PKEY, a.* from #objectList a ORDER BY database_name, schema_name, object_type;
 
-DROP TABLE #objectList;
+IF OBJECT_ID('tempdb..#objectList') IS NOT NULL  
+   DROP TABLE #objectList;
