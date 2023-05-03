@@ -143,7 +143,7 @@ WITH coltypes AS (
             data_type_owner,
             1                                                 AS col_count
         FROM
-            &v_tblprefix._tab_columns a INNER JOIN &v_tblprefix._objects b ON &v_a_con_id = &v_b_con_id AND a.owner = b.owner AND a.table_name = b.object_name and b.object_type != 'VIEW'
+            &v_tblprefix._tab_columns a INNER JOIN &v_tblprefix._objects b ON &v_a_con_id = &v_b_con_id AND a.owner = b.owner AND a.table_name = b.object_name and b.object_type = 'TABLE'
         WHERE
             a.owner NOT IN 
 @&EXTRACTSDIR/exclude_schemas.sql
