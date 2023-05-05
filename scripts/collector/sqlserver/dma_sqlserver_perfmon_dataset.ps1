@@ -380,6 +380,8 @@ param(
 		logman.exe delete -n $dataSet
 	}
 }
+function Yellow{    process { Write-Host $_ -ForegroundColor Yellow }}
+
 function CollectDMAPerfmonDataSet
 {
 param(
@@ -391,6 +393,7 @@ param(
 	Write-Output "Collecting results from the Google DMA SQL Server Perfmon Counter Data Set."
 	$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
 	$outputFileName = $perfmonOutFile
+	Write-Output $dataSet
 
 	if (!(Test-Path -PathType container $outputDir)) {
 		Write-Output ""
@@ -401,6 +404,7 @@ param(
 	if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv) {
 		Write-Output ""
 		Write-Output "Moving perfmon datafiles to the $env:TEMP Directory Without Header"
+		$fileExists = $true
 		foreach($file in Get-ChildItem -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataset*.csv)
 		{
 			$tempFileName = Split-Path $file -leaf
@@ -414,15 +418,20 @@ param(
 		}
 	} else {
 		Write-Output ""
-		Write-Output "No Perfmon Files exist in the $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet Directory"
+		Write-Output "No Perfmon Files exist in the $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet Directory. Continuing without Perform file." | Yellow
+		$fileExists = $false
 	}
 
 	Write-Output "Concatenating and adding header to perfmon files to $outputFileName" 
+	if ($fileExists)  {
 	((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\PKEY_*$dataSet*.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
-	
+	}
+	else {
+	((Get-Content -Path $PSScriptRoot\perfmon_header.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
+	}	
 	if (Test-Path -Path $outputDir\$outputFileName) {
 		Write-Output "Clean up Temp File area."
-		Remove-Item -Path $env:TEMP\*$dataSet*.csv
+		#Remove-Item -Path $env:TEMP\*$dataSet*.csv
 	}
 }
 
