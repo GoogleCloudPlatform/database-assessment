@@ -13,9 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-This script access Automatic Repository Workload (AWR) views in the database dictionary.
-Please ensure you have proper licensing. For more information consult Oracle Support Doc ID 1490798.1
-
 */
 
 SET NOCOUNT ON
@@ -35,6 +32,7 @@ CREATE TABLE #objectList(
     ,schema_name nvarchar(255)
     ,object_type nvarchar(255)
     ,object_type_desc nvarchar(255)
+    ,associated_table_name nvarchar(255)
     ,object_count nvarchar(255)
     ,lines_of_code nvarchar(255));
 
@@ -47,42 +45,170 @@ BEGIN
 	use [' + @dbname + '];
 	INSERT INTO #objectList
     SELECT 
-    DB_NAME(DB_ID()) as database_name 
+    database_name 
     , schema_name
     , type 
     , type_desc
+	, associated_table_name
     , count(*) AS object_count
     , ISNULL(SUM(LinesOfCode),0) AS lines_of_code
     FROM 
     (
-        SELECT
-        s.name as schema_name,
-        RTRIM(LTRIM(o.type)) as type, 
-        o.type_desc, 
-        LEN(a.definition)- LEN(
-            REPLACE(
-            a.definition, 
-            CHAR(10), 
-            ''''
-            )
-        ) AS LinesOfCode, 
-        OBJECT_NAME(o.object_id) AS NameOfObject 
-        FROM 
-        sys.objects o
-        JOIN sys.schemas s ON s.schema_id = o.schema_id
-        LEFT OUTER JOIN sys.all_sql_modules a ON a.OBJECT_ID = o.object_id
-        WHERE 
-        o.type NOT IN (
-            ''S'' --SYSTEM_TABLE
-            , 
-            ''IT'' --INTERNAL_TABLE
-            ) 
-        AND OBJECTPROPERTY(o.object_id, ''IsMSShipped'') = 0
+    SELECT
+    DB_NAME(DB_ID()) as database_name,
+    s.name as schema_name,
+    RTRIM(LTRIM(o.type)) as type, 
+    o.type_desc, 
+    ISNULL(LEN(a.definition)- LEN(
+        REPLACE(
+        a.definition, 
+        CHAR(10), 
+        ''''
+        )
+    ),0) AS LinesOfCode, 
+    OBJECT_NAME(o.object_id) AS NameOfObject ,
+    NULL as associated_table_name
+    FROM 
+    sys.objects o
+    JOIN sys.schemas s ON s.schema_id = o.schema_id
+    LEFT OUTER JOIN sys.all_sql_modules a ON a.OBJECT_ID = o.object_id
+    WHERE 
+    o.type NOT IN (
+        ''S'' --SYSTEM_TABLE
+        , 
+        ''IT'' --INTERNAL_TABLE
+        ,
+        ''F'' --FOREIGN KEY
+        ,
+        ''PK''  --PRIMARY KEY
+        ,
+        ''C''  -- CHECK CONSTRAINT
+        ,
+        ''D''  --DEFAULT CONSTRAINT
+        ,
+        ''UQ''  --UNIQUE CONSTRAINT
+        ,
+        ''TR'' --TRIGGER
+        ,
+        ''V'' --VIEW
+        ) 
+    AND OBJECTPROPERTY(o.object_id, ''IsMSShipped'') = 0
+    UNION
+    select DB_NAME(DB_ID()) as database_name,
+    s.name as schema_name,
+    type,
+    type_desc,
+    ISNULL(LEN(a.definition)- LEN(
+        REPLACE(
+        a.definition, 
+        CHAR(10), 
+        ''''
+        )
+    ),0) AS LinesOfCode,
+    cc.name AS NameOfObject ,
+    object_name(cc.parent_object_id) AS associated_table_name
+    from sys.check_constraints cc
+    JOIN sys.schemas s ON s.schema_id = cc.schema_id
+    LEFT OUTER JOIN sys.all_sql_modules a ON a.OBJECT_ID = cc.object_id
+    WHERE cc.is_ms_shipped = 0
+    UNION
+    select DB_NAME(DB_ID()) as database_name,
+    s.name as schema_name,
+    type,
+    type_desc,
+    ISNULL(LEN(a.definition)- LEN(
+        REPLACE(
+        a.definition, 
+        CHAR(10), 
+        ''''
+        )
+    ),0) AS LinesOfCode,
+    fk.name AS NameOfObject ,
+    object_name(fk.parent_object_id) AS associated_table_name
+    from sys.foreign_keys fk
+    JOIN sys.schemas s ON s.schema_id = fk.schema_id
+    LEFT OUTER JOIN sys.all_sql_modules a ON a.OBJECT_ID = fk.object_id
+    WHERE fk.is_ms_shipped = 0
+    UNION
+    select DB_NAME(DB_ID()) as database_name,
+    s.name as schema_name,
+    type,
+    type_desc,
+    ISNULL(LEN(a.definition)- LEN(
+        REPLACE(
+        a.definition, 
+        CHAR(10), 
+        ''''
+        )
+    ),0) AS LinesOfCode,
+    dc.name AS NameOfObject ,
+    object_name(dc.parent_object_id) AS associated_table_name
+    from sys.default_constraints dc
+    JOIN sys.schemas s ON s.schema_id = dc.schema_id
+    LEFT OUTER JOIN sys.all_sql_modules a ON a.OBJECT_ID = dc.object_id
+    WHERE dc.is_ms_shipped = 0
+    UNION
+    select DB_NAME(DB_ID()) as database_name,
+    s.name as schema_name,
+    type,
+    type_desc,
+    ISNULL(LEN(a.definition)- LEN(
+        REPLACE(
+        a.definition, 
+        CHAR(10), 
+        ''''
+        )
+    ),0) AS LinesOfCode,
+    kc.name AS NameOfObject,
+    object_name(kc.parent_object_id) AS associated_table_name
+    from sys.key_constraints kc
+    JOIN sys.schemas s ON s.schema_id = kc.schema_id
+    LEFT OUTER JOIN sys.all_sql_modules a ON a.OBJECT_ID = kc.object_id
+    WHERE kc.is_ms_shipped = 0
+    UNION
+    select DB_NAME(DB_ID()) as database_name,
+    s.name as schema_name,
+    t.type,
+    t.type_desc,
+    ISNULL(LEN(a.definition)- LEN(
+        REPLACE(
+        a.definition, 
+        CHAR(10), 
+        ''''
+        )
+    ),0) AS LinesOfCode,
+    t.name AS NameOfObject ,
+    object_name(t.parent_id) AS associated_table_name
+    from sys.triggers t
+    JOIN sys.tables tbl ON tbl.object_id = t.parent_id
+    LEFT OUTER JOIN sys.schemas s ON s.schema_id = tbl.schema_id
+    LEFT OUTER JOIN sys.all_sql_modules a ON a.OBJECT_ID = t.object_id
+    WHERE t.is_ms_shipped = 0
+    UNION
+    select DB_NAME(DB_ID()) as database_name,
+    s.name as schema_name,
+    type,
+    type_desc,
+    ISNULL(LEN(a.definition)- LEN(
+        REPLACE(
+        a.definition, 
+        CHAR(10), 
+        ''''
+        )
+    ),0) AS LinesOfCode,
+    v.name AS NameOfObject ,
+    NULL as associated_table_name
+    from sys.views v
+    JOIN sys.schemas s ON s.schema_id = v.schema_id
+    LEFT OUTER JOIN sys.all_sql_modules a ON a.OBJECT_ID = v.object_id
+    WHERE v.is_ms_shipped = 0
     ) SubQuery 
-    GROUP BY 
-    schema_name,
-    type, 
-    type_desc');
+        GROUP BY 
+        database_name,
+        schema_name,
+        type, 
+        type_desc,
+        associated_table_name');
     FETCH NEXT FROM db_cursor INTO @dbname 
 END 
 
