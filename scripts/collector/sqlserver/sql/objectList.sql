@@ -33,8 +33,9 @@ CREATE TABLE #objectList(
     ,object_name nvarchar(255)
     ,object_type nvarchar(255)
     ,object_type_desc nvarchar(255)
-    ,associated_table_name nvarchar(255)
-    ,lines_of_code nvarchar(255));
+    ,object_count nvarchar(255)
+    ,lines_of_code nvarchar(255)
+	,associated_table_name nvarchar(255));
 
 OPEN db_cursor  
 FETCH NEXT FROM db_cursor INTO @dbname  
@@ -50,8 +51,9 @@ BEGIN
 	, NameOfObject as object_name
     , RTRIM(LTRIM(type)) as type
     , type_desc
-	, associated_table_name
+	, count(*) AS object_count
     , ISNULL(SUM(LinesOfCode),0) AS lines_of_code
+	, associated_table_name
     FROM 
     (
     SELECT
