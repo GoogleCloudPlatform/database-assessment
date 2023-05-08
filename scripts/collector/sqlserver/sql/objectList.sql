@@ -30,10 +30,10 @@ IF OBJECT_ID('tempdb..#objectList') IS NOT NULL
 CREATE TABLE #objectList(
     database_name nvarchar(255)
     ,schema_name nvarchar(255)
+    ,object_name nvarchar(255)
     ,object_type nvarchar(255)
     ,object_type_desc nvarchar(255)
     ,associated_table_name nvarchar(255)
-    ,object_count nvarchar(255)
     ,lines_of_code nvarchar(255));
 
 OPEN db_cursor  
@@ -47,10 +47,10 @@ BEGIN
     SELECT 
     database_name 
     , schema_name
-    , type 
+	, NameOfObject as object_name
+    , RTRIM(LTRIM(type)) as type
     , type_desc
 	, associated_table_name
-    , count(*) AS object_count
     , ISNULL(SUM(LinesOfCode),0) AS lines_of_code
     FROM 
     (
@@ -96,7 +96,7 @@ BEGIN
     UNION
     select DB_NAME(DB_ID()) as database_name,
     s.name as schema_name,
-    type,
+    RTRIM(LTRIM(type)) as type,
     type_desc,
     ISNULL(LEN(a.definition)- LEN(
         REPLACE(
@@ -114,7 +114,7 @@ BEGIN
     UNION
     select DB_NAME(DB_ID()) as database_name,
     s.name as schema_name,
-    type,
+    RTRIM(LTRIM(type)) as type,
     type_desc,
     ISNULL(LEN(a.definition)- LEN(
         REPLACE(
@@ -132,7 +132,7 @@ BEGIN
     UNION
     select DB_NAME(DB_ID()) as database_name,
     s.name as schema_name,
-    type,
+    RTRIM(LTRIM(type)) as type,
     type_desc,
     ISNULL(LEN(a.definition)- LEN(
         REPLACE(
@@ -150,7 +150,7 @@ BEGIN
     UNION
     select DB_NAME(DB_ID()) as database_name,
     s.name as schema_name,
-    type,
+    RTRIM(LTRIM(type)) as type,
     type_desc,
     ISNULL(LEN(a.definition)- LEN(
         REPLACE(
@@ -168,7 +168,7 @@ BEGIN
     UNION
     select DB_NAME(DB_ID()) as database_name,
     s.name as schema_name,
-    t.type,
+    RTRIM(LTRIM(t.type)) as type,
     t.type_desc,
     ISNULL(LEN(a.definition)- LEN(
         REPLACE(
@@ -187,7 +187,7 @@ BEGIN
     UNION
     select DB_NAME(DB_ID()) as database_name,
     s.name as schema_name,
-    type,
+    RTRIM(LTRIM(type)) as type,
     type_desc,
     ISNULL(LEN(a.definition)- LEN(
         REPLACE(
@@ -206,9 +206,11 @@ BEGIN
         GROUP BY 
         database_name,
         schema_name,
+        NameOfObject,
         type, 
         type_desc,
-        associated_table_name');
+        associated_table_name
+    ORDER BY database_name, schema_name, associated_table_name');
     FETCH NEXT FROM db_cursor INTO @dbname 
 END 
 
