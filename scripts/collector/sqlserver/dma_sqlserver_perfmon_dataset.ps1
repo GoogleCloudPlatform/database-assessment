@@ -393,7 +393,6 @@ param(
 	Write-Output "Collecting results from the Google DMA SQL Server Perfmon Counter Data Set."
 	$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
 	$outputFileName = $perfmonOutFile
-	Write-Output $dataSet
 
 	if (!(Test-Path -PathType container $outputDir)) {
 		Write-Output ""
