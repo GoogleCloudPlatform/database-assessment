@@ -430,7 +430,7 @@ param(
 	}	
 	if (Test-Path -Path $outputDir\$outputFileName) {
 		Write-Output "Clean up Temp File area."
-		#Remove-Item -Path $env:TEMP\*$dataSet*.csv
+		Remove-Item -Path $env:TEMP\*$dataSet*.csv
 	}
 }
 
