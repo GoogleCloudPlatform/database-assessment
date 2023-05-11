@@ -22,6 +22,12 @@ set instance=%2
 set managedInstanceName=%3
 
 set isValidPerfmonOperation=false
+
+if %perfmonOperation%==help (
+    echo "Usage: ManageSqlServerPerfmonDataset.bat create/update/delete/collect managed/default [InstanceName]"
+    goto done
+)
+
 rem check passed options for PerfmonOperation
 (for %%a in (%validPerfmonOperations%) do (
     :: echo %%a
@@ -33,7 +39,7 @@ rem check passed options for PerfmonOperation
 
 if %isValidPerfmonOperation%==false (
     echo %perfmonOperation% is not a valid perfmonOperation, allowed are %validPerfmonOperations%
-    exit /b 2
+    goto done
 )
 
 echo %perfmonOperation%
@@ -51,7 +57,7 @@ rem check passed options for PerfmonOperation
 
 if %isValidInstance%==false (
     echo %instance% is not a valid Instance type, allowed are %validInstances%
-    exit /b 2
+    goto done
 )
 
 echo %instance%
@@ -59,7 +65,7 @@ echo %isValidInstance%
 if %instance%==managed (
     if [%managedInstanceName%]==[]  (
         echo Please pass a valid instanceName
-        exit /b 2
+        goto done
     )
 )
 
