@@ -18,8 +18,8 @@ set validPerfmonOperations=create stop delete collect
 set validInstances=default managed
 
 if [%1]==[] (
-    echo "Usage: ManageSqlServerPerfmonDataset.bat create/update/delete/collect managed/default [InstanceName]"
-    goto done
+    echo "Usage: .\ManageSqlServerPerfmonDataset.bat [operation] create/update/delete/collect [InstanceName]managed/default Example: .\ManageSqlServerPerfmonDataset.bat create default"
+    goto exit
 )
 
 set perfmonOperation=%1
@@ -30,7 +30,7 @@ set isValidPerfmonOperation=false
 
 if %perfmonOperation%==help (
     echo "Usage: .\ManageSqlServerPerfmonDataset.bat [operation] create/update/delete/collect [InstanceName]managed/default Example: .\ManageSqlServerPerfmonDataset.bat create default "
-    goto done
+    goto exit
 )
 
 
@@ -44,8 +44,8 @@ rem check passed options for PerfmonOperation
 ))
 
 if %isValidPerfmonOperation%==false (
-    echo %perfmonOperation% is not a valid perfmonOperation, allowed are %validPerfmonOperations%
-    goto done
+    echo %perfmonOperation% is not a valid perfmon Operation, allowed arguments are %validPerfmonOperations%
+    goto exit
 )
 
 set isValidInstance=false
@@ -59,8 +59,8 @@ rem check passed options for PerfmonOperation
 ))
 
 if %isValidInstance%==false (
-    echo %instance% is not a valid Instance type, allowed are %validInstances%
-    goto done
+    echo %instance% is not a valid Instance type, allowed arguments are %validInstances%
+    goto exit
 )
 
 echo %instance%
@@ -68,7 +68,7 @@ echo %isValidInstance%
 if %instance%==managed (
     if [%managedInstanceName%]==[]  (
         echo Please pass a valid instanceName
-        goto done
+        goto exit
     )
 )
 
@@ -90,3 +90,6 @@ if %instance%==managed (
 
 :done
 echo Script Complete!
+
+:exit
+echo Exit!
