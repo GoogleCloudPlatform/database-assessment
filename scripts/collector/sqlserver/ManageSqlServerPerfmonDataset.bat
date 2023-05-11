@@ -17,6 +17,11 @@
 set validPerfmonOperations=create stop delete collect
 set validInstances=default managed
 
+if [%1]==[] (
+    echo "Usage: ManageSqlServerPerfmonDataset.bat create/update/delete/collect managed/default [InstanceName]"
+    goto done
+)
+
 set perfmonOperation=%1
 set instance=%2
 set managedInstanceName=%3
@@ -27,6 +32,7 @@ if %perfmonOperation%==help (
     echo "Usage: ManageSqlServerPerfmonDataset.bat create/update/delete/collect managed/default [InstanceName]"
     goto done
 )
+
 
 rem check passed options for PerfmonOperation
 (for %%a in (%validPerfmonOperations%) do (

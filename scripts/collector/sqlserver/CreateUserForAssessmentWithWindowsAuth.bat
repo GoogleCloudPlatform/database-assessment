@@ -23,6 +23,11 @@ if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-CollectionUserPass" set "pass=%2"
 if /i "%1" == "-useDefaultCreds" set "defaultCreds=1"
 
+if %1 == help (
+    echo "Usage: CreateUserForAssessmentWithWindowsAuth.bat (-collectionUserName -collectionUserPass)/-useDefaultCreds"
+    goto done
+)
+
 shift
 goto :loop
 
