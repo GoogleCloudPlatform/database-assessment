@@ -48,9 +48,6 @@ if %isValidPerfmonOperation%==false (
     goto done
 )
 
-echo %perfmonOperation%
-echo %isValidPerfmonOperation%
-
 set isValidInstance=false
 rem check passed options for PerfmonOperation
 (for %%a in (%validInstances%) do (
