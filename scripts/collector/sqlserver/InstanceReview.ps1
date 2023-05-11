@@ -22,7 +22,12 @@ $foldername = ""
 foreach($item in $objs) {
     $sqlsrv = $item.InstanceName
 	Write-Output "Retrieving Metadata Information from $sqlsrv"
-    $obj = sqlcmd -S $sqlsrv -i sql\foldername.sql -U $user -P $pass -W -m 1 -u | findstr /v /c:"---"
+	if ($sqlsrv -like "*MSSQLSERVER*") {
+		$obj = sqlcmd -H $sqlsrv -i sql\foldername.sql -U $user -P $pass -W -m 1 -u | findstr /v /c:"---"
+	} else {
+		$obj = sqlcmd -S $sqlsrv -i sql\foldername.sql -U $user -P $pass -W -m 1 -u | findstr /v /c:"---"
+	}
+
     $splitobj = $obj[1].Split('')
     $values = $splitobj | ForEach-Object { if($_.Trim() -ne '') { $_ } }
 
@@ -62,26 +67,49 @@ foreach($item in $objs) {
     $dbccTraceFlg = 'opdb' + '__' + 'DbccTrace' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $diskVolumeInfo = 'opdb' + '__' + 'DiskVolInfo' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 
-	Write-Output "Retriving SQL Server Installed Components..."
-	sqlcmd -S $sqlsrv -i sql\componentsInstalled.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
-	Write-Output "Retriving SQL Server Properties..."
-	sqlcmd -S $sqlsrv -i sql\serverProperties.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
-	Write-Output "Retriving SQL Server Features..."
-	sqlcmd -S $sqlsrv -i sql\features.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
-	Write-Output "Retriving SQL Server Linked Servers..."
-	sqlcmd -S $sqlsrv -i sql\linkedServers.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
-	Write-Output "Retriving SQL Server Database Sizes..."
-	sqlcmd -S $sqlsrv -i sql\dbSizes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
-	Write-Output "Retriving SQL Server Cluster Nodes..."
-	sqlcmd -S $sqlsrv -i sql\dbClusterNodes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
-	Write-Output "Retriving SQL Server Object Info..."
-	sqlcmd -S $sqlsrv -i sql\objectList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$objectList
-	sqlcmd -S $sqlsrv -i sql\tableList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$tableList
-    sqlcmd -S $sqlsrv -i sql\indexList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$indexList
-	sqlcmd -S $sqlsrv -i sql\columnDatatypes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
-	sqlcmd -S $sqlsrv -i sql\userConnectionInfo.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
-    sqlcmd -S $sqlsrv -i sql\dbccTraceFlags.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
-    sqlcmd -S $sqlsrv -i sql\diskVolumeInfo.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
+	if ($instancename -eq "MSSQLSERVER") {
+		Write-Output "Retriving SQL Server Installed Components..."
+		sqlcmd -S $machinename -i sql\componentsInstalled.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
+		Write-Output "Retriving SQL Server Properties..."
+		sqlcmd -S $machinename -i sql\serverProperties.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
+		Write-Output "Retriving SQL Server Features..."
+		sqlcmd -S $machinename -i sql\features.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
+		Write-Output "Retriving SQL Server Linked Servers..."
+		sqlcmd -S $machinename -i sql\linkedServers.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
+		Write-Output "Retriving SQL Server Database Sizes..."
+		sqlcmd -S $machinename -i sql\dbSizes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
+		Write-Output "Retriving SQL Server Cluster Nodes..."
+		sqlcmd -S $machinename -i sql\dbClusterNodes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
+		Write-Output "Retriving SQL Server Object Info..."
+		sqlcmd -S $machinename -i sql\objectList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$objectList
+		sqlcmd -S $machinename -i sql\tableList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$tableList
+		sqlcmd -S $machinename -i sql\indexList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$indexList
+		sqlcmd -S $machinename -i sql\columnDatatypes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
+		sqlcmd -S $machinename -i sql\userConnectionInfo.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
+		sqlcmd -S $machinename -i sql\dbccTraceFlags.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
+		sqlcmd -S $machinename -i sql\diskVolumeInfo.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
+	} else {
+		Write-Output "Retriving SQL Server Installed Components..."
+		sqlcmd -S $sqlsrv -i sql\componentsInstalled.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
+		Write-Output "Retriving SQL Server Properties..."
+		sqlcmd -S $sqlsrv -i sql\serverProperties.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
+		Write-Output "Retriving SQL Server Features..."
+		sqlcmd -S $sqlsrv -i sql\features.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
+		Write-Output "Retriving SQL Server Linked Servers..."
+		sqlcmd -S $sqlsrv -i sql\linkedServers.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
+		Write-Output "Retriving SQL Server Database Sizes..."
+		sqlcmd -S $sqlsrv -i sql\dbSizes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
+		Write-Output "Retriving SQL Server Cluster Nodes..."
+		sqlcmd -S $sqlsrv -i sql\dbClusterNodes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
+		Write-Output "Retriving SQL Server Object Info..."
+		sqlcmd -S $sqlsrv -i sql\objectList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$objectList
+		sqlcmd -S $sqlsrv -i sql\tableList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$tableList
+		sqlcmd -S $sqlsrv -i sql\indexList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$indexList
+		sqlcmd -S $sqlsrv -i sql\columnDatatypes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
+		sqlcmd -S $sqlsrv -i sql\userConnectionInfo.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
+		sqlcmd -S $sqlsrv -i sql\dbccTraceFlags.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
+		sqlcmd -S $sqlsrv -i sql\diskVolumeInfo.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
+	}
 
     Write-Output "Retrieving OS Disk Cluster Information.."
     if (Test-Path -Path $env:TEMP\tempDisk.csv) {
