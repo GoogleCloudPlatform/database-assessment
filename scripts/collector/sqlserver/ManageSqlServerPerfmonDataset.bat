@@ -29,7 +29,7 @@ set managedInstanceName=%3
 set isValidPerfmonOperation=false
 
 if %perfmonOperation%==help (
-    echo "Usage: ManageSqlServerPerfmonDataset.bat create/update/delete/collect managed/default [InstanceName]"
+    echo "Usage: .\ManageSqlServerPerfmonDataset.bat [operation] create/update/delete/collect [InstanceName]managed/default Example: .\ManageSqlServerPerfmonDataset.bat create default "
     goto done
 )
 
