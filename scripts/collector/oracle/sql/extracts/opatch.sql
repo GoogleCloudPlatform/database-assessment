@@ -52,12 +52,12 @@ SELECT  &p_patchinfo
         dual ),
 vopatch as (
     SELECT
-        extractvalue(rws.object_value, '/patch/patchID')               patch_id,
-        extractvalue(rws.object_value, '/patch/uniquePatchID')         unique_patch_id,
-        extractvalue(rws.object_value, '/patch/patchDescription')      patch_descr,       
-        extractvalue(rws.object_value, '/patch/patchType')             patch_type,
-        extractvalue(rws.object_value, '/patch/appliedDate')             applied_date,
-        extractvalue(rws.object_value, '/patch/bugs[1]/bug[1]/description[1]')      bug_descr
+        extractvalue(column_value, '/patch/patchID')               patch_id,
+        extractvalue(column_value, '/patch/uniquePatchID')         unique_patch_id,
+        extractvalue(column_value, '/patch/patchDescription')      patch_descr,       
+        extractvalue(column_value, '/patch/patchType')             patch_type,
+        extractvalue(column_value, '/patch/appliedDate')             applied_date,
+        extractvalue(column_value, '/patch/bugs[1]/bug[1]/description[1]')      bug_descr
     FROM
         xml                                                             x,
         TABLE ( xmlsequence(extract(x.x, '/InventoryInstance/patches/*')) )              rws 

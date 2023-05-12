@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+COLUMN DB_NAME FORMAT A20
+COLUMN INSTANCE_NAME FORMAT A20
 spool &outputdir/opdb__opkeylog__&v_tag
 
 with vop as (
@@ -23,3 +25,5 @@ select pkey , opscriptversion , db_version , hostname
        , db_name , instance_name , collection_time , db_id , CMNT
 from vop;
 spool off
+COLUMN DB_NAME CLEAR
+COLUMN INSTANCE_NAME CLEAR
