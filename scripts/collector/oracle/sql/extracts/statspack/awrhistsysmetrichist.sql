@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+COLUMN HOUR FORMAT A4
+COLUMN METRIC_UNIT FORMAT A15
 spool &outputdir/opdb__awrhistsysmetrichist__&v_tag
 
 WITH vsysmetric AS (
@@ -56,7 +58,7 @@ FROM   (
                ON hsm.snap_id = dhsnap.snap_id
                   AND hsm.instance_number = dhsnap.instance_number
                   AND hsm.dbid = dhsnap.dbid
-WHERE  hsm.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+WHERE  dhsnap.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
 AND hsm.dbid = &&v_dbid
 GROUP  BY '&&v_host'
           || '_'
@@ -76,3 +78,5 @@ SELECT pkey , dbid , instance_number , hour , metric_name ,
 	   sum_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100
 FROM vsysmetric;
 spool off
+COLUMN HOUR CLEAR
+COLUMN METRIC_UNIT CLEAR

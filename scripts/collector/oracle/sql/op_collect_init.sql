@@ -42,6 +42,7 @@ set colsep '|'
 set timing off
 set time off
 alter session set nls_numeric_characters='.,';
+alter session set nls_date_format='YYYY-MM-DD HH24:MI:SS';
 
 set termout on
 whenever sqlerror exit failure
@@ -49,7 +50,9 @@ whenever oserror continue
 
 
 variable minsnap NUMBER;
+variable minsnaptime VARCHAR2(20);
 variable maxsnap NUMBER;
+variable maxsnaptime VARCHAR2(20);
 variable umfflag VARCHAR2(100);
 variable pdb_logging_flag VARCHAR2(1);
 variable dflt_value_flag  VARCHAR2(1);
@@ -72,7 +75,9 @@ column horanc new_value v_hora noprint
 column dbname new_value v_dbname noprint
 column dbversion new_value v_dbversion noprint
 column min_snapid new_value v_min_snapid noprint
+column min_snaptime new_value v_min_snaptime noprint
 column max_snapid new_value v_max_snapid noprint
+column max_snaptime new_value v_max_snaptime noprint
 column umf_test new_value v_umf_test noprint
 column p_dbid new_value v_dbid noprint
 column p_tblprefix new_value v_tblprefix noprint
@@ -227,8 +232,12 @@ SELECT :b_compress_col AS p_compress_col FROM dual;
 DECLARE
 cnt NUMBER;
 BEGIN
-  SELECT count(1) INTO cnt FROM dba_tables WHERE table_name = 'DBA_HIST_IOSTAT_FUNCTION';
-  IF cnt = 1 OR (cnt = 1 AND '&v_dodiagnostics' = 'usediagnostics') THEN :b_io_function_sql := 'iofunction.sql';
+  SELECT SUM(cnt) INTO cnt FROM (
+    SELECT count(1) FROM dba_views WHERE (view_name = 'DBA_HIST_IOSTAT_FUNCTION' AND '&v_dodiagnostics' = 'usediagnostics')
+    UNION
+    SELECT count(1) FROM dba_tables WHERE (table_name ='STATS$IOSTAT_FUNCTION_NAME' AND '&v_dodiagnostics' = 'nodiagnostics' AND OWNER ='PERFSTAT')
+  );
+  IF (cnt > 0 ) THEN :b_io_function_sql := 'iofunction.sql';
   ELSE 
     :b_io_function_sql := 'noop.sql';
   END IF;
@@ -345,15 +354,28 @@ BEGIN
     END IF;
   END;
   IF (l_tab_name != '---' AND l_tab_name NOT LIKE 'ERROR%') THEN
-     THE_SQL := 'SELECT min(snap_id) , max(snap_id) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
-     EXECUTE IMMEDIATE the_sql INTO  :minsnap, :maxsnap USING '&&v_dbid' ;
-     IF :minsnap IS NULL THEN
-        dbms_output.put_line('Warning: No snapshots found within the last &&dtrange days.  No performance data will be extracted.');
-        :minsnap := -1;
-        :maxsnap := -1;
-        :v_info_prompt := 'without performance data';
+     IF l_tab_name = 'DBA_HIST_SNAPSHOT' THEN
+       THE_SQL := 'SELECT min(snap_id) , max(snap_id) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
+       EXECUTE IMMEDIATE the_sql INTO  :minsnap, :maxsnap USING '&&v_dbid' ;
+       IF :minsnap IS NULL THEN
+          dbms_output.put_line('Warning: No snapshots found within the last &&dtrange days.  No performance data will be extracted.');
+          :minsnap := -1;
+          :maxsnap := -1;
+          :v_info_prompt := 'without performance data';
+       ELSE
+          :v_info_prompt := 'between snaps ' || :minsnap || ' and ' || :maxsnap;
+       END IF;
      ELSE
-        :v_info_prompt := 'between snaps ' || :minsnap || ' and ' || :maxsnap;
+       THE_SQL := 'SELECT min(snap_time) , max(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
+       EXECUTE IMMEDIATE the_sql INTO  :minsnaptime, :maxsnaptime USING '&&v_dbid' ;
+       IF :minsnaptime IS NULL THEN
+          dbms_output.put_line('Warning: No snapshots found within the last &&dtrange days.  No performance data will be extracted.');
+          :minsnaptime := sysdate;
+          :maxsnaptime := sysdate;
+          :v_info_prompt := 'without performance data';
+       ELSE
+          :v_info_prompt := 'between  ' || :minsnaptime || ' and ' || :maxsnaptime;
+       END IF;
      END IF;
   ELSE
      :v_info_prompt := 'without performance data';
@@ -361,7 +383,7 @@ BEGIN
 END;
 /
 set termout off
-SELECT NVL(:minsnap, -1) min_snapid, NVL(:maxsnap, -1) max_snapid, :sp sp_script, :v_info_prompt info_prompt FROM dual;
+SELECT NVL(:minsnap, -1) min_snapid, NVL(:maxsnap, -1) max_snapid, NVL(:minsnaptime, SYSDATE) min_snaptime, NVL(:maxsnaptime, SYSDATE) max_snaptime,  :sp sp_script, :v_info_prompt info_prompt FROM dual;
 
 set termout on
 PROMPT Collecting data for database &v_dbname '&&v_dbid' &p_info_prompt
@@ -371,6 +393,8 @@ set termout &TERMOUTOFF
 
 COLUMN min_snapid clear
 COLUMN max_snapid clear
+COLUMN min_snaptime clear
+COLUMN max_snaptime clear
 
 column a_con_id new_value v_a_con_id noprint
 column b_con_id new_value v_b_con_id noprint

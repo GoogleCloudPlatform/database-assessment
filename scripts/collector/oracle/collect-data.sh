@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.3"
+OpVersion="4.3.4"
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
 export LANG=C
@@ -263,8 +263,7 @@ if [ $retval -eq 0 ]; then
     dbmajor=$((echo ${sqlcmd_result} | cut -d '|' -f1)  |cut -d '.' -f 1)
     if [ "${dbmajor}" = "10" ]
     then
-       echo "Oracle 10 is not supported yet, exiting."
-       exit
+       echo "Oracle 10 support is experimental."
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
     executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS}

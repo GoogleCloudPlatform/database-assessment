@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+COLUMN sp_con_id FORMAT A6 HEADING CON_ID
+
 spool &outputdir/opdb__awrhistcmdtypes__&v_tag
 
 WITH vcmdtype AS(
@@ -168,7 +170,7 @@ From STATS$SQL_SUMMARY s
          AND ss.instance_number = sn.instance_number
     LEFT OUTER join audit_actions aa
                  ON ss.command_type = aa.action
-WHERE sn.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+WHERE sn.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
 GROUP BY '&&v_host'
          || '_'
          || '&&v_dbname'
@@ -176,9 +178,9 @@ GROUP BY '&&v_host'
          || '&&v_hora'  ,
           'N/A' , TO_CHAR(sn.snap_time, 'hh24'),  ss.command_type, aa.name
 )
-SELECT pkey , con_id , hh24 , command_type , cnt , avg_buffer_gets , avg_elapsed_time ,
+SELECT pkey , con_id AS sp_con_id, hh24 , command_type , cnt , avg_buffer_gets , avg_elapsed_time ,
        avg_rows_processed , avg_executions , avg_cpu_time , avg_iowait , avg_clwait ,
        avg_apwait , avg_ccwait , avg_plsexec_time, command_name
 FROM vcmdtype;
 spool off
-
+COLUMN sp_con_id CLEAR
