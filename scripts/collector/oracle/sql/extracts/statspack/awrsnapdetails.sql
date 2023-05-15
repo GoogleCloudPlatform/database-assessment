@@ -1,3 +1,23 @@
+/*
+Copyright 2022 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+COLUMN HOUR FORMAT A4
+COLUMN MIN_BEGIN_INTERVAL_TIME FORMAT A30
+COLUMN MAX_BEGIN_INTERVAL_TIME FORMAT A30
+
 spool &outputdir/opdb__awrsnapdetails__&v_tag
 
 WITH vawrsnap as (
@@ -41,7 +61,7 @@ FROM (
                        s.startup_time,
                        LAG(s.startup_time,1) OVER (partition by instance_number ORDER BY snap_time) as lag_startup_time
 		FROM   STATS$SNAPSHOT s
-		WHERE  s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+		WHERE  s.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
 		AND dbid = &&v_dbid
 		order by s.snap_id )
         WHERE startup_time = lag_startup_time
@@ -53,4 +73,6 @@ SELECT pkey , dbid , instance_number , hour , min_snap_id , max_snap_id , min_be
 FROM vawrsnap;
 
 spool off
-
+COLUMN HOUR CLEAR
+COLUMN MIN_BEGIN_INTERVAL_TIME CLEAR
+COLUMN MAX_BEGIN_INTERVAL_TIME CLEAR

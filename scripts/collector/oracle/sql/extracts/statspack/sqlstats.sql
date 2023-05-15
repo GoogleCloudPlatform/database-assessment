@@ -13,6 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
+COLUMN sp_con_id FORMAT A6 HEADING CON_ID
+COLUMN PHYSICAL_READ_BYTES_TOTAL      FORMAT A40
+COLUMN PHYSICAL_WRITE_BYTES_TOTAL     FORMAT A40
+COLUMN IO_OFFLOAD_ELIG_BYTES_TOTAL    FORMAT A40
+COLUMN IO_INTERCONNECT_BYTES_TOTAL    FORMAT A40
+COLUMN OPTIMIZED_PHYSICAL_READS_TOTAL FORMAT A40
+COLUMN CELL_UNCOMPRESSED_BYTES_TOTAL  FORMAT A40
+COLUMN IO_OFFLOAD_RETURN_BYTES_TOTAL  FORMAT A40
+
 spool &outputdir/opdb__sqlstats__&v_tag
 
 WITH vsqlstat AS(
@@ -179,7 +189,7 @@ From STATS$SQL_SUMMARY s
 WHERE a.snap_id = b.snap_id
 AND a.instance_number = b.instance_number
 AND a.dbid = b.dbid
-AND b.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+AND b.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
 AND b.dbid = &&v_dbid
 GROUP BY '&&v_host'
        || '_'
@@ -188,7 +198,7 @@ GROUP BY '&&v_host'
        || '&&v_hora',
        b.dbid, b.instance_number, force_matching_signature
 ORDER BY elapsed_time_total DESC)
-SELECT pkey , con_id , dbid , instance_number , force_matching_signature , sql_id ,
+SELECT pkey , con_id AS sp_con_id , dbid , instance_number , force_matching_signature , sql_id ,
        total_executions , total_px_servers_execs , elapsed_time_total , disk_reads_total ,
        physical_read_bytes_total , physical_write_bytes_total , io_offload_elig_bytes_total , io_interconnect_bytes_total ,
        optimized_physical_reads_total , cell_uncompressed_bytes_total , io_offload_return_bytes_total , direct_writes_total ,
@@ -197,3 +207,11 @@ SELECT pkey , con_id , dbid , instance_number , force_matching_signature , sql_i
 FROM vsqlstat
 WHERE rownum < 300;
 spool off
+COLUMN sp_con_id CLEAR
+COLUMN PHYSICAL_READ_BYTES_TOTAL      CLEAR
+COLUMN PHYSICAL_WRITE_BYTES_TOTAL     CLEAR
+COLUMN IO_OFFLOAD_ELIG_BYTES_TOTAL    CLEAR
+COLUMN IO_INTERCONNECT_BYTES_TOTAL    CLEAR
+COLUMN OPTIMIZED_PHYSICAL_READS_TOTAL CLEAR
+COLUMN CELL_UNCOMPRESSED_BYTES_TOTAL  CLEAR
+COLUMN IO_OFFLOAD_RETURN_BYTES_TOTAL  CLEAR

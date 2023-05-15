@@ -47,7 +47,7 @@ set markup HTML OFF
 set newpage 1
 set null ""
 set numformat ""
-set numwidth 10
+set numwidth 48
 set pno 0
 set recsep WRAP
 set recsepchar " "

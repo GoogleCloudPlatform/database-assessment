@@ -23,7 +23,7 @@ WITH vcompresstype AS (
             || '&&v_hora' AS pkey,
 	        con_id,
             owner,
-            TRUNC(SUM(CEIL(DECODE(compress_for, 'BASIC', gbytes,
+            TRUNC(SUM(CEIL(DECODE(compress_for, 'BASIC', gbytes, 'ENABLED',
                                            0)))) basic,
             TRUNC(SUM(CEIL(DECODE(compress_for, 'OLTP', gbytes,
                                            'ADVANCED', gbytes,
@@ -39,7 +39,7 @@ WITH vcompresstype AS (
             TRUNC(SUM(CEIL(gbytes)))                  total_gb
      FROM   (SELECT &v_a_con_id AS con_id,
                     a.owner,
-                    a.compress_for,
+                    &v_compress_col AS compress_for,
                     SUM(bytes / 1024 / 1024 / 1024) gbytes
              FROM   &v_tblprefix._tables a,
                     &v_tblprefix._segments b
@@ -52,11 +52,11 @@ WITH vcompresstype AS (
 @&EXTRACTSDIR/exclude_schemas.sql
              GROUP  BY &v_a_con_id,
                        a.owner,
-                       a.compress_for
+                       &v_compress_col
              UNION ALL
              SELECT &v_a_con_id,
                     a.table_owner,
-                    a.compress_for,
+                    &v_compress_col AS compress_for,
                     SUM(bytes / 1024 / 1024 / 1024) gbytes
              FROM   &v_tblprefix._tab_partitions a,
                     &v_tblprefix._segments b
@@ -69,11 +69,11 @@ WITH vcompresstype AS (
 @&EXTRACTSDIR/exclude_schemas.sql
              GROUP  BY &v_a_con_id,
                        a.table_owner,
-                       a.compress_for
+                       &v_compress_col
              UNION ALL
              SELECT &v_a_con_id,
                     a.table_owner,
-                    a.compress_for,
+                    &v_compress_col AS compress_for,
                     SUM(bytes / 1024 / 1024 / 1024) gbytes
              FROM   &v_tblprefix._tab_subpartitions a,
                     &v_tblprefix._segments b
@@ -86,7 +86,7 @@ WITH vcompresstype AS (
 @&EXTRACTSDIR/exclude_schemas.sql
              GROUP  BY &v_a_con_id,
                        a.table_owner,
-                       a.compress_for)
+                       &v_compress_col)
      GROUP  BY con_id,
                owner
      --HAVING TRUNC(SUM(gbytes)) > 0
