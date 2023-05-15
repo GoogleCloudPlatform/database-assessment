@@ -42,6 +42,7 @@ set colsep '|'
 set timing off
 set time off
 alter session set nls_numeric_characters='.,';
+alter session set nls_date_format='YYYY-MM-DD HH24:MI:SS';
 
 set termout on
 whenever sqlerror exit failure
@@ -49,10 +50,24 @@ whenever oserror continue
 
 
 variable minsnap NUMBER;
+variable minsnaptime VARCHAR2(20);
 variable maxsnap NUMBER;
+variable maxsnaptime VARCHAR2(20);
 variable umfflag VARCHAR2(100);
 variable pdb_logging_flag VARCHAR2(1);
 variable dflt_value_flag  VARCHAR2(1);
+variable b_compress_col VARCHAR2(20);
+
+variable b_lob_compression_col         VARCHAR2(30);
+variable b_lob_part_compression_col    VARCHAR2(30);
+variable b_lob_subpart_compression_col VARCHAR2(30);
+variable b_lob_dedup_col               VARCHAR2(30);
+variable b_lob_part_dedup_col          VARCHAR2(30);
+variable b_lob_subpart_dedup_col       VARCHAR2(30);
+
+variable b_index_visibility            VARCHAR2(30);
+
+variable b_io_function_sql             VARCHAR2(20);
 
 column instnc new_value v_inst noprint
 column hostnc new_value v_host noprint
@@ -60,7 +75,9 @@ column horanc new_value v_hora noprint
 column dbname new_value v_dbname noprint
 column dbversion new_value v_dbversion noprint
 column min_snapid new_value v_min_snapid noprint
+column min_snaptime new_value v_min_snaptime noprint
 column max_snapid new_value v_max_snapid noprint
+column max_snaptime new_value v_max_snaptime noprint
 column umf_test new_value v_umf_test noprint
 column p_dbid new_value v_dbid noprint
 column p_tblprefix new_value v_tblprefix noprint
@@ -71,6 +88,15 @@ column p_dopluggable new_value v_dopluggable noprint
 column p_db_container_col new_value v_db_container_col noprint
 column p_pluggablelogging new_value v_pluggablelogging noprint
 column p_sqlcmd new_value v_sqlcmd noprint
+column p_compress_col new_value v_compress_col noprint
+column p_lob_compression_col new_value v_lob_compression_col noprint
+column p_lob_part_compression_col new_value v_lob_part_compression_col noprint
+column p_lob_subpart_compression_col new_value v_lob_subpart_compression_col noprint
+column p_lob_dedup_col new_value v_lob_dedup_col noprint
+column p_lob_part_dedup_col new_value v_lob_part_dedup_col noprint
+column p_lob_subpart_dedup_col new_value v_lob_subpart_dedup_col noprint
+column p_index_visibility new_value v_index_visibility noprint
+column p_io_function_sql new_value v_io_function_sql noprint
 
 SELECT host_name     hostnc,
        instance_name instnc
@@ -187,6 +213,39 @@ SELECT CASE WHEN :dflt_value_flag = 'N' THEN '''N/A''' ELSE 'DEFAULT_VALUE' END 
        CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN 'sqlcmd10g.sql' ELSE 'sqlcmd.sql' END AS p_sqlcmd
 FROM DUAL;
 
+DECLARE 
+  cnt NUMBER;
+BEGIN
+  SELECT count(1) INTO cnt FROM dba_tab_columns WHERE table_name = 'DBA_TABLES' AND column_name ='COMPRESS_FOR';
+  IF cnt = 1 THEN :b_compress_col := 'COMPRESS_FOR';
+  ELSE
+    SELECT count(1) INTO cnt FROM dba_tab_columns WHERE table_name = 'DBA_TABLES' AND column_name = 'COMPRESSION';
+    IF cnt = 1 THEN :b_compress_col := 'COMPRESSION';
+    END IF;
+  END IF;
+END;
+/
+
+SELECT :b_compress_col AS p_compress_col FROM dual;
+
+
+DECLARE
+cnt NUMBER;
+BEGIN
+  SELECT SUM(cnt) INTO cnt FROM (
+    SELECT count(1) FROM dba_views WHERE (view_name = 'DBA_HIST_IOSTAT_FUNCTION' AND '&v_dodiagnostics' = 'usediagnostics')
+    UNION
+    SELECT count(1) FROM dba_tables WHERE (table_name ='STATS$IOSTAT_FUNCTION_NAME' AND '&v_dodiagnostics' = 'nodiagnostics' AND OWNER ='PERFSTAT')
+  );
+  IF (cnt > 0 ) THEN :b_io_function_sql := 'iofunction.sql';
+  ELSE 
+    :b_io_function_sql := 'noop.sql';
+  END IF;
+END;
+/
+
+SELECT :b_io_function_sql AS p_io_function_sql FROM dual;
+
 
 set serveroutput on
 DECLARE cnt NUMBER;
@@ -211,6 +270,51 @@ FROM dual
 SELECT &v_umf_test p_dbid
 FROM   v$database
 /
+
+DECLARE 
+  cnt NUMBER;
+BEGIN
+  SELECT count(1) INTO cnt FROM dba_tab_columns WHERE table_name = 'DBA_LOBS' AND column_name = 'COMPRESSION';
+  IF cnt = 1 THEN
+    :b_lob_compression_col         := 'l.compression';
+    :b_lob_part_compression_col    := 'lp.compression'; 
+    :b_lob_subpart_compression_col := 'lsp.compression'; 
+    :b_lob_dedup_col               := 'l.deduplication';
+    :b_lob_part_dedup_col          := 'lp.deduplication';
+    :b_lob_subpart_dedup_col       := 'lsp.deduplication';
+  ELSE
+    :b_lob_compression_col         := '''N/A''';
+    :b_lob_part_compression_col    := '''N/A''';
+    :b_lob_subpart_compression_col := '''N/A''';
+    :b_lob_dedup_col               := '''N/A''';
+    :b_lob_part_dedup_col          := '''N/A''';
+    :b_lob_subpart_dedup_col       := '''N/A''';
+  END IF;
+END;
+/
+
+SELECT 
+:b_lob_compression_col         AS p_lob_compression_col ,
+:b_lob_part_compression_col    AS p_lob_part_compression_col ,
+:b_lob_subpart_compression_col AS p_lob_subpart_compression_col ,
+:b_lob_dedup_col               AS p_lob_dedup_col ,
+:b_lob_part_dedup_col          AS p_lob_part_dedup_col ,
+:b_lob_subpart_dedup_col       AS p_lob_subpart_dedup_col 
+FROM DUAL;
+
+DECLARE
+  cnt NUMBER;
+BEGIN
+  SELECT count(1) INTO cnt FROM dba_tab_columns WHERE table_name = 'DBA_INDEXES' AND column_name = 'VISIBILITY';
+  IF cnt = 1 THEN 
+    :b_index_visibility := 'VISIBILITY';
+  ELSE
+    :b_index_visibility := '''N/A''';
+  END IF;
+END;
+/
+
+SELECT :b_index_visibility AS p_index_visibility FROM DUAL;
 
 variable sp VARCHAR2(100);
 variable v_info_prompt VARCHAR2(200);
@@ -250,15 +354,28 @@ BEGIN
     END IF;
   END;
   IF (l_tab_name != '---' AND l_tab_name NOT LIKE 'ERROR%') THEN
-     THE_SQL := 'SELECT min(snap_id) , max(snap_id) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
-     EXECUTE IMMEDIATE the_sql INTO  :minsnap, :maxsnap USING '&&v_dbid' ;
-     IF :minsnap IS NULL THEN
-        dbms_output.put_line('Warning: No snapshots found within the last &&dtrange days.  No performance data will be extracted.');
-        :minsnap := -1;
-        :maxsnap := -1;
-        :v_info_prompt := 'without performance data';
+     IF l_tab_name = 'DBA_HIST_SNAPSHOT' THEN
+       THE_SQL := 'SELECT min(snap_id) , max(snap_id) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
+       EXECUTE IMMEDIATE the_sql INTO  :minsnap, :maxsnap USING '&&v_dbid' ;
+       IF :minsnap IS NULL THEN
+          dbms_output.put_line('Warning: No snapshots found within the last &&dtrange days.  No performance data will be extracted.');
+          :minsnap := -1;
+          :maxsnap := -1;
+          :v_info_prompt := 'without performance data';
+       ELSE
+          :v_info_prompt := 'between snaps ' || :minsnap || ' and ' || :maxsnap;
+       END IF;
      ELSE
-        :v_info_prompt := 'between snaps ' || :minsnap || ' and ' || :maxsnap;
+       THE_SQL := 'SELECT min(snap_time) , max(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
+       EXECUTE IMMEDIATE the_sql INTO  :minsnaptime, :maxsnaptime USING '&&v_dbid' ;
+       IF :minsnaptime IS NULL THEN
+          dbms_output.put_line('Warning: No snapshots found within the last &&dtrange days.  No performance data will be extracted.');
+          :minsnaptime := sysdate;
+          :maxsnaptime := sysdate;
+          :v_info_prompt := 'without performance data';
+       ELSE
+          :v_info_prompt := 'between  ' || :minsnaptime || ' and ' || :maxsnaptime;
+       END IF;
      END IF;
   ELSE
      :v_info_prompt := 'without performance data';
@@ -266,7 +383,7 @@ BEGIN
 END;
 /
 set termout off
-SELECT NVL(:minsnap, -1) min_snapid, NVL(:maxsnap, -1) max_snapid, :sp sp_script, :v_info_prompt info_prompt FROM dual;
+SELECT NVL(:minsnap, -1) min_snapid, NVL(:maxsnap, -1) max_snapid, NVL(:minsnaptime, SYSDATE) min_snaptime, NVL(:maxsnaptime, SYSDATE) max_snaptime,  :sp sp_script, :v_info_prompt info_prompt FROM dual;
 
 set termout on
 PROMPT Collecting data for database &v_dbname '&&v_dbid' &p_info_prompt
@@ -276,6 +393,8 @@ set termout &TERMOUTOFF
 
 COLUMN min_snapid clear
 COLUMN max_snapid clear
+COLUMN min_snaptime clear
+COLUMN max_snaptime clear
 
 column a_con_id new_value v_a_con_id noprint
 column b_con_id new_value v_b_con_id noprint

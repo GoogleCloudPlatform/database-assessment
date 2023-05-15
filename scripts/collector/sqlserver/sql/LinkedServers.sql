@@ -13,9 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-This script access Automatic Repository Workload (AWR) views in the database dictionary.
-Please ensure you have proper licensing. For more information consult Oracle Support Doc ID 1490798.1
-
 */
 
 SET NOCOUNT ON;

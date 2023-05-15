@@ -11,16 +11,41 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+<#
+.SYNOPSIS
+    .
+.DESCRIPTION
+    Creates a user within the SQL Server Database using "Windows Authentication" with the necessary permissions 
+    needed to execute subsequent scripts to collect data from SQL Server and Perfmon to be uploaded to Google Database Migration Assistant for review.
 
-# Parameter help description
+    If user and password are supplied, that will be used to execute the script.  Otherwise default credentials hardcoded in the script will be used
+.PARAMETER user
+    SqlServer superuser username (mandatory)
+.PARAMETER pass
+    SqlServer superuser password (mandatory)
+.PARAMETER collectionUserName
+    Collection username (optional)
+.PARAMETER collectionUserPass
+    Collection username password (optional)
+.EXAMPLE
+    To use a specific username / password combination:
+        C:\createuserwithsqluser.ps1 -user [superuser] -pass [superuser password] -collectionUserName [collection username] -collectionUserPass [collection username password]
+    
+    or
+    
+    To use default credentials:
+        C:\createuserwithsqluser.ps1 -user [superuser] -pass [superuser password]
+.NOTES
+    https://googlecloudplatform.github.io/database-assessment/
+#>
 Param(
 [Parameter(Mandatory=$true)][string]$user,
 [Parameter(Mandatory=$true)][string]$pass,
 [Parameter(Mandatory=$false)][string]$collectionUserName="userfordma",
-[Parameter(Mandatory=$false)][string]$CollectionUserPass="P@ssword135"
+[Parameter(Mandatory=$false)][string]$collectionUserPass="P@ssword135"
 )
 $objs = Import-Csv -Delimiter "," sqlsrv.csv
 foreach($item in $objs) {
     $sqlsrv = $item.InstanceName
-    sqlcmd -S $sqlsrv -i sql\prereq_createsa.sql -U $user -P $pass -m 1 -v collectionUser=$collectionUserName collectionPass=$CollectionUserPass
+    sqlcmd -S $sqlsrv -i sql\prereq_createsa.sql -U $user -P $pass -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
 }

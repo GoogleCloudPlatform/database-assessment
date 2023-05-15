@@ -19,6 +19,8 @@ COLUMN SECONDARY FORMAT A20
 COLUMN UNIQUENESS FORMAT A20
 COLUMN JOIN_INDEX FORMAT A20
 COLUMN CUSTOM_INDEX_TYPE FORMAT A20
+COLUMN VISIBILITY FORMAT A20
+COLUMN COMPRESSION FORMAT A20
 spool &outputdir/opdb__indextypedtl__&v_tag
 
 WITH vidxtype AS (
@@ -35,7 +37,7 @@ SELECT '&&v_host'
        a.partitioned,
        a.temporary,
        a.secondary,
-       a.visibility,                      
+       &v_index_visibility AS VISIBILITY,
        a.join_index,
        CASE WHEN a.ityp_owner IS NOT NULL THEN 'Y' ELSE 'N' END AS custom_index_type,
        a.table_name,
@@ -53,7 +55,7 @@ SELECT pkey ,
        partitioned,
        temporary,
        secondary,
-       visibility,                      
+       visibility,
        join_index,
        custom_index_type,
        table_name,
@@ -66,3 +68,5 @@ COLUMN SECONDARY CLEAR
 COLUMN UNIQUENESS CLEAR
 COLUMN JOIN_INDEX CLEAR
 COLUMN CUSTOM_INDEX_TYPE CLEAR
+COLUMN VISIBILITY CLEAR
+COLUMN COMPRESSION CLEAR

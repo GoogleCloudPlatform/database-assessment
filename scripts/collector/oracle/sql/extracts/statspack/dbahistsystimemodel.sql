@@ -1,3 +1,20 @@
+/*
+Copyright 2022 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+COLUMN HOUR FORMAT A4
 spool &outputdir/opdb__dbahistsystimemodel__&v_tag
 
 WITH vtimemodel AS (
@@ -47,7 +64,7 @@ WHERE  s.snap_id = g.snap_id
        AND s.instance_number = g.instance_number
        AND s.dbid = g.dbid
        AND g.stat_id = n.stat_id
-       AND s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+       AND s.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
        AND s.dbid = '&&v_dbid'
 )
 GROUP BY
@@ -62,4 +79,4 @@ SELECT pkey, dbid, instance_number, hour, stat_name, cnt,
 FROM vtimemodel;
 
 spool off
-
+COLUMN HOUR CLEAR

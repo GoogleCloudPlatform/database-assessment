@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+column hour format a4
 spool &outputdir/opdb__ioevents__&v_tag
 
 WITH vrawev AS (
@@ -48,7 +49,7 @@ FROM STATS$SYSTEM_EVENT sev
      AND sev.instance_number = dhsnap.instance_number
      AND sev.dbid = dhsnap.dbid
      INNER JOIN v$event_name en ON en.name = sev.event
-WHERE  sev.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+WHERE  dhsnap.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
 AND sev.dbid = &&v_dbid
 AND en.wait_class IN ('User I/O', 'System I/O', 'Commit')),
 vpercev AS(
@@ -63,7 +64,13 @@ SELECT pkey,
        PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY tot_tout_delta_value DESC) AS tot_tout_delta_value_P95,
        PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P95
+         within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P95,
+       PERCENTILE_CONT(0.00)
+         within GROUP (ORDER BY tot_waits_delta_value DESC) AS tot_waits_delta_value_P100,
+       PERCENTILE_CONT(0.00)
+         within GROUP (ORDER BY tot_tout_delta_value DESC) AS tot_tout_delta_value_P100,
+       PERCENTILE_CONT(0.00)
+         within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P100
 FROM vrawev
 GROUP BY pkey,
          dbid,
@@ -80,11 +87,18 @@ SELECT pkey,
        event_name,
        ROUND(tot_waits_delta_value_P95) tot_waits_delta_value_P95,
        ROUND(tot_tout_delta_value_P95) tot_tout_delta_value_P95,
-       ROUND(time_wa_us_delta_value_P95) time_wa_us_delta_value_P95
+       ROUND(time_wa_us_delta_value_P95) time_wa_us_delta_value_P95,
+       ROUND(tot_waits_delta_value_P100) tot_waits_delta_value_P100,
+       ROUND(tot_tout_delta_value_P100) tot_tout_delta_value_P100,
+       ROUND(time_wa_us_delta_value_P100) time_wa_us_delta_value_P100
 FROM vpercev)
 SELECT pkey , dbid , instance_number , hour , wait_class , event_name ,
        tot_waits_delta_value_P95 ,
        tot_tout_delta_value_P95 ,
-       time_wa_us_delta_value_P95
+       time_wa_us_delta_value_P95,
+       tot_waits_delta_value_P100 ,
+       tot_tout_delta_value_P100 ,
+       time_wa_us_delta_value_P100
 FROM vfev;
 spool off
+column hour clear

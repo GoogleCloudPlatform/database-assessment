@@ -13,8 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-column t_sql_cmd   new_value  v_sql_cmd noprint
-column t_machine   new_value  v_machine noprint
+COLUMN t_sql_cmd   NEW_VALUE  v_sql_cmd NOPRINT
+COLUMN t_machine   NEW_VALUE  v_machine NOPRINT 
+COLUMN MACHINE FORMAT A60
 
 
 SELECT  CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '&AWRDIR/sqlcmd10.sql' ELSE '&AWRDIR/sqlcmd12.sql' END as t_sql_cmd,
