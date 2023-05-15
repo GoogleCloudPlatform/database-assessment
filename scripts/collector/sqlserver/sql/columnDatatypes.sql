@@ -21,6 +21,8 @@ Please ensure you have proper licensing. For more information consult Oracle Sup
 SET NOCOUNT ON
 DECLARE @PKEY AS VARCHAR(256)
 SELECT @PKEY = N'$(pkey)';
+DECLARE @PRODUCT_VERSION AS VARCHAR(30)
+SELECT @PRODUCT_VERSION = PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4);
 DECLARE @dbname VARCHAR(50)
 DECLARE db_cursor CURSOR FOR 
 SELECT name 
@@ -50,8 +52,10 @@ CREATE TABLE #columnDatatypes(
 OPEN db_cursor  
 FETCH NEXT FROM db_cursor INTO @dbname  
 
-WHILE @@FETCH_STATUS = 0  
+WHILE @@FETCH_STATUS = 0
 BEGIN
+   IF @PRODUCT_VERSION > 12
+   BEGIN
 	exec ('
 	use [' + @dbname + '];
 	INSERT INTO #columnDatatypes (
@@ -106,8 +110,64 @@ BEGIN
    ORDER BY s.name
          , o.name
          , t.name');
-    FETCH NEXT FROM db_cursor INTO @dbname 
-END 
+   END;
+   IF @PRODUCT_VERSION <= 12
+   BEGIN
+	exec ('
+	use [' + @dbname + '];
+	INSERT INTO #columnDatatypes (
+      schema_name
+      ,table_name
+      ,datatype
+      ,max_length
+      ,precision
+      ,scale
+      ,is_computed
+      ,is_filestream
+      ,is_masked
+      ,encryption_type
+      ,is_sparse
+      ,rule_object_id
+      ,column_count 
+   )
+   SELECT s.name AS schema_name
+         , o.name AS table_name
+         , t.name AS datatype
+         , c.max_length
+         , c.precision
+         , c.scale
+         , c.is_computed
+         , c.is_filestream
+         , 0 as is_masked
+         , 0 AS encryption_type
+         , c.is_sparse
+         , c.rule_object_id
+         , count(1) column_count
+      FROM  sys.objects o 
+      JOIN  sys.schemas s
+         ON  s.schema_id = o.schema_id
+      JOIN  sys.columns c
+      ON  o.object_id = c.object_id
+      JOIN  sys.types t
+      ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
+   WHERE o.type_desc = ''USER_TABLE'' 
+      AND t.system_type_id = t.user_type_id
+   GROUP BY s.name
+         , o.name
+         , t.name
+         , c.max_length
+         , c.precision
+         , c.scale
+         , c.is_computed
+         , c.is_filestream
+         , c.is_sparse
+         , c.rule_object_id
+   ORDER BY s.name
+         , o.name
+         , t.name');
+   END;
+   FETCH NEXT FROM db_cursor INTO @dbname 
+END
 
 CLOSE db_cursor  
 DEALLOCATE db_cursor
