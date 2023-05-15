@@ -11,7 +11,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+<#
+.SYNOPSIS
+    .
+.DESCRIPTION
+    Executes the necessary scripts to collect data from SQL Server and Perfmon to be uploaded to Google Database Migration Assistant for review.
 
+    If user and password are supplied, that will be used to execute the script.  Otherwise default credentials hardcoded in the script will be used
+.PARAMETER user
+    Collection username (optional)
+.PARAMETER pass
+    Collection username password (optional)
+.EXAMPLE
+    To use a specific username / password combination:
+        C:\InstanceReview.ps1 -user [collection username] -pass [collection username password]
+    
+    or
+    
+    To use default credentials:
+        C:\InstanceReview.ps1
+.NOTES
+    https://googlecloudplatform.github.io/database-assessment/
+#>
 Param(
 [string]$user = "userfordma",
 [string]$pass = "P@ssword135"

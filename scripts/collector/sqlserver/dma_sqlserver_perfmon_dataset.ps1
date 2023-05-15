@@ -28,8 +28,7 @@
 .EXAMPLE
     C:\dma_sqlserver_perfmon_dataset.ps1 -operation create -mssqlInstanceName [named Instance] / $null
 .NOTES
-    Author: Shane Borden
-    Date:   February 28, 2023    
+    https://googlecloudplatform.github.io/database-assessment/
 #>
 param (
 	[Parameter(
