@@ -51,11 +51,14 @@ goto done
 
 :error
 echo "Username or Password is not populated"
-goto done
+goto exit
 
 :defaultCredError
 echo "Please specify -useDefaultCreds flag when invoking the script"
-goto done
+goto exit
 
 :done
 echo Script Complete!
+
+:exit
+echo Exit!
