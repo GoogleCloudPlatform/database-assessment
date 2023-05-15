@@ -23,8 +23,10 @@ if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-CollectionUserPass" set "pass=%2"
 if /i "%1" == "-useDefaultCreds" set "defaultCreds=1"
 
+set helpMessage=Usage: CreateUserForAssessmentWithWindowsAuth.bat (-collectionUserName -collectionUserPass)/-useDefaultCreds
+
 if %1 == help (
-    echo "Usage: CreateUserForAssessmentWithWindowsAuth.bat (-collectionUserName -collectionUserPass)/-useDefaultCreds"
+    echo %helpMessage%
     goto done
 )
 
@@ -51,14 +53,11 @@ goto done
 
 :error
 echo "Username or Password is not populated"
-goto exit
+goto done
 
 :defaultCredError
 echo "Please specify -useDefaultCreds flag when invoking the script"
-goto exit
+goto done
 
 :done
 echo Script Complete!
-
-:exit
-echo Exit!

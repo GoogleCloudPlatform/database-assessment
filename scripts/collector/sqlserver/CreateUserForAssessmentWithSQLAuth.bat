@@ -27,8 +27,10 @@ if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-CollectionUserPass" set "pass=%2"
 if /i "%1" == "-useDefaultCreds" set "defaultCreds=1"
 
+set helpMessage=Usage: .\CreateUserForAssessmentWithSQLAuth.bat -serverUserName -serverUserPass -useDefaultCreds/(-collectionUserName -collectionUserPass)
+
 if %1 == help (
-    echo "Usage: .\CreateUserForAssessmentWithSQLAuth.bat -serverUserName -serverUserPass -useDefaultCreds/(-collectionUserName -collectionUserPass)"
+    echo %helpMessage%
     goto done
 )
 
