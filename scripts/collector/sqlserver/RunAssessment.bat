@@ -23,7 +23,7 @@ if /i "%1" == "-username" set "user=%2"
 if /i "%1" == "-password" set "pass=%2"
 if /i "%1" == "-useDefaultCreds" set "defaultUsr=1"
 
-set helpMessage=Usage: RunAssessment.bat (-collectionUserName -collectionUserPass)/-useDefaultCreds
+set helpMessage="Usage: RunAssessment.bat (-collectionUserName -collectionUserPass) or -useDefaultCreds"
 
 if %1 == help (
     echo %helpMessage%
