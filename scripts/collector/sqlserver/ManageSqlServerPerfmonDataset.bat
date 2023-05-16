@@ -13,45 +13,85 @@
 :: limitations under the License.
 
 @echo off
-set perfmonOperation=
-set mssqlInstanceName=
 
-:loop 
-if "%1" == "" goto evaluateOperation
-if /i "%1" == "-operation" set "perfmonOperation=%2"
-if /i "%1" == "-mssqlInstanceName" set "perfmonInstance=%2"
+set validPerfmonOperations=create stop delete collect
+set validInstances=default managed
 
-shift
-goto :loop
+set helpMessage=Usage: .\ManageSqlServerPerfmonDataset.bat [operation] create/update/delete/collect [InstanceName]managed/default Example: .\ManageSqlServerPerfmonDataset.bat create default
 
-:evaluateOperation
-if [%perfmonOperation%]==[] goto error
-if not [%perfmonOperation%]==[] goto execPerfmonOperation
+if [%1]==[] (
+    echo %helpMessage%
+    goto exit
+)
 
-:execPerfmonOperation
-if [%perfmonInstance%] == [] goto execPerfmonDefaultInstance
-if not [%perfmonInstance%] == [] goto execPerfmonNamedInstance
+set perfmonOperation=%1
+set instance=%2
+set managedInstanceName=%3
 
-:execPerfmonDefaultInstance
-echo "Managing Perfmon Collection for Default Instance"
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dma_sqlserver_perfmon_dataset.ps1 -operation %perfmonOperation%
+set isValidPerfmonOperation=false
 
-goto done
+if %perfmonOperation%==help (
+    echo %helpMessage%
+    goto exit
+)
 
-:execPerfmonNamedInstance
-if [%perfmonInstance%] == [] goto defaultNamedInstanceError
-echo "Managing Perfmon Collection for Named Instance %perfmonInstance%"
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dma_sqlserver_perfmon_dataset.ps1 -operation %perfmonOperation% -mssqlInstanceName %perfmonInstance%
 
-goto done
+rem check passed options for PerfmonOperation
+(for %%a in (%validPerfmonOperations%) do (
+    :: echo %%a
+    if %perfmonOperation%==%%a (
+       :: echo "Operation match %%a"
+        set isValidPerfmonOperation=true
+    )
+))
 
-:error
-echo "Operation parameter is not populated"
-goto done
+if %isValidPerfmonOperation%==false (
+    echo %perfmonOperation% is not a valid perfmon Operation, allowed arguments are %validPerfmonOperations%
+    goto exit
+)
 
-:defaultNamedInstanceError
-echo "Named Instance not properly specified"
-goto done
+set isValidInstance=false
+rem check passed options for PerfmonOperation
+(for %%a in (%validInstances%) do (
+    :: echo %%a
+    if %instance%==%%a (
+        :: echo "Operation match %%a"
+        set isValidInstance=true
+    )
+))
+
+if %isValidInstance%==false (
+    echo %instance% is not a valid Instance type, allowed arguments are %validInstances%
+    goto exit
+)
+
+echo %instance%
+echo %isValidInstance%
+if %instance%==managed (
+    if [%managedInstanceName%]==[]  (
+        echo Please pass a valid instanceName
+        goto exit
+    )
+)
+
+echo %managedInstanceName%
+
+if %instance%==default (
+    echo "Managing Perfmon Collection for Default Instance"
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dma_sqlserver_perfmon_dataset.ps1 -operation %perfmonOperation%
+
+    goto done
+)
+
+if %instance%==managed (
+    echo "Managing Perfmon Collection for Default Instance"
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dma_sqlserver_perfmon_dataset.ps1 -operation %perfmonOperation% -mssqlInstanceName %managedInstanceName%
+
+    goto done
+)
 
 :done
 echo Script Complete!
+
+:exit
+echo Exit!

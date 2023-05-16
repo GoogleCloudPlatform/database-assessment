@@ -135,6 +135,7 @@ dmypy.json
 
 # osx
 .ds_store
+.DS_Store
 
 # vscode
 # .vscode
