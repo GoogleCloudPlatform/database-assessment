@@ -23,9 +23,9 @@ SELECT DISTINCT
     vs.volume_mount_point,
     vs.file_system_type,
     vs.logical_volume_name,
-    CONVERT(DECIMAL(18, 2), vs.total_bytes / 1073741824.0) AS total_size_gb,
-    CONVERT(DECIMAL(18, 2), vs.available_bytes / 1073741824.0) AS available_size_gb,
-    CAST(CAST(vs.available_bytes AS float) / CAST(vs.total_bytes AS float) AS DECIMAL(18, 2)) * 100 AS space_free_pct
+    CONVERT(NVARCHAR, (vs.total_bytes / 1073741824.0)) AS total_size_gb,
+    CONVERT(NVARCHAR, (vs.available_bytes / 1073741824.0)) AS available_size_gb,
+    CONVERT(NVARCHAR, ROUND((CONVERT(numeric,vs.available_bytes) / CONVERT(numeric, vs.total_bytes)),4)) AS space_free_pct
 FROM
     sys.master_files AS f WITH (
         NOLOCK)
