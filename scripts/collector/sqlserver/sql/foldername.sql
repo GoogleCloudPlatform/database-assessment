@@ -16,6 +16,7 @@ limitations under the License.
 */
 
 SET NOCOUNT ON;
+SET LANGUAGE us_english;
 /*  Modified to work with 2008R2
 SELECT CAST(SERVERPROPERTY('ProductVersion') AS VARCHAR(15)) AS Version, 
 CAST(SERVERPROPERTY('MachineName') AS VARCHAR(15)) as machinename, 

@@ -16,10 +16,11 @@ limitations under the License.
 */
 
 /* sys.dm_os_host_info - Applies to: SQL Server 2017 (14.x) and later */
-SET NOCOUNT ON
+SET NOCOUNT ON;
+SET LANGUAGE us_english;
 DECLARE @PKEY AS VARCHAR(256)
-DECLARE @PRODUCT_VERSION AS VARCHAR(30)
-SELECT @PRODUCT_VERSION = PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4);
+DECLARE @PRODUCT_VERSION AS INTEGER
+SELECT @PRODUCT_VERSION = CONVERT(integer, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
 SELECT @PKEY = N'$(pkey)';
 
 IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  

@@ -15,7 +15,8 @@ limitations under the License.
 
 */
 
-SET NOCOUNT ON
+SET NOCOUNT ON;
+SET LANGUAGE us_english;
 DECLARE @PKEY AS VARCHAR(256)
 SELECT @PKEY = N'$(pkey)';
 
