@@ -15,7 +15,8 @@ limitations under the License.
 
 */
 
-SET NOCOUNT ON
+SET NOCOUNT ON;
+SET LANGUAGE us_english;
 /* ------------------------------------------ Inital Setup -----------------------------------------------------*/
 CREATE TABLE #RegResult
 (

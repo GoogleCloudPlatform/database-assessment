@@ -17,7 +17,7 @@
 set validPerfmonOperations=create stop delete collect
 set validInstances=default managed
 
-set helpMessage=Usage: .\ManageSqlServerPerfmonDataset.bat [operation] create/update/delete/collect [InstanceName]managed/default Example: .\ManageSqlServerPerfmonDataset.bat create default
+set helpMessage="Usage: .\ManageSqlServerPerfmonDataset.bat [operation] create/update/delete/collect [Instance Type]managed/default [ManagedInstanceName] Example: .\ManageSqlServerPerfmonDataset.bat create default or .\ManageSqlServerPerfmonDataset.bat create managed SQL2019"
 
 if [%1]==[] (
     echo %helpMessage%

@@ -23,7 +23,7 @@ if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-CollectionUserPass" set "pass=%2"
 if /i "%1" == "-useDefaultCreds" set "defaultCreds=1"
 
-set helpMessage=Usage: CreateUserForAssessmentWithWindowsAuth.bat (-collectionUserName -collectionUserPass)/-useDefaultCreds
+set helpMessage="Usage: CreateUserForAssessmentWithWindowsAuth.bat (-collectionUserName -collectionUserPass) or -useDefaultCreds"
 
 if %1 == help (
     echo %helpMessage%

@@ -16,6 +16,7 @@ limitations under the License.
 */
 
 SET NOCOUNT ON;
+SET LANGUAGE us_english;
 USE [master]
 --Linked Servers
 select N'$(pkey)' as PKEY, 

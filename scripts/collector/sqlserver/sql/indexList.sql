@@ -15,7 +15,8 @@ limitations under the License.
 
 */
 
-SET NOCOUNT ON
+SET NOCOUNT ON;
+SET LANGUAGE us_english;
 DECLARE @PKEY AS VARCHAR(256)
 SELECT @PKEY = N'$(pkey)';
 DECLARE @dbname VARCHAR(50)
@@ -72,7 +73,7 @@ BEGIN
          ,ISNULL (SUM(ic.key_ordinal),0) AS count_key_ordinal
          ,ISNULL (SUM(ic.partition_ordinal),0) AS count_partition_ordinal
          ,ISNULL (COUNT(ic.is_included_column),0) as count_is_included_column
-         ,CAST(ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2) AS NUMERIC(36, 2)) AS total_space_mb
+         ,CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) AS total_space_mb
       FROM sys.indexes i
       JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
       JOIN sys.tables t ON i.object_id = t.object_id
