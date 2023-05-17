@@ -18,8 +18,8 @@ limitations under the License.
 SET NOCOUNT ON
 DECLARE @PKEY AS VARCHAR(256)
 SELECT @PKEY = N'$(pkey)';
-DECLARE @PRODUCT_VERSION AS VARCHAR(30)
-SELECT @PRODUCT_VERSION = PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4);
+DECLARE @PRODUCT_VERSION AS INTEGER
+SELECT @PRODUCT_VERSION = CONVERT(integer, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
 DECLARE @dbname VARCHAR(50)
 DECLARE db_cursor CURSOR FOR 
 SELECT name 
@@ -79,9 +79,9 @@ BEGIN
 											WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 											)
 								END
-			,[total_space_mb]   = cast(round(( au.total_pages                  * (8/1024.00)), 2) AS DECIMAL(36,2))
-			,[used_space_mb]    = cast(round(( au.used_pages                   * (8/1024.00)), 2) AS DECIMAL(36,2))
-			,[unused_space_mb]  = cast(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2) AS DECIMAL(36,2))
+			,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
+			,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
+			,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 		FROM sys.schemas s
 		JOIN sys.tables  t ON s.schema_id = t.schema_id
 		JOIN sys.indexes i ON t.object_id = i.object_id
@@ -144,9 +144,9 @@ BEGIN
 											WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 											)
 								END
-			,[total_space_mb]   = cast(round(( au.total_pages                  * (8/1024.00)), 2) AS DECIMAL(36,2))
-			,[used_space_mb]    = cast(round(( au.used_pages                   * (8/1024.00)), 2) AS DECIMAL(36,2))
-			,[unused_space_mb]  = cast(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2) AS DECIMAL(36,2))
+			,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
+			,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
+			,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 		FROM sys.schemas s
 		JOIN sys.tables  t ON s.schema_id = t.schema_id
 		JOIN sys.indexes i ON t.object_id = i.object_id
