@@ -27,8 +27,8 @@ IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL
    DROP TABLE #serverProperties;
 
 CREATE TABLE #serverProperties(
-    property_name nvarchar(255)
-    ,property_value nvarchar(255)
+    property_name nvarchar(256)
+    ,property_value nvarchar(1024)
 );
 INSERT INTO #serverProperties
 SELECT 'BuildClrVersion' AS Property, CONVERT(nvarchar, SERVERPROPERTY('BuildClrVersion')) AS Value
@@ -119,7 +119,7 @@ SELECT 'IsRemoteProcTransactionPromotionEnabled', CONVERT(nvarchar, is_remote_pr
 UNION ALL
 SELECT 'IsRemoteLoginEnabled', CONVERT(nvarchar, is_remote_login_enabled) FROM sys.servers WHERE name = @@SERVERNAME
 UNION ALL
-SELECT 'FullVersion', REPLACE(REPLACE(@@version, CHAR(13), ' '), CHAR(10), ' ')
+SELECT 'FullVersion', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), ' '), CHAR(10), ' '),1,1024)
 UNION ALL
 SELECT
     'MaintenancePlansEnabled',
@@ -184,18 +184,18 @@ END;
 IF @PRODUCT_VERSION < 14
 BEGIN
  exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows'' FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
- exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' '') /* SQL Server 2016 (13.x) and prior */');
- exec('INSERT INTO #serverProperties SELECT ''HostRelease'', CONVERT(nvarchar,windows_release) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
- exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', CONVERT(nvarchar,windows_service_pack_level) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
- exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',CONVERT(nvarchar, os_language_version) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
+ exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024) /* SQL Server 2016 (13.x) and prior */');
+ exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,windows_release),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
+ exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar,windows_service_pack_level),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
+ exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
 END;
 IF @PRODUCT_VERSION >= 14
 BEGIN
- exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', CONVERT(nvarchar,host_platform) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
- exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', CONVERT(nvarchar,host_distribution) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
- exec('INSERT INTO #serverProperties SELECT ''HostRelease'', CONVERT(nvarchar,host_release) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
- exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', CONVERT(nvarchar,host_service_pack_level) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
- exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',CONVERT(nvarchar, os_language_version) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+ exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', SUBSTRING(CONVERT(nvarchar,host_platform),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+ exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(CONVERT(nvarchar,host_distribution),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+ exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,host_release),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+ exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar,host_service_pack_level),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+ exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
 END;
 IF @PRODUCT_VERSION >= 13 AND @PRODUCT_VERSION <= 16
 BEGIN
