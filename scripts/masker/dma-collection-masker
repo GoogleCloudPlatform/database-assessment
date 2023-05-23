@@ -74,23 +74,18 @@ def run_masker(input_dir: Optional[Path] = None, output_path: Optional[Path] = N
 
     Args:
         config (Dict[str,str]): dictionary representation of the config.
-        input_dir (Path | None, optional): _description_. Defaults to None.
-        output_path (Path | None, optional): _description_. Defaults to None.
+        input_dir (Path | None, optional): Path containing collections to mask. Defaults to None.
+        output_path (Path | None, optional): Path to write masked collection. Defaults to None.
     """
     with TemporaryDirectory() as temp_dir:
         work_dir = Path(temp_dir)
         work_dir.mkdir(exist_ok=True)
         input_dir = input_dir if input_dir else Path("input")
         output_path = output_path if output_path else Path("masked")
-        logger.info("Masking complete.  Please submit the files in the '%s' directory.", output_path)
 
         for dir_name in {input_dir, output_path}:
             dir_name.mkdir(parents=True, exist_ok=True)
 
-        if not _is_dir_empty(output_path):
-            raise ApplicationError(
-                f"Directory '{output_path}' must be empty before running this tool.  Clean up these files and retry"
-            )
         collections = _find_collections_to_process(input_dir)
         for collection in collections:
             identity_map: Dict[str, str] = {}
@@ -106,25 +101,16 @@ def run_masker(input_dir: Optional[Path] = None, output_path: Optional[Path] = N
             )
             _clean_folder(work_dir)
 
-        logger.info("Masking complete.  Please submit the files in the '%s' directory.", output_path)
+        logger.info("------------------------------------------------------------------------------------------")
+        logger.info("------------------------------------------------------------------------------------------")
+        logger.info(
+            "Masking complete.  Please submit the files in the '%s' directory.",
+            output_path,
+        )
         logger.info(
             "Retain the *key files in the '%s' directory to map data from the assessment report to the original values.",
             input_dir,
         )
-
-
-def _is_dir_empty(dir_name: Path) -> bool:
-    """Check if directory is empty.
-
-    Returns true if directory is empty.
-
-    Args:
-        dir_name (Path): The directory to check for files.
-
-    Returns:
-        bool: True if directory is empty.
-    """
-    return bool(len(list(dir_name.glob("*"))) == 0)
 
 
 def _find_collections_to_process(search_path: Path) -> List[Path]:
@@ -136,7 +122,11 @@ def _find_collections_to_process(search_path: Path) -> List[Path]:
     Returns:
         List[Path]: list of files found matching the collection pattern
     """
-    return list(Path(str(search_path)).glob("opdb_oracle_*.zip"))
+    return list(
+        set(Path(str(search_path)).glob("opdb_oracle_*.zip")).difference(
+            set(Path(str(search_path)).glob("opdb_oracle_*ERROR.zip"))
+        )
+    )
 
 
 def _extract_collection(collection_file: Path, extract_path: Path) -> None:
@@ -174,7 +164,9 @@ def _find_file_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> Opti
 
 
 def _generate_identity_map_from_rule(
-    rule: DataMaskRule, collection_file: Path, existing_identity_map: Optional[Dict[str, str]] = None
+    rule: DataMaskRule,
+    collection_file: Path,
+    existing_identity_map: Optional[Dict[str, str]] = None,
 ) -> Dict[str, str]:
     """Generate identity map from rule.
 
@@ -203,7 +195,8 @@ def _generate_identity_map_from_rule(
     unique_values = list(dict.fromkeys(all_values))
     return {
         value: existing_identity_map.get(
-            value, f"USER_{''.join(random.choices(string.ascii_lowercase + string.digits, k=4))}"  # noqa: S311
+            value,
+            f"USER_{''.join(random.choices(string.ascii_lowercase + string.digits, k=3)).upper()}",
         )
         for value in unique_values
     }
@@ -232,15 +225,25 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
 
 
 def _package_collection(
-    collection: Path, identity_map: Dict[str, str], extract_path: Path, output_path: Path
+    collection: Path,
+    identity_map: Dict[str, str],
+    extract_path: Path,
+    output_path: Path,
 ) -> Tuple[Path, Path]:
-    """Package collection.
+    """Packages de-identified files.
 
-    Packages de-identified files.
+    Args:
+        collection (Path): the collection archive
+        identity_map (Dict[str, str]): the map of unique keys to the replacement value
+        extract_path (Path): The path to look for extracted files.
+        output_path (Path): The path to write the new collection.
+
+    Returns:
+        Tuple[Path, Path]: The new key file and archive file.
     """
     logger.info("Zipping %s", collection.stem)
     archive_file = Path(output_path / f"{collection.stem}.zip")
-    key_file = Path(output_path / f"{collection.stem}.key")
+    key_file = Path(collection.parent / f"{collection.stem}.key")
     matched_files = (
         list(extract_path.glob("*.csv")) + list(extract_path.glob("*.log")) + list(extract_path.glob("*.txt"))
     )
@@ -258,23 +261,30 @@ def _package_collection(
 
 
 def _clean_folder(extract_path: Path) -> None:
-    """Clean folder."""
-    logger.info("Cleaning temporary files")
+    """Clean temp folder
 
+    Args:
+        extract_path (Path): The path to clean.
+    """
+    logger.info("Cleaning temporary files")
     matched_files = list(extract_path.glob("*"))
     for file in matched_files:
-        if file.exists():
+        if file.exists() and file.is_file():
             file.unlink()
+        if file.exists() and file.is_dir():
+            shutil.rmtree(file, ignore_errors=True)
 
 
 def main() -> None:
+    """Google Database Migration Assessment - Collection Masking Script."""
+
     def _validate_collection_path(path: str) -> str:
         p = Path(path)
         if p.exists() and p.is_dir() and path is not None:
             return path
         raise argparse.ArgumentTypeError(f"collection-path {path} is not a valid path")
 
-    parser = argparse.ArgumentParser(description="Google Database Migration Assessment - De-identification Script")
+    parser = argparse.ArgumentParser(description="Google Database Migration Assessment - Collection Masking Script")
     parser.add_argument(
         "--verbose",
         "-v",
@@ -289,10 +299,12 @@ def main() -> None:
     )
     parser.add_argument(
         "--output-path",
-        default=f"{Path.cwd()}/output",
-        help="Path to search for collections.",
+        default=str(Path.cwd()),
+        help="Path to write masked collections.",
     )
     args = parser.parse_args(args=None if sys.argv[1:] else ["--help"])
+    if Path(args.collection_path) == Path(args.output_path):
+        raise argparse.ArgumentTypeError("output-path must not be the same path as collection-path")
     level = args.verbose
     if level == 0:
         level = logging.ERROR
