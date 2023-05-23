@@ -1,0 +1,314 @@
+#!/usr/bin/env python3
+# Copyright 2022 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import argparse
+import csv
+import logging
+import random
+import shutil
+import string
+import sys
+import zipfile as zf
+from collections import namedtuple
+from pathlib import Path
+from tempfile import NamedTemporaryFile, TemporaryDirectory
+from typing import Dict, List, Optional, Tuple
+
+__all__ = [
+    "ApplicationError",
+    "DataMaskRule",
+    "main",
+    "run_masker",
+]
+__version__ = "4.3.5"
+logger = logging.getLogger(__name__)
+
+here = Path(__file__).parent
+
+DataMaskRule = namedtuple("DataMaskRule", ["mask_type", "table_name", "column_position", "missing_ok"])
+
+
+DATA_MASK_CONFIG = [
+    DataMaskRule(mask_type="Schema Name", table_name="columntypes", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="compressbytype", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="datatypes", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="dbobjectnames", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="dbobjects", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="dtlsourcecode", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="exttab", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="indextypedtl", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="indextypes", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="lobsizing", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="mviewtypes", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="sourcecode", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="tableconstraints", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="tablesnopk", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="tabletypedtl", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="tabletypes", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="triggers", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="usedspacedetails", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="usrsegatt", column_position=2, missing_ok=True),
+]
+
+
+class ApplicationError(Exception):
+    """Application Error
+
+    Raised when any error occurs with the masking process.
+    """
+
+
+def run_masker(input_dir: Optional[Path] = None, output_path: Optional[Path] = None) -> None:
+    """Run Masker.
+
+    Args:
+        config (Dict[str,str]): dictionary representation of the config.
+        input_dir (Path | None, optional): _description_. Defaults to None.
+        output_path (Path | None, optional): _description_. Defaults to None.
+    """
+    with TemporaryDirectory() as temp_dir:
+        work_dir = Path(temp_dir)
+        work_dir.mkdir(exist_ok=True)
+        input_dir = input_dir if input_dir else Path("input")
+        output_path = output_path if output_path else Path("masked")
+        logger.info("Masking complete.  Please submit the files in the '%s' directory.", output_path)
+
+        for dir_name in {input_dir, output_path}:
+            dir_name.mkdir(parents=True, exist_ok=True)
+
+        if not _is_dir_empty(output_path):
+            raise ApplicationError(
+                f"Directory '{output_path}' must be empty before running this tool.  Clean up these files and retry"
+            )
+        collections = _find_collections_to_process(input_dir)
+        for collection in collections:
+            identity_map: Dict[str, str] = {}
+            _extract_collection(collection, work_dir)
+            for rule in DATA_MASK_CONFIG:
+                collection_file = _find_file_referenced_by_rule(rule, work_dir)
+                if collection_file:
+                    identity_map = _generate_identity_map_from_rule(rule, collection_file, identity_map)
+                    _apply_identity_map_to_file(rule, collection_file, identity_map)
+            logger.info("Completed work on %s", collection.stem)
+            _collection_key_file, _new_collection_archive = _package_collection(
+                collection, identity_map, work_dir, output_path
+            )
+            _clean_folder(work_dir)
+
+        logger.info("Masking complete.  Please submit the files in the '%s' directory.", output_path)
+        logger.info(
+            "Retain the *key files in the '%s' directory to map data from the assessment report to the original values.",
+            input_dir,
+        )
+
+
+def _is_dir_empty(dir_name: Path) -> bool:
+    """Check if directory is empty.
+
+    Returns true if directory is empty.
+
+    Args:
+        dir_name (Path): The directory to check for files.
+
+    Returns:
+        bool: True if directory is empty.
+    """
+    return bool(len(list(dir_name.glob("*"))) == 0)
+
+
+def _find_collections_to_process(search_path: Path) -> List[Path]:
+    """Find collections to process.
+
+    Args:
+        search_path (Path): The path to search for collections
+
+    Returns:
+        List[Path]: list of files found matching the collection pattern
+    """
+    return list(Path(str(search_path)).glob("opdb_oracle_*.zip"))
+
+
+def _extract_collection(collection_file: Path, extract_path: Path) -> None:
+    """Extract collection.
+
+    Args:
+        collection_file (Path): The collection file to extract.
+        extract_path (Path): The past to extract the collection to.
+    """
+    logger.info("Processing %s", collection_file)
+    with zf.ZipFile(collection_file, "r") as f:
+        f.extractall(path=extract_path)
+
+
+def _find_file_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> Optional[Path]:
+    """Find file referenced by data masking rule.
+
+    Args:
+        rule (DataMaskRule): The data masking rule to apply.
+        search_path (Path): The search path to look for collection csv files.
+
+    Raises:
+        ApplicationError: Raised when no matching file is found.
+        ApplicationError: Raise when more than 1 matching files are found.
+
+    Returns:
+       Optional[Path]: If the file was found, the file.  Else None.
+    """
+    matched_file = list(search_path.glob(f"opdb__{rule.table_name}__*.csv"))
+    if not matched_file and not rule.missing_ok:
+        raise ApplicationError(f"Could not find a file to match for {rule.table_name}")
+    if matched_file and len(matched_file) > 1:
+        raise ApplicationError(f"Found too many files when searching for {rule.table_name}.  Found {matched_file}")
+    return matched_file[0]
+
+
+def _generate_identity_map_from_rule(
+    rule: DataMaskRule, collection_file: Path, existing_identity_map: Optional[Dict[str, str]] = None
+) -> Dict[str, str]:
+    """Generate identity map from rule.
+
+    This function takes a rule and identifies all of the unique values that should be replaced within a collection.
+
+    It returns a dictionary where the original value is the key and the replacement is the value.
+
+    Args:
+        rule (DataMaskRule): Data masking rule
+        collection_file (Path): Collection file to use
+        existing_identity_map (Optional[Dict[str, str]], optional): Pass in an existing identity map from a previous rule. Defaults to None.
+
+    Returns:
+        Dict[str, str]: A dictionary of the original and replacement values.
+    """
+    if existing_identity_map is None:
+        existing_identity_map = {}
+
+    all_values: List[str] = list(existing_identity_map.keys())
+    with collection_file.open(mode="r", encoding="utf-8") as f:
+        data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
+        for rn, row in enumerate(data_to_mask):
+            if rn > 0:
+                # Get the value from column to mask
+                all_values.append(row[rule.column_position])
+    unique_values = list(dict.fromkeys(all_values))
+    return {
+        value: existing_identity_map.get(
+            value, f"USER_{''.join(random.choices(string.ascii_lowercase + string.digits, k=4))}"  # noqa: S311
+        )
+        for value in unique_values
+    }
+
+
+def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, identity_map: Dict[str, str]) -> None:
+    """Apply Identity Map to File.
+
+    This function takes the identity map (a dictionary that holds unique values and their masked replacement value) and applies it to a file.
+
+    This replaced data is written to a tempfile that replaces the original file on success.
+
+    Args:
+        rule (DataMaskRule): _description_
+        collection_file (Path): _description_
+        identity_map (Dict[str, str]): _description_
+    """
+    with collection_file.open(mode="r", encoding="utf-8") as f, NamedTemporaryFile(mode="w", delete=False) as t:
+        data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
+        temp_file = csv.writer(t, delimiter="|", quotechar='"')
+        for rn, row in enumerate(data_to_mask):
+            if rn > 0:
+                row[rule.column_position] = identity_map.get(row[rule.column_position], "~~UNMAPPED~~")
+            temp_file.writerow(row)
+        shutil.move(t.name, collection_file)
+
+
+def _package_collection(
+    collection: Path, identity_map: Dict[str, str], extract_path: Path, output_path: Path
+) -> Tuple[Path, Path]:
+    """Package collection.
+
+    Packages de-identified files.
+    """
+    logger.info("Zipping %s", collection.stem)
+    archive_file = Path(output_path / f"{collection.stem}.zip")
+    key_file = Path(output_path / f"{collection.stem}.key")
+    matched_files = (
+        list(extract_path.glob("*.csv")) + list(extract_path.glob("*.log")) + list(extract_path.glob("*.txt"))
+    )
+    with zf.ZipFile(archive_file, "w") as f:
+        for matched_file in matched_files:
+            f.write(matched_file)
+    with key_file.open(mode="w", encoding="utf-8") as f:
+        f.write(
+            f"Use this file to map the masked values to the original values in collection {archive_file.stem}.zip\n"
+        )
+        f.write("ORIGINAL,MASKED\n")
+        csv_writer = csv.writer(f, delimiter="|", quotechar='"')
+        csv_writer.writerows(identity_map.items())
+    return key_file, archive_file
+
+
+def _clean_folder(extract_path: Path) -> None:
+    """Clean folder."""
+    logger.info("Cleaning temporary files")
+
+    matched_files = list(extract_path.glob("*"))
+    for file in matched_files:
+        if file.exists():
+            file.unlink()
+
+
+def main() -> None:
+    def _validate_collection_path(path: str) -> str:
+        p = Path(path)
+        if p.exists() and p.is_dir() and path is not None:
+            return path
+        raise argparse.ArgumentTypeError(f"collection-path {path} is not a valid path")
+
+    parser = argparse.ArgumentParser(description="Google Database Migration Assessment - De-identification Script")
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="count",
+        help="Logging level: 0: ERROR, 1: INFO, 2: DEBUG",
+        default=1,
+    )
+    parser.add_argument(
+        "--collection-path",
+        type=_validate_collection_path,
+        help="Path to search for collections.",
+    )
+    parser.add_argument(
+        "--output-path",
+        default=f"{Path.cwd()}/output",
+        help="Path to search for collections.",
+    )
+    args = parser.parse_args(args=None if sys.argv[1:] else ["--help"])
+    level = args.verbose
+    if level == 0:
+        level = logging.ERROR
+    elif level == 1:
+        level = logging.INFO
+    else:
+        level = logging.DEBUG
+
+    logging.basicConfig(
+        level=level,
+        format="%(asctime)s [%(levelname)8s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    logger.info("Starting Collection De-Identification Process.")
+    run_masker(Path(args.collection_path), Path(args.output_path))
+
+
+if __name__ == "__main__":
+    main()
