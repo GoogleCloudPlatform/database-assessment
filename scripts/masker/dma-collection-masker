@@ -210,9 +210,9 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
     This replaced data is written to a tempfile that replaces the original file on success.
 
     Args:
-        rule (DataMaskRule): _description_
-        collection_file (Path): _description_
-        identity_map (Dict[str, str]): _description_
+        rule (DataMaskRule): The current masking rule
+        collection_file (Path): the current collection file to mask
+        identity_map (Dict[str, str]): The key/replacement key dictionary.
     """
     with collection_file.open(mode="r", encoding="utf-8") as f, NamedTemporaryFile(mode="w", delete=False) as t:
         data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
