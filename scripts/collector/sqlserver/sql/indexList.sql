@@ -58,10 +58,13 @@ BEGIN
       INSERT INTO #indexList
       SELECT
          DB_NAME() as database_name
-         ,s.name schema_name
-         ,t.name  table_name 
-         ,i.name  index_name
-         ,i.type_desc index_type
+         ,s.name as schema_name
+         ,CASE
+		      WHEN t.name IS NULL THEN v.name
+		      ELSE t.name
+		   END as table_name 
+         ,i.name as index_name
+         ,i.type_desc as index_type
          ,i.is_primary_key
          ,i.is_unique
          ,i.fill_factor
@@ -69,21 +72,26 @@ BEGIN
          ,i.has_filter
          ,p.data_compression
          ,p.data_compression_desc
-         ,ISNULL (ps.name, ''Not Partitioned'') AS partition_scheme
-         ,ISNULL (SUM(ic.key_ordinal),0) AS count_key_ordinal
-         ,ISNULL (SUM(ic.partition_ordinal),0) AS count_partition_ordinal
+         ,ISNULL (ps.name, ''Not Partitioned'') as partition_scheme
+         ,ISNULL (SUM(ic.key_ordinal),0) as count_key_ordinal
+         ,ISNULL (SUM(ic.partition_ordinal),0) as count_partition_ordinal
          ,ISNULL (COUNT(ic.is_included_column),0) as count_is_included_column
-         ,CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) AS total_space_mb
+         ,CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) as total_space_mb
       FROM sys.indexes i
       JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
-      JOIN sys.tables t ON i.object_id = t.object_id
-      JOIN sys.schemas s ON s.schema_id = t.schema_id
-      JOIN sys.partitions AS p ON p.OBJECT_ID = i.OBJECT_ID AND p.index_id = i.index_id
-      JOIN sys.allocation_units AS a ON a.container_id = p.partition_id
+      JOIN sys.objects o ON o.object_id = i.object_id AND o.is_ms_shipped = 0
+      LEFT JOIN sys.tables t ON i.object_id = t.object_id AND t.is_ms_shipped = 0
+	   LEFT JOIN sys.views v ON i.object_id = v.object_id AND v.is_ms_shipped = 0
+      LEFT JOIN sys.schemas s ON s.schema_id = t.schema_id
+      LEFT JOIN sys.partitions AS p ON p.object_id = i.object_id AND p.index_id = i.index_id
+      LEFT JOIN sys.allocation_units AS a ON a.container_id = p.partition_id
       LEFT JOIN sys.partition_schemes ps ON i.data_space_id = ps.data_space_id
       GROUP BY 
          s.name 
-         ,t.name   
+         ,CASE
+		      WHEN t.name IS NULL THEN v.name
+		      ELSE t.name
+		   END    
          ,i.name  
          ,i.type_desc 
          ,i.is_primary_key

@@ -161,7 +161,35 @@ SELECT 'PhysicalCpuCount', CONVERT(varchar, (cpu_count/hyperthread_ratio)) from 
 UNION ALL
 SELECT 'SqlServerStartTime', CONVERT(varchar, (sqlserver_start_time)) from sys.dm_os_sys_info
 UNION ALL
-SELECT 'CountTSQLEndpoints', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535;
+SELECT 'CountTSQLEndpoints', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535
+UNION ALL
+SELECT 'BULK_INSERT', CONVERT(varchar,count(p.permission_name)) FROM fn_my_permissions(NULL, 'SERVER') p WHERE permission_name like '%ADMINISTER BULK OPERATIONS%';
+WITH check_sysadmin_role AS (
+    SELECT
+        name,
+        type_desc,
+        is_disabled
+    FROM
+        master.sys.server_principals
+    WHERE
+        IS_SRVROLEMEMBER ('sysadmin', name) = 1
+        AND name NOT LIKE '%NT SERVICE%'
+    UNION
+    SELECT
+        name,
+        type_desc,
+        is_disabled
+    FROM
+        master.sys.server_principals
+    WHERE
+        IS_SRVROLEMEMBER ('dbcreator', name) = 1
+        AND name NOT LIKE '%NT SERVICE%'
+)
+INSERT INTO #serverProperties SELECT
+    'sysadmin_role',
+    CONVERT(varchar, count(*))
+FROM
+    check_sysadmin_role;
 WITH log_shipping_count AS (
     SELECT
         count(*) log_shipping
@@ -211,7 +239,27 @@ exec('INSERT INTO #serverProperties SELECT ''IsBufferPoolExtensionEnabled'', CON
 END;
 IF @PRODUCT_VERSION >= 11
 BEGIN
-exec('INSERT INTO #serverProperties SELECT ''IsFileStreamEmabled'', CONVERT(nvarchar, count(*)) FROM sys.database_filestream_options where non_transacted_access <> 0 /* SQL Server 2012 (11.x) above */');
+exec('WITH check_filestream AS (
+    SELECT
+        Name,
+        ISNULL ((
+                SELECT
+                    1
+                FROM
+                    sys.master_files AS mf
+                WHERE
+                    mf.database_id = db.database_id
+                    AND mf.type = 2),
+                0) AS hasfs
+    FROM
+        sys.databases AS db
+)
+INSERT INTO #serverProperties SELECT
+    ''IsFileStreamEnabled'',
+    sum(hasfs)
+FROM
+    check_filestream
+/* SQL Server 2012 (11.x) above */');
 END;
 
 SELECT @PKEY as PKEY, a.* FROM #serverProperties a;
