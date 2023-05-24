@@ -87,12 +87,14 @@ foreach($item in $objs) {
     $perfMonOutput = 'opdb' + '__' + 'PerfMonData' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $dbccTraceFlg = 'opdb' + '__' + 'DbccTrace' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
     $diskVolumeInfo = 'opdb' + '__' + 'DiskVolInfo' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
+    $dbServerFlags = 'opdb' + '__' + 'DbServerFlags' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 
 	if ($instancename -eq "MSSQLSERVER") {
 		Write-Output "Retriving SQL Server Installed Components..."
 		sqlcmd -S $machinename -i sql\componentsInstalled.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
 		Write-Output "Retriving SQL Server Properties..."
 		sqlcmd -S $machinename -i sql\serverProperties.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
+        sqlcmd -S $machinename -i sql\dbServerUnsupportedFlags.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbServerFlags
 		Write-Output "Retriving SQL Server Features..."
 		sqlcmd -S $machinename -i sql\features.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
 		Write-Output "Retriving SQL Server Linked Servers..."
@@ -114,6 +116,7 @@ foreach($item in $objs) {
 		sqlcmd -S $sqlsrv -i sql\componentsInstalled.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
 		Write-Output "Retriving SQL Server Properties..."
 		sqlcmd -S $sqlsrv -i sql\serverProperties.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
+        sqlcmd -S $sqlsrv -i sql\dbServerUnsupportedFlags.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbServerFlags
 		Write-Output "Retriving SQL Server Features..."
 		sqlcmd -S $sqlsrv -i sql\features.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
 		Write-Output "Retriving SQL Server Linked Servers..."
