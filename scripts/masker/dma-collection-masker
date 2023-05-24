@@ -249,7 +249,7 @@ def _package_collection(
     )
     with zf.ZipFile(archive_file, "w") as f:
         for matched_file in matched_files:
-            f.write(matched_file)
+            f.write(matched_file, f"{matched_file.stem}{matched_file.suffix}")
     with key_file.open(mode="w", encoding="utf-8") as f:
         f.write(
             f"Use this file to map the masked values to the original values in collection {archive_file.stem}.zip\n"
