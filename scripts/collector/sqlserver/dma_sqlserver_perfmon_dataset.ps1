@@ -450,13 +450,25 @@ function CreateEmptyFile
 			Write-Output "Creating Output Directory"
 			$null = New-Item -ItemType Directory -Path $outputDir
 		}
-	
+
+		$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
+		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
+		Set-Content $env:TEMP\emptyStrings.csv -Value $tempContent
+
+		$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
+		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
+		Add-Content $env:TEMP\emptyStrings.csv -Value $tempContent
+
 		Write-Output "Concatenating and adding header to perfmon files to $outputFileName" 
-		((Get-Content -Path $PSScriptRoot\perfmon_header.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
+		((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\emptyStrings.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
 
 		if (Test-Path -Path $outputDir\$outputFileName) {
 			Write-Output "Clean up Temp File area."
 			Remove-Item -Path $env:TEMP\*$dataSet*.csv
+		}
+
+		if (Test-Path -Path $env:TEMP\emptyStrings.csv) {
+			Remove-Item -Path $env:TEMP\emptyStrings.csv
 		}
 	}
 
