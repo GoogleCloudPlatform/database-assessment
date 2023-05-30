@@ -19,11 +19,12 @@ set defaultCreds=0
 
 :loop 
 if "%1" == "" goto evaluateUser
+if /i "%1" == "-serverName" set "serverName=%2"
 if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-CollectionUserPass" set "pass=%2"
 if /i "%1" == "-useDefaultCreds" set "defaultCreds=1"
 
-set helpMessage="Usage: CreateUserForAssessmentWithWindowsAuth.bat (-collectionUserName -collectionUserPass) or -useDefaultCreds"
+set helpMessage="Usage: CreateUserForAssessmentWithWindowsAuth.bat -serverName (-collectionUserName -collectionUserPass) or -useDefaultCreds"
 
 if %1 == help (
     echo %helpMessage%
@@ -34,20 +35,23 @@ shift
 goto :loop
 
 :evaluateUser
+if [%serverName%]==[] goto raiseServerError
 if not [%user%]==[] goto execWithCustomCreds
 if "%defaultCreds%"=="0" goto defaultCredError
 if "%defaultCreds%"=="1" goto execWithDefaultCreds
 
 :execWithDefaultCreds
+if [%serverName%]==[] goto raiseServerError
 echo "Creating Collection User with Default Credentials"
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createuserwithwindowsauth.ps1
+PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createuserwithwindowsauth.ps1 -serverName %serverName% 
 goto done
 
 :execWithCustomCreds
+if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 if [%pass%] == [] goto error
 echo "Creating Collection User with Custom Credentials"
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createuserwithwindowsauth.ps1 -collectionUserName %user% -CollectionUserPass %pass%
+PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createuserwithwindowsauth.ps1 -serverName %serverName% -collectionUserName %user% -CollectionUserPass %pass%
 
 goto done
 
@@ -57,6 +61,11 @@ goto exit
 
 :defaultCredError
 echo "Please specify -useDefaultCreds flag when invoking the script"
+goto exit
+
+:raiseServerError
+echo "Please specify -serverName flag when invoking the script"
+echo "Format: [server name / ip address]\[instance name]"
 goto exit
 
 :done

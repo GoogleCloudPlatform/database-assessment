@@ -19,11 +19,12 @@ set defaultUsr=0
 
 :loop 
 if "%1" == "" goto evaluateUser
+if /i "%1" == "-serverName" set "serverName=%2"
 if /i "%1" == "-username" set "user=%2"
 if /i "%1" == "-password" set "pass=%2"
 if /i "%1" == "-useDefaultCreds" set "defaultUsr=1"
 
-set helpMessage="Usage: RunAssessment.bat (-collectionUserName -collectionUserPass) or -useDefaultCreds"
+set helpMessage="Usage: RunAssessment.bat (-serverName [servername] -collectionUserName [username] -collectionUserPass [password]) or -serverName [servername] -useDefaultCreds"
 
 if %1 == help (
     echo %helpMessage%
@@ -34,32 +35,44 @@ shift
 goto :loop
 
 :evaluateUser
+if [%serverName%]==[] goto raiseServerError
 if not [%user%]==[] goto execWithCustomUser
 if "%defaultUsr%"=="0" goto defaultCredError
 if "%defaultUsr%"=="1" goto execWithDefaultUser
 
 :execWithDefaultUser
 echo "Gathering Collection with Default User"
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File ".\InstanceReview.ps1"
+PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName%
 goto done
 
 :execWithCustomUser
+if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 if [%pass%] == [] goto error
 echo "Gathering Collection with Custom User"
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -user %user% -pass %pass%
+PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -user %user% -pass %pass%
 
 goto done
 
 :error
 echo "Username or Password is not populated"
-goto done
+goto exit
 
 :defaultCredError
 echo "Please specify -useDefaultCreds flag when invoking the script"
-goto done
+goto exit
+
+:raiseServerError
+echo "Please specify -serverName flag when invoking the script"
+echo "Format: [server name / ip address]\[instance name]"
+goto exit
 
 :done
 echo.
 echo.
 echo Script Complete!
+
+:exit
+echo.
+echo.
+echo Exit!
