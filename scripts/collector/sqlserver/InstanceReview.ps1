@@ -41,8 +41,6 @@ Param(
 [Parameter(Mandatory=$false)][string]$pass = "P@ssword135"
 )
 
-Import-Module $PSScriptRoot + '\InstanceReviewFunc.psm1'
-
 $foldername = ""
 
 if ([string]::IsNullorEmpty($serverName)) {
@@ -78,7 +76,7 @@ if ($folderLength -le 260) {
     Write-Output "Creating directory $foldername"
     $null = New-Item -Name $foldername -ItemType Directory
 } else {
-    Write-Output "Folder length exceeds 260 characters.  Run collection tool from a"
+    Write-Output "Folder length exceeds 260 characters.  Run collection tool from a path with less characters"
     Write-Output "Folder being created is: $PSScriptRoot\$foldername"
     Exit 1
 }
@@ -99,9 +97,17 @@ $dbccTraceFlg = 'opdb' + '__' + 'DbccTrace' + '__' + $dbversion + '_' + $op_vers
 $diskVolumeInfo = 'opdb' + '__' + 'DiskVolInfo' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 $dbServerFlags = 'opdb' + '__' + 'DbServerFlags' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 
+$outputFileArray = @($compFileName, $srvFileName, $blockingFeatures, $linkedServers, $dbsizes, $dbClusterNodes, $objectList, $tableList, $indexList, $columnDatatypes, $userConnectionList, $perfMonOutput, $dbccTraceFlg, $diskVolumeInfo, $dbServerFlags)
 
-
-
+Write-Output "Checking max directory path lengths for errors..."
+foreach ($directory in $outputFileArray) {
+	$folderLength = ($PSScriptRoot + '\' + $foldername + '\' + $directory).Length
+    if ($folderLength -gt 260) {
+        Write-Output "Output file $PSScriptRoot\$foldername\$directory name exceeds 260 characters."
+        Write-Output "Execute collection from a path with less characters"
+        Exit 1
+    }
+}
 
 Write-Output "Retriving SQL Server Installed Components..."
 sqlcmd -S $serverName -i sql\componentsInstalled.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
