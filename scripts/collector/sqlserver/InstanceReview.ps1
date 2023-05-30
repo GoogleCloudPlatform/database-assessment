@@ -41,6 +41,8 @@ Param(
 [Parameter(Mandatory=$false)][string]$pass = "P@ssword135"
 )
 
+Import-Module $PSScriptRoot + '\InstanceReviewFunc.psm1'
+
 $foldername = ""
 
 if ([string]::IsNullorEmpty($serverName)) {
@@ -49,6 +51,12 @@ if ([string]::IsNullorEmpty($serverName)) {
 } else {
     Write-Output "Retrieving Metadata Information from $serverName"
     $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $user -P $pass -W -m 1 -u | findstr /v /c:"---"
+}
+
+if ([string]::IsNullorEmpty($obj)) {
+    Write-Output " "
+    Write-Output "Connection Error to SQL Server $serverName.  Exiting Script...."
+    Exit 1
 }
 
 $splitobj = $obj[1].Split('')
@@ -90,6 +98,10 @@ $perfMonOutput = 'opdb' + '__' + 'PerfMonData' + '__' + $dbversion + '_' + $op_v
 $dbccTraceFlg = 'opdb' + '__' + 'DbccTrace' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 $diskVolumeInfo = 'opdb' + '__' + 'DiskVolInfo' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 $dbServerFlags = 'opdb' + '__' + 'DbServerFlags' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
+
+
+
+
 
 Write-Output "Retriving SQL Server Installed Components..."
 sqlcmd -S $serverName -i sql\componentsInstalled.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName

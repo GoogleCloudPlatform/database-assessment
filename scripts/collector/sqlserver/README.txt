@@ -32,7 +32,7 @@ for analysis by Database Migration Assessment.
     b) Update the sqlserver\sqlqsrv.csv file to contain the full instance name(s) on a separate line you would like to scan in the format:
         [computer name]\[instance name]
 
-        A default instance would look like: MS-SERVER1\MSSQLSERVER or 10.0.0.1\MSSQLSERVER
+        A default instance would look like: MS-SERVER1 or 10.0.0.1
 
         A custom instance would look like: MS-SERVER1\TESTINSTANCE or 10.0.0.1\TESTINSTANCE
     

@@ -50,6 +50,7 @@ if "%defaultCreds%"=="1" goto execWithDefaultCreds
 if [%serverName%]==[] goto raiseServerError
 echo "Creating Collection User with Default Credentials"
 PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createuserwithsqluser.ps1 -serverName %serverName% -user %saUser% -pass %saPass%
+if %errorlevel% == 1 goto exit
 goto done
 
 :execWithCustomCreds
@@ -58,24 +59,28 @@ if [%pass%] == [] goto error
 if [%serverName%]==[] goto raiseServerError
 echo "Creating Collection User with Custom Credentials"
 PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createuserwithsqluser.ps1 -serverName %serverName% -user %saUser% -pass %saPass% -collectionUserName %user% -CollectionUserPass %pass%
-
+if %errorlevel% == 1 goto exit
 goto done
 
 :error
-echo "Username or Password is not populated"
+echo Username or Password is not populated
+echo Please specify -useDefaultCreds flag or [-username and -password] when invoking the script
 goto exit
 
 :defaultCredError
-echo "Please specify -useDefaultCreds flag when invoking the script"
+echo Please specify -useDefaultCreds flag when invoking the script
+echo Please specify -useDefaultCreds flag or [-username and -password] when invoking the script
 goto exit
 
 :raiseServerError
-echo "Please specify -serverName flag when invoking the script"
-echo "Format: [server name / ip address]\[instance name]"
+echo Please specify -serverName flag when invoking the script
+echo Format: [server name / ip address]\[instance name]
 goto exit
 
 :done
-echo Script Complete!
+echo Script Complete.
+exit /B 0
 
 :exit
-echo Exit!
+echo Exit
+exit /B 1

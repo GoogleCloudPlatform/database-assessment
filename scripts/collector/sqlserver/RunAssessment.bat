@@ -41,38 +41,42 @@ if "%defaultUsr%"=="0" goto defaultCredError
 if "%defaultUsr%"=="1" goto execWithDefaultUser
 
 :execWithDefaultUser
-echo "Gathering Collection with Default User"
+echo Gathering Collection with Default User
 PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName%
+if %errorlevel% == 1 goto exit
 goto done
 
 :execWithCustomUser
 if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 if [%pass%] == [] goto error
-echo "Gathering Collection with Custom User"
+echo Gathering Collection with Custom User
 PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -user %user% -pass %pass%
-
+if %errorlevel% == 1 goto exit
 goto done
 
 :error
-echo "Username or Password is not populated"
+echo Username or Password is not populated
+echo Please specify -useDefaultCreds flag or [-username and -password] when invoking the script
 goto exit
 
 :defaultCredError
-echo "Please specify -useDefaultCreds flag when invoking the script"
+echo Please specify -useDefaultCreds flag or [-username and -password] when invoking the script
 goto exit
 
 :raiseServerError
-echo "Please specify -serverName flag when invoking the script"
-echo "Format: [server name / ip address]\[instance name]"
+echo Please specify -serverName flag when invoking the script
+echo Format: [server name or ip address]\[instance name]
 goto exit
 
 :done
 echo.
 echo.
-echo Script Complete!
+echo Script Complete.
+exit /B 0
 
 :exit
 echo.
 echo.
-echo Exit!
+echo Exit with Error Code %ERRORLEVEL%
+exit /B 1
