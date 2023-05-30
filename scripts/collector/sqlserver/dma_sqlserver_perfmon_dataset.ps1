@@ -433,6 +433,33 @@ param(
 	}
 }
 
+function CreateEmptyFile
+{
+	param(
+		[string]$dataSet,
+		[string]$perfmonOutDir,
+		[string]$perfmonOutFile,
+		[string]$pkey
+		)
+		Write-Output "Creating an empty Google DMA SQL Server Perfmon Counter Data Set."
+		$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
+		$outputFileName = $perfmonOutFile
+	
+		if (!(Test-Path -PathType container $outputDir)) {
+			Write-Output ""
+			Write-Output "Creating Output Directory"
+			$null = New-Item -ItemType Directory -Path $outputDir
+		}
+	
+		Write-Output "Concatenating and adding header to perfmon files to $outputFileName" 
+		((Get-Content -Path $PSScriptRoot\perfmon_header.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
+
+		if (Test-Path -Path $outputDir\$outputFileName) {
+			Write-Output "Clean up Temp File area."
+			Remove-Item -Path $env:TEMP\*$dataSet*.csv
+		}
+	}
+
 if (!$operation) {
 	$operation = read-host -Prompt "Enter an operation: create, stop, delete, collect" 
 }
@@ -449,6 +476,8 @@ if ($operation.ToLower() -eq "create") {
 	DeleteDMAPerfmonDataSet -dataSet $datasetName
 } elseif ($operation.ToLower() -eq "collect") {
 	CollectDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey
+} elseif ($operation.ToLower() -eq "createemptyfile") {
+	CreateEmptyFile -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey
 } else {
 	Write-Output "Operation $operation specified is invalid"
 }
