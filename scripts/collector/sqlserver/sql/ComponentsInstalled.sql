@@ -17,6 +17,8 @@ limitations under the License.
 
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
+DECLARE @PKEY AS VARCHAR(256)
+SELECT @PKEY = N'$(pkey)';
 /* ------------------------------------------ Inital Setup -----------------------------------------------------*/
 CREATE TABLE #RegResult
 (
@@ -214,7 +216,8 @@ TRUNCATE TABLE #RegResult
 END
 /* -------------------------------------------------------------------------------------------------------------*/
 SELECT 
-CAST(@@SERVERNAME + '_' + 'master' + '_' + @@ServiceName + '_' + FORMAT(GETDATE() , 'MMddyyHHmmss') AS VARCHAR(256)) AS PKEY,
+/*CAST(@@SERVERNAME + '_' + 'master' + '_' + @@ServiceName + '_' + FORMAT(GETDATE() , 'MMddyyHHmmss') AS VARCHAR(256)) AS PKEY,*/
+@PKEY as PKEY,
 PhysicalSrverName AS 'Physical Server Name' /*Display finding*/
 ,ServerName AS 'SQL Instance Name'
 ,ServiceName AS 'SQL Server Services'
