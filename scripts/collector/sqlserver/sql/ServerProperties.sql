@@ -209,14 +209,6 @@ IF @PRODUCT_VERSION >= 15
 BEGIN
  exec('INSERT INTO #serverProperties SELECT ''IsHybridBufferPoolEnabled'', CONVERT(nvarchar,is_enabled) from sys.server_memory_optimized_hybrid_buffer_pool_configuration /* SQL Server 2019 (15.x) and later versions */');
 END;
-IF @PRODUCT_VERSION < 14
-BEGIN
- exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows'' FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
- exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024) /* SQL Server 2016 (13.x) and prior */');
- exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,windows_release),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
- exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar,windows_service_pack_level),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
- exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
-END;
 IF @PRODUCT_VERSION >= 14
 BEGIN
  exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', SUBSTRING(CONVERT(nvarchar,host_platform),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
@@ -224,6 +216,22 @@ BEGIN
  exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,host_release),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
  exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar,host_service_pack_level),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
  exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+END;
+IF @PRODUCT_VERSION >= 11 AND @PRODUCT_VERSION < 14
+BEGIN
+ exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows'' FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+ exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,windows_release),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+ exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar,windows_service_pack_level),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+ exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+ exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024) /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x) */');
+END
+IF @PRODUCT_VERSION < 11
+BEGIN
+ exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows'' /* Versions before SQL Server 2012 (11.x)   */');
+ exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar(255),@@VERSION),3 + charindex ('' ON '',@@VERSION),255) /* Versions before SQL Server 2012 (11.x)   */');
+ exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar(255),SERVERPROPERTY(''ProductLevel'')),1,255) /* Versions before SQL Server 2012 (11.x)  */');
+ exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar(255), ''UNKNOWN''),1,255) /* Versions before SQL Server 2012 (11.x)  */');
+ exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024) /* Versions before SQL Server 2012 (11.x) */');
 END;
 IF @PRODUCT_VERSION >= 13 AND @PRODUCT_VERSION <= 16
 BEGIN

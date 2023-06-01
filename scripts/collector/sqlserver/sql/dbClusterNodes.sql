@@ -17,10 +17,44 @@ limitations under the License.
 
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
-SELECT
-    N'$(pkey)' as PKEY,
-	NodeName AS node_name, 
-    status, 
-    status_description
-FROM sys.dm_os_cluster_nodes
-;
+DECLARE @PKEY AS VARCHAR(256)
+SELECT @PKEY = N'$(pkey)';
+DECLARE @PRODUCT_VERSION AS INTEGER
+SELECT @PRODUCT_VERSION = CONVERT(integer, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+
+IF OBJECT_ID('tempdb..#clusterNodesTable') IS NOT NULL  
+    DROP TABLE #clusterNodesTable;
+
+CREATE TABLE #clusterNodesTable (
+    [NodeName] nvarchar(255), 
+    [status] nvarchar(255), 
+    [status_description] nvarchar(255)
+);
+
+IF @PRODUCT_VERSION >= 11
+BEGIN
+    exec ('
+    use [master];
+    INSERT INTO #clusterNodesTable
+    SELECT
+	    NodeName AS node_name, 
+        status, 
+        status_description
+    FROM sys.dm_os_cluster_nodes');
+END
+
+IF @PRODUCT_VERSION < 11
+BEGIN
+    exec ('
+    use [master];
+    INSERT INTO #clusterNodesTable
+    SELECT
+	    NodeName, 
+        NULL, 
+        NULL
+    FROM sys.dm_os_cluster_nodes');
+END
+
+SELECT @PKEY as PKEY,  NodeName AS node_name, status, status_description from #clusterNodesTable;
+
+DROP TABLE #clusterNodesTable;
