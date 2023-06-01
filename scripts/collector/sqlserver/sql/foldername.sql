@@ -17,14 +17,6 @@ limitations under the License.
 
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
-/*  Modified to work with 2008R2
-SELECT CAST(SERVERPROPERTY('ProductVersion') AS VARCHAR(15)) AS Version, 
-CAST(SERVERPROPERTY('MachineName') AS VARCHAR(15)) as machinename, 
-'master'as databasename, 
-@@ServiceName as instancename, 
-FORMAT(GETDATE() , 'MMddyyHHmmss') as current_ts,
-@@SERVERNAME + '_' + 'master' + '_' + @@ServiceName + '_' + FORMAT(GETDATE() , 'MMddyyHHmmss') as pkey;
-*/
 SELECT CAST(SERVERPROPERTY('ProductVersion') AS VARCHAR(15)) AS Version, 
 UPPER(CAST(SERVERPROPERTY('MachineName') AS VARCHAR(15))) as machinename, 
 'master'as databasename, 

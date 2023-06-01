@@ -3,6 +3,8 @@ README
 Instructions on how to prepare and run Google Database Migration Assessment Data Extractor for Microsoft SQL Server to extract the data required
 for analysis by Database Migration Assessment.
 
+These scripts have been tested with SQL Server 2008R2 SP2 through SQL Server 2022
+
 1. Background
 -------------
 
