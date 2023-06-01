@@ -226,12 +226,12 @@ BEGIN
  exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024) /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x) */');
 END
 IF @PRODUCT_VERSION < 11
-BEGIN
- exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows'' /* Versions before SQL Server 2012 (11.x)   */');
- exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar(255),@@VERSION),3 + charindex ('' ON '',@@VERSION),255) /* Versions before SQL Server 2012 (11.x)   */');
- exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar(255),SERVERPROPERTY(''ProductLevel'')),1,255) /* Versions before SQL Server 2012 (11.x)  */');
- exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar(255), ''UNKNOWN''),1,255) /* Versions before SQL Server 2012 (11.x)  */');
- exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024) /* Versions before SQL Server 2012 (11.x) */');
+BEGIN   /* Versions before SQL Server 2012 (11.x)   */
+ exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows''');
+ exec('INSERT INTO #serverProperties SELECT ''HostRelease'', REPLACE(REPLACE(SUBSTRING(@@VERSION,4 + charindex ('' ON '',@@VERSION),LEN(@@VERSION)), CHAR(13), ''''), CHAR(10), '''')');
+ exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar,SERVERPROPERTY(''ProductLevel'')),1,1024)');
+ exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',''UNKNOWN''');
+ exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024)');
 END;
 IF @PRODUCT_VERSION >= 13 AND @PRODUCT_VERSION <= 16
 BEGIN
