@@ -472,8 +472,47 @@ function CreateEmptyFile
 		}
 	}
 
+	function CreateManualPerfmonFile
+	{
+		param(
+			[string]$dataSet,
+			[string]$perfmonOutDir,
+			[string]$perfmonOutFile,
+			[string]$pkey
+			)
+			Write-Output "Creating an empty Google DMA SQL Server Perfmon Counter Data Set."
+			$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
+			$outputFileName = $perfmonOutFile
+		
+			if (!(Test-Path -PathType container $outputDir)) {
+				Write-Output ""
+				Write-Output "Creating Output Directory"
+				$null = New-Item -ItemType Directory -Path $outputDir
+			}
+	
+			$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
+			$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
+			Set-Content $env:TEMP\emptyStrings.csv -Value $tempContent
+	
+			$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
+			$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
+			Add-Content $env:TEMP\emptyStrings.csv -Value $tempContent
+	
+			Write-Output "Concatenating and adding header to perfmon files to $outputFileName" 
+			((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\emptyStrings.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
+	
+			if (Test-Path -Path $outputDir\$outputFileName) {
+				Write-Output "Clean up Temp File area."
+				Remove-Item -Path $env:TEMP\*$dataSet*.csv
+			}
+	
+			if (Test-Path -Path $env:TEMP\emptyStrings.csv) {
+				Remove-Item -Path $env:TEMP\emptyStrings.csv
+			}
+		}
+
 if (!$operation) {
-	$operation = read-host -Prompt "Enter an operation: create, stop, delete, collect" 
+	$operation = read-host -Prompt "Enter an operation: create, stop, delete, collect createemptyfile createmanualfile" 
 }
 if ($mssqlInstanceName) {
 	$datasetName = "Google-DMA-SQLServerDataSet-$mssqlInstanceName"
@@ -490,6 +529,8 @@ if ($operation.ToLower() -eq "create") {
 	CollectDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey
 } elseif ($operation.ToLower() -eq "createemptyfile") {
 	CreateEmptyFile -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey
+} elseif ($operation.ToLower() -eq "createmanualfile") {
+	CreateManualPerfmonFile -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey
 } else {
 	Write-Output "Operation $operation specified is invalid"
 }
