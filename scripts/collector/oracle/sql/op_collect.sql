@@ -84,7 +84,7 @@ set termout &TERMOUTOFF
 @&SQLDIR/&v_dopluggable
 @&SQLDIR/op_collect_&v_dodiagnostics
 @&EXTRACTSDIR/lobsizing.sql
-@&EXTRACTSDIR/opatch.sql
+--@&EXTRACTSDIR/opatch.sql
 
 
 set termout on
