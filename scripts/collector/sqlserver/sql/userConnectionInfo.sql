@@ -19,11 +19,13 @@ SET NOCOUNT ON;
 SET LANGUAGE us_english;
 DECLARE @PKEY AS VARCHAR(256)
 SELECT @PKEY = N'$(pkey)';
+DECLARE @PRODUCT_VERSION AS INTEGER
+SELECT @PRODUCT_VERSION = CONVERT(integer, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
 DECLARE @dbname VARCHAR(50)
 DECLARE db_cursor CURSOR FOR 
 SELECT name 
 FROM MASTER.dbo.sysdatabases 
-WHERE name NOT IN ('master','model','msdb','tempdb')
+WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource')
 
 IF OBJECT_ID('tempdb..#connectionInfo') IS NOT NULL  
    DROP TABLE #connectionInfo;
@@ -51,35 +53,67 @@ CREATE TABLE #connectionInfo(
 OPEN db_cursor  
 FETCH NEXT FROM db_cursor INTO @dbname  
 
-WHILE @@FETCH_STATUS = 0  
+WHILE @@FETCH_STATUS = 0
 BEGIN
-	exec ('
-	use [' + @dbname + '];
-	INSERT INTO #connectionInfo
-    SELECT
-        DB_NAME() as database_name
-        ,sdes.is_user_process
-        ,sdes.host_name
-        ,sdes.program_name
-        ,sdes.login_name
-        ,sdec.num_reads
-        ,sdec.num_writes
-        ,FORMAT(sdec.last_read,''yyyy-MM-dd HH:mm:ss'') as last_read
-        ,FORMAT(sdec.last_write,''yyyy-MM-dd HH:mm:ss'') as last_write
-        ,sdes.reads
-        ,sdes.logical_reads
-        ,sdes.writes
-        ,sdes.client_interface_name
-        ,sdes.nt_domain
-        ,sdes.nt_user_name
-        ,sdec.client_net_address
-        ,sdec.local_net_address
-    FROM sys.dm_exec_sessions AS sdes
-    INNER JOIN sys.dm_exec_connections AS sdec
-            ON sdec.session_id = sdes.session_id
-    WHERE sdes.session_id <> @@SPID');
+    IF @PRODUCT_VERSION >= 11
+    BEGIN
+        exec ('
+        use [' + @dbname + '];
+        INSERT INTO #connectionInfo
+        SELECT
+            DB_NAME() as database_name
+            ,sdes.is_user_process
+            ,sdes.host_name
+            ,sdes.program_name
+            ,sdes.login_name
+            ,sdec.num_reads
+            ,sdec.num_writes
+            ,FORMAT(sdec.last_read,''yyyy-MM-dd HH:mm:ss'') as last_read
+            ,FORMAT(sdec.last_write,''yyyy-MM-dd HH:mm:ss'') as last_write
+            ,sdes.reads
+            ,sdes.logical_reads
+            ,sdes.writes
+            ,sdes.client_interface_name
+            ,sdes.nt_domain
+            ,sdes.nt_user_name
+            ,sdec.client_net_address
+            ,sdec.local_net_address
+        FROM sys.dm_exec_sessions AS sdes
+        INNER JOIN sys.dm_exec_connections AS sdec
+                ON sdec.session_id = sdes.session_id
+        WHERE sdes.session_id <> @@SPID');
+    END
+    IF @PRODUCT_VERSION < 11
+    BEGIN
+        exec ('
+        use [' + @dbname + '];
+        INSERT INTO #connectionInfo
+        SELECT
+            DB_NAME() as database_name
+            ,sdes.is_user_process
+            ,sdes.host_name
+            ,sdes.program_name
+            ,sdes.login_name
+            ,sdec.num_reads
+            ,sdec.num_writes
+            ,CONVERT(VARCHAR(256),sdec.last_read, 120) as last_read
+            ,CONVERT(VARCHAR(256),sdec.last_write,120) as last_write
+            ,sdes.reads
+            ,sdes.logical_reads
+            ,sdes.writes
+            ,sdes.client_interface_name
+            ,sdes.nt_domain
+            ,sdes.nt_user_name
+            ,sdec.client_net_address
+            ,sdec.local_net_address
+        FROM sys.dm_exec_sessions AS sdes
+        INNER JOIN sys.dm_exec_connections AS sdec
+                ON sdec.session_id = sdes.session_id
+        WHERE sdes.session_id <> @@SPID');
+    END
+
     FETCH NEXT FROM db_cursor INTO @dbname 
-END 
+END
 
 CLOSE db_cursor  
 DEALLOCATE db_cursor

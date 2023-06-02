@@ -77,21 +77,23 @@ if %instance%==managed (
 echo %managedInstanceName%
 
 if %instance%==default (
-    echo "Managing Perfmon Collection for Default Instance"
+    echo Managing Perfmon Collection for Default Instance
     PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dma_sqlserver_perfmon_dataset.ps1 -operation %perfmonOperation%
 
     goto done
 )
 
 if %instance%==managed (
-    echo "Managing Perfmon Collection for Default Instance"
+    echo Managing Perfmon Collection for Default Instance
     PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dma_sqlserver_perfmon_dataset.ps1 -operation %perfmonOperation% -mssqlInstanceName %managedInstanceName%
 
     goto done
 )
 
 :done
-echo Script Complete!
+echo Script Complete
+exit /B 0
 
 :exit
-echo Exit!
+echo Exit
+exit /B 1

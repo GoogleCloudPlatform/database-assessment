@@ -161,7 +161,35 @@ SELECT 'PhysicalCpuCount', CONVERT(varchar, (cpu_count/hyperthread_ratio)) from 
 UNION ALL
 SELECT 'SqlServerStartTime', CONVERT(varchar, (sqlserver_start_time)) from sys.dm_os_sys_info
 UNION ALL
-SELECT 'CountTSQLEndpoints', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535;
+SELECT 'CountTSQLEndpoints', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535
+UNION ALL
+SELECT 'BULK_INSERT', CONVERT(varchar,count(p.permission_name)) FROM fn_my_permissions(NULL, 'SERVER') p WHERE permission_name like '%ADMINISTER BULK OPERATIONS%';
+WITH check_sysadmin_role AS (
+    SELECT
+        name,
+        type_desc,
+        is_disabled
+    FROM
+        master.sys.server_principals
+    WHERE
+        IS_SRVROLEMEMBER ('sysadmin', name) = 1
+        AND name NOT LIKE '%NT SERVICE%'
+    UNION
+    SELECT
+        name,
+        type_desc,
+        is_disabled
+    FROM
+        master.sys.server_principals
+    WHERE
+        IS_SRVROLEMEMBER ('dbcreator', name) = 1
+        AND name NOT LIKE '%NT SERVICE%'
+)
+INSERT INTO #serverProperties SELECT
+    'sysadmin_role',
+    CONVERT(varchar, count(*))
+FROM
+    check_sysadmin_role;
 WITH log_shipping_count AS (
     SELECT
         count(*) log_shipping
@@ -181,14 +209,6 @@ IF @PRODUCT_VERSION >= 15
 BEGIN
  exec('INSERT INTO #serverProperties SELECT ''IsHybridBufferPoolEnabled'', CONVERT(nvarchar,is_enabled) from sys.server_memory_optimized_hybrid_buffer_pool_configuration /* SQL Server 2019 (15.x) and later versions */');
 END;
-IF @PRODUCT_VERSION < 14
-BEGIN
- exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows'' FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
- exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024) /* SQL Server 2016 (13.x) and prior */');
- exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,windows_release),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
- exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar,windows_service_pack_level),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
- exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and prior */');
-END;
 IF @PRODUCT_VERSION >= 14
 BEGIN
  exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', SUBSTRING(CONVERT(nvarchar,host_platform),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
@@ -196,6 +216,22 @@ BEGIN
  exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,host_release),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
  exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar,host_service_pack_level),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
  exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+END;
+IF @PRODUCT_VERSION >= 11 AND @PRODUCT_VERSION < 14
+BEGIN
+ exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows'' FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+ exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,windows_release),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+ exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar,windows_service_pack_level),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+ exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+ exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024) /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x) */');
+END
+IF @PRODUCT_VERSION < 11
+BEGIN   /* Versions before SQL Server 2012 (11.x)   */
+ exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows''');
+ exec('INSERT INTO #serverProperties SELECT ''HostRelease'', REPLACE(REPLACE(SUBSTRING(@@VERSION,4 + charindex ('' ON '',@@VERSION),LEN(@@VERSION)), CHAR(13), ''''), CHAR(10), '''')');
+ exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar,SERVERPROPERTY(''ProductLevel'')),1,1024)');
+ exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',''UNKNOWN''');
+ exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024)');
 END;
 IF @PRODUCT_VERSION >= 13 AND @PRODUCT_VERSION <= 16
 BEGIN
@@ -211,7 +247,27 @@ exec('INSERT INTO #serverProperties SELECT ''IsBufferPoolExtensionEnabled'', CON
 END;
 IF @PRODUCT_VERSION >= 11
 BEGIN
-exec('INSERT INTO #serverProperties SELECT ''IsFileStreamEmabled'', CONVERT(nvarchar, count(*)) FROM sys.database_filestream_options where non_transacted_access <> 0 /* SQL Server 2012 (11.x) above */');
+exec('WITH check_filestream AS (
+    SELECT
+        Name,
+        ISNULL ((
+                SELECT
+                    1
+                FROM
+                    sys.master_files AS mf
+                WHERE
+                    mf.database_id = db.database_id
+                    AND mf.type = 2),
+                0) AS hasfs
+    FROM
+        sys.databases AS db
+)
+INSERT INTO #serverProperties SELECT
+    ''IsFileStreamEnabled'',
+    sum(hasfs)
+FROM
+    check_filestream
+/* SQL Server 2012 (11.x) above */');
 END;
 
 SELECT @PKEY as PKEY, a.* FROM #serverProperties a;

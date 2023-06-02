@@ -3,6 +3,8 @@ README
 Instructions on how to prepare and run Google Database Migration Assessment Data Extractor for Microsoft SQL Server to extract the data required
 for analysis by Database Migration Assessment.
 
+These scripts have been tested with SQL Server 2008R2 SP2 through SQL Server 2022
+
 1. Background
 -------------
 
@@ -32,9 +34,9 @@ for analysis by Database Migration Assessment.
     b) Update the sqlserver\sqlqsrv.csv file to contain the full instance name(s) on a separate line you would like to scan in the format:
         [computer name]\[instance name]
 
-        A default instance would look like: MS-SERVER1\MSSQLSERVER
+        A default instance would look like: MS-SERVER1 or 10.0.0.1
 
-        A custom instance would look like: MS-SERVER1\TESTINSTANCE
+        A custom instance would look like: MS-SERVER1\TESTINSTANCE or 10.0.0.1\TESTINSTANCE
     
     c) If the extract will be run by a user that does not have SYSADMIN privilege, connect to the database 
        as a user with SYSADMIN privileges and create the user if needed.
@@ -42,6 +44,7 @@ for analysis by Database Migration Assessment.
         From a command prompt, execute either of the following scripts depending on what type of authentication you currently use for your SYSADMIN user.  The collection user will use SQL Authentication:
             - CreateUserForAssessmentWithSQLAuth.bat
                 The following parameters can be specified:
+                    -serverName  ** Always Specified
                     -serverUserName  ** Always Specified
                     -serverUserPass  ** Always Specified
                         and
@@ -51,6 +54,7 @@ for analysis by Database Migration Assessment.
                     -useDefaultCreds  ** Specify if default credentials coded in the app should be used
             - CreateUserForAssessmentWithWindowsAuth.bat
                 The following parameters can be specified:
+                    -serverName  ** Always Specified
                     -collectionUserName  ** Specified if a custom username will be used
                     -CollectionUserPass  ** Specified if a custom username will be used
                         or
@@ -98,10 +102,10 @@ for analysis by Database Migration Assessment.
     b)  When the perfmon dataset completes or if you would like to execute the collection sooner, execute the following command and return the subsequent .zip file to Google.
 
         If a custom collection user was created in the above step:
-            .\RunAssessment.bat -username [collection user name] -password [collection user password]
+            .\RunAssessment.bat -serverName [servername\instanceName] -username [collection user name] -password [collection user password]
 
         If the default user was created in the above step:
-            .\RunAssessment.bat -useDefaultCreds
+            .\RunAssessment.bat -serverName [servername\instanceName] -useDefaultCreds
 
         Notes:
             1) Google Database Migration Assessment Data Extractor extracts data for the entire database.
