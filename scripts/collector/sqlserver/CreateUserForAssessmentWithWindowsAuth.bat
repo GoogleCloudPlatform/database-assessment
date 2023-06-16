@@ -21,7 +21,7 @@ set defaultCreds=0
 if "%1" == "" goto evaluateUser
 if /i "%1" == "-serverName" set "serverName=%2"
 if /i "%1" == "-collectionUserName" set "user=%2"
-if /i "%1" == "-CollectionUserPass" set "pass=%2"
+if /i "%1" == "-collectionUserPass" set "pass=%2"
 if /i "%1" == "-useDefaultCreds" set "defaultCreds=1"
 
 set helpMessage="Usage: CreateUserForAssessmentWithWindowsAuth.bat -serverName (-collectionUserName -collectionUserPass) or -useDefaultCreds"
@@ -52,7 +52,7 @@ if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 if [%pass%] == [] goto error
 echo Creating Collection User with Custom Credentials
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createuserwithwindowsauth.ps1 -serverName %serverName% -collectionUserName %user% -CollectionUserPass %pass%
+PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createuserwithwindowsauth.ps1 -serverName %serverName% -collectionUserName %user% -collectionUserPass %pass%
 if %errorlevel% == 1 goto exit
 goto done
 

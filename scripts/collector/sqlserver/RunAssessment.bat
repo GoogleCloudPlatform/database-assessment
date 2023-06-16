@@ -20,8 +20,8 @@ set defaultUsr=0
 :loop 
 if "%1" == "" goto evaluateUser
 if /i "%1" == "-serverName" set "serverName=%2"
-if /i "%1" == "-username" set "user=%2"
-if /i "%1" == "-password" set "pass=%2"
+if /i "%1" == "-collectionUserName" set "user=%2"
+if /i "%1" == "-collectionUserPass" set "pass=%2"
 if /i "%1" == "-useDefaultCreds" set "defaultUsr=1"
 
 set helpMessage="Usage: RunAssessment.bat (-serverName [servername] -collectionUserName [username] -collectionUserPass [password]) or -serverName [servername] -useDefaultCreds"

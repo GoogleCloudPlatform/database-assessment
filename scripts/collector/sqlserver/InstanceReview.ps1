@@ -20,9 +20,9 @@
     If user and password are supplied, that will be used to execute the script.  Otherwise default credentials hardcoded in the script will be used
 .PARAMETER serverName
     Connection string usually in the form of [server name / ip address]\[instance name] (required)
-.PARAMETER user
+.PARAMETER collectionUserName
     Collection username (optional)
-.PARAMETER pass
+.PARAMETER collectionUserPass
     Collection username password (optional)
 .EXAMPLE
     To use a specific username / password combination:
@@ -37,8 +37,8 @@
 #>
 Param(
 [Parameter(Mandatory=$true)][string]$serverName = "",
-[Parameter(Mandatory=$false)][string]$user = "userfordma",
-[Parameter(Mandatory=$false)][string]$pass = "P@ssword135"
+[Parameter(Mandatory=$false)][string]$collectionUserName = "userfordma",
+[Parameter(Mandatory=$false)][string]$collectionUserPass = "P@ssword135"
 )
 
 $foldername = ""
@@ -48,7 +48,7 @@ if ([string]::IsNullorEmpty($serverName)) {
     Exit 1
 } else {
     Write-Output "Retrieving Metadata Information from $serverName"
-    $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $user -P $pass -W -m 1 -u | findstr /v /c:"---"
+    $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u | findstr /v /c:"---"
 }
 
 if ([string]::IsNullorEmpty($obj)) {
@@ -110,26 +110,26 @@ foreach ($directory in $outputFileArray) {
 }
 
 Write-Output "Retriving SQL Server Installed Components..."
-sqlcmd -S $serverName -i sql\componentsInstalled.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
+sqlcmd -S $serverName -i sql\componentsInstalled.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
 Write-Output "Retriving SQL Server Properties..."
-sqlcmd -S $serverName -i sql\serverProperties.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
-sqlcmd -S $serverName -i sql\dbServerUnsupportedFlags.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbServerFlags
+sqlcmd -S $serverName -i sql\serverProperties.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
+sqlcmd -S $serverName -i sql\dbServerUnsupportedFlags.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbServerFlags
 Write-Output "Retriving SQL Server Features..."
-sqlcmd -S $serverName -i sql\features.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
+sqlcmd -S $serverName -i sql\features.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
 Write-Output "Retriving SQL Server Linked Servers..."
-sqlcmd -S $serverName -i sql\linkedServers.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
+sqlcmd -S $serverName -i sql\linkedServers.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
 Write-Output "Retriving SQL Server Database Sizes..."
-sqlcmd -S $serverName -i sql\dbSizes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
+sqlcmd -S $serverName -i sql\dbSizes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
 Write-Output "Retriving SQL Server Cluster Nodes..."
-sqlcmd -S $serverName -i sql\dbClusterNodes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
+sqlcmd -S $serverName -i sql\dbClusterNodes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
 Write-Output "Retriving SQL Server Object Info..."
-sqlcmd -S $serverName -i sql\objectList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$objectList
-sqlcmd -S $serverName -i sql\tableList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$tableList
-sqlcmd -S $serverName -i sql\indexList.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$indexList
-sqlcmd -S $serverName -i sql\columnDatatypes.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
-sqlcmd -S $serverName -i sql\userConnectionInfo.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
-sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
-sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -U $user -P $pass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
+sqlcmd -S $serverName -i sql\objectList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$objectList
+sqlcmd -S $serverName -i sql\tableList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$tableList
+sqlcmd -S $serverName -i sql\indexList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$indexList
+sqlcmd -S $serverName -i sql\columnDatatypes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
+sqlcmd -S $serverName -i sql\userConnectionInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
+sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
+sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
 
 Write-Output "Retrieving OS Disk Cluster Information.."
 if (Test-Path -Path $env:TEMP\tempDisk.csv) {
