@@ -17,7 +17,7 @@ limitations under the License.
 SET nocount ON;
 SET language us_english;
 DECLARE @PKEY AS VARCHAR(256)
-SELECT @PKEY = N'123';
+SELECT @PKEY = N'$(pkey)';
 DECLARE @TABLE_PERMISSION_COUNT AS INTEGER
 
 /* need to record table permissions in order to determine if we can run certain server level queryies
