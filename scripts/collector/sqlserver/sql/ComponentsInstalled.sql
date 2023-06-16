@@ -14,216 +14,542 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 */
-
-SET NOCOUNT ON;
-SET LANGUAGE us_english;
+SET nocount ON;
+SET language us_english;
 DECLARE @PKEY AS VARCHAR(256)
-SELECT @PKEY = N'$(pkey)';
+SELECT @PKEY = N'123';
+DECLARE @TABLE_PERMISSION_COUNT AS INTEGER
+
+/* need to record table permissions in order to determine if we can run certain server level queryies
+    as some tables are not available in managed instances 
+*/
+IF Object_id('tempdb..#myPerms') IS NOT NULL
+  DROP TABLE #myperms;
+CREATE TABLE #myperms
+  (
+     entity_name     NVARCHAR(255),
+     subentity_name  NVARCHAR(255),
+     permission_name NVARCHAR(255)
+  );
+INSERT INTO #myperms
+SELECT *
+FROM   Fn_my_permissions('sys.xp_regread', 'OBJECT')
+WHERE  Upper(permission_name) = 'EXECUTE'
+       AND subentity_name = '';
+INSERT INTO #myperms
+SELECT *
+FROM   Fn_my_permissions('sys.xp_servicecontrol', 'OBJECT')
+WHERE  Upper(permission_name) = 'EXECUTE'
+       AND subentity_name = '';
+SELECT @TABLE_PERMISSION_COUNT = Count(*)
+FROM   #myperms
+WHERE  Lower(entity_name) IN ( 'sys.xp_regread', 'sys.xp_servicecontrol' )
+       AND Upper(permission_name) = 'EXECUTE';
+
 /* ------------------------------------------ Inital Setup -----------------------------------------------------*/
-CREATE TABLE #RegResult
-(
-ResultValue NVARCHAR(4)
-)
-CREATE TABLE #ServicesServiceStatus /*Create temp tables*/
-(
-RowID INT IDENTITY(1,1)
-,ServerName NVARCHAR(128)
-,ServiceName NVARCHAR(128)
-,ServiceStatus varchar(128)
-,StatusDateTime DATETIME DEFAULT (GETDATE())
-,PhysicalSrverName NVARCHAR(128)
-)
-DECLARE
-@ChkInstanceName nvarchar(128) /*Stores SQL Instance Name*/
-,@ChkSrvName nvarchar(128) /*Stores Server Name*/
-,@TrueSrvName nvarchar(128) /*Stores where code name needed */
-,@SQLSrv NVARCHAR(128) /*Stores server name*/
-,@PhysicalSrvName NVARCHAR(128) /*Stores physical name*/
-,@FTS nvarchar(128) /*Stores Full Text Search Service name*/
-,@RS nvarchar(128) /*Stores Reporting Service name*/
-,@SQLAgent NVARCHAR(128) /*Stores SQL Agent Service name*/
-,@OLAP nvarchar(128) /*Stores Analysis Service name*/
-,@REGKEY NVARCHAR(128) /*Stores Registry Key information*/
-SET @PhysicalSrvName = CAST(SERVERPROPERTY('MachineName') AS VARCHAR(128))
-SET @ChkSrvName = CAST(SERVERPROPERTY('INSTANCENAME') AS VARCHAR(128))
-SET @ChkInstanceName = @@serverName
+IF Object_id('tempdb..#RegResult') IS NOT NULL
+  DROP TABLE #regresult;
+IF Object_id('tempdb..#ServicesServiceStatus') IS NOT NULL
+  DROP TABLE #servicesservicestatus;
+  CREATE TABLE #regresult
+  (
+     resultvalue NVARCHAR(4)
+  )
+  CREATE TABLE #servicesservicestatus /*Create temp tables*/
+  (
+     rowid             INT IDENTITY(1, 1),
+     servername        NVARCHAR(128),
+     servicename       NVARCHAR(128),
+     servicestatus     VARCHAR(128),
+     statusdatetime    DATETIME DEFAULT (Getdate()),
+     physicalsrvername NVARCHAR(128)
+  )
+  DECLARE @ChkInstanceName NVARCHAR(128) /*Stores SQL Instance Name*/
+        ,
+        @ChkSrvName      NVARCHAR(128) /*Stores Server Name*/
+        ,
+        @TrueSrvName     NVARCHAR(128) /*Stores where code name needed */
+        ,
+        @SQLSrv          NVARCHAR(128) /*Stores server name*/
+        ,
+        @PhysicalSrvName NVARCHAR(128) /*Stores physical name*/
+        ,
+        @FTS             NVARCHAR(128) /*Stores Full Text Search Service name*/
+        ,
+        @RS              NVARCHAR(128) /*Stores Reporting Service name*/
+        ,
+        @SQLAgent        NVARCHAR(128) /*Stores SQL Agent Service name*/
+        ,
+        @OLAP            NVARCHAR(128) /*Stores Analysis Service name*/
+        ,
+        @REGKEY          NVARCHAR(128) /*Stores Registry Key information*/
+    SET @PhysicalSrvName = Cast(Serverproperty('MachineName') AS VARCHAR(128))
+    SET @ChkSrvName = Cast(Serverproperty('INSTANCENAME') AS VARCHAR(128))
+    SET @ChkInstanceName = @@serverName
 IF @ChkSrvName IS NULL /*Detect default or named instance*/
-BEGIN
-SET @TrueSrvName = 'MSQLSERVER'
-SELECT @OLAP = 'MSSQLServerOLAPService' /*Setting up proper service name*/
-SELECT @FTS = 'MSFTESQL'
-SELECT @RS = 'ReportServer'
-SELECT @SQLAgent = 'SQLSERVERAGENT'
-SELECT @SQLSrv = 'MSSQLSERVER'
-END
+  BEGIN
+      SET @TrueSrvName = 'MSQLSERVER'
+
+      SELECT @OLAP = 'MSSQLServerOLAPService' /*Setting up proper service name*/
+
+      SELECT @FTS = 'MSFTESQL'
+
+      SELECT @RS = 'ReportServer'
+
+      SELECT @SQLAgent = 'SQLSERVERAGENT'
+
+      SELECT @SQLSrv = 'MSSQLSERVER'
+  END
 ELSE
-BEGIN
-SET @TrueSrvName = CAST(SERVERPROPERTY('INSTANCENAME') AS VARCHAR(128))
-SET @SQLSrv = '$'+@ChkSrvName
-SELECT @OLAP = 'MSOLAP' + @SQLSrv /*Setting up proper service name*/
-SELECT @FTS = 'MSFTESQL' + @SQLSrv
-SELECT @RS = 'ReportServer' + @SQLSrv
-SELECT @SQLAgent = 'SQLAgent' + @SQLSrv
-SELECT @SQLSrv = 'MSSQL' + @SQLSrv
-END
+  BEGIN
+      SET @TrueSrvName = Cast(Serverproperty('INSTANCENAME') AS VARCHAR(128))
+      SET @SQLSrv = '$' + @ChkSrvName
+
+      SELECT @OLAP = 'MSOLAP' + @SQLSrv /*Setting up proper service name*/
+
+      SELECT @FTS = 'MSFTESQL' + @SQLSrv
+
+      SELECT @RS = 'ReportServer' + @SQLSrv
+
+      SELECT @SQLAgent = 'SQLAgent' + @SQLSrv
+
+      SELECT @SQLSrv = 'MSSQL' + @SQLSrv
+  END
+
 /* ---------------------------------- SQL Server Service Section ----------------------------------------------*/
-SET @REGKEY = 'System\CurrentControlSet\Services\'+@SQLSrv
-INSERT #RegResult ( ResultValue ) EXEC master.sys.xp_regread @rootkey='HKEY_LOCAL_MACHINE', @key=@REGKEY
-IF (SELECT ResultValue FROM #RegResult) = 1
-BEGIN
-INSERT #ServicesServiceStatus (ServiceStatus) /*Detecting staus of SQL Sever service*/
-EXEC xp_servicecontrol N'QUERYSTATE',@SQLSrv
-UPDATE #ServicesServiceStatus set ServiceName = 'MS SQL Server Service' where RowID = @@identity
-UPDATE #ServicesServiceStatus set ServerName = @TrueSrvName where RowID = @@identity
-UPDATE #ServicesServiceStatus set PhysicalSrverName = @PhysicalSrvName where RowID = @@identity
-TRUNCATE TABLE #RegResult
-END
+SET @REGKEY = 'System\CurrentControlSet\Services\'
+              + @SQLSrv
+INSERT #regresult
+       (resultvalue)
+EXEC master.sys.Xp_regread
+  @rootkey='HKEY_LOCAL_MACHINE',
+  @key=@REGKEY
+IF (SELECT resultvalue
+    FROM   #regresult) = 1
+   AND @TABLE_PERMISSION_COUNT >= 2
+  BEGIN
+      INSERT #servicesservicestatus
+             (servicestatus) /*Detecting staus of SQL Sever service*/
+      EXEC Xp_servicecontrol
+        N'QUERYSTATE',
+        @SQLSrv
+
+      UPDATE #servicesservicestatus
+      SET    servicename = 'MS SQL Server Service'
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    servername = @TrueSrvName
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    physicalsrvername = @PhysicalSrvName
+      WHERE  rowid = @@identity
+
+      TRUNCATE TABLE #regresult
+  END
 ELSE
-BEGIN
-INSERT INTO #ServicesServiceStatus (ServiceStatus) VALUES ('NOT INSTALLED')
-UPDATE #ServicesServiceStatus set ServiceName = 'MS SQL Server Service' where RowID = @@identity
-UPDATE #ServicesServiceStatus set ServerName = @TrueSrvName where RowID = @@identity
-UPDATE #ServicesServiceStatus set PhysicalSrverName = @PhysicalSrvName where RowID = @@identity
-TRUNCATE TABLE #RegResult
-END
+  BEGIN
+      INSERT INTO #servicesservicestatus
+                  (servicestatus)
+      VALUES      ('NOT INSTALLED')
+
+      UPDATE #servicesservicestatus
+      SET    servicename = 'MS SQL Server Service'
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    servername = @TrueSrvName
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    physicalsrvername = @PhysicalSrvName
+      WHERE  rowid = @@identity
+
+      TRUNCATE TABLE #regresult
+  END
+
 /* ---------------------------------- SQL Server Agent Service Section -----------------------------------------*/
-SET @REGKEY = 'System\CurrentControlSet\Services\'+@SQLAgent
-INSERT #RegResult ( ResultValue ) EXEC master.sys.xp_regread @rootkey='HKEY_LOCAL_MACHINE', @key=@REGKEY
-IF (SELECT ResultValue FROM #RegResult) = 1
-BEGIN
-INSERT #ServicesServiceStatus (ServiceStatus) /*Detecting staus of SQL Agent service*/
-EXEC xp_servicecontrol N'QUERYSTATE',@SQLAgent
-UPDATE #ServicesServiceStatus set ServiceName = 'SQL Server Agent Service' where RowID = @@identity
-UPDATE #ServicesServiceStatus set ServerName = @TrueSrvName where RowID = @@identity
-UPDATE #ServicesServiceStatus set PhysicalSrverName = @PhysicalSrvName where RowID = @@identity
-TRUNCATE TABLE #RegResult
-END
+SET @REGKEY = 'System\CurrentControlSet\Services\'
+              + @SQLAgent
+INSERT #regresult
+       (resultvalue)
+EXEC master.sys.Xp_regread
+  @rootkey='HKEY_LOCAL_MACHINE',
+  @key=@REGKEY
+IF (SELECT resultvalue
+    FROM   #regresult) = 1
+   AND @TABLE_PERMISSION_COUNT >= 2
+  BEGIN
+      INSERT #servicesservicestatus
+             (servicestatus) /*Detecting staus of SQL Agent service*/
+      EXEC Xp_servicecontrol
+        N'QUERYSTATE',
+        @SQLAgent
+
+      UPDATE #servicesservicestatus
+      SET    servicename = 'SQL Server Agent Service'
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    servername = @TrueSrvName
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    physicalsrvername = @PhysicalSrvName
+      WHERE  rowid = @@identity
+
+      TRUNCATE TABLE #regresult
+  END
 ELSE
-BEGIN
-INSERT INTO #ServicesServiceStatus (ServiceStatus) VALUES ('NOT INSTALLED')
-UPDATE #ServicesServiceStatus set ServiceName = 'SQL Server Agent Service' where RowID = @@identity
-UPDATE #ServicesServiceStatus set ServerName = @TrueSrvName where RowID = @@identity
-UPDATE #ServicesServiceStatus set PhysicalSrverName = @PhysicalSrvName where RowID = @@identity
-TRUNCATE TABLE #RegResult
-END
+  BEGIN
+      INSERT INTO #servicesservicestatus
+                  (servicestatus)
+      VALUES      ('NOT INSTALLED')
+
+      UPDATE #servicesservicestatus
+      SET    servicename = 'SQL Server Agent Service'
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    servername = @TrueSrvName
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    physicalsrvername = @PhysicalSrvName
+      WHERE  rowid = @@identity
+
+      TRUNCATE TABLE #regresult
+  END
+
 /* ---------------------------------- SQL Browser Service Section ----------------------------------------------*/
-SET @REGKEY = 'System\CurrentControlSet\Services\SQLBrowser'
-INSERT #RegResult ( ResultValue ) EXEC master.sys.xp_regread @rootkey='HKEY_LOCAL_MACHINE', @key=@REGKEY
-IF (SELECT ResultValue FROM #RegResult) = 1
+IF @TABLE_PERMISSION_COUNT >= 2
 BEGIN
-INSERT #ServicesServiceStatus (ServiceStatus) /*Detecting staus of SQL Browser Service*/
-EXEC master.dbo.xp_servicecontrol N'QUERYSTATE',N'sqlbrowser'
-UPDATE #ServicesServiceStatus set ServiceName = 'SQL Browser Service - Instance Independent' where RowID = @@identity
-UPDATE #ServicesServiceStatus set ServerName = @TrueSrvName where RowID = @@identity
-UPDATE #ServicesServiceStatus set PhysicalSrverName = @PhysicalSrvName where RowID = @@identity
-TRUNCATE TABLE #RegResult
+SET @REGKEY = 'System\CurrentControlSet\Services\SQLBrowser'
+
+INSERT #regresult
+       (resultvalue)
+EXEC master.sys.Xp_regread
+  @rootkey='HKEY_LOCAL_MACHINE',
+  @key=@REGKEY
+IF (SELECT resultvalue
+    FROM   #regresult) = 1
+  BEGIN
+      INSERT #servicesservicestatus
+             (servicestatus) /*Detecting staus of SQL Browser Service*/
+      EXEC master.dbo.Xp_servicecontrol
+        N'QUERYSTATE',
+        N'sqlbrowser'
+
+      UPDATE #servicesservicestatus
+      SET    servicename = 'SQL Browser Service - Instance Independent'
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    servername = @TrueSrvName
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    physicalsrvername = @PhysicalSrvName
+      WHERE  rowid = @@identity
+
+      TRUNCATE TABLE #regresult
+  END
+IF (SELECT resultvalue
+    FROM   #regresult) <> 1
+  BEGIN
+      INSERT INTO #servicesservicestatus
+                  (servicestatus)
+      VALUES      ('NOT INSTALLED')
+
+      UPDATE #servicesservicestatus
+      SET    servicename = 'SQL Browser Service - Instance Independent'
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    servername = @TrueSrvName
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    physicalsrvername = @PhysicalSrvName
+      WHERE  rowid = @@identity
+
+      TRUNCATE TABLE #regresult
+  END
 END
 ELSE
 BEGIN
-INSERT INTO #ServicesServiceStatus (ServiceStatus) VALUES ('NOT INSTALLED')
-UPDATE #ServicesServiceStatus set ServiceName = 'SQL Browser Service - Instance Independent' where RowID = @@identity
-UPDATE #ServicesServiceStatus set ServerName = @TrueSrvName where RowID = @@identity
-UPDATE #ServicesServiceStatus set PhysicalSrverName = @PhysicalSrvName where RowID = @@identity
-TRUNCATE TABLE #RegResult
+      INSERT INTO #servicesservicestatus
+                  (physicalsrvername,servername,servicename,servicestatus)
+      VALUES      (@PhysicalSrvName,@TrueSrvName,'SQL Browser Service - Instance Independent','N/A');
 END
 /* ---------------------------------- Integration Service Section ----------------------------------------------*/
-SET @REGKEY = 'System\CurrentControlSet\Services\MsDtsServer'
-INSERT #RegResult ( ResultValue ) EXEC master.sys.xp_regread @rootkey='HKEY_LOCAL_MACHINE', @key=@REGKEY
-IF (SELECT ResultValue FROM #RegResult) = 1
+IF @TABLE_PERMISSION_COUNT >= 2
 BEGIN
-INSERT #ServicesServiceStatus (ServiceStatus) /*Detecting staus of Intergration Service*/
-EXEC master.dbo.xp_servicecontrol N'QUERYSTATE',N'MsDtsServer'
-UPDATE #ServicesServiceStatus set ServiceName = 'Intergration Service - Instance Independent' where RowID = @@identity
-UPDATE #ServicesServiceStatus set ServerName = @TrueSrvName where RowID = @@identity
-UPDATE #ServicesServiceStatus set PhysicalSrverName = @PhysicalSrvName where RowID = @@identity
-TRUNCATE TABLE #RegResult
+SET @REGKEY = 'System\CurrentControlSet\Services\MsDtsServer'
+
+INSERT #regresult
+       (resultvalue)
+EXEC master.sys.Xp_regread
+  @rootkey='HKEY_LOCAL_MACHINE',
+  @key=@REGKEY
+  IF (SELECT resultvalue
+    FROM   #regresult) = 1
+  BEGIN
+      INSERT #servicesservicestatus
+             (servicestatus) /*Detecting staus of Intergration Service*/
+      EXEC master.dbo.Xp_servicecontrol
+        N'QUERYSTATE',
+        N'sqlbrowser'
+
+      UPDATE #servicesservicestatus
+      SET    servicename = 'Intergration Service - Instance Independent'
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    servername = @TrueSrvName
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    physicalsrvername = @PhysicalSrvName
+      WHERE  rowid = @@identity
+
+      TRUNCATE TABLE #regresult
+  END
+  IF (SELECT resultvalue
+    FROM   #regresult) <> 1
+  BEGIN
+      INSERT INTO #servicesservicestatus
+                  (servicestatus)
+      VALUES      ('NOT INSTALLED')
+
+      UPDATE #servicesservicestatus
+      SET    servicename = 'Intergration Service - Instance Independent'
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    servername = @TrueSrvName
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    physicalsrvername = @PhysicalSrvName
+      WHERE  rowid = @@identity
+
+      TRUNCATE TABLE #regresult
+  END
 END
 ELSE
 BEGIN
-INSERT INTO #ServicesServiceStatus (ServiceStatus) VALUES ('NOT INSTALLED')
-UPDATE #ServicesServiceStatus set ServiceName = 'Intergration Service - Instance Independent' where RowID = @@identity
-UPDATE #ServicesServiceStatus set ServerName = @TrueSrvName where RowID = @@identity
-UPDATE #ServicesServiceStatus set PhysicalSrverName = @PhysicalSrvName where RowID = @@identity
-TRUNCATE TABLE #RegResult
+      INSERT INTO #servicesservicestatus
+                  (physicalsrvername,servername,servicename,servicestatus)
+      VALUES      (@PhysicalSrvName,@TrueSrvName,'Intergration Service - Instance Independent','N/A');
 END
 /* ---------------------------------- Reporting Service Section ------------------------------------------------*/
-SET @REGKEY = 'System\CurrentControlSet\Services\'+@RS
-INSERT #RegResult ( ResultValue ) EXEC master.sys.xp_regread @rootkey='HKEY_LOCAL_MACHINE', @key=@REGKEY
-IF (SELECT ResultValue FROM #RegResult) = 1
+IF @TABLE_PERMISSION_COUNT >= 2
 BEGIN
-INSERT #ServicesServiceStatus (ServiceStatus) /*Detecting staus of Reporting service*/
-EXEC master.dbo.xp_servicecontrol N'QUERYSTATE',@RS
-UPDATE #ServicesServiceStatus set ServiceName = 'Reporting Service' where RowID = @@identity
-UPDATE #ServicesServiceStatus set ServerName = @TrueSrvName where RowID = @@identity
-UPDATE #ServicesServiceStatus set PhysicalSrverName = @PhysicalSrvName where RowID = @@identity
-TRUNCATE TABLE #RegResult
+SET @REGKEY = 'System\CurrentControlSet\Services\' + @RS
+
+INSERT #regresult
+       (resultvalue)
+EXEC master.sys.Xp_regread
+  @rootkey='HKEY_LOCAL_MACHINE',
+  @key=@REGKEY
+  IF (SELECT resultvalue
+    FROM   #regresult) = 1
+  BEGIN
+      INSERT #servicesservicestatus
+             (servicestatus) /*Detecting staus of Reporting service*/
+      EXEC master.dbo.Xp_servicecontrol
+        N'QUERYSTATE',
+        N'sqlbrowser'
+
+      UPDATE #servicesservicestatus
+      SET    servicename = 'Reporting Service'
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    servername = @TrueSrvName
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    physicalsrvername = @PhysicalSrvName
+      WHERE  rowid = @@identity
+
+      TRUNCATE TABLE #regresult
+  END
+  IF (SELECT resultvalue
+    FROM   #regresult) <> 1
+  BEGIN
+      INSERT INTO #servicesservicestatus
+                  (servicestatus)
+      VALUES      ('NOT INSTALLED')
+
+      UPDATE #servicesservicestatus
+      SET    servicename = 'Reporting Service'
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    servername = @TrueSrvName
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    physicalsrvername = @PhysicalSrvName
+      WHERE  rowid = @@identity
+
+      TRUNCATE TABLE #regresult
+  END
 END
 ELSE
 BEGIN
-INSERT INTO #ServicesServiceStatus (ServiceStatus) VALUES ('NOT INSTALLED')
-UPDATE #ServicesServiceStatus set ServiceName = 'Reporting Service' where RowID = @@identity
-UPDATE #ServicesServiceStatus set ServerName = @TrueSrvName where RowID = @@identity
-UPDATE #ServicesServiceStatus set PhysicalSrverName = @PhysicalSrvName where RowID = @@identity
-TRUNCATE TABLE #RegResult
+      INSERT INTO #servicesservicestatus
+                  (physicalsrvername,servername,servicename,servicestatus)
+      VALUES      (@PhysicalSrvName,@TrueSrvName,'Reporting Service','N/A');
 END
 /* ---------------------------------- Analysis Service Section -------------------------------------------------*/
 IF @ChkSrvName IS NULL /*Detect default or named instance*/
+  BEGIN
+      SET @OLAP = 'MSSQLServerOLAPService'
+  END
+ELSE
+  BEGIN
+      SET @OLAP = 'MSOLAP' + '$' + @ChkSrvName
+      SET @REGKEY = 'System\CurrentControlSet\Services\'
+                    + @OLAP
+  END
+IF @TABLE_PERMISSION_COUNT >= 2
 BEGIN
-SET @OLAP = 'MSSQLServerOLAPService'
+INSERT #regresult
+       (resultvalue)
+EXEC master.sys.Xp_regread
+  @rootkey='HKEY_LOCAL_MACHINE',
+  @key=@REGKEY
+
+IF (SELECT resultvalue
+    FROM   #regresult) = 1
+  BEGIN
+      INSERT #servicesservicestatus
+             (servicestatus) /*Detecting staus of Analysis service*/
+      EXEC master.dbo.Xp_servicecontrol
+        N'QUERYSTATE',
+        @OLAP
+
+      UPDATE #servicesservicestatus
+      SET    servicename = 'Analysis Services'
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    servername = @TrueSrvName
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    physicalsrvername = @PhysicalSrvName
+      WHERE  rowid = @@identity
+
+      TRUNCATE TABLE #regresult
+  END
+IF (SELECT resultvalue
+    FROM   #regresult) <> 1
+  BEGIN
+      INSERT INTO #servicesservicestatus
+                  (servicestatus)
+      VALUES      ('NOT INSTALLED')
+
+      UPDATE #servicesservicestatus
+      SET    servicename = 'Analysis Services'
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    servername = @TrueSrvName
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    physicalsrvername = @PhysicalSrvName
+      WHERE  rowid = @@identity
+
+      TRUNCATE TABLE #regresult
+  END
 END
 ELSE
 BEGIN
-SET @OLAP = 'MSOLAP'+'$'+@ChkSrvName
-SET @REGKEY = 'System\CurrentControlSet\Services\'+@OLAP
-END
-INSERT #RegResult ( ResultValue ) EXEC master.sys.xp_regread @rootkey='HKEY_LOCAL_MACHINE', @key=@REGKEY
-IF (SELECT ResultValue FROM #RegResult) = 1
-BEGIN
-INSERT #ServicesServiceStatus (ServiceStatus) /*Detecting staus of Analysis service*/
-EXEC master.dbo.xp_servicecontrol N'QUERYSTATE',@OLAP
-UPDATE #ServicesServiceStatus set ServiceName = 'Analysis Services' where RowID = @@identity
-UPDATE #ServicesServiceStatus set ServerName = @TrueSrvName where RowID = @@identity
-UPDATE #ServicesServiceStatus set PhysicalSrverName = @PhysicalSrvName where RowID = @@identity
-TRUNCATE TABLE #RegResult
-END
-ELSE
-BEGIN
-INSERT INTO #ServicesServiceStatus (ServiceStatus) VALUES ('NOT INSTALLED')
-UPDATE #ServicesServiceStatus set ServiceName = 'Analysis Services' where RowID = @@identity
-UPDATE #ServicesServiceStatus set ServerName = @TrueSrvName where RowID = @@identity
-UPDATE #ServicesServiceStatus set PhysicalSrverName = @PhysicalSrvName where RowID = @@identity
-TRUNCATE TABLE #RegResult
+      INSERT INTO #servicesservicestatus
+                  (physicalsrvername,servername,servicename,servicestatus)
+      VALUES      (@PhysicalSrvName,@TrueSrvName,'Analysis Services','N/A');
 END
 /* ---------------------------------- Full Text Search Service Section -----------------------------------------*/
-SET @REGKEY = 'System\CurrentControlSet\Services\'+@FTS
-INSERT #RegResult ( ResultValue ) EXEC master.sys.xp_regread @rootkey='HKEY_LOCAL_MACHINE', @key=@REGKEY
-IF (SELECT ResultValue FROM #RegResult) = 1
+SET @REGKEY = 'System\CurrentControlSet\Services\' + @FTS
+
+IF @TABLE_PERMISSION_COUNT >= 2
 BEGIN
-INSERT #ServicesServiceStatus (ServiceStatus) /*Detecting staus of Full Text Search service*/
-EXEC master.dbo.xp_servicecontrol N'QUERYSTATE',@FTS
-UPDATE #ServicesServiceStatus set ServiceName = 'Full Text Search Service' where RowID = @@identity
-UPDATE #ServicesServiceStatus set ServerName = @TrueSrvName where RowID = @@identity
-UPDATE #ServicesServiceStatus set PhysicalSrverName = @PhysicalSrvName where RowID = @@identity
-TRUNCATE TABLE #RegResult
+INSERT #regresult
+       (resultvalue)
+EXEC master.sys.Xp_regread
+  @rootkey='HKEY_LOCAL_MACHINE',
+  @key=@REGKEY
+
+IF (SELECT resultvalue
+    FROM   #regresult) = 1
+  BEGIN
+      INSERT #servicesservicestatus
+             (servicestatus) /*Detecting staus of Full Text Search service*/
+      EXEC master.dbo.Xp_servicecontrol
+        N'QUERYSTATE',
+        @FTS
+
+      UPDATE #servicesservicestatus
+      SET    servicename = 'Full Text Search Service'
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    servername = @TrueSrvName
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    physicalsrvername = @PhysicalSrvName
+      WHERE  rowid = @@identity
+
+      TRUNCATE TABLE #regresult
+  END
+IF (SELECT resultvalue
+    FROM   #regresult) <> 1
+  BEGIN
+      INSERT INTO #servicesservicestatus
+                  (servicestatus)
+      VALUES      ('NOT INSTALLED')
+
+      UPDATE #servicesservicestatus
+      SET    servicename = 'Full Text Search Service'
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    servername = @TrueSrvName
+      WHERE  rowid = @@identity
+
+      UPDATE #servicesservicestatus
+      SET    physicalsrvername = @PhysicalSrvName
+      WHERE  rowid = @@identity
+
+      TRUNCATE TABLE #regresult
+  END
 END
 ELSE
 BEGIN
-INSERT INTO #ServicesServiceStatus (ServiceStatus) VALUES ('NOT INSTALLED')
-UPDATE #ServicesServiceStatus set ServiceName = 'Full Text Search Service' where RowID = @@identity
-UPDATE #ServicesServiceStatus set ServerName = @TrueSrvName where RowID = @@identity
-UPDATE #ServicesServiceStatus set PhysicalSrverName = @PhysicalSrvName where RowID = @@identity
-TRUNCATE TABLE #RegResult
+      INSERT INTO #servicesservicestatus
+                  (physicalsrvername,servername,servicename,servicestatus)
+      VALUES      (@PhysicalSrvName,@TrueSrvName,'Full Text Search Service','N/A');
 END
 /* -------------------------------------------------------------------------------------------------------------*/
-SELECT 
-/*CAST(@@SERVERNAME + '_' + 'master' + '_' + @@ServiceName + '_' + FORMAT(GETDATE() , 'MMddyyHHmmss') AS VARCHAR(256)) AS PKEY,*/
-@PKEY as PKEY,
-PhysicalSrverName AS 'Physical Server Name' /*Display finding*/
-,ServerName AS 'SQL Instance Name'
-,ServiceName AS 'SQL Server Services'
-,ServiceStatus AS 'Current Service Service Status'
-,StatusDateTime AS 'Date/Time Service Status Checked'
-FROM #ServicesServiceStatus
+SELECT @PKEY             AS PKEY,
+       physicalsrvername AS 'Physical Server Name' /*Display finding*/
+       ,
+       servername        AS 'SQL Instance Name',
+       servicename       AS 'SQL Server Services',
+       servicestatus     AS 'Current Service Service Status',
+       statusdatetime    AS 'Date/Time Service Status Checked'
+FROM   #servicesservicestatus
+
 /* -------------------------------------------------------------------------------------------------------------*/
-DROP TABLE #ServicesServiceStatus /*Perform cleanup*/
-DROP TABLE #RegResult
+/*Perform cleanup*/
+IF Object_id('tempdb..#RegResult') IS NOT NULL
+  DROP TABLE #regresult;
+IF Object_id('tempdb..#ServicesServiceStatus') IS NOT NULL
+  DROP TABLE #servicesservicestatus;

@@ -22,6 +22,7 @@ DECLARE @PKEY AS VARCHAR(256)
 DECLARE @PRODUCT_VERSION AS INTEGER
 SELECT @PRODUCT_VERSION = CONVERT(integer, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
 SELECT @PKEY = N'$(pkey)';
+DECLARE @TABLE_PERMISSION_COUNT AS INTEGER
 
 IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  
    DROP TABLE #serverProperties;
@@ -30,6 +31,28 @@ CREATE TABLE #serverProperties(
     property_name nvarchar(256)
     ,property_value nvarchar(1024)
 );
+
+/* need to record table permissions in order to determine if we can run certain serverprops queryies
+    as some tables are not available in managed instances 
+*/
+IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL  
+   DROP TABLE #myPerms;
+
+CREATE TABLE #myPerms (
+    entity_name nvarchar(255), 
+    subentity_name nvarchar(255), 
+    permission_name nvarchar(255)
+);
+
+use msdb;
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmail_server', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmail_profile', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmail_profileaccount', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmail_account', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.log_shipping_secondary_databases', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.log_shipping_primary_databases', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+
+use master;
 INSERT INTO #serverProperties
 SELECT 'BuildClrVersion' AS Property, CONVERT(nvarchar, SERVERPROPERTY('BuildClrVersion')) AS Value
 UNION ALL
@@ -131,14 +154,6 @@ FROM
 WHERE
     j.[enabled] = 1
 UNION ALL
-SELECT
-    'IsDbMailEnabled', CONVERT(nvarchar, count(*))
-FROM
-    msdb.dbo.sysmail_profile p
-    JOIN msdb.dbo.sysmail_profileaccount pa ON p.profile_id = pa.profile_id
-    JOIN msdb.dbo.sysmail_account a ON pa.account_id = a.account_id
-    JOIN msdb.dbo.sysmail_server s ON a.account_id = s.account_id
-UNION ALL
 SELECT 'IsTempDbMetadataMemoryOptimized', CONVERT(varchar, value_in_use) from sys.configurations where name = 'tempdb metadata memory-optimized'
 UNION ALL
 SELECT 'IsPolybaseEnabled', CONVERT(varchar, value_in_use) from sys.configurations where name = 'polybase enabled'
@@ -190,21 +205,6 @@ INSERT INTO #serverProperties SELECT
     CONVERT(varchar, count(*))
 FROM
     check_sysadmin_role;
-WITH log_shipping_count AS (
-    SELECT
-        count(*) log_shipping
-    FROM
-        msdb..log_shipping_primary_databases
-    UNION ALL
-    SELECT
-        count(*) log_shipping
-    FROM
-        msdb..log_shipping_secondary_databases
-)
-INSERT INTO #serverProperties SELECT
-    'IsLogShippingEnabled', CONVERT(varchar,sum(log_shipping))
-FROM
-    log_shipping_count;
 IF @PRODUCT_VERSION >= 15
 BEGIN
  exec('INSERT INTO #serverProperties SELECT ''IsHybridBufferPoolEnabled'', CONVERT(nvarchar,is_enabled) from sys.server_memory_optimized_hybrid_buffer_pool_configuration /* SQL Server 2019 (15.x) and later versions */');
@@ -270,7 +270,54 @@ FROM
 /* SQL Server 2012 (11.x) above */');
 END;
 
+/* check the table permissions temp table before we run this query. Otherwise default the value to show that mail is off */
+SELECT @TABLE_PERMISSION_COUNT = COUNT(*) FROM #myPerms 
+WHERE LOWER(entity_name) in ('dbo.sysmail_profile','dbo.sysmail_profileaccount','dbo.sysmail_account','dbo.sysmail_server') and UPPER(permission_name) = 'SELECT';
+IF @TABLE_PERMISSION_COUNT >= 4
+BEGIN
+exec('INSERT INTO #serverProperties
+SELECT
+    ''IsDbMailEnabled'', CONVERT(nvarchar, count(*))
+FROM
+    msdb.dbo.sysmail_profile p
+    JOIN msdb.dbo.sysmail_profileaccount pa ON p.profile_id = pa.profile_id
+    JOIN msdb.dbo.sysmail_account a ON pa.account_id = a.account_id
+    JOIN msdb.dbo.sysmail_server s ON a.account_id = s.account_id');
+END;
+ELSE
+BEGIN
+exec('INSERT INTO #serverProperties
+SELECT ''IsDbMailEnabled'', CAST(COALESCE(value_in_use,0) as NVARCHAR)  FROM  sys.configurations WHERE name = ''Database Mail XPs''
+');
+END;
+SELECT @TABLE_PERMISSION_COUNT = COUNT(*) FROM #myPerms 
+WHERE LOWER(entity_name) in ('dbo.log_shipping_primary_databases','dbo.log_shipping_secondary_databases') and UPPER(permission_name) = 'SELECT';
+IF @TABLE_PERMISSION_COUNT >= 2
+BEGIN
+exec('WITH log_shipping_count AS (
+    SELECT
+        count(*) log_shipping
+    FROM
+        msdb..log_shipping_primary_databases
+    UNION ALL
+    SELECT
+        count(*) log_shipping
+    FROM
+        msdb..log_shipping_secondary_databases
+)
+INSERT INTO #serverProperties SELECT
+    ''IsLogShippingEnabled'', CONVERT(varchar,COALESCE(sum(log_shipping),0))
+FROM
+    log_shipping_count');
+END;
+ELSE
+BEGIN
+exec('INSERT INTO #serverProperties VALUES (''IsLogShippingEnabled'', CONVERT(varchar,0))');
+END;
+
 SELECT @PKEY as PKEY, a.* FROM #serverProperties a;
 
 IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  
    DROP TABLE #serverProperties;
+IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL  
+   DROP TABLE #myPerms;
