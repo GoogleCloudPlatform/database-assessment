@@ -112,10 +112,10 @@ In order to begin running the Database Migration Assessment Collection process, 
 - From a command prompt session in "Administrator Mode" on the server you would like to collect data on, execute the following command:
 
       For a default instance:
-        .\ManageSqlServerPerfmonDatset.bat -operation create
+        .\ManageSqlServerPerfmonDatset.bat -operation create -instanceType default
 
       For a named instance:
-        .\ManageSqlServerPerfmonDatset.bat -operation create -mssqlInstanceName [instance name]
+        .\ManageSqlServerPerfmonDatset.bat -operation create -instanceType managed -mssqlInstanceName [instance name]
 
   <br/>
 
@@ -127,10 +127,20 @@ In order to begin running the Database Migration Assessment Collection process, 
 - When the perfmon dataset completes or if you would like to execute the collection sooner, execute the following command from a command prompt session in "Administrator Mode" on the server you would like to collect data on and return the subsequent .zip file to Google.
 
        If a custom collection user was created in the above step:
+
+           For a Named Instance:
            .\RunAssessment.bat -serverName [servername\instanceName] -username [collection user name] -password [collection user password]
 
+           For a Default Instance:
+           .\RunAssessment.bat -serverName [servername] -username [collection user name] -password [collection user password]
+
        If the default user was created in the above step:
+
+           For a Named Instance:
            .\RunAssessment.bat -serverName [servername\instanceName] -useDefaultCreds
+
+           For a Default Instance:
+           .\RunAssessment.bat -serverName [servername] -useDefaultCreds
 
        Notes:
            1) Google Database Migration Assessment Data Extractor extracts data for all user databases present in the instance

@@ -1,5 +1,5 @@
 :: Copyright 2023 Google LLC
-::
+:: 
 :: Licensed under the Apache License, Version 2.0 (the "License");
 :: you may not use this file except in compliance with the License.
 :: You may obtain a copy of the License at
@@ -17,21 +17,42 @@
 set validPerfmonOperations=create stop delete collect
 set validInstances=default managed
 
-set helpMessage="Usage: .\ManageSqlServerPerfmonDataset.bat [operation] create/update/delete/collect [Instance Type]managed/default [ManagedInstanceName] Example: .\ManageSqlServerPerfmonDataset.bat create default or .\ManageSqlServerPerfmonDataset.bat create managed SQL2019"
+set helpMessage=Usage ManageSqlServerPerfmonDataset.bat -operation [create/update/delete/collect/help] -instanceType [managed/default] -managmanagedInstanceName [instance name]
+set helpExample=Example: .\ManageSqlServerPerfmonDataset.bat -operation create -instanceType default or .\ManageSqlServerPerfmonDataset.bat -operation create -instanceType managed -managedInstanceName SQL2019
 
 if [%1]==[] (
+	echo:
+	echo Help:
     echo %helpMessage%
+	echo:
+    echo %helpExample%
     goto exit
 )
 
-set perfmonOperation=%1
-set instance=%2
-set managedInstanceName=%3
+if %1 == help (
+	echo:
+	echo Help:
+    echo %helpMessage%
+	echo:
+    echo %helpExample%
+    goto done
+)
+
+:loop 
+if "%1" == "" goto runAssessmentOperation
+if /i "%1" == "-operation" set "perfmonOperation=%2"
+if /i "%1" == "-instanceType" set "instance=%2"
+if /i "%1" == "-managedInstanceName" set "managedInstanceName=%2"
 
 set isValidPerfmonOperation=false
 
+:runAssessmentOperation
 if %perfmonOperation%==help (
+	echo:
+	echo Help:
     echo %helpMessage%
+	echo:
+    echo %helpExample%
     goto exit
 )
 
