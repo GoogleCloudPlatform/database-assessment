@@ -25,26 +25,31 @@
 .PARAMETER collectionUserPass
     Collection username password (optional)
 .EXAMPLE
-    To use a specific username / password combination:
-        C:\InstanceReview.ps1 -serverName [server name / ip address]\[instance name] -user [collection username] -pass [collection username password]
+    To use a specific username / password combination for a named instance:
+        C:\InstanceReview.ps1 -serverName [server name / ip address]\[instance name] -collectionUserName [collection username] -collectionUserPass [collection username password]
     
-    or
-    
-    To use default credentials:
-        C:\InstanceReview.ps1 -serverName [server name / ip address]\[instance name]
+    To use a specific username / password combination for a default instance:
+        C:\InstanceReview.ps1 -serverName [server name / ip address] -collectionUserName [collection username] -collectionUserPass [collection username password]
+
 .NOTES
     https://googlecloudplatform.github.io/database-assessment/
 #>
 Param(
 [Parameter(Mandatory=$true)][string]$serverName = "",
-[Parameter(Mandatory=$false)][string]$collectionUserName = "userfordma",
-[Parameter(Mandatory=$false)][string]$collectionUserPass = "P@ssword135"
+[Parameter(Mandatory=$false)][string]$collectionUserName = "",
+[Parameter(Mandatory=$false)][string]$collectionUserPass = ""
 )
 
 $foldername = ""
 
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
+    Exit 1
+} elseif ([string]::IsNullorEmpty($collectionUserName)) {
+    Write-Output "Collection Username parameter $collectionUserName is empty.  Ensure that the parameter is provided"
+    Exit 1
+} elseif ([string]::IsNullorEmpty($collectionUserPass)) {
+    Write-Output "Collection Username password parameter $collectionUserPass is empty.  Ensure that the parameter is provided"
     Exit 1
 } else {
     Write-Output "Retrieving Metadata Information from $serverName"

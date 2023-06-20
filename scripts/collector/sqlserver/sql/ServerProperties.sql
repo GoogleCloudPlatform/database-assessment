@@ -51,6 +51,8 @@ INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmail_profileaccount
 INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmail_account', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
 INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.log_shipping_secondary_databases', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
 INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.log_shipping_primary_databases', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmaintplan_subplans', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysjobs', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
 
 use master;
 INSERT INTO #serverProperties
@@ -143,16 +145,6 @@ UNION ALL
 SELECT 'IsRemoteLoginEnabled', CONVERT(nvarchar, is_remote_login_enabled) FROM sys.servers WHERE name = @@SERVERNAME
 UNION ALL
 SELECT 'FullVersion', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), ' '), CHAR(10), ' '),1,1024)
-UNION ALL
-SELECT
-    'MaintenancePlansEnabled',
-    CONVERT(nvarchar, count(*))
-FROM
-    msdb..sysmaintplan_plans p
-    INNER JOIN msdb..sysmaintplan_subplans sp ON p.id = sp.plan_id
-    INNER JOIN msdb..sysjobs j ON sp.job_id = j.job_id
-WHERE
-    j.[enabled] = 1
 UNION ALL
 SELECT 'IsTempDbMetadataMemoryOptimized', CONVERT(varchar, value_in_use) from sys.configurations where name = 'tempdb metadata memory-optimized'
 UNION ALL
@@ -313,6 +305,24 @@ END;
 ELSE
 BEGIN
 exec('INSERT INTO #serverProperties VALUES (''IsLogShippingEnabled'', CONVERT(varchar,0))');
+END;
+SELECT @TABLE_PERMISSION_COUNT = COUNT(*) FROM #myPerms 
+WHERE LOWER(entity_name) in ('dbo.sysmaintplan_subplans','dbo.sysjobs') and UPPER(permission_name) = 'SELECT';
+IF @TABLE_PERMISSION_COUNT >= 2
+BEGIN
+exec('INSERT INTO #serverProperties SELECT
+    ''MaintenancePlansEnabled'',
+    CONVERT(varchar, COALESCE(count(*),0))
+FROM
+    msdb..sysmaintplan_plans p
+    INNER JOIN msdb..sysmaintplan_subplans sp ON p.id = sp.plan_id
+    INNER JOIN msdb..sysjobs j ON sp.job_id = j.job_id
+WHERE
+    j.[enabled] = 1');
+END;
+ELSE
+BEGIN
+exec('INSERT INTO #serverProperties VALUES (''MaintenancePlansEnabled'', CONVERT(varchar,0))');
 END;
 
 SELECT @PKEY as PKEY, a.* FROM #serverProperties a;

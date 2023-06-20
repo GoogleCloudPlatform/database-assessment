@@ -15,16 +15,14 @@
 @echo off
 set user=
 set pass=
-set defaultUsr=0
 
 :loop 
 if "%1" == "" goto evaluateUser
 if /i "%1" == "-serverName" set "serverName=%2"
 if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-collectionUserPass" set "pass=%2"
-if /i "%1" == "-useDefaultCreds" set "defaultUsr=1"
 
-set helpMessage="Usage: RunAssessment.bat (-serverName [servername] -collectionUserName [username] -collectionUserPass [password]) or -serverName [servername] -useDefaultCreds"
+set helpMessage="Usage: RunAssessment.bat -serverName [servername] -collectionUserName [username] -collectionUserPass [password]"
 
 if %1 == help (
     echo %helpMessage%
@@ -37,14 +35,6 @@ goto :loop
 :evaluateUser
 if [%serverName%]==[] goto raiseServerError
 if not [%user%]==[] goto execWithCustomUser
-if "%defaultUsr%"=="0" goto defaultCredError
-if "%defaultUsr%"=="1" goto execWithDefaultUser
-
-:execWithDefaultUser
-echo Gathering Collection with Default User
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName%
-if %errorlevel% == 1 goto exit
-goto done
 
 :execWithCustomUser
 if [%serverName%]==[] goto raiseServerError
@@ -57,16 +47,13 @@ goto done
 
 :error
 echo Username or Password is not populated
-echo Please specify -useDefaultCreds flag or [-username and -password] when invoking the script
-goto exit
-
-:defaultCredError
-echo Please specify -useDefaultCreds flag or [-username and -password] when invoking the script
+echo Please specify [-collectionUserName and -collectionUserPass] when invoking the script
 goto exit
 
 :raiseServerError
 echo Please specify -serverName flag when invoking the script
-echo Format: [server name or ip address]\[instance name]
+echo Format: [server name or ip address]\[instance name] - for a Named Instance
+echo Format: [server name or ip address] - for a Default Instance
 goto exit
 
 :done

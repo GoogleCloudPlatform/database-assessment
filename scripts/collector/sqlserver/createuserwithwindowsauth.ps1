@@ -37,10 +37,21 @@
     https://googlecloudplatform.github.io/database-assessment/
 #>
 Param(
-[Parameter(Mandatory=$true)][string]$serverName,
-[Parameter(Mandatory=$false)][string]$collectionUserName="userfordma",
-[Parameter(Mandatory=$false)][string]$collectionUserPass="P@ssword135"
+[Parameter(Mandatory=$true)][string]$serverName="",
+[Parameter(Mandatory=$false)][string]$collectionUserName="",
+[Parameter(Mandatory=$false)][string]$collectionUserPass=""
 )
+
+if ([string]::IsNullorEmpty($serverName)) {
+    Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
+    Exit 1
+} elseif ([string]::IsNullorEmpty($collectionUserName)) {
+    Write-Output "Collection Username parameter $collectionUserName is empty.  Ensure that the parameter is provided"
+    Exit 1
+} elseif ([string]::IsNullorEmpty($collectionUserPass)) {
+    Write-Output "Collection Username password parameter $collectionUserPass is empty.  Ensure that the parameter is provided"
+    Exit 1
+}
 
 Write-Output "Creating Collection User in $serverName"
 sqlcmd -S $serverName -i sql\prereq_createsa.sql -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass

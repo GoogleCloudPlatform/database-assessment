@@ -17,7 +17,6 @@ set user=
 set pass=
 set saUser=
 set saPass=
-set defaultCreds=0
 
 :loop 
 if "%1" == "" goto evaluateUser
@@ -26,9 +25,8 @@ if /i "%1" == "-serverUserName" set "saUser=%2"
 if /i "%1" == "-serverUserPass" set "saPass=%2"
 if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-collectionUserPass" set "pass=%2"
-if /i "%1" == "-useDefaultCreds" set "defaultCreds=1"
 
-set helpMessage="Usage: .\CreateUserForAssessmentWithSQLAuth.bat -serverName -serverUserName -serverUserPass -useDefaultCreds/(-collectionUserName -collectionUserPass)"
+set helpMessage=Usage: .\CreateUserForAssessmentWithSQLAuth.bat -serverName [servername] -serverUserName [existing admin username] -serverUserPass [existing admin password] -collectionUserName [username] -collectionUserPass [password]
 
 if %1 == help (
     echo %helpMessage%
@@ -43,15 +41,6 @@ if [%serverName%]==[] goto raiseServerError
 if [%saUser%]==[] goto error
 if [%saPass%]==[] goto error
 if not [%user%]==[] goto execWithCustomCreds
-if "%defaultCreds%"=="0" goto defaultCredError
-if "%defaultCreds%"=="1" goto execWithDefaultCreds
-
-:execWithDefaultCreds
-if [%serverName%]==[] goto raiseServerError
-echo "Creating Collection User with Default Credentials"
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createuserwithsqluser.ps1 -serverName %serverName% -user %saUser% -pass %saPass%
-if %errorlevel% == 1 goto exit
-goto done
 
 :execWithCustomCreds
 if [%user%] == [] goto error
@@ -64,17 +53,13 @@ goto done
 
 :error
 echo Username or Password is not populated
-echo Please specify -useDefaultCreds flag or [-username and -password] when invoking the script
-goto exit
-
-:defaultCredError
-echo Please specify -useDefaultCreds flag when invoking the script
-echo Please specify -useDefaultCreds flag or [-username and -password] when invoking the script
+echo Please specify [-collectionUserName and -collectionUserPass] when invoking the script
 goto exit
 
 :raiseServerError
 echo Please specify -serverName flag when invoking the script
-echo Format: [server name / ip address]\[instance name]
+echo Format: [server name or ip address]\[instance name] - for a Named Instance
+echo Format: [server name or ip address] - for a Default Instance
 goto exit
 
 :done
