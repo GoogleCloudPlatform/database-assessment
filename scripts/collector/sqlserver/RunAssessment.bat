@@ -13,21 +13,25 @@
 ::limitations under the License.
 
 @echo off
+set serverName=
 set user=
 set pass=
+set helpMessage=Usage: RunAssessment.bat -serverName [servername] -collectionUserName [username] -collectionUserPass [password]
+set helpExample=Example: RunAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123
+
+if [%1]==[] (
+    goto helpOperation
+)
+
+if %1 == help (
+    goto helpOperation
+)
 
 :loop 
 if "%1" == "" goto evaluateUser
 if /i "%1" == "-serverName" set "serverName=%2"
 if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-collectionUserPass" set "pass=%2"
-
-set helpMessage="Usage: RunAssessment.bat -serverName [servername] -collectionUserName [username] -collectionUserPass [password]"
-
-if %1 == help (
-    echo %helpMessage%
-    goto done
-)
 
 shift
 goto :loop
@@ -55,6 +59,14 @@ echo Please specify -serverName flag when invoking the script
 echo Format: [server name or ip address]\[instance name] - for a Named Instance
 echo Format: [server name or ip address] - for a Default Instance
 goto exit
+
+:helpOperation
+echo:
+echo Help:
+echo %helpMessage%
+echo:
+echo %helpExample%
+goto done
 
 :done
 echo.
