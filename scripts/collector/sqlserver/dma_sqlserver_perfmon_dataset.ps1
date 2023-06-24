@@ -22,7 +22,7 @@
 		stop - stops the collection
 		delete - deletes the collection and leaves any data set collection files present int eh appropriate location
 		collect - moves the dataset collection to the downloads directory and creates a tar of the results
-.PARAMETER mssqlInstanceName
+.PARAMETER managedInstanceName
     Enter the named instance name (Optional, unless using a named instance)
 	If collecting from a named instance, enter the instance name or the default instance will be used.
 .EXAMPLE
@@ -38,7 +38,7 @@ param (
 	[Parameter(
 		Mandatory=$False,
 		HelpMessage="The instance name if a named instance is used"
-	)][string]$mssqlInstanceName=$null,
+	)][string]$managedInstanceName=$null,
 	[Parameter(
 		Mandatory=$False,
 		HelpMessage="The dir name for the final perfmon combined file"
@@ -514,13 +514,13 @@ function CreateEmptyFile
 if (!$operation) {
 	$operation = read-host -Prompt "Enter an operation: create, stop, delete, collect createemptyfile createmanualfile" 
 }
-if ($mssqlInstanceName) {
-	$datasetName = "Google-DMA-SQLServerDataSet-$mssqlInstanceName"
+if ($managedInstanceName) {
+	$datasetName = "Google-DMA-SQLServerDataSet-$managedInstanceName"
 } else {
 	$datasetName = "Google-DMA-SQLServerDataSet-MSSQLSERVER"
 }
 if ($operation.ToLower() -eq "create") {
-	CreateDMAPerfmonDataSet -instanceName $mssqlInstanceName -dataSet $datasetName
+	CreateDMAPerfmonDataSet -instanceName $managedInstanceName -dataSet $datasetName
 } elseif ($operation.ToLower() -eq "stop") {
 	StopDMAPerfmonDataSet -dataSet $datasetName
 } elseif ($operation.ToLower() -eq "delete") {

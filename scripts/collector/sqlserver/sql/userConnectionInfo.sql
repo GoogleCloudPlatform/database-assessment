@@ -25,7 +25,7 @@ DECLARE @dbname VARCHAR(50)
 DECLARE db_cursor CURSOR FOR 
 SELECT name 
 FROM MASTER.dbo.sysdatabases 
-WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource')
+WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
 
 IF OBJECT_ID('tempdb..#connectionInfo') IS NOT NULL  
    DROP TABLE #connectionInfo;

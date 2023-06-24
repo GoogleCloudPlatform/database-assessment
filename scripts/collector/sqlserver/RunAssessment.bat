@@ -13,23 +13,25 @@
 ::limitations under the License.
 
 @echo off
+set serverName=
 set user=
 set pass=
-set defaultUsr=0
+set helpMessage=Usage: RunAssessment.bat -serverName [servername] -collectionUserName [username] -collectionUserPass [password]
+set helpExample=Example: RunAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123
+
+if [%1]==[] (
+    goto helpOperation
+)
+
+if %1 == help (
+    goto helpOperation
+)
 
 :loop 
 if "%1" == "" goto evaluateUser
 if /i "%1" == "-serverName" set "serverName=%2"
-if /i "%1" == "-username" set "user=%2"
-if /i "%1" == "-password" set "pass=%2"
-if /i "%1" == "-useDefaultCreds" set "defaultUsr=1"
-
-set helpMessage="Usage: RunAssessment.bat (-serverName [servername] -collectionUserName [username] -collectionUserPass [password]) or -serverName [servername] -useDefaultCreds"
-
-if %1 == help (
-    echo %helpMessage%
-    goto done
-)
+if /i "%1" == "-collectionUserName" set "user=%2"
+if /i "%1" == "-collectionUserPass" set "pass=%2"
 
 shift
 goto :loop
@@ -37,37 +39,34 @@ goto :loop
 :evaluateUser
 if [%serverName%]==[] goto raiseServerError
 if not [%user%]==[] goto execWithCustomUser
-if "%defaultUsr%"=="0" goto defaultCredError
-if "%defaultUsr%"=="1" goto execWithDefaultUser
-
-:execWithDefaultUser
-echo Gathering Collection with Default User
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName%
-if %errorlevel% == 1 goto exit
-goto done
 
 :execWithCustomUser
 if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 if [%pass%] == [] goto error
 echo Gathering Collection with Custom User
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -user %user% -pass %pass%
+PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -collectionUserName %user% -collectionUserPass %pass%
 if %errorlevel% == 1 goto exit
 goto done
 
 :error
 echo Username or Password is not populated
-echo Please specify -useDefaultCreds flag or [-username and -password] when invoking the script
-goto exit
-
-:defaultCredError
-echo Please specify -useDefaultCreds flag or [-username and -password] when invoking the script
+echo Please specify [-collectionUserName and -collectionUserPass] when invoking the script
 goto exit
 
 :raiseServerError
 echo Please specify -serverName flag when invoking the script
-echo Format: [server name or ip address]\[instance name]
+echo Format: [server name or ip address]\[instance name] - for a Named Instance
+echo Format: [server name or ip address] - for a Default Instance
 goto exit
+
+:helpOperation
+echo:
+echo Help:
+echo %helpMessage%
+echo:
+echo %helpExample%
+goto done
 
 :done
 echo.
