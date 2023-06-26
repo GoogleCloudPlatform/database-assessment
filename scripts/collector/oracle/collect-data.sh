@@ -23,11 +23,20 @@ export LANG=C
 export LANG=${LOCALE}.UTF-8
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SQLPLUS=sqlplus
 OUTPUT_DIR=${SCRIPT_DIR}/output; export OUTPUT_DIR
 ORACLE_PATH=${SCRIPT_DIR}; export ORACLE_PATH
 TMP_DIR=${SCRIPT_DIR}/tmp
 LOG_DIR=${SCRIPT_DIR}/log
 SQL_DIR=${SCRIPT_DIR}/sql
+
+
+ISWIN=$(uname -a | grep microsoft |wc -l)
+if [ ${ISWIN} -eq 1 ]
+  then
+	  SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
+	  SQLPLUS=sqlplus.exe
+fi
 
 GREP=$(which grep)
 SED=$(which sed)
@@ -56,13 +65,13 @@ function checkVersion {
 connectString="$1"
 OpVersion=$2
 
-if ! [ -x "$(command -v sqlplus)" ]; then
-  echo "Could not find sqlplus command. Source in environment and try again"
+if ! [ -x "$(command -v ${SQLPLUS})" ]; then
+  echo "Could not find ${SQLPLUS} command. Source in environment and try again"
   echo "Exiting..."
   exit 1
 fi
 
-sqlplus -s /nolog << EOF
+${SQLPLUS} -s /nolog << EOF
 connect ${connectString}
 @${SQL_DIR}/op_set_sql_env.sql 
 set pagesize 0 lines 400 feedback off verify off heading off echo off timing off time off
@@ -77,16 +86,16 @@ connectString="$1"
 OpVersion=$2
 DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
 
-if ! [ -x "$(command -v sqlplus)" ]; then
-  echo "Could not find sqlplus command. Source in environment and try again"
+if ! [ -x "$(command -v ${SQLPLUS})" ]; then
+  echo "Could not find ${SQLPLUS} command. Source in environment and try again"
   echo "Exiting..."
   exit 1
 fi
 
 
-sqlplus -s /nolog << EOF
+${SQLPLUS} -s /nolog << EOF
 connect ${connectString}
-@${SCRIPT_DIR}/sql/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${OUTPUT_DIR}
+@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${OUTPUT_DIR}
 exit;
 EOF
 
