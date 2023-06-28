@@ -207,6 +207,10 @@ if ($powerShellVersion -ge 5) {
     Write-Output ""
     Write-Output "Return file $PSScriptRoot\$zippedopfolder"
     Write-Output "to Google to complete assessment"
+} else {
+    Write-Output ""
+    Write-Output ""
+    Write-Output "Please manually zip the files in $foldername and return to Google to complete assessment"
 }
 
 Exit 0
