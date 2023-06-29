@@ -21,9 +21,10 @@ DECLARE @PKEY AS VARCHAR(256)
 SELECT @PKEY = N'$(pkey)';
 DECLARE @dbname VARCHAR(50)
 DECLARE db_cursor CURSOR FOR 
-SELECT name 
-FROM MASTER.dbo.sysdatabases 
+SELECT name
+FROM MASTER.sys.databases 
 WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
+AND state = 0
 
 IF OBJECT_ID('tempdb..#objectList') IS NOT NULL  
    DROP TABLE #objectList;

@@ -23,9 +23,10 @@ DECLARE @PRODUCT_VERSION AS VARCHAR(30)
 SELECT @PRODUCT_VERSION = PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4);
 DECLARE @dbname VARCHAR(50)
 DECLARE db_cursor CURSOR FOR 
-SELECT name 
-FROM MASTER.dbo.sysdatabases 
+SELECT name
+FROM MASTER.sys.databases 
 WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
+AND state = 0
 
 IF OBJECT_ID('tempdb..#columnDatatypes') IS NOT NULL  
    DROP TABLE #columnDatatypes;
