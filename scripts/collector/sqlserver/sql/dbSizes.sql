@@ -24,9 +24,12 @@ SELECT
 	DB_NAME(database_id) AS database_name, 
     type_desc, 
     SUM(size/128.0) AS current_size_mb
-FROM sys.master_files
+FROM sys.master_files sm
 WHERE DB_NAME(database_id) NOT IN ('master', 'model', 'msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
 AND type IN (0,1)
+AND EXISTS (SELECT 1 FROM MASTER.sys.databases sd WHERE state = 0 
+AND sd.name NOT IN ('master','model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
+AND DB_NAME(sd.database_id) = DB_NAME(sm.database_id))
 GROUP BY DB_NAME(database_id), type_desc) sizing
 ORDER BY 2
 ;
