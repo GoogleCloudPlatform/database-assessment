@@ -40,6 +40,7 @@ as a user with SYSDBA privileges and create the user if needed.  If this is a mu
 create the user as a common user in the root container. The Dma_collector does not currently support
 running in individual pluggable databases.
 
+
 ```shell
 sqlplus "sys/password@//hostname:port/dbservicename"
 SQL> create user DMA_COLLECTOR identified by password;
@@ -78,6 +79,20 @@ To avoid using the licensed Oracle Tuning and Diagnostics pack data:
 ```shell
 ./collect-data.sh {user}/{password}@//{db host/scan address}/{service name} NoDiagnostics
 ```
+
+Collections can be run as SYS if needed by setting ORACLE_SID and running on the database host:
+
+```shell
+./collect-data.sh '/ as sysdba' UseDiagnostics
+```
+
+OR
+To avoid using the licensed Oracle Tuning and Diagnostics pack data:
+
+```shell
+./collect-data.sh '/ as sysdba' NoDiagnostics
+```
+
 
 ## Upload Collections
 
