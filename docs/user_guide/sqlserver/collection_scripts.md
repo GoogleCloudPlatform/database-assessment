@@ -2,7 +2,9 @@
 
 Instructions on how to prepare and run Google Database Migration Assessment Data Extractor for Microsoft SQL Server to extract the data required for analysis by the Database Migration Assessment tool.
 
-These scripts have been tested with SQL Server 2008R2 SP2 through SQL Server 2022
+These scripts have been tested with the following platforms:
+SQL Server 2008R2 SP2 through SQL Server 2022
+Windows Server 2012 through Windows Server 2022 (Requires PowerShell Version 5 or Greater)
 
 ---
 
@@ -30,7 +32,7 @@ The collection script depends on the following executables to be available on th
 
 ```shell
 command prompt
-powershell
+powershell (version 5 or greater)
 sqlcmd
 ```
 

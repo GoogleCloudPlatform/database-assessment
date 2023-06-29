@@ -188,19 +188,29 @@ foreach($file in Get-ChildItem -Path $foldername\*.csv) {
 }
 $zippedopfolder = $foldername + '.zip'
 Write-Output "Zipping Output to $zippedopfolder"
-Compress-Archive -Path $foldername\*.csv -DestinationPath $zippedopfolder
-if (Test-Path -Path $zippedopfolder) {
-    Write-Output "Removing directory $foldername"
-    Remove-Item -Path $foldername -Recurse -Force
-}
-if (Test-Path -Path $env:TEMP\tempDisk.csv) {
-    Write-Output "Clean up Temp File area"
-    Remove-Item -Path $env:TEMP\tempDisk.csv
-}
 
-Write-Output ""
-Write-Output ""
-Write-Output "Return file $PSScriptRoot\$zippedopfolder"
-Write-Output "to Google to complete assessment"
+$powerShellVersion = $PSVersionTable.PSVersion.Major
+
+if ($powerShellVersion -ge 5) {
+    Compress-Archive -Path $foldername\*.csv -DestinationPath $zippedopfolder
+
+    if (Test-Path -Path $zippedopfolder) {
+        Write-Output "Removing directory $foldername"
+        Remove-Item -Path $foldername -Recurse -Force
+    }
+    if (Test-Path -Path $env:TEMP\tempDisk.csv) {
+        Write-Output "Clean up Temp File area"
+        Remove-Item -Path $env:TEMP\tempDisk.csv
+    }
+
+    Write-Output ""
+    Write-Output ""
+    Write-Output "Return file $PSScriptRoot\$zippedopfolder"
+    Write-Output "to Google to complete assessment"
+} else {
+    Write-Output ""
+    Write-Output ""
+    Write-Output "Please manually zip the files in $foldername and return to Google to complete assessment"
+}
 
 Exit 0

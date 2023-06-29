@@ -72,7 +72,7 @@ SELECT 'EngineEdition', CONVERT(nvarchar, SERVERPROPERTY('EngineEdition'))
 UNION ALL
 SELECT 'HadrManagerStatus', CONVERT(nvarchar, SERVERPROPERTY('HadrManagerStatus'))
 UNION ALL
-SELECT 'InstanceName', CONVERT(nvarchar, SERVERPROPERTY('InstanceName'))
+SELECT 'InstanceName', CONVERT(nvarchar, COALESCE(SERVERPROPERTY('InstanceName'),@@ServiceName))
 UNION ALL
 SELECT 'IsAdvancedAnalyticsInstalled', CONVERT(nvarchar, SERVERPROPERTY('IsAdvancedAnalyticsInstalled'))
 UNION ALL
