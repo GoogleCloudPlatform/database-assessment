@@ -334,8 +334,8 @@ BEGIN
      l_tab_name := 'DBA_HIST_SNAPSHOT'; 
      l_col_name := 'begin_interval_time';
   ELSE IF '&v_dodiagnostics' = 'nodiagnostics' THEN
-         SELECT count(1) INTO cnt FROM all_tables WHERE owner ='PERFSTAT';
-         IF cnt > 0 THEN 
+         SELECT count(1) INTO cnt FROM all_tables WHERE owner ='PERFSTAT' AND table_name IN ('STATS$IOSTAT_FUNCTION', 'STATS$OSSTAT', 'STATS$OSSTATNAME', 'STATS$SNAPSHOT', 'STATS$SQL_SUMMARY', 'STATS$SYSSTAT', 'STATS$SYSTEM_EVENT', 'STATS$SYS_TIME_MODEL', 'STATS$TIME_MODEL_STATNAME');
+         IF cnt = 9 THEN 
            :sp := 'op_collect_statspack.sql';
            l_tab_name := 'STATS$SNAPSHOT'; 
            l_col_name := 'snap_time';
