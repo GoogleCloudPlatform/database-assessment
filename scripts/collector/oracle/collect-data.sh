@@ -25,16 +25,28 @@ export LANG=${LOCALE}.UTF-8
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 SQLPLUS=sqlplus
 OUTPUT_DIR=${SCRIPT_DIR}/output; export OUTPUT_DIR
+SQLOUTPUT_DIR=${OUTPUT_DIR}; export SQLOUTPUT_DIR
 ORACLE_PATH=${SCRIPT_DIR}; export ORACLE_PATH
 TMP_DIR=${SCRIPT_DIR}/tmp
 LOG_DIR=${SCRIPT_DIR}/log
 SQL_DIR=${SCRIPT_DIR}/sql
 
-
+# cygpath -w $(pwd)
+# Check if running on Windows Subsystem for Linux
 ISWIN=$(uname -a | grep microsoft |wc -l)
 if [ ${ISWIN} -eq 1 ]
   then
 	  SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
+          SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
+	  SQLPLUS=sqlplus.exe
+fi
+
+# Check if running on Cygwin
+ISCYG=$(uname -a | grep Cygwin | wc -l)
+if [ ${ISCYG} -eq 1 ]
+ then
+	  SQL_DIR=$(cygpath -w ${SCRIPT_DIR})/sql
+          SQLOUTPUT_DIR=$(cygpath -w ${SQLOUTPUT_DIR})
 	  SQLPLUS=sqlplus.exe
 fi
 
@@ -95,7 +107,7 @@ fi
 
 ${SQLPLUS} -s /nolog << EOF
 connect ${connectString}
-@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${OUTPUT_DIR}
+@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${SQLOUTPUT_DIR}
 exit;
 EOF
 
