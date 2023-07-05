@@ -1,10 +1,11 @@
 # Gather workload metadata
 
-The workload collection supports Oracle 11gR1 and newer.  Older versions of Oracle are not currently supported.
+The workload collection supports Oracle 10gR1 and newer.  Older versions of Oracle are not currently supported.
 
 ## System environment
 
-The collection script depends on the following to be available on the machine from which it is run:
+The collection script is designed to run in a Unix or Unix-like environment.  It can be run on Windows within either Windows subsystem for Linux or Cygwin.
+It depends on the following to be available on the machine from which it is run:
 
 ```shell
 bash shell
