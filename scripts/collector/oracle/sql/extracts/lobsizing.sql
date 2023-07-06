@@ -130,7 +130,11 @@ WHERE
 @&EXTRACTSDIR/exclude_schemas.sql
     )
 )
-SELECT '&&v_tag' pkey, 
+SELECT  '&&v_host'
+       || '_'
+       || '&&v_dbname'
+       || '_'
+       || '&&v_hora' AS pkey,
        con_id,
        owner,
        table_name,

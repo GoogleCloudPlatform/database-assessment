@@ -1,10 +1,11 @@
 # Gather workload metadata
 
-The workload collection supports Oracle 11gR1 and newer.  Older versions of Oracle are not currently supported.
+The workload collection supports Oracle 10gR1 and newer.  Older versions of Oracle are not currently supported.
 
 ## System environment
 
-The collection script depends on the following to be available on the machine from which it is run:
+The collection script is designed to run in a Unix or Unix-like environment.  It can be run on Windows within either Windows subsystem for Linux or Cygwin.
+It depends on the following to be available on the machine from which it is run:
 
 ```shell
 bash shell
@@ -39,6 +40,7 @@ If the extract will be run by a user that does not have SYSDBA privilege, connec
 as a user with SYSDBA privileges and create the user if needed.  If this is a multi-tenant database,
 create the user as a common user in the root container. The Dma_collector does not currently support
 running in individual pluggable databases.
+
 
 ```shell
 sqlplus "sys/password@//hostname:port/dbservicename"
@@ -78,6 +80,20 @@ To avoid using the licensed Oracle Tuning and Diagnostics pack data:
 ```shell
 ./collect-data.sh {user}/{password}@//{db host/scan address}/{service name} NoDiagnostics
 ```
+
+Collections can be run as SYS if needed by setting ORACLE_SID and running on the database host:
+
+```shell
+./collect-data.sh '/ as sysdba' UseDiagnostics
+```
+
+OR
+To avoid using the licensed Oracle Tuning and Diagnostics pack data:
+
+```shell
+./collect-data.sh '/ as sysdba' NoDiagnostics
+```
+
 
 ## Upload Collections
 
