@@ -31,25 +31,6 @@ TMP_DIR=${SCRIPT_DIR}/tmp
 LOG_DIR=${SCRIPT_DIR}/log
 SQL_DIR=${SCRIPT_DIR}/sql
 
-# cygpath -w $(pwd)
-# Check if running on Windows Subsystem for Linux
-ISWIN=$(uname -a | grep microsoft |wc -l)
-if [ ${ISWIN} -eq 1 ]
-  then
-	  SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
-          SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
-	  SQLPLUS=sqlplus.exe
-fi
-
-# Check if running on Cygwin
-ISCYG=$(uname -a | grep Cygwin | wc -l)
-if [ ${ISCYG} -eq 1 ]
- then
-	  SQL_DIR=$(cygpath -w ${SCRIPT_DIR})/sql
-          SQLOUTPUT_DIR=$(cygpath -w ${SQLOUTPUT_DIR})
-	  SQLPLUS=sqlplus.exe
-fi
-
 GREP=$(which grep)
 SED=$(which sed)
 if [ $(uname) = "SunOS" ]
@@ -70,6 +51,25 @@ fi
 if [ ! -d ${OUTPUT_DIR} ]; then
    mkdir -p ${OUTPUT_DIR}
 fi
+
+# Check if running on Windows Subsystem for Linux
+ISWIN=$(uname -a | grep microsoft |wc -l)
+if [ ${ISWIN} -eq 1 ]
+  then
+	  SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
+          SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
+	  SQLPLUS=sqlplus.exe
+fi
+
+# Check if running on Cygwin
+ISCYG=$(uname -a | grep Cygwin | wc -l)
+if [ ${ISCYG} -eq 1 ]
+ then
+	  SQL_DIR=$(cygpath -w ${SCRIPT_DIR})/sql
+          SQLOUTPUT_DIR=$(cygpath -w ${SQLOUTPUT_DIR})
+	  SQLPLUS=sqlplus.exe
+fi
+
 ### Import logging & helper functions
 #############################################################################
 
