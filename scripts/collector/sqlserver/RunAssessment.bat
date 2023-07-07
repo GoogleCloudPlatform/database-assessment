@@ -14,9 +14,10 @@
 
 @echo off
 set serverName=
+set port=1433
 set user=
 set pass=
-set helpMessage=Usage: RunAssessment.bat -serverName [servername] -collectionUserName [username] -collectionUserPass [password]
+set helpMessage=Usage: RunAssessment.bat -serverName [servername] -port [port number] -collectionUserName [username] -collectionUserPass [password]
 set helpExample=Example: RunAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123
 
 if [%1]==[] (
@@ -30,6 +31,7 @@ if %1 == help (
 :loop 
 if "%1" == "" goto evaluateUser
 if /i "%1" == "-serverName" set "serverName=%2"
+if /i "%1" == "-port" set "port=%2"
 if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-collectionUserPass" set "pass=%2"
 
@@ -45,7 +47,7 @@ if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 if [%pass%] == [] goto error
 echo Gathering Collection with Custom User
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -collectionUserName %user% -collectionUserPass %pass%
+PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -port %port% -collectionUserName %user% -collectionUserPass %pass%
 if %errorlevel% == 1 goto exit
 goto done
 
