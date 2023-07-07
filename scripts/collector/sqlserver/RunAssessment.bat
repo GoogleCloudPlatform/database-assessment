@@ -14,7 +14,7 @@
 
 @echo off
 set serverName=
-set port=1433
+set port=
 set user=
 set pass=
 set helpMessage=Usage: RunAssessment.bat -serverName [servername] -port [port number] -collectionUserName [username] -collectionUserPass [password]
@@ -47,7 +47,13 @@ if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 if [%pass%] == [] goto error
 echo Gathering Collection with Custom User
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -port %port% -collectionUserName %user% -collectionUserPass %pass%
+
+if [%port%] ==[] (
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -collectionUserName %user% -collectionUserPass %pass%
+) else (
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -port %port% -collectionUserName %user% -collectionUserPass %pass%
+)
+
 if %errorlevel% == 1 goto exit
 goto done
 
