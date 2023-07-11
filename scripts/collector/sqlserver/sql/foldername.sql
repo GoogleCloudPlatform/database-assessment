@@ -14,12 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 */
-
+ 
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
+DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256)
+SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
+IF @ASSESSMENT_DATABSE_NAME = 'all'
+   SELECT @ASSESSMENT_DATABSE_NAME = 'master'
 SELECT CAST(SERVERPROPERTY('ProductVersion') AS VARCHAR(15)) AS Version, 
 UPPER(CAST(SERVERPROPERTY('MachineName') AS VARCHAR(15))) as machinename, 
 'master'as databasename, 
 @@ServiceName as instancename, 
 replace(convert(varchar, getdate(),1),'/','') + replace(convert(varchar, getdate(),108),':','') as current_ts,
-UPPER(@@SERVERNAME) + '_' + 'master' + '_' + @@ServiceName + '_' + replace(convert(varchar, getdate(),1),'/','') + replace(convert(varchar, getdate(),108),':','') as pkey;
+UPPER(@@SERVERNAME) + '_' + @ASSESSMENT_DATABSE_NAME + '_' + @@ServiceName + '_' + replace(convert(varchar, getdate(),1),'/','') + replace(convert(varchar, getdate(),108),':','') as pkey;
