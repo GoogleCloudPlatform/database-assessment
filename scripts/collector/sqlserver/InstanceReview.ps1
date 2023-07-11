@@ -62,10 +62,32 @@ if ([string]::IsNullorEmpty($serverName)) {
     if ([string]::IsNullorEmpty($port)) {
         Write-Output "Servername is $serverName"
         $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u | findstr /v /c:"---"
+        if ([string]$database -ne "all") {
+            $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v database=$database | findstr /v /c:"-"
+            $splitValidDBObj = $validDBObj[1].Split('')
+            $validDBObjValues = $splitValidDBObj | ForEach-Object { if($_.Trim() -ne '') { $_ } }
+            $countValidDBs = $validDBObjValues[0]
+            if (([string]::IsNullorEmpty($obj)) -or ([integer]$countValidDBs -eq 0)) {
+                Write-Output " "
+                Write-Output "SQL Server Database $database not valid.  Exiting Script...."
+                Exit 1                
+            }
+        }
     } else {
         $serverName = "$serverName,$port"
         Write-Output "Servername is $serverName"
         $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u | findstr /v /c:"---"
+        if ([string]$database -ne "all") {
+            $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v database=$database | findstr /v /c:"-"
+            $splitValidDBObj = $validDBObj[1].Split('')
+            $validDBObjValues = $splitValidDBObj | ForEach-Object { if($_.Trim() -ne '') { $_ } }
+            $countValidDBs = $validDBObjValues[0]
+            if (([string]::IsNullorEmpty($obj)) -or ([integer]$countValidDBs -eq 0)) {
+                Write-Output " "
+                Write-Output "SQL Server Database $database not valid.  Exiting Script...."
+                Exit 1                
+            }
+        }
     }
 }
 
@@ -74,6 +96,8 @@ if ([string]::IsNullorEmpty($obj)) {
     Write-Output "Connection Error to SQL Server $serverName.  Exiting Script...."
     Exit 1
 }
+
+Start-Sleep -Seconds 5
 
 $splitobj = $obj[1].Split('')
 $values = $splitobj | ForEach-Object { if($_.Trim() -ne '') { $_ } }
