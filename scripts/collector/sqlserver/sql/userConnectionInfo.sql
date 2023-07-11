@@ -19,13 +19,21 @@ SET NOCOUNT ON;
 SET LANGUAGE us_english;
 DECLARE @PKEY AS VARCHAR(256)
 SELECT @PKEY = N'$(pkey)';
+DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256)
+SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
+IF @ASSESSMENT_DATABSE_NAME = 'all'
+   SELECT @ASSESSMENT_DATABSE_NAME = '%'
 DECLARE @PRODUCT_VERSION AS INTEGER
-SELECT @PRODUCT_VERSION = CONVERT(integer, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+DECLARE @validDB AS INTEGER
+SELECT @validDB = 0
 DECLARE @dbname VARCHAR(50)
+
 DECLARE db_cursor CURSOR FOR 
 SELECT name
 FROM MASTER.sys.databases 
 WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
+AND name like @ASSESSMENT_DATABSE_NAME
 AND state = 0
 
 IF OBJECT_ID('tempdb..#connectionInfo') IS NOT NULL  
@@ -56,6 +64,17 @@ FETCH NEXT FROM db_cursor INTO @dbname
 
 WHILE @@FETCH_STATUS = 0
 BEGIN
+    BEGIN
+        SELECT @validDB = COUNT(1)
+        FROM MASTER.sys.databases 
+        WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
+        AND name like @ASSESSMENT_DATABSE_NAME
+        AND state = 0
+
+        IF @validDB = 0
+            BREAK;
+    END
+   
     IF @PRODUCT_VERSION >= 11
     BEGIN
         exec ('
@@ -119,6 +138,6 @@ END
 CLOSE db_cursor  
 DEALLOCATE db_cursor
 
-SELECT @PKEY as PKEY, a.* from #connectionInfo a ORDER BY database_name, login_name;
+SELECT @PKEY as PKEY, a.* from #connectionInfo a;
 
 DROP TABLE #connectionInfo;

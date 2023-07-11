@@ -22,6 +22,8 @@
     Connection string usually in the form of [server name / ip address]\[instance name] (required)
 .PARAMETER port
     Connection port (default:1433)
+.PARAMETER database
+    Run assessment for a single database (default:all)
 .PARAMETER collectionUserName
     Collection username (optional)
 .PARAMETER collectionUserPass
@@ -39,6 +41,7 @@
 Param(
 [Parameter(Mandatory=$true)][string]$serverName = "",
 [Parameter(Mandatory=$false)][string]$port="",
+[Parameter(Mandatory=$false)][string]$database="all",
 [Parameter(Mandatory=$false)][string]$collectionUserName = "",
 [Parameter(Mandatory=$false)][string]$collectionUserPass = ""
 )
@@ -66,8 +69,6 @@ if ([string]::IsNullorEmpty($serverName)) {
     }
 }
 
-#Start-Sleep -Seconds 20
-
 if ([string]::IsNullorEmpty($obj)) {
     Write-Output " "
     Write-Output "Connection Error to SQL Server $serverName.  Exiting Script...."
@@ -79,7 +80,11 @@ $values = $splitobj | ForEach-Object { if($_.Trim() -ne '') { $_ } }
 
 $dbversion = $values[0].Replace('.','')
 $machinename = $values[1]
-$dbname = $values[2]
+if ([string]$database -eq "all") {
+    $dbname = $values[2]
+} else {
+    $dbname = $database
+}
 $instancename = $values[3]
 $current_ts = $values[4]
 $pkey = $values[5]
@@ -136,15 +141,15 @@ sqlcmd -S $serverName -i sql\features.sql -U $collectionUserName -P $collectionU
 Write-Output "Retriving SQL Server Linked Servers..."
 sqlcmd -S $serverName -i sql\linkedServers.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
 Write-Output "Retriving SQL Server Database Sizes..."
-sqlcmd -S $serverName -i sql\dbSizes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
+sqlcmd -S $serverName -i sql\dbSizes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
 Write-Output "Retriving SQL Server Cluster Nodes..."
 sqlcmd -S $serverName -i sql\dbClusterNodes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
 Write-Output "Retriving SQL Server Object Info..."
-sqlcmd -S $serverName -i sql\objectList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$objectList
-sqlcmd -S $serverName -i sql\tableList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$tableList
-sqlcmd -S $serverName -i sql\indexList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$indexList
-sqlcmd -S $serverName -i sql\columnDatatypes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
-sqlcmd -S $serverName -i sql\userConnectionInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
+sqlcmd -S $serverName -i sql\objectList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$objectList
+sqlcmd -S $serverName -i sql\tableList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$tableList
+sqlcmd -S $serverName -i sql\indexList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$indexList
+sqlcmd -S $serverName -i sql\columnDatatypes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
+sqlcmd -S $serverName -i sql\userConnectionInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
 sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
 sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
 
