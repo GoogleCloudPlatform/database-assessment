@@ -89,7 +89,7 @@ In order to begin running the Database Migration Assessment Collection process, 
 
 ## Execution
 
-#### Perfmon Requirements
+#### Perfmon Requirements (Optional)
 
 - If you have your own perfmon counters capturing the following statistics or run on a SQL Server Product such as Amazon RDS or Google CloudSQL for SQL Server, skip to step b, otherwise proceed to step a.
 - Perfmon Data is not required. This collection can be safely skipped.
