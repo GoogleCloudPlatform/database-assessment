@@ -21,6 +21,8 @@
     If user and password are supplied, that will be used to execute the script.  Otherwise default credentials hardcoded in the script will be used
 .PARAMETER serverName
     Connection string usually in the form of [server name / ip address]\[instance name] (required)
+.PARAMETER port
+    Connection port (default:1433)
 .PARAMETER collectionUserName
     Collection username (optional)
 .PARAMETER collectionUserPass
@@ -38,12 +40,16 @@
 #>
 Param(
 [Parameter(Mandatory=$true)][string]$serverName="",
+[Parameter(Mandatory=$true)][string]$port="1433",
 [Parameter(Mandatory=$false)][string]$collectionUserName="",
 [Parameter(Mandatory=$false)][string]$collectionUserPass=""
 )
 
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
+    Exit 1
+} elseif ([string]::IsNullorEmpty($port)) {
+    Write-Output "Server Admin Port parameter $port is empty.  Ensure that the parameter is provided"
     Exit 1
 } elseif ([string]::IsNullorEmpty($collectionUserName)) {
     Write-Output "Collection Username parameter $collectionUserName is empty.  Ensure that the parameter is provided"
@@ -54,4 +60,4 @@ if ([string]::IsNullorEmpty($serverName)) {
 }
 
 Write-Output "Creating Collection User in $serverName"
-sqlcmd -S $serverName -i sql\prereq_createsa.sql -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
+sqlcmd -S $serverName,$port -i sql\prereq_createsa.sql -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass

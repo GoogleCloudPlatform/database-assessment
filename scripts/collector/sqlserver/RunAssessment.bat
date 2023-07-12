@@ -14,10 +14,15 @@
 
 @echo off
 set serverName=
+set port=
 set user=
 set pass=
-set helpMessage=Usage: RunAssessment.bat -serverName [servername] -collectionUserName [username] -collectionUserPass [password]
-set helpExample=Example: RunAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123
+set database=all
+set helpMessage=Usage: RunAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [username] -collectionUserPass [password]
+set helpExample=Example (default port): RunAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123
+set helpExamplePort=Example (specified port): RunAssessment.bat -serverName MS-SERVER1 -port 1436 -collectionUserName sa -collectionUserPass password123
+set helpExampleDatabase=Example (default port / single database): RunAssessment.bat -serverName MS-SERVER1\SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+set helpExampleDatabasePort=Example (specified port / single database): RunAssessment.bat -serverName MS-SERVER1 -port 1436 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
 
 if [%1]==[] (
     goto helpOperation
@@ -30,6 +35,8 @@ if %1 == help (
 :loop 
 if "%1" == "" goto evaluateUser
 if /i "%1" == "-serverName" set "serverName=%2"
+if /i "%1" == "-port" set "port=%2"
+if /i "%1" == "-database" set "database=%2"
 if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-collectionUserPass" set "pass=%2"
 
@@ -45,7 +52,13 @@ if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 if [%pass%] == [] goto error
 echo Gathering Collection with Custom User
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -collectionUserName %user% -collectionUserPass %pass%
+
+if [%port%] ==[] (
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -database %database% -collectionUserName %user% -collectionUserPass %pass%
+) else (
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass%
+)
+
 if %errorlevel% == 1 goto exit
 goto done
 
@@ -66,6 +79,13 @@ echo Help:
 echo %helpMessage%
 echo:
 echo %helpExample%
+echo:
+echo %helpExamplePort%
+echo:
+echo %helpExampleDatabase%
+echo:
+echo %helpExampleDatabasePort%
+echo:
 goto done
 
 :done

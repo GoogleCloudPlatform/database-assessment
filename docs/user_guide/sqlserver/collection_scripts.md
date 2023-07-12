@@ -54,35 +54,45 @@ In order to begin running the Database Migration Assessment Collection process, 
     - As of the current release, the collection scripts require a user with the SYSADMIN privilege.  An existing user may be used or one can be created using the scripts as shown below:
 
         If an existing user with SYSADMIN privileges wil not be used, from a command prompt, execute either of the following scripts depending on what type of authentication you currently use for your SYSADMIN user.
+
         In this example the collection user will use SQL Authentication:
             - CreateUserForAssessmentWithSQLAuth.bat
                 The following parameters can be specified:
                     -serverName  ** Required
+                    -port  ** Optional (Defaults to 1433)
                     -serverUserName  ** Required
                     -serverUserPass  ** Required
-                        and
-                    -collectionUserName  ** Required if a custom username will be used
-                    -collectionUserPass  ** Required if a custom password will be used
-                        or
-                    -useDefaultCreds  ** Required if custom credentials are not desired
+                    -collectionUserName  ** Required
+                    -collectionUserPass  ** Required
+
+            For a Named Instance:
+                CreateUserForAssessmentWithSQLAuth.bat -serverName [servername\instanceName] -port [port number] -serverUserName [existing privileged user] -serverUserPass [privileged user password] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+
+            For a Default Instance:
+                CreateUserForAssessmentWithSQLAuth.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+
         In this example, the created user will use Windows Authentication:
             - CreateUserForAssessmentWithWindowsAuth.bat
                 The following parameters can be specified:
                     -serverName  ** Required
-                    -collectionUserName  ** Required if a custom username will be used
-                    -collectionUserPass  ** Required if a custom password will be used
-                        or
-                    -useDefaultCreds  ** Required if custom credentials are not desired
+                    -port  ** Optional (Defaults to 1433)
+                    -collectionUserName  ** Required
+                    -collectionUserPass  ** Required
 
-        *** The option "-useDefaultCreds" create a user named "userfordma" and a default password contained in the script
+            For a Named Instance:
+                CreateUserForAssessmentWithWindowsAuth.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+
+            For a Default Instance:
+                CreateUserForAssessmentWithWindowsAuth.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
 ---
 
 ## Execution
 
-#### Perfmon Requirements
+#### Perfmon Requirements (Optional)
 
 - If you have your own perfmon counters capturing the following statistics or run on a SQL Server Product such as Amazon RDS or Google CloudSQL for SQL Server, skip to step b, otherwise proceed to step a.
+** The Perfmon data collection process is optional and can be safely skipped.  However, there will be no right sizing information in the assessment report.
   <br/>
 
         \Memory\Available MBytes
@@ -113,40 +123,69 @@ In order to begin running the Database Migration Assessment Collection process, 
 
 - From a command prompt session in "Administrator Mode" on the server you would like to collect data on, execute the following command:
 
-      For a default instance:
-        .\ManageSqlServerPerfmonDatset.bat -operation create -instanceType default
+* ManageSqlServerPerfmonDatset.bat
+  The following parameters can be specified:
+  - -operation \*\* Required (create, stop, delete, collect)
+  - -instanceType \*\* Required (default, managed)
+  - -mssqlInstanceName \*\* Required if instanceType is "managed" (should be the instance name without the server name)
 
-      For a named instance:
-        .\ManageSqlServerPerfmonDatset.bat -operation create -instanceType managed -mssqlInstanceName [instance name]
+To execute the perfmon collection:
 
-  <br/>
+        For a default instance:
+            ManageSqlServerPerfmonDatset.bat -operation create -instanceType default
 
-- The script will create a permon data set that will collect the above metrics at a 1 minute interval for 8 days. The dataset will automatically stop after 8 days of collection. To get the most accurate statistics, it would be good to have this collection run over the busiest time for the server.
-  <br/>
+        For a named instance:
+            ManageSqlServerPerfmonDatset.bat -operation create -instanceType managed -mssqlInstanceName [instance name]
+
+The script will create a permon data set that will collect the above metrics at a 1 minute interval for 8 days. The dataset will automatically stop after 8 days of collection. To get the most accurate statistics, it would be good to have this collection run over the busiest time for the server.
+<br/>
 
 #### Perform Collection
 
 - When the perfmon dataset completes or if you would like to execute the collection sooner, execute the following command from a command prompt session in "Administrator Mode" on the server you would like to collect data on and return the subsequent .zip file to Google.
+- The collection can also be run for all user databases or a single user database. See the below examples for each scenario
+  <br/>
 
-       If a custom collection user was created in the above step:
+* RunAssessment.bat
+  The following parameters can be specified:
+  - -serverName \*\*Required
+  - -port \*\*Optional (Defaults to 1433)
+  - -database \*\*Optional (Defaults to all user databases)
+  - -collectionUserName \*\*Required
+  - -collectionUserPass \*\*Required
 
-           For a Named Instance:
-           .\RunAssessment.bat -serverName [servername\instanceName] -username [collection user name] -password [collection user password]
+To Execute the Collection:
 
-           For a Default Instance:
-           .\RunAssessment.bat -serverName [servername] -username [collection user name] -password [collection user password]
+      For a default instance (all databases):
+        RunAssessment.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
-       If the default user was created in the above step:
+        Example (default port): RunAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123
+        Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123
 
-           For a Named Instance:
-           .\RunAssessment.bat -serverName [servername\instanceName] -useDefaultCreds
+      For a default instance (single database):
+        RunAssessment.bat -serverName [servername] -port [port number] -database [single database name] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
-           For a Default Instance:
-           .\RunAssessment.bat -serverName [servername] -useDefaultCreds
+        Example (default port): RunAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+        Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
 
-       Notes:
-           1) Google Database Migration Assessment Data Extractor extracts data for all user databases present in the instance
-           2) Collection scripts should be executed from an "Administrator Mode" command prompt
+      For a named instance (all databases):
+        RunAssessment.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+
+
+        Example (default port): RunAssessment.bat -serverName MS-SERVER1/SQL2019 -collectionUserName sa -collectionUserPass password123
+        Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123
+
+      For a named instance (single database):
+        RunAssessment.bat -serverName [servername\instanceName] -port [port number] -database [single database name] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+
+        Example (default port): RunAssessment.bat -serverName MS-SERVER1/SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+        Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1437 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+
+
+        Notes:
+          1. Google Database Migration Assessment Data Extractor extracts data for all user databases present in the instance
+          2. Collection scripts should be executed from an "Administrator Mode" command prompt
+          3. When using a port to connect only provide the local host name
 
 ---
 
@@ -156,7 +195,7 @@ In order to begin running the Database Migration Assessment Collection process, 
 - The full path and file name will be displayed on completion.
 - Return the listed file to Google for processing
 
-## !!! IMPORTANT Do not modify the name or the contents of the zip file without consultation from Google.
+!!! IMPORTANT Do not modify the name or the contents of the zip file without consultation from Google.
 
 ## License
 
