@@ -92,8 +92,6 @@ if ([string]::IsNullorEmpty($obj)) {
     Exit 1
 }
 
-Start-Sleep -Seconds 5
-
 $splitobj = $obj[1].Split('')
 $values = $splitobj | ForEach-Object { if($_.Trim() -ne '') { $_ } }
 
