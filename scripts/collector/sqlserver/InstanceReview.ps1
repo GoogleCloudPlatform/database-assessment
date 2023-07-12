@@ -108,7 +108,7 @@ $instancename = $values[3]
 $current_ts = $values[4]
 $pkey = $values[5]
 
-$op_version = "4.3.8"
+$op_version = "4.3.9"
 
 $foldername = 'opdb' + '_' + 'mssql' + '_' + 'PerfCounter' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
 
