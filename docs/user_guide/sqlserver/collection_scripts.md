@@ -92,6 +92,7 @@ In order to begin running the Database Migration Assessment Collection process, 
 #### Perfmon Requirements
 
 - If you have your own perfmon counters capturing the following statistics or run on a SQL Server Product such as Amazon RDS or Google CloudSQL for SQL Server, skip to step b, otherwise proceed to step a.
+- Perfmon Data is not required. This collection can be safely skipped.
   <br/>
 
         \Memory\Available MBytes
@@ -142,27 +143,49 @@ The script will create a permon data set that will collect the above metrics at 
 #### Perform Collection
 
 - When the perfmon dataset completes or if you would like to execute the collection sooner, execute the following command from a command prompt session in "Administrator Mode" on the server you would like to collect data on and return the subsequent .zip file to Google.
+- The collection can also be run for all user databases or a single user database. See the below examples for each scenario
   <br/>
 
 * RunAssessment.bat
   The following parameters can be specified:
-  - -serverName \*\* Required
-  - -port \*\* Optional (Defaults to 1433)
-  - -collectionUserName \*\* Required
-  - -collectionUserPass \*\* Required
+  - -serverName \*\*Required
+  - -port \*\*Optional (Defaults to 1433)
+  - -database \*\*Optional (Defaults to all user databases)
+  - -collectionUserName \*\*Required
+  - -collectionUserPass \*\*Required
 
 To Execute the Collection:
 
-      For a default instance:
+      For a default instance (all databases):
         RunAssessment.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
-      For a named instance:
+        Example (default port): RunAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123
+        Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123
+
+      For a default instance (single database):
+        RunAssessment.bat -serverName [servername] -port [port number] -database [single database name] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+
+        Example (default port): RunAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+        Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+
+      For a named instance (all databases):
         RunAssessment.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+
+
+        Example (default port): RunAssessment.bat -serverName MS-SERVER1/SQL2019 -collectionUserName sa -collectionUserPass password123
+        Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123
+
+      For a named instance (single database):
+        RunAssessment.bat -serverName [servername\instanceName] -port [port number] -database [single database name] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+
+        Example (default port): RunAssessment.bat -serverName MS-SERVER1/SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+        Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1437 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
 
 
         Notes:
           1. Google Database Migration Assessment Data Extractor extracts data for all user databases present in the instance
           2. Collection scripts should be executed from an "Administrator Mode" command prompt
+          3. When using a port to connect only provide the local host name
 
 ---
 

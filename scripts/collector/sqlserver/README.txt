@@ -121,14 +121,33 @@ These scripts have been tested with the following platforms:
             The following parameters can be specified:
                 -serverName ** Required
                 -port **Optional (Defaults to 1433)
+                -database **Optional (Defaults to all user databases)
                 -collectionUserName **Required
                 -collectionUserPass **Required
 
-        For a Named Instance:
+        For a Named Instance (all databases):
             .\RunAssessment.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
-        For a Default Instance:
+                Example (default port): RunAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123
+                Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123
+
+        For a Named Instance (single database):
+            .\RunAssessment.bat -serverName [servername\instanceName] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+        
+                Example (default port): RunAssessment.bat -serverName MS-SERVER1/SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+                Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+
+        For a Default Instance (all databases):
             .\RunAssessment.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+
+                Example (default port): RunAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123
+                Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123
+
+        For a Default Instance (single databases):
+            .\RunAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+
+                Example (default port): RunAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+                Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
 
         Notes:
             1) Google Database Migration Assessment Data Extractor extracts data for all user databases present in the instance
