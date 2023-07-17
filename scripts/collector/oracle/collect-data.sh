@@ -53,7 +53,7 @@ if [ ! -d ${OUTPUT_DIR} ]; then
 fi
 
 # Check if running on Windows Subsystem for Linux
-ISWIN=$(uname -a | grep microsoft |wc -l)
+ISWIN=$(uname -a | grep -i microsoft |wc -l)
 if [ ${ISWIN} -eq 1 ]
   then
 	  SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
@@ -186,9 +186,11 @@ echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
 cd ${OUTPUT_DIR}
 if [ ! "${ZIP}" = "" ]
 then
+  ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt > opdb__manifest__${V_FILE_TAG}.txt	
   $ZIP $ZIPFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
   OUTFILE=$ZIPFILE
 else
+  ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt > opdb__manifest__${V_FILE_TAG}.txt	
   tar cvf $TARFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
   $GZIP $TARFILE
   OUTFILE=${TARFILE}.gz
