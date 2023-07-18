@@ -184,13 +184,12 @@ locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
 echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
 
 cd ${OUTPUT_DIR}
+ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt > opdb__manifest__${V_FILE_TAG}.txt	
 if [ ! "${ZIP}" = "" ]
 then
-  ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt > opdb__manifest__${V_FILE_TAG}.txt	
   $ZIP $ZIPFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
   OUTFILE=$ZIPFILE
 else
-  ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt > opdb__manifest__${V_FILE_TAG}.txt	
   tar cvf $TARFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
   $GZIP $TARFILE
   OUTFILE=${TARFILE}.gz
