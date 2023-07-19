@@ -27,7 +27,7 @@ function getTimeStamp {
     return "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
 }
 
-function WriteLog {
+function writeLog {
     param(
         [Parameter(Mandatory=$true)][string]$logLocation = "",
         [Parameter(Mandatory=$true)][string]$logMessage=""
