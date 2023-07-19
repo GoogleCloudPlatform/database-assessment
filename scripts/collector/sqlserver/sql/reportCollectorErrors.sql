@@ -20,7 +20,7 @@ SET LANGUAGE us_english;
 DECLARE @PKEY AS VARCHAR(256)
 SELECT @PKEY = N'$(pkey)';
 
-SELECT @PKEY, e.* from #dmaCollectorErrors e;
+SELECT @PKEY, e.* from tempdb.dbo.dmaCollectorErrors e;
 
-IF OBJECT_ID('tempdb..#dmaCollectorErrors') IS NOT NULL  
-   DROP TABLE #objectList;
+IF OBJECT_ID('tempdb.dbo.dmaCollectorErrors') IS NOT NULL  
+   DROP TABLE tempdb.dbo.dmaCollectorErrors;

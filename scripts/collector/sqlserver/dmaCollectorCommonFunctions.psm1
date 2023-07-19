@@ -30,7 +30,7 @@ function getTimeStamp {
 function writeLog {
     param(
         [Parameter(Mandatory=$true)][string]$logLocation = "",
-        [Parameter(Mandatory=$true)][string]$logMessage=""
+        [Parameter(Mandatory=$true)][string]$logMessage = ""
     )
-    Write-Output getTimeStamp + '   ' + $logMessage | Add-Content -Append -Encoding utf8 -Path $foldername\$logFile
+    Write-Output getTimeStamp + '   ' + $logMessage | Add-Content -Encoding utf8 -Path $logLocation
 }

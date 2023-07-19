@@ -49,8 +49,8 @@ CREATE TABLE #objectList(
     ,lines_of_code nvarchar(255)
 	,associated_table_name nvarchar(255));
 
-IF OBJECT_ID('tempdb..#dmaCollectorErrors') IS NULL 
-   CREATE TABLE #dmaCollectorErrors(
+IF OBJECT_ID('tempdb.dbo.dmaCollectorErrors') IS NULL 
+   CREATE TABLE tempdb.dbo.dmaCollectorErrors(
       database_name nvarchar(255) DEFAULT db_name()
       ,module_name nvarchar(255)
       ,error_number nvarchar(255)
@@ -250,7 +250,7 @@ BEGIN
             associated_table_name');
     END TRY
     BEGIN CATCH
-        INSERT INTO #dmaCollectorErrors
+        INSERT INTO tempdb.dbo.dmaCollectorErrors
         SELECT
             db_name(),
             'columnDatatypes',

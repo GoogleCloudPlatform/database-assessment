@@ -46,7 +46,7 @@ Param(
 [Parameter(Mandatory=$false)][string]$collectionUserPass = ""
 )
 
-Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.ps1
+Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
 
 $foldername = ""
 
@@ -111,13 +111,7 @@ $pkey = $values[5]
 $op_version = "4.3.9"
 
 $foldername = 'opdb' + '_' + 'mssql' + '_' + 'PerfCounter' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
-$logFile = 'opdb' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
-
-Write-Output $PSVersionTable | Add-Content -Append -Encoding utf8 -Path $foldername\$logFile
-Write-Output $OutputEncoding | Add-Content -Append -Encoding utf8 -Path $foldername\$logFile
-
-writeLog -logLocation $foldername\$logFile -logMessage $PSVersionTable
-writeLog -logLocation $foldername\$logFile -logMessage $OutputEncoding
+$logFile = 'opdb__log' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 
 $folderLength = ($PSScriptRoot + '\' + $foldername).Length
 if ($folderLength -le 260) {
@@ -128,6 +122,9 @@ if ($folderLength -le 260) {
     Write-Output "Folder being created is: $PSScriptRoot\$foldername"
     Exit 1
 }
+
+Write-Output $PSVersionTable | Add-Content -Encoding utf8 -Path $foldername\$logFile
+Write-Output $OutputEncoding | Add-Content -Encoding utf8 -Path $foldername\$logFile
 
 $compFileName = 'opdb' + '__' + 'CompInstalled' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 $srvFileName = 'opdb' + '__' + 'ServerProps' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
@@ -179,7 +176,7 @@ sqlcmd -S $serverName -i sql\userConnectionInfo.sql -U $collectionUserName -P $c
 sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
 sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
 Write-Output "Retriving DMA Collector Errors and Writing to Log..."
-sqlcmd -S $serverName -i sql\reportCollectorErrors.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | Add-Content -Append -Encoding utf8 -Path $foldername\$logFile
+sqlcmd -S $serverName -i sql\reportCollectorErrors.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | Add-Content -Encoding utf8 -Path $foldername\$logFile
 
 
 Write-Output "Retrieving OS Disk Cluster Information.."
