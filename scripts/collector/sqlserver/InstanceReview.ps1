@@ -123,8 +123,11 @@ if ($folderLength -le 260) {
     Exit 1
 }
 
-Write-Output $PSVersionTable | Add-Content -Encoding utf8 -Path $foldername\$logFile
-Write-Output $OutputEncoding | Add-Content -Encoding utf8 -Path $foldername\$logFile
+WriteLog -logLocation $foldername\$logFile -logMessage "PS Version Table"
+$PSVersionTable | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Output Encoding Table"
+$OutputEncoding | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
 
 $compFileName = 'opdb' + '__' + 'CompInstalled' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 $srvFileName = 'opdb' + '__' + 'ServerProps' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
