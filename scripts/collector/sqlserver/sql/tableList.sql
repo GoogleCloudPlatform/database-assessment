@@ -58,6 +58,18 @@ CREATE TABLE #tableList(
     ,unused_space_mb nvarchar(255)
     );
 
+IF OBJECT_ID('tempdb..#dmaCollectorErrors') IS NULL 
+   CREATE TABLE #dmaCollectorErrors(
+      database_name nvarchar(255) DEFAULT db_name()
+      ,module_name nvarchar(255)
+      ,error_number nvarchar(255)
+      ,error_severity nvarchar(255)
+      ,error_state nvarchar(255)
+      ,error_procedure nvarchar(255)
+      ,error_line nvarchar(255)
+      ,error_message nvarchar(255)
+      );
+
 OPEN db_cursor  
 FETCH NEXT FROM db_cursor INTO @dbname  
 
@@ -71,140 +83,159 @@ BEGIN
 		AND state = 0
 
 		IF @validDB = 0
-			BREAK;
+			CONTINUE;
 	END
-   
-	IF @PRODUCT_VERSION > 12
-	BEGIN
-	exec ('
-	use [' + @dbname + '];
-	WITH TableData AS (
-		SELECT 
-			[schema_name]      = s.[name]
-			,[table_name]       = t.[name]
-			,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
-			,[object_type]      = CASE WHEN i.[type] in (0,1,5) THEN ''TABLE'' ELSE ''INDEX''  END
-			,[index_type]       = i.[type_desc]
-			,[partition_count]  = p.partition_count
-			,[is_memory_optimized]  = t.is_memory_optimized
-			,[temporal_type]  = t.temporal_type
-			,[is_external]  = t.is_external
-			,[lock_escalation] = t.lock_escalation
-			,[is_tracked_by_cdc]  =  t.is_tracked_by_cdc
-			,[text_in_row_limit]  =  t.text_in_row_limit
-			,[is_replicated]  =  t.is_replicated
-			,[row_count]        = p.[rows]
-			,[data_compression] = CASE WHEN p.data_compression_cnt > 1 THEN ''Mixed''
-									ELSE (  SELECT DISTINCT p.data_compression_desc
-											FROM sys.partitions p
-											WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
-											)
-								END
-			,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
-			,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
-			,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
-		FROM sys.schemas s
-		JOIN sys.tables  t ON s.schema_id = t.schema_id
-		JOIN sys.indexes i ON t.object_id = i.object_id
-		JOIN (
-			SELECT [object_id], index_id, partition_count=count(*), [rows]=sum([rows]), data_compression_cnt=count(distinct [data_compression])
-			FROM sys.partitions
-			GROUP BY [object_id], [index_id]
-		) p ON i.[object_id] = p.[object_id] AND i.[index_id] = p.[index_id]
-		JOIN (
-			SELECT p.[object_id], p.[index_id], total_pages = sum(a.total_pages), used_pages = sum(a.used_pages), data_pages=sum(a.data_pages)
-			FROM sys.partitions p
-			JOIN sys.allocation_units a ON p.[partition_id] = a.[container_id]
-			GROUP BY p.[object_id], p.[index_id]
-		) au ON i.[object_id] = au.[object_id] AND i.[index_id] = au.[index_id]
-		WHERE t.is_ms_shipped = 0 -- Not a system table
-			AND i.type IN (0,1,5))
-		INSERT INTO #tableList
-		SELECT 
-			DB_NAME() as database_name,
-			schema_name,
-            table_name,
-            partition_count,
-			is_memory_optimized,
-			temporal_type,
-			is_external,
-			lock_escalation,
-			is_tracked_by_cdc,
-			text_in_row_limit,
-			is_replicated,
-            row_count,
-            data_compression,
-            total_space_mb,
-            used_space_mb,
-            unused_space_mb
-		FROM TableData');
-	END;
-	IF @PRODUCT_VERSION <= 12
-	BEGIN
-	exec ('
-	use [' + @dbname + '];
-	WITH TableData AS (
-		SELECT 
-			[schema_name]      = s.[name]
-			,[table_name]       = t.[name]
-			,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
-			,[object_type]      = CASE WHEN i.[type] in (0,1,5) THEN ''TABLE'' ELSE ''INDEX''  END
-			,[index_type]       = i.[type_desc]
-			,[partition_count]  = p.partition_count
-			,[is_memory_optimized]  = 0
-			,[temporal_type]  = 0
-			,[is_external]  = 0
-			,[lock_escalation] = t.lock_escalation
-			,[is_tracked_by_cdc]  =  t.is_tracked_by_cdc
-			,[text_in_row_limit]  =  t.text_in_row_limit
-			,[is_replicated]  =  t.is_replicated
-			,[row_count]        = p.[rows]
-			,[data_compression] = CASE WHEN p.data_compression_cnt > 1 THEN ''Mixed''
-									ELSE (  SELECT DISTINCT p.data_compression_desc
-											FROM sys.partitions p
-											WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
-											)
-								END
-			,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
-			,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
-			,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
-		FROM sys.schemas s
-		JOIN sys.tables  t ON s.schema_id = t.schema_id
-		JOIN sys.indexes i ON t.object_id = i.object_id
-		JOIN (
-			SELECT [object_id], index_id, partition_count=count(*), [rows]=sum([rows]), data_compression_cnt=count(distinct [data_compression])
-			FROM sys.partitions
-			GROUP BY [object_id], [index_id]
-		) p ON i.[object_id] = p.[object_id] AND i.[index_id] = p.[index_id]
-		JOIN (
-			SELECT p.[object_id], p.[index_id], total_pages = sum(a.total_pages), used_pages = sum(a.used_pages), data_pages=sum(a.data_pages)
-			FROM sys.partitions p
-			JOIN sys.allocation_units a ON p.[partition_id] = a.[container_id]
-			GROUP BY p.[object_id], p.[index_id]
-		) au ON i.[object_id] = au.[object_id] AND i.[index_id] = au.[index_id]
-		WHERE t.is_ms_shipped = 0 -- Not a system table
-			AND i.type IN (0,1,5))
-		INSERT INTO #tableList
-		SELECT 
-			DB_NAME() as database_name,
-			schema_name,
-            table_name,
-            partition_count,
-			is_memory_optimized,
-			temporal_type,
-			is_external,
-			lock_escalation,
-			is_tracked_by_cdc,
-			text_in_row_limit,
-			is_replicated,
-            row_count,
-            data_compression,
-            total_space_mb,
-            used_space_mb,
-            unused_space_mb
-		FROM TableData');
-	END;
+
+	BEGIN TRY
+		IF @PRODUCT_VERSION > 12
+		BEGIN
+		exec ('
+		use [' + @dbname + '];
+		WITH TableData AS (
+			SELECT 
+				[schema_name]      = s.[name]
+				,[table_name]       = t.[name]
+				,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
+				,[object_type]      = CASE WHEN i.[type] in (0,1,5) THEN ''TABLE'' ELSE ''INDEX''  END
+				,[index_type]       = i.[type_desc]
+				,[partition_count]  = p.partition_count
+				,[is_memory_optimized]  = t.is_memory_optimized
+				,[temporal_type]  = t.temporal_type
+				,[is_external]  = t.is_external
+				,[lock_escalation] = t.lock_escalation
+				,[is_tracked_by_cdc]  =  t.is_tracked_by_cdc
+				,[text_in_row_limit]  =  t.text_in_row_limit
+				,[is_replicated]  =  t.is_replicated
+				,[row_count]        = p.[rows]
+				,[data_compression] = CASE WHEN p.data_compression_cnt > 1 THEN ''Mixed''
+										ELSE (  SELECT DISTINCT p.data_compression_desc
+												FROM sys.partitions p
+												WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
+												)
+									END
+				,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
+				,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
+				,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+			FROM sys.schemas s
+			JOIN sys.tables  t ON s.schema_id = t.schema_id
+			JOIN sys.indexes i ON t.object_id = i.object_id
+			JOIN (
+				SELECT [object_id], index_id, partition_count=count(*), [rows]=sum([rows]), data_compression_cnt=count(distinct [data_compression])
+				FROM sys.partitions
+				GROUP BY [object_id], [index_id]
+			) p ON i.[object_id] = p.[object_id] AND i.[index_id] = p.[index_id]
+			JOIN (
+				SELECT p.[object_id], p.[index_id], total_pages = sum(a.total_pages), used_pages = sum(a.used_pages), data_pages=sum(a.data_pages)
+				FROM sys.partitions p
+				JOIN sys.allocation_units a ON p.[partition_id] = a.[container_id]
+				GROUP BY p.[object_id], p.[index_id]
+			) au ON i.[object_id] = au.[object_id] AND i.[index_id] = au.[index_id]
+			WHERE t.is_ms_shipped = 0 -- Not a system table
+				AND i.type IN (0,1,5))
+			INSERT INTO #tableList
+			SELECT 
+				DB_NAME() as database_name,
+				schema_name,
+				table_name,
+				partition_count,
+				is_memory_optimized,
+				temporal_type,
+				is_external,
+				lock_escalation,
+				is_tracked_by_cdc,
+				text_in_row_limit,
+				is_replicated,
+				row_count,
+				data_compression,
+				total_space_mb,
+				used_space_mb,
+				unused_space_mb
+			FROM TableData');
+		END;
+		IF @PRODUCT_VERSION <= 12
+		BEGIN
+		exec ('
+		use [' + @dbname + '];
+		WITH TableData AS (
+			SELECT 
+				[schema_name]      = s.[name]
+				,[table_name]       = t.[name]
+				,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
+				,[object_type]      = CASE WHEN i.[type] in (0,1,5) THEN ''TABLE'' ELSE ''INDEX''  END
+				,[index_type]       = i.[type_desc]
+				,[partition_count]  = p.partition_count
+				,[is_memory_optimized]  = 0
+				,[temporal_type]  = 0
+				,[is_external]  = 0
+				,[lock_escalation] = t.lock_escalation
+				,[is_tracked_by_cdc]  =  t.is_tracked_by_cdc
+				,[text_in_row_limit]  =  t.text_in_row_limit
+				,[is_replicated]  =  t.is_replicated
+				,[row_count]        = p.[rows]
+				,[data_compression] = CASE WHEN p.data_compression_cnt > 1 THEN ''Mixed''
+										ELSE (  SELECT DISTINCT p.data_compression_desc
+												FROM sys.partitions p
+												WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
+												)
+									END
+				,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
+				,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
+				,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+			FROM sys.schemas s
+			JOIN sys.tables  t ON s.schema_id = t.schema_id
+			JOIN sys.indexes i ON t.object_id = i.object_id
+			JOIN (
+				SELECT [object_id], index_id, partition_count=count(*), [rows]=sum([rows]), data_compression_cnt=count(distinct [data_compression])
+				FROM sys.partitions
+				GROUP BY [object_id], [index_id]
+			) p ON i.[object_id] = p.[object_id] AND i.[index_id] = p.[index_id]
+			JOIN (
+				SELECT p.[object_id], p.[index_id], total_pages = sum(a.total_pages), used_pages = sum(a.used_pages), data_pages=sum(a.data_pages)
+				FROM sys.partitions p
+				JOIN sys.allocation_units a ON p.[partition_id] = a.[container_id]
+				GROUP BY p.[object_id], p.[index_id]
+			) au ON i.[object_id] = au.[object_id] AND i.[index_id] = au.[index_id]
+			WHERE t.is_ms_shipped = 0 -- Not a system table
+				AND i.type IN (0,1,5))
+			INSERT INTO #tableList
+			SELECT 
+				DB_NAME() as database_name,
+				schema_name,
+				table_name,
+				partition_count,
+				is_memory_optimized,
+				temporal_type,
+				is_external,
+				lock_escalation,
+				is_tracked_by_cdc,
+				text_in_row_limit,
+				is_replicated,
+				row_count,
+				data_compression,
+				total_space_mb,
+				used_space_mb,
+				unused_space_mb
+			FROM TableData');
+		END;
+    END TRY
+    BEGIN CATCH
+        INSERT INTO #dmaCollectorErrors
+        SELECT
+            db_name(),
+            'columnDatatypes',
+            SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254),
+            SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254),
+            SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254),
+            SUBSTRING(CONVERT(nvarchar,ERROR_PROCEDURE()),1,254),
+            SUBSTRING(CONVERT(nvarchar,ERROR_LINE()),1,254),
+            SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,254);
+        SELECT @ERROR_NUMBER_LENGTH = COALESCE(ERROR_NUMBER(),0)
+        IF @ERROR_NUMBER_LENGTH > 0
+            CONTINUE;
+	END CATCH
+
     FETCH NEXT FROM db_cursor INTO @dbname 
+
 END 
 
 CLOSE db_cursor  
@@ -212,4 +243,5 @@ DEALLOCATE db_cursor
 
 SELECT @PKEY as PKEY, a.* from #tableList a;
 
-DROP TABLE #tableList;
+IF OBJECT_ID('tempdb..#tableList') IS NOT NULL
+	DROP TABLE #tableList;

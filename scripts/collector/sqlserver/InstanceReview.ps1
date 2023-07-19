@@ -46,6 +46,8 @@ Param(
 [Parameter(Mandatory=$false)][string]$collectionUserPass = ""
 )
 
+Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.ps1
+
 $foldername = ""
 
 if ([string]::IsNullorEmpty($serverName)) {
@@ -109,6 +111,10 @@ $pkey = $values[5]
 $op_version = "4.3.9"
 
 $foldername = 'opdb' + '_' + 'mssql' + '_' + 'PerfCounter' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
+$logFile = 'opdb' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
+
+Write-Output $PSVersionTable | Add-Content -Append -Encoding utf8 -Path $foldername\$logFile
+Write-Output $OutputEncoding | Add-Content -Append -Encoding utf8 -Path $foldername\$logFile
 
 $folderLength = ($PSScriptRoot + '\' + $foldername).Length
 if ($folderLength -le 260) {
@@ -169,6 +175,9 @@ sqlcmd -S $serverName -i sql\columnDatatypes.sql -U $collectionUserName -P $coll
 sqlcmd -S $serverName -i sql\userConnectionInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
 sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
 sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
+Write-Output "Retriving DMA Collector Errors and Writing to Log..."
+sqlcmd -S $serverName -i sql\reportCollectorErrors.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | Add-Content -Append -Encoding utf8 -Path $foldername\$logFile
+
 
 Write-Output "Retrieving OS Disk Cluster Information.."
 if (Test-Path -Path $env:TEMP\tempDisk.csv) {
@@ -219,7 +228,7 @@ if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() 
 Write-Output "Remove special characters and UTF8 BOM from extracted Files.."
 foreach($file in Get-ChildItem -Path $foldername\*.csv) {
 	$inputFile = Split-Path -Leaf $file
-	((Get-Content -Path $foldername\$inputFile) -join "`n") + "`n" | Set-Content -NoNewLine -Encoding UTF8 -Force -Path $foldername\$inputFile
+	((Get-Content -Path $foldername\$inputFile) -join "`n") + "`n" | Set-Content -NoNewLine -Encoding utf8 -Force -Path $foldername\$inputFile
 	$utf8 = New-Object System.Text.UTF8Encoding $false
 	$fileContent = Get-Content $foldername\$inputFile -Raw
 	Set-Content -Value $utf8.GetBytes($fileContent) -Encoding Byte -Path $foldername\$inputFile -Force

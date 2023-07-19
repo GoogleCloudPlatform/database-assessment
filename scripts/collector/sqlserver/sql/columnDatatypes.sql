@@ -28,6 +28,7 @@ SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPRO
 DECLARE @validDB AS INTEGER
 SELECT @validDB = 0
 DECLARE @dbname VARCHAR(50)
+DECLARE @ERROR_NUMBER_LENGTH AS INTEGER
 
 DECLARE db_cursor CURSOR FOR 
 SELECT name
@@ -56,6 +57,18 @@ CREATE TABLE #columnDatatypes(
    ,column_count nvarchar(255)
    );
 
+IF OBJECT_ID('tempdb..#dmaCollectorErrors') IS NULL 
+   CREATE TABLE #dmaCollectorErrors(
+      database_name nvarchar(255) DEFAULT db_name()
+      ,module_name nvarchar(255)
+      ,error_number nvarchar(255)
+      ,error_severity nvarchar(255)
+      ,error_state nvarchar(255)
+      ,error_procedure nvarchar(255)
+      ,error_line nvarchar(255)
+      ,error_message nvarchar(255)
+      );
+
 OPEN db_cursor  
 FETCH NEXT FROM db_cursor INTO @dbname  
 
@@ -69,116 +82,135 @@ BEGIN
       AND state = 0
 
       IF @validDB = 0
-         BREAK;
+         CONTINUE;
    END
    
-   IF @PRODUCT_VERSION > 12
-   BEGIN
-	exec ('
-	use [' + @dbname + '];
-	INSERT INTO #columnDatatypes (
-      schema_name
-      ,table_name
-      ,datatype
-      ,max_length
-      ,precision
-      ,scale
-      ,is_computed
-      ,is_filestream
-      ,is_masked
-      ,encryption_type
-      ,is_sparse
-      ,rule_object_id
-      ,column_count 
-   )
-   SELECT s.name AS schema_name
-         , o.name AS table_name
-         , t.name AS datatype
-         , c.max_length
-         , c.precision
-         , c.scale
-         , c.is_computed
-         , c.is_filestream
-         , c.is_masked
-         , ISNULL(c.encryption_type,0) AS encryption_type
-         , c.is_sparse
-         , c.rule_object_id
-         , count(1) column_count
-      FROM  sys.objects o 
-      JOIN  sys.schemas s
-         ON  s.schema_id = o.schema_id
-      JOIN  sys.columns c
-      ON  o.object_id = c.object_id
-      JOIN  sys.types t
-      ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-   WHERE o.type_desc = ''USER_TABLE'' 
-      AND t.system_type_id = t.user_type_id
-   GROUP BY s.name
-         , o.name
-         , t.name
-         , c.max_length
-         , c.precision
-         , c.scale
-         , c.is_computed
-         , c.is_filestream
-         , c.is_masked
-         , c.encryption_type
-         , c.is_sparse
-         , c.rule_object_id');
-   END;
-   IF @PRODUCT_VERSION <= 12
-   BEGIN
-	exec ('
-	use [' + @dbname + '];
-	INSERT INTO #columnDatatypes (
-      schema_name
-      ,table_name
-      ,datatype
-      ,max_length
-      ,precision
-      ,scale
-      ,is_computed
-      ,is_filestream
-      ,is_masked
-      ,encryption_type
-      ,is_sparse
-      ,rule_object_id
-      ,column_count 
-   )
-   SELECT s.name AS schema_name
-         , o.name AS table_name
-         , t.name AS datatype
-         , c.max_length
-         , c.precision
-         , c.scale
-         , c.is_computed
-         , c.is_filestream
-         , 0 as is_masked
-         , 0 AS encryption_type
-         , c.is_sparse
-         , c.rule_object_id
-         , count(1) column_count
-      FROM  sys.objects o 
-      JOIN  sys.schemas s
-         ON  s.schema_id = o.schema_id
-      JOIN  sys.columns c
-      ON  o.object_id = c.object_id
-      JOIN  sys.types t
-      ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-   WHERE o.type_desc = ''USER_TABLE'' 
-      AND t.system_type_id = t.user_type_id
-   GROUP BY s.name
-         , o.name
-         , t.name
-         , c.max_length
-         , c.precision
-         , c.scale
-         , c.is_computed
-         , c.is_filestream
-         , c.is_sparse
-         , c.rule_object_id');
-   END;
-   FETCH NEXT FROM db_cursor INTO @dbname 
+   BEGIN TRY
+      IF @PRODUCT_VERSION > 12
+      BEGIN
+      exec ('
+      use [' + @dbname + '];
+      INSERT INTO #columnDatatypes (
+         schema_name
+         ,table_name
+         ,datatype
+         ,max_length
+         ,precision
+         ,scale
+         ,is_computed
+         ,is_filestream
+         ,is_masked
+         ,encryption_type
+         ,is_sparse
+         ,rule_object_id
+         ,column_count 
+      )
+      SELECT s.name AS schema_name
+            , o.name AS table_name
+            , t.name AS datatype
+            , c.max_length
+            , c.precision
+            , c.scale
+            , c.is_computed
+            , c.is_filestream
+            , c.is_masked
+            , ISNULL(c.encryption_type,0) AS encryption_type
+            , c.is_sparse
+            , c.rule_object_id
+            , count(1) column_count
+         FROM  sys.objects o 
+         JOIN  sys.schemas s
+            ON  s.schema_id = o.schema_id
+         JOIN  sys.columns c
+         ON  o.object_id = c.object_id
+         JOIN  sys.types t
+         ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
+      WHERE o.type_desc = ''USER_TABLE'' 
+         AND t.system_type_id = t.user_type_id
+      GROUP BY s.name
+            , o.name
+            , t.name
+            , c.max_length
+            , c.precision
+            , c.scale
+            , c.is_computed
+            , c.is_filestream
+            , c.is_masked
+            , c.encryption_type
+            , c.is_sparse
+            , c.rule_object_id');
+      END;
+      IF @PRODUCT_VERSION <= 12
+      BEGIN
+      exec ('
+      use [' + @dbname + '];
+      INSERT INTO #columnDatatypes (
+         schema_name
+         ,table_name
+         ,datatype
+         ,max_length
+         ,precision
+         ,scale
+         ,is_computed
+         ,is_filestream
+         ,is_masked
+         ,encryption_type
+         ,is_sparse
+         ,rule_object_id
+         ,column_count 
+      )
+      SELECT s.name AS schema_name
+            , o.name AS table_name
+            , t.name AS datatype
+            , c.max_length
+            , c.precision
+            , c.scale
+            , c.is_computed
+            , c.is_filestream
+            , 0 as is_masked
+            , 0 AS encryption_type
+            , c.is_sparse
+            , c.rule_object_id
+            , count(1) column_count
+         FROM  sys.objects o 
+         JOIN  sys.schemas s
+            ON  s.schema_id = o.schema_id
+         JOIN  sys.columns c
+         ON  o.object_id = c.object_id
+         JOIN  sys.types t
+         ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
+      WHERE o.type_desc = ''USER_TABLE'' 
+         AND t.system_type_id = t.user_type_id
+      GROUP BY s.name
+            , o.name
+            , t.name
+            , c.max_length
+            , c.precision
+            , c.scale
+            , c.is_computed
+            , c.is_filestream
+            , c.is_sparse
+            , c.rule_object_id');
+      END;
+   END TRY
+   BEGIN CATCH
+      INSERT INTO #dmaCollectorErrors
+      SELECT
+         db_name(),
+         'columnDatatypes',
+         SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254),
+         SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254),
+         SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254),
+         SUBSTRING(CONVERT(nvarchar,ERROR_PROCEDURE()),1,254),
+         SUBSTRING(CONVERT(nvarchar,ERROR_LINE()),1,254),
+         SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,254);
+      SELECT @ERROR_NUMBER_LENGTH = COALESCE(ERROR_NUMBER(),0)
+      IF @ERROR_NUMBER_LENGTH > 0
+         CONTINUE;
+   END CATCH
+   
+   FETCH NEXT FROM db_cursor INTO @dbname
+   
 END
 
 CLOSE db_cursor  

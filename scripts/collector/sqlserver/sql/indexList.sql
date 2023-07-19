@@ -59,6 +59,18 @@ CREATE TABLE #indexList(
    total_space_mb nvarchar(255)
    );
 
+IF OBJECT_ID('tempdb..#dmaCollectorErrors') IS NULL 
+   CREATE TABLE #dmaCollectorErrors(
+      database_name nvarchar(255) DEFAULT db_name()
+      ,module_name nvarchar(255)
+      ,error_number nvarchar(255)
+      ,error_severity nvarchar(255)
+      ,error_state nvarchar(255)
+      ,error_procedure nvarchar(255)
+      ,error_line nvarchar(255)
+      ,error_message nvarchar(255)
+      );
+
 OPEN db_cursor  
 FETCH NEXT FROM db_cursor INTO @dbname  
 
@@ -72,59 +84,78 @@ BEGIN
 		AND state = 0
 
 		IF @validDB = 0
-			BREAK;
+			CONTINUE;
 	END
    
-	exec ('
-      use [' + @dbname + '];
-      INSERT INTO #indexList
+   BEGIN TRY
+      exec ('
+         use [' + @dbname + '];
+         INSERT INTO #indexList
+         SELECT
+            DB_NAME() as database_name
+            ,s.name as schema_name
+            ,CASE
+               WHEN t.name IS NULL THEN v.name
+               ELSE t.name
+            END as table_name 
+            ,i.name as index_name
+            ,i.type_desc as index_type
+            ,i.is_primary_key
+            ,i.is_unique
+            ,i.fill_factor
+            ,i.allow_page_locks
+            ,i.has_filter
+            ,p.data_compression
+            ,p.data_compression_desc
+            ,ISNULL (ps.name, ''Not Partitioned'') as partition_scheme
+            ,ISNULL (SUM(ic.key_ordinal),0) as count_key_ordinal
+            ,ISNULL (SUM(ic.partition_ordinal),0) as count_partition_ordinal
+            ,ISNULL (COUNT(ic.is_included_column),0) as count_is_included_column
+            ,CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) as total_space_mb
+         FROM sys.indexes i
+         JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+         JOIN sys.objects o ON o.object_id = i.object_id AND o.is_ms_shipped = 0
+         LEFT JOIN sys.tables t ON i.object_id = t.object_id AND t.is_ms_shipped = 0
+         LEFT JOIN sys.views v ON i.object_id = v.object_id AND v.is_ms_shipped = 0
+         LEFT JOIN sys.schemas s ON s.schema_id = t.schema_id
+         LEFT JOIN sys.partitions AS p ON p.object_id = i.object_id AND p.index_id = i.index_id
+         LEFT JOIN sys.allocation_units AS a ON a.container_id = p.partition_id
+         LEFT JOIN sys.partition_schemes ps ON i.data_space_id = ps.data_space_id
+         GROUP BY 
+            s.name 
+            ,CASE
+               WHEN t.name IS NULL THEN v.name
+               ELSE t.name
+            END    
+            ,i.name  
+            ,i.type_desc 
+            ,i.is_primary_key
+            ,i.is_unique
+            ,i.fill_factor
+            ,i.allow_page_locks
+            ,i.has_filter
+            ,p.data_compression
+            ,p.data_compression_desc
+            ,ISNULL (ps.name, ''Not Partitioned'')');
+   END TRY
+   BEGIN CATCH
+      INSERT INTO #dmaCollectorErrors
       SELECT
-         DB_NAME() as database_name
-         ,s.name as schema_name
-         ,CASE
-		      WHEN t.name IS NULL THEN v.name
-		      ELSE t.name
-		   END as table_name 
-         ,i.name as index_name
-         ,i.type_desc as index_type
-         ,i.is_primary_key
-         ,i.is_unique
-         ,i.fill_factor
-         ,i.allow_page_locks
-         ,i.has_filter
-         ,p.data_compression
-         ,p.data_compression_desc
-         ,ISNULL (ps.name, ''Not Partitioned'') as partition_scheme
-         ,ISNULL (SUM(ic.key_ordinal),0) as count_key_ordinal
-         ,ISNULL (SUM(ic.partition_ordinal),0) as count_partition_ordinal
-         ,ISNULL (COUNT(ic.is_included_column),0) as count_is_included_column
-         ,CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) as total_space_mb
-      FROM sys.indexes i
-      JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
-      JOIN sys.objects o ON o.object_id = i.object_id AND o.is_ms_shipped = 0
-      LEFT JOIN sys.tables t ON i.object_id = t.object_id AND t.is_ms_shipped = 0
-	   LEFT JOIN sys.views v ON i.object_id = v.object_id AND v.is_ms_shipped = 0
-      LEFT JOIN sys.schemas s ON s.schema_id = t.schema_id
-      LEFT JOIN sys.partitions AS p ON p.object_id = i.object_id AND p.index_id = i.index_id
-      LEFT JOIN sys.allocation_units AS a ON a.container_id = p.partition_id
-      LEFT JOIN sys.partition_schemes ps ON i.data_space_id = ps.data_space_id
-      GROUP BY 
-         s.name 
-         ,CASE
-		      WHEN t.name IS NULL THEN v.name
-		      ELSE t.name
-		   END    
-         ,i.name  
-         ,i.type_desc 
-         ,i.is_primary_key
-         ,i.is_unique
-         ,i.fill_factor
-         ,i.allow_page_locks
-         ,i.has_filter
-         ,p.data_compression
-         ,p.data_compression_desc
-	      ,ISNULL (ps.name, ''Not Partitioned'')');
-    FETCH NEXT FROM db_cursor INTO @dbname 
+         db_name(),
+         'columnDatatypes',
+         SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254),
+         SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254),
+         SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254),
+         SUBSTRING(CONVERT(nvarchar,ERROR_PROCEDURE()),1,254),
+         SUBSTRING(CONVERT(nvarchar,ERROR_LINE()),1,254),
+         SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,254);
+      SELECT @ERROR_NUMBER_LENGTH = COALESCE(ERROR_NUMBER(),0)
+      IF @ERROR_NUMBER_LENGTH > 0
+         CONTINUE;
+   END CATCH
+
+   FETCH NEXT FROM db_cursor INTO @dbname 
+
 END 
 
 CLOSE db_cursor  
@@ -132,4 +163,5 @@ DEALLOCATE db_cursor
 
 SELECT @PKEY as PKEY, a.* from #indexList a;
 
-DROP TABLE #indexList;
+IF OBJECT_ID('tempdb..#indexList') IS NOT NULL  
+   DROP TABLE #indexList;
