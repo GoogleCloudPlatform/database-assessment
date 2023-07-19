@@ -216,9 +216,13 @@ if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() 
     .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
 }
 
-Write-Output "Remove special characters from extracted Files.."
+Write-Output "Remove special characters and UTF8 BOM from extracted Files.."
 foreach($file in Get-ChildItem -Path $foldername\*.csv) {
-    (Get-Content $file -Raw).Replace("`r`n","`n") | Set-Content $file -Encoding utf8 -Force
+	$inputFile = Split-Path -Leaf $file
+	((Get-Content -Path $foldername\$inputFile) -join "`n") + "`n" | Set-Content -NoNewLine -Encoding UTF8 -Force -Path $foldername\$inputFile
+	$utf8 = New-Object System.Text.UTF8Encoding $false
+	$fileContent = Get-Content $foldername\$inputFile -Raw
+	Set-Content -Value $utf8.GetBytes($fileContent) -Encoding Byte -Path $foldername\$inputFile -Force
 }
 $zippedopfolder = $foldername + '.zip'
 Write-Output "Zipping Output to $zippedopfolder"
