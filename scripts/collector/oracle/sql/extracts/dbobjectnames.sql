@@ -58,7 +58,7 @@ vdbobj AS (
                || '&&v_hora' AS pkey,
                i.con_id,
                i.owner,
-               i.object_name,
+               chr(34) || i.object_name || chr(34) as object_name ,
                i.object_type,
                i.editionable,
                s.lines,
