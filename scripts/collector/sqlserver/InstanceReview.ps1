@@ -116,6 +116,9 @@ $logFile = 'opdb' + '__' + $dbversion + '_' + $op_version + '_' + $machinename +
 Write-Output $PSVersionTable | Add-Content -Append -Encoding utf8 -Path $foldername\$logFile
 Write-Output $OutputEncoding | Add-Content -Append -Encoding utf8 -Path $foldername\$logFile
 
+writeLog -logLocation $foldername\$logFile -logMessage $PSVersionTable
+writeLog -logLocation $foldername\$logFile -logMessage $OutputEncoding
+
 $folderLength = ($PSScriptRoot + '\' + $foldername).Length
 if ($folderLength -le 260) {
     Write-Output "Creating directory $foldername"
