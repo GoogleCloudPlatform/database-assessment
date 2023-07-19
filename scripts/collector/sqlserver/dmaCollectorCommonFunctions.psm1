@@ -23,14 +23,11 @@
     https://googlecloudplatform.github.io/database-assessment/
 #>
 
-function getTimeStamp {
-    return "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
-}
-
 function writeLog {
     param(
         [Parameter(Mandatory=$true)][string]$logLocation = "",
         [Parameter(Mandatory=$true)][string]$logMessage = ""
     )
-    Write-Output getTimeStamp + '   ' + $logMessage | Add-Content -Encoding utf8 -Path $logLocation
+	$currentTimestamp = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
+    Write-Output "$currentTimestamp   $logMessage" | Add-Content -Encoding utf8 -Path $logLocation
 }
