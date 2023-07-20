@@ -28,6 +28,8 @@
     Collection username (optional)
 .PARAMETER collectionUserPass
     Collection username password (optional)
+.PARAMETER ignorePerfmon
+    Signals if the perfmon collection should be skipped (default:false) 
 .EXAMPLE
     To use a specific username / password combination for a named instance:
         C:\InstanceReview.ps1 -serverName [server name / ip address]\[instance name] -collectionUserName [collection username] -collectionUserPass [collection username password]
@@ -43,7 +45,8 @@ Param(
 [Parameter(Mandatory=$false)][string]$port="",
 [Parameter(Mandatory=$false)][string]$database="all",
 [Parameter(Mandatory=$false)][string]$collectionUserName = "",
-[Parameter(Mandatory=$false)][string]$collectionUserPass = ""
+[Parameter(Mandatory=$false)][string]$collectionUserPass = "",
+[Parameter(Mandatory=$false)][bool]$ignorePerfmon = $false
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
@@ -247,15 +250,24 @@ foreach($file in Get-ChildItem -Path $foldername\*DiskVolInfo*.csv) {
 # Pull perfmon file if we are running from same server.  Generate empty file if running on remote server
 # Capability does not exist yet to run against remote computer
 
-WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving Perfmon Information..."  -logOperation "FILE"
-if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper())) {
-    .\dma_sqlserver_perfmon_dataset.ps1 -operation collect -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
-} elseif (($instancename -ne "MSSQLSERVER") -and ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper())) {
-    .\dma_sqlserver_perfmon_dataset.ps1 -operation collect -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
-} elseif (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
-    .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
-} elseif (($instancename -ne "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
-    .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+if ($ignorePerfmon -eq $true) {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Skipping Perfmon Information..."  -logOperation "FILE"
+    if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
+        .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+    } else {
+        .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+    }
+} else {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving Perfmon Information..."  -logOperation "FILE"
+    if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper())) {
+        .\dma_sqlserver_perfmon_dataset.ps1 -operation collect -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+    } elseif (($instancename -ne "MSSQLSERVER") -and ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper())) {
+        .\dma_sqlserver_perfmon_dataset.ps1 -operation collect -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+    } elseif (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
+        .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+    } elseif (($instancename -ne "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
+        .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+    }
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Remove special characters and UTF8 BOM from extracted files..." -logOperation "BOTH"

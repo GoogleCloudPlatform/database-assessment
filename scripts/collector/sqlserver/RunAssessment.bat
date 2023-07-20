@@ -18,6 +18,7 @@ set port=
 set user=
 set pass=
 set database=all
+set noPerfmon=false
 set helpMessage=Usage: RunAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [username] -collectionUserPass [password]
 set helpExample=Example (default port): RunAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123
 set helpExamplePort=Example (specified port): RunAssessment.bat -serverName MS-SERVER1 -port 1436 -collectionUserName sa -collectionUserPass password123
@@ -39,6 +40,7 @@ if /i "%1" == "-port" set "port=%2"
 if /i "%1" == "-database" set "database=%2"
 if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-collectionUserPass" set "pass=%2"
+if /i "%1" == "-ignorePerfmon" set "noPerfmon=%2"
 
 shift
 goto :loop
@@ -54,9 +56,9 @@ if [%pass%] == [] goto error
 echo Gathering Collection with Custom User
 
 if [%port%] ==[] (
-    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -database %database% -collectionUserName %user% -collectionUserPass %pass%
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon%
 ) else (
-    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass%
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon%
 )
 
 if %errorlevel% == 1 goto exit
