@@ -209,10 +209,6 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Dis
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving DMA Collector Errors and Writing to Log..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\reportCollectorErrors.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | Add-Content -Encoding utf8 -Path $foldername\$sqlErrorLogFile
 
-WriteLog -logLocation $foldername\$logFile -logMessage "   " -logOperation "BOTH"
-WriteLog -logLocation $foldername\$logFile -logMessage "---" -logOperation "BOTH"
-WriteLog -logLocation $foldername\$logFile -logMessage "   " -logOperation "BOTH"
-
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving OS Disk Cluster Information..." -logOperation "BOTH"
 if (Test-Path -Path $env:TEMP\tempDisk.csv) {
     Remove-Item -Path $env:TEMP\tempDisk.csv
