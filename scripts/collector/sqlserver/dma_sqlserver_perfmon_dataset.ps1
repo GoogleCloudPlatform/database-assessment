@@ -52,11 +52,17 @@ param (
 		HelpMessage="The pkey value for the final perfmon combined file"
 	)][string]$pkey=$null
 )
+
+Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
+
+$perfmonLogFile = 'opdb__perfMonLog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
 function CreateDMAPerfmonDataSet 
 {
 param(
     [string]$instanceName,
-	[string]$dataSet
+	[string]$dataSet,
+	[string]$perfmonOutDir,
+	[string]$logFile
     )
 if ($instanceName) {
 $str = @'
@@ -291,53 +297,54 @@ $str = @'
 }
 
 	$xmlTempDir = $env:TEMP
+	$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
 	$metricInstanceName = "MSSQL`$" + $instanceName
 	$perfmonDataSetExists = logman.exe query -n $dataSet
 	if ($perfmonDataSetExists -Like "*Data Collector Set was not found*") {
-		Write-Output "Beginning Creation of the Google DMA SQL Server Perfmon Counter Data Set"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Beginning Creation of the Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
 		if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv) {
-			Write-Output ""
-			Write-Output "Removing old perfmon data files"
+			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Removing old perfmon data files..." -logOperation "BOTH"
 			Remove-Item -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv
 		}
 		if (Test-Path -Path $env:TEMP\DMA-SQLServerPerfmonDataSet.xml) {
-			Write-Output ""
-			Write-Output "Removing old perfmon template file"
+			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Removing old perfmon template file..." -logOperation "BOTH"
 			Remove-Item -Path $env:TEMP\DMA-SQLServerPerfmonDataSet.xml
 		}
 	} else {
-		Write-Output ""
-		Write-Output "Google DMA SQL Server Perfmon Counter Data Set found....."
-		Write-Output ""
-		Write-Output "Stopping Google DMA SQL Server Perfmon Counter Data Set"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Google DMA SQL Server Perfmon Counter Data Set found..." -logOperation "BOTH"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Stopping Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
 		logman.exe stop -n $dataSet
-		Write-Output ""
-		Write-Output "Deleting Google DMA SQL Server Perfmon Counter Data Set"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Deleting Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
 		logman.exe delete -n $dataSet
 		if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv) {
-			Write-Output ""
-			Write-Output "Removing old perfmon data files"
+			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Removing old perfmon data files..." -logOperation "BOTH"
 			Remove-Item -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv
 		}
 		if (Test-Path -Path $env:TEMP\DMA-SQLServerPerfmonDataSet.xml) {
-			Write-Output ""
-			Write-Output "Removing old perfmon template file"
+			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Removing old perfmon template file..." -logOperation "BOTH"
 			Remove-Item -Path $env:TEMP\DMA-SQLServerPerfmonDataSet.xml
 		}
 	}
 	
 	$newXML = $str.Replace('$instance', $metricInstanceName).Replace('$dataset', $dataSet)
 	
-	Write-Output ""
-	Write-Output "Writing XML File to be used for import to perfmon"
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Writing XML File to be used for import to perfmon..." -logOperation "BOTH"
 	$newXML | Out-File -FilePath $xmlTempDir\DMA-SQLServerPerfmonDataSet.xml -encoding utf8
 
-	Write-Output ""
-	Write-Output "Importing Google DMA SQL Server Perfmon Counter Data Set from Template"
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Importing Google DMA SQL Server Perfmon Counter Data Set from Template..." -logOperation "BOTH"
 	logman.exe import -n $dataSet -xml (Get-ChildItem -Path $xmlTempDir\DMA-SQLServerPerfmonDataSet.xml | ForEach-Object { $_.FullName })
 
-	Write-Output ""
-	Write-Output "Starting Google DMA SQL Server Perfmon Counter Data Set"
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Starting Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
 	logman.exe start -n $dataSet
 
 	$debug_flag = $null
@@ -358,24 +365,32 @@ $str = @'
 function StopDMAPerfmonDataSet
 {
 param(
-    [string]$dataSet
+    [string]$dataSet,
+	[string]$perfmonOutDir,
+	[string]$logFile
     )
-	Write-Output "Stopping Google DMA SQL Server Perfmon Counter Data Set"
+
+	$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
+
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Stopping Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
 	logman.exe stop -n $dataSet
 }
 function DeleteDMAPerfmonDataSet
 {
 param(
-	[string]$dataSet
+	[string]$dataSet,
+	[string]$perfmonOutDir,
+	[string]$logFile
 	)
+	$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
 	$perfmonDataSetRunning = logman.exe query -n $dataSet
 
 	if ($perfmonDataSetRunning -like "*Status:               Running*") {
-		Write-Output "Google DMA SQL Server Perfmon Counter Data Set is running... Stopping Data Collector Set before deletion."
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Google DMA SQL Server Perfmon Counter Data Set is running... Stopping Data Collector Set before deletion..." -logOperation "BOTH"
 		logman.exe stop -n $dataSet
 		logman.exe delete -n $dataSet
 	} else {
-		Write-Output "Google DMA SQL Server Perfmon Counter Data Set found, but not running..... Deleting"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Google DMA SQL Server Perfmon Counter Data Set found, but not running..... Deleting..." -logOperation "BOTH"
 		logman.exe delete -n $dataSet
 	}
 }
@@ -387,21 +402,24 @@ param(
 	[string]$dataSet,
 	[string]$perfmonOutDir,
 	[string]$perfmonOutFile,
-	[string]$pkey
+	[string]$pkey,
+	[string]$logFile
 	)
-	Write-Output "Collecting results from the Google DMA SQL Server Perfmon Counter Data Set."
+	
 	$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
 	$outputFileName = $perfmonOutFile
 
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Collecting results from the Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
+
 	if (!(Test-Path -PathType container $outputDir)) {
-		Write-Output ""
-		Write-Output "Creating Output Directory"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Creating Output Directory $outputDir..." -logOperation "BOTH"
 		$null = New-Item -ItemType Directory -Path $outputDir
 	}
 
 	if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv) {
-		Write-Output ""
-		Write-Output "Moving perfmon datafiles to the $env:TEMP Directory Without Header"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Moving perfmon datafiles to the $env:TEMP Directory Without Header" -logOperation "BOTH"
 		$fileExists = $true
 		foreach($file in Get-ChildItem -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataset*.csv)
 		{
@@ -415,12 +433,13 @@ param(
 			} | Out-File -FilePath $env:TEMP\$tempFileName -Encoding utf8
 		}
 	} else {
-		Write-Output ""
-		Write-Output "No Perfmon Files exist in the $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet Directory. Continuing without Perform file." | Yellow
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "No Perfmon Files exist in the $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet Directory. Continuing without Perfmon file." -logOperation "FILE"
+		Write-Output "No Perfmon Files exist in the $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet Directory. Continuing without Perfmon file." | Yellow
 		$fileExists = $false
 	}
 
-	Write-Output "Concatenating and adding header to perfmon files to $outputFileName" 
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Concatenating and adding header to perfmon files..." -logOperation "BOTH"
 	if ($fileExists)  {
 	((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\PKEY_*$dataSet*.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
 	}
@@ -428,7 +447,7 @@ param(
 	((Get-Content -Path $PSScriptRoot\perfmon_header.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
 	}	
 	if (Test-Path -Path $outputDir\$outputFileName) {
-		Write-Output "Clean up Temp File area."
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Clean up Temp File area..." -logOperation "BOTH"
 		Remove-Item -Path $env:TEMP\*$dataSet*.csv
 	}
 }
@@ -439,15 +458,17 @@ function CreateEmptyFile
 		[string]$dataSet,
 		[string]$perfmonOutDir,
 		[string]$perfmonOutFile,
-		[string]$pkey
+		[string]$pkey,
+		[string]$logFile
 		)
-		Write-Output "Creating an empty Google DMA SQL Server Perfmon Counter Data Set."
+		
 		$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
 		$outputFileName = $perfmonOutFile
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Creating an empty Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
 	
 		if (!(Test-Path -PathType container $outputDir)) {
-			Write-Output ""
-			Write-Output "Creating Output Directory"
+			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Creating Output Directory..." -logOperation "BOTH"
 			$null = New-Item -ItemType Directory -Path $outputDir
 		}
 
@@ -459,11 +480,11 @@ function CreateEmptyFile
 		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
 		Add-Content $env:TEMP\emptyStrings.csv -Value $tempContent
 
-		Write-Output "Concatenating and adding header to perfmon files to $outputFileName" 
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Concatenating and adding header to perfmon files to $outputFileName ..." -logOperation "BOTH"
 		((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\emptyStrings.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
 
 		if (Test-Path -Path $outputDir\$outputFileName) {
-			Write-Output "Clean up Temp File area."
+			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Clean up Temp File area..." -logOperation "BOTH"
 			Remove-Item -Path $env:TEMP\*$dataSet*.csv
 		}
 
@@ -472,65 +493,32 @@ function CreateEmptyFile
 		}
 	}
 
-	function CreateManualPerfmonFile
-	{
-		param(
-			[string]$dataSet,
-			[string]$perfmonOutDir,
-			[string]$perfmonOutFile,
-			[string]$pkey
-			)
-			Write-Output "Creating an empty Google DMA SQL Server Perfmon Counter Data Set."
-			$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
-			$outputFileName = $perfmonOutFile
-		
-			if (!(Test-Path -PathType container $outputDir)) {
-				Write-Output ""
-				Write-Output "Creating Output Directory"
-				$null = New-Item -ItemType Directory -Path $outputDir
-			}
-	
-			$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
-			$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
-			Set-Content $env:TEMP\emptyStrings.csv -Value $tempContent
-	
-			$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
-			$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
-			Add-Content $env:TEMP\emptyStrings.csv -Value $tempContent
-	
-			Write-Output "Concatenating and adding header to perfmon files to $outputFileName" 
-			((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\emptyStrings.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
-	
-			if (Test-Path -Path $outputDir\$outputFileName) {
-				Write-Output "Clean up Temp File area."
-				Remove-Item -Path $env:TEMP\*$dataSet*.csv
-			}
-	
-			if (Test-Path -Path $env:TEMP\emptyStrings.csv) {
-				Remove-Item -Path $env:TEMP\emptyStrings.csv
-			}
-		}
-
 if (!$operation) {
-	$operation = read-host -Prompt "Enter an operation: create, stop, delete, collect createemptyfile createmanualfile" 
+	$operation = read-host -Prompt "Enter an operation: create, stop, delete, collect, createemptyfile" 
 }
 if ($managedInstanceName) {
 	$datasetName = "Google-DMA-SQLServerDataSet-$managedInstanceName"
 } else {
 	$datasetName = "Google-DMA-SQLServerDataSet-MSSQLSERVER"
 }
+
+if (!(Test-Path -Path $PSScriptRoot\$perfmonOutDir)) {
+	$null = New-Item -Name $PSScriptRoot\$perfmonOutDir -ItemType Directory
+	WriteLog -logLocation $PSScriptRoot\$perfmonOutDir\$logFile -logMessage "Creating log directory..." -logOperation "MESSAGE"
+	Remove-Item -Path $env:TEMP\tempDisk.csv
+}
+
+
 if ($operation.ToLower() -eq "create") {
-	CreateDMAPerfmonDataSet -instanceName $managedInstanceName -dataSet $datasetName
+	CreateDMAPerfmonDataSet -instanceName $managedInstanceName -dataSet $datasetName -perfmonOutDir $perfmonOutDir -logFile $perfmonLogFile
 } elseif ($operation.ToLower() -eq "stop") {
-	StopDMAPerfmonDataSet -dataSet $datasetName
+	StopDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -logFile $perfmonLogFile
 } elseif ($operation.ToLower() -eq "delete") {
-	DeleteDMAPerfmonDataSet -dataSet $datasetName
+	DeleteDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -logFile $perfmonLogFile
 } elseif ($operation.ToLower() -eq "collect") {
-	CollectDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey
+	CollectDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey -logFile $perfmonLogFile
 } elseif ($operation.ToLower() -eq "createemptyfile") {
-	CreateEmptyFile -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey
-} elseif ($operation.ToLower() -eq "createmanualfile") {
-	CreateManualPerfmonFile -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey
+	CreateEmptyFile -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey -logFile $perfmonLogFile
 } else {
 	Write-Output "Operation $operation specified is invalid"
 }

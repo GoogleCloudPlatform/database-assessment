@@ -115,7 +115,13 @@ $pkey = $values[5]
 
 $op_version = "4.3.9"
 
-$foldername = 'opdb' + '_' + 'mssql' + '_' + 'PerfCounter' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
+if ($ignorePerfmon -eq "true") {
+    $perfCounterLabel = "NoPerfCounter"
+} else {
+    $perfCounterLabel = "PerfCounter"
+}
+
+$foldername = 'opdb' + '_' + 'mssql' + '_' + $perfCounterLabel + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
 $logFile = 'opdb__collectorLog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
 $sqlErrorLogFile = 'opdb__sqlErrorlog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
 
@@ -157,9 +163,8 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Checking max directory p
 foreach ($directory in $outputFileArray) {
 	$folderLength = ($PSScriptRoot + '\' + $foldername + '\' + $directory).Length
     if ($folderLength -gt 260) {
-        WriteLog -logLocation $foldername\$logFile -logMessage "Output file $PSScriptRoot\$foldername\$directory name exceeds 260 characters."
-        Write-Output "Output file $PSScriptRoot\$foldername\$directory name exceeds 260 characters."
-        Write-Output "Execute collection from a path with less characters"
+        WriteLog -logLocation $foldername\$logFile -logMessage "Output file $PSScriptRoot\$foldername\$directory name exceeds 260 characters." -logOperation "BOTH"
+        WriteLog -logLocation $foldername\$logFile -logMessage "Execute collection from a path with less than 260 characters." -logOperation "BOTH"
         Exit 1
     }
 }
@@ -295,23 +300,25 @@ if ($powerShellVersion -ge 5) {
     Compress-Archive -Path $foldername\*.csv,$foldername\*.log -DestinationPath $zippedopfolder
 
     if (Test-Path -Path $zippedopfolder) {
-        Write-Output "Removing directory $foldername"
+        WriteLog -logLocation $foldername\$logFile -logMessage "Removing directory $foldername..." -logOperation "MESSAGE"
         Remove-Item -Path $foldername -Recurse -Force
     }
     if (Test-Path -Path $env:TEMP\tempDisk.csv) {
-        Write-Output "Clean up Temp File area..."
+        WriteLog -logLocation $foldername\$logFile -logMessage "Clean up Temp File area..." -logOperation "MESSAGE"
         Remove-Item -Path $env:TEMP\tempDisk.csv
     }
 
-    Write-Output ""
-    Write-Output ""
-    Write-Output "Return file $PSScriptRoot\$zippedopfolder to Google to complete assessment"
-    Write-Output "Collection Complete..."
+    WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Return file $PSScriptRoot\$zippedopfolder" -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "to Google to complete assessment" -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Collection Complete..." -logOperation "MESSAGE"
 } else {
-    Write-Output ""
-    Write-Output ""
-    Write-Output "Please manually zip the files in $foldername and return to Google to complete assessment"
-    Write-Output "Collection Complete..."
+    WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Please manually zip the files in $foldername and" -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "return to Google to complete assessment" -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Collection Complete..." -logOperation "MESSAGE"
 }
 
 Exit 0
