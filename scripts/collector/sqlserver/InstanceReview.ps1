@@ -46,7 +46,7 @@ Param(
 [Parameter(Mandatory=$false)][string]$database="all",
 [Parameter(Mandatory=$false)][string]$collectionUserName = "",
 [Parameter(Mandatory=$false)][string]$collectionUserPass = "",
-[Parameter(Mandatory=$false)][bool]$ignorePerfmon = $false
+[Parameter(Mandatory=$false)][string]$ignorePerfmon = "false"
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
@@ -250,7 +250,7 @@ foreach($file in Get-ChildItem -Path $foldername\*DiskVolInfo*.csv) {
 # Pull perfmon file if we are running from same server.  Generate empty file if running on remote server
 # Capability does not exist yet to run against remote computer
 
-if ($ignorePerfmon -eq $true) {
+if ($ignorePerfmon -eq "true") {
     WriteLog -logLocation $foldername\$logFile -logMessage "Skipping Perfmon Information..."  -logOperation "FILE"
     if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
         .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
