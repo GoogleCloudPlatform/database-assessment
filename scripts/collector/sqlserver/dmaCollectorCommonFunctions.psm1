@@ -25,9 +25,19 @@
 
 function writeLog {
     param(
-        [Parameter(Mandatory=$true)][string]$logLocation = "",
-        [Parameter(Mandatory=$true)][string]$logMessage = ""
+        [Parameter(Mandatory=$true)][string]$logLocation,
+        [Parameter(Mandatory=$true)][string]$logMessage,
+        [Parameter(Mandatory=$false)][string]$logOperation='BOTH'
     )
 	$currentTimestamp = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
-    Write-Output "$currentTimestamp   $logMessage" | Add-Content -Encoding utf8 -Path $logLocation
+    if ([string]$logOperation.toUpper() -eq 'BOTH') {
+        Write-Output "$currentTimestamp   $logMessage" | Add-Content -Encoding utf8 -Path $logLocation
+        Write-Output "$currentTimestamp   $logMessage"
+    } elseif ([string]$logOperation.toUpper() -eq 'FILE') {
+        Write-Output "$currentTimestamp   $logMessage" | Add-Content -Encoding utf8 -Path $logLocation
+    } elseif ([string]$logOperation.toUpper() -eq 'MESSAGE') {
+        Write-Output "$currentTimestamp   $logMessage"
+    } else {
+        Write-Output "$currentTimestamp   $logMessage"
+    }
 }
