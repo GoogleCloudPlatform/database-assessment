@@ -113,7 +113,8 @@ $pkey = $values[5]
 $op_version = "4.3.9"
 
 $foldername = 'opdb' + '_' + 'mssql' + '_' + 'PerfCounter' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
-$logFile = 'opdb__log' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
+$logFile = 'opdb__collectorLog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
+$sqlErrorLogFile = 'opdb__sqlErrorlog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
 
 $folderLength = ($PSScriptRoot + '\' + $foldername).Length
 if ($folderLength -le 260) {
@@ -203,7 +204,7 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Dis
     sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving DMA Collector Errors and Writing to Log..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\reportCollectorErrors.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | Add-Content -Encoding utf8 -Path $foldername\$logFile
+    sqlcmd -S $serverName -i sql\reportCollectorErrors.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | Add-Content -Encoding utf8 -Path $foldername\$sqlErrorLogFile
 
 WriteLog -logLocation $foldername\$logFile -logMessage "   " -logOperation "BOTH"
 WriteLog -logLocation $foldername\$logFile -logMessage "---" -logOperation "BOTH"
@@ -267,7 +268,7 @@ foreach($file in Get-ChildItem -Path $foldername\*.csv) {
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Checking for error messages within collection files..." -logOperation "BOTH"
-foreach($file in Get-ChildItem -Path $foldername\*.csv) {
+foreach($file in Get-ChildItem -Path $foldername\*.csv, $foldername\*.log) {
 	$inputFile = Split-Path -Leaf $file
     [regex]$pattern = "(Msg(\s\d*)(.)(\n|\s)Level(\s\d*.)(\n|\s)State(\s\d*)(.)(\n|\s))"
     $content = Get-Content -Path $foldername\$inputFile | select-string -Pattern $pattern
