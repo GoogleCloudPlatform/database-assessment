@@ -258,8 +258,8 @@ if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() 
     .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
 }
 
-Write-Output "Remove special characters and UTF8 BOM from extracted Files..."
-WriteLog -logLocation $foldername\$logFile -logMessage "Remove special characters and UTF8 BOM from extracted Files..."
+Write-Output "Remove special characters and UTF8 BOM from extracted files..."
+WriteLog -logLocation $foldername\$logFile -logMessage "Remove special characters and UTF8 BOM from extracted files..."
 foreach($file in Get-ChildItem -Path $foldername\*.csv) {
 	$inputFile = Split-Path -Leaf $file
 	((Get-Content -Path $foldername\$inputFile) -join "`n") + "`n" | Set-Content -NoNewLine -Encoding utf8 -Force -Path $foldername\$inputFile
@@ -267,6 +267,16 @@ foreach($file in Get-ChildItem -Path $foldername\*.csv) {
 	$fileContent = Get-Content $foldername\$inputFile -Raw
 	Set-Content -Value $utf8.GetBytes($fileContent) -Encoding Byte -Path $foldername\$inputFile -Force
 }
+
+Write-Output "Checking for error messages within collection files..."
+WriteLog -logLocation $foldername\$logFile -logMessage "Checking for error messages within collection files..."
+foreach($file in Get-ChildItem -Path $foldername\*.csv) {
+	$inputFile = Split-Path -Leaf $file
+    [regex]$pattern = "^(Msg\s\d*(.|\n)\sLevel\s\d*(.|\n)\sState\s\d*)(.|\n)*"
+    $content = Get-Content -Path $foldername\$inputFile | select-string -Pattern $pattern
+    $errorCount = $errorCount + $content.length
+}
+
 $zippedopfolder = $foldername + '.zip'
 Write-Output "Zipping Output to $zippedopfolder..."
 WriteLog -logLocation $foldername\$logFile -logMessage "Zipping Output to $zippedopfolder..."
