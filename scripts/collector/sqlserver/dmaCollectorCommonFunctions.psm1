@@ -18,7 +18,6 @@
     Creates a user within the SQL Server Database using "Windows Authentication" with the necessary permissions 
     needed to execute subsequent scripts to collect data from SQL Server and Perfmon to be uploaded to Google Database Migration Assistant for review.
 
-    If user and password are supplied, that will be used to execute the script.  Otherwise default credentials hardcoded in the script will be used
 .NOTES
     https://googlecloudplatform.github.io/database-assessment/
 #>
