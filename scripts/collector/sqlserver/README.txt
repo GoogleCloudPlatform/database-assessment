@@ -100,7 +100,7 @@ These scripts have been tested with the following platforms:
    
             ManageSqlServerPerfmonDatset.bat
             The following parameters can be specified:
-                - -operation **Required (create, stop, delete, collect)
+                - -operation **Required (create, start, stop, delete, collect, createemptyfile, help)
                 - -instanceType **Required (default, managed)
                 - -mssqlInstanceName **Required if instanceType is "managed" (should be the instance name without the server name)
 
@@ -124,6 +124,7 @@ These scripts have been tested with the following platforms:
                 -database **Optional (Defaults to all user databases)
                 -collectionUserName **Required
                 -collectionUserPass **Required
+                -ignorePerfmon **Optional (Defaults to "false" / Set to "true" to ignore perfmon collection)
 
         For a Named Instance (all databases):
             .\RunAssessment.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]

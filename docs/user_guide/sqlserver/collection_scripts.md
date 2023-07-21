@@ -92,44 +92,44 @@ In order to begin running the Database Migration Assessment Collection process, 
 #### Perfmon Requirements (Optional)
 
 - If you have your own perfmon counters capturing the following statistics or run on a SQL Server Product such as Amazon RDS or Google CloudSQL for SQL Server, skip to step b, otherwise proceed to step a.
-** The Perfmon data collection process is optional and can be safely skipped.  However, there will be no right sizing information in the assessment report.
+  \*\* The Perfmon data collection process is optional and can be safely skipped. However, there will be no right sizing information in the assessment report.
   <br/>
 
-        \Memory\Available MBytes
-        \PhysicalDisk(_Total)\Avg. Disk Bytes/Read
-        \PhysicalDisk(_Total)\Avg. Disk Bytes/Write
-        \PhysicalDisk(_Total)\Avg. Disk sec/Read
-        \PhysicalDisk(_Total)\Avg. Disk sec/Write
-        \PhysicalDisk(_Total)\Disk Reads/sec
-        \PhysicalDisk(_Total)\Disk Writes/sec
-        \Processor(_Total)\% Idle Time
-        \Processor(_Total)\% Processor Time
-        \Processor Information(_Total)\Processor Frequency
-        \System\Processor Queue Length
-        \SQLServer:Buffer Manager\Buffer cache hit ratio
-        \SQLServer:Buffer Manager\Checkpoint pages/sec
-        \SQLServer:Buffer Manager\Free list stalls/sec
-        \SQLServer:Buffer Manager\Page life expectancy
-        \SQLServer:Buffer Manager\Page lookups/sec
-        \SQLServer:Buffer Manager\Page reads/sec
-        \SQLServer:Buffer Manager\Page writes/sec
-        \SQLServer:General Statistics\User Connections
-        \SQLServer:Memory Manager\Memory Grants Pending
-        \SQLServer:Memory Manager\Target Server Memory (KB)
-        \SQLServer:Memory Manager\Total Server Memory (KB)
-        \SQLServer:SQL Statistics\Batch Requests/sec
+          \Memory\Available MBytes
+          \PhysicalDisk(_Total)\Avg. Disk Bytes/Read
+          \PhysicalDisk(_Total)\Avg. Disk Bytes/Write
+          \PhysicalDisk(_Total)\Avg. Disk sec/Read
+          \PhysicalDisk(_Total)\Avg. Disk sec/Write
+          \PhysicalDisk(_Total)\Disk Reads/sec
+          \PhysicalDisk(_Total)\Disk Writes/sec
+          \Processor(_Total)\% Idle Time
+          \Processor(_Total)\% Processor Time
+          \Processor Information(_Total)\Processor Frequency
+          \System\Processor Queue Length
+          \SQLServer:Buffer Manager\Buffer cache hit ratio
+          \SQLServer:Buffer Manager\Checkpoint pages/sec
+          \SQLServer:Buffer Manager\Free list stalls/sec
+          \SQLServer:Buffer Manager\Page life expectancy
+          \SQLServer:Buffer Manager\Page lookups/sec
+          \SQLServer:Buffer Manager\Page reads/sec
+          \SQLServer:Buffer Manager\Page writes/sec
+          \SQLServer:General Statistics\User Connections
+          \SQLServer:Memory Manager\Memory Grants Pending
+          \SQLServer:Memory Manager\Target Server Memory (KB)
+          \SQLServer:Memory Manager\Total Server Memory (KB)
+          \SQLServer:SQL Statistics\Batch Requests/sec
 
-    <br/>
+      <br/>
 
 - From a command prompt session in "Administrator Mode" on the server you would like to collect data on, execute the following command:
 
 * ManageSqlServerPerfmonDatset.bat
   The following parameters can be specified:
-  - -operation \*\* Required (create, stop, delete, collect)
+  - -operation \*\* Required (create, start, stop, delete, collect, createemptyfile, help)
   - -instanceType \*\* Required (default, managed)
   - -mssqlInstanceName \*\* Required if instanceType is "managed" (should be the instance name without the server name)
 
-To execute the perfmon collection:
+To create and start the perfmon collection:
 
         For a default instance:
             ManageSqlServerPerfmonDatset.bat -operation create -instanceType default
@@ -138,6 +138,7 @@ To execute the perfmon collection:
             ManageSqlServerPerfmonDatset.bat -operation create -instanceType managed -mssqlInstanceName [instance name]
 
 The script will create a permon data set that will collect the above metrics at a 1 minute interval for 8 days. The dataset will automatically stop after 8 days of collection. To get the most accurate statistics, it would be good to have this collection run over the busiest time for the server.
+
 <br/>
 
 #### Perform Collection
@@ -153,6 +154,7 @@ The script will create a permon data set that will collect the above metrics at 
   - -database \*\*Optional (Defaults to all user databases)
   - -collectionUserName \*\*Required
   - -collectionUserPass \*\*Required
+  - -ignorePerfmon \*\*Optional (Defaults to "false" / Set to "true" to ignore perfmon collection)
 
 To Execute the Collection:
 
@@ -170,7 +172,6 @@ To Execute the Collection:
 
       For a named instance (all databases):
         RunAssessment.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
-
 
         Example (default port): RunAssessment.bat -serverName MS-SERVER1/SQL2019 -collectionUserName sa -collectionUserPass password123
         Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123

@@ -14,7 +14,7 @@
 
 @echo off
 
-set validPerfmonOperations=create stop delete collect
+set validPerfmonOperations=create start stop delete collect createemptyfile help
 set validInstances=default managed
 set isValidPerfmonOperation=false
 set isValidInstance=false
@@ -24,7 +24,7 @@ set perfmonOperation=""
 set instance=""
 set managedInstanceName=
 
-set helpMessage=Usage ManageSqlServerPerfmonDataset.bat -operation [create/update/delete/collect/help] -instanceType [managed/default] -managedInstanceName [instance name]
+set helpMessage=Usage ManageSqlServerPerfmonDataset.bat -operation [create/start/stop/delete/collect/createemptyfile/help] -instanceType [managed/default] -managedInstanceName [instance name]
 set helpExample=Example: .\ManageSqlServerPerfmonDataset.bat -operation create -instanceType default or .\ManageSqlServerPerfmonDataset.bat -operation create -instanceType managed -managedInstanceName SQL2019
 
 if [%1]==[] (

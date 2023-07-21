@@ -55,7 +55,20 @@ param (
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
 
-$perfmonLogFile = 'opdb__perfMonLog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
+if ($null -eq $machinename) {
+	$machinename = hostname
+}
+
+if ($null -eq $current_ts) {
+	$current_ts = Get-Date -Format "MMddyyyyTHHmmss"
+}
+
+if ($null -eq $managedInstanceName) {
+	$perfmonLogFile = 'opdb__perfMonLog' + '__' + $operation + '_' + $machinename + '_MSSQLSERVER' + $current_ts + '.log'
+} else {
+	$perfmonLogFile = 'opdb__perfMonLog' + '__' + $operation + '_' + $machinename + '_' + $managedInstanceName + '_' + $current_ts + '.log'
+}
+
 function CreateDMAPerfmonDataSet 
 {
 param(
@@ -346,6 +359,8 @@ $str = @'
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Starting Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
 	logman.exe start -n $dataSet
+	logman.exe query -n $dataset | out-string | Add-Content -Encoding utf8 -Path $outputDir\$perfmonLogFile
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Operation Completed..." -logOperation "BOTH"
 
 	$debug_flag = $null
 
@@ -362,6 +377,22 @@ $str = @'
 			Get-ChildItem -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv
 	}
 }
+
+function StartDMAPerfmonDataSet
+{
+param(
+    [string]$dataSet,
+	[string]$perfmonOutDir,
+	[string]$logFile
+    )
+
+	$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
+
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Starting Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
+	logman.exe start -n $dataSet
+	logman.exe query -n $dataset | out-string | Add-Content -Encoding utf8 -Path $outputDir\$perfmonLogFile
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Operation Completed..." -logOperation "BOTH"
+}
 function StopDMAPerfmonDataSet
 {
 param(
@@ -374,6 +405,8 @@ param(
 
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Stopping Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
 	logman.exe stop -n $dataSet
+	logman.exe query -n $dataset | out-string | Add-Content -Encoding utf8 -Path $outputDir\$perfmonLogFile
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Operation Completed..." -logOperation "BOTH"
 }
 function DeleteDMAPerfmonDataSet
 {
@@ -389,9 +422,11 @@ param(
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Google DMA SQL Server Perfmon Counter Data Set is running... Stopping Data Collector Set before deletion..." -logOperation "BOTH"
 		logman.exe stop -n $dataSet
 		logman.exe delete -n $dataSet
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Operation Completed..." -logOperation "BOTH"
 	} else {
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Google DMA SQL Server Perfmon Counter Data Set found, but not running..... Deleting..." -logOperation "BOTH"
 		logman.exe delete -n $dataSet
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Operation Completed..." -logOperation "BOTH"
 	}
 }
 function Yellow{    process { Write-Host $_ -ForegroundColor Yellow }}
@@ -450,6 +485,8 @@ param(
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Clean up Temp File area..." -logOperation "BOTH"
 		Remove-Item -Path $env:TEMP\*$dataSet*.csv
 	}
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Collecting current state of perfmon dataset: $dataset..." -logOperation "BOTH"
+	logman.exe query -n $dataset | out-string | Add-Content -Encoding utf8 -Path $outputDir\$perfmonLogFile
 }
 
 function CreateEmptyFile
@@ -511,6 +548,8 @@ if (!(Test-Path -Path $PSScriptRoot\$perfmonOutDir)) {
 
 if ($operation.ToLower() -eq "create") {
 	CreateDMAPerfmonDataSet -instanceName $managedInstanceName -dataSet $datasetName -perfmonOutDir $perfmonOutDir -logFile $perfmonLogFile
+} elseif ($operation.ToLower() -eq "start") {
+	StartDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -logFile $perfmonLogFile
 } elseif ($operation.ToLower() -eq "stop") {
 	StopDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -logFile $perfmonLogFile
 } elseif ($operation.ToLower() -eq "delete") {
