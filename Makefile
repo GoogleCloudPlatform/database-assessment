@@ -83,6 +83,7 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 	cp scripts/collector/sqlserver/sql/*.sql $(BUILD_DIR)/collector/sqlserver/sql
 	cp scripts/collector/sqlserver/*.bat $(BUILD_DIR)/collector/sqlserver/
 	cp scripts/collector/sqlserver/*.ps1 $(BUILD_DIR)/collector/sqlserver/
+	cp scripts/collector/sqlserver/*.psm1 $(BUILD_DIR)/collector/sqlserver/
 	cp scripts/collector/sqlserver/*.csv $(BUILD_DIR)/collector/sqlserver/
 	cp scripts/collector/sqlserver/README.txt $(BUILD_DIR)/collector/sqlserver/
 	cp  LICENSE $(BUILD_DIR)/collector/sqlserver
