@@ -28,6 +28,8 @@
     Collection username (optional)
 .PARAMETER collectionUserPass
     Collection username password (optional)
+.PARAMETER ignorePerfmon
+    Signals if the perfmon collection should be skipped (default:false) 
 .EXAMPLE
     To use a specific username / password combination for a named instance:
         C:\InstanceReview.ps1 -serverName [server name / ip address]\[instance name] -collectionUserName [collection username] -collectionUserPass [collection username password]
@@ -43,10 +45,15 @@ Param(
 [Parameter(Mandatory=$false)][string]$port="",
 [Parameter(Mandatory=$false)][string]$database="all",
 [Parameter(Mandatory=$false)][string]$collectionUserName = "",
-[Parameter(Mandatory=$false)][string]$collectionUserPass = ""
+[Parameter(Mandatory=$false)][string]$collectionUserPass = "",
+[Parameter(Mandatory=$false)][string]$ignorePerfmon = "false"
 )
 
+Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
+
+$powerShellVersion = $PSVersionTable.PSVersion.Major
 $foldername = ""
+$errorCount = 0
 
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
@@ -108,7 +115,15 @@ $pkey = $values[5]
 
 $op_version = "4.3.9"
 
-$foldername = 'opdb' + '_' + 'mssql' + '_' + 'PerfCounter' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
+if ($ignorePerfmon -eq "true") {
+    $perfCounterLabel = "NoPerfCounter"
+} else {
+    $perfCounterLabel = "PerfCounter"
+}
+
+$foldername = 'opdb' + '_' + 'mssql' + '_' + $perfCounterLabel + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
+$logFile = 'opdb__collectorLog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
+$sqlErrorLogFile = 'opdb__sqlErrorlog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
 
 $folderLength = ($PSScriptRoot + '\' + $foldername).Length
 if ($folderLength -le 260) {
@@ -119,6 +134,12 @@ if ($folderLength -le 260) {
     Write-Output "Folder being created is: $PSScriptRoot\$foldername"
     Exit 1
 }
+
+WriteLog -logLocation $foldername\$logFile -logMessage "PS Version Table" -logOperation "FILE"
+$PSVersionTable | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Output Encoding Table" -logOperation "FILE"
+$OutputEncoding | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
 
 $compFileName = 'opdb' + '__' + 'CompInstalled' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 $srvFileName = 'opdb' + '__' + 'ServerProps' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
@@ -138,39 +159,62 @@ $dbServerFlags = 'opdb' + '__' + 'DbServerFlags' + '__' + $dbversion + '_' + $op
 
 $outputFileArray = @($compFileName, $srvFileName, $blockingFeatures, $linkedServers, $dbsizes, $dbClusterNodes, $objectList, $tableList, $indexList, $columnDatatypes, $userConnectionList, $perfMonOutput, $dbccTraceFlg, $diskVolumeInfo, $dbServerFlags)
 
-Write-Output "Checking max directory path lengths for errors..."
+WriteLog -logLocation $foldername\$logFile -logMessage "Checking max directory path lengths for errors..." -logOperation "BOTH"
 foreach ($directory in $outputFileArray) {
 	$folderLength = ($PSScriptRoot + '\' + $foldername + '\' + $directory).Length
     if ($folderLength -gt 260) {
-        Write-Output "Output file $PSScriptRoot\$foldername\$directory name exceeds 260 characters."
-        Write-Output "Execute collection from a path with less characters"
+        WriteLog -logLocation $foldername\$logFile -logMessage "Output file $PSScriptRoot\$foldername\$directory name exceeds 260 characters." -logOperation "BOTH"
+        WriteLog -logLocation $foldername\$logFile -logMessage "Execute collection from a path with less than 260 characters." -logOperation "BOTH"
         Exit 1
     }
 }
 
-Write-Output "Retriving SQL Server Installed Components..."
-sqlcmd -S $serverName -i sql\componentsInstalled.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
-Write-Output "Retriving SQL Server Properties..."
-sqlcmd -S $serverName -i sql\serverProperties.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
-sqlcmd -S $serverName -i sql\dbServerUnsupportedFlags.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbServerFlags
-Write-Output "Retriving SQL Server Features..."
-sqlcmd -S $serverName -i sql\features.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
-Write-Output "Retriving SQL Server Linked Servers..."
-sqlcmd -S $serverName -i sql\linkedServers.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
-Write-Output "Retriving SQL Server Database Sizes..."
-sqlcmd -S $serverName -i sql\dbSizes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
-Write-Output "Retriving SQL Server Cluster Nodes..."
-sqlcmd -S $serverName -i sql\dbClusterNodes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
-Write-Output "Retriving SQL Server Object Info..."
-sqlcmd -S $serverName -i sql\objectList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$objectList
-sqlcmd -S $serverName -i sql\tableList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$tableList
-sqlcmd -S $serverName -i sql\indexList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$indexList
-sqlcmd -S $serverName -i sql\columnDatatypes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
-sqlcmd -S $serverName -i sql\userConnectionInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
-sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
-sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Installed Components..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\componentsInstalled.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
 
-Write-Output "Retrieving OS Disk Cluster Information.."
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Properties..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\serverProperties.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server CloudSQL Unsupported Flag Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\dbServerUnsupportedFlags.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbServerFlags
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Features in Use Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\features.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Linked Server Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\linkedServers.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Database Size Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\dbSizes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Cluster Node Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\dbClusterNodes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Object Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\objectList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$objectList
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Table Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\tableList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$tableList
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Index Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\indexList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$indexList
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Column Datatype Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\columnDatatypes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server User Connection Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\userConnectionInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server DBCC Trace Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Disk Volume Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving DMA Collector Errors and Writing to Log..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\reportCollectorErrors.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | Add-Content -Encoding utf8 -Path $foldername\$sqlErrorLogFile
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving OS Disk Cluster Information..." -logOperation "BOTH"
 if (Test-Path -Path $env:TEMP\tempDisk.csv) {
     Remove-Item -Path $env:TEMP\tempDisk.csv
 }
@@ -206,45 +250,75 @@ foreach($file in Get-ChildItem -Path $foldername\*DiskVolInfo*.csv) {
 
 # Pull perfmon file if we are running from same server.  Generate empty file if running on remote server
 # Capability does not exist yet to run against remote computer
-if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper())) {
-    .\dma_sqlserver_perfmon_dataset.ps1 -operation collect -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
-} elseif (($instancename -ne "MSSQLSERVER") -and ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper())) {
-    .\dma_sqlserver_perfmon_dataset.ps1 -operation collect -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
-} elseif (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
-    .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
-} elseif (($instancename -ne "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
-    .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+
+if ($ignorePerfmon -eq "true") {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Skipping Perfmon Information..."  -logOperation "FILE"
+    if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
+        .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+    } else {
+        .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+    }
+} else {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving Perfmon Information..."  -logOperation "FILE"
+    if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper())) {
+        .\dma_sqlserver_perfmon_dataset.ps1 -operation collect -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+    } elseif (($instancename -ne "MSSQLSERVER") -and ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper())) {
+        .\dma_sqlserver_perfmon_dataset.ps1 -operation collect -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+    } elseif (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
+        .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+    } elseif (($instancename -ne "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
+        .\dma_sqlserver_perfmon_dataset.ps1 -operation createemptyfile -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+    }
 }
 
-Write-Output "Remove special characters from extracted Files.."
+WriteLog -logLocation $foldername\$logFile -logMessage "Remove special characters and UTF8 BOM from extracted files..." -logOperation "BOTH"
 foreach($file in Get-ChildItem -Path $foldername\*.csv) {
-    (Get-Content $file -Raw).Replace("`r`n","`n") | Set-Content $file -Encoding utf8 -Force
+	$inputFile = Split-Path -Leaf $file
+	((Get-Content -Path $foldername\$inputFile) -join "`n") + "`n" | Set-Content -NoNewLine -Encoding utf8 -Force -Path $foldername\$inputFile
+	$utf8 = New-Object System.Text.UTF8Encoding $false
+	$fileContent = Get-Content $foldername\$inputFile -Raw
+	Set-Content -Value $utf8.GetBytes($fileContent) -Encoding Byte -Path $foldername\$inputFile -Force
 }
-$zippedopfolder = $foldername + '.zip'
-Write-Output "Zipping Output to $zippedopfolder"
 
-$powerShellVersion = $PSVersionTable.PSVersion.Major
+WriteLog -logLocation $foldername\$logFile -logMessage "Checking for error messages within collection files..." -logOperation "BOTH"
+foreach($file in Get-ChildItem -Path $foldername\*.csv, $foldername\*.log) {
+	$inputFile = Split-Path -Leaf $file
+    [regex]$pattern = "(Msg(\s\d*)(.)(\n|\s)Level(\s\d*.)(\n|\s)State(\s\d*)(.)(\n|\s))"
+    $content = Get-Content -Path $foldername\$inputFile | select-string -Pattern $pattern
+    $errorCount = $errorCount + $content.length
+}
+
+if ($errorCount -gt 0) {
+    $zippedopfolder = $foldername + '_ERROR.zip'
+} else {
+    $zippedopfolder = $foldername + '.zip'
+}
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Zipping Output to $zippedopfolder..." -logOperation "BOTH"
 
 if ($powerShellVersion -ge 5) {
-    Compress-Archive -Path $foldername\*.csv -DestinationPath $zippedopfolder
+    Compress-Archive -Path $foldername\*.csv,$foldername\*.log -DestinationPath $zippedopfolder
 
     if (Test-Path -Path $zippedopfolder) {
-        Write-Output "Removing directory $foldername"
+        WriteLog -logLocation $foldername\$logFile -logMessage "Removing directory $foldername..." -logOperation "MESSAGE"
         Remove-Item -Path $foldername -Recurse -Force
     }
     if (Test-Path -Path $env:TEMP\tempDisk.csv) {
-        Write-Output "Clean up Temp File area"
+        WriteLog -logLocation $foldername\$logFile -logMessage "Clean up Temp File area..." -logOperation "MESSAGE"
         Remove-Item -Path $env:TEMP\tempDisk.csv
     }
 
-    Write-Output ""
-    Write-Output ""
-    Write-Output "Return file $PSScriptRoot\$zippedopfolder"
-    Write-Output "to Google to complete assessment"
+    WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Return file $PSScriptRoot\$zippedopfolder" -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "to Google to complete assessment" -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Collection Complete..." -logOperation "MESSAGE"
 } else {
-    Write-Output ""
-    Write-Output ""
-    Write-Output "Please manually zip the files in $foldername and return to Google to complete assessment"
+    WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Please manually zip the files in $foldername and" -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "return to Google to complete assessment" -logOperation "MESSAGE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Collection Complete..." -logOperation "MESSAGE"
 }
 
 Exit 0

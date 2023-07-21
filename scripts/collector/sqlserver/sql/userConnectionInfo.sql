@@ -28,6 +28,7 @@ SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPRO
 DECLARE @validDB AS INTEGER
 SELECT @validDB = 0
 DECLARE @dbname VARCHAR(50)
+DECLARE @ERROR_NUMBER_LENGTH AS INTEGER
 
 DECLARE db_cursor CURSOR FOR 
 SELECT name
@@ -59,6 +60,18 @@ CREATE TABLE #connectionInfo(
     ,local_net_address nvarchar(255)
     );
 
+IF OBJECT_ID('tempdb.dbo.dmaCollectorErrors') IS NULL 
+   CREATE TABLE tempdb.dbo.dmaCollectorErrors(
+      database_name nvarchar(255) DEFAULT db_name()
+      ,module_name nvarchar(255)
+      ,error_number nvarchar(255)
+      ,error_severity nvarchar(255)
+      ,error_state nvarchar(255)
+      ,error_procedure nvarchar(255)
+      ,error_line nvarchar(255)
+      ,error_message nvarchar(255)
+      );
+
 OPEN db_cursor  
 FETCH NEXT FROM db_cursor INTO @dbname  
 
@@ -72,67 +85,85 @@ BEGIN
         AND state = 0
 
         IF @validDB = 0
-            BREAK;
-    END
-   
-    IF @PRODUCT_VERSION >= 11
-    BEGIN
-        exec ('
-        use [' + @dbname + '];
-        INSERT INTO #connectionInfo
-        SELECT
-            DB_NAME() as database_name
-            ,sdes.is_user_process
-            ,sdes.host_name
-            ,sdes.program_name
-            ,sdes.login_name
-            ,sdec.num_reads
-            ,sdec.num_writes
-            ,FORMAT(sdec.last_read,''yyyy-MM-dd HH:mm:ss'') as last_read
-            ,FORMAT(sdec.last_write,''yyyy-MM-dd HH:mm:ss'') as last_write
-            ,sdes.reads
-            ,sdes.logical_reads
-            ,sdes.writes
-            ,sdes.client_interface_name
-            ,sdes.nt_domain
-            ,sdes.nt_user_name
-            ,sdec.client_net_address
-            ,sdec.local_net_address
-        FROM sys.dm_exec_sessions AS sdes
-        INNER JOIN sys.dm_exec_connections AS sdec
-                ON sdec.session_id = sdes.session_id
-        WHERE sdes.session_id <> @@SPID');
-    END
-    IF @PRODUCT_VERSION < 11
-    BEGIN
-        exec ('
-        use [' + @dbname + '];
-        INSERT INTO #connectionInfo
-        SELECT
-            DB_NAME() as database_name
-            ,sdes.is_user_process
-            ,sdes.host_name
-            ,sdes.program_name
-            ,sdes.login_name
-            ,sdec.num_reads
-            ,sdec.num_writes
-            ,CONVERT(VARCHAR(256),sdec.last_read, 120) as last_read
-            ,CONVERT(VARCHAR(256),sdec.last_write,120) as last_write
-            ,sdes.reads
-            ,sdes.logical_reads
-            ,sdes.writes
-            ,sdes.client_interface_name
-            ,sdes.nt_domain
-            ,sdes.nt_user_name
-            ,sdec.client_net_address
-            ,sdec.local_net_address
-        FROM sys.dm_exec_sessions AS sdes
-        INNER JOIN sys.dm_exec_connections AS sdec
-                ON sdec.session_id = sdes.session_id
-        WHERE sdes.session_id <> @@SPID');
+            CONTINUE;
     END
 
-    FETCH NEXT FROM db_cursor INTO @dbname 
+    BEGIN TRY
+        IF @PRODUCT_VERSION >= 11
+        BEGIN
+            exec ('
+            use [' + @dbname + '];
+            INSERT INTO #connectionInfo
+            SELECT
+                DB_NAME() as database_name
+                ,sdes.is_user_process
+                ,sdes.host_name
+                ,sdes.program_name
+                ,sdes.login_name
+                ,sdec.num_reads
+                ,sdec.num_writes
+                ,FORMAT(sdec.last_read,''yyyy-MM-dd HH:mm:ss'') as last_read
+                ,FORMAT(sdec.last_write,''yyyy-MM-dd HH:mm:ss'') as last_write
+                ,sdes.reads
+                ,sdes.logical_reads
+                ,sdes.writes
+                ,sdes.client_interface_name
+                ,sdes.nt_domain
+                ,sdes.nt_user_name
+                ,sdec.client_net_address
+                ,sdec.local_net_address
+            FROM sys.dm_exec_sessions AS sdes
+            INNER JOIN sys.dm_exec_connections AS sdec
+                    ON sdec.session_id = sdes.session_id
+            WHERE sdes.session_id <> @@SPID');
+        END
+        IF @PRODUCT_VERSION < 11
+        BEGIN
+            exec ('
+            use [' + @dbname + '];
+            INSERT INTO #connectionInfo
+            SELECT
+                DB_NAME() as database_name
+                ,sdes.is_user_process
+                ,sdes.host_name
+                ,sdes.program_name
+                ,sdes.login_name
+                ,sdec.num_reads
+                ,sdec.num_writes
+                ,CONVERT(VARCHAR(256),sdec.last_read, 120) as last_read
+                ,CONVERT(VARCHAR(256),sdec.last_write,120) as last_write
+                ,sdes.reads
+                ,sdes.logical_reads
+                ,sdes.writes
+                ,sdes.client_interface_name
+                ,sdes.nt_domain
+                ,sdes.nt_user_name
+                ,sdec.client_net_address
+                ,sdec.local_net_address
+            FROM sys.dm_exec_sessions AS sdes
+            INNER JOIN sys.dm_exec_connections AS sdec
+                    ON sdec.session_id = sdes.session_id
+            WHERE sdes.session_id <> @@SPID');
+        END
+    END TRY
+    BEGIN CATCH
+        INSERT INTO tempdb.dbo.dmaCollectorErrors
+        SELECT
+            db_name(),
+            'columnDatatypes',
+            SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254),
+            SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254),
+            SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254),
+            SUBSTRING(CONVERT(nvarchar,ERROR_PROCEDURE()),1,254),
+            SUBSTRING(CONVERT(nvarchar,ERROR_LINE()),1,254),
+            SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,254);
+        SELECT @ERROR_NUMBER_LENGTH = COALESCE(ERROR_NUMBER(),0)
+        IF @ERROR_NUMBER_LENGTH > 0
+            CONTINUE;
+	END CATCH
+
+    FETCH NEXT FROM db_cursor INTO @dbname
+
 END
 
 CLOSE db_cursor  
@@ -140,4 +171,5 @@ DEALLOCATE db_cursor
 
 SELECT @PKEY as PKEY, a.* from #connectionInfo a;
 
-DROP TABLE #connectionInfo;
+IF OBJECT_ID('tempdb..#connectionInfo') IS NOT NULL
+    DROP TABLE #connectionInfo;
