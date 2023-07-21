@@ -54,7 +54,7 @@ set termout &TERMOUTOFF
 @&EXTRACTSDIR/archlogs.sql
 @&EXTRACTSDIR/backups.sql
 @&EXTRACTSDIR/columntypes.sql
-@&EXTRACTSDIR/compressbytype.sql
+--@&EXTRACTSDIR/compressbytype.sql
 @&EXTRACTSDIR/cpucoresusage.sql
 @&EXTRACTSDIR/dataguard.sql
 @&EXTRACTSDIR/datatypes.sql
