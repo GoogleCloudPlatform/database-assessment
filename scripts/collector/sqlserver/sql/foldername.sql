@@ -45,7 +45,7 @@ BEGIN CATCH
 	replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''') as current_ts,
 	CASE WHEN @CLOUDTYPE IS NOT NULL
 	THEN
-		''' + @INSTANCENAME + ''' + ''-'' + ''' + @CLOUDTYPE + ''' + ''_'' + ''' + @ASSESSMENT_DATABSE_NAME + ''' + ''_'' + @@SERVERNAME + ''_'' + replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''')
+		''' + @INSTANCENAME + ''' + ''-'' + @CLOUDTYPE + ''_'' + ''' + @ASSESSMENT_DATABSE_NAME + ''' + ''_'' + @@SERVERNAME + ''_'' + replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''')
 	ELSE
 		''' + @INSTANCENAME + ''' + ''_'' + ''' + @ASSESSMENT_DATABSE_NAME + ''' + ''_'' + @@SERVERNAME + ''_'' + replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''')
 	END as pkey');
