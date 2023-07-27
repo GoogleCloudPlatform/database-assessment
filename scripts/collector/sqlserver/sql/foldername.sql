@@ -17,15 +17,13 @@ limitations under the License.
 
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
-DECLARE @CLOUDTYPE AS VARCHAR(256)
 DECLARE @INSTANCENAME AS VARCHAR(256)
 DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256)
+IF UPPER(@@VERSION) LIKE '%AZURE%'
+	SELECT @INSTANCENAME = SUBSTRING(REPLACE(CONVERT(NVARCHAR(255), service_broker_guid),'-',''),0,15) FROM sys.databases where name = 'master'
 SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
 IF @ASSESSMENT_DATABSE_NAME = 'all'
    SELECT @ASSESSMENT_DATABSE_NAME = 'master'
-IF UPPER(@@VERSION) LIKE '%AZURE%'
-	SELECT @CLOUDTYPE = 'AZURE'
-	SELECT @INSTANCENAME = SUBSTRING(REPLACE(CONVERT(NVARCHAR(255), service_broker_guid),'-',''),0,15) FROM sys.databases where name = 'master'
 BEGIN TRY
 	exec('
 	SELECT CAST(SERVERPROPERTY(''ProductVersion'') AS VARCHAR(15)) AS Version, 
@@ -37,10 +35,18 @@ BEGIN TRY
 END TRY
 BEGIN CATCH
 	exec('
+	DECLARE @CLOUDTYPE AS VARCHAR(256)
+	IF UPPER(@@VERSION) LIKE ''%AZURE%''
+		SELECT @CLOUDTYPE = ''AZURE''
 	SELECT CAST(SERVERPROPERTY(''ProductVersion'') AS VARCHAR(15)) AS Version, 
 	UPPER(CONVERT(varchar, HOST_NAME())) as machinename, 
 	''' + @ASSESSMENT_DATABSE_NAME + ''' as databasename,
 	@@SERVERNAME as instancename, 
 	replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''') as current_ts,
-    ''' + @INSTANCENAME + ''' + ''-'' + ''' + @CLOUDTYPE + ''' + ''_'' + ''' + @ASSESSMENT_DATABSE_NAME + ''' + ''_'' + @@SERVERNAME + ''_'' + replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''') as pkey');
+	CASE WHEN @CLOUDTYPE IS NOT NULL
+	THEN
+		''' + @INSTANCENAME + ''' + ''-'' + ''' + @CLOUDTYPE + ''' + ''_'' + ''' + @ASSESSMENT_DATABSE_NAME + ''' + ''_'' + @@SERVERNAME + ''_'' + replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''')
+	ELSE
+		''' + @INSTANCENAME + ''' + ''_'' + ''' + @ASSESSMENT_DATABSE_NAME + ''' + ''_'' + @@SERVERNAME + ''_'' + replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''')
+	END as pkey');
 END CATCH
