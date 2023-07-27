@@ -33,7 +33,7 @@ The collection script depends on the following executables to be available on th
 ```shell
 command prompt
 powershell (version 5 or greater)
-sqlcmd
+sqlcmd (ensure that it is in your $PATH)
 ```
 
 ---

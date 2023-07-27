@@ -32,7 +32,7 @@ DECLARE @ERROR_NUMBER_LENGTH AS INTEGER
 
 DECLARE db_cursor CURSOR FOR 
 SELECT name
-FROM MASTER.sys.databases 
+FROM sys.databases 
 WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
 AND name like @ASSESSMENT_DATABSE_NAME
 AND state = 0
@@ -76,7 +76,7 @@ WHILE @@FETCH_STATUS = 0
 BEGIN
    BEGIN
       SELECT @validDB = COUNT(1)
-      FROM MASTER.sys.databases 
+      FROM sys.databases 
       WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
       AND name like @ASSESSMENT_DATABSE_NAME
       AND state = 0

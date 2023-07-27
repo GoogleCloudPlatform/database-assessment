@@ -22,7 +22,7 @@ SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
 IF @ASSESSMENT_DATABSE_NAME = 'all'
    SELECT @ASSESSMENT_DATABSE_NAME = '%'
 
-SELECT count(1)
+SELECT name
 FROM sys.databases 
 WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
 AND name like @ASSESSMENT_DATABSE_NAME
