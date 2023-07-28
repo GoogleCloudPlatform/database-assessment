@@ -32,29 +32,45 @@ CREATE TABLE #clusterNodesTable (
 );
 
 IF @PRODUCT_VERSION >= 11
-BEGIN
+BEGIN TRY
     exec ('
-    use [master];
     INSERT INTO #clusterNodesTable
     SELECT
 	    NodeName AS node_name, 
         status, 
         status_description
     FROM sys.dm_os_cluster_nodes');
-END
+END TRY
+BEGIN CATCH
+	IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+		WAITFOR DELAY '00:00:00'
+END CATCH
 
 IF @PRODUCT_VERSION < 11
-BEGIN
+BEGIN TRY
     exec ('
-    use [master];
     INSERT INTO #clusterNodesTable
     SELECT
 	    NodeName, 
         NULL, 
         NULL
     FROM sys.dm_os_cluster_nodes');
-END
+END TRY
+BEGIN CATCH
+	IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+		WAITFOR DELAY '00:00:00'
+    ELSE
+    SELECT
+        host_name() as host_name,
+        db_name() as database_name,
+        'columnDatatypes' as module_name,
+        SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
+        SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
+        SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
+        SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message
+END CATCH
 
 SELECT @PKEY as PKEY,  NodeName AS node_name, status, status_description from #clusterNodesTable;
 
-DROP TABLE #clusterNodesTable;
+IF OBJECT_ID('tempdb..#clusterNodesTable') IS NOT NULL  
+    DROP TABLE #clusterNodesTable;

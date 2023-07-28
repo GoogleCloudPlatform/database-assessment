@@ -68,6 +68,7 @@ if ([string]::IsNullorEmpty($serverName)) {
     if ([string]::IsNullorEmpty($port)) {
         Write-Output "Retrieving Metadata Information from $serverName"
         $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v database=$database | findstr /v /c:"---"
+        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v database=$database)
         if ([string]$database -ne "all") {
             $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v database=$database | findstr /v /c:"-"
             $countValidDBs = $validDBObj
@@ -75,14 +76,13 @@ if ([string]::IsNullorEmpty($serverName)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
                 Exit 1                
-            } else {
-                $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v database=$database)
             }
         }
     } else {
         $serverName = "$serverName,$port"
         Write-Output "Retrieving Metadata Information from $serverName"
         $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v database=$database | findstr /v /c:"---"
+        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v database=$database)
         if ([string]$database -ne "all") {
             $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v database=$database | findstr /v /c:"-"
             $countValidDBs = $validDBObj
@@ -90,8 +90,6 @@ if ([string]::IsNullorEmpty($serverName)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
                 Exit 1                
-            } else {
-                $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v database=$database)
             }
         }
     }
@@ -192,9 +190,6 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Fea
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Linked Server Info..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\linkedServers.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
 
-WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Database Size Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\dbSizes.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
-
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Cluster Node Info..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\dbClusterNodes.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
 
@@ -210,6 +205,7 @@ Set-Content -Path $foldername\$tableList -Encoding utf8 -Value "PKEY|database_na
 Set-Content -Path $foldername\$indexList -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|index_name|index_type|is_primary_key|is_unique|fill_factor|allow_page_locks|has_filter|data_compression|data_compression_desc|is_partitioned|count_key_ordinal|count_partition_ordinal|count_is_included_column|total_space_mb"
 Set-Content -Path $foldername\$columnDatatypes -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|datatype|max_length|precision|scale|is_computed|is_filestream|is_masked|encryption_type|is_sparse|rule_object_id|column_count"
 Set-Content -Path $foldername\$userConnectionList -Encoding utf8 -Value "PKEY|database_name|is_user_process|host_name|program_name|login_name|num_reads|num_writes|last_read|last_write|reads|logical_reads|writes|client_interface_name|nt_domain|nt_user_name|client_net_address|local_net_address"
+Set-Content -Path $foldername\$dbsizes -Encoding utf8 -Value "PKEY|database_name|type_desc|current_size_mb"
 
 ### Iterate through collections that could execute against multiple databases in the instance
 foreach ($databaseName in $dbNameArray) {
@@ -227,9 +223,12 @@ foreach ($databaseName in $dbNameArray) {
 
     WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server User Connection Info for Database $databaseName ..." -logOperation "BOTH"
         sqlcmd -S $serverName -i sql\userConnectionInfo.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$userConnectionList -Encoding utf8
+
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Database Size Info for Database $databaseName ..." -logOperation "BOTH"
+        sqlcmd -S $serverName -i sql\dbSizes.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbsizes -Encoding utf8
+    
 }
 
-    
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving OS Disk Cluster Information..." -logOperation "BOTH"
     if (Test-Path -Path $env:TEMP\tempDisk.csv) {
         Remove-Item -Path $env:TEMP\tempDisk.csv

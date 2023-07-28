@@ -19,10 +19,15 @@ limitations under the License.
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
 DECLARE @PKEY AS VARCHAR(256)
+DECLARE @CLOUDTYPE AS VARCHAR(256)
 DECLARE @PRODUCT_VERSION AS INTEGER
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
-SELECT @PKEY = N'$(pkey)';
 DECLARE @TABLE_PERMISSION_COUNT AS INTEGER
+
+SELECT @PKEY = N'$(pkey)';
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @CLOUDTYPE = 'NONE'
+IF UPPER(@@VERSION) LIKE '%AZURE%'
+	SELECT @CLOUDTYPE = 'AZURE'
 
 IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  
    DROP TABLE #serverProperties;
@@ -44,17 +49,15 @@ CREATE TABLE #myPerms (
     permission_name nvarchar(255)
 );
 
-use msdb;
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmail_server', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmail_profile', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmail_profileaccount', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmail_account', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.log_shipping_secondary_databases', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.log_shipping_primary_databases', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmaintplan_subplans', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysjobs', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmail_server', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmail_profile', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmail_profileaccount', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmail_account', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.log_shipping_secondary_databases', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.log_shipping_primary_databases', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmaintplan_subplans', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysjobs', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
 
-use master;
 INSERT INTO #serverProperties
 SELECT 'BuildClrVersion' AS Property, CONVERT(nvarchar, SERVERPROPERTY('BuildClrVersion')) AS Value
 UNION ALL
@@ -71,8 +74,6 @@ UNION ALL
 SELECT 'EngineEdition', CONVERT(nvarchar, SERVERPROPERTY('EngineEdition'))
 UNION ALL
 SELECT 'HadrManagerStatus', CONVERT(nvarchar, SERVERPROPERTY('HadrManagerStatus'))
-UNION ALL
-SELECT 'InstanceName', CONVERT(nvarchar, COALESCE(SERVERPROPERTY('InstanceName'),@@ServiceName))
 UNION ALL
 SELECT 'IsAdvancedAnalyticsInstalled', CONVERT(nvarchar, SERVERPROPERTY('IsAdvancedAnalyticsInstalled'))
 UNION ALL
@@ -138,12 +139,6 @@ SELECT 'FilestreamConfiguredLevel', CONVERT(nvarchar, SERVERPROPERTY('Filestream
 UNION ALL
 SELECT 'FilestreamEffectiveLevel', CONVERT(nvarchar, SERVERPROPERTY('FilestreamEffectiveLevel'))
 UNION ALL
-SELECT 'IsRpcOutEnabled', CONVERT(nvarchar, is_rpc_out_enabled) FROM sys.servers WHERE name = @@SERVERNAME
-UNION ALL
-SELECT 'IsRemoteProcTransactionPromotionEnabled', CONVERT(nvarchar, is_remote_proc_transaction_promotion_enabled) FROM sys.servers WHERE name = @@SERVERNAME
-UNION ALL
-SELECT 'IsRemoteLoginEnabled', CONVERT(nvarchar, is_remote_login_enabled) FROM sys.servers WHERE name = @@SERVERNAME
-UNION ALL
 SELECT 'FullVersion', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), ' '), CHAR(10), ' '),1,1024)
 UNION ALL
 SELECT 'IsTempDbMetadataMemoryOptimized', CONVERT(varchar, value_in_use) from sys.configurations where name = 'tempdb metadata memory-optimized'
@@ -157,8 +152,6 @@ UNION ALL
 SELECT 'IsResourceGovenorEnabled', CONVERT(varchar, is_enabled) from sys.resource_governor_configuration
 UNION ALL
 SELECT 'IsTDEInUse', CONVERT(nvarchar, count(*)) from sys.databases where is_encrypted <> 0
-UNION ALL
-SELECT 'ServerLevelTriggers', CONVERT(varchar, count(*)) from sys.server_triggers
 UNION ALL
 SELECT 'CountServiceBrokerEndpoints', CONVERT(varchar, count(*)) from sys.service_broker_endpoints
 UNION ALL
@@ -197,6 +190,45 @@ INSERT INTO #serverProperties SELECT
     CONVERT(varchar, count(*))
 FROM
     check_sysadmin_role;
+
+IF @CLOUDTYPE = 'NONE'
+    exec('INSERT INTO #serverProperties SELECT ''InstanceName'', CONVERT(nvarchar, COALESCE(SERVERPROPERTY(''InstanceName''),@@ServiceName))')
+    exec('INSERT INTO #serverProperties SELECT ''IsRpcOutEnabled'', CONVERT(nvarchar, is_rpc_out_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
+    exec('INSERT INTO #serverProperties SELECT ''IsRemoteProcTransactionPromotionEnabled'', CONVERT(nvarchar, is_remote_proc_transaction_promotion_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
+    exec('INSERT INTO #serverProperties SELECT ''IsRemoteLoginEnabled'', CONVERT(nvarchar, is_remote_login_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
+    exec('INSERT INTO #serverProperties SELECT ''ServerLevelTriggers'', CONVERT(varchar, count(*)) from sys.server_triggers')
+
+IF @CLOUDTYPE = 'AZURE'
+    exec('INSERT INTO #serverProperties SELECT ''InstanceName'', CONVERT(nvarchar, COALESCE(SERVERPROPERTY(''InstanceName''),@@SERVERNAME))')
+    BEGIN TRY
+        exec('INSERT INTO #serverProperties SELECT ''IsRpcOutEnabled'', CONVERT(nvarchar, is_rpc_out_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            exec('INSERT INTO #serverProperties SELECT ''IsRpcOutEnabled'', ''0''')
+    END CATCH
+    BEGIN TRY
+        exec('INSERT INTO #serverProperties SELECT ''IsRemoteProcTransactionPromotionEnabled'', CONVERT(nvarchar, is_remote_proc_transaction_promotion_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            exec('INSERT INTO #serverProperties SELECT ''IsRemoteProcTransactionPromotionEnabled'', ''0''')
+    END CATCH
+    BEGIN TRY
+        exec('INSERT INTO #serverProperties SELECT ''IsRemoteLoginEnabled'', CONVERT(nvarchar, is_remote_login_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            exec('INSERT INTO #serverProperties SELECT ''IsRemoteLoginEnabled'', ''0''')
+    END CATCH
+    BEGIN TRY
+        exec('INSERT INTO #serverProperties SELECT ''ServerLevelTriggers'', CONVERT(varchar, count(*)) from sys.server_triggers')
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            exec('INSERT INTO #serverProperties SELECT ''ServerLevelTriggers'', ''0''')
+    END CATCH
+
 IF @PRODUCT_VERSION >= 15
 BEGIN
  exec('INSERT INTO #serverProperties SELECT ''IsHybridBufferPoolEnabled'', CONVERT(nvarchar,is_enabled) from sys.server_memory_optimized_hybrid_buffer_pool_configuration /* SQL Server 2019 (15.x) and later versions */');
