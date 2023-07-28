@@ -18,24 +18,19 @@ limitations under the License.
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
 DECLARE @PKEY AS VARCHAR(256)
-SELECT @PKEY = N'$(pkey)';
+DECLARE @CLOUDTYPE AS VARCHAR(256)
 DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256)
+DECLARE @PRODUCT_VERSION AS INTEGER
+DECLARE @validDB AS INTEGER
+
+SELECT @PKEY = N'$(pkey)';
 SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
 IF @ASSESSMENT_DATABSE_NAME = 'all'
    SELECT @ASSESSMENT_DATABSE_NAME = '%'
-DECLARE @PRODUCT_VERSION AS INTEGER
 SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
-DECLARE @validDB AS INTEGER
 SELECT @validDB = 0
-DECLARE @dbname VARCHAR(50)
-DECLARE @ERROR_NUMBER_LENGTH AS INTEGER
-
-DECLARE db_cursor CURSOR FOR 
-SELECT name
-FROM MASTER.sys.databases 
-WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-AND name like @ASSESSMENT_DATABSE_NAME
-AND state = 0
+IF UPPER(@@VERSION) LIKE '%AZURE%'
+	SELECT @CLOUDTYPE = 'AZURE'
 
 IF OBJECT_ID('tempdb..#indexList') IS NOT NULL  
    DROP TABLE #objectList;
@@ -60,107 +55,80 @@ CREATE TABLE #indexList(
    total_space_mb nvarchar(255)
    );
 
-IF OBJECT_ID('tempdb.dbo.dmaCollectorErrors') IS NULL 
-   CREATE TABLE tempdb.dbo.dmaCollectorErrors(
-      database_name nvarchar(255) DEFAULT db_name()
-      ,module_name nvarchar(255)
-      ,error_number nvarchar(255)
-      ,error_severity nvarchar(255)
-      ,error_state nvarchar(255)
-      ,error_procedure nvarchar(255)
-      ,error_line nvarchar(255)
-      ,error_message nvarchar(255)
-      );
-
-OPEN db_cursor  
-FETCH NEXT FROM db_cursor INTO @dbname  
-
-WHILE @@FETCH_STATUS = 0  
 BEGIN
-	BEGIN
-		SELECT @validDB = COUNT(1)
-		FROM MASTER.sys.databases 
-		WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-		AND name like @ASSESSMENT_DATABSE_NAME
-		AND state = 0
-
-		IF @validDB = 0
-			CONTINUE;
-	END
+   BEGIN
+      SELECT @validDB = COUNT(1)
+      FROM sys.databases 
+      WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
+      AND name like @ASSESSMENT_DATABSE_NAME
+      AND state = 0
+   END
    
    BEGIN TRY
-      exec ('
-         use [' + @dbname + '];
-         INSERT INTO #indexList
-         SELECT
-            DB_NAME() as database_name
-            ,s.name as schema_name
-            ,CASE
-               WHEN t.name IS NULL THEN v.name
-               ELSE t.name
-            END as table_name 
-            ,i.name as index_name
-            ,i.type_desc as index_type
-            ,i.is_primary_key
-            ,i.is_unique
-            ,i.fill_factor
-            ,i.allow_page_locks
-            ,i.has_filter
-            ,p.data_compression
-            ,p.data_compression_desc
-            ,ISNULL (ps.name, ''Not Partitioned'') as partition_scheme
-            ,ISNULL (SUM(ic.key_ordinal),0) as count_key_ordinal
-            ,ISNULL (SUM(ic.partition_ordinal),0) as count_partition_ordinal
-            ,ISNULL (COUNT(ic.is_included_column),0) as count_is_included_column
-            ,CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) as total_space_mb
-         FROM sys.indexes i
-         JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
-         JOIN sys.objects o ON o.object_id = i.object_id AND o.is_ms_shipped = 0
-         LEFT JOIN sys.tables t ON i.object_id = t.object_id AND t.is_ms_shipped = 0
-         LEFT JOIN sys.views v ON i.object_id = v.object_id AND v.is_ms_shipped = 0
-         LEFT JOIN sys.schemas s ON s.schema_id = t.schema_id
-         LEFT JOIN sys.partitions AS p ON p.object_id = i.object_id AND p.index_id = i.index_id
-         LEFT JOIN sys.allocation_units AS a ON a.container_id = p.partition_id
-         LEFT JOIN sys.partition_schemes ps ON i.data_space_id = ps.data_space_id
-         GROUP BY 
-            s.name 
-            ,CASE
-               WHEN t.name IS NULL THEN v.name
-               ELSE t.name
-            END    
-            ,i.name  
-            ,i.type_desc 
-            ,i.is_primary_key
-            ,i.is_unique
-            ,i.fill_factor
-            ,i.allow_page_locks
-            ,i.has_filter
-            ,p.data_compression
-            ,p.data_compression_desc
-            ,ISNULL (ps.name, ''Not Partitioned'')');
+      IF @validDB <> 0
+      BEGIN
+         exec ('
+            INSERT INTO #indexList
+            SELECT
+               DB_NAME() as database_name
+               ,s.name as schema_name
+               ,CASE
+                  WHEN t.name IS NULL THEN v.name
+                  ELSE t.name
+               END as table_name 
+               ,i.name as index_name
+               ,i.type_desc as index_type
+               ,i.is_primary_key
+               ,i.is_unique
+               ,i.fill_factor
+               ,i.allow_page_locks
+               ,i.has_filter
+               ,p.data_compression
+               ,p.data_compression_desc
+               ,ISNULL (ps.name, ''Not Partitioned'') as partition_scheme
+               ,ISNULL (SUM(ic.key_ordinal),0) as count_key_ordinal
+               ,ISNULL (SUM(ic.partition_ordinal),0) as count_partition_ordinal
+               ,ISNULL (COUNT(ic.is_included_column),0) as count_is_included_column
+               ,CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) as total_space_mb
+            FROM sys.indexes i
+            JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+            JOIN sys.objects o ON o.object_id = i.object_id AND o.is_ms_shipped = 0
+            LEFT JOIN sys.tables t ON i.object_id = t.object_id AND t.is_ms_shipped = 0
+            LEFT JOIN sys.views v ON i.object_id = v.object_id AND v.is_ms_shipped = 0
+            LEFT JOIN sys.schemas s ON s.schema_id = t.schema_id
+            LEFT JOIN sys.partitions AS p ON p.object_id = i.object_id AND p.index_id = i.index_id
+            LEFT JOIN sys.allocation_units AS a ON a.container_id = p.partition_id
+            LEFT JOIN sys.partition_schemes ps ON i.data_space_id = ps.data_space_id
+            GROUP BY 
+               s.name 
+               ,CASE
+                  WHEN t.name IS NULL THEN v.name
+                  ELSE t.name
+               END    
+               ,i.name  
+               ,i.type_desc 
+               ,i.is_primary_key
+               ,i.is_unique
+               ,i.fill_factor
+               ,i.allow_page_locks
+               ,i.has_filter
+               ,p.data_compression
+               ,p.data_compression_desc
+               ,ISNULL (ps.name, ''Not Partitioned'')');
+      END;
    END TRY
    BEGIN CATCH
-      INSERT INTO tempdb.dbo.dmaCollectorErrors
       SELECT
-         db_name(),
-         'columnDatatypes',
-         SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254),
-         SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254),
-         SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254),
-         SUBSTRING(CONVERT(nvarchar,ERROR_PROCEDURE()),1,254),
-         SUBSTRING(CONVERT(nvarchar,ERROR_LINE()),1,254),
-         SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,254);
-      SELECT @ERROR_NUMBER_LENGTH = COALESCE(ERROR_NUMBER(),0)
-      IF @ERROR_NUMBER_LENGTH > 0
-         CONTINUE;
+         host_name() as host_name,
+         db_name() as database_name,
+         'indexList' as module_name,
+         SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
+         SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
+         SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
+         SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
    END CATCH
 
-   FETCH NEXT FROM db_cursor INTO @dbname 
-
 END 
-
-CLOSE db_cursor  
-DEALLOCATE db_cursor
 
 SELECT @PKEY as PKEY, a.* from #indexList a;
 

@@ -75,6 +75,8 @@ if ([string]::IsNullorEmpty($serverName)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
                 Exit 1                
+            } else {
+                $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v database=$database)
             }
         }
     } else {
@@ -88,6 +90,8 @@ if ([string]::IsNullorEmpty($serverName)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
                 Exit 1                
+            } else {
+                $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v database=$database)
             }
         }
     }
@@ -141,6 +145,10 @@ $PSVersionTable | out-string | Add-Content -Encoding utf8 -Path $foldername\$log
 WriteLog -logLocation $foldername\$logFile -logMessage "Output Encoding Table" -logOperation "FILE"
 $OutputEncoding | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
 
+WriteLog -logLocation $foldername\$logFile -logMessage "Executing Assessment Against the Following Databases:" -logOperation "BOTH"
+Write-Output $dbNameArray
+$dbNameArray | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
+
 $compFileName = 'opdb' + '__' + 'CompInstalled' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 $srvFileName = 'opdb' + '__' + 'ServerProps' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 $blockingFeatures = 'opdb' + '__' + 'BlockFeatures' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
@@ -170,83 +178,91 @@ foreach ($directory in $outputFileArray) {
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Installed Components..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\componentsInstalled.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
+    sqlcmd -S $serverName -i sql\componentsInstalled.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$compFileName
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Properties..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\serverProperties.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
+    sqlcmd -S $serverName -i sql\serverProperties.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server CloudSQL Unsupported Flag Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\dbServerUnsupportedFlags.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbServerFlags
+    sqlcmd -S $serverName -i sql\dbServerUnsupportedFlags.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbServerFlags
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Features in Use Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\features.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
+    sqlcmd -S $serverName -i sql\features.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Linked Server Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\linkedServers.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
+    sqlcmd -S $serverName -i sql\linkedServers.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Database Size Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\dbSizes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
+    sqlcmd -S $serverName -i sql\dbSizes.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$dbsizes
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Cluster Node Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\dbClusterNodes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
-
-WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Object Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\objectList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$objectList
-
-WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Table Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\tableList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$tableList
-
-WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Index Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\indexList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$indexList
-
-WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Column Datatype Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\columnDatatypes.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$columnDatatypes
-
-WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server User Connection Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\userConnectionInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" > $foldername\$userConnectionList
+    sqlcmd -S $serverName -i sql\dbClusterNodes.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server DBCC Trace Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
+    sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Disk Volume Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
+    sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
 
-WriteLog -logLocation $foldername\$logFile -logMessage "Retriving DMA Collector Errors and Writing to Log..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\reportCollectorErrors.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | Add-Content -Encoding utf8 -Path $foldername\$sqlErrorLogFile
+### First establish headers for the collection files which could execute against multiple databases in the instance
+Set-Content -Path $foldername\$objectList -Encoding utf8 -Value "PKEY|database_name|schema_name|object_name|object_type|object_type_desc|object_count|lines_of_code|associated_table_name"
+Set-Content -Path $foldername\$tableList -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|partition_count|is_memory_optimized|temporal_type|is_external|lock_escalation|is_tracked_by_cdc|text_in_row_limit|is_replicated|row_count|data_compression|total_space_mb|used_space_mb|unused_space_mb"
+Set-Content -Path $foldername\$indexList -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|index_name|index_type|is_primary_key|is_unique|fill_factor|allow_page_locks|has_filter|data_compression|data_compression_desc|is_partitioned|count_key_ordinal|count_partition_ordinal|count_is_included_column|total_space_mb"
+Set-Content -Path $foldername\$columnDatatypes -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|datatype|max_length|precision|scale|is_computed|is_filestream|is_masked|encryption_type|is_sparse|rule_object_id|column_count"
+Set-Content -Path $foldername\$userConnectionList -Encoding utf8 -Value "PKEY|database_name|is_user_process|host_name|program_name|login_name|num_reads|num_writes|last_read|last_write|reads|logical_reads|writes|client_interface_name|nt_domain|nt_user_name|client_net_address|local_net_address"
 
+### Iterate through collections that could execute against multiple databases in the instance
+foreach ($databaseName in $dbNameArray) {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Object Info for Database $databaseName ..." -logOperation "BOTH"
+        sqlcmd -S $serverName -i sql\objectList.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$objectList -Encoding utf8
+
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Table Info for Database $databaseName ..." -logOperation "BOTH"
+        sqlcmd -S $serverName -i sql\tableList.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$tableList -Encoding utf8
+
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Index Info for Database $databaseName ..." -logOperation "BOTH"
+        sqlcmd -S $serverName -i sql\indexList.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$indexList -Encoding utf8
+
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Column Datatype Info for Database $databaseName ..." -logOperation "BOTH"
+        sqlcmd -S $serverName -i sql\columnDatatypes.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$columnDatatypes -Encoding utf8
+
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server User Connection Info for Database $databaseName ..." -logOperation "BOTH"
+        sqlcmd -S $serverName -i sql\userConnectionInfo.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$userConnectionList -Encoding utf8
+}
+
+    
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving OS Disk Cluster Information..." -logOperation "BOTH"
-if (Test-Path -Path $env:TEMP\tempDisk.csv) {
-    Remove-Item -Path $env:TEMP\tempDisk.csv
-}
-
-Add-Content -Path $env:TEMP\tempDisk.csv -Value "PKEY|volume_mount_point|file_system_type|logical_volume_name|total_size_gb|available_size_gb|space_free_pct|cluster_block_size" -Encoding utf8
-
-# If we are running against a remote computer, we need to create an empty tempDisk.csv file
-if ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper()) {
-    foreach($drive in (Import-Csv -Delimiter '|' -Path $foldername\*DiskVolInfo*.csv | Select-Object -Property volume_mount_point).volume_mount_point) {
-        $blocksize = (Get-CimInstance -ClassName Win32_Volume | Select-Object Name, Label, BlockSize, FileSystem | `
-        Where-Object {($_.Name -Contains $drive) -and ($_.FileSystem -in 'NTFS')} | Select-Object -Property BlockSize).BlockSize
-        Get-Content -Path  $foldername\*DiskVolInfo*.csv | ForEach-Object {			
-            if ($_ -match ([regex]::Escape($drive))) {
-                if ([int]$blocksize -gt 0)
-                {
-                    $blockValue = $_ + '|' +$blocksize
-                    Add-Content -Path $env:TEMP\tempDisk.csv -Value $blockValue -Encoding utf8
-                }
-                else
-                {
-                    $blockValue = $_ + '|null'
-                    Add-Content -Path $env:TEMP\tempDisk.csv -Value $blockValue -Encoding utf8
-                }
-            }
-        } 
+    if (Test-Path -Path $env:TEMP\tempDisk.csv) {
+        Remove-Item -Path $env:TEMP\tempDisk.csv
     }
-}
 
-foreach($file in Get-ChildItem -Path $foldername\*DiskVolInfo*.csv) {
-    $outputFileName=$file.name
-    Get-Content -Path $env:TEMP\tempDisk.csv | Set-Content -Encoding utf8 -Path $foldername\$outputFileName
-}
+    Add-Content -Path $env:TEMP\tempDisk.csv -Value "PKEY|volume_mount_point|file_system_type|logical_volume_name|total_size_gb|available_size_gb|space_free_pct|cluster_block_size" -Encoding utf8
+
+    # If we are running against a remote computer, we need to create an empty tempDisk.csv file
+    if ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper()) {
+        foreach($drive in (Import-Csv -Delimiter '|' -Path $foldername\*DiskVolInfo*.csv | Select-Object -Property volume_mount_point).volume_mount_point) {
+            $blocksize = (Get-CimInstance -ClassName Win32_Volume | Select-Object Name, Label, BlockSize, FileSystem | `
+            Where-Object {($_.Name -Contains $drive) -and ($_.FileSystem -in 'NTFS')} | Select-Object -Property BlockSize).BlockSize
+            Get-Content -Path  $foldername\*DiskVolInfo*.csv | ForEach-Object {			
+                if ($_ -match ([regex]::Escape($drive))) {
+                    if ([int]$blocksize -gt 0)
+                    {
+                        $blockValue = $_ + '|' +$blocksize
+                        Add-Content -Path $env:TEMP\tempDisk.csv -Value $blockValue -Encoding utf8
+                    }
+                    else
+                    {
+                        $blockValue = $_ + '|null'
+                        Add-Content -Path $env:TEMP\tempDisk.csv -Value $blockValue -Encoding utf8
+                    }
+                }
+            } 
+        }
+    }
+
+    foreach($file in Get-ChildItem -Path $foldername\*DiskVolInfo*.csv) {
+        $outputFileName=$file.name
+        Get-Content -Path $env:TEMP\tempDisk.csv | Set-Content -Encoding utf8 -Path $foldername\$outputFileName
+    }
 
 # Pull perfmon file if we are running from same server.  Generate empty file if running on remote server
 # Capability does not exist yet to run against remote computer
@@ -285,6 +301,7 @@ foreach($file in Get-ChildItem -Path $foldername\*.csv, $foldername\*.log) {
 	$inputFile = Split-Path -Leaf $file
     [regex]$pattern = "(Msg(\s\d*)(.)(\n|\s)Level(\s\d*.)(\n|\s)State(\s\d*)(.)(\n|\s))"
     $content = Get-Content -Path $foldername\$inputFile | select-string -Pattern $pattern
+    WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "Checking for error messages within collection files..." -logOperation "FILE"
     $errorCount = $errorCount + $content.length
 }
 
