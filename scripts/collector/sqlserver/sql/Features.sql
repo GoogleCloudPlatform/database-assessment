@@ -28,7 +28,6 @@ Is_EnabledOrUsed NVARCHAR(4),
 Count INT
 )
 --Log shipping
-use master;
 /*
 Commented Out until we can figure out how to execute it on a managed SQL Server Instance
 DECLARE @lsdbs TABLE(a char(100),b char(100),c char(100),d char(100), e char(100), f char(100), g char(100), h char(100), i char(100), j char(100), k char(100), l char(100), m char(100), n char(100), o char(100));
@@ -108,13 +107,16 @@ INSERT INTO #FeaturesEnabled VALUES (
 'Linked Servers Used', @IS_LinkedSrvUsed, ISNULL(@LinkedSrvUsed,0) );
 
 --Policy based management
-USE msdb;
 DECLARE @PoliciesEnabled_value as INT, @IS_PoliciesEnabled as NVARCHAR(4)
-SELECT @PoliciesEnabled_value = count(*) FROM syspolicy_policies where is_enabled =1;
-IF @PoliciesEnabled_value > 0 SET @IS_PoliciesEnabled = 'Yes'  ELSE  SET @IS_PoliciesEnabled = 'No' ;
-INSERT INTO #FeaturesEnabled VALUES (
-'Policy Based Management', @IS_PoliciesEnabled, ISNULL(@PoliciesEnabled_value,0) );
+BEGIN TRY
+    exec('SELECT @PoliciesEnabled_value = count(*) FROM msdb.dbo.syspolicy_policies where is_enabled =1;
+	IF @PoliciesEnabled_value > 0 SET @IS_PoliciesEnabled = ''Yes''  ELSE  SET @IS_PoliciesEnabled = ''No'' ;
+	INSERT INTO #FeaturesEnabled VALUES (
+		''Policy Based Management'', @IS_PoliciesEnabled, ISNULL(@PoliciesEnabled_value,0) );');
+END TRY
+BEGIN CATCH
+	IF ERROR_NUMBER() = 40515 AND ERROR_SEVERITY() = 15 AND ERROR_STATE() = 1
+    exec('INSERT INTO #FeaturesEnabled VALUES (''Policy Based Management'', ''No'', ''0'')')
+END CATCH
 
-SELECT 
-N'$(pkey)' as PKEY,
-* FROM #FeaturesEnabled;
+SELECT N'$(pkey)' as PKEY, * FROM #FeaturesEnabled;

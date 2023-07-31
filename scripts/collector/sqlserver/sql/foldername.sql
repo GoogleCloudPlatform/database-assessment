@@ -38,8 +38,11 @@ BEGIN CATCH
 	DECLARE @CLOUDTYPE AS VARCHAR(256)
 	IF UPPER(@@VERSION) LIKE ''%AZURE%''
 		SELECT @CLOUDTYPE = ''AZURE''
-	SELECT CAST(SERVERPROPERTY(''ProductVersion'') AS VARCHAR(15)) AS Version, 
-	UPPER(CONVERT(varchar, HOST_NAME())) as machinename, 
+	SELECT CAST(SERVERPROPERTY(''ProductVersion'') AS VARCHAR(15)) AS Version,
+	CASE WHEN UPPER(CONVERT(varchar, HOST_NAME())) = ''WINSVR''
+	THEN ''' + @INSTANCENAME + ''' + ''-'' + @CLOUDTYPE
+	ELSE UPPER(CONVERT(varchar, HOST_NAME())) 
+	END AS machinename, 
 	''' + @ASSESSMENT_DATABSE_NAME + ''' as databasename,
 	@@SERVERNAME as instancename, 
 	replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''') as current_ts,
