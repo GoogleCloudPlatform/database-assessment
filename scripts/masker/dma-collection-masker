@@ -20,6 +20,7 @@ import shutil
 import string
 import sys
 import zipfile as zf
+import tarfile
 from collections import namedtuple
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -31,7 +32,7 @@ __all__ = [
     "main",
     "run_masker",
 ]
-__version__ = "4.3.10"
+__version__ = "4.3.11"
 logger = logging.getLogger(__name__)
 
 here = Path(__file__).parent
@@ -87,6 +88,11 @@ def run_masker(input_dir: Optional[Path] = None, output_path: Optional[Path] = N
             dir_name.mkdir(parents=True, exist_ok=True)
 
         collections = _find_collections_to_process(input_dir)
+        if len(collections) == 0:
+            logger.info("No collections found in location " + str(input_dir))
+            logger.info("Exiting...")
+            exit(1)
+
         for collection in collections:
             identity_map: Dict[str, str] = {}
             _extract_collection(collection, work_dir)
@@ -122,11 +128,24 @@ def _find_collections_to_process(search_path: Path) -> List[Path]:
     Returns:
         List[Path]: list of files found matching the collection pattern
     """
-    return list(
-        set(Path(str(search_path)).glob("opdb_oracle_*.zip")).difference(
-            set(Path(str(search_path)).glob("opdb_oracle_*ERROR.zip"))
+
+    """
+    Check for zip files
+    """
+    file_list = set(Path(str(search_path)).glob("opdb_oracle_*.zip")).difference(
+        set(Path(str(search_path)).glob("opdb_oracle_*ERROR.zip"))
+    )
+
+    """
+    Check for gzip files
+    """
+    file_list = file_list.union(
+        set(Path(str(search_path)).glob("opdb_oracle_*.gz")).difference(
+            set(Path(str(search_path)).glob("opdb_oracle_*ERROR.gz"))
         )
     )
+
+    return file_list
 
 
 def _extract_collection(collection_file: Path, extract_path: Path) -> None:
@@ -137,8 +156,13 @@ def _extract_collection(collection_file: Path, extract_path: Path) -> None:
         extract_path (Path): The past to extract the collection to.
     """
     logger.info("Processing %s", collection_file)
-    with zf.ZipFile(collection_file, "r") as f:
-        f.extractall(path=extract_path)
+    if str(collection_file).endswith("zip"):
+        with zf.ZipFile(collection_file, "r") as f:
+            f.extractall(path=extract_path)
+    elif str(collection_file).endswith("gz"):
+        tf = tarfile.open(collection_file)
+        tf.extractall(extract_path)
+        tf.close()
 
 
 def _find_file_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> Optional[Path]:
@@ -158,9 +182,12 @@ def _find_file_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> Opti
     matched_file = list(search_path.glob(f"opdb__{rule.table_name}__*.csv"))
     if not matched_file and not rule.missing_ok:
         raise ApplicationError(f"Could not find a file to match for {rule.table_name}")
+    if matched_file and not rule.missing_ok and len(matched_file) == 0:
+        raise ApplicationError(f"Could not find a file to match for {rule.table_name}")
     if matched_file and len(matched_file) > 1:
         raise ApplicationError(f"Found too many files when searching for {rule.table_name}.  Found {matched_file}")
-    return matched_file[0]
+    if matched_file and len(matched_file) == 1:
+        return matched_file[0]
 
 
 def _generate_identity_map_from_rule(
@@ -241,9 +268,14 @@ def _package_collection(
     Returns:
         Tuple[Path, Path]: The new key file and archive file.
     """
+    if collection.stem.endswith("zip"):
+        file_stem = collection.stem
+    else:
+        file_stem = collection.stem.rstrip(".tar")
+
     logger.info("Zipping %s", collection.stem)
-    archive_file = Path(output_path / f"{collection.stem}.zip")
-    key_file = Path(collection.parent / f"{collection.stem}.key")
+    archive_file = Path(output_path / f"{file_stem}.zip")
+    key_file = Path(collection.parent / f"{file_stem}.key")
     matched_files = (
         list(extract_path.glob("*.csv")) + list(extract_path.glob("*.log")) + list(extract_path.glob("*.txt"))
     )
