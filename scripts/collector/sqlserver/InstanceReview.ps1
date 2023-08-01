@@ -158,6 +158,7 @@ $perfMonOutput = 'opdb' + '__' + 'PerfMonData' + '__' + $dbversion + '_' + $op_v
 $dbccTraceFlg = 'opdb' + '__' + 'DbccTrace' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 $diskVolumeInfo = 'opdb' + '__' + 'DiskVolInfo' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 $dbServerFlags = 'opdb' + '__' + 'DbServerFlags' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
+$manifestFile = 'opdb' + '__' + 'manifest' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.txt'
 
 $outputFileArray = @($compFileName, $srvFileName, $blockingFeatures, $linkedServers, $dbsizes, $dbClusterNodes, $objectList, $tableList, $indexList, $columnDatatypes, $userConnectionList, $perfMonOutput, $dbccTraceFlg, $diskVolumeInfo, $dbServerFlags)
 
@@ -261,6 +262,12 @@ foreach($file in Get-ChildItem -Path $foldername\*.csv) {
 	Set-Content -Value $utf8.GetBytes($fileContent) -Encoding Byte -Path $foldername\$inputFile -Force
 }
 
+WriteLog -logLocation $foldername\$logFile -logMessage "Creating the manifest..." -logOperation "BOTH"
+foreach($file in Get-ChildItem -Path $foldername\*.csv) {
+	$inputFile = Split-Path -Leaf $file
+    createManifestFile -manifestFileLocation $foldername -manifestOutputFileName $manifestFile -manifestedFileName $inputFile
+}
+
 WriteLog -logLocation $foldername\$logFile -logMessage "Checking for error messages within collection files..." -logOperation "BOTH"
 foreach($file in Get-ChildItem -Path $foldername\*.csv, $foldername\*.log) {
 	$inputFile = Split-Path -Leaf $file
@@ -282,7 +289,7 @@ if ($errorCount -gt 0) {
 WriteLog -logLocation $foldername\$logFile -logMessage "Zipping Output to $zippedopfolder..." -logOperation "BOTH"
 
 if ($powerShellVersion -ge 5) {
-    Compress-Archive -Path $foldername\*.csv,$foldername\*.log -DestinationPath $zippedopfolder
+    Compress-Archive -Path $foldername\*.csv,$foldername\*.log,$foldername\*.txt -DestinationPath $zippedopfolder
 
     if (Test-Path -Path $zippedopfolder) {
         WriteLog -logLocation $foldername\$logFile -logMessage "Removing directory $foldername..." -logOperation "MESSAGE"

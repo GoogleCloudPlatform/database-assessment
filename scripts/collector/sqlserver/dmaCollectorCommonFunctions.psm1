@@ -40,3 +40,13 @@ function writeLog {
         Write-Output "$currentTimestamp   $logMessage"
     }
 }
+
+function createManifestFile {
+    param(
+        [Parameter(Mandatory=$true)][string]$manifestFileLocation,
+        [Parameter(Mandatory=$true)][string]$manifestOutputFileName,
+        [Parameter(Mandatory=$true)][string]$manifestedFileName
+    )
+    $fileMD5Hash = (Get-FileHash -Algorithm MD5 -Path $manifestFileLocation\$manifestedFileName).Hash
+    Add-Content -Path $manifestFileLocation\$manifestOutputFileName -Value "mssql|$fileMD5Hash|$manifestedFileName"
+}

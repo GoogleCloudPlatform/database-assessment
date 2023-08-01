@@ -183,11 +183,23 @@ WITH check_sysadmin_role AS (
         IS_SRVROLEMEMBER ('dbcreator', name) = 1
         AND name NOT LIKE '%NT SERVICE%'
 )
-INSERT INTO #serverProperties SELECT
-    'sysadmin_role',
+INSERT INTO #serverProperties 
+    SELECT 'sysadmin_role',
     CONVERT(varchar, count(*))
 FROM
     check_sysadmin_role;
+WITH BUFFER_POOL_SIZE AS (
+	SELECT database_id AS DatabaseID
+		,DB_NAME(database_id) AS DatabaseName
+		,COUNT(file_id) * 8 / 1024.0 AS BufferSizeInMB
+	FROM sys.dm_os_buffer_descriptors
+	GROUP BY DB_NAME(database_id)
+		,database_id
+)
+INSERT INTO #serverProperties
+    SELECT 'total_buffer_size_in_mb'
+	,SUM(BufferSizeInMB)
+FROM BUFFER_POOL_SIZE;
 
 /* Certain clouds do not allow access to certain tables so we need to catch the table does not exist error and default the setting */
 IF @CLOUDTYPE = 'AZURE'
