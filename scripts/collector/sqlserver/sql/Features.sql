@@ -55,8 +55,13 @@ BEGIN
     DECLARE @IS_DBMail_Enabled_value as INT, @IS_DBMail_Enabled as NVARCHAR(4)
     SELECT @IS_DBMail_Enabled_value = CAST(value_in_use as INT)  FROM  sys.configurations WHERE name = 'Database Mail XPs';
     IF @IS_DBMail_Enabled_value = 1 SET @IS_DBMail_Enabled = 'Yes'  ELSE  SET @IS_DBMail_Enabled = 'No' ;
+
     INSERT INTO #FeaturesEnabled VALUES (
-    'Database Mail', @IS_DBMail_Enabled, 0 );
+    'Database Mail', 
+    @IS_DBMail_Enabled, 
+    CASE WHEN @IS_DBMail_Enabled_value > 0 THEN @IS_DBMail_Enabled_value 
+    ELSE 0
+    END);
 END
 
 --external scripts enabled
