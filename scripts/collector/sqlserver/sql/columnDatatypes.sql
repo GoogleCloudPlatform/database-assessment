@@ -63,7 +63,7 @@ BEGIN
    END
    
    BEGIN TRY
-      IF @PRODUCT_VERSION > 12 AND @validDB <> 0 AND @CLOUDTYPE <> 'AZURE'
+      IF @PRODUCT_VERSION > 12 AND @validDB <> 0 AND @CLOUDTYPE = 'NONE'
       BEGIN
       exec ('
       INSERT INTO #columnDatatypes (
@@ -116,7 +116,7 @@ BEGIN
             , c.is_sparse
             , c.rule_object_id');
       END;
-      IF @PRODUCT_VERSION <= 12 AND @validDB <> 0 AND @CLOUDTYPE <> 'AZURE'
+      IF @PRODUCT_VERSION <= 12 AND @validDB <> 0 AND @CLOUDTYPE = 'NONE'
       BEGIN
       exec ('
       INSERT INTO #columnDatatypes (

@@ -37,7 +37,8 @@ file_system_type NVARCHAR(255),
 logical_volume_name NVARCHAR(255),
 total_size_gb NVARCHAR(255),
 available_size_gb NVARCHAR(255),
-space_free_pct NVARCHAR(255)
+space_free_pct NVARCHAR(255),
+cluster_block_size NVARCHAR(255)
 )
 
 IF @CLOUDTYPE = 'NONE'
@@ -46,10 +47,14 @@ IF @CLOUDTYPE = 'NONE'
     SELECT DISTINCT
         vs.volume_mount_point,
         vs.file_system_type,
-        vs.logical_volume_name,
+		CASE WHEN LEN(vs.logical_volume_name) > 0
+		   THEN vs.logical_volume_name
+		ELSE ''''
+		END,
         CONVERT(NVARCHAR, (vs.total_bytes / 1073741824.0)) AS total_size_gb,
         CONVERT(NVARCHAR, (vs.available_bytes / 1073741824.0)) AS available_size_gb,
-        CONVERT(NVARCHAR, ROUND((CONVERT(numeric,vs.available_bytes) / CONVERT(numeric, vs.total_bytes)),4)) AS space_free_pct
+        CONVERT(NVARCHAR, ROUND((CONVERT(numeric,vs.available_bytes) / CONVERT(numeric, vs.total_bytes)),4)) AS space_free_pct,
+        '''' as cluster_block_size
     FROM
         sys.master_files AS f WITH (
             NOLOCK)
@@ -65,8 +70,14 @@ IF @CLOUDTYPE = 'AZURE'
     ,sum(allocated_storage_in_megabytes/1024) available_size_gb
     FROM db_sizes)
     INSERT INTO #gcpDMADiskVolumeInfo
-    SELECT ''CLOUD'' as volume_mount_point, ''AZURE'' as file_system_type, ''CLOUD'' as logical_volume_name, 
-    total_size_gb, available_size_gb, total_size_gb/available_size_gb as space_free_pct
+    SELECT 
+        ''CLOUD'' as volume_mount_point, 
+        ''AZURE'' as file_system_type, 
+        ''CLOUD'' as logical_volume_name, 
+        total_size_gb, 
+        available_size_gb, 
+        total_size_gb/available_size_gb as space_free_pct,
+        '''' as cluster_block_size
     FROM sum_sizes');
 
 SELECT @PKEY as PKEY, a.* from #gcpDMADiskVolumeInfo a;

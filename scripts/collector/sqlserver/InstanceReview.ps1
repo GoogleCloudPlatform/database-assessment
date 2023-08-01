@@ -198,7 +198,7 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server DBC
     sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Disk Volume Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
+    sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
 
 ### First establish headers for the collection files which could execute against multiple databases in the instance
 Set-Content -Path $foldername\$objectList -Encoding utf8 -Value "PKEY|database_name|schema_name|object_name|object_type|object_type_desc|object_count|lines_of_code|associated_table_name"
@@ -228,48 +228,6 @@ foreach ($databaseName in $dbNameArray) {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Database Size Info for Database $databaseName ..." -logOperation "BOTH"
         sqlcmd -S $serverName -i sql\dbSizes.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbsizes -Encoding utf8
 }
-
-WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving OS Disk Cluster Information..." -logOperation "BOTH"
-    if (Test-Path -Path $env:TEMP\tempDisk.csv) {
-        Remove-Item -Path $env:TEMP\tempDisk.csv
-    }
-
-    Add-Content -Path $env:TEMP\tempDisk.csv -Value "PKEY|volume_mount_point|file_system_type|logical_volume_name|total_size_gb|available_size_gb|space_free_pct|cluster_block_size" -Encoding utf8
-
-    # If we are running against a remote computer, we need to create an empty tempDisk.csv file
-    if ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper()) {
-        foreach($drive in (Import-Csv -Delimiter '|' -Path $foldername\*DiskVolInfo*.csv | Select-Object -Property volume_mount_point).volume_mount_point) {
-            $blocksize = (Get-CimInstance -ClassName Win32_Volume | Select-Object Name, Label, BlockSize, FileSystem | `
-            Where-Object {($_.Name -Contains $drive) -and ($_.FileSystem -in 'NTFS')} | Select-Object -Property BlockSize).BlockSize
-            Get-Content -Path  $foldername\*DiskVolInfo*.csv | ForEach-Object {			
-                if ($_ -match ([regex]::Escape($drive))) {
-                    if ([int]$blocksize -gt 0)
-                    {
-                        $blockValue = $_ + '|' +$blocksize
-                        Add-Content -Path $env:TEMP\tempDisk.csv -Value $blockValue -Encoding utf8
-                    }
-                    else
-                    {
-                        $blockValue = $_ + '|null'
-                        Add-Content -Path $env:TEMP\tempDisk.csv -Value $blockValue -Encoding utf8
-                    }
-                } else {
-                    $blockValue = $_ + '|null'
-                    Add-Content -Path $env:TEMP\tempDisk.csv -Value $blockValue -Encoding utf8
-                }
-            }
-        }
-    } else {
-        Get-Content -Path  $foldername\*DiskVolInfo*.csv | ForEach-Object {
-            $blockValue = $_ + '|null'
-            Add-Content -Path $env:TEMP\tempDisk.csv -Value $blockValue -Encoding utf8
-        }
-    }
-
-    foreach($file in Get-ChildItem -Path $foldername\*DiskVolInfo*.csv) {
-        $outputFileName=$file.name
-        Get-Content -Path $env:TEMP\tempDisk.csv | Set-Content -Encoding utf8 -Path $foldername\$outputFileName
-    }
 
 # Pull perfmon file if we are running from same server.  Generate empty file if running on remote server
 # Capability does not exist yet to run against remote computer
