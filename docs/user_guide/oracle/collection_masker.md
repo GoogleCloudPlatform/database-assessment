@@ -6,7 +6,7 @@ This script will create a key file that maps the anonymized schema name to its o
 
 **Note** This file should is not sent with the collection script and should not be lost, as it can't be recreated.
 
-## executing the script
+## Executing the script
 
 The script can be executed at the shell or command prompt and requires 2 parameters:
 
