@@ -4,7 +4,7 @@ While the collection script do not gather any data or source code, it does conta
 
 This script will create a key file that maps the anonymized schema name to its original name.
 
-**Note** This file should is not sent with the collection script and should not be lost, as it can't be created.
+**Note** This file should is not sent with the collection script and should not be lost, as it can't be recreated.
 
 ## executing the script
 
