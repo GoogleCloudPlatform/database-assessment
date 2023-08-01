@@ -14,14 +14,38 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 */
-
+--Linked Servers
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
-USE [master]
---Linked Servers
-select N'$(pkey)' as PKEY, 
-    product, 
-    count(product) as CountOfLinkedServers
-from sys.servers
-where is_linked = 1
-GROUP BY product;
+DECLARE @PKEY AS VARCHAR(256)
+DECLARE @CLOUDTYPE AS VARCHAR(256)
+DECLARE @PRODUCT_VERSION AS INTEGER
+
+SELECT @PKEY = N'$(pkey)';
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @CLOUDTYPE = 'NONE'
+IF UPPER(@@VERSION) LIKE '%AZURE%'
+	SELECT @CLOUDTYPE = 'AZURE'
+
+
+IF OBJECT_ID('tempdb..#LinkedServersData') IS NOT NULL  
+   DROP TABLE #LinkedServersData;  
+
+CREATE TABLE #LinkedServersData
+(
+product NVARCHAR(255),
+CountOfLinkedServers INT
+)
+
+IF @CLOUDTYPE = 'NONE'    
+    INSERT INTO #LinkedServersData
+    select product, 
+        count(product) as CountOfLinkedServers
+    from sys.servers
+    where is_linked = 1
+    GROUP BY product;
+
+SELECT @PKEY as PKEY, a.* from #LinkedServersData a;
+
+IF OBJECT_ID('tempdb..#LinkedServersData') IS NOT NULL  
+   DROP TABLE #LinkedServersData;

@@ -124,8 +124,8 @@ if ($ignorePerfmon -eq "true") {
 }
 
 $foldername = 'opdb' + '_' + 'mssql' + '_' + $perfCounterLabel + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts
-$logFile = 'opdb__collectorLog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
-$sqlErrorLogFile = 'opdb__sqlErrorlog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
+$logFile = 'opdb_mssql_collectorLog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
+$sqlErrorLogFile = 'opdb_mssql_sqlErrorlog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
 
 $folderLength = ($PSScriptRoot + '\' + $foldername).Length
 if ($folderLength -le 260) {
@@ -144,8 +144,9 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Output Encoding Table" -
 $OutputEncoding | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Executing Assessment Against the Following Databases:" -logOperation "BOTH"
-Write-Output $dbNameArray
-$dbNameArray | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
+foreach ($dbName in $dbNameArray) {
+    WriteLog -logLocation $foldername\$logFile -logMessage "            $dbName" -logOperation "BOTH"
+}
 
 $compFileName = 'opdb' + '__' + 'CompInstalled' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 $srvFileName = 'opdb' + '__' + 'ServerProps' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
@@ -197,7 +198,7 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server DBC
     sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Disk Volume Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
+    sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v pkey=$pkey -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
 
 ### First establish headers for the collection files which could execute against multiple databases in the instance
 Set-Content -Path $foldername\$objectList -Encoding utf8 -Value "PKEY|database_name|schema_name|object_name|object_type|object_type_desc|object_count|lines_of_code|associated_table_name"
@@ -225,7 +226,7 @@ foreach ($databaseName in $dbNameArray) {
         sqlcmd -S $serverName -i sql\userConnectionInfo.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$userConnectionList -Encoding utf8
 
     WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Database Size Info for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\dbSizes.sql -d master -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbsizes -Encoding utf8
+        sqlcmd -S $serverName -i sql\dbSizes.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v pkey=$pkey database=$database -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbsizes -Encoding utf8
     
 }
 
@@ -253,8 +254,16 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving OS Disk Clust
                         $blockValue = $_ + '|null'
                         Add-Content -Path $env:TEMP\tempDisk.csv -Value $blockValue -Encoding utf8
                     }
+                } else {
+                    $blockValue = $_ + '|null'
+                    Add-Content -Path $env:TEMP\tempDisk.csv -Value $blockValue -Encoding utf8
                 }
-            } 
+            }
+        }
+    } else {
+        Get-Content -Path  $foldername\*DiskVolInfo*.csv | ForEach-Object {
+            $blockValue = $_ + '|null'
+            Add-Content -Path $env:TEMP\tempDisk.csv -Value $blockValue -Encoding utf8
         }
     }
 
@@ -300,7 +309,10 @@ foreach($file in Get-ChildItem -Path $foldername\*.csv, $foldername\*.log) {
 	$inputFile = Split-Path -Leaf $file
     [regex]$pattern = "(Msg(\s\d*)(.)(\n|\s)Level(\s\d*.)(\n|\s)State(\s\d*)(.)(\n|\s))"
     $content = Get-Content -Path $foldername\$inputFile | select-string -Pattern $pattern
-    WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "Checking for error messages within collection files..." -logOperation "FILE"
+    WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "Checking for error messages within collection $inputFile ..." -logOperation "FILE"
+    if ($errorCount -gt ($errorCount + $content.length)) {
+        WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "Errors found within collection $inputFile ..." -logOperation "FILE"
+    }
     $errorCount = $errorCount + $content.length
 }
 
