@@ -284,7 +284,7 @@ BEGIN
     BEGIN
     exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows'' FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
     exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,windows_release),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
-    exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,windows_service_pack_level),1,1024), ''UNKNOWN'' FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+    exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,windows_service_pack_level),1,1024), ''UNKNOWN'') FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
     exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
     exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024) /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x) */');
     END
@@ -292,7 +292,7 @@ BEGIN
     BEGIN   /* Versions before SQL Server 2012 (11.x)   */
     exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows''');
     exec('INSERT INTO #serverProperties SELECT ''HostRelease'', REPLACE(REPLACE(SUBSTRING(@@VERSION,4 + charindex ('' ON '',@@VERSION),LEN(@@VERSION)), CHAR(13), ''''), CHAR(10), '''')');
-    exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,SERVERPROPERTY(''ProductLevel'')),1,1024), ''UNKNOWN'' ');
+    exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,SERVERPROPERTY(''ProductLevel'')),1,1024), ''UNKNOWN'') ');
     exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',''UNKNOWN''');
     exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024)');
     END;
