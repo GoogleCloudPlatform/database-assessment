@@ -77,7 +77,7 @@ SELECT 'EngineEdition', CONVERT(nvarchar, SERVERPROPERTY('EngineEdition'))
 UNION ALL
 SELECT 'HadrManagerStatus', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('HadrManagerStatus')), '0')
 UNION ALL
-SELECT 'IsAdvancedAnalyticsInstalled', CONVERT(nvarchar, SERVERPROPERTY('IsAdvancedAnalyticsInstalled'))
+SELECT 'IsAdvancedAnalyticsInstalled', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsAdvancedAnalyticsInstalled')), '0')
 UNION ALL
 SELECT 'IsClustered', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsClustered')), '0')
 UNION ALL
@@ -89,11 +89,11 @@ SELECT 'IsIntegratedSecurityOnly', CONVERT(nvarchar, SERVERPROPERTY('IsIntegrate
 UNION ALL
 SELECT 'IsLocalDB', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsLocalDB')), '0')
 UNION ALL
-SELECT 'IsPolyBaseInstalled', CONVERT(nvarchar, SERVERPROPERTY('IsPolyBaseInstalled'))
+SELECT 'IsPolyBaseInstalled',  COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsPolyBaseInstalled')), '0')
 UNION ALL
 SELECT 'IsSingleUser', CONVERT(nvarchar, SERVERPROPERTY('IsSingleUser'))
 UNION ALL
-SELECT 'IsXTPSupported', CONVERT(nvarchar, SERVERPROPERTY('IsXTPSupported'))
+SELECT 'IsXTPSupported', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsXTPSupported')), '0')
 UNION ALL
 SELECT 'LCID', CONVERT(nvarchar, SERVERPROPERTY('LCID'))
 UNION ALL
@@ -143,14 +143,6 @@ SELECT 'FilestreamEffectiveLevel', CONVERT(nvarchar, SERVERPROPERTY('FilestreamE
 UNION ALL
 SELECT 'FullVersion', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), ' '), CHAR(10), ' '),1,1024)
 UNION ALL
-SELECT 'IsTempDbMetadataMemoryOptimized', COALESCE(CONVERT(nvarchar, value_in_use), '0') from sys.configurations where name = 'tempdb metadata memory-optimized'
-UNION ALL
-SELECT 'IsPolybaseEnabled', CONVERT(nvarchar, COALESCE(value_in_use,0)) from sys.configurations where name = 'polybase enabled'
-UNION ALL
-SELECT 'IsExternalScriptsEnabled', CONVERT(varchar, value_in_use) from sys.configurations where name = 'external scripts enabled'
-UNION ALL
-SELECT 'IsCLREnabled', CONVERT(varchar, value_in_use) from sys.configurations where name = 'clr enabled'
-UNION ALL
 SELECT 'IsResourceGovenorEnabled', CONVERT(varchar, is_enabled) from sys.resource_governor_configuration
 UNION ALL
 SELECT 'IsTDEInUse', CONVERT(nvarchar, count(*)) from sys.databases where is_encrypted <> 0
@@ -172,6 +164,7 @@ WITH check_sysadmin_role AS (
     WHERE
         IS_SRVROLEMEMBER ('sysadmin', name) = 1
         AND name NOT LIKE '%NT SERVICE%'
+        AND name <> 'sa'
     UNION
     SELECT
         name,
@@ -182,10 +175,14 @@ WITH check_sysadmin_role AS (
     WHERE
         IS_SRVROLEMEMBER ('dbcreator', name) = 1
         AND name NOT LIKE '%NT SERVICE%'
+        AND name <> 'sa'
 )
 INSERT INTO #serverProperties 
     SELECT 'sysadmin_role',
-    CONVERT(varchar, count(*))
+    CASE WHEN count(*) > 0
+    THEN '1'
+    ELSE '0'
+	END
 FROM
     check_sysadmin_role;
 WITH BUFFER_POOL_SIZE AS (
