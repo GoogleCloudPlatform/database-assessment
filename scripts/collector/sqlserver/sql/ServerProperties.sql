@@ -346,7 +346,7 @@ END;
 /* check the table permissions temp table before we run this query. Otherwise default the value to show that mail is off */
 SELECT @TABLE_PERMISSION_COUNT = COUNT(*) FROM #myPerms 
 WHERE LOWER(entity_name) in ('dbo.sysmail_profile','dbo.sysmail_profileaccount','dbo.sysmail_account','dbo.sysmail_server') and UPPER(permission_name) = 'SELECT';
-IF @TABLE_PERMISSION_COUNT >= 4
+IF @TABLE_PERMISSION_COUNT >= 4 AND @CLOUDTYPE = 'NONE'
 BEGIN
     BEGIN TRY
     exec('INSERT INTO #serverProperties
@@ -373,7 +373,7 @@ SELECT ''IsDbMailEnabled'', CAST(COALESCE(value_in_use,0) as NVARCHAR)  FROM  sy
 END;
 SELECT @TABLE_PERMISSION_COUNT = COUNT(*) FROM #myPerms 
 WHERE LOWER(entity_name) in ('dbo.log_shipping_primary_databases','dbo.log_shipping_secondary_databases') and UPPER(permission_name) = 'SELECT';
-IF @TABLE_PERMISSION_COUNT >= 2
+IF @TABLE_PERMISSION_COUNT >= 2 AND @CLOUDTYPE = 'NONE'
 BEGIN
 exec('WITH log_shipping_count AS (
     SELECT
