@@ -66,7 +66,7 @@ if ([string]::IsNullorEmpty($serverName)) {
     Exit 1
 } else {
     if ([string]::IsNullorEmpty($port)) {
-        Write-Output "Retrieving Metadata Information from $serverName"
+        WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
         $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v database=$database | findstr /v /c:"---"
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v database=$database)
         if ([string]$database -ne "all") {
@@ -80,7 +80,7 @@ if ([string]::IsNullorEmpty($serverName)) {
         }
     } else {
         $serverName = "$serverName,$port"
-        Write-Output "Retrieving Metadata Information from $serverName"
+        WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
         $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -v database=$database | findstr /v /c:"---"
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -W -m 1 -u -h-1 -v database=$database)
         if ([string]$database -ne "all") {
@@ -129,12 +129,29 @@ $sqlErrorLogFile = 'opdb_mssql_sqlErrorlog' + '__' + $dbversion + '_' + $op_vers
 
 $folderLength = ($PSScriptRoot + '\' + $foldername).Length
 if ($folderLength -le 260) {
-    Write-Output "Creating directory $foldername"
+    WriteLog -logMessage "Creating directory $PSScriptRoot\$foldername" -logOperation "MESSAGE"
+    Write-Output " "
     $null = New-Item -Name $foldername -ItemType Directory
 } else {
-    Write-Output "Folder length exceeds 260 characters.  Run collection tool from a path with less characters"
-    Write-Output "Folder being created is: $PSScriptRoot\$foldername"
+    WriteLog -logMessage "Folder length exceeds 260 characters.  Run collection tool from a path with less characters" -logOperation "MESSAGE"
+    WriteLog -logMessage "Folder being created is: $PSScriptRoot\$foldername" -logOperation "MESSAGE"
+    Write-Output " "
+    Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Consider shortening foldername by reducing 'db-migration-assessment-collection-scripts-sqlserver' to 'google-dma'" -ForegroundColor red
     Exit 1
+}
+
+$logFileArray = @($logFile, $sqlErrorLogFile)
+
+WriteLog -logMessage "Checking directory path + log file name lengths for max length limitations..." -logOperation "MESSAGE"
+foreach ($logFileName in $logFileArray) {
+	$folderLength = ($PSScriptRoot + '\' + $foldername + '\' + $logFileName).Length
+    if ($folderLength -gt 260) {
+        WriteLog -logMessage "Output file $PSScriptRoot\$foldername\$logFileName name exceeds 260 characters." -logOperation "MESSAGE"
+        Write-Output " "
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Execute collection from a path with less than 260 characters." -ForegroundColor red
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Consider shortening foldername by reducing 'db-migration-assessment-collection-scripts-sqlserver' to 'google-dma'" -ForegroundColor red
+        Exit 1
+    }
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "PS Version Table" -logOperation "FILE"
@@ -162,12 +179,15 @@ $manifestFile = 'opdb' + '__' + 'manifest' + '__' + $dbversion + '_' + $op_versi
 
 $outputFileArray = @($compFileName, $srvFileName, $blockingFeatures, $linkedServers, $dbsizes, $dbClusterNodes, $objectList, $tableList, $indexList, $columnDatatypes, $userConnectionList, $perfMonOutput, $dbccTraceFlg, $diskVolumeInfo, $dbServerFlags)
 
-WriteLog -logLocation $foldername\$logFile -logMessage "Checking max directory path lengths for errors..." -logOperation "BOTH"
+WriteLog -logMessage "Checking directory path + output file name lengths for max length limitations..." -logOperation "MESSAGE"
 foreach ($directory in $outputFileArray) {
 	$folderLength = ($PSScriptRoot + '\' + $foldername + '\' + $directory).Length
     if ($folderLength -gt 260) {
-        WriteLog -logLocation $foldername\$logFile -logMessage "Output file $PSScriptRoot\$foldername\$directory name exceeds 260 characters." -logOperation "BOTH"
-        WriteLog -logLocation $foldername\$logFile -logMessage "Execute collection from a path with less than 260 characters." -logOperation "BOTH"
+        WriteLog -logMessage "Output file $PSScriptRoot\$foldername\$directory name exceeds 260 characters." -logOperation "MESSAGE"
+        Write-Output " "
+        WriteLog -logMessage "Execute collection from a path with less than 260 characters." -logOperation "MESSAGE"
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Execute collection from a path with less than 260 characters." -ForegroundColor red
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Consider shortening foldername by reducing 'db-migration-assessment-collection-scripts-sqlserver' to 'google-dma'" -ForegroundColor red
         Exit 1
     }
 }

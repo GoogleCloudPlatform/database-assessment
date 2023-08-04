@@ -53,7 +53,6 @@ if not [%user%]==[] goto execWithCustomUser
 if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 if [%pass%] == [] goto error
-echo Gathering Collection with Custom User
 
 if [%port%] ==[] (
     PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\InstanceReview.ps1 -serverName %serverName% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon%
