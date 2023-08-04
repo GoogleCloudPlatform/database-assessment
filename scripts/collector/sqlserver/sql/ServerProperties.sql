@@ -304,6 +304,7 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,SERVERPROPERTY(''ProductLevel'')),1,1024), ''UNKNOWN'') ');
     exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',''UNKNOWN''');
     exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024)');
+    exec('INSERT INTO #serverProperties SELECT ''PhysicalMemoryKB'', CONVERT(varchar, (ROUND(physical_memory_in_bytes/1024,0))) from sys.dm_os_sys_info');
     END;
     IF @PRODUCT_VERSION >= 13 AND @PRODUCT_VERSION <= 16
     BEGIN
