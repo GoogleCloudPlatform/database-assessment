@@ -18,24 +18,20 @@ limitations under the License.
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
 DECLARE @PKEY AS VARCHAR(256)
-SELECT @PKEY = N'$(pkey)';
+DECLARE @CLOUDTYPE AS VARCHAR(256)
 DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256)
+DECLARE @PRODUCT_VERSION AS INTEGER
+DECLARE @validDB AS INTEGER
+
+SELECT @PKEY = N'$(pkey)';
 SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
 IF @ASSESSMENT_DATABSE_NAME = 'all'
    SELECT @ASSESSMENT_DATABSE_NAME = '%'
-DECLARE @PRODUCT_VERSION AS INTEGER
 SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
-DECLARE @validDB AS INTEGER
 SELECT @validDB = 0
-DECLARE @dbname VARCHAR(50)
-DECLARE @ERROR_NUMBER_LENGTH AS INTEGER
-
-DECLARE db_cursor CURSOR FOR 
-SELECT name
-FROM MASTER.sys.databases 
-WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-AND name like @ASSESSMENT_DATABSE_NAME
-AND state = 0
+SELECT @CLOUDTYPE = 'NONE'
+IF UPPER(@@VERSION) LIKE '%AZURE%'
+	SELECT @CLOUDTYPE = 'AZURE'
 
 IF OBJECT_ID('tempdb..#connectionInfo') IS NOT NULL  
    DROP TABLE #connectionInfo;
@@ -60,39 +56,19 @@ CREATE TABLE #connectionInfo(
     ,local_net_address nvarchar(255)
     );
 
-IF OBJECT_ID('tempdb.dbo.dmaCollectorErrors') IS NULL 
-   CREATE TABLE tempdb.dbo.dmaCollectorErrors(
-      database_name nvarchar(255) DEFAULT db_name()
-      ,module_name nvarchar(255)
-      ,error_number nvarchar(255)
-      ,error_severity nvarchar(255)
-      ,error_state nvarchar(255)
-      ,error_procedure nvarchar(255)
-      ,error_line nvarchar(255)
-      ,error_message nvarchar(255)
-      );
-
-OPEN db_cursor  
-FETCH NEXT FROM db_cursor INTO @dbname  
-
-WHILE @@FETCH_STATUS = 0
 BEGIN
     BEGIN
         SELECT @validDB = COUNT(1)
-        FROM MASTER.sys.databases 
+        FROM sys.databases 
         WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
         AND name like @ASSESSMENT_DATABSE_NAME
         AND state = 0
-
-        IF @validDB = 0
-            CONTINUE;
     END
 
     BEGIN TRY
-        IF @PRODUCT_VERSION >= 11
+        IF @PRODUCT_VERSION >= 11 AND @validDB <> 0
         BEGIN
             exec ('
-            use [' + @dbname + '];
             INSERT INTO #connectionInfo
             SELECT
                 DB_NAME() as database_name
@@ -117,10 +93,9 @@ BEGIN
                     ON sdec.session_id = sdes.session_id
             WHERE sdes.session_id <> @@SPID');
         END
-        IF @PRODUCT_VERSION < 11
+        IF @PRODUCT_VERSION < 11 AND @validDB <> 0
         BEGIN
             exec ('
-            use [' + @dbname + '];
             INSERT INTO #connectionInfo
             SELECT
                 DB_NAME() as database_name
@@ -147,27 +122,17 @@ BEGIN
         END
     END TRY
     BEGIN CATCH
-        INSERT INTO tempdb.dbo.dmaCollectorErrors
         SELECT
-            db_name(),
-            'columnDatatypes',
-            SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254),
-            SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254),
-            SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254),
-            SUBSTRING(CONVERT(nvarchar,ERROR_PROCEDURE()),1,254),
-            SUBSTRING(CONVERT(nvarchar,ERROR_LINE()),1,254),
-            SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,254);
-        SELECT @ERROR_NUMBER_LENGTH = COALESCE(ERROR_NUMBER(),0)
-        IF @ERROR_NUMBER_LENGTH > 0
-            CONTINUE;
-	END CATCH
-
-    FETCH NEXT FROM db_cursor INTO @dbname
+            host_name() as host_name,
+            db_name() as database_name,
+            'connectionInfo' as module_name,
+            SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
+            SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
+            SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
+            SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
+    END CATCH
 
 END
-
-CLOSE db_cursor  
-DEALLOCATE db_cursor
 
 SELECT @PKEY as PKEY, a.* from #connectionInfo a;
 

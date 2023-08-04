@@ -17,10 +17,13 @@ limitations under the License.
 
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
-DECLARE @PKEY AS VARCHAR(256)
-SELECT @PKEY = N'$(pkey)';
+DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256)
+SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
+IF @ASSESSMENT_DATABSE_NAME = 'all'
+   SELECT @ASSESSMENT_DATABSE_NAME = '%'
 
-SELECT @PKEY, e.* from tempdb.dbo.dmaCollectorErrors e;
-
-IF OBJECT_ID('tempdb.dbo.dmaCollectorErrors') IS NOT NULL  
-   DROP TABLE tempdb.dbo.dmaCollectorErrors;
+SELECT name
+FROM sys.databases 
+WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
+AND name like @ASSESSMENT_DATABSE_NAME
+AND state = 0

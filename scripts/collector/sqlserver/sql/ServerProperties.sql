@@ -19,10 +19,17 @@ limitations under the License.
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
 DECLARE @PKEY AS VARCHAR(256)
+DECLARE @CLOUDTYPE AS VARCHAR(256)
 DECLARE @PRODUCT_VERSION AS INTEGER
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
-SELECT @PKEY = N'$(pkey)';
 DECLARE @TABLE_PERMISSION_COUNT AS INTEGER
+DECLARE @MACHINENAME AS VARCHAR(256)
+
+SELECT @PKEY = N'$(pkey)';
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @CLOUDTYPE = 'NONE'
+IF UPPER(@@VERSION) LIKE '%AZURE%'
+	SELECT @CLOUDTYPE = 'AZURE'
+    SELECT @MACHINENAME = SUBSTRING(REPLACE(CONVERT(NVARCHAR(255), service_broker_guid),'-',''),0,15) FROM sys.databases where name = 'master'
 
 IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  
    DROP TABLE #serverProperties;
@@ -44,17 +51,15 @@ CREATE TABLE #myPerms (
     permission_name nvarchar(255)
 );
 
-use msdb;
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmail_server', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmail_profile', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmail_profileaccount', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmail_account', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.log_shipping_secondary_databases', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.log_shipping_primary_databases', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysmaintplan_subplans', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('dbo.sysjobs', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmail_server', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmail_profile', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmail_profileaccount', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmail_account', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.log_shipping_secondary_databases', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.log_shipping_primary_databases', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmaintplan_subplans', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysjobs', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
 
-use master;
 INSERT INTO #serverProperties
 SELECT 'BuildClrVersion' AS Property, CONVERT(nvarchar, SERVERPROPERTY('BuildClrVersion')) AS Value
 UNION ALL
@@ -70,33 +75,31 @@ SELECT 'EditionID', CONVERT(nvarchar, SERVERPROPERTY('EditionID'))
 UNION ALL
 SELECT 'EngineEdition', CONVERT(nvarchar, SERVERPROPERTY('EngineEdition'))
 UNION ALL
-SELECT 'HadrManagerStatus', CONVERT(nvarchar, SERVERPROPERTY('HadrManagerStatus'))
+SELECT 'HadrManagerStatus', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('HadrManagerStatus')), '0')
 UNION ALL
-SELECT 'InstanceName', CONVERT(nvarchar, COALESCE(SERVERPROPERTY('InstanceName'),@@ServiceName))
+SELECT 'IsAdvancedAnalyticsInstalled', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsAdvancedAnalyticsInstalled')), '0')
 UNION ALL
-SELECT 'IsAdvancedAnalyticsInstalled', CONVERT(nvarchar, SERVERPROPERTY('IsAdvancedAnalyticsInstalled'))
-UNION ALL
-SELECT 'IsClustered', CONVERT(nvarchar, SERVERPROPERTY('IsClustered'))
+SELECT 'IsClustered', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsClustered')), '0')
 UNION ALL
 SELECT 'IsFullTextInstalled', CONVERT(nvarchar, SERVERPROPERTY('IsFullTextInstalled'))
 UNION ALL
-SELECT 'IsHadrEnabled', CONVERT(nvarchar, SERVERPROPERTY('IsHadrEnabled'))
+SELECT 'IsHadrEnabled', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsHadrEnabled')), '0')
 UNION ALL
 SELECT 'IsIntegratedSecurityOnly', CONVERT(nvarchar, SERVERPROPERTY('IsIntegratedSecurityOnly'))
 UNION ALL
-SELECT 'IsLocalDB', CONVERT(nvarchar, SERVERPROPERTY('IsLocalDB'))
+SELECT 'IsLocalDB', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsLocalDB')), '0')
 UNION ALL
-SELECT 'IsPolyBaseInstalled', CONVERT(nvarchar, SERVERPROPERTY('IsPolyBaseInstalled'))
+SELECT 'IsPolyBaseInstalled',  COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsPolyBaseInstalled')), '0')
 UNION ALL
 SELECT 'IsSingleUser', CONVERT(nvarchar, SERVERPROPERTY('IsSingleUser'))
 UNION ALL
-SELECT 'IsXTPSupported', CONVERT(nvarchar, SERVERPROPERTY('IsXTPSupported'))
+SELECT 'IsXTPSupported', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsXTPSupported')), '0')
 UNION ALL
 SELECT 'LCID', CONVERT(nvarchar, SERVERPROPERTY('LCID'))
 UNION ALL
 SELECT 'LicenseType', CONVERT(nvarchar, SERVERPROPERTY('LicenseType'))
 UNION ALL
-SELECT 'MachineName', CONVERT(nvarchar, SERVERPROPERTY('MachineName'))
+SELECT 'MachineName', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('MachineName')), @MACHINENAME + '-' + @CLOUDTYPE)
 UNION ALL
 SELECT 'NumLicenses', CONVERT(nvarchar, SERVERPROPERTY('NumLicenses'))
 UNION ALL
@@ -132,43 +135,23 @@ SELECT 'SqlSortOrder', CONVERT(nvarchar, SERVERPROPERTY('SqlSortOrder'))
 UNION ALL
 SELECT 'SqlSortOrderName', CONVERT(nvarchar, SERVERPROPERTY('SqlSortOrderName'))
 UNION ALL
-SELECT 'FilestreamShareName', CONVERT(nvarchar, SERVERPROPERTY('FilestreamShareName'))
+SELECT 'FilestreamShareName', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('FilestreamShareName')),'NONE')
 UNION ALL
 SELECT 'FilestreamConfiguredLevel', CONVERT(nvarchar, SERVERPROPERTY('FilestreamConfiguredLevel'))
 UNION ALL
 SELECT 'FilestreamEffectiveLevel', CONVERT(nvarchar, SERVERPROPERTY('FilestreamEffectiveLevel'))
 UNION ALL
-SELECT 'IsRpcOutEnabled', CONVERT(nvarchar, is_rpc_out_enabled) FROM sys.servers WHERE name = @@SERVERNAME
-UNION ALL
-SELECT 'IsRemoteProcTransactionPromotionEnabled', CONVERT(nvarchar, is_remote_proc_transaction_promotion_enabled) FROM sys.servers WHERE name = @@SERVERNAME
-UNION ALL
-SELECT 'IsRemoteLoginEnabled', CONVERT(nvarchar, is_remote_login_enabled) FROM sys.servers WHERE name = @@SERVERNAME
-UNION ALL
 SELECT 'FullVersion', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), ' '), CHAR(10), ' '),1,1024)
-UNION ALL
-SELECT 'IsTempDbMetadataMemoryOptimized', CONVERT(varchar, value_in_use) from sys.configurations where name = 'tempdb metadata memory-optimized'
-UNION ALL
-SELECT 'IsPolybaseEnabled', CONVERT(varchar, value_in_use) from sys.configurations where name = 'polybase enabled'
-UNION ALL
-SELECT 'IsExternalScriptsEnabled', CONVERT(varchar, value_in_use) from sys.configurations where name = 'external scripts enabled'
-UNION ALL
-SELECT 'IsCLREnabled', CONVERT(varchar, value_in_use) from sys.configurations where name = 'clr enabled'
 UNION ALL
 SELECT 'IsResourceGovenorEnabled', CONVERT(varchar, is_enabled) from sys.resource_governor_configuration
 UNION ALL
 SELECT 'IsTDEInUse', CONVERT(nvarchar, count(*)) from sys.databases where is_encrypted <> 0
-UNION ALL
-SELECT 'ServerLevelTriggers', CONVERT(varchar, count(*)) from sys.server_triggers
-UNION ALL
-SELECT 'CountServiceBrokerEndpoints', CONVERT(varchar, count(*)) from sys.service_broker_endpoints
 UNION ALL
 SELECT 'LogicalCpuCount', CONVERT(varchar, cpu_count) from sys.dm_os_sys_info
 UNION ALL
 SELECT 'PhysicalCpuCount', CONVERT(varchar, (cpu_count/hyperthread_ratio)) from sys.dm_os_sys_info
 UNION ALL
 SELECT 'SqlServerStartTime', CONVERT(varchar, (sqlserver_start_time)) from sys.dm_os_sys_info
-UNION ALL
-SELECT 'CountTSQLEndpoints', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535
 UNION ALL
 SELECT 'BULK_INSERT', CONVERT(varchar,count(p.permission_name)) FROM fn_my_permissions(NULL, 'SERVER') p WHERE permission_name like '%ADMINISTER BULK OPERATIONS%';
 WITH check_sysadmin_role AS (
@@ -177,104 +160,211 @@ WITH check_sysadmin_role AS (
         type_desc,
         is_disabled
     FROM
-        master.sys.server_principals
+        sys.server_principals
     WHERE
         IS_SRVROLEMEMBER ('sysadmin', name) = 1
         AND name NOT LIKE '%NT SERVICE%'
+        AND name <> 'sa'
     UNION
     SELECT
         name,
         type_desc,
         is_disabled
     FROM
-        master.sys.server_principals
+        sys.server_principals
     WHERE
         IS_SRVROLEMEMBER ('dbcreator', name) = 1
         AND name NOT LIKE '%NT SERVICE%'
+        AND name <> 'sa'
 )
-INSERT INTO #serverProperties SELECT
-    'sysadmin_role',
-    CONVERT(varchar, count(*))
+INSERT INTO #serverProperties 
+    SELECT 'sysadmin_role',
+    CASE WHEN count(*) > 0
+    THEN '1'
+    ELSE '0'
+	END
 FROM
     check_sysadmin_role;
-IF @PRODUCT_VERSION >= 15
-BEGIN
- exec('INSERT INTO #serverProperties SELECT ''IsHybridBufferPoolEnabled'', CONVERT(nvarchar,is_enabled) from sys.server_memory_optimized_hybrid_buffer_pool_configuration /* SQL Server 2019 (15.x) and later versions */');
-END;
-IF @PRODUCT_VERSION >= 14
-BEGIN
- exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', SUBSTRING(CONVERT(nvarchar,host_platform),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
- exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(CONVERT(nvarchar,host_distribution),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
- exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,host_release),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
- exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar,host_service_pack_level),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
- exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
-END;
-IF @PRODUCT_VERSION >= 11 AND @PRODUCT_VERSION < 14
-BEGIN
- exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows'' FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
- exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,windows_release),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
- exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar,windows_service_pack_level),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
- exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
- exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024) /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x) */');
-END
-IF @PRODUCT_VERSION < 11
-BEGIN   /* Versions before SQL Server 2012 (11.x)   */
- exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows''');
- exec('INSERT INTO #serverProperties SELECT ''HostRelease'', REPLACE(REPLACE(SUBSTRING(@@VERSION,4 + charindex ('' ON '',@@VERSION),LEN(@@VERSION)), CHAR(13), ''''), CHAR(10), '''')');
- exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', SUBSTRING(CONVERT(nvarchar,SERVERPROPERTY(''ProductLevel'')),1,1024)');
- exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',''UNKNOWN''');
- exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024)');
-END;
-IF @PRODUCT_VERSION >= 13 AND @PRODUCT_VERSION <= 16
-BEGIN
-exec('INSERT INTO #serverProperties SELECT ''IsStretchDatabaseEnabled'', CONVERT(nvarchar, count(*)) FROM sys.remote_data_archive_databases /* SQL Server 2016 (13.x) and Up to 2022 */');
-END;
-IF @PRODUCT_VERSION >= 13
-BEGIN
-exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', CONVERT(nvarchar, count(*)) from sys.availability_groups where dtc_support is not null /* SQL Server 2016 (13.x) and above */');
-END;
-IF @PRODUCT_VERSION >= 12
-BEGIN
-exec('INSERT INTO #serverProperties SELECT ''IsBufferPoolExtensionEnabled'', CONVERT(nvarchar, state) FROM sys.dm_os_buffer_pool_extension_configuration /* SQL Server 2014 (13.x) above */');
-END;
-IF @PRODUCT_VERSION >= 11
-BEGIN
-exec('WITH check_filestream AS (
-    SELECT
-        Name,
-        ISNULL ((
-                SELECT
-                    1
-                FROM
-                    sys.master_files AS mf
-                WHERE
-                    mf.database_id = db.database_id
-                    AND mf.type = 2),
-                0) AS hasfs
-    FROM
-        sys.databases AS db
+WITH BUFFER_POOL_SIZE AS (
+	SELECT database_id AS DatabaseID
+		,DB_NAME(database_id) AS DatabaseName
+		,COUNT(file_id) * 8 / 1024.0 AS BufferSizeInMB
+	FROM sys.dm_os_buffer_descriptors
+	GROUP BY DB_NAME(database_id)
+		,database_id
 )
-INSERT INTO #serverProperties SELECT
-    ''IsFileStreamEnabled'',
-    sum(hasfs)
-FROM
-    check_filestream
-/* SQL Server 2012 (11.x) above */');
+INSERT INTO #serverProperties
+    SELECT 'total_buffer_size_in_mb'
+	,SUM(BufferSizeInMB)
+FROM BUFFER_POOL_SIZE;
+
+/* Certain clouds do not allow access to certain tables so we need to catch the table does not exist error and default the setting */
+IF @CLOUDTYPE = 'AZURE'
+BEGIN
+    exec('INSERT INTO #serverProperties SELECT ''InstanceName'', CONVERT(nvarchar, COALESCE(SERVERPROPERTY(''InstanceName''),@@SERVERNAME))')
+    BEGIN TRY
+        exec('INSERT INTO #serverProperties SELECT ''IsRpcOutEnabled'', CONVERT(nvarchar, is_rpc_out_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            exec('INSERT INTO #serverProperties SELECT ''IsRpcOutEnabled'', ''0''')
+    END CATCH
+    BEGIN TRY
+        exec('INSERT INTO #serverProperties SELECT ''IsRemoteProcTransactionPromotionEnabled'', CONVERT(nvarchar, is_remote_proc_transaction_promotion_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            exec('INSERT INTO #serverProperties SELECT ''IsRemoteProcTransactionPromotionEnabled'', ''0''')
+    END CATCH
+    BEGIN TRY
+        exec('INSERT INTO #serverProperties SELECT ''IsRemoteLoginEnabled'', CONVERT(nvarchar, is_remote_login_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            exec('INSERT INTO #serverProperties SELECT ''IsRemoteLoginEnabled'', ''0''')
+    END CATCH
+    BEGIN TRY
+        exec('INSERT INTO #serverProperties SELECT ''ServerLevelTriggers'', CONVERT(varchar, count(*)) from sys.server_triggers')
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            exec('INSERT INTO #serverProperties SELECT ''ServerLevelTriggers'', ''0''')
+    END CATCH
+    BEGIN TRY
+        exec('INSERT INTO #serverProperties SELECT ''CountServiceBrokerEndpoints'', CONVERT(varchar, count(*)) from sys.service_broker_endpoints')
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            exec('INSERT INTO #serverProperties SELECT ''CountServiceBrokerEndpoints'', ''0''')
+    END CATCH
+    BEGIN TRY
+        exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', CONVERT(nvarchar, count(*)) from sys.availability_groups where dtc_support is not null /* SQL Server 2016 (13.x) and above */');
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', ''0'' /* SQL Server 2016 (13.x) and above */');
+    END CATCH
+    BEGIN TRY
+            exec('INSERT INTO #serverProperties SELECT ''IsBufferPoolExtensionEnabled'', CONVERT(nvarchar, state) FROM sys.dm_os_buffer_pool_extension_configuration /* SQL Server 2014 (13.x) above */');
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+                exec('INSERT INTO #serverProperties SELECT ''IsBufferPoolExtensionEnabled'', ''0'' /* SQL Server 2014 (13.x) above */');
+    END CATCH
+    BEGIN TRY
+            exec('INSERT INTO #serverProperties SELECT ''CountTSQLEndpoints'', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535')
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+                exec('INSERT INTO #serverProperties SELECT ''CountTSQLEndpoints'', ''0''')
+    END CATCH
+    
+    exec('INSERT INTO #serverProperties SELECT ''IsHybridBufferPoolEnabled'', CONVERT(nvarchar,is_enabled) from sys.server_memory_optimized_hybrid_buffer_pool_configuration /* SQL Server 2019 (15.x) and later versions */');
+    exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Azure VM''');
+    exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', ''Linux''');
+    exec('INSERT INTO #serverProperties SELECT ''HostRelease'', ''UNKNOWN''');
+    exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', ''UNKNOWN''');
+    exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'', ''UNKNOWN''');
+    exec('INSERT INTO #serverProperties SELECT ''IsStretchDatabaseEnabled'', CONVERT(nvarchar, count(*)) FROM sys.remote_data_archive_databases /* SQL Server 2016 (13.x) and Up to 2022 */');
+END
+IF @CLOUDTYPE = 'NONE'
+BEGIN
+    exec('INSERT INTO #serverProperties SELECT ''InstanceName'', CONVERT(nvarchar, COALESCE(SERVERPROPERTY(''InstanceName''),@@ServiceName))')
+    exec('INSERT INTO #serverProperties SELECT ''IsRpcOutEnabled'', CONVERT(nvarchar, is_rpc_out_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
+    exec('INSERT INTO #serverProperties SELECT ''IsRemoteProcTransactionPromotionEnabled'', CONVERT(nvarchar, is_remote_proc_transaction_promotion_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
+    exec('INSERT INTO #serverProperties SELECT ''IsRemoteLoginEnabled'', CONVERT(nvarchar, is_remote_login_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
+    exec('INSERT INTO #serverProperties SELECT ''ServerLevelTriggers'', CONVERT(varchar, count(*)) from sys.server_triggers')
+    exec('INSERT INTO #serverProperties SELECT ''CountServiceBrokerEndpoints'', CONVERT(varchar, count(*)) from sys.service_broker_endpoints')
+    exec('INSERT INTO #serverProperties SELECT ''CountTSQLEndpoints'', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535')
+
+    IF @PRODUCT_VERSION >= 15
+    BEGIN
+    exec('INSERT INTO #serverProperties SELECT ''IsHybridBufferPoolEnabled'', CONVERT(nvarchar,is_enabled) from sys.server_memory_optimized_hybrid_buffer_pool_configuration /* SQL Server 2019 (15.x) and later versions */');
+    END;
+    IF @PRODUCT_VERSION >= 14
+    BEGIN
+    exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', SUBSTRING(CONVERT(nvarchar,host_platform),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+    exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(CONVERT(nvarchar,host_distribution),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+    exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,host_release),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+    exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,host_service_pack_level),1,1024), ''UNKNOWN'')  FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+    exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+    END;
+    IF @PRODUCT_VERSION >= 11 AND @PRODUCT_VERSION < 14
+    BEGIN
+    exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows'' FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+    exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,windows_release),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+    exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,windows_service_pack_level),1,1024), ''UNKNOWN'') FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+    exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+    exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024) /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x) */');
+    END
+    IF @PRODUCT_VERSION < 11
+    BEGIN   /* Versions before SQL Server 2012 (11.x)   */
+    exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows''');
+    exec('INSERT INTO #serverProperties SELECT ''HostRelease'', REPLACE(REPLACE(SUBSTRING(@@VERSION,4 + charindex ('' ON '',@@VERSION),LEN(@@VERSION)), CHAR(13), ''''), CHAR(10), '''')');
+    exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,SERVERPROPERTY(''ProductLevel'')),1,1024), ''UNKNOWN'') ');
+    exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',''UNKNOWN''');
+    exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024)');
+    exec('INSERT INTO #serverProperties SELECT ''PhysicalMemoryKB'', CONVERT(varchar, (ROUND(physical_memory_in_bytes/1024,0))) from sys.dm_os_sys_info');
+    END;
+    IF @PRODUCT_VERSION >= 13 AND @PRODUCT_VERSION <= 16
+    BEGIN
+    exec('INSERT INTO #serverProperties SELECT ''IsStretchDatabaseEnabled'', CONVERT(nvarchar, count(*)) FROM sys.remote_data_archive_databases /* SQL Server 2016 (13.x) and Up to 2022 */');
+    END;
+    IF @PRODUCT_VERSION >= 13
+    BEGIN
+    exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', CONVERT(nvarchar, count(*)) from sys.availability_groups where dtc_support is not null /* SQL Server 2016 (13.x) and above */');
+    END;
+    IF @PRODUCT_VERSION >= 12
+    BEGIN
+    exec('INSERT INTO #serverProperties SELECT ''IsBufferPoolExtensionEnabled'', CONVERT(nvarchar, state) FROM sys.dm_os_buffer_pool_extension_configuration /* SQL Server 2014 (13.x) above */');
+    END;
+    IF @PRODUCT_VERSION >= 11
+    BEGIN
+    exec('WITH check_filestream AS (
+        SELECT
+            Name,
+            ISNULL ((
+                    SELECT
+                        1
+                    FROM
+                        sys.master_files AS mf
+                    WHERE
+                        mf.database_id = db.database_id
+                        AND mf.type = 2),
+                    0) AS hasfs
+        FROM
+            sys.databases AS db
+    )
+    INSERT INTO #serverProperties SELECT
+        ''IsFileStreamEnabled'',
+        sum(hasfs)
+    FROM
+        check_filestream
+    /* SQL Server 2012 (11.x) above */');
+    END;
 END;
 
 /* check the table permissions temp table before we run this query. Otherwise default the value to show that mail is off */
 SELECT @TABLE_PERMISSION_COUNT = COUNT(*) FROM #myPerms 
 WHERE LOWER(entity_name) in ('dbo.sysmail_profile','dbo.sysmail_profileaccount','dbo.sysmail_account','dbo.sysmail_server') and UPPER(permission_name) = 'SELECT';
-IF @TABLE_PERMISSION_COUNT >= 4
+IF @TABLE_PERMISSION_COUNT >= 4 AND @CLOUDTYPE = 'NONE'
 BEGIN
-exec('INSERT INTO #serverProperties
-SELECT
-    ''IsDbMailEnabled'', CONVERT(nvarchar, count(*))
-FROM
-    msdb.dbo.sysmail_profile p
-    JOIN msdb.dbo.sysmail_profileaccount pa ON p.profile_id = pa.profile_id
-    JOIN msdb.dbo.sysmail_account a ON pa.account_id = a.account_id
-    JOIN msdb.dbo.sysmail_server s ON a.account_id = s.account_id');
+    BEGIN TRY
+    exec('INSERT INTO #serverProperties
+    SELECT
+        ''IsDbMailEnabled'', CONVERT(nvarchar, count(*))
+    FROM
+        msdb.dbo.sysmail_profile p
+        JOIN msdb.dbo.sysmail_profileaccount pa ON p.profile_id = pa.profile_id
+        JOIN msdb.dbo.sysmail_account a ON pa.account_id = a.account_id
+        JOIN msdb.dbo.sysmail_server s ON a.account_id = s.account_id');
+    END TRY
+    BEGIN CATCH
+    IF ERROR_NUMBER() = 40515 AND ERROR_SEVERITY() = 15 AND ERROR_STATE() = 1
+        exec('INSERT INTO #serverProperties
+        SELECT
+            ''IsDbMailEnabled'', ''0''');
+    END CATCH
 END;
 ELSE
 BEGIN
@@ -284,7 +374,7 @@ SELECT ''IsDbMailEnabled'', CAST(COALESCE(value_in_use,0) as NVARCHAR)  FROM  sy
 END;
 SELECT @TABLE_PERMISSION_COUNT = COUNT(*) FROM #myPerms 
 WHERE LOWER(entity_name) in ('dbo.log_shipping_primary_databases','dbo.log_shipping_secondary_databases') and UPPER(permission_name) = 'SELECT';
-IF @TABLE_PERMISSION_COUNT >= 2
+IF @TABLE_PERMISSION_COUNT >= 2 AND @CLOUDTYPE = 'NONE'
 BEGIN
 exec('WITH log_shipping_count AS (
     SELECT

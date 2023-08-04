@@ -4,7 +4,13 @@ Instructions on how to prepare and run Google Database Migration Assessment Data
 for analysis by Database Migration Assessment.
 
 These scripts have been tested with the following platforms:
-    SQL Server 2008R2 SP2 through SQL Server 2022
+    SQL Server Versions:
+
+        SQL Server 2008R2 SP2 through SQL Server 2022
+        AZURE SQL Database
+
+Operating System Versions:
+
     Windows Server 2012 through Windows Server 2022 (Requires PowerShell Version 5 or Greater)
 
 1. Background
@@ -149,6 +155,14 @@ These scripts have been tested with the following platforms:
 
                 Example (default port): RunAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
                 Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+
+        For Azure SQL Database (Ignore Perfmon Collection):
+             .\RunAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password] -ignorePerfmon true
+
+                Example (default port): RunAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
+                Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
+                Example (default port / all databases): RunAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
+                Example (custom port / all databases): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true        
 
         Notes:
             1) Google Database Migration Assessment Data Extractor extracts data for all user databases present in the instance

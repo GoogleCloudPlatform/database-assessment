@@ -24,19 +24,34 @@
 
 function writeLog {
     param(
-        [Parameter(Mandatory=$true)][string]$logLocation,
+        [Parameter(Mandatory=$false)][string]$logLocation,
         [Parameter(Mandatory=$true)][string]$logMessage,
         [Parameter(Mandatory=$false)][string]$logOperation='BOTH'
     )
 	$currentTimestamp = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
-    if ([string]$logOperation.toUpper() -eq 'BOTH') {
+    if (([string]$logOperation.toUpper() -eq 'BOTH') -and ($logLocation -ne '')) {
         Write-Output "$currentTimestamp   $logMessage" | Add-Content -Encoding utf8 -Path $logLocation
         Write-Output "$currentTimestamp   $logMessage"
-    } elseif ([string]$logOperation.toUpper() -eq 'FILE') {
+    } elseif (([string]$logOperation.toUpper() -eq 'FILE') -and ($logLocation -ne '')) {
         Write-Output "$currentTimestamp   $logMessage" | Add-Content -Encoding utf8 -Path $logLocation
     } elseif ([string]$logOperation.toUpper() -eq 'MESSAGE') {
         Write-Output "$currentTimestamp   $logMessage"
     } else {
         Write-Output "$currentTimestamp   $logMessage"
     }
+}
+
+function createManifestFile {
+    param(
+        [Parameter(Mandatory=$true)][string]$manifestFileLocation,
+        [Parameter(Mandatory=$true)][string]$manifestOutputFileName,
+        [Parameter(Mandatory=$true)][string]$manifestedFileName
+    )
+    $fileMD5Hash = (Get-FileHash -Algorithm MD5 -Path $manifestFileLocation\$manifestedFileName).Hash
+    Add-Content -Path $manifestFileLocation\$manifestOutputFileName -Value "mssql|$fileMD5Hash|$manifestedFileName"
+}
+
+function getCurrentTimestamp {
+    $currentTimestamp = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
+    return $currentTimestamp 
 }
