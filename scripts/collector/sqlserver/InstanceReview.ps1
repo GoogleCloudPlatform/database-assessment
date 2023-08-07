@@ -32,10 +32,10 @@
     Signals if the perfmon collection should be skipped (default:false) 
 .EXAMPLE
     To use a specific username / password combination for a named instance:
-        C:\InstanceReview.ps1 -serverName [server name / ip address]\[instance name] -collectionUserName [collection username] -collectionUserPass [collection username password]
+        C:\instanceReview.ps1 -serverName [server name / ip address]\[instance name] -collectionUserName [collection username] -collectionUserPass [collection username password]
     
     To use a specific username / password combination for a default instance:
-        C:\InstanceReview.ps1 -serverName [server name / ip address] -collectionUserName [collection username] -collectionUserPass [collection username password]
+        C:\instanceReview.ps1 -serverName [server name / ip address] -collectionUserName [collection username] -collectionUserPass [collection username password]
 
 .NOTES
     https://googlecloudplatform.github.io/database-assessment/

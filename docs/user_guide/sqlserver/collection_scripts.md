@@ -154,7 +154,7 @@ The script will create a permon data set that will collect the above metrics at 
 - The collection can also be run for all user databases or a single user database. See the below examples for each scenario
   <br/>
 
-* RunAssessment.bat
+* runAssessment.bat
   The following parameters can be specified:
   - -serverName \*\*Required
   - -port \*\*Optional (Defaults to 1433)
@@ -166,36 +166,36 @@ The script will create a permon data set that will collect the above metrics at 
 To Execute the Collection:
 
       For a default instance (all databases):
-        RunAssessment.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+        runAssessment.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
-        Example (default port): RunAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123
-        Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123
+        Example (default port): runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123
+        Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123
 
       For a default instance (single database):
-        RunAssessment.bat -serverName [servername] -port [port number] -database [single database name] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+        runAssessment.bat -serverName [servername] -port [port number] -database [single database name] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
-        Example (default port): RunAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
-        Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+        Example (default port): runAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+        Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
 
       For a named instance (all databases):
-        RunAssessment.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+        runAssessment.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
-        Example (default port): RunAssessment.bat -serverName MS-SERVER1/SQL2019 -collectionUserName sa -collectionUserPass password123
-        Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123
+        Example (default port): runAssessment.bat -serverName MS-SERVER1/SQL2019 -collectionUserName sa -collectionUserPass password123
+        Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123
 
       For a named instance (single database):
-        RunAssessment.bat -serverName [servername\instanceName] -port [port number] -database [single database name] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+        runAssessment.bat -serverName [servername\instanceName] -port [port number] -database [single database name] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
-        Example (default port): RunAssessment.bat -serverName MS-SERVER1/SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
-        Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1437 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+        Example (default port): runAssessment.bat -serverName MS-SERVER1/SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+        Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1437 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
 
       For Azure SQL Database (Ignore Perfmon Collection):
-        RunAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password] -ignorePerfmon true
+        runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password] -ignorePerfmon true
 
-        Example (default port): RunAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
-        Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
-        Example (default port / all databases): RunAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
-        Example (custom port / all databases): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
+        Example (default port): runAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
+        Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
+        Example (default port / all databases): runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
+        Example (custom port / all databases): runAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
 
 
 
