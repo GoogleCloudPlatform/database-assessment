@@ -12,7 +12,7 @@ If an existing user with SYSADMIN privileges wil not be used, from a command pro
 
 ```powershell
 
-.\CreateUserForAssessmentWithSQLAuth.bat
+.\createUserForAssessmentWithSQLAuth.bat
 
 The following parameters can be specified:
     -serverName  ** Required
@@ -32,7 +32,7 @@ The following parameters can be specified:
 #### Windows Authentication
 
 ```powershell
-.\CreateUserForAssessmentWithWindowsAuth.bat
+.\createUserForAssessmentWithWindowsAuth.bat
 
 The following parameters can be specified:
     -serverName  ** Required

@@ -28,7 +28,7 @@ if /i "%1" == "-serverUserPass" set "saPass=%2"
 if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-collectionUserPass" set "pass=%2"
 
-set helpMessage=Usage: .\CreateUserForAssessmentWithSQLAuth.bat -serverName [servername] -port [port number] -serverUserName [existing admin username] -serverUserPass [existing admin password] -collectionUserName [username] -collectionUserPass [password]
+set helpMessage=Usage: .\createUserForAssessmentWithSQLAuth.bat -serverName [servername] -port [port number] -serverUserName [existing admin username] -serverUserPass [existing admin password] -collectionUserName [username] -collectionUserPass [password]
 
 if %1 == help (
     echo %helpMessage%

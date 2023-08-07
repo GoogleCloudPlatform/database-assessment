@@ -29,7 +29,7 @@ This utility extracts metadata about the tables, partitions and SQL workload in 
 
 ## Database Privileges
 
-This utility must be run as a database user with privileges to SELECT from certain data dictionary views. The scripts "CreateUserForAssessmentWithSQLAuth.bat" and "CreateUserForAssessmentWithWindowsAuth.bat" are supplied to create the required user and privileges. Instructions for executing it are below. Alternatively, you may use a user that already has the required privileges.
+This utility must be run as a database user with privileges to SELECT from certain data dictionary views. The scripts "createUserForAssessmentWithSQLAuth.bat" and "createUserForAssessmentWithWindowsAuth.bat" are supplied to create the required user and privileges. Instructions for executing it are below. Alternatively, you may use a user that already has the required privileges.
 
 ---
 
@@ -63,7 +63,7 @@ In order to begin running the Database Migration Assessment Collection process, 
         If an existing user with SYSADMIN privileges wil not be used, from a command prompt, execute either of the following scripts depending on what type of authentication you currently use for your SYSADMIN user.
 
         In this example the collection user will use SQL Authentication:
-            - CreateUserForAssessmentWithSQLAuth.bat
+            - createUserForAssessmentWithSQLAuth.bat
                 The following parameters can be specified:
                     -serverName  ** Required
                     -port  ** Optional (Defaults to 1433)
@@ -73,13 +73,13 @@ In order to begin running the Database Migration Assessment Collection process, 
                     -collectionUserPass  ** Required
 
             For a Named Instance:
-                CreateUserForAssessmentWithSQLAuth.bat -serverName [servername\instanceName] -port [port number] -serverUserName [existing privileged user] -serverUserPass [privileged user password] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+                createUserForAssessmentWithSQLAuth.bat -serverName [servername\instanceName] -port [port number] -serverUserName [existing privileged user] -serverUserPass [privileged user password] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
             For a Default Instance:
-                CreateUserForAssessmentWithSQLAuth.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+                createUserForAssessmentWithSQLAuth.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
         In this example, the created user will use Windows Authentication:
-            - CreateUserForAssessmentWithWindowsAuth.bat
+            - createUserForAssessmentWithWindowsAuth.bat
                 The following parameters can be specified:
                     -serverName  ** Required
                     -port  ** Optional (Defaults to 1433)
@@ -87,10 +87,10 @@ In order to begin running the Database Migration Assessment Collection process, 
                     -collectionUserPass  ** Required
 
             For a Named Instance:
-                CreateUserForAssessmentWithWindowsAuth.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+                createUserForAssessmentWithWindowsAuth.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
             For a Default Instance:
-                CreateUserForAssessmentWithWindowsAuth.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+                createUserForAssessmentWithWindowsAuth.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
 ---
 
