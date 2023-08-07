@@ -72,6 +72,15 @@ if ([string]::IsNullorEmpty($serverName)) {
 }
 
 Write-Output "Creating Collection User in $serverName"
-sqlcmd -S $serverName,$port -i sql\createCollectionUser.sql -U $user -P $pass -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
+
+
+if ([string]::IsNullorEmpty($port)) {
+    Write-Output "Creating Collection User in $serverName"
+    sqlcmd -S $serverName -i sql\createCollectionUser.sql -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
+} else {
+    $serverName = "$serverName,$port"
+    Write-Output "Creating Collection User in $serverName, using PORT $port"
+    sqlcmd -S $serverName -i sql\createCollectionUser.sql -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
+}
 
 Exit 0

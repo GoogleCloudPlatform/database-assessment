@@ -49,7 +49,7 @@ if [%user%] == [] goto error
 if [%pass%] == [] goto error
 if [%serverName%]==[] goto raiseServerError
 echo "Creating Collection User with Custom Credentials"
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createuserwithsqluser.ps1 -serverName %serverName% -port %port% -user %saUser% -pass %saPass% -collectionUserName %user% -collectionUserPass %pass%
+PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createUserWithSQLAuth.ps1 -serverName %serverName% -port %port% -user %saUser% -pass %saPass% -collectionUserName %user% -collectionUserPass %pass%
 if %errorlevel% == 1 goto exit
 goto done
 

@@ -40,10 +40,12 @@
 #>
 Param(
 [Parameter(Mandatory=$true)][string]$serverName="",
-[Parameter(Mandatory=$true)][string]$port="1433",
+[Parameter(Mandatory=$true)][string]$port="",
 [Parameter(Mandatory=$false)][string]$collectionUserName="",
 [Parameter(Mandatory=$false)][string]$collectionUserPass=""
 )
+
+Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
 
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
@@ -59,5 +61,13 @@ if ([string]::IsNullorEmpty($serverName)) {
     Exit 1
 }
 
-Write-Output "Creating Collection User in $serverName"
-sqlcmd -S $serverName,$port -i sql\createCollectionUser.sql -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
+if ([string]::IsNullorEmpty($port)) {
+    Write-Output "Creating Collection User in $serverName"
+    sqlcmd -S $serverName -i sql\createCollectionUser.sql -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
+} else {
+    $serverName = "$serverName,$port"
+    Write-Output "Creating Collection User in $serverName, using PORT $port"
+    sqlcmd -S $serverName -i sql\createCollectionUser.sql -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
+}
+
+
