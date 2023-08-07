@@ -72,6 +72,6 @@ if ([string]::IsNullorEmpty($serverName)) {
 }
 
 Write-Output "Creating Collection User in $serverName"
-sqlcmd -S $serverName,$port -i sql\prereq_createsa.sql -U $user -P $pass -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
+sqlcmd -S $serverName,$port -i sql\createCollectionUser.sql -U $user -P $pass -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
 
 Exit 0

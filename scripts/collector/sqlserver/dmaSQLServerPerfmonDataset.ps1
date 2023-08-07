@@ -26,7 +26,7 @@
     Enter the named instance name (Optional, unless using a named instance)
 	If collecting from a named instance, enter the instance name or the default instance will be used.
 .EXAMPLE
-    C:\dma_sqlserver_perfmon_dataset.ps1 -operation create -mssqlInstanceName [named Instance] / $null
+    C:\dmaSQLServerPerfmonDataset.ps1 -operation create -mssqlInstanceName [named Instance] / $null
 .NOTES
     https://googlecloudplatform.github.io/database-assessment/
 #>
@@ -480,6 +480,15 @@ param(
 	}
 	else {
 	((Get-Content -Path $PSScriptRoot\perfmon_header.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
+	$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
+	$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
+	Add-Content -Path $outputDir\$outputFileName -Value $tempContent
+
+	$futureDate = (Get-Date).AddMinutes(1)
+	$tempDate = $futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")
+	$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
+	Add-Content -Path $outputDir\$outputFileName -Value $tempContent
+
 	}	
 	if (Test-Path -Path $outputDir\$outputFileName) {
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Clean up Temp File area..." -logOperation "BOTH"

@@ -37,18 +37,6 @@ Features NVARCHAR(40),
 Is_EnabledOrUsed NVARCHAR(4),
 Count INT
 )
---Log shipping
-/*
-Commented Out until we can figure out how to execute it on a managed SQL Server Instance
-DECLARE @lsdbs TABLE(a char(100),b char(100),c char(100),d char(100), e char(100), f char(100), g char(100), h char(100), i char(100), j char(100), k char(100), l char(100), m char(100), n char(100), o char(100));
-DECLARE @IS_LogShipping_Enabled as NVARCHAR(4), @log_shipping_count INT
-insert INTO @lsdbs 
-EXEC sp_help_log_shipping_monitor; 
-select @log_shipping_count = count(*) from @lsdbs;
-IF @log_shipping_count > 0 SET @IS_LogShipping_Enabled = 'Yes'  ELSE  SET @IS_LogShipping_Enabled = 'No' ;
-INSERT INTO #FeaturesEnabled VALUES (
-'Log Shipping', @IS_LogShipping_Enabled, ISNULL(@log_shipping_count,0) );*/
-
 
 --DB Mail
 BEGIN

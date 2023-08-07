@@ -25,4 +25,13 @@ IF NOT EXISTS
 BEGIN
     CREATE LOGIN [$(collectionUser)] WITH PASSWORD=N'$(collectionPass)', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF
 END
-EXEC master..sp_addsrvrolemember @loginame = N'$(collectionUser)', @rolename = N'sysadmin'
+GRANT VIEW SERVER STATE TO N'$(collectionUser)'
+GO
+GRANT SELECT ALL USER SECURABLES TO N'$(collectionUser)'
+GO
+GRANT VIEW ANY DATABASE TO N'$(collectionUser)'
+GO
+GRANT VIEW ANY DEFINITION TO N'$(collectionUser)'
+GO
+GRANT VIEW SERVER STATE TO N'$(collectionUser)'
+GO
