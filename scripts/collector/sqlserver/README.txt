@@ -39,10 +39,21 @@ Operating System Versions:
 
     a) Unzip the install archive.
 
-    b) As of the current release, the collection scripts require a user with the SYSADMIN privilege.  An existing user may be used or one can be created using the scripts as shown below:
+    b) As of the current release, the collection scripts require a user with the SYSADMIN privilege.  
+        An existing user may be used or one can be created using the scripts as shown below:
+  
+        In the master database:
+            GRANT VIEW SERVER STATE TO [username];
+            GRANT SELECT ALL USER SECURABLES TO [username];
+            GRANT VIEW ANY DATABASE TO [username];
+            GRANT VIEW ANY DEFINITION TO [username];
+            GRANT VIEW SERVER STATE TO [username];
 
-        If an existing user with SYSADMIN privileges wil not be used, from a command prompt, execute either of the following scripts depending on what type of authentication you currently use for your SYSADMIN user.  
+        In each user database:
+            CREATE USER [username] FOR LOGIN [username];
+            GRANT VIEW DATABASE STATE TO [username];
         
+    c) User creation using provided scripts (optional):
         In this example the collection user will use SQL Authentication:
             - createUserForAssessmentWithSQLAuth.bat
                 The following parameters can be specified:
@@ -72,6 +83,8 @@ Operating System Versions:
 
             For a Default Instance:
                 createUserForAssessmentWithWindowsAuth.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+
+
 
 3. Execution
 ------------
