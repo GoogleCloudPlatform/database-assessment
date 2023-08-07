@@ -165,5 +165,4 @@ scripts/collector/oracle/output/
 scripts/collector/oracle/privs.sql
 scripts/collector/oracle/VERSION.txt
 scripts/collector/sqlserver/output/
-!scripts/collector/sqlserver/perfmon_header.csv
 scripts/collector/oracle/login.sql
