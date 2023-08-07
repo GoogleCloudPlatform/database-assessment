@@ -470,7 +470,7 @@ param(
 	} else {
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "No Perfmon Files exist in the $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet Directory. Continuing without Perfmon file." -logOperation "FILE"
-		Write-Output "No Perfmon Files exist in the $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet Directory. Continuing without Perfmon file." | Yellow
+		Write-Output "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date))   No Perfmon Files exist in the $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet Directory. Continuing without Perfmon file." | Yellow
 		$fileExists = $false
 	}
 
