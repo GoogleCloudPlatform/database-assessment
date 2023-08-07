@@ -24,7 +24,7 @@ if /i "%1" == "-port" set "port=%2"
 if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-collectionUserPass" set "pass=%2"
 
-set helpMessage=Usage: .\CreateUserForAssessmentWithWindowsAuth.bat -serverName [servername] -port [port number] -collectionUserName [username] -collectionUserPass [password]
+set helpMessage=Usage: .\createUserForAssessmentWithWindowsAuth.bat -serverName [servername] -port [port number] -collectionUserName [username] -collectionUserPass [password]
 
 
 if %1 == help (
@@ -44,7 +44,7 @@ if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 if [%pass%] == [] goto error
 echo Creating Collection User with Custom Credentials
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createuserwithwindowsauth.ps1 -serverName %serverName% -port %port% -collectionUserName %user% -collectionUserPass %pass%
+PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createUserWithWindowsAuth.ps1 -serverName %serverName% -port %port% -collectionUserName %user% -collectionUserPass %pass%
 if %errorlevel% == 1 goto exit
 goto done
 

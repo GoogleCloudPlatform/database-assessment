@@ -24,8 +24,8 @@ set perfmonOperation=""
 set instance=""
 set managedInstanceName=
 
-set helpMessage=Usage ManageSqlServerPerfmonDataset.bat -operation [create/start/stop/delete/collect/createemptyfile/help] -instanceType [managed/default] -managedInstanceName [instance name]
-set helpExample=Example: .\ManageSqlServerPerfmonDataset.bat -operation create -instanceType default or .\ManageSqlServerPerfmonDataset.bat -operation create -instanceType managed -managedInstanceName SQL2019
+set helpMessage=Usage manageSQLServerPerfmonDataset.bat -operation [create/start/stop/delete/collect/createemptyfile/help] -instanceType [managed/default] -managedInstanceName [instance name]
+set helpExample=Example: .\manageSQLServerPerfmonDataset.bat -operation create -instanceType default or .\manageSQLServerPerfmonDataset.bat -operation create -instanceType managed -managedInstanceName SQL2019
 
 if [%1]==[] (
     goto helpOperation
@@ -89,14 +89,14 @@ if %instance%==managed (
 
 if %instance%==default (
     echo Managing Perfmon Collection for Default Instance
-    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dma_sqlserver_perfmon_dataset.ps1 -operation %perfmonOperation%
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dmaSQLServerPerfmonDataset.ps1 -operation %perfmonOperation%
 
     goto done
 )
 
 if %instance%==managed (
     echo Managing Perfmon Collection for Managed Instance %managedInstanceName%
-    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dma_sqlserver_perfmon_dataset.ps1 -operation %perfmonOperation% -managedInstanceName %managedInstanceName%
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dmaSQLServerPerfmonDataset.ps1 -operation %perfmonOperation% -managedInstanceName %managedInstanceName%
 
     goto done
 )

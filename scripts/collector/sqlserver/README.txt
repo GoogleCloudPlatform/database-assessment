@@ -25,7 +25,7 @@ Operating System Versions:
     b) Database Privileges
     ----------------------
     This utility must be run as a database user with privileges to SELECT from certain data dictionary views.
-    The scripts "CreateUserForAssessmentWithSQLAuth.bat" and "CreateUserForAssessmentWithWindowsAuth.bat" are supplied to create the required user and privileges.  Instructions for executing it are below. Alternatively, you may use a user that already has the required privileges (include privileges in the appendix)
+    The scripts "createUserForAssessmentWithSQLAuth.bat" and "createUserForAssessmentWithWindowsAuth.bat" are supplied to create the required user and privileges.  Instructions for executing it are below. Alternatively, you may use a user that already has the required privileges (include privileges in the appendix)
 
     c) System Requirements
     ----------------------
@@ -39,12 +39,23 @@ Operating System Versions:
 
     a) Unzip the install archive.
 
-    b) As of the current release, the collection scripts require a user with the SYSADMIN privilege.  An existing user may be used or one can be created using the scripts as shown below:
+    b) As of the current release, the collection scripts require a user with the SYSADMIN privilege.  
+        An existing user may be used or one can be created using the scripts as shown below:
+  
+        In the master database:
+            GRANT VIEW SERVER STATE TO [username];
+            GRANT SELECT ALL USER SECURABLES TO [username];
+            GRANT VIEW ANY DATABASE TO [username];
+            GRANT VIEW ANY DEFINITION TO [username];
+            GRANT VIEW SERVER STATE TO [username];
 
-        If an existing user with SYSADMIN privileges wil not be used, from a command prompt, execute either of the following scripts depending on what type of authentication you currently use for your SYSADMIN user.  
+        In each user database:
+            CREATE USER [username] FOR LOGIN [username];
+            GRANT VIEW DATABASE STATE TO [username];
         
+    c) User creation using provided scripts (optional):
         In this example the collection user will use SQL Authentication:
-            - CreateUserForAssessmentWithSQLAuth.bat
+            - createUserForAssessmentWithSQLAuth.bat
                 The following parameters can be specified:
                     -serverName  ** Required
                     -port  ** Optional (Defaults to 1433)
@@ -54,13 +65,13 @@ Operating System Versions:
                     -collectionUserPass  ** Required
 
             For a Named Instance:
-                CreateUserForAssessmentWithSQLAuth.bat -serverName [servername\instanceName] -port [port number] -serverUserName [existing privileged user] -serverUserPass [privileged user password] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+                createUserForAssessmentWithSQLAuth.bat -serverName [servername\instanceName] -port [port number] -serverUserName [existing privileged user] -serverUserPass [privileged user password] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
             For a Default Instance:
-                CreateUserForAssessmentWithSQLAuth.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+                createUserForAssessmentWithSQLAuth.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
         In this example, the created user will use Windows Authentication:
-            - CreateUserForAssessmentWithWindowsAuth.bat
+            - createUserForAssessmentWithWindowsAuth.bat
                 The following parameters can be specified:
                     -serverName  ** Required
                     -port  ** Optional (Defaults to 1433)
@@ -68,10 +79,12 @@ Operating System Versions:
                     -collectionUserPass  ** Required
 
             For a Named Instance:
-                CreateUserForAssessmentWithWindowsAuth.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+                createUserForAssessmentWithWindowsAuth.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
             For a Default Instance:
-                CreateUserForAssessmentWithWindowsAuth.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+                createUserForAssessmentWithWindowsAuth.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+
+
 
 3. Execution
 ------------
@@ -123,7 +136,7 @@ Operating System Versions:
     b)  When the perfmon dataset completes or if you would like to execute the collection sooner, execute the following command from a command prompt session in "Administrator Mode" on the server you would like to collect data on
         and return the subsequent .zip file to Google.
 
-        RunAssessment.bat
+        runAssessment.bat
             The following parameters can be specified:
                 -serverName ** Required
                 -port **Optional (Defaults to 1433)
@@ -133,36 +146,36 @@ Operating System Versions:
                 -ignorePerfmon **Optional (Defaults to "false" / Set to "true" to ignore perfmon collection)
 
         For a Named Instance (all databases):
-            .\RunAssessment.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+            .\runAssessment.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
-                Example (default port): RunAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123
-                Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123
+                Example (default port): runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123
+                Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123
 
         For a Named Instance (single database):
-            .\RunAssessment.bat -serverName [servername\instanceName] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+            .\runAssessment.bat -serverName [servername\instanceName] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password]
         
-                Example (default port): RunAssessment.bat -serverName MS-SERVER1/SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
-                Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+                Example (default port): runAssessment.bat -serverName MS-SERVER1/SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+                Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
 
         For a Default Instance (all databases):
-            .\RunAssessment.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+            .\runAssessment.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
-                Example (default port): RunAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123
-                Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123
+                Example (default port): runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123
+                Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123
 
         For a Default Instance (single databases):
-            .\RunAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password]
+            .\runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
-                Example (default port): RunAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
-                Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+                Example (default port): runAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
+                Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123
 
         For Azure SQL Database (Ignore Perfmon Collection):
-             .\RunAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password] -ignorePerfmon true
+             .\runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password] -ignorePerfmon true
 
-                Example (default port): RunAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
-                Example (custom port): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
-                Example (default port / all databases): RunAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
-                Example (custom port / all databases): RunAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true        
+                Example (default port): runAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
+                Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
+                Example (default port / all databases): runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true
+                Example (custom port / all databases): runAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true        
 
         Notes:
             1) Google Database Migration Assessment Data Extractor extracts data for all user databases present in the instance
