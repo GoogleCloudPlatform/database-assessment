@@ -476,18 +476,25 @@ param(
 
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Concatenating and adding header to perfmon files..." -logOperation "BOTH"
 	if ($fileExists)  {
-	((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\PKEY_*$dataSet*.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
+
+		$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"'
+		Set-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
+		((Get-Content -Path $env:TEMP\PKEY_*$dataSet*.csv -Raw ) -replace ',','|') | Add-Content -Encoding utf8 -Path $outputDir\$outputFileName
+	
 	}
 	else {
-	((Get-Content -Path $PSScriptRoot\perfmon_header.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
-	$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
-	$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
-	Add-Content -Path $outputDir\$outputFileName -Value $tempContent
 
-	$futureDate = (Get-Date).AddMinutes(1)
-	$tempDate = $futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")
-	$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
-	Add-Content -Path $outputDir\$outputFileName -Value $tempContent
+		$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"'
+		Set-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
+
+		$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
+		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
+		Add-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
+
+		$futureDate = (Get-Date).AddMinutes(1)
+		$tempDate = $futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")
+		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
+		Add-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
 
 	}	
 	if (Test-Path -Path $outputDir\$outputFileName) {
@@ -518,16 +525,20 @@ function CreateEmptyFile
 			$null = New-Item -ItemType Directory -Path $outputDir
 		}
 
-		$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
-		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
-		Set-Content $env:TEMP\emptyStrings.csv -Value $tempContent
+		$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"'
+		Set-Content $env:TEMP\emptyStrings.csv -Value $tempContent -Encoding utf8
 
 		$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
 		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
-		Add-Content $env:TEMP\emptyStrings.csv -Value $tempContent
+		Add-Content $env:TEMP\emptyStrings.csv -Value $tempContent -Encoding utf8
+
+		$futureDate = (Get-Date).AddMinutes(1)
+		$tempDate = $futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")
+		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
+		Add-Content $env:TEMP\emptyStrings.csv -Value $tempContent -Encoding utf8
 
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Concatenating and adding header to perfmon files to $outputFileName ..." -logOperation "BOTH"
-		((Get-Content -Path $PSScriptRoot\perfmon_header.csv, $env:TEMP\emptyStrings.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -NoNewline -Path $outputDir\$outputFileName
+		((Get-Content -Path $env:TEMP\emptyStrings.csv -Raw ) -replace ',','|') | Set-Content -Encoding utf8 -Path $outputDir\$outputFileName
 
 		if (Test-Path -Path $outputDir\$outputFileName) {
 			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Clean up Temp File area..." -logOperation "BOTH"
