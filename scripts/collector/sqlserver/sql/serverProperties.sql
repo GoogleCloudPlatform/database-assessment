@@ -153,7 +153,17 @@ SELECT 'PhysicalCpuCount', CONVERT(varchar, (cpu_count/hyperthread_ratio)) from 
 UNION ALL
 SELECT 'SqlServerStartTime', CONVERT(varchar, (sqlserver_start_time)) from sys.dm_os_sys_info
 UNION ALL
-SELECT 'BULK_INSERT', CONVERT(varchar,count(p.permission_name)) FROM fn_my_permissions(NULL, 'SERVER') p WHERE permission_name like '%ADMINISTER BULK OPERATIONS%';
+SELECT 'BULK_INSERT', CONVERT(varchar,count(p.permission_name)) FROM fn_my_permissions(NULL, 'SERVER') p WHERE permission_name like '%ADMINISTER BULK OPERATIONS%'
+UNION ALL
+SELECT 'TotalOSMemoryMB', CONVERT(varchar, (total_physical_memory_kb/1024)) FROM sys.dm_os_sys_memory
+UNION ALL
+SELECT 'AvailableOSMemoryMB', CONVERT(varchar, (available_physical_memory_kb/1024)) FROM sys.dm_os_sys_memory
+UNION ALL
+SELECT 'TotalMemoryInUseIncludingProcessesInMB', CONVERT(varchar, (physical_memory_in_use_kb/1024)) FROM sys.dm_os_process_memory
+UNION ALL
+SELECT 'TotalLockedPageAllocInMB', CONVERT(varchar, (locked_page_allocations_kb/1024)) FROM sys.dm_os_process_memory
+UNION ALL
+SELECT 'TotalUserVirtualMemoryInMB', CONVERT(varchar, (total_virtual_address_space_kb/1024)) FROM sys.dm_os_process_memory;
 WITH check_sysadmin_role AS (
     SELECT
         name,
@@ -266,6 +276,8 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', ''UNKNOWN''');
     exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'', ''UNKNOWN''');
     exec('INSERT INTO #serverProperties SELECT ''IsStretchDatabaseEnabled'', CONVERT(nvarchar, count(*)) FROM sys.remote_data_archive_databases /* SQL Server 2016 (13.x) and Up to 2022 */');
+    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, committed_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
+    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
 END
 IF @CLOUDTYPE = 'NONE'
 BEGIN
@@ -304,7 +316,8 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,SERVERPROPERTY(''ProductLevel'')),1,1024), ''UNKNOWN'') ');
     exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',''UNKNOWN''');
     exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024)');
-    exec('INSERT INTO #serverProperties SELECT ''PhysicalMemoryKB'', CONVERT(varchar, (ROUND(physical_memory_in_bytes/1024,0))) from sys.dm_os_sys_info');
+    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, 0) /* Parameter defaulted because its not avaliable in this version */');
+    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, 0) /* Parameter defaulted because its not avaliable in this version */');
     END;
     IF @PRODUCT_VERSION >= 13 AND @PRODUCT_VERSION <= 16
     BEGIN
@@ -320,6 +333,8 @@ BEGIN
     END;
     IF @PRODUCT_VERSION >= 11
     BEGIN
+    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, committed_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
+    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
     exec('WITH check_filestream AS (
         SELECT
             Name,
