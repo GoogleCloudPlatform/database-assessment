@@ -17,7 +17,8 @@ set user=
 set pass=
 set saUser=
 set saPass=
-set port=1433
+set serverName=
+set port=
 
 :loop 
 if "%1" == "" goto evaluateUser
@@ -48,7 +49,7 @@ if not [%user%]==[] goto execWithCustomCreds
 if [%user%] == [] goto error
 if [%pass%] == [] goto error
 if [%serverName%]==[] goto raiseServerError
-echo "Creating Collection User with Custom Credentials"
+
 PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createUserWithSQLAuth.ps1 -serverName %serverName% -port %port% -user %saUser% -pass %saPass% -collectionUserName %user% -collectionUserPass %pass%
 if %errorlevel% == 1 goto exit
 goto done
