@@ -27,7 +27,6 @@ SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPRO
 SELECT @CLOUDTYPE = 'NONE'
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
-	SELECT @MACHINENAME = SUBSTRING(REPLACE(CONVERT(NVARCHAR(255), service_broker_guid),'-',''),0,15) FROM sys.databases where name = 'master'
 
 SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
 IF @ASSESSMENT_DATABSE_NAME = 'all'
@@ -36,7 +35,7 @@ IF @ASSESSMENT_DATABSE_NAME = 'all'
 BEGIN
 	exec('
 	SELECT CAST(SERVERPROPERTY(''ProductVersion'') AS VARCHAR(15)) AS Version,
-	COALESCE(CONVERT(nvarchar, @@SERVERNAME), ''' + @MACHINENAME + '''  + ''-'' + ''' + @CLOUDTYPE + ''') as machinename,
+	UPPER(CONVERT(nvarchar, @@SERVERNAME)) as machinename,
 	''' + @ASSESSMENT_DATABSE_NAME + ''' as databasename,
 	COALESCE(CONVERT(nvarchar, SERVERPROPERTY(''InstanceName'')), ''MSSQLSERVER'') as instancename,
 	replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''') as current_ts,
