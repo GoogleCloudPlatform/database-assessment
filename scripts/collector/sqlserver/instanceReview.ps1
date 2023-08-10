@@ -67,6 +67,7 @@ if ([string]::IsNullorEmpty($serverName)) {
 } else {
     if ([string]::IsNullorEmpty($port)) {
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
+        $inputServerName = $serverName
         $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v database=$database)
         if ([string]$database -ne "all") {
@@ -79,6 +80,7 @@ if ([string]::IsNullorEmpty($serverName)) {
             }
         }
     } else {
+        $inputServerName = $serverName
         $serverName = "$serverName,$port"
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
         $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
@@ -160,6 +162,18 @@ $PSVersionTable | out-string | Add-Content -Encoding utf8 -Path $foldername\$log
 WriteLog -logLocation $foldername\$logFile -logMessage "Output Encoding Table" -logOperation "FILE"
 $OutputEncoding | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
 
+WriteLog -logLocation $foldername\$logFile -logMessage "Execution Variables List" -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "serverName = $inputServerName " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "port = $port " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "database = $database " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "collectionUserName = $collectionUserName " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "ignorePerfmon = $ignorePerfmon " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "connectionString = $serverName " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
+
+
 $compFileName = 'opdb' + '__' + 'CompInstalled' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 $srvFileName = 'opdb' + '__' + 'ServerProps' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 $blockingFeatures = 'opdb' + '__' + 'BlockFeatures' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
@@ -192,7 +206,7 @@ foreach ($directory in $outputFileArray) {
     }
 }
 
-WriteLog -logLocation $foldername\$logFile -logMessage "Executing Assessment Against the Following Databases:" -logOperation "BOTH"
+WriteLog -logLocation $foldername\$logFile -logMessage "Executing Assessment on Server $serverName Against the Following Databases:" -logOperation "BOTH"
 foreach ($dbNameList in $dbNameArray) {
     WriteLog -logLocation $foldername\$logFile -logMessage "            $dbNameList" -logOperation "BOTH"
 }
