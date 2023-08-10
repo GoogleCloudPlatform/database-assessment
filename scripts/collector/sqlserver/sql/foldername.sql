@@ -19,14 +19,6 @@ SET NOCOUNT ON;
 SET LANGUAGE us_english;
 
 DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256)
-DECLARE @CLOUDTYPE AS VARCHAR(256)
-DECLARE @PRODUCT_VERSION AS INTEGER
-DECLARE @MACHINENAME AS VARCHAR(256)
-
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
-SELECT @CLOUDTYPE = 'NONE'
-IF UPPER(@@VERSION) LIKE '%AZURE%'
-	SELECT @CLOUDTYPE = 'AZURE'
 
 SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
 IF @ASSESSMENT_DATABSE_NAME = 'all'
@@ -39,10 +31,6 @@ BEGIN
 	''' + @ASSESSMENT_DATABSE_NAME + ''' as databasename,
 	COALESCE(CONVERT(nvarchar, SERVERPROPERTY(''InstanceName'')), ''MSSQLSERVER'') as instancename,
 	replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''') as current_ts,
-	CASE WHEN ''' + @CLOUDTYPE + ''' = ''AZURE''
-	THEN 
-	   UPPER(CONVERT(nvarchar, @@SERVERNAME)) + ''-'' + ''' + @CLOUDTYPE + ''' + ''_'' + ''' + @ASSESSMENT_DATABSE_NAME + ''' + ''_'' +  COALESCE(CONVERT(nvarchar, SERVERPROPERTY(''InstanceName'')), ''MSSQLSERVER'') + ''_'' + replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''') 
-	ELSE
-	   UPPER(CONVERT(nvarchar, @@SERVERNAME)) + ''_'' + ''' + @ASSESSMENT_DATABSE_NAME + ''' + ''_'' +  COALESCE(CONVERT(nvarchar, SERVERPROPERTY(''InstanceName'')), ''MSSQLSERVER'') + ''_'' + replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''') 
+	UPPER(CONVERT(nvarchar, @@SERVERNAME)) + ''_'' + ''' + @ASSESSMENT_DATABSE_NAME + ''' + ''_'' +  COALESCE(CONVERT(nvarchar, SERVERPROPERTY(''InstanceName'')), ''MSSQLSERVER'') + ''_'' + replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''') 
 	END as pkey');
 END
