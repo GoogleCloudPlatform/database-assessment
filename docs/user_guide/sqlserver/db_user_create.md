@@ -16,6 +16,15 @@ The user creation scripts will grant the appropriate permissions. If it is desir
 	GRANT VIEW SERVER STATE TO [username];
 ```
 
+For SQL Server Versions 2022 and above, the following additional permissions will be granted:
+
+```sql
+            GRANT VIEW SERVER PERFORMANCE STATE TO [username];
+            GRANT VIEW SERVER SECURITY STATE TO [username];
+            GRANT VIEW ANY PERFORMANCE DEFINITION TO [username];
+            GRANT VIEW ANY SECURITY DEFINITION TO [username];
+```
+
 In addition the user must also be mapped to all user databases, tempdb and master databases along with the following grant:
 
 ```sql

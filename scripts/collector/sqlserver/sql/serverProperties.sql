@@ -29,7 +29,12 @@ SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPRO
 SELECT @CLOUDTYPE = 'NONE'
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
-    SELECT @MACHINENAME = SUBSTRING(REPLACE(CONVERT(NVARCHAR(255), service_broker_guid),'-',''),0,15) FROM sys.databases where name = 'master'
+
+IF CHARINDEX('\', @@SERVERNAME)-1 = -1
+  SELECT @MACHINENAME = UPPER(@@SERVERNAME)
+ELSE
+  SELECT @MACHINENAME = UPPER(SUBSTRING(CONVERT(nvarchar, @@SERVERNAME),1,CHARINDEX('\', CONVERT(nvarchar, @@SERVERNAME))-1))
+
 
 IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  
    DROP TABLE #serverProperties;
@@ -99,7 +104,7 @@ SELECT 'LCID', CONVERT(nvarchar, SERVERPROPERTY('LCID'))
 UNION ALL
 SELECT 'LicenseType', CONVERT(nvarchar, SERVERPROPERTY('LicenseType'))
 UNION ALL
-SELECT 'MachineName', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('MachineName')), @MACHINENAME + '-' + @CLOUDTYPE)
+SELECT 'MachineName', @MACHINENAME
 UNION ALL
 SELECT 'NumLicenses', CONVERT(nvarchar, SERVERPROPERTY('NumLicenses'))
 UNION ALL
@@ -265,7 +270,15 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''HostRelease'', ''UNKNOWN''');
     exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', ''UNKNOWN''');
     exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'', ''UNKNOWN''');
-    exec('INSERT INTO #serverProperties SELECT ''IsStretchDatabaseEnabled'', CONVERT(nvarchar, count(*)) FROM sys.remote_data_archive_databases /* SQL Server 2016 (13.x) and Up to 2022 */');
+    exec('INSERT INTO #serverProperties SELECT ''IsStretchDatabaseEnabled'', CONVERT(nvarchar, count(*)) FROM sys.remote_data_archive_databases');
+    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, committed_kb/1024) FROM sys.dm_os_sys_info');
+    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info');
+    /* Default Memory Usage to SQLServerMemoryTargetInMB for Azure SQL Database because data is not available */
+    exec('INSERT INTO #serverProperties SELECT ''TotalOSMemoryMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info')
+    exec('INSERT INTO #serverProperties SELECT ''AvailableOSMemoryMB'', CONVERT(varchar, 0)')
+    exec('INSERT INTO #serverProperties SELECT ''TotalMemoryInUseIncludingProcessesInMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info')
+    exec('INSERT INTO #serverProperties SELECT ''TotalLockedPageAllocInMB'', CONVERT(varchar, 0)')
+    exec('INSERT INTO #serverProperties SELECT ''TotalUserVirtualMemoryInMB'', CONVERT(varchar, 0)')
 END
 IF @CLOUDTYPE = 'NONE'
 BEGIN
@@ -276,6 +289,12 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''ServerLevelTriggers'', CONVERT(varchar, count(*)) from sys.server_triggers')
     exec('INSERT INTO #serverProperties SELECT ''CountServiceBrokerEndpoints'', CONVERT(varchar, count(*)) from sys.service_broker_endpoints')
     exec('INSERT INTO #serverProperties SELECT ''CountTSQLEndpoints'', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535')
+    /* Query Memory usage at OS level */
+    exec('INSERT INTO #serverProperties SELECT ''TotalOSMemoryMB'', CONVERT(varchar, (total_physical_memory_kb/1024)) FROM sys.dm_os_sys_memory')
+    exec('INSERT INTO #serverProperties SELECT ''AvailableOSMemoryMB'', CONVERT(varchar, (available_physical_memory_kb/1024)) FROM sys.dm_os_sys_memory')
+    exec('INSERT INTO #serverProperties SELECT ''TotalMemoryInUseIncludingProcessesInMB'', CONVERT(varchar, (physical_memory_in_use_kb/1024)) FROM sys.dm_os_process_memory')
+    exec('INSERT INTO #serverProperties SELECT ''TotalLockedPageAllocInMB'', CONVERT(varchar, (locked_page_allocations_kb/1024)) FROM sys.dm_os_process_memory')
+    exec('INSERT INTO #serverProperties SELECT ''TotalUserVirtualMemoryInMB'', CONVERT(varchar, (total_virtual_address_space_kb/1024)) FROM sys.dm_os_process_memory')
 
     IF @PRODUCT_VERSION >= 15
     BEGIN
@@ -304,7 +323,8 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,SERVERPROPERTY(''ProductLevel'')),1,1024), ''UNKNOWN'') ');
     exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',''UNKNOWN''');
     exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024)');
-    exec('INSERT INTO #serverProperties SELECT ''PhysicalMemoryKB'', CONVERT(varchar, (ROUND(physical_memory_in_bytes/1024,0))) from sys.dm_os_sys_info');
+    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, 0) /* Parameter defaulted because its not avaliable in this version */');
+    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, 0) /* Parameter defaulted because its not avaliable in this version */');
     END;
     IF @PRODUCT_VERSION >= 13 AND @PRODUCT_VERSION <= 16
     BEGIN
@@ -320,6 +340,8 @@ BEGIN
     END;
     IF @PRODUCT_VERSION >= 11
     BEGIN
+    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, committed_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
+    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
     exec('WITH check_filestream AS (
         SELECT
             Name,

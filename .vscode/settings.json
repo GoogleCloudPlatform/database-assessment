@@ -141,7 +141,7 @@
   "[toml]": {
     "editor.defaultFormatter": "be5invis.toml"
   },
-  "mypy.targets": ["src/server"],
+  "mypy.targets": ["."],
   "mypy.configFile": "",
   "mypy.debugLogging": false,
   "ruff.args": [],
