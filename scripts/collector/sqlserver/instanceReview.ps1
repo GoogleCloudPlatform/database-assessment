@@ -117,7 +117,7 @@ $instancename = $values[3]
 $current_ts = $values[4]
 $pkey = $values[5]
 
-$op_version = "4.3.13"
+$op_version = "4.3.14"
 
 if ($ignorePerfmon -eq "true") {
     $perfCounterLabel = "NoPerfCounter"

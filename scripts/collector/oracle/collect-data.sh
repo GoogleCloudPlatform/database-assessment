@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.13"
+OpVersion="4.3.14"
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
 export LANG=C
