@@ -87,7 +87,8 @@ GROUP BY
           name)
 SELECT pkey , dbid , instance_number , hour , stat_name , cnt ,
        avg_value , mode_value , median_value , min_value , max_value ,
-	   sum_value , perc50 , perc75 , perc90 , perc95 , perc100
+	   sum_value , perc50 , perc75 , perc90 , perc95 , perc100,
+	       '&v_uniq_id' AS V_UNIQ_ID
 FROM vsysstat;
 
 spool off

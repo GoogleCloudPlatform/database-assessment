@@ -68,6 +68,7 @@ SELECT '&&v_host'
        || '&&v_dbname'
        || '_'
        || '&&v_hora'                   AS pkey,
-       patch_id, unique_patch_id, patch_type, applied_date, patch_descr, bug_descr
+       patch_id, unique_patch_id, patch_type, applied_date, patch_descr, bug_descr,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM vopatch;
 spool off

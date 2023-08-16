@@ -32,6 +32,7 @@ GROUP BY '&&v_host'
        || '_'
        || '&&v_hora',
        &v_a_con_id , owner)
-SELECT pkey , con_id , owner , count
+SELECT pkey , con_id , owner , count,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM vdbl;
 spool off

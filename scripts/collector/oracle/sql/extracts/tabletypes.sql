@@ -153,7 +153,8 @@ SELECT '&&v_host'
        clustered_table,
        table_count,
        object_table,
-       xml_table
+       xml_table,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM  tblinfo;
 spool off
 COLUMN TEMPORARY CLEAR

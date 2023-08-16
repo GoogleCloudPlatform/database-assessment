@@ -79,6 +79,7 @@ column min_snaptime new_value v_min_snaptime noprint
 column max_snapid new_value v_max_snapid noprint
 column max_snaptime new_value v_max_snaptime noprint
 column umf_test new_value v_umf_test noprint
+column uniq_id new_value v_uniq_id noprint
 column p_dbid new_value v_dbid noprint
 column p_tblprefix new_value v_tblprefix noprint
 column p_is_container new_value v_is_container noprint
@@ -108,10 +109,27 @@ FROM   v$database
 /
 
 
-select RTRIM(SUBSTR('&v_tag',INSTR('&v_tag','_',1,5)+1), '.csv') horanc from dual;
+SELECT RTRIM(SUBSTR('&v_tag',INSTR('&v_tag','_',1,5)+1), '.csv') horanc from dual;
 
 SELECT substr(replace(version,'.',''),0,3) dbversion
-from v$instance
+FROM v$instance
+/
+
+--select d.dbid || '_' || d.db_unique_name || '_' || i.host_name AS uniq_id
+--from v$database d 
+--  join (select host_name from gv$instance where inst_id = (select min(inst_id) from gv$instance)) i
+--/
+
+column vname new_value v_name noprint
+SELECT min(object_name) AS vname 
+FROM dba_objects 
+WHERE object_name IN ('V$INSTANCE', 'GV$INSTANCE');
+
+SELECT lower(i.host_name||'_'||d.db_unique_name||'_'||d.dbid) AS uniq_id
+FROM ( 
+	SELECT version, host_name
+	FROM &&v_name 
+	WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v$database d
 /
 
 /*
@@ -413,4 +431,4 @@ FROM DUAL;
 column CON_ID &v_h_con_id
 
 set numwidth 48
-
+column v_uniq_id format a100

@@ -31,6 +31,7 @@ WITH vuseg AS (
  AND owner NOT IN
 @&EXTRACTSDIR/exclude_schemas.sql
 )
-SELECT pkey , con_id , owner , segment_name , segment_type , tablespace_name
+SELECT pkey , con_id , owner , segment_name , segment_type , tablespace_name,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM vuseg;
 spool off

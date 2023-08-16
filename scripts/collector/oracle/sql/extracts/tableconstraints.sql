@@ -71,6 +71,7 @@ GROUP  BY '&&v_host'
           owner,
           table_name)
 SELECT pkey , con_id , owner ,table_name , pk , uk , ck ,
-       ri , vwck , vwro , hashexpr , suplog , total_cons
+       ri , vwck , vwro , hashexpr , suplog , total_cons,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM vnopk;
 spool off

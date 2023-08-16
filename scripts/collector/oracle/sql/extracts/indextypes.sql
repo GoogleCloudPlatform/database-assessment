@@ -73,7 +73,8 @@ SELECT pkey ,
        visibility,                      
        join_index,
        custom_index_type,
-       cnt
+       cnt,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM vidxtype;
 spool off
 COLUMN PARTITIONED CLEAR

@@ -59,7 +59,8 @@ SELECT pkey ,
        owner , 
        object_type , 
        editionable ,
-       count  
+       count  ,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM vdbobj a;
 spool off
 

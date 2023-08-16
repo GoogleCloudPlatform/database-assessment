@@ -21,10 +21,11 @@ SELECT '&&v_host'
        || '&&v_dbname'
        || '_'
        || '&&v_hora' AS pkey,
-       username,
-       &v_a_con_id AS con_id
+       &v_a_con_id AS con_id,
+       username
 FROM   &v_tblprefix._users a
 ORDER  BY username)
-SELECT pkey , username, con_id
+SELECT pkey , con_id, username,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM vuser;
 spool off

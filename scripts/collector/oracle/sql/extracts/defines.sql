@@ -43,4 +43,5 @@ prompt v_umf_test         = &v_umf_test
 prompt Applies to STATSPACK collections only: 
 prompt v_max_snaptime     = &v_max_snaptime
 prompt v_min_snaptime     = &v_min_snaptime
+prompt v_uniq_id          = &v_uniq_id
 spool off

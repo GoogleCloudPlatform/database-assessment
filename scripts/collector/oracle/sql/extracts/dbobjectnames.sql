@@ -76,7 +76,8 @@ SELECT pkey ,
        object_type , 
        editionable ,
        lines,
-       status
+       status,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM vdbobj a;
 spool off
 

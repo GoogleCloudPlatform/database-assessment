@@ -27,6 +27,7 @@ SELECT '&&v_host'
        &v_a_con_id AS con_id
 FROM   &v_tblprefix._high_water_mark_statistics a
 ORDER  BY description)
-SELECT pkey , description , highwater , last_value, con_id
+SELECT pkey , description , highwater , last_value, con_id,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM vhwmst;
 spool off

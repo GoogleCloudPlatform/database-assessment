@@ -81,6 +81,7 @@ vsysmetricsummperhour as (
 )
 SELECT pkey , dbid , instance_number , hour , metric_name ,
        metric_unit , avg_value , mode_value , median_value , min_value , max_value ,
-	   sum_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100
+	   sum_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100,
+	       '&v_uniq_id' AS V_UNIQ_ID
 FROM vsysmetricsummperhour;
 spool off

@@ -85,10 +85,12 @@ fi
 
 ${SQLPLUS} -s /nolog << EOF
 connect ${connectString}
-@${SQL_DIR}/op_set_sql_env.sql 
+@${SQL_DIR}/op_set_sql_env.sql
 set pagesize 0 lines 400 feedback off verify off heading off echo off timing off time off
+column vname new_value v_name noprint
+select min(object_name) as vname from dba_objects where object_name in ('V\$INSTANCE', 'GV\$INSTANCE');
 select 'DMAFILETAG~'|| i.version||'|'||substr(replace(i.version,'.',''),0,3)||'_'||'${OpVersion}_'||i.host_name||'_'||d.name||'_'||i.instance_name||'_'||to_char(sysdate,'MMDDRRHH24MISS')||'~'
-from v\$instance i, v\$database d;
+from ( SELECT version, host_name, instance_name FROM &&v_name WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v\$database d;
 exit;
 EOF
 }
@@ -157,7 +159,7 @@ function compressOpFiles  {
 V_FILE_TAG=$1
 V_ERR_TAG=""
 echo ""
-echo "Archiving output files"
+echo "Archiving output files with tag ${V_FILE_TAG}"
 CURRENT_WORKING_DIR=$(pwd)
 cp ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
 if [ -f VERSION.txt ]; then

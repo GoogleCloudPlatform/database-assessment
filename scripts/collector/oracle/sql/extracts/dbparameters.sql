@@ -30,7 +30,8 @@ SELECT '&&v_host'
        isdefault
 FROM   gv$system_parameter a
 ORDER  BY 2,3 )
-SELECT pkey , inst_id , con_id , name , value , default_value , isdefault
+SELECT pkey , inst_id , con_id , name , value , default_value , isdefault,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM vparam;
 spool off
 column default_value clear

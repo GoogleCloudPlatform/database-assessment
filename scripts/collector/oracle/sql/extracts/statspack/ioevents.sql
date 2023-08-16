@@ -98,7 +98,8 @@ SELECT pkey , dbid , instance_number , hour , wait_class , event_name ,
        time_wa_us_delta_value_P95,
        tot_waits_delta_value_P100 ,
        tot_tout_delta_value_P100 ,
-       time_wa_us_delta_value_P100
+       time_wa_us_delta_value_P100,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM vfev;
 spool off
 column hour clear

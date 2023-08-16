@@ -25,7 +25,8 @@ SELECT '&&v_host'
        input_type, 
        round(sum(elapsed_seconds)) AS elapsed_seconds, 
        round(sum(input_bytes)/1024/1024) AS mbytes_in, 
-       round(sum(output_bytes)/1024/1024) AS mbytes_out
+       round(sum(output_bytes)/1024/1024) AS mbytes_out,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM v$rman_backup_job_details a
 WHERE start_time >= trunc(sysdate) - '&&dtrange'
 GROUP BY trunc(start_time), input_type, &v_a_con_id

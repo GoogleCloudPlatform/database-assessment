@@ -48,7 +48,8 @@ SELECT '&&v_host'
        refresh_mode,
        refresh_method,
        fast_refreshable,
-       compile_state
+       compile_state,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM  mvinfo;
 spool off
 COLUMN UPDATABLE CLEAR

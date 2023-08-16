@@ -61,7 +61,8 @@ group by '&&v_host'
        &v_machine,
        scmd.command_name)
 SELECT pkey , dbid , instance_number , hour , program ,
-       module , machine , command_name , cnt
+       module , machine , command_name , cnt,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM vsrcconn
 order by hour;
 spool off

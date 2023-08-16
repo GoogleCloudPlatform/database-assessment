@@ -69,7 +69,8 @@ FROM (
 GROUP BY '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora', dbid, instance_number, hour)
 SELECT pkey , dbid , instance_number , hour , min_snap_id , max_snap_id , min_begin_interval_time ,
        max_begin_interval_time , cnt , sum_snaps_diff_secs , avg_snaps_diff_secs , median_snaps_diff_secs ,
-       mode_snaps_diff_secs , min_snaps_diff_secs , max_snaps_diff_secs
+       mode_snaps_diff_secs , min_snaps_diff_secs , max_snaps_diff_secs,
+       '&v_uniq_id' AS V_UNIQ_ID
 FROM vawrsnap;
 
 spool off
