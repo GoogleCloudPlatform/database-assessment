@@ -138,7 +138,7 @@ dbversion=$(${SQLCMD}  --user=$user --password=$pass -h $host -P $port -s $db <<
 SELECT version();
 EOF
 )
-echo 'DMAFILETAG~'${dbversion}'|'${dbversion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}
+echo 'DMAFILETAG~'${dbversion}'|'${dbversion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
 }
 
 
@@ -158,8 +158,7 @@ connect ${connectString}
 set pagesize 0 lines 400 feedback off verify off heading off echo off timing off time off
 column vname new_value v_name noprint
 select min(object_name) as vname from dba_objects where object_name in ('V\$INSTANCE', 'GV\$INSTANCE');
-select 'DMAFILETAG~'|| i.version||'|'||substr(replace(i.version,'.',''),0,3)||'_'||'${OpVersion}_'||i.host_name||'_'||d.name||'_'||i.instance_name||'_'||to_char(sysdate,
-'MMDDRRHH24MISS')||'~'
+select 'DMAFILETAG~'|| i.version||'|'||substr(replace(i.version,'.',''),0,3)||'_'||'${OpVersion}_'||i.host_name||'_'||d.name||'_'||i.instance_name||'_'||to_char(sysdate, 'MMDDRRHH24MISS')||'~'
 from ( SELECT version, host_name, instance_name FROM &&v_name WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v\$database d;
 exit;
 EOF
@@ -209,7 +208,6 @@ for s in sql/source/*sql
 do
   fname=$(echo $s | cut -d '/' -f 3)
   ${SED} "s/V_TAG/${V_TAG}/g;s/SKIPSCHEMA/${SKIPSCHEMA}/g;s/SQLOUTPUT_DIR/'${SQLOUTPUT_DIR}'/g" ${s} > sql/${V_FILE_TAG}_${fname}
-  ls -l sql/${V_FILE_TAG}_${fname}
 done
 
 rm sql/${V_TAG}_mysqlcollector.sql
@@ -407,7 +405,7 @@ checkPlatform $DBTYPE
 
 
 if [ "$DBTYPE" == "oracle" ] ; then
-  sqlcmd_result=$(checkVersion "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | cut -d '~' -f 2)
+  sqlcmd_result=$(checkVersionOracle "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | cut -d '~' -f 2)
   if [[ "${sqlcmd_result}" = "" ]];
     then
       echo "Unable to connect to the target Oracle database using ${connectString}.  Please verify the connection information and target database status."
@@ -422,7 +420,7 @@ if [ "$DBTYPE" == "oracle" ] ; then
       exit 255
     fi
     else if [ "$DBTYPE" == "postgres" ] ; then
-      sqlcmd_result=$(checkVersionMysql "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r' )
+      sqlcmd_result=$(checkVersionPg "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r' )
       echo Result=${sqlcmd_result}
       if [[ "${sqlcmd_result}" = "" ]];
         then
@@ -460,6 +458,7 @@ if [ $retval -eq 0 ]; then
        echo "Oracle 10 support is experimental."
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
+    echo V_TAG = ${V_TAG}
 
     if [ "$3" == "oracle" ] ; then
       executeOPOracle "${connectString}" ${OpVersion} ${DIAGPACKACCESS}
