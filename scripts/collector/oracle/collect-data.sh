@@ -186,7 +186,17 @@ locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
 echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
 
 cd ${OUTPUT_DIR}
-ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt > opdb__manifest__${V_FILE_TAG}.txt	
+if [ -f opdb__manifest__${V_FILE_TAG}.txt ];
+then
+  rm opdb__manifest__${V_FILE_TAG}.txt
+fi
+
+for file in $(ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt)
+do
+ MD5=$(md5sum $file | cut -d ' ' -f 1)
+ echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
+done
+
 if [ ! "${ZIP}" = "" ]
 then
   $ZIP $ZIPFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
