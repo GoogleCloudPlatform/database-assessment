@@ -1,0 +1,3 @@
+# This is a list of MySQL schemas that should be ignored during a DMA collection.
+# All schemas should be listed on a single line, with no blank lines.
+'mysql', 'information_schema', 'performance_schema', 'sys'
