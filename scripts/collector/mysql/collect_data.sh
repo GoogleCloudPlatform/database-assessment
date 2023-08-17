@@ -76,7 +76,7 @@ function checkPlatform {
       if [ ! "${1}" == "postgres" ]
         then
            SQLCMD=${SQLCMD}.exe
-     fi
+      fi
  fi
 
  # Check if running on Cygwin
@@ -100,8 +100,7 @@ function checkVersionPg {
     port=$(echo ${connectString} | cut -d ':' -f 2 | cut -d '/' -f 1)
     db=$(echo ${connectString} | cut -d '/' -f 5)
 
-    echo $user $pass $host $port $db
-
+    export PGPASSWORD="${pass}"
     if ! [ -x "$(command -v ${SQLCMD})" ]; then
       echo "Could not find ${SQLCMD} command. Source in environment and try again"
       echo "Exiting..."
