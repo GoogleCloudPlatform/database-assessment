@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -x
+
 # Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -92,7 +92,6 @@ function checkPlatform {
 ### Import logging & helper functions
 #############################################################################
 function checkVersionPg {
-echo connectString="$1"	
     connectString="$1"
     OpVersion=$2
     user=$(echo ${connectString} | cut -d '/' -f 1)
@@ -102,9 +101,6 @@ echo connectString="$1"
     db=$(echo ${connectString} | cut -d '/' -f 5)
 
     export PGPASSWORD="${pass}"
-    echo Connect info =  $user $pass $host $port $db
-    echo SQLCMD = ${SQLCMD}
-    echo PATH=${PATH}
     if ! [ -x "$(command -v ${SQLCMD})" ]; then
       echo "Could not find ${SQLCMD} command. Source in environment and try again"
       echo "Exiting..."
