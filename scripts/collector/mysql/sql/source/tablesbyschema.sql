@@ -1,4 +1,4 @@
-tee SQLOUTPUT_DIR/opdb__tablesbyschema__V_TAG
+tee output/opdb__tablesbyschema__V_TAG
 SELECT /*+ MAX_EXECUTION_TIME(5000) */ table_schema,
                                        ROUND(SUM(data_length)/1024/1024/1024, 2) AS Data_Size_GB,
                                        ROUND(SUM(index_length)/1024/1024/1024, 2) AS Index_Size_GB

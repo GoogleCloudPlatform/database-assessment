@@ -1,4 +1,4 @@
-tee SQLOUTPUT_DIR/opdb__proceduresbyschema__V_TAG
+tee output/opdb__proceduresbyschema__V_TAG
 SELECT /*+ MAX_EXECUTION_TIME(5000) */ ROUTINE_SCHEMA,
                                        ROUTINE_NAME
 FROM information_schema.ROUTINES

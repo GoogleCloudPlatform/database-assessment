@@ -1,4 +1,4 @@
-tee SQLOUTPUT_DIR/opdb__tableswithfulltextindexes__V_TAG
+tee output/opdb__tableswithfulltextindexes__V_TAG
 SELECT /*+ MAX_EXECUTION_TIME(5000) */ S.table_schema,
                                        S.table_name,
                                        S.column_name,

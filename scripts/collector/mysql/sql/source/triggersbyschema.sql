@@ -1,4 +1,4 @@
-tee SQLOUTPUT_DIR/opdb__triggersbyschema__V_TAG
+tee output/opdb__triggersbyschema__V_TAG
 SELECT /*+ MAX_EXECUTION_TIME(5000) */ TRIGGER_SCHEMA,
                                        TRIGGER_NAME
 FROM information_schema.TRIGGERS

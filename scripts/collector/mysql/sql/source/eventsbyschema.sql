@@ -1,4 +1,4 @@
-tee SQLOUTPUT_DIR/opdb__eventsbyschema__V_TAG
+tee output/opdb__eventsbyschema__V_TAG
 SELECT /*+ MAX_EXECUTION_TIME(5000) */ event_schema,
                                        event_name
 FROM information_schema.events

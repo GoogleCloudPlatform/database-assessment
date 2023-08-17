@@ -1,4 +1,4 @@
-tee SQLOUTPUT_DIR/opdb__tablepartcount__V_TAG
+tee output/opdb__tablepartcount__V_TAG
 SELECT /*+ MAX_EXECUTION_TIME(5000) */ COUNT(*) AS PARTS_COUNT,
                                        TABLE_SCHEMA,
                                        TABLE_NAME,

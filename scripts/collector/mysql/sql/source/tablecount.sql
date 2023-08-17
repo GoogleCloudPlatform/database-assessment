@@ -1,4 +1,4 @@
-tee SQLOUTPUT_DIR/opdb__tablecount__V_TAG
+tee output/opdb__tablecount__V_TAG
 SELECT /*+ MAX_EXECUTION_TIME(5000) */ COUNT(*) AS 'TABLE_COUNT',
       ROUND(sum(data_length) / (1024 * 1024 * 1024), 2) DATA,
       ROUND(sum(index_length) / (1024 * 1024 * 1024), 2) INDEXES

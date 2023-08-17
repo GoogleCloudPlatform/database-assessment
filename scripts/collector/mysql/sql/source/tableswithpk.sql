@@ -1,4 +1,4 @@
-tee SQLOUTPUT_DIR/opdb__tableswithpk__V_TAG
+tee output/opdb__tableswithpk__V_TAG
 SELECT /*+ MAX_EXECUTION_TIME(5000) */ tables.table_schema,
                                        tables.table_name,
                                        tables.table_rows

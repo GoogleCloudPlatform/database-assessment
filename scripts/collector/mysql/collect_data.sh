@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.10"
+OpVersion="4.3.15"
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
 export LANG=C
@@ -31,7 +31,7 @@ TMP_DIR=${SCRIPT_DIR}/tmp
 LOG_DIR=${SCRIPT_DIR}/log
 SQL_DIR=${SCRIPT_DIR}/sql
 DBTYPE=""
-
+echo SQLOUTPUT_DIR = ${SQLOUTPUT_DIR}
 GREP=$(which grep)
 SED=$(which sed)
 if [ $(uname) = "SunOS" ]
@@ -72,6 +72,7 @@ function checkPlatform {
     then
       SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
       SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
+      echo SQLOUTPUT_DIR = ${SQLOUTPUT_DIR}
       if [ ! "${1}" == "postgres" ]
         then
            SQLCMD=${SQLCMD}.exe
@@ -207,7 +208,8 @@ export SKIPSCHEMA=$(grep -v \# sql/source/skipschema.csv)
 for s in sql/source/*sql
 do
   fname=$(echo $s | cut -d '/' -f 3)
-  ${SED} "s/V_TAG/${V_TAG}/g;s/SKIPSCHEMA/${SKIPSCHEMA}/g;s/SQLOUTPUT_DIR/${SQLOUTPUT_DIR}/g" ${s} > sql/${V_FILE_TAG}_${fname}
+  ${SED} "s/V_TAG/${V_TAG}/g;s/SKIPSCHEMA/${SKIPSCHEMA}/g;s/SQLOUTPUT_DIR/'${SQLOUTPUT_DIR}'/g" ${s} > sql/${V_FILE_TAG}_${fname}
+  ls -l sql/${V_FILE_TAG}_${fname}
 done
 
 rm sql/${V_TAG}_mysqlcollector.sql
@@ -397,7 +399,6 @@ fi
 # MAIN
 #############################################################################
 
-set -x
 DBTYPE="$3"
 
 connectString="$1"

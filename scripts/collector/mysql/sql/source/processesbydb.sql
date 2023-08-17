@@ -1,4 +1,4 @@
-tee SQLOUTPUT_DIR/opdb__processesbydb__V_TAG
+tee output/opdb__processesbydb__V_TAG
 SELECT db,
        count(*) AS 'count'
 FROM information_schema.processlist

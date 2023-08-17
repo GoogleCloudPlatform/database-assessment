@@ -1,4 +1,4 @@
-tee SQLOUTPUT_DIR/opdb__fkconstraints__V_TAG
+tee output/opdb__fkconstraints__V_TAG
 SELECT /*+ MAX_EXECUTION_TIME(5000) */ CONSTRAINT_SCHEMA,
                                        CONSTRAINT_NAME,
                                        TABLE_SCHEMA,

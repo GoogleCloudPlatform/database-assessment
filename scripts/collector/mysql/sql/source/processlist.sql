@@ -1,4 +1,4 @@
-tee SQLOUTPUT_DIR/opdb__processlist__V_TAG
+tee output/opdb__processlist__V_TAG
 SELECT id,
        HOST,
        db,

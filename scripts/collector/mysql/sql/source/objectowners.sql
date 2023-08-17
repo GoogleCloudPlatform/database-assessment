@@ -1,4 +1,4 @@
-tee SQLOUTPUT_DIR/opdb__objectowners__V_TAG
+tee output/opdb__objectowners__V_TAG
 SELECT /*+ MAX_EXECUTION_TIME(5000) */ DEFINER
 FROM information_schema.views
 WHERE TABLE_SCHEMA NOT IN ('mysql',

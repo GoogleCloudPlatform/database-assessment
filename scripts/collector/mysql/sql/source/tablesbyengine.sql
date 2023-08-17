@@ -1,4 +1,4 @@
-tee SQLOUTPUT_DIR/opdb__tablesbyengine__V_TAG
+tee output/opdb__tablesbyengine__V_TAG
 SELECT /*+ MAX_EXECUTION_TIME(5000) */ ENGINE AS Storage_Engine,
                        COUNT(*) Tables_Count,
                        ROUND(SUM(data_length) / (1024*1024*1024), 2) Data_Size,
