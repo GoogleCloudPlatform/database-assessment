@@ -17,26 +17,12 @@ limitations under the License.
 
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
+DECLARE @MACHINE_NAME AS VARCHAR(256)
 
-DECLARE @PKEY AS VARCHAR(256)
-DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
-
-SELECT @PKEY = N'$(pkey)';
-SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
-
-IF OBJECT_ID('tempdb..#dbccTraceTable') IS NOT NULL  
-   DROP TABLE #dbccTraceTable;
-
-CREATE TABLE #dbccTraceTable (
-    [name] int, 
-    [status] int, 
-    [global] int, 
-    [session] int
-);
-
-INSERT INTO #dbccTraceTable exec('dbcc tracestatus()');
-
-SELECT @PKEY as PKEY, a.*, @DMA_SOURCE_ID as dma_source_id from #dbccTraceTable a;
-
-IF OBJECT_ID('tempdb..#dbccTraceTable') IS NOT NULL  
-   DROP TABLE #dbccTraceTable;
+IF CHARINDEX('\', @@SERVERNAME)-1 = -1
+  SELECT @MACHINE_NAME = UPPER(@@SERVERNAME)
+ELSE
+  SELECT @MACHINE_NAME = UPPER(SUBSTRING(CONVERT(nvarchar, @@SERVERNAME),1,CHARINDEX('\', CONVERT(nvarchar, @@SERVERNAME))-1))
+SELECT @MACHINE_NAME + '_' + replace(service_broker_guid,'-','') + '_' + COALESCE(CONVERT(nvarchar, SERVERPROPERTY('InstanceName')), 'MSSQLSERVER')
+FROM sys.databases
+WHERE [name] = N'msdb';
