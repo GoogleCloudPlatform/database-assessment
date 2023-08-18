@@ -275,27 +275,28 @@ foreach ($databaseName in $dbNameArray) {
 if ($ignorePerfmon -eq "true") {
     WriteLog -logLocation $foldername\$logFile -logMessage "Skipping Perfmon Information..."  -logOperation "FILE"
     if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
-        .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+        .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId[0]
     } else {
-        .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+        .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId[0]
     }
 } else {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving Perfmon Information..."  -logOperation "FILE"
     if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper())) {
-        .\dmaSQLServerPerfmonDataset.ps1 -operation collect -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+        .\dmaSQLServerPerfmonDataset.ps1 -operation collect -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId[0]
     } elseif (($instancename -ne "MSSQLSERVER") -and ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper())) {
-        .\dmaSQLServerPerfmonDataset.ps1 -operation collect -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+        .\dmaSQLServerPerfmonDataset.ps1 -operation collect -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId[0]
     } elseif (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
-        .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+        .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId[0]
     } elseif (($instancename -ne "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
-        .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey
+        .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId[0]
     }
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Remove special characters and UTF8 BOM from extracted files..." -logOperation "BOTH"
 foreach($file in Get-ChildItem -Path $foldername\*.csv) {
 	$inputFile = Split-Path -Leaf $file
-	((Get-Content -Path $foldername\$inputFile) -join "`n") + "`n" | Set-Content -NoNewLine -Encoding utf8 -Force -Path $foldername\$inputFile
+	#((Get-Content -Path $foldername\$inputFile) -join "`n") + "`n" | Set-Content -NoNewLine -Encoding utf8 -Force -Path $foldername\$inputFile
+    ((Get-Content -Path $foldername\$inputFile) -join "`n") + "`n" | Set-Content -Encoding utf8 -Force -Path $foldername\$inputFile
 	$utf8 = New-Object System.Text.UTF8Encoding $false
 	$fileContent = Get-Content $foldername\$inputFile -Raw
 	Set-Content -Value $utf8.GetBytes($fileContent) -Encoding Byte -Path $foldername\$inputFile -Force
