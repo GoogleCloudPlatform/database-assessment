@@ -145,13 +145,13 @@ function checkVersionOracle {
 connectString="$1"
 OpVersion=$2
 
-if ! [ -x "$(command -v ${SQLPLUS})" ]; then
-  echo "Could not find ${SQLPLUS} command. Source in environment and try again"
+if ! [ -x "$(command -v ${SQLCMD})" ]; then
+  echo "Could not find ${SQLCMD} command. Source in environment and try again"
   echo "Exiting..."
   exit 1
 fi
 
-${SQLPLUS} -s /nolog << EOF
+${SQLCMD} -s /nolog << EOF
 connect ${connectString}
 @${SQL_DIR}/op_set_sql_env.sql
 set pagesize 0 lines 400 feedback off verify off heading off echo off timing off time off
