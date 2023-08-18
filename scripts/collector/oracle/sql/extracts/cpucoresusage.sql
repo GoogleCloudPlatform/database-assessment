@@ -28,6 +28,6 @@ SELECT '&&v_host'
 FROM   dba_cpu_usage_statistics
 ORDER  BY timestamp)
 SELECT pkey , dt , cpu_count , cpu_core_count , cpu_socket_count,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vcpursc;
 spool off

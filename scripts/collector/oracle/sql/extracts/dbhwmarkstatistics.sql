@@ -28,6 +28,6 @@ SELECT '&&v_host'
 FROM   &v_tblprefix._high_water_mark_statistics a
 ORDER  BY description)
 SELECT pkey , description , highwater , last_value, con_id,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vhwmst;
 spool off

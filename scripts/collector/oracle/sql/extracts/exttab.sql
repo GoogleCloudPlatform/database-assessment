@@ -25,6 +25,6 @@ SELECT '&&v_host'
 FROM &v_tblprefix._external_tables a)
 SELECT pkey , con_id , owner , table_name , type_owner , type_name ,
        default_directory_owner , default_directory_name,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vexttab;
 spool off

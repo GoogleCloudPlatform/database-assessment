@@ -36,6 +36,6 @@ SELECT '&&v_host'
               || '&&v_hora',
               &v_a_con_id , owner, segment_type )
 SELECT pkey , con_id , owner , segment_type , GB,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vused;
 spool off

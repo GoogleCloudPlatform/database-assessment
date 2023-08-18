@@ -154,7 +154,7 @@ SELECT '&&v_host'
        table_count,
        object_table,
        xml_table,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM  tblinfo;
 spool off
 COLUMN TEMPORARY CLEAR

@@ -79,7 +79,7 @@ column min_snaptime new_value v_min_snaptime noprint
 column max_snapid new_value v_max_snapid noprint
 column max_snaptime new_value v_max_snaptime noprint
 column umf_test new_value v_umf_test noprint
-column uniq_id new_value v_uniq_id noprint
+column uniq_id new_value v_dma_source_id noprint
 column p_dbid new_value v_dbid noprint
 column p_tblprefix new_value v_tblprefix noprint
 column p_is_container new_value v_is_container noprint
@@ -431,4 +431,4 @@ FROM DUAL;
 column CON_ID &v_h_con_id
 
 set numwidth 48
-column v_uniq_id format a100
+column v_dma_source_id format a100

@@ -138,7 +138,7 @@ SELECT '&&v_host'
        p.subpartitioning_type,
        p.partition_count,
        sp.cnt AS subpartition_count,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM  tblinfo a
 LEFT OUTER JOIN &v_tblprefix._part_tables p
               ON a.owner = p.owner

@@ -26,7 +26,7 @@ SELECT '&&v_host'
        dest_id, 
        count(1) AS CNT, 
        round(sum(blocks * block_size)/1024/1024) as mbytes,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM gv$archived_log
 WHERE first_time >= trunc(sysdate) - '&&dtrange'
 GROUP BY trunc(first_time), thread#, to_char(first_time, 'HH24'), dest_id

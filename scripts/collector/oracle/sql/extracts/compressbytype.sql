@@ -93,7 +93,7 @@ WITH vcompresstype AS (
      )
 SELECT pkey , con_id , owner , basic , oltp , query_low ,
        query_high , archive_low , archive_high , total_gb,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vcompresstype
 ORDER BY total_gb DESC;
 spool off

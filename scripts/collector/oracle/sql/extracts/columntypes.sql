@@ -210,7 +210,7 @@ SELECT
     c.UNDEFINED_COL_COUNT                        ,
     c.USER_DEFINED_COL_COUNT                     ,
     NVL(s.bytes,0) as bytes                      ,
-    '&v_uniq_id' AS V_UNIQ_ID
+    '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM  coltypes c 
 LEFT JOIN segs s ON c.con_id = s.con_id and s.owner = c.owner and s.segment_name = c.table_name 
 ORDER BY 1,2,3,4

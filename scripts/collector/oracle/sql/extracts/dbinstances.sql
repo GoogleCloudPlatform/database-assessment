@@ -31,6 +31,6 @@ SELECT '&&v_host'
 FROM   gv$instance )
 SELECT pkey , inst_id , instance_name , host_name ,
        version , status , database_status , instance_role,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vdbinst;
 spool off

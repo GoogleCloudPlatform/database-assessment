@@ -26,6 +26,6 @@ SELECT '&&v_host'
 FROM   &v_tblprefix._users a
 ORDER  BY username)
 SELECT pkey , con_id, username,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vuser;
 spool off

@@ -60,7 +60,7 @@ SELECT pkey ,
        object_type , 
        editionable ,
        count  ,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vdbobj a;
 spool off
 

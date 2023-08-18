@@ -49,7 +49,7 @@ SELECT '&&v_host'
        refresh_method,
        fast_refreshable,
        compile_state,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM  mvinfo;
 spool off
 COLUMN UPDATABLE CLEAR

@@ -73,6 +73,6 @@ GROUP  BY pkey,
           TYPE)
 SELECT pkey , con_id , owner , type , sum_nr_lines , qt_objs ,
        sum_nr_lines_w_utl , sum_nr_lines_w_dbms , count_exec_im , count_dbms_sql , sum_nr_lines_w_dbms_utl , sum_count_total,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vsrc;
 spool off

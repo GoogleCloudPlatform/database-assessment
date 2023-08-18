@@ -61,6 +61,6 @@ GROUP  BY '&&v_host'
 SELECT pkey , con_id , hh24 , command_type , cnt , avg_buffer_gets , avg_elasped_time ,
        avg_rows_processed , avg_executions , avg_cpu_time , avg_iowait , avg_clwait ,
        avg_apwait , avg_ccwait , avg_plsexec_time, command_name,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vcmdtype;
 spool off

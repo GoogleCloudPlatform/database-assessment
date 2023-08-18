@@ -31,7 +31,7 @@ SELECT '&&v_host'
 FROM   gv$system_parameter a
 ORDER  BY 2,3 )
 SELECT pkey , inst_id , con_id , name , value , default_value , isdefault,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vparam;
 spool off
 column default_value clear

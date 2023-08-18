@@ -54,7 +54,7 @@ WHERE destination IS NOT NULL)
 SELECT pkey , con_id , inst_id , log_archive_config , dest_id , dest_name , destination , status ,
        target , schedule , register , alternate ,
        transmit_mode , affirm , valid_role , verify,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vodg;
 spool off
 
