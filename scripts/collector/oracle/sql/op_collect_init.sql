@@ -79,7 +79,7 @@ column min_snaptime new_value v_min_snaptime noprint
 column max_snapid new_value v_max_snapid noprint
 column max_snaptime new_value v_max_snaptime noprint
 column umf_test new_value v_umf_test noprint
-column dma_source_id new_value v_dma_source_id noprint
+column p_dma_source_id new_value v_dma_source_id noprint
 column p_dbid new_value v_dbid noprint
 column p_tblprefix new_value v_tblprefix noprint
 column p_is_container new_value v_is_container noprint
@@ -120,7 +120,7 @@ SELECT min(object_name) AS vname
 FROM dba_objects 
 WHERE object_name IN ('V$INSTANCE', 'GV$INSTANCE');
 
-SELECT lower(i.host_name||'_'||d.db_unique_name||'_'||d.dbid) AS dma_source_id
+SELECT lower(i.host_name||'_'||d.db_unique_name||'_'||d.dbid) AS p_dma_source_id
 FROM ( 
 	SELECT version, host_name
 	FROM &&v_name 
