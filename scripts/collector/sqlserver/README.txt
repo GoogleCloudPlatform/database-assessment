@@ -49,6 +49,12 @@ Operating System Versions:
             GRANT VIEW ANY DEFINITION TO [username];
             GRANT VIEW SERVER STATE TO [username];
 
+            For SQL Server Version 2022 and above the following additional permissions are needed:
+                GRANT VIEW SERVER PERFORMANCE STATE TO [username];
+                GRANT VIEW SERVER SECURITY STATE TO [username];
+                GRANT VIEW ANY PERFORMANCE DEFINITION TO [username];
+                GRANT VIEW ANY SECURITY DEFINITION TO [username];
+
         In each user database:
             CREATE USER [username] FOR LOGIN [username];
             GRANT VIEW DATABASE STATE TO [username];

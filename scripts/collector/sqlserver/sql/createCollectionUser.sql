@@ -20,6 +20,9 @@ SET LANGUAGE us_english;
 
 DECLARE @dbname VARCHAR(50);
 DECLARE @COLLECTION_USER VARCHAR(256);
+DECLARE @PRODUCT_VERSION AS INTEGER
+
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
 DECLARE db_cursor CURSOR FOR 
 SELECT name
 FROM MASTER.sys.databases 
@@ -40,6 +43,13 @@ BEGIN
 	GRANT VIEW ANY DATABASE TO [$(collectionUser)]
 	GRANT VIEW ANY DEFINITION TO [$(collectionUser)]
 	GRANT VIEW SERVER STATE TO [$(collectionUser)]
+    IF @PRODUCT_VERSION > 15
+        BEGIN
+            GRANT VIEW SERVER PERFORMANCE STATE TO [$(collectionUser)]
+            GRANT VIEW SERVER SECURITY STATE TO [$(collectionUser)]
+            GRANT VIEW ANY PERFORMANCE DEFINITION TO [$(collectionUser)]
+            GRANT VIEW ANY SECURITY DEFINITION TO [$(collectionUser)]
+        END;
 END;
 
 OPEN db_cursor  
