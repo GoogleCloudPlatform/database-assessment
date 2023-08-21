@@ -48,7 +48,7 @@ IF @CLOUDTYPE = 'NONE'
     where is_linked = 1
     GROUP BY product;
 
-SELECT @PKEY as PKEY, a.* from #LinkedServersData a;
+SELECT @PKEY as PKEY, a.*, @DMA_SOURCE_ID as DMA_SOURCE_ID from #LinkedServersData a;
 
 IF OBJECT_ID('tempdb..#LinkedServersData') IS NOT NULL  
    DROP TABLE #LinkedServersData;
