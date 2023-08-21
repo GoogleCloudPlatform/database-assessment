@@ -38,8 +38,10 @@ prompt v_io_function_sql  = &v_io_function_sql
 prompt v_is_container     = &v_is_container 
 prompt v_max_snapid       = &v_max_snapid 
 prompt v_min_snapid       = &v_min_snapid 
-prompt v_max_snaptime     = &v_max_snaptime
-prompt v_min_snaptime     = &v_min_snaptime
 prompt v_tblprefix        = &v_tblprefix 
 prompt v_umf_test         = &v_umf_test 
+prompt Applies to STATSPACK collections only: 
+prompt v_max_snaptime     = &v_max_snaptime
+prompt v_min_snaptime     = &v_min_snaptime
+prompt v_dma_source_id          = &v_dma_source_id
 spool off

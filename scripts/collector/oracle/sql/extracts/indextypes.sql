@@ -73,7 +73,8 @@ SELECT pkey ,
        visibility,                      
        join_index,
        custom_index_type,
-       cnt
+       cnt,
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vidxtype;
 spool off
 COLUMN PARTITIONED CLEAR

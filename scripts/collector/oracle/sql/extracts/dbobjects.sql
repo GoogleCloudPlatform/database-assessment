@@ -59,7 +59,8 @@ SELECT pkey ,
        owner , 
        object_type , 
        editionable ,
-       count  
+       count  ,
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vdbobj a;
 spool off
 

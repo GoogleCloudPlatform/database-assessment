@@ -79,6 +79,7 @@ column min_snaptime new_value v_min_snaptime noprint
 column max_snapid new_value v_max_snapid noprint
 column max_snaptime new_value v_max_snaptime noprint
 column umf_test new_value v_umf_test noprint
+column p_dma_source_id new_value v_dma_source_id noprint
 column p_dbid new_value v_dbid noprint
 column p_tblprefix new_value v_tblprefix noprint
 column p_is_container new_value v_is_container noprint
@@ -108,39 +109,24 @@ FROM   v$database
 /
 
 
-select RTRIM(SUBSTR('&v_tag',INSTR('&v_tag','_',1,5)+1), '.csv') horanc from dual;
+SELECT RTRIM(SUBSTR('&v_tag',INSTR('&v_tag','_',1,5)+1), '.csv') horanc from dual;
 
 SELECT substr(replace(version,'.',''),0,3) dbversion
-from v$instance
+FROM v$instance
 /
 
-/*
-WITH control_params AS 
-(
-SELECT 'dba' as tblprefix,
-       0 as is_container,
-       '''N/A''' as editionable_col,
-       '112' as this_version,
-       'op_collect_nopluggable_info.sql' as do_pluggable,
-       '''N/A''' as db_container_col
-FROM DUAL
-UNION
-SELECT 'cdb' as tblprefix,
-       1 as is_container,
-       'EDITIONABLE' as editionable_col,
-       'OTHER' as this_version,
-       'op_collect_pluggable_info.sql' as do_pluggable,
-       'cdb'  as db_container_col
-FROM DUAL
-)
-SELECT tblprefix AS p_tblprefix,
-       is_container AS p_is_container,
-       editionable_col AS p_editionable_col, 
-       do_pluggable AS p_dopluggable,
-       db_container_col as p_db_container_col
-FROM control_params WHERE ('&v_dbversion'  = '112' AND this_version = '&v_dbversion') 
-                       OR ('&v_dbversion' != '112' AND this_version = 'OTHER')
-*/
+column vname new_value v_name noprint
+SELECT min(object_name) AS vname 
+FROM dba_objects 
+WHERE object_name IN ('V$INSTANCE', 'GV$INSTANCE');
+
+SELECT lower(i.host_name||'_'||d.db_unique_name||'_'||d.dbid) AS p_dma_source_id
+FROM ( 
+	SELECT version, host_name
+	FROM &&v_name 
+	WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v$database d
+/
+
 
 var lv_tblprefix VARCHAR2(3);
 var lv_is_container NUMBER;
@@ -413,4 +399,4 @@ FROM DUAL;
 column CON_ID &v_h_con_id
 
 set numwidth 48
-
+column v_dma_source_id format a100

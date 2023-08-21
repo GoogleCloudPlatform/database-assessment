@@ -76,7 +76,8 @@ SELECT pkey ,
        object_type , 
        editionable ,
        lines,
-       status
+       status,
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vdbobj a;
 spool off
 

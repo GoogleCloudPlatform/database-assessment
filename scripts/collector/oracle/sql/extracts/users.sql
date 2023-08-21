@@ -13,29 +13,19 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-spool &outputdir/opdb__usedspacedetails__&v_tag
+spool &outputdir/opdb__users__&v_tag
 
-WITH vused AS (
+WITH vuser AS (
 SELECT '&&v_host'
        || '_'
        || '&&v_dbname'
        || '_'
        || '&&v_hora' AS pkey,
        &v_a_con_id AS con_id,
-       owner,
-       segment_type,
-       ROUND(SUM(bytes) / 1024 / 1024 / 1024, 0) GB
-       FROM   &v_tblprefix._segments a
-       WHERE  owner NOT IN (
-@&EXTRACTSDIR/exclude_schemas.sql
-)
-       GROUP  BY '&&v_host'
-              || '_'
-              || '&&v_dbname'
-              || '_'
-              || '&&v_hora',
-              &v_a_con_id , owner, segment_type )
-SELECT pkey , con_id , owner , segment_type , GB,
+       username
+FROM   &v_tblprefix._users a
+ORDER  BY username)
+SELECT pkey , con_id, username,
        '&v_dma_source_id' AS DMA_SOURCE_ID
-FROM vused;
+FROM vuser;
 spool off

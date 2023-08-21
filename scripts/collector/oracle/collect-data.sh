@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.14"
+OpVersion="4.3.15"
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
 export LANG=C
@@ -85,10 +85,12 @@ fi
 
 ${SQLPLUS} -s /nolog << EOF
 connect ${connectString}
-@${SQL_DIR}/op_set_sql_env.sql 
+@${SQL_DIR}/op_set_sql_env.sql
 set pagesize 0 lines 400 feedback off verify off heading off echo off timing off time off
+column vname new_value v_name noprint
+select min(object_name) as vname from dba_objects where object_name in ('V\$INSTANCE', 'GV\$INSTANCE');
 select 'DMAFILETAG~'|| i.version||'|'||substr(replace(i.version,'.',''),0,3)||'_'||'${OpVersion}_'||i.host_name||'_'||d.name||'_'||i.instance_name||'_'||to_char(sysdate,'MMDDRRHH24MISS')||'~'
-from v\$instance i, v\$database d;
+from ( SELECT version, host_name, instance_name FROM &&v_name WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v\$database d;
 exit;
 EOF
 }
@@ -157,7 +159,7 @@ function compressOpFiles  {
 V_FILE_TAG=$1
 V_ERR_TAG=""
 echo ""
-echo "Archiving output files"
+echo "Archiving output files with tag ${V_FILE_TAG}"
 CURRENT_WORKING_DIR=$(pwd)
 cp ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
 if [ -f VERSION.txt ]; then
@@ -184,7 +186,17 @@ locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
 echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
 
 cd ${OUTPUT_DIR}
-ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt > opdb__manifest__${V_FILE_TAG}.txt	
+if [ -f opdb__manifest__${V_FILE_TAG}.txt ];
+then
+  rm opdb__manifest__${V_FILE_TAG}.txt
+fi
+
+for file in $(ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt)
+do
+ MD5=$(md5sum $file | cut -d ' ' -f 1)
+ echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
+done
+
 if [ ! "${ZIP}" = "" ]
 then
   $ZIP $ZIPFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt

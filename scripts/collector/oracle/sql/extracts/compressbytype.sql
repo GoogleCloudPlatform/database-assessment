@@ -92,7 +92,8 @@ WITH vcompresstype AS (
      --HAVING TRUNC(SUM(gbytes)) > 0
      )
 SELECT pkey , con_id , owner , basic , oltp , query_low ,
-       query_high , archive_low , archive_high , total_gb
+       query_high , archive_low , archive_high , total_gb,
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vcompresstype
 ORDER BY total_gb DESC;
 spool off

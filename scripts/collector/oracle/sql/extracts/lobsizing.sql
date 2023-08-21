@@ -166,7 +166,8 @@ SELECT  '&&v_host'
        seg_bytes,
        table_avg_lob_bytes,
        partition_avg_lob_bytes,
-       subpartition_avg_lob_bytes
+       subpartition_avg_lob_bytes,
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM lobdata;
 spool off
 
