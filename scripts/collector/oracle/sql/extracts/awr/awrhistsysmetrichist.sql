@@ -65,6 +65,7 @@ ORDER  BY hsm.dbid,
           TO_CHAR(hsm.begin_time, 'hh24'))
 SELECT pkey , dbid , instance_number , hour , metric_name ,
        metric_unit , avg_value , mode_value , median_value , min_value , max_value ,
-	   sum_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100
+	   sum_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100,
+	       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vsysmetric;
 spool off

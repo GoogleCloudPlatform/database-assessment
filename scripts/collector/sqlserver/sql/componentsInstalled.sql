@@ -17,8 +17,11 @@ limitations under the License.
 SET nocount ON;
 SET language us_english;
 DECLARE @PKEY AS VARCHAR(256)
-SELECT @PKEY = N'$(pkey)';
+DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
 DECLARE @TABLE_PERMISSION_COUNT AS INTEGER
+
+SELECT @PKEY = N'$(pkey)';
+SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 
 /* need to record table permissions in order to determine if we can run certain server level queryies
     as some tables are not available in managed instances 
@@ -620,12 +623,12 @@ BEGIN CATCH
 END CATCH
 /* -------------------------------------------------------------------------------------------------------------*/
 SELECT @PKEY             AS PKEY,
-       physicalsrvername AS 'Physical Server Name' /*Display finding*/
-       ,
-       servername        AS 'SQL Instance Name',
-       servicename       AS 'SQL Server Services',
-       servicestatus     AS 'Current Service Service Status',
-       statusdatetime    AS 'Date/Time Service Status Checked'
+       physicalsrvername AS 'physical_server_name',
+       servername        AS 'sql_instance_name',
+       servicename       AS 'sql_server_services',
+       servicestatus     AS 'current_service_status',
+       statusdatetime    AS 'status_date_time',
+       @DMA_SOURCE_ID    AS 'dma_source_id'
 FROM   #servicesservicestatus
 
 /* -------------------------------------------------------------------------------------------------------------*/

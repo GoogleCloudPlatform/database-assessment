@@ -1,5 +1,5 @@
 /*
-Copyright 2022 Google LLC
+Copyright 2023 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -12,22 +12,17 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-*/
-spool &outputdir/opdb__cpucoresusage__&v_tag
 
-WITH vcpursc AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'                          AS pkey,
-       TO_CHAR(timestamp, 'MM/DD/YY HH24:MI') dt,
-       cpu_count,
-       cpu_core_count,
-       cpu_socket_count
-FROM   dba_cpu_usage_statistics
-ORDER  BY timestamp)
-SELECT pkey , dt , cpu_count , cpu_core_count , cpu_socket_count,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
-FROM vcpursc;
-spool off
+*/
+
+SET NOCOUNT ON;
+SET LANGUAGE us_english;
+DECLARE @MACHINE_NAME AS VARCHAR(256)
+
+IF CHARINDEX('\', @@SERVERNAME)-1 = -1
+  SELECT @MACHINE_NAME = UPPER(@@SERVERNAME)
+ELSE
+  SELECT @MACHINE_NAME = UPPER(SUBSTRING(CONVERT(nvarchar, @@SERVERNAME),1,CHARINDEX('\', CONVERT(nvarchar, @@SERVERNAME))-1))
+SELECT @MACHINE_NAME + '_' + replace(service_broker_guid,'-','') + '_' + COALESCE(CONVERT(nvarchar, SERVERPROPERTY('InstanceName')), 'MSSQLSERVER')
+FROM sys.databases
+WHERE [name] = N'msdb';

@@ -71,6 +71,7 @@ GROUP BY
       stat_name)
 SELECT pkey , dbid , instance_number , hour , stat_name , cnt ,
        avg_value , mode_value , median_value , min_value , max_value ,
-	   sum_value , perc50 , perc75 , perc90 , perc95 , perc100
+	   sum_value , perc50 , perc75 , perc90 , perc95 , perc100,
+	       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vtimemodel;
 spool off

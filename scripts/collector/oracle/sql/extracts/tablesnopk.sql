@@ -70,6 +70,7 @@ GROUP  BY '&&v_host'
           con_id,
           owner)
 SELECT pkey , con_id , owner , pk , uk , ck ,
-       ri , vwck , vwro , hashexpr , suplog , num_tables , total_cons
+       ri , vwck , vwro , hashexpr , suplog , num_tables , total_cons,
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vnopk;
 spool off

@@ -52,6 +52,7 @@ prompt
 set termout &TERMOUTOFF
 @&EXTRACTSDIR/defines.sql
 @&EXTRACTSDIR/archlogs.sql
+@&EXTRACTSDIR/users.sql
 @&EXTRACTSDIR/backups.sql
 @&EXTRACTSDIR/columntypes.sql
 --@&EXTRACTSDIR/compressbytype.sql

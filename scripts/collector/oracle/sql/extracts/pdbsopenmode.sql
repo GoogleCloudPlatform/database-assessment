@@ -27,6 +27,7 @@ SELECT '&&v_host'
        total_size / 1024 / 1024 / 1024 TOTAL_GB,
        con_uid
 FROM   v$pdbs )
-SELECT pkey , con_id , name , open_mode , TOTAL_GB, con_uid
+SELECT pkey , con_id , name , open_mode , TOTAL_GB, con_uid,
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM vpdbmode;
 spool off

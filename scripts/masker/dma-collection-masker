@@ -32,7 +32,9 @@ __all__ = [
     "main",
     "run_masker",
 ]
-__version__ = "4.3.5"
+
+__version__ = "4.3.15"
+
 logger = logging.getLogger(__name__)
 
 here = Path(__file__).parent
@@ -60,6 +62,7 @@ DATA_MASK_CONFIG = [
     DataMaskRule(mask_type="Schema Name", table_name="triggers", column_position=2, missing_ok=True),
     DataMaskRule(mask_type="Schema Name", table_name="usedspacedetails", column_position=2, missing_ok=True),
     DataMaskRule(mask_type="Schema Name", table_name="usrsegatt", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="users", column_position=2, missing_ok=True),
 ]
 
 

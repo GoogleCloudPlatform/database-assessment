@@ -17,8 +17,12 @@ limitations under the License.
 
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
+
 DECLARE @PKEY AS VARCHAR(256)
+DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
+
 SELECT @PKEY = N'$(pkey)';
+SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 
 IF OBJECT_ID('tempdb..#dbccTraceTable') IS NOT NULL  
    DROP TABLE #dbccTraceTable;
@@ -32,7 +36,7 @@ CREATE TABLE #dbccTraceTable (
 
 INSERT INTO #dbccTraceTable exec('dbcc tracestatus()');
 
-SELECT @PKEY as PKEY, a.* from #dbccTraceTable a;
+SELECT @PKEY as PKEY, a.*, @DMA_SOURCE_ID as dma_source_id from #dbccTraceTable a;
 
 IF OBJECT_ID('tempdb..#dbccTraceTable') IS NOT NULL  
    DROP TABLE #dbccTraceTable;

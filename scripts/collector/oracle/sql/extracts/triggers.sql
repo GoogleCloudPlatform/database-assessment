@@ -60,6 +60,7 @@ SELECT '&&v_host'
        trigger_type,
        triggering_event,
        base_object_type,
-       trigger_count
+       trigger_count,
+       '&v_dma_source_id' AS DMA_SOURCE_ID
 FROM  trginfo;
 spool off
