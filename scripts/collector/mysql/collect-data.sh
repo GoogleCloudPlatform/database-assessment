@@ -132,7 +132,6 @@ function checkVersionMysql {
       exit 1
     fi
 
-# SELECT 'DMAFILETAG~' , version();
 dbversion=$(${SQLCMD}  --user=$user --password=$pass -h $host -P $port -s $db << EOF
 SELECT version();
 EOF
@@ -185,6 +184,7 @@ EOF
 }
 
 
+
 function executeOPMysql {
 connectString="$1"
 OpVersion=$2
@@ -203,20 +203,32 @@ fi
 
 export SKIPSCHEMA=$(grep -v \# sql/source/skipschema.csv)
 
+echo Getting DMA_SOURCE_ID with  ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table --silent $db 
+export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/source/init.sql )
+echo DMA_SOURCE_ID = $DMA_SOURCE_ID
+
 for s in sql/source/*sql
 do
   fname=$(echo $s | cut -d '/' -f 3)
-  ${SED} "s/V_TAG/${V_TAG}/g;s/SKIPSCHEMA/${SKIPSCHEMA}/g;s/SQLOUTPUT_DIR/'${SQLOUTPUT_DIR}'/g" ${s} > sql/${V_FILE_TAG}_${fname}
+  ${SED} "s/V_TAG/${V_TAG}/g;s/SKIPSCHEMA/${SKIPSCHEMA}/g;s/SQLOUTPUT_DIR/'${SQLOUTPUT_DIR}'/g;s/_DMA_SOURCE_ID_/${DMA_SOURCE_ID}/g" ${s} > sql/${V_FILE_TAG}_${fname}
 done
 
-rm sql/${V_TAG}_mysqlcollector.sql
+if [ -f sql/${V_TAG}_mysqlcollector.sql ]; 
+then
+  rm sql/${V_TAG}_mysqlcollector.sql
+fi
+
 for f in sql/${V_FILE_TAG}_*sql
 do
-        echo source ${f} >> sql/${V_FILE_TAG}_mysqlcollector.sql
+  echo source ${f} >> sql/${V_FILE_TAG}_mysqlcollector.sql
 done
 
 ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table $db < sql/${V_FILE_TAG}_mysqlcollector.sql
 
+for x in $(grep -L DMA_SOURCE_ID output/*${V_FILE_TAG}.csv )
+do
+  sed 's///g' ${x} | awk 'BEGIN { FS="|"; OFS="|"; }; {if (NR == 2) { $NF = $NF "DMA_SOURCE_ID" } else { $NF = $NF "'${DMA_SOURCE_ID}'" } print }' > ${x}.tmp && mv ${x}.tmp ${x}
+done
 }
 
 
@@ -274,7 +286,7 @@ do
     cp sed_${V_FILE_TAG}.tmp ${outfile}
     rm sed_${V_FILE_TAG}.tmp
   else
-    ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g' ${outfile} > sed_${V_FILE_TAG}.tmp
+    ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;s/$//g' ${outfile} > sed_${V_FILE_TAG}.tmp
     cp sed_${V_FILE_TAG}.tmp ${outfile}
     rm sed_${V_FILE_TAG}.tmp
   fi
