@@ -1,14 +1,13 @@
 \i sql/init.sql
 \i sql/applications.sql
-\i sql/awsextensiondependency.sql
-\i sql/awsoracleexists.sql
-\i sql/awsoracleversion.sql
+--\i sql/awsextensiondependency.sql
+--\i sql/awsoracleexists.sql
+--\i sql/awsoracleversion.sql
 \i sql/bgwriterstats.sql
 \i sql/databasesize.sql
 \i sql/extensions.sql
 \i sql/indexdetail.sql
 \i sql/indexiostats.sql
-\i sql/postgresql-queries-script.sql
 \i sql/relationsize.sql
 \i sql/relationsizesummary.sql
 \i sql/replicationslots.sql

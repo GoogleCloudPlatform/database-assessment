@@ -3,4 +3,5 @@ SELECT EXISTS
   (SELECT
    FROM information_schema.tables
    WHERE table_schema = 'aws_oracle_ext'
-     AND TABLE_NAME = 'versions' ) AS SCTOracleExtensionExists
+     AND TABLE_NAME = 'versions' ) AS SCTOracleExtensionExists,
+  :DMA_SOURCE_ID

@@ -31,7 +31,7 @@ TMP_DIR=${SCRIPT_DIR}/tmp
 LOG_DIR=${SCRIPT_DIR}/log
 SQL_DIR=${SCRIPT_DIR}/sql
 DBTYPE=""
-echo SQLOUTPUT_DIR = ${SQLOUTPUT_DIR}
+
 GREP=$(which grep)
 SED=$(which sed)
 if [ $(uname) = "SunOS" ]
@@ -72,7 +72,7 @@ function checkPlatform {
     then
       SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
       SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
-      echo SQLOUTPUT_DIR = ${SQLOUTPUT_DIR}
+      
       if [ ! "${1}" == "postgres" ]
         then
            SQLCMD=${SQLCMD}.exe
@@ -212,7 +212,7 @@ done
 rm sql/${V_TAG}_mysqlcollector.sql
 for f in sql/${V_FILE_TAG}_*sql
 do
-        echo source ${f} >> sql/${V_FILE_TAG}_mysqlcollector.sql
+  echo source ${f} >> sql/${V_FILE_TAG}_mysqlcollector.sql
 done
 
 ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table $db < sql/${V_FILE_TAG}_mysqlcollector.sql
@@ -236,9 +236,16 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
   exit 1
 fi
 
+
+DBID=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t <<EOF
+SELECT system_identifier FROM pg_control_system();
+EOF
+)
+
 ${SQLCMD}  --user=$user --password -h $host -w -p $port -t <<EOF
 \set VTAG ${V_FILE_TAG}
-\i sql/all.sql
+\set DBID ${DBID}
+\i sql/op_collect.sql
 EOF
 }
 
@@ -338,7 +345,6 @@ fi
 if [ -f $OUTFILE ]
 then
   rm opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
-  rm ../sql/${V_FILE_TAG}*.sql
 fi
 
 cd ${CURRENT_WORKING_DIR}

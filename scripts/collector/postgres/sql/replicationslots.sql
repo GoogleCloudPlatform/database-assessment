@@ -1,3 +1,4 @@
 \o output/opdb__replicationslots_:VTAG.csv
-SELECT *
+SELECT *,
+       :DMA_SOURCE_ID
 FROM pg_replication_slots

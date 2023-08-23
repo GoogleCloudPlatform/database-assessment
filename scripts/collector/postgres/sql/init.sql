@@ -1,1 +1,1 @@
-\pset format unaligned
+\set format unaligned

@@ -14,7 +14,8 @@ SELECT r.oid::text AS roleName,
    WHERE m.member = r.oid)::varchar(5000) AS memberof,
        pg_catalog.shobj_description(r.oid, 'pg_authid') AS description,
        r.rolreplication,
-       r.rolbypassrls
+       r.rolbypassrls,
+       :DMA_SOURCE_ID
 FROM pg_catalog.pg_roles r
 WHERE r.rolname !~ '^pg_'
 ORDER BY 1
