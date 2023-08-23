@@ -237,14 +237,14 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
 fi
 
 
-DBID=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t <<EOF
+DMA_SOURCE_ID=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t <<EOF
 SELECT system_identifier FROM pg_control_system();
 EOF
 )
 
 ${SQLCMD}  --user=$user --password -h $host -w -p $port -t <<EOF
 \set VTAG ${V_FILE_TAG}
-\set DBID ${DBID}
+\set DMA_SOURCE_ID ${DMA_SOURCE_ID}
 \i sql/op_collect.sql
 EOF
 }
