@@ -20,7 +20,6 @@ COLUMN TIMESTAMP_WITH_LOCAL_TIME_Z_CO HEADING TIMESTAMP_WITH_LOCAL_TIME_Z_COUNT 
 COLUMN TIMESTAMP_WITH_TIME_ZONE_COL_C HEADING TIMESTAMP_WITH_TIME_ZONE_COL_COUNT FORMAT 9999999999999999999999999999999
 
 spool &outputdir/opdb__columntypes__&v_tag
-
 WITH coltypes AS (
   SELECT 
     to_char(con_id) as con_id,
@@ -138,7 +137,8 @@ WITH coltypes AS (
             &v_a_con_id AS con_id,
             a.owner,
             table_name,
-            regexp_replace(data_type, '\([[:digit:]]\)', '(x)') AS data_type,
+@&EXTRACTSDIR/&v_data_type_exp
+            AS data_type,
             data_type_owner,
             1                                                 AS col_count
         FROM

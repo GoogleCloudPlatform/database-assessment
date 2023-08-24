@@ -115,12 +115,42 @@ SELECT substr(replace(version,'.',''),0,3) dbversion
 FROM v$instance
 /
 
+COLUMN p_data_type_exp NEW_VALUE v_data_type_exp noprint
+COLUMN p_skipfile NEW_VALUE v_skipfile noprint
+SELECT CASE WHEN  '&v_dbversion' LIKE '9%' THEN 'data_type_col_9i.sql'
+            ELSE 'data_type_col_regex.sql'
+       END as p_data_type_exp,
+       CASE WHEN  '&v_dbversion' LIKE '9%' THEN '-- '
+            ELSE ''
+       END AS p_skipfile
+FROM dual;
+
+COLUMN p_dg_valid_role         new_value v_dg_valid_role         noprint
+COLUMN p_dg_verify             new_value v_dg_verify             noprint
+COLUMN p_db_unique_name        new_value v_db_unique_name        noprint
+COLUMN p_platform_name         new_value v_platform_name         noprint
+SELECT 
+        '''N/A''' AS p_dg_valid_role, 
+        '''N/A''' AS p_dg_verify,
+        'name'    AS p_db_unique_name,
+        '''N/A''' AS p_platform_name
+FROM DUAL 
+WHERE '&v_dbversion' LIKE '9%'
+UNION
+SELECT
+        REPLACE('REPLACE(valid_role ,"|", " ")', chr(34), chr(39)) ,
+        'verify'  ,
+        'db_unique_name' AS p_db_unique_name,
+        'platform_name'  AS p_platform_name
+FROM DUAL
+WHERE '&v_dbversion' NOT LIKE '9%';
+
 column vname new_value v_name noprint
 SELECT min(object_name) AS vname 
 FROM dba_objects 
 WHERE object_name IN ('V$INSTANCE', 'GV$INSTANCE');
 
-SELECT lower(i.host_name||'_'||d.db_unique_name||'_'||d.dbid) AS p_dma_source_id
+SELECT lower(i.host_name||'_'||&v_db_unique_name||'_'||d.dbid) AS p_dma_source_id
 FROM ( 
 	SELECT version, host_name
 	FROM &&v_name 
@@ -186,7 +216,7 @@ BEGIN
     ELSE
       :pdb_logging_flag := 'Y';
     END IF; 
-  ELSE IF  '&v_dbversion'  LIKE '11%' OR  '&v_dbversion'  LIKE '10%' THEN
+  ELSE IF  '&v_dbversion'  LIKE '11%' OR  '&v_dbversion'  LIKE '10%'  OR  '&v_dbversion'  LIKE '9%'  THEN
           :dflt_value_flag := 'N';
           :pdb_logging_flag := 'N';
        END IF;
@@ -400,3 +430,4 @@ column CON_ID &v_h_con_id
 
 set numwidth 48
 column v_dma_source_id format a100
+
