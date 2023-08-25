@@ -116,13 +116,13 @@ FROM v$instance
 /
 
 COLUMN p_data_type_exp NEW_VALUE v_data_type_exp noprint
-COLUMN p_skipfile NEW_VALUE v_skipfile noprint
+COLUMN p_ora9ind NEW_VALUE v_ora9ind noprint
 SELECT CASE WHEN  '&v_dbversion' LIKE '9%' THEN 'data_type_col_9i.sql'
             ELSE 'data_type_col_regex.sql'
        END as p_data_type_exp,
-       CASE WHEN  '&v_dbversion' LIKE '9%' THEN '-- '
+       CASE WHEN  '&v_dbversion' LIKE '9%' THEN '9i_'
             ELSE ''
-       END AS p_skipfile
+       END AS p_ora9ind
 FROM dual;
 
 COLUMN p_dg_valid_role         new_value v_dg_valid_role         noprint

@@ -156,13 +156,6 @@ do
 done
 }
 
-function 9i_filler {
-V_FILE_TAG=${1}
-echo 'PKEY|DT|CPU_COUNT|CPU_CORE_COUNT|CPU_SOCKET_COUNT|DMA_SOURCE_ID' >  ${OUTPUT_DIR}/opdb__cpucoresusage__${V_FILE_TAG}.csv
-echo 'PKEY|CON_ID|NAME|CURRE|DETECTED_USAGES|TOTAL_SAMPLES|FIRST_USAGE|LAST_USAGE|AUX_COUNT|DMA_SOURCE_ID' > ${OUTPUT_DIR}/opdb__dbfeatures__${V_FILE_TAG}.csv
-echo 'PKEY|DESCRIPTION|HIGHWATER|LAST_VALUE|CON_ID|DMA_SOURCE_ID' > ${OUTPUT_DIR}/opdb__dbhwmarkstatistics__${V_FILE_TAG}.csv
-}
-
 function compressOpFiles  {
 V_FILE_TAG=$1
 V_ERR_TAG=""
@@ -191,12 +184,8 @@ ZIPFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.zip
 
 locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
 
+echo "dbmajor = ${dbmajor}"  >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
 echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
-
-if [[ "${dbmajor}" = "09" ]]
-then
-  9i_filler ${V_FILE_TAG}
-fi
 
 cd ${OUTPUT_DIR}
 if [ -f opdb__manifest__${V_FILE_TAG}.txt ];

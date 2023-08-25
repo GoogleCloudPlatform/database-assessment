@@ -53,14 +53,14 @@ set termout &TERMOUTOFF
 @&EXTRACTSDIR/defines.sql
 @&EXTRACTSDIR/archlogs.sql
 @&EXTRACTSDIR/users.sql
-&v_skipfile @&EXTRACTSDIR/backups.sql
+@&EXTRACTSDIR/&v_ora9ind.backups.sql
 @&EXTRACTSDIR/columntypes.sql
 @&EXTRACTSDIR/compressbytype.sql
-&v_skipfile @&EXTRACTSDIR/cpucoresusage.sql
+@&EXTRACTSDIR/&v_ora9ind.cpucoresusage.sql
 @&EXTRACTSDIR/dataguard.sql
 @&EXTRACTSDIR/datatypes.sql
-&v_skipfile @&EXTRACTSDIR/dbfeatures.sql
-&v_skipfile @&EXTRACTSDIR/dbhwmarkstatistics.sql
+@&EXTRACTSDIR/&v_ora9ind.dbfeatures.sql
+@&EXTRACTSDIR/&v_ora9ind.dbhwmarkstatistics.sql
 @&EXTRACTSDIR/dbinstances.sql
 @&EXTRACTSDIR/dblinks.sql
 @&EXTRACTSDIR/dbobjects.sql
