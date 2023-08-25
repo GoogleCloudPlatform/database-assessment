@@ -305,6 +305,7 @@ if [ $retval -eq 0 ]; then
     else if [ "${dbmajor}" = "09" ]
       then
        echo "Oracle 9 support is experimental."
+       DIAGPACKACCESS="NoDiagnostics"
       fi  
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
