@@ -1,7 +1,7 @@
 tee output/opdb__functionsbyschema__V_TAG
 SELECT /*+ MAX_EXECUTION_TIME(5000) */ ROUTINE_SCHEMA,
                                        ROUTINE_NAME
-                                , '_DMA_SOURCE_ID_' as DMA_SOURCE_ID				
+                                , '''_DMASOURCEID_''' as DMA_SOURCE_ID, '''_DMAMANUALID_''' as MANUAL_ID
 FROM information_schema.ROUTINES
 WHERE ROUTINE_TYPE = 'FUNCTION'
   AND ROUTINE_SCHEMA NOT IN ('mysql',

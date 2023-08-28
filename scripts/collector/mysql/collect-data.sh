@@ -189,6 +189,7 @@ function executeOPMysql {
 connectString="$1"
 OpVersion=$2
 V_FILE_TAG=$3
+V_MANUAL_ID="${4}"
 user=$(echo ${connectString} | cut -d '/' -f 1)
 pass=$(echo ${connectString} | cut -d '/' -f 2 | cut -d '@' -f 1)
 host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
@@ -204,13 +205,13 @@ fi
 export SKIPSCHEMA=$(grep -v \# sql/source/skipschema.csv)
 
 echo Getting DMA_SOURCE_ID with  ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table --silent $db 
-export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/source/init.sql )
+export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/source/init.sql | tr -d '')
 echo DMA_SOURCE_ID = $DMA_SOURCE_ID
 
 for s in sql/source/*sql
 do
   fname=$(echo $s | cut -d '/' -f 3)
-  ${SED} "s/V_TAG/${V_TAG}/g;s/SKIPSCHEMA/${SKIPSCHEMA}/g;s/SQLOUTPUT_DIR/'${SQLOUTPUT_DIR}'/g;s/_DMA_SOURCE_ID_/${DMA_SOURCE_ID}/g" ${s} > sql/${V_FILE_TAG}_${fname}
+  ${SED} "s/V_TAG/${V_TAG}/g;s/SKIPSCHEMA/${SKIPSCHEMA}/g;s/SQLOUTPUT_DIR/'${SQLOUTPUT_DIR}'/g;s/_DMASOURCEID_/${DMA_SOURCE_ID}/g;s/_DMAMANUALID_/${V_MANUAL_ID}/g" ${s} > sql/${V_FILE_TAG}_${fname}
 done
 
 if [ -f sql/${V_TAG}_mysqlcollector.sql ]; 
@@ -227,7 +228,7 @@ ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table $db < 
 
 for x in $(grep -L DMA_SOURCE_ID output/*${V_FILE_TAG}.csv )
 do
-  sed 's///g' ${x} | awk 'BEGIN { FS="|"; OFS="|"; }; {if (NR == 2) { $NF = $NF "DMA_SOURCE_ID" } else { $NF = $NF "'${DMA_SOURCE_ID}'" } print }' > ${x}.tmp && mv ${x}.tmp ${x}
+  sed 's///g' ${x} | awk -v SRCID="${DMA_SOURCE_ID}" -v MANID="${V_MANUAL_ID}" -v Q="'" 'BEGIN { FS="|"; OFS="|"; }; {if (NR == 2) { $NF = $NF "DMA_SOURCE_ID" "|" "MANUAL_ID" } else { $NF = $NF Q SRCID Q "|" Q MANID Q "|" } print }' > ${x}.tmp && mv ${x}.tmp ${x}
 done
 }
 
@@ -323,6 +324,7 @@ ZIPFILE=opdb_${DBTYPE}_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.zip
 
 locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
 
+echo "MANUAL_ID : " ${MANUAL_ID} >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
 echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
 
 cd ${OUTPUT_DIR}
@@ -392,7 +394,7 @@ fi
 ### Validate input
 #############################################################################
 
-if [[  $# -ne 3  || (  "$2" != "UseDiagnostics" && "$2" != "NoDiagnostics" ) ]]
+if [[  $# -lt 3  || $# -gt 4 || (  "$2" != "UseDiagnostics" && "$2" != "NoDiagnostics" ) ]]
  then
   echo
   echo "You must indicate whether or not to use the Diagnostics Pack views."
@@ -408,9 +410,16 @@ fi
 # MAIN
 #############################################################################
 
-DBTYPE="$3"
 
 connectString="$1"
+DIAGPACKACCESS="$2"
+DBTYPE="$3"
+MANUALID=""
+if [[ $# -eq 4 ]]; 
+then
+  echo Setting manual Id to "${4}"
+  MANUALID=$(echo "$4" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]')
+fi
 
 checkPlatform $DBTYPE
 
@@ -444,7 +453,6 @@ fi
 
 retval=$?
 
-DIAGPACKACCESS="$2"
 
 extractorVersion="$(getVersion)"
 
@@ -475,7 +483,7 @@ if [ $retval -eq 0 ]; then
       executeOPOracle "${connectString}" ${OpVersion} ${DIAGPACKACCESS}
       retval=$?
     else if [ "$3" == "mysql" ]; then
-      executeOPMysql "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g')
+      executeOPMysql "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g') "${MANUALID}"
       retval=$?
     else if [ "$3" == "postgres" ]; then
       executeOPPg "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g')
