@@ -24,11 +24,11 @@ SELECT CASE WHEN &v_is_container != 0 THEN 'c.con_id'   ELSE '''N/A''' END as c_
        CASE WHEN &v_is_container != 0 THEN 's.con_id'   ELSE '''N/A''' END as s_con_id
 FROM DUAL;
 
-SELECT  CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 't.segment_created'   END as t_segment_created,
-        CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 'tp.segment_created'  END as tp_segment_created,
-        CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 'lp.segment_created'  END as lp_segment_created,
-        CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 'tsp.segment_created' END as tsp_segment_created,
-        CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 'lsp.segment_created' END as lsp_segment_created
+SELECT  CASE WHEN '&v_dbversion' LIKE '9%' OR '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 't.segment_created'   END as t_segment_created,
+        CASE WHEN '&v_dbversion' LIKE '9%' OR '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 'tp.segment_created'  END as tp_segment_created,
+        CASE WHEN '&v_dbversion' LIKE '9%' OR '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 'lp.segment_created'  END as lp_segment_created,
+        CASE WHEN '&v_dbversion' LIKE '9%' OR '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 'tsp.segment_created' END as tsp_segment_created,
+        CASE WHEN '&v_dbversion' LIKE '9%' OR '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 'lsp.segment_created' END as lsp_segment_created
 FROM DUAL;
 
 

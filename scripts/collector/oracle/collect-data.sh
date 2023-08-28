@@ -16,7 +16,8 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.15"
+OpVersion="4.3.16"
+dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
 export LANG=C
@@ -90,7 +91,7 @@ set pagesize 0 lines 400 feedback off verify off heading off echo off timing off
 column vname new_value v_name noprint
 select min(object_name) as vname from dba_objects where object_name in ('V\$INSTANCE', 'GV\$INSTANCE');
 select 'DMAFILETAG~'|| i.version||'|'||substr(replace(i.version,'.',''),0,3)||'_'||'${OpVersion}_'||i.host_name||'_'||d.name||'_'||i.instance_name||'_'||to_char(sysdate,'MMDDRRHH24MISS')||'~'
-from ( SELECT version, host_name, instance_name FROM &&v_name WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v\$database d;
+from ( SELECT case when version like '9%' then '0' || version else version end as version, host_name, instance_name FROM &&v_name WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v\$database d;
 exit;
 EOF
 }
@@ -183,6 +184,7 @@ ZIPFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.zip
 
 locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
 
+echo "dbmajor = ${dbmajor}"  >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
 echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
 
 cd ${OUTPUT_DIR}
@@ -300,6 +302,11 @@ if [ $retval -eq 0 ]; then
     if [ "${dbmajor}" = "10" ]
     then
        echo "Oracle 10 support is experimental."
+    else if [ "${dbmajor}" = "09" ]
+      then
+       echo "Oracle 9 support is experimental."
+       DIAGPACKACCESS="NoDiagnostics"
+      fi  
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
     executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS}

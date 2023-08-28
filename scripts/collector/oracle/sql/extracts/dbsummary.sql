@@ -59,7 +59,7 @@ SELECT '&&v_host'
        || (SELECT value
            FROM   nls_database_parameters a
            WHERE  a.parameter = 'NLS_CHARACTERSET')                             AS characterset,
-       (SELECT platform_name
+       (SELECT &v_platform_name as  platform_name
         FROM   v$database)                                                      AS platform_name,
        (SELECT TO_CHAR(startup_time, 'YYYY-MM-DD HH24:MI:SS')
         FROM   v$instance)                                                      AS startup_time,
@@ -103,7 +103,7 @@ SELECT '&&v_host'
              v$logfile f
         WHERE f.group# = l.group#     )                                         AS db_size_redo_allocated_gb,
 @&EXTRACTSDIR/app_schemas.sql
-        , (SELECT db_unique_name
+        , (SELECT &v_db_unique_name as db_unique_name
            FROM v$database)                                                     AS db_unique_name
 FROM   dual)
 SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , force_logging ,

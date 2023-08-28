@@ -46,9 +46,9 @@ SELECT  '&&v_host'
         REPLACE(alternate  ,'|', ' ')alternate, 
         transmit_mode, 
         affirm, 
-        REPLACE(valid_role ,'|', ' ') valid_role, 
-        verify,
-        'N/A' log_archive_config
+        &v_dg_valid_role AS valid_role, 
+        &v_dg_verify     AS verify,
+        'N/A' as log_archive_config
 FROM gv$archive_dest a
 WHERE destination IS NOT NULL)
 SELECT pkey , con_id , inst_id , log_archive_config , dest_id , dest_name , destination , status ,
