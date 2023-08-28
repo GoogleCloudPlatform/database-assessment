@@ -5,6 +5,7 @@ SELECT id,
        command,
        TIME,
        state
+                                , '''_DMASOURCEID_''' as DMA_SOURCE_ID, '''_DMAMANUALID_''' as MANUAL_ID
 FROM information_schema.processlist
 ;
 notee

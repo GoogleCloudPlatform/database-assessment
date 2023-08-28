@@ -2,6 +2,7 @@ tee output/opdb__tableswithpk__V_TAG
 SELECT /*+ MAX_EXECUTION_TIME(5000) */ tables.table_schema,
                                        tables.table_name,
                                        tables.table_rows
+                                , '''_DMASOURCEID_''' as DMA_SOURCE_ID, '''_DMAMANUALID_''' as MANUAL_ID
 FROM information_schema.tables
 LEFT JOIN
   (SELECT table_schema,
