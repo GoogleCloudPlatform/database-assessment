@@ -73,7 +73,7 @@ function checkPlatform {
       SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
       SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
       
-      if [ ! "${1}" == "postgres" ]
+      if [ "${1}" == "oracle" ]
         then
            SQLCMD=${SQLCMD}.exe
       fi
@@ -184,7 +184,6 @@ EOF
 }
 
 
-
 function executeOPMysql {
 connectString="$1"
 OpVersion=$2
@@ -203,34 +202,27 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
 fi
 
 export SKIPSCHEMA=$(grep -v \# sql/source/skipschema.csv)
+export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/source/init.sql | tr -d '\r')
 
-echo Getting DMA_SOURCE_ID with  ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table --silent $db 
-export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/source/init.sql | tr -d '
-')
-echo DMA_SOURCE_ID = $DMA_SOURCE_ID
-
-for s in sql/source/*sql
-do
-  fname=$(echo $s | cut -d '/' -f 3)
-  ${SED} "s/V_TAG/${V_TAG}/g;s/SKIPSCHEMA/${SKIPSCHEMA}/g;s/SQLOUTPUT_DIR/'${SQLOUTPUT_DIR}'/g;s/_DMASOURCEID_/${DMA_SOURCE_ID}/g;s/_DMAMANUALID_/${V_MANUAL_ID}/g" ${s} > sql/${V_FILE_TAG}_${fname}
-done
-
-if [ -f sql/${V_TAG}_mysqlcollector.sql ]; 
+if [ -f sql/${V_FILE_TAG}_mysqlcollector.sql ]; 
 then
-rm sql/${V_TAG}_mysqlcollector.sql
+rm sql/${V_FILE_TAG}_mysqlcollector.sql
 fi
 
-for f in sql/${V_FILE_TAG}_*sql
+for f in $(ls -1 sql/source/*.sql | grep -v -e _mysqlcollector.sql -e init.sql)
 do
-  echo source ${f} >> sql/${V_FILE_TAG}_mysqlcollector.sql
+  fname=$(echo ${f} | cut -d '/' -f 3 | cut -d '.' -f 1)
+    ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__${fname}__${V_TAG} <<EOF
+SET @DMASOURCEID='${DMA_SOURCE_ID}' ; 
+SET @DMAMANUALID='${V_MANUAL_ID}' ;
+source ${f}
+exit
+EOF
 done
-
-${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table $db < sql/${V_FILE_TAG}_mysqlcollector.sql
 
 for x in $(grep -L DMA_SOURCE_ID output/*${V_FILE_TAG}.csv )
 do
-  sed 's/
-//g' ${x} | awk -v SRCID="${DMA_SOURCE_ID}" -v MANID="${V_MANUAL_ID}" -v Q="'" 'BEGIN { FS="|"; OFS="|"; }; {if (NR == 2) { $NF = $NF "DMA_SOURCE_ID" "|" "MANUAL_ID" } else { $NF = $NF Q SRCID Q "|" Q MANID Q "|" } print }' > ${x}.tmp && mv ${x}.tmp ${x}
+  sed 's/\r//g' ${x} | awk -v SRCID="${DMA_SOURCE_ID}" -v MANID="${V_MANUAL_ID}" -v Q="'" 'BEGIN { FS="|"; OFS="|"; }; {if (NR == 2) { $NF = $NF "DMA_SOURCE_ID" "|" "MANUAL_ID" } else { $NF = $NF Q SRCID Q "|" Q MANID Q "|" } print }' > ${x}.tmp && mv ${x}.tmp ${x}
 done
 }
 
@@ -367,10 +359,6 @@ fi
 if [ -f $OUTFILE ]
 then
   rm opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
-  if [[ -f ../sql/${V_FILE_TAG}*.sql ]]
-  then
-    rm ../sql/${V_FILE_TAG}*.sql
-  fi
 fi
 
 cd ${CURRENT_WORKING_DIR}

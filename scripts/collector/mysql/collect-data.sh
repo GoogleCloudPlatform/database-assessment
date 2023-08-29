@@ -31,7 +31,7 @@ TMP_DIR=${SCRIPT_DIR}/tmp
 LOG_DIR=${SCRIPT_DIR}/log
 SQL_DIR=${SCRIPT_DIR}/sql
 DBTYPE=""
-echo SQLOUTPUT_DIR = ${SQLOUTPUT_DIR}
+
 GREP=$(which grep)
 SED=$(which sed)
 if [ $(uname) = "SunOS" ]
@@ -72,8 +72,8 @@ function checkPlatform {
     then
       SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
       SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
-      echo SQLOUTPUT_DIR = ${SQLOUTPUT_DIR}
-      if [ ! "${1}" == "postgres" ]
+
+      if [ "${1}" == "oracle" ]
         then
            SQLCMD=${SQLCMD}.exe
       fi
@@ -108,11 +108,11 @@ function checkVersionPg {
     fi
 
     # SELECT 'DMAFILETAG~' , version();
-    dbversion=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t << EOF
+    dbversion=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t --no-align << EOF
 SELECT current_setting('server_version');
 EOF
 )
-echo 'DMAFILETAG~'${dbversion}'|'${dbversion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}
+echo 'DMAFILETAG~'${dbversion}'|'${dbversion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
 }
 
 function checkVersionMysql {
@@ -184,7 +184,6 @@ EOF
 }
 
 
-
 function executeOPMysql {
 connectString="$1"
 OpVersion=$2
@@ -202,33 +201,27 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
   exit 1
 fi
 
-export SKIPSCHEMA=$(grep -v \# sql/source/skipschema.csv)
+export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/init.sql | tr -d '\r')
 
-echo Getting DMA_SOURCE_ID with  ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table --silent $db 
-export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/source/init.sql | tr -d '')
-echo DMA_SOURCE_ID = $DMA_SOURCE_ID
-
-for s in sql/source/*sql
-do
-  fname=$(echo $s | cut -d '/' -f 3)
-  ${SED} "s/V_TAG/${V_TAG}/g;s/SKIPSCHEMA/${SKIPSCHEMA}/g;s/SQLOUTPUT_DIR/'${SQLOUTPUT_DIR}'/g;s/_DMASOURCEID_/${DMA_SOURCE_ID}/g;s/_DMAMANUALID_/${V_MANUAL_ID}/g" ${s} > sql/${V_FILE_TAG}_${fname}
-done
-
-if [ -f sql/${V_TAG}_mysqlcollector.sql ]; 
+if [ -f sql/${V_FILE_TAG}_mysqlcollector.sql ]; 
 then
-  rm sql/${V_TAG}_mysqlcollector.sql
+  rm sql/${V_FILE_TAG}_mysqlcollector.sql
 fi
 
-for f in sql/${V_FILE_TAG}_*sql
+for f in $(ls -1 sql/*.sql | grep -v -e _mysqlcollector.sql -e init.sql)
 do
-  echo source ${f} >> sql/${V_FILE_TAG}_mysqlcollector.sql
+  fname=$(echo ${f} | cut -d '/' -f 3 | cut -d '.' -f 1)
+  ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__${fname}__${V_TAG} <<EOF
+SET @DMASOURCEID='${DMA_SOURCE_ID}' ; 
+SET @DMAMANUALID='${V_MANUAL_ID}' ;
+source ${f}
+exit
+EOF
 done
-
-${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table $db < sql/${V_FILE_TAG}_mysqlcollector.sql
 
 for x in $(grep -L DMA_SOURCE_ID output/*${V_FILE_TAG}.csv )
 do
-  sed 's///g' ${x} | awk -v SRCID="${DMA_SOURCE_ID}" -v MANID="${V_MANUAL_ID}" -v Q="'" 'BEGIN { FS="|"; OFS="|"; }; {if (NR == 2) { $NF = $NF "DMA_SOURCE_ID" "|" "MANUAL_ID" } else { $NF = $NF Q SRCID Q "|" Q MANID Q "|" } print }' > ${x}.tmp && mv ${x}.tmp ${x}
+  sed 's/\r//g' ${x} | awk -v SRCID="${DMA_SOURCE_ID}" -v MANID="${V_MANUAL_ID}" -v Q="'" 'BEGIN { FS="|"; OFS="|"; }; {if (NR == 2) { $NF = $NF "DMA_SOURCE_ID" "|" "MANUAL_ID" } else { $NF = $NF Q SRCID Q "|" Q MANID Q "|" } print }' > ${x}.tmp && mv ${x}.tmp ${x}
 done
 }
 
@@ -237,6 +230,7 @@ function executeOPPg {
 connectString="$1"
 OpVersion=$2
 V_FILE_TAG=$3
+V_MANUAL_ID="${4}"
 user=$(echo ${connectString} | cut -d '/' -f 1)
 pass=$(echo ${connectString} | cut -d '/' -f 2 | cut -d '@' -f 1)
 host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
@@ -249,9 +243,21 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
   exit 1
 fi
 
-${SQLCMD}  --user=$user --password -h $host -w -p $port -t <<EOF
+
+DMA_SOURCE_ID=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t --no-align <<EOF
+SELECT system_identifier FROM pg_control_system();
+EOF
+)
+if [[ "${V_MANUAL_ID}" == "" ]]
+then
+	V_MANUAL_ID=""
+fi
+
+${SQLCMD}  --user=$user --password -h $host -w -p $port -t --no-align <<EOF
 \set VTAG ${V_FILE_TAG}
-\i sql/all.sql
+\set DMA_SOURCE_ID '\'${DMA_SOURCE_ID}\''
+\set DMA_MANUAL_ID '\'${V_MANUAL_ID}\''
+\i sql/op_collect.sql
 EOF
 }
 
@@ -287,7 +293,7 @@ do
     cp sed_${V_FILE_TAG}.tmp ${outfile}
     rm sed_${V_FILE_TAG}.tmp
   else
-    ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;s/$//g' ${outfile} > sed_${V_FILE_TAG}.tmp
+    ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g' ${outfile} > sed_${V_FILE_TAG}.tmp
     cp sed_${V_FILE_TAG}.tmp ${outfile}
     rm sed_${V_FILE_TAG}.tmp
   fi
@@ -352,7 +358,6 @@ fi
 if [ -f $OUTFILE ]
 then
   rm opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
-  rm ../sql/${V_FILE_TAG}*.sql
 fi
 
 cd ${CURRENT_WORKING_DIR}
@@ -417,8 +422,7 @@ DBTYPE="$3"
 MANUALID=""
 if [[ $# -eq 4 ]]; 
 then
-  echo Setting manual Id to "${4}"
-  MANUALID=$(echo "$4" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]')
+    MANUALID=$(echo "$4" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]')
 fi
 
 checkPlatform $DBTYPE
@@ -433,16 +437,14 @@ if [ "$DBTYPE" == "oracle" ] ; then
     fi
   else if [ "$DBTYPE" == "mysql" ] ; then
     sqlcmd_result=$(checkVersionMysql "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r' )
-    echo Result=${sqlcmd_result}
-    if [[ "${sqlcmd_result}" = "" ]];
+        if [[ "${sqlcmd_result}" = "" ]];
       then
       echo "Unable to connect to the target MySQL database using ${connectString}.  Please verify the connection information and target database status."
       exit 255
     fi
     else if [ "$DBTYPE" == "postgres" ] ; then
       sqlcmd_result=$(checkVersionPg "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r' )
-      echo Result=${sqlcmd_result}
-      if [[ "${sqlcmd_result}" = "" ]];
+            if [[ "${sqlcmd_result}" = "" ]];
         then
         echo "Unable to connect to the target Postgres database using ${connectString}.  Please verify the connection information and target database status."
         exit 255
@@ -477,8 +479,7 @@ if [ $retval -eq 0 ]; then
        echo "Oracle 10 support is experimental."
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    echo V_TAG = ${V_TAG}
-
+    
     if [ "$3" == "oracle" ] ; then
       executeOPOracle "${connectString}" ${OpVersion} ${DIAGPACKACCESS}
       retval=$?
@@ -486,7 +487,7 @@ if [ $retval -eq 0 ]; then
       executeOPMysql "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g') "${MANUALID}"
       retval=$?
     else if [ "$3" == "postgres" ]; then
-      executeOPPg "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g')
+      executeOPPg "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g') "${MANUALID}"
       retval=$?
       fi
     fi
