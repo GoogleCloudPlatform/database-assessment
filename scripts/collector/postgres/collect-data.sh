@@ -201,17 +201,16 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
   exit 1
 fi
 
-export SKIPSCHEMA=$(grep -v \# sql/source/skipschema.csv)
-export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/source/init.sql | tr -d '\r')
+export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/init.sql | tr -d '\r')
 
 if [ -f sql/${V_FILE_TAG}_mysqlcollector.sql ]; 
 then
 rm sql/${V_FILE_TAG}_mysqlcollector.sql
 fi
 
-for f in $(ls -1 sql/source/*.sql | grep -v -e _mysqlcollector.sql -e init.sql)
+for f in $(ls -1 sql/*.sql | grep -v -e _mysqlcollector.sql -e init.sql)
 do
-  fname=$(echo ${f} | cut -d '/' -f 3 | cut -d '.' -f 1)
+  fname=$(echo ${f} | cut -d '/' -f 2 | cut -d '.' -f 1)
     ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__${fname}__${V_TAG} <<EOF
 SET @DMASOURCEID='${DMA_SOURCE_ID}' ; 
 SET @DMAMANUALID='${V_MANUAL_ID}' ;

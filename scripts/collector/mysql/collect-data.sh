@@ -210,7 +210,7 @@ fi
 
 for f in $(ls -1 sql/*.sql | grep -v -e _mysqlcollector.sql -e init.sql)
 do
-  fname=$(echo ${f} | cut -d '/' -f 3 | cut -d '.' -f 1)
+  fname=$(echo ${f} | cut -d '/' -f 2 | cut -d '.' -f 1)
   ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__${fname}__${V_TAG} <<EOF
 SET @DMASOURCEID='${DMA_SOURCE_ID}' ; 
 SET @DMAMANUALID='${V_MANUAL_ID}' ;
