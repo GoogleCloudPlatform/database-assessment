@@ -21,10 +21,12 @@ SET LANGUAGE us_english;
 DECLARE @PKEY AS VARCHAR(256)
 DECLARE @PRODUCT_VERSION AS INTEGER
 DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
+DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
 SELECT @PKEY = N'$(pkey)';
-SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
+SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
 IF OBJECT_ID('tempdb..#clusterNodesTable') IS NOT NULL  
     DROP TABLE #clusterNodesTable;
@@ -74,7 +76,14 @@ BEGIN CATCH
         SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message
 END CATCH
 
-SELECT @PKEY as PKEY,  NodeName AS node_name, status, status_description, @DMA_SOURCE_ID as dma_source_id from #clusterNodesTable;
+SELECT 
+    @PKEY as PKEY,
+    NodeName AS node_name,
+    status,
+    status_description,
+    @DMA_SOURCE_ID as dma_source_id,
+    @DMA_MANUAL_ID as dma_manual_id
+from #clusterNodesTable;
 
 IF OBJECT_ID('tempdb..#clusterNodesTable') IS NOT NULL  
     DROP TABLE #clusterNodesTable;
