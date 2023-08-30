@@ -126,7 +126,7 @@ $current_ts = $values[4]
 $pkey = $values[5]
 $dmaSourceId = $dmaSourceId[0]
 
-$op_version = "4.3.16"
+$op_version = "4.3.17"
 
 if ($ignorePerfmon -eq "true") {
     $perfCounterLabel = "NoPerfCounter"
