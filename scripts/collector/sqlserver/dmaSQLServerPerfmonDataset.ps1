@@ -60,13 +60,13 @@ param (
 		HelpMessage="The pkey value for the final perfmon combined file"
 	)][string]$pkey=$null,
 	[Parameter(
-		Mandatory=$False,
+		Mandatory=$True,
 		HelpMessage="The dma_source_id value for the final perfmon combined file"
-	)][string]$dmaSourceId=$null,
+	)][string]$dmaSourceId,
 	[Parameter(
 		Mandatory=$False,
 		HelpMessage="The dma_manual_id / customer supplied tag value for the final perfmon combined file"
-	)][string]$dmaManualId=$null
+	)][string]$dmaManualId="NA"
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
@@ -481,7 +481,7 @@ param(
 		foreach($file in Get-ChildItem -Path $env:TEMP\*$dataSet*.csv) {
 			$tempFileName = 'PKEY_' + (Split-Path $file -leaf)
 			Get-Content -Path $file | ForEach-Object {
-				'"' + $pkey + '"|' + $_ + '|"' + $dmaSourceId + '"'
+				'"' + $pkey + '"|' + $_ + '|"' + $dmaSourceId + '"|"' + $dmaManualId + '"'
 			} | Out-File -FilePath $env:TEMP\$tempFileName -Encoding utf8
 		}
 	} else {
@@ -521,6 +521,8 @@ param(
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
 	WriteLog -logLocation $foldername\$logFile -logMessage "DMA Source Id: $dmaSourceId " -logOperation "FILE"
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
+	WriteLog -logLocation $foldername\$logFile -logMessage "DMA Manual Id: $dmaManualId " -logOperation "FILE"
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Collecting current state of perfmon dataset: $dataset..." -logOperation "BOTH"
 	logman.exe query -n $dataset | out-string | Add-Content -Encoding utf8 -Path $outputDir\$perfmonLogFile
 
@@ -544,6 +546,8 @@ function CreateEmptyFile
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Creating an empty Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
 		WriteLog -logLocation $foldername\$logFile -logMessage "DMA Source Id: $dmaSourceId " -logOperation "FILE"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
+		WriteLog -logLocation $foldername\$logFile -logMessage "DMA Manual Id: $dmaManualId " -logOperation "FILE"
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
 	
 		if (!(Test-Path -PathType container $outputDir)) {
