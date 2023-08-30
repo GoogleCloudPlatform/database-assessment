@@ -17,13 +17,16 @@ limitations under the License.
 
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
+
 DECLARE @PKEY AS VARCHAR(256)
 DECLARE @PRODUCT_VERSION AS INTEGER
 DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
+DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
 SELECT @PKEY = N'$(pkey)';
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
+SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
 SELECT
     @PKEY as PKEY,
@@ -31,7 +34,8 @@ SELECT
     value,
     value_in_use,
     SUBSTRING(description, 1, 256) AS description,
-    @DMA_SOURCE_ID as dma_source_id
+    @DMA_SOURCE_ID as dma_source_id,
+    @DMA_MANUAL_ID as dma_manual_id
 FROM
     sys.configurations
 WHERE

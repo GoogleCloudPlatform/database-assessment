@@ -19,9 +19,11 @@ SET language us_english;
 DECLARE @PKEY AS VARCHAR(256)
 DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
 DECLARE @TABLE_PERMISSION_COUNT AS INTEGER
+DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
 SELECT @PKEY = N'$(pkey)';
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
+SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
 /* need to record table permissions in order to determine if we can run certain server level queryies
     as some tables are not available in managed instances 
@@ -628,7 +630,8 @@ SELECT @PKEY             AS PKEY,
        servicename       AS 'sql_server_services',
        servicestatus     AS 'current_service_status',
        statusdatetime    AS 'status_date_time',
-       @DMA_SOURCE_ID    AS 'dma_source_id'
+       @DMA_SOURCE_ID    AS 'dma_source_id',
+       @DMA_MANUAL_ID    AS 'dma_manual_id'
 FROM   #servicesservicestatus
 
 /* -------------------------------------------------------------------------------------------------------------*/

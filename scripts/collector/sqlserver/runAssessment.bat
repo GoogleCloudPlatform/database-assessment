@@ -17,13 +17,14 @@ set serverName=
 set port=
 set user=
 set pass=
+set collectionTag="NA"
 set database=all
 set noPerfmon=false
-set helpMessage=Usage: runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [username] -collectionUserPass [password] -ignorePerfmon [true/false]
-set helpExample=Example (default port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false]
-set helpExamplePort=Example (specified port): runAssessment.bat -serverName MS-SERVER1 -port 1436 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false]
-set helpExampleDatabase=Example (default port / single database): runAssessment.bat -serverName MS-SERVER1\SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false]
-set helpExampleDatabasePort=Example (specified port / single database): runAssessment.bat -serverName MS-SERVER1 -port 1436 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false]
+set helpMessage=Usage: runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [username] -collectionUserPass [password] -ignorePerfmon [true/false] -collectionTag [unique tag to identify collection]
+set helpExample=Example (default port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -collectionTag mySQLServer
+set helpExamplePort=Example (specified port): runAssessment.bat -serverName MS-SERVER1 -port 1436 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -collectionTag mySQLServer
+set helpExampleDatabase=Example (default port / single database): runAssessment.bat -serverName MS-SERVER1\SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -collectionTag mySQLServer
+set helpExampleDatabasePort=Example (specified port / single database): runAssessment.bat -serverName MS-SERVER1 -port 1436 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -collectionTag mySQLServer
 
 if [%1]==[] (
     goto helpOperation
@@ -41,12 +42,16 @@ if /i "%1" == "-database" set "database=%2"
 if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-collectionUserPass" set "pass=%2"
 if /i "%1" == "-ignorePerfmon" set "noPerfmon=%2"
+if /i "%1" == "-collectionTag" set "collectionTag=%2"
 
 shift
 goto :loop
 
 :evaluateUser
 if [%serverName%]==[] goto raiseServerError
+if not [%collectionTag%]==[] (
+   if not "%collectionTag%"=="%collectionTag: =%" goto raiseTagError
+)
 if not [%user%]==[] goto execWithCustomUser
 
 :execWithCustomUser
@@ -55,9 +60,9 @@ if [%user%] == [] goto error
 if [%pass%] == [] goto error
 
 if [%port%] ==[] (
-    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon%
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -collectionTag %collectionTag%
 ) else (
-    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon%
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -collectionTag %collectionTag%
 )
 
 if %errorlevel% == 1 goto exit
@@ -72,6 +77,10 @@ goto exit
 echo Please specify -serverName flag when invoking the script
 echo Format: [server name or ip address]\[instance name] - for a Named Instance
 echo Format: [server name or ip address] - for a Default Instance
+goto exit
+
+:raiseTagError
+echo Please specify -collectionTag as a string with no spaces and no special characters
 goto exit
 
 :helpOperation
