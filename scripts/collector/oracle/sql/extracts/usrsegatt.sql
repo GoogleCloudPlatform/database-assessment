@@ -32,6 +32,6 @@ WITH vuseg AS (
 @&EXTRACTSDIR/exclude_schemas.sql
 )
 SELECT pkey , con_id , owner , segment_name , segment_type , tablespace_name,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vuseg;
 spool off

@@ -26,6 +26,6 @@ SELECT '&&v_host'
 FROM   &v_tblprefix._users a
 ORDER  BY username)
 SELECT pkey , con_id, username,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vuser;
 spool off

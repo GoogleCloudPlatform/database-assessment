@@ -48,6 +48,6 @@ GROUP  BY '&&v_host'
 )
 SELECT pkey , con_id , owner , data_type , cnt,
        data_length, data_precision, data_scale, avg_col_len, distinct_table_count,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vdtype;
 spool off

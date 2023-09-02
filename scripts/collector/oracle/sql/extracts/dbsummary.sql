@@ -112,6 +112,6 @@ SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , fo
 	   db_long_size_gb , dg_database_role , dg_protection_mode , dg_protection_level, 
            db_size_temp_allocated_gb, db_size_redo_allocated_gb,
            ebs_owner, siebel_owner, psft_owner, rds_flag, oci_autonomous_flag, dbms_cloud_pkg_installed,
-           apex_installed, sap_owner, db_unique_name, '&v_dma_source_id' AS DMA_SOURCE_ID
+           apex_installed, sap_owner, db_unique_name, '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vdbsummary;
 spool off
