@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__compressbytype__&v_tag
-
 WITH vcompresstype AS (
      SELECT '&&v_host'
             || '_'

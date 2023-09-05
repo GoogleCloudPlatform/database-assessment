@@ -32,7 +32,7 @@ set pagesize 0 embedded on
 set feed off
 set underline off
 set verify off
-set head on
+set head off
 set scan on
 set pause off
 set wrap on

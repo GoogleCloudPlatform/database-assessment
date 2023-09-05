@@ -41,6 +41,7 @@ END;
 SELECT :xml_select_sql AS p_xml_select FROM dual;
 
 spool &outputdir/opdb__tabletypes__&v_tag
+prompt PKEY|CON_ID|OWNER|PAR|IOT_TYPE|NESTED|TEMPORARY|SECONDARY|CLUSTERED_TABLE|TABLE_COUNT|OBJECT_TABLE|XML_TABLE|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH tblinfo AS (
 SELECT
     &v_a_con_id AS con_id,

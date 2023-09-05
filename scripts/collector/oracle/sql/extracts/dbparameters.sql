@@ -15,6 +15,7 @@ limitations under the License.
 */
 column default_value format a255
 spool &outputdir/opdb__dbparameters__&v_tag
+prompt PKEY|INST_ID|CON_ID|NAME|VALUE|DEFAULT_VALUE|ISDEFAULT|DMA_SOURCE_ID|DMA_MANUAL_ID
 
 WITH vparam AS (
 SELECT '&&v_host'

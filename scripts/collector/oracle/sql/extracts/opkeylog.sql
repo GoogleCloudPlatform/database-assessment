@@ -16,7 +16,7 @@ limitations under the License.
 COLUMN DB_NAME FORMAT A20
 COLUMN INSTANCE_NAME FORMAT A20
 spool &outputdir/opdb__opkeylog__&v_tag
-
+prompt PKEY|OPSCRI|DB_|HOSTNAME|DB_NAME|INSTANCE_NAME|COLLECTION_T|DB_ID|C|DMA_SOURCE_ID|DMA_MANUAL_ID
 with vop as (
 select '&&v_host'
        || '_'

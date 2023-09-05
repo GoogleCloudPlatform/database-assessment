@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__tableconstraints__&v_tag
-
+prompt PKEY|CON_ID|OWNER|TABLE_NAME|PK|UK|CK|RI|VWCK|VWRO|HASHEXPR|SUPLOG|TOTAL_CONS|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vnopk AS (
 SELECT '&&v_host'
        || '_'

@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 spool &outputdir/opdb__awrhistosstat__&v_tag
-
+prompt PKEY|DBID|INSTANCE_NUMBER|HH|STAT_NAME|HH24_TOTAL_SECS|CUMULATIVE_VALUE|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|MIN_VALUE|MAX_VALUE|SUM_VALUE|COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH v_osstat_all
      AS (SELECT os.dbid,
                      os.instance_number,

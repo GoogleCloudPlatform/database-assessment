@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__usrsegatt__&v_tag
-
+prompt PKEY|CON_ID|OWNER|SEGMENT_NAME|SEGMENT_TYPE|TABLESPACE_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vuseg AS (
  SELECT '&&v_host'
        || '_'

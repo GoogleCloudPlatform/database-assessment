@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__usedspacedetails__&v_tag
-
+prompt PKEY|CON_ID|OWNER|SEGMENT_TYPE|GB|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vused AS (
 SELECT '&&v_host'
        || '_'

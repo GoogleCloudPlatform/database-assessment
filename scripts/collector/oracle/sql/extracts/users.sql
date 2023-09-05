@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__users__&v_tag
-
+prompt PKEY|CON_ID|USERNAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vuser AS (
 SELECT '&&v_host'
        || '_'
