@@ -22,26 +22,34 @@ DECLARE @dbname VARCHAR(50);
 DECLARE @COLLECTION_USER VARCHAR(256);
 DECLARE @PRODUCT_VERSION AS INTEGER
 
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
 DECLARE db_cursor CURSOR FOR 
 SELECT name
 FROM MASTER.sys.databases 
 WHERE name NOT IN ('model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
 AND state = 0;
 
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @COLLECTION_USER = N'$(collectionUser)'
+
 BEGIN
-	GRANT VIEW SERVER STATE TO [$(collectionUser)]
-	GRANT SELECT ALL USER SECURABLES TO [$(collectionUser)]
-	GRANT VIEW ANY DATABASE TO [$(collectionUser)]
-	GRANT VIEW ANY DEFINITION TO [$(collectionUser)]
-	GRANT VIEW SERVER STATE TO [$(collectionUser)]
-    IF @PRODUCT_VERSION > 15
-        BEGIN
-            exec('GRANT VIEW SERVER PERFORMANCE STATE TO [$(collectionUser)]');
-            exec('GRANT VIEW SERVER SECURITY STATE TO [$(collectionUser)]');
-            exec('GRANT VIEW ANY PERFORMANCE DEFINITION TO [$(collectionUser)]');
-            exec('GRANT VIEW ANY SECURITY DEFINITION TO [$(collectionUser)]');
-        END;
+    IF EXISTS 
+        (SELECT name  
+        FROM master.sys.server_principals
+        WHERE name = @COLLECTION_USER)
+    BEGIN
+        exec('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
+        exec('GRANT SELECT ALL USER SECURABLES TO [' + @COLLECTION_USER + ']');
+        exec('GRANT VIEW ANY DATABASE TO [' + @COLLECTION_USER + ']');
+        exec('GRANT VIEW ANY DEFINITION TO [' + @COLLECTION_USER + ']');
+        exec('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
+        IF @PRODUCT_VERSION > 15
+            BEGIN
+                exec('GRANT VIEW SERVER PERFORMANCE STATE TO [' + @COLLECTION_USER + ']');
+                exec('GRANT VIEW SERVER SECURITY STATE TO [' + @COLLECTION_USER + ']');
+                exec('GRANT VIEW ANY PERFORMANCE DEFINITION TO [' + @COLLECTION_USER + ']');
+                exec('GRANT VIEW ANY SECURITY DEFINITION TO [' + @COLLECTION_USER + ']');
+            END;
+    END;
 END;
 
 OPEN db_cursor  
@@ -54,9 +62,9 @@ BEGIN
         use [' + @dbname + '];
         IF EXISTS (SELECT [name]
            FROM [sys].[database_principals]
-           WHERE [type] = N''S'' AND [name] = N''$(collectionUser)'')
+           WHERE [type] = N''S'' AND [name] = N''' + @COLLECTION_USER + ''')
            BEGIN
-             GRANT VIEW DATABASE STATE TO [$(collectionUser)];
+             GRANT VIEW DATABASE STATE TO [' + @COLLECTION_USER + '];
            END');
     END;
 

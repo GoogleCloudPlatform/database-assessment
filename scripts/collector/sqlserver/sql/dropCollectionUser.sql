@@ -19,12 +19,15 @@ SET NOCOUNT ON;
 SET LANGUAGE us_english;
 
 DECLARE @dbname VARCHAR(50);
+DECLARE @COLLECTION_USER VARCHAR(256);
 
 DECLARE db_cursor CURSOR FOR 
 SELECT name
 FROM MASTER.sys.databases 
 WHERE name NOT IN ('model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
 AND state = 0;
+
+SELECT @COLLECTION_USER = N'$(collectionUser)'
 
 OPEN db_cursor  
 FETCH NEXT FROM db_cursor INTO @dbname  
@@ -36,9 +39,9 @@ BEGIN
         use [' + @dbname + '];
         IF EXISTS (SELECT [name]
            FROM [sys].[database_principals]
-           WHERE [type] = N''S'' AND [name] = N''$(collectionUser)'')
+           WHERE [type] = N''S'' AND [name] = N''' + @COLLECTION_USER + ''')
            BEGIN
-             DROP USER [$(collectionUser)];
+             DROP USER [' + @COLLECTION_USER + '];
            END;
         ');
     END;
@@ -53,7 +56,7 @@ use [master];
 IF EXISTS 
     (SELECT name  
      FROM master.sys.server_principals
-     WHERE name = N'$(collectionUser)')
+     WHERE name = @COLLECTION_USER)
 	BEGIN
-		DROP LOGIN [$(collectionUser)];
+		exec ('DROP LOGIN [' + @COLLECTION_USER + ']');
 	END;
