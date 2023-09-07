@@ -29,13 +29,6 @@ FROM MASTER.sys.databases
 WHERE name NOT IN ('model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
 AND state = 0;
 
-IF NOT EXISTS 
-    (SELECT name  
-     FROM master.sys.server_principals
-     WHERE name = N'$(collectionUser)')
-	BEGIN
-		CREATE LOGIN [$(collectionUser)] WITH PASSWORD=N'$(collectionPass)', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF
-	END
 BEGIN
 	GRANT VIEW SERVER STATE TO [$(collectionUser)]
 	GRANT SELECT ALL USER SECURABLES TO [$(collectionUser)]
@@ -59,13 +52,12 @@ BEGIN
     BEGIN
         exec ('
         use [' + @dbname + '];
-        IF NOT EXISTS (SELECT [name]
+        IF EXISTS (SELECT [name]
            FROM [sys].[database_principals]
            WHERE [type] = N''S'' AND [name] = N''$(collectionUser)'')
            BEGIN
-             CREATE USER [$(collectionUser)] FOR LOGIN [$(collectionUser)];
-           END;
-        GRANT VIEW DATABASE STATE TO [$(collectionUser)]');
+             GRANT VIEW DATABASE STATE TO [$(collectionUser)];
+           END');
     END;
 
     FETCH NEXT FROM db_cursor INTO @dbname;
