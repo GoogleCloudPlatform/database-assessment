@@ -20,7 +20,6 @@ SET LANGUAGE us_english;
 
 DECLARE @dbname VARCHAR(50);
 DECLARE @COLLECTION_USER VARCHAR(256);
-DECLARE @COLLECTION_PASS VARCHAR(256);
 DECLARE @PRODUCT_VERSION AS INTEGER
 
 DECLARE db_cursor CURSOR FOR 
@@ -31,28 +30,26 @@ AND state = 0;
 
 SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
 SELECT @COLLECTION_USER = N'$(collectionUser)'
-SELECT @COLLECTION_PASS = N'$(collectionPass)'
 
-IF NOT EXISTS 
-    (SELECT name  
-     FROM master.sys.server_principals
-     WHERE name = @COLLECTION_USER)
-	BEGIN
-		exec ('CREATE LOGIN [' + @COLLECTION_USER + '] WITH PASSWORD=N''' + @COLLECTION_PASS + ''', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF');
-	END
 BEGIN
-	exec ('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
-	exec ('GRANT SELECT ALL USER SECURABLES TO [' + @COLLECTION_USER + ']');
-	exec ('GRANT VIEW ANY DATABASE TO [' + @COLLECTION_USER + ']');
-	exec ('GRANT VIEW ANY DEFINITION TO [' + @COLLECTION_USER + ']');
-	exec ('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
-    IF @PRODUCT_VERSION > 15
-        BEGIN
-            exec('GRANT VIEW SERVER PERFORMANCE STATE TO [' + @COLLECTION_USER + ']');
-            exec('GRANT VIEW SERVER SECURITY STATE TO [' + @COLLECTION_USER + ']');
-            exec('GRANT VIEW ANY PERFORMANCE DEFINITION TO [' + @COLLECTION_USER + ']');
-            exec('GRANT VIEW ANY SECURITY DEFINITION TO [' + @COLLECTION_USER + ']');
-        END;
+    IF EXISTS 
+        (SELECT name  
+        FROM master.sys.server_principals
+        WHERE name = @COLLECTION_USER)
+    BEGIN
+        exec('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
+        exec('GRANT SELECT ALL USER SECURABLES TO [' + @COLLECTION_USER + ']');
+        exec('GRANT VIEW ANY DATABASE TO [' + @COLLECTION_USER + ']');
+        exec('GRANT VIEW ANY DEFINITION TO [' + @COLLECTION_USER + ']');
+        exec('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
+        IF @PRODUCT_VERSION > 15
+            BEGIN
+                exec('GRANT VIEW SERVER PERFORMANCE STATE TO [' + @COLLECTION_USER + ']');
+                exec('GRANT VIEW SERVER SECURITY STATE TO [' + @COLLECTION_USER + ']');
+                exec('GRANT VIEW ANY PERFORMANCE DEFINITION TO [' + @COLLECTION_USER + ']');
+                exec('GRANT VIEW ANY SECURITY DEFINITION TO [' + @COLLECTION_USER + ']');
+            END;
+    END;
 END;
 
 OPEN db_cursor  
@@ -63,13 +60,12 @@ BEGIN
     BEGIN
         exec ('
         use [' + @dbname + '];
-        IF NOT EXISTS (SELECT [name]
+        IF EXISTS (SELECT [name]
            FROM [sys].[database_principals]
            WHERE [type] = N''S'' AND [name] = N''' + @COLLECTION_USER + ''')
            BEGIN
-             CREATE USER [' + @COLLECTION_USER + '] FOR LOGIN  [' + @COLLECTION_USER + '];
-           END;
-        GRANT VIEW DATABASE STATE TO  [' + @COLLECTION_USER + ']');
+             GRANT VIEW DATABASE STATE TO [' + @COLLECTION_USER + '];
+           END');
     END;
 
     FETCH NEXT FROM db_cursor INTO @dbname;

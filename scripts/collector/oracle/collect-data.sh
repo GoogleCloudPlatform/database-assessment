@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.17"
+OpVersion="4.3.18"
 dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
