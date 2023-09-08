@@ -16,7 +16,7 @@
 set serverName=
 set port=
 set user=
-set pass=
+set pass=false
 set collectionTag="NA"
 set database=all
 set noPerfmon=false
