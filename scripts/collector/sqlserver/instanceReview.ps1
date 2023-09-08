@@ -65,8 +65,9 @@ if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Collection Username parameter $collectionUserName is empty.  Ensure that the parameter is provided"
     Exit 1
 } elseif ([string]::IsNullorEmpty($collectionUserPass)) {
-    Write-Output "Collection Username password parameter $collectionUserPass is empty.  Ensure that the parameter is provided"
-    Exit 1
+    Write-Output "Collection Username password parameter $collectionUserPass is empty."
+    $passPrompt = Read-Host 'Please enter your password:' -AsSecureString
+    $collectionUserPass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($passPrompt))
 } elseif (((checkStringForSpecialChars -inputString $collectionTag) -eq "fail") -and (![string]::IsNullorEmpty($collectionTag))) {
     Write-Output "Collection Tag parameter $collectionTag contains spaces or special characters.  Ensure that the parameter contains only letters, numbers and no spaces"
     Exit 1

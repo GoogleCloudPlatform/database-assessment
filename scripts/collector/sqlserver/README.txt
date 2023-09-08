@@ -148,7 +148,7 @@ Operating System Versions:
                 -port **Optional (Defaults to 1433)
                 -database **Optional (Defaults to all user databases)
                 -collectionUserName **Required
-                -collectionUserPass **Required
+                -collectionUserPass **Optional (If not provided will be prompted)
                 -ignorePerfmon **Optional (Defaults to "false" / Set to "true" to ignore perfmon collection)
                 -collectionTag **Optional (Defaults to "NA" - Gives the ability the user to tag their collection with a unique name)
 

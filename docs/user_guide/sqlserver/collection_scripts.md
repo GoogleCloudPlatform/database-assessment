@@ -62,6 +62,8 @@ powershell (version 5 or greater)
 sqlcmd (ensure that it is in your $PATH)
 ```
 
+If needed sqlcmd can be downloaded from [here](https://learn.microsoft.com/en-us/sql/tools/sqlcmd/sqlcmd-utility?view=sql-server-ver16&tabs=odbc%2Cwindows#download-and-install-sqlcmd)
+
 ---
 
 ## Preparation
@@ -89,7 +91,7 @@ In order to begin running the Database Migration Assessment Collection process, 
                     -serverUserName  ** Required
                     -serverUserPass  ** Required
                     -collectionUserName  ** Required
-                    -collectionUserPass  ** Required
+                    -collectionUserPass  ** Optional (If not provided will be prompted)
 
             For a Named Instance:
                 createUserForAssessmentWithSQLAuth.bat -serverName [servername\instanceName] -port [port number] -serverUserName [existing privileged user] -serverUserPass [privileged user password] -collectionUserName [collection user name] -collectionUserPass [collection user password]
@@ -122,12 +124,12 @@ In order to begin running the Database Migration Assessment Collection process, 
   <br/>
 
           \Memory\Available MBytes
-          \PhysicalDisk(_Total)\Avg. Disk Bytes/Read
-          \PhysicalDisk(_Total)\Avg. Disk Bytes/Write
-          \PhysicalDisk(_Total)\Avg. Disk sec/Read
-          \PhysicalDisk(_Total)\Avg. Disk sec/Write
-          \PhysicalDisk(_Total)\Disk Reads/sec
-          \PhysicalDisk(_Total)\Disk Writes/sec
+          \PhysicalDisk(_Total)\Avg. Disk Bytes/Read (average disk read throughput)
+          \PhysicalDisk(_Total)\Avg. Disk Bytes/Write (average disk write throughput)
+          \PhysicalDisk(_Total)\Avg. Disk sec/Read (average time in seconds to read data from disk)
+          \PhysicalDisk(_Total)\Avg. Disk sec/Write (average time in seconds to write data from disk)
+          \PhysicalDisk(_Total)\Disk Reads/sec (disk read throughput read-iops)
+          \PhysicalDisk(_Total)\Disk Writes/sec (disk write throughput write-iops)
           \Processor(_Total)\% Idle Time
           \Processor(_Total)\% Processor Time
           \Processor Information(_Total)\Processor Frequency

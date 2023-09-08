@@ -57,7 +57,6 @@ if not [%user%]==[] goto execWithCustomUser
 :execWithCustomUser
 if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
-if [%pass%] == [] goto error
 
 if [%port%] ==[] (
     PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -collectionTag %collectionTag%
