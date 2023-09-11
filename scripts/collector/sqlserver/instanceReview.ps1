@@ -44,10 +44,10 @@
 #>
 Param(
 [Parameter(Mandatory=$true)][string]$serverName = "",
-[Parameter(Mandatory=$false)][string]$port="",
+[Parameter(Mandatory=$false)][string]$port,
 [Parameter(Mandatory=$false)][string]$database="all",
-[Parameter(Mandatory=$false)][string]$collectionUserName="",
-[Parameter(Mandatory=$false)][string]$collectionUserPass="",
+[Parameter(Mandatory=$false)][string]$collectionUserName,
+[Parameter(Mandatory=$false)][string]$collectionUserPass,
 [Parameter(Mandatory=$false)][string]$ignorePerfmon="false",
 [Parameter(Mandatory=$false)][string]$collectionTag="NA"
 )
@@ -58,14 +58,19 @@ $powerShellVersion = $PSVersionTable.PSVersion.Major
 $foldername = ""
 $errorCount = 0
 
+if (([string]::IsNullorEmpty($collectionUserPass)) -or ([string]$collectionUserPass -eq "false")) {
+	Write-Output ""
+    Write-Output "Collection Username password parameter is not provided"
+    $passPrompt = Read-Host 'Please enter your password' -AsSecureString
+    $collectionUserPass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($passPrompt))
+	Write-Output ""
+} 
+
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
     Exit 1
 } elseif ([string]::IsNullorEmpty($collectionUserName)) {
     Write-Output "Collection Username parameter $collectionUserName is empty.  Ensure that the parameter is provided"
-    Exit 1
-} elseif ([string]::IsNullorEmpty($collectionUserPass)) {
-    Write-Output "Collection Username password parameter $collectionUserPass is empty.  Ensure that the parameter is provided"
     Exit 1
 } elseif (((checkStringForSpecialChars -inputString $collectionTag) -eq "fail") -and (![string]::IsNullorEmpty($collectionTag))) {
     Write-Output "Collection Tag parameter $collectionTag contains spaces or special characters.  Ensure that the parameter contains only letters, numbers and no spaces"
@@ -126,7 +131,7 @@ $current_ts = $values[4]
 $pkey = $values[5]
 $dmaSourceId = $dmaSourceId[0]
 
-$op_version = "4.3.18"
+$op_version = "4.3.19"
 
 if ($ignorePerfmon -eq "true") {
     $perfCounterLabel = "NoPerfCounter"
