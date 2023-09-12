@@ -251,6 +251,34 @@ fi
 
 }
 
+
+function printUsage()
+{
+echo " Usage:"
+echo "  Parameters"
+echo ""
+echo "  Connection definition must one of:"
+echo "      {"
+echo "        --connectionStr       Oracle EasyConnect string formatted as {user}/{password}@//{db host}:{listener port}/{service name}"
+echo "       or"
+echo "        --hostName            Database server host name"
+echo "        --port                Database Listener port"
+echo "        --databaseService     Database service name"
+echo "        --collectionUserName  Database user name"
+echo "        --collectionUserPass  Database password"
+echo "      }"
+echo "  Performance statistics source"
+echo "      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE"
+echo
+echo
+echo " Example:"
+echo
+echo
+echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR"
+echo " or"
+echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR"
+
+}
 ### Validate input
 
 hostName=""
@@ -266,6 +294,7 @@ collectionTag=""
  if [[ $(($# & 1)) == 1 ]] ;
  then
   echo "Invalid number of parameters "
+  printUsage
   exit 
  fi
 
@@ -281,6 +310,7 @@ collectionTag=""
 	 elif [[ "$1" == "--collectionTag" ]];      then collectionTag="${2}"
 	 else
 		 echo "Unknown parameter ${1}"
+		 printUsage
 		 exit
 	 fi
 	 shift 2
@@ -288,8 +318,7 @@ collectionTag=""
 
 
  if [[ "${dbType}" != "oracle" ]] ; then
-	 echo Only Oracle database supported
-	 exit 1
+	 dbType="oracle"
  fi
 
  if [[ "${statsSrc}" = "awr" ]]; then
@@ -306,6 +335,7 @@ collectionTag=""
 		 echo Got Connection ${connStr}
 	 else
 		 echo "Connection information incomplete"
+		 printUsage
 		 exit
 	 fi
  fi
@@ -315,15 +345,6 @@ collectionTag=""
  else collectionTag="N/A"
  fi
 
-echo hostName=              "${hostName}"
-echo port=                  "${port}"
-echo databaseService=       "${databaseService}"
-echo collectionUserName=    "${collectionUserName}"
-echo collectionUserPass=    "${collectionUserPass}"
-echo dbType=                "${dbType}"
-echo statsSrc=              "${statsSrc}"
-echo connStr=               "${connStr}"
-echo collectionTag=         "${collectionTag}"
 
 #############################################################################
 #
