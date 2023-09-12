@@ -356,7 +356,10 @@ BEGIN
            l_tab_name := 'STATS$SNAPSHOT'; 
            l_col_name := 'snap_time';
          END IF;
-       ELSE l_tab_name :=  'ERROR - Unexpected parameter: &v_dodiagnostics';
+       ELSE IF  '&v_dodiagnostics' = 'nostatspack' THEN
+           :sp  := 'prompt_nostatspack.sql';
+         ELSE l_tab_name :=  'ERROR - Unexpected parameter: &v_dodiagnostics';
+         END IF;
        END IF;
   END IF; 
   BEGIN

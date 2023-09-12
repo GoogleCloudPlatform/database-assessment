@@ -327,6 +327,7 @@ collectionTag=""
           DIAGPACKACCESS="NoDiagnostics"
  else 
 	 echo No performance data will be collected.
+         DIAGPACKACCESS="nostatspack"
  fi
 
  if [[ "${connStr}" == "" ]] ; then 
@@ -342,7 +343,7 @@ collectionTag=""
 
  if [[ "${collectionTag}" != "" ]]; then
 	 collectionTag=$(echo "${collectionTag}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
- else collectionTag="N/A"
+ else collectionTag='NA'
  fi
 
 
@@ -404,7 +405,7 @@ if [ $retval -eq 0 ]; then
       fi  
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS} ${collectionTag}
+    executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS} "${collectionTag}"
     retval=$?
     if [ $retval -ne 0 ]; then
       createErrorLog  $(echo ${V_TAG} | sed 's/.csv//g')
