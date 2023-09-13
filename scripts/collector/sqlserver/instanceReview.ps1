@@ -179,7 +179,7 @@ $OutputEncoding | out-string | Add-Content -Encoding utf8 -Path $foldername\$log
 WriteLog -logLocation $foldername\$logFile -logMessage "DMA Source Id: $dmaSourceId " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 
-WriteLog -logLocation $foldername\$logFile -logMessage "DMA Maunal Id: $collectionTag " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "DMA Manual Id: $collectionTag " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
  
 WriteLog -logLocation $foldername\$logFile -logMessage "Execution Variables List" -logOperation "FILE"
@@ -193,25 +193,45 @@ WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "connectionString = $serverName " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 
+$outputFileSuffix = '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 
-$compFileName = 'opdb' + '__' + 'CompInstalled' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$srvFileName = 'opdb' + '__' + 'ServerProps' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$blockingFeatures = 'opdb' + '__' + 'BlockFeatures' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$linkedServers = 'opdb' + '__' + 'LinkedSrvrs' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$dbsizes = 'opdb' + '__' + 'DbSizes' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$dbClusterNodes = 'opdb' + '__' + 'DbClusterNodes' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$objectList = 'opdb' + '__' + 'ObjectList' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$tableList = 'opdb' + '__' + 'TableList' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$indexList = 'opdb' + '__' + 'IndexList' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$columnDatatypes = 'opdb' + '__' + 'ColumnDatatypes' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$userConnectionList = 'opdb' + '__' + 'UserConnections' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$perfMonOutput = 'opdb' + '__' + 'PerfMonData' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$dbccTraceFlg = 'opdb' + '__' + 'DbccTrace' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$diskVolumeInfo = 'opdb' + '__' + 'DiskVolInfo' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$dbServerFlags = 'opdb' + '__' + 'DbServerFlags' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$manifestFile = 'opdb' + '__' + 'manifest' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.txt'
+$compFileName = 'opdb' + '__' + 'CompInstalled' + $outputFileSuffix
+$srvFileName = 'opdb' + '__' + 'ServerProps' + $outputFileSuffix
+$blockingFeatures = 'opdb' + '__' + 'BlockFeatures' + $outputFileSuffix
+$linkedServers = 'opdb' + '__' + 'LinkedSrvrs' + $outputFileSuffix
+$dbsizes = 'opdb' + '__' + 'DbSizes' + $outputFileSuffix
+$dbClusterNodes = 'opdb' + '__' + 'DbClusterNodes' + $outputFileSuffix
+$objectList = 'opdb' + '__' + 'ObjectList' + $outputFileSuffix
+$tableList = 'opdb' + '__' + 'TableList' + $outputFileSuffix
+$indexList = 'opdb' + '__' + 'IndexList' + $outputFileSuffix
+$columnDatatypes = 'opdb' + '__' + 'ColumnDatatypes' + $outputFileSuffix
+$userConnectionList = 'opdb' + '__' + 'UserConnections' + $outputFileSuffix
+$perfMonOutput = 'opdb' + '__' + 'PerfMonData' + $outputFileSuffix
+$dbccTraceFlg = 'opdb' + '__' + 'DbccTrace' + $outputFileSuffix
+$diskVolumeInfo = 'opdb' + '__' + 'DiskVolInfo' + $outputFileSuffix
+$dbServerFlags = 'opdb' + '__' + 'DbServerFlags' + $outputFileSuffix
+$dbServerConfig = 'opdb' + '__' + 'DbServerConfig' + $outputFileSuffix
+$dbServerDmvPerfmon = 'opdb' + '__' + 'DmvPerfmon' + $outputFileSuffix
+$manifestFile = 'opdb' + '__' + 'manifest' + $outputFileSuffix
 
-$outputFileArray = @($compFileName, $srvFileName, $blockingFeatures, $linkedServers, $dbsizes, $dbClusterNodes, $objectList, $tableList, $indexList, $columnDatatypes, $userConnectionList, $perfMonOutput, $dbccTraceFlg, $diskVolumeInfo, $dbServerFlags)
+$outputFileArray = @($compFileName,
+                    $srvFileName,
+                    $blockingFeatures,
+                    $linkedServers,
+                    $dbsizes,
+                    $dbClusterNodes,
+                    $objectList,
+                    $tableList,
+                    $indexList,
+                    $columnDatatypes,
+                    $userConnectionList,
+                    $perfMonOutput,
+                    $dbccTraceFlg,
+                    $diskVolumeInfo,
+                    $dbServerFlags,
+                    $dbServerConfig,
+                    $dbServerDmvPerfmon,
+                    $manifestFile)
 
 WriteLog -logMessage "Checking directory path + output file name lengths for max length limitations..." -logOperation "MESSAGE"
 foreach ($directory in $outputFileArray) {
@@ -255,6 +275,12 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server DBC
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Disk Volume Info..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -d master -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
 
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Configuration Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\dbServerConfigurationSettings.sql -d master -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$dbServerConfig
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Configuration Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\dbServerDmvPerfmon.sql -d master -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$dbServerDmvPerfmon
+   
 ### First establish headers for the collection files which could execute against multiple databases in the instance
 Set-Content -Path $foldername\$objectList -Encoding utf8 -Value "PKEY|database_name|schema_name|object_name|object_type|object_type_desc|object_count|lines_of_code|associated_table_name|dma_source_id|dma_manual_id"
 Set-Content -Path $foldername\$tableList -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|partition_count|is_memory_optimized|temporal_type|is_external|lock_escalation|is_tracked_by_cdc|text_in_row_limit|is_replicated|row_count|data_compression|total_space_mb|used_space_mb|unused_space_mb|dma_source_id|dma_manual_id"
