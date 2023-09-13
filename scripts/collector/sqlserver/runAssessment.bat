@@ -14,7 +14,7 @@
 
 @echo off
 set serverName=
-set port=
+set port=default
 set user=
 set pass=false
 set collectionTag="NA"
@@ -58,11 +58,7 @@ if not [%user%]==[] goto execWithCustomUser
 if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 
-if [%port%] ==[] (
-    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -collectionTag %collectionTag%
-) else (
-    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -collectionTag %collectionTag%
-)
+PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -collectionTag %collectionTag%
 
 if %errorlevel% == 1 goto exit
 goto done

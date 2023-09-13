@@ -18,7 +18,7 @@ set pass=
 set saUser=
 set saPass=
 set serverName=
-set port=
+set port=default
 
 :loop 
 if "%1" == "" goto evaluateUser

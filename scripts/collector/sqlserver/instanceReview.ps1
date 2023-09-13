@@ -44,7 +44,7 @@
 #>
 Param(
 [Parameter(Mandatory=$true)][string]$serverName = "",
-[Parameter(Mandatory=$false)][string]$port,
+[Parameter(Mandatory=$false)][string]$port="default",
 [Parameter(Mandatory=$false)][string]$database="all",
 [Parameter(Mandatory=$false)][string]$collectionUserName,
 [Parameter(Mandatory=$false)][string]$collectionUserPass,
@@ -76,7 +76,7 @@ if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Collection Tag parameter $collectionTag contains spaces or special characters.  Ensure that the parameter contains only letters, numbers and no spaces"
     Exit 1
 } else {
-    if ([string]::IsNullorEmpty($port)) {
+    if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
         $inputServerName = $serverName
         $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
