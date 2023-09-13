@@ -85,7 +85,7 @@ WITH util AS (
         ) AS RBS
 ),
 sample_iops AS (
-    SELECT LEFT(UPPER(mf.physical_name), 2) AS DISK_Drive,
+    SELECT mf.physical_name AS DISK_Drive,
         SUM(sample_ms) as sample_ms,
         SUM(num_of_reads) AS DISK_num_of_reads,
         SUM(io_stall_read_ms) AS DISK_io_stall_read_ms,
@@ -97,11 +97,11 @@ sample_iops AS (
     FROM sys.dm_io_virtual_file_stats(NULL, NULL) AS vfs
         INNER JOIN sys.master_files AS mf WITH (NOLOCK) ON vfs.database_id = mf.database_id
         AND vfs.file_id = mf.file_id
-    GROUP BY LEFT(UPPER(mf.physical_name), 2)
+    GROUP BY mf.physical_name
 )
 INSERT INTO #serverDmvPerfmon
 SELECT 
-    CONVERT(NVARCHAR,CONVERT(datetime2(3),DATEADD(ms, -1 * (@ticksNow - UT.EventStamp), GETDATE()))) AS COLLECTION_TIME,
+    CONVERT(VARCHAR(23),CONVERT(datetime2(3),DATEADD(ms, -1 * (@ticksNow - UT.EventStamp), GETDATE())),121) AS COLLECTION_TIME,
     NULL AS AVAILABLE_MBYTES,
     CASE
         WHEN DISK_num_of_reads = 0 THEN '0'
