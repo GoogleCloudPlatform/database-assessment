@@ -32,7 +32,7 @@ IF OBJECT_ID('tempdb..#serverConfigurationParams') IS NOT NULL
     DROP TABLE #serverConfigurationParams;
 
 CREATE TABLE #serverConfigurationParams (
-    configuration_id int, 
+    configuration_id nvarchar(255), 
     name nvarchar(255),
     value nvarchar(255),
     minimum nvarchar(255),
@@ -45,13 +45,13 @@ BEGIN
     exec ('
     INSERT INTO #serverConfigurationParams
     SELECT
-	    configuration_id, 
-        name,
-        value,
-        minimum,
-        maximum,
-        value_in_use, 
-        description
+	    CONVERT(nvarchar,configuration_id), 
+        CONVERT(nvarchar,name),
+        CONVERT(nvarchar,value),
+        CONVERT(nvarchar,minimum),
+        CONVERT(nvarchar,maximum),
+        CONVERT(nvarchar,value_in_use), 
+        CONVERT(nvarchar,description)
     FROM sys.configurations');
 END
 
@@ -63,7 +63,7 @@ SELECT
     minimum,
     maximum,
     value_in_use, 
-    description
+    description,
     @DMA_SOURCE_ID as dma_source_id,
     @DMA_MANUAL_ID as dma_manual_id
 from #serverConfigurationParams;

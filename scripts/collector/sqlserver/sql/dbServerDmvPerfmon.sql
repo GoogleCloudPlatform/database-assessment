@@ -17,6 +17,7 @@ limitations under the License.
 
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
+SET QUOTED_IDENTIFIER ON;
 
 DECLARE @PKEY AS VARCHAR(256)
 DECLARE @PRODUCT_VERSION AS INTEGER
@@ -80,7 +81,7 @@ WITH util AS (
             SELECT ORB.[timestamp] AS EventStamp,
                 CONVERT(XML, ORB.record) AS Rc
             FROM sys.dm_os_ring_buffers AS ORB
-            WHERE ORB.ring_buffer_type = N 'RING_BUFFER_SCHEDULER_MONITOR'
+            WHERE ORB.ring_buffer_type = 'RING_BUFFER_SCHEDULER_MONITOR'
         ) AS RBS
 ),
 sample_iops AS (
@@ -98,6 +99,7 @@ sample_iops AS (
         AND vfs.file_id = mf.file_id
     GROUP BY LEFT(UPPER(mf.physical_name), 2)
 )
+INSERT INTO #serverDmvPerfmon
 SELECT 
     CONVERT(NVARCHAR,CONVERT(datetime2(3),DATEADD(ms, -1 * (@ticksNow - UT.EventStamp), GETDATE()))) AS COLLECTION_TIME,
     NULL AS AVAILABLE_MBYTES,
@@ -119,11 +121,11 @@ SELECT
     END AS [PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC],
     CASE
         WHEN (SI.DISK_num_of_reads = 0) THEN '0'
-        ELSE CONVERT(NVARCHAR,((SI.DISK_num_of_bytes_read /(SI.sample_ms / 1000))))
+        ELSE CONVERT(NVARCHAR,((SI.DISK_num_of_reads /(SI.sample_ms / 1000))))
     END AS [PHYSICALDISK_DISK_READS_SEC],
     CASE
         WHEN (SI.DISK_num_of_writes = 0) THEN '0'
-        ELSE CONVERT(NVARCHAR,((SI.DISK_num_of_bytes_writes /(SI.sample_ms / 1000))))
+        ELSE CONVERT(NVARCHAR,((SI.DISK_num_of_writes /(SI.sample_ms / 1000))))
     END AS [PHYSICALDISK_DISK_WRITES_SEC],
     CASE
         WHEN UT.SystemIdle = 0 THEN CONVERT(NVARCHAR,(100 - UT.ProcessUtil))

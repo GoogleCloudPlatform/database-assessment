@@ -41,8 +41,10 @@ goto :loop
 
 :evaluateUser
 if [%serverName%]==[] goto raiseServerError
-if [%saUser%]==[] goto error
-if [%saPass%]==[] goto error
+if [%saUser%]==[] goto serverUserError
+if [%saPass%]==[] goto serverUserError
+if [%user%]==[] goto error
+if [%pass%]==[] goto error
 if not [%user%]==[] goto execWithCustomCreds
 
 :execWithCustomCreds
@@ -53,6 +55,11 @@ if [%serverName%]==[] goto raiseServerError
 PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createUserWithSQLAuth.ps1 -serverName %serverName% -port %port% -user %saUser% -pass %saPass% -collectionUserName %user% -collectionUserPass %pass%
 if %errorlevel% == 1 goto exit
 goto done
+
+:serverUserError
+echo serverUserName or serverUserPass is not populated
+echo Please specify [-serverUserName and -serverUserPass] when invoking the script
+goto exit
 
 :error
 echo Username or Password is not populated
