@@ -44,7 +44,7 @@
 #>
 Param(
 [Parameter(Mandatory=$true)][string]$serverName = "",
-[Parameter(Mandatory=$false)][string]$port,
+[Parameter(Mandatory=$false)][string]$port="default",
 [Parameter(Mandatory=$false)][string]$database="all",
 [Parameter(Mandatory=$false)][string]$collectionUserName,
 [Parameter(Mandatory=$false)][string]$collectionUserPass,
@@ -76,16 +76,15 @@ if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Collection Tag parameter $collectionTag contains spaces or special characters.  Ensure that the parameter contains only letters, numbers and no spaces"
     Exit 1
 } else {
-    if ([string]::IsNullorEmpty($port)) {
+    if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
         $inputServerName = $serverName
-        $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
+        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v database=$database)
-        $dmaSourceId = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1)
+        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1)
         if ([string]$database -ne "all") {
             $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v database=$database | findstr /v /c:"-"
-            $countValidDBs = $validDBObj
-            if (([string]::IsNullorEmpty($obj)) -or ([int]$countValidDBs -eq 0)) {
+            if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
                 Exit 1                
@@ -95,13 +94,12 @@ if ([string]::IsNullorEmpty($serverName)) {
         $inputServerName = $serverName
         $serverName = "$serverName,$port"
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
-        $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
+        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v database=$database)
-        $dmaSourceId = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1)
+        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1)
         if ([string]$database -ne "all") {
             $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v database=$database | findstr /v /c:"-"
-            $countValidDBs = $validDBObj
-            if (([string]::IsNullorEmpty($obj)) -or ([int]$countValidDBs -eq 0)) {
+            if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
                 Exit 1                
@@ -110,13 +108,13 @@ if ([string]::IsNullorEmpty($serverName)) {
     }
 }
 
-if ([string]::IsNullorEmpty($obj)) {
+if ([string]::IsNullorEmpty($folderObj)) {
     Write-Output " "
     Write-Output "Connection Error to SQL Server $serverName.  Exiting Script...."
     Exit 1
 }
 
-$splitobj = $obj[1].Split('')
+$splitobj = $folderObj[1].Split('')
 $values = $splitobj | ForEach-Object { if($_.Trim() -ne '') { $_ } }
 
 $dbversion = $values[0].Replace('.','')
@@ -129,9 +127,9 @@ if ([string]$database -eq "all") {
 $instancename = $values[3]
 $current_ts = $values[4]
 $pkey = $values[5]
-$dmaSourceId = $dmaSourceId[0]
+$dmaSourceId = $dmaSourceIdObj[0]
 
-$op_version = "4.3.19"
+$op_version = "4.3.20"
 
 if ($ignorePerfmon -eq "true") {
     $perfCounterLabel = "NoPerfCounter"
@@ -176,10 +174,16 @@ $PSVersionTable | out-string | Add-Content -Encoding utf8 -Path $foldername\$log
 WriteLog -logLocation $foldername\$logFile -logMessage "Output Encoding Table" -logOperation "FILE"
 $OutputEncoding | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
 
-WriteLog -logLocation $foldername\$logFile -logMessage "DMA Source Id: $dmaSourceId " -logOperation "FILE"
-WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
+if ([string]::IsNullorEmpty($dmaSourceId)) {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Derived parameter DMASourceID is not populated.  Defaulting value...." -logOperation "BOTH"
+    WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "BOTH"
+    $dmaSourceId = 'NotPopulated'
+} else {
+    WriteLog -logLocation $foldername\$logFile -logMessage "DMA Source Id: $dmaSourceId " -logOperation "FILE"
+    WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
+}
 
-WriteLog -logLocation $foldername\$logFile -logMessage "DMA Maunal Id: $collectionTag " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "DMA Manual Id: $collectionTag " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
  
 WriteLog -logLocation $foldername\$logFile -logMessage "Execution Variables List" -logOperation "FILE"
@@ -193,25 +197,45 @@ WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "connectionString = $serverName " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 
+$outputFileSuffix = '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
 
-$compFileName = 'opdb' + '__' + 'CompInstalled' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$srvFileName = 'opdb' + '__' + 'ServerProps' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$blockingFeatures = 'opdb' + '__' + 'BlockFeatures' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$linkedServers = 'opdb' + '__' + 'LinkedSrvrs' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$dbsizes = 'opdb' + '__' + 'DbSizes' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$dbClusterNodes = 'opdb' + '__' + 'DbClusterNodes' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$objectList = 'opdb' + '__' + 'ObjectList' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$tableList = 'opdb' + '__' + 'TableList' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$indexList = 'opdb' + '__' + 'IndexList' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$columnDatatypes = 'opdb' + '__' + 'ColumnDatatypes' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$userConnectionList = 'opdb' + '__' + 'UserConnections' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$perfMonOutput = 'opdb' + '__' + 'PerfMonData' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$dbccTraceFlg = 'opdb' + '__' + 'DbccTrace' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$diskVolumeInfo = 'opdb' + '__' + 'DiskVolInfo' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$dbServerFlags = 'opdb' + '__' + 'DbServerFlags' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.csv'
-$manifestFile = 'opdb' + '__' + 'manifest' + '__' + $dbversion + '_' + $op_version  + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.txt'
+$compFileName = 'opdb' + '__' + 'CompInstalled' + $outputFileSuffix
+$srvFileName = 'opdb' + '__' + 'ServerProps' + $outputFileSuffix
+$blockingFeatures = 'opdb' + '__' + 'BlockFeatures' + $outputFileSuffix
+$linkedServers = 'opdb' + '__' + 'LinkedSrvrs' + $outputFileSuffix
+$dbsizes = 'opdb' + '__' + 'DbSizes' + $outputFileSuffix
+$dbClusterNodes = 'opdb' + '__' + 'DbClusterNodes' + $outputFileSuffix
+$objectList = 'opdb' + '__' + 'ObjectList' + $outputFileSuffix
+$tableList = 'opdb' + '__' + 'TableList' + $outputFileSuffix
+$indexList = 'opdb' + '__' + 'IndexList' + $outputFileSuffix
+$columnDatatypes = 'opdb' + '__' + 'ColumnDatatypes' + $outputFileSuffix
+$userConnectionList = 'opdb' + '__' + 'UserConnections' + $outputFileSuffix
+$perfMonOutput = 'opdb' + '__' + 'PerfMonData' + $outputFileSuffix
+$dbccTraceFlg = 'opdb' + '__' + 'DbccTrace' + $outputFileSuffix
+$diskVolumeInfo = 'opdb' + '__' + 'DiskVolInfo' + $outputFileSuffix
+$dbServerFlags = 'opdb' + '__' + 'DbServerFlags' + $outputFileSuffix
+$dbServerConfig = 'opdb' + '__' + 'DbServerConfig' + $outputFileSuffix
+$dbServerDmvPerfmon = 'opdb' + '__' + 'DmvPerfmon' + $outputFileSuffix
+$manifestFile = 'opdb' + '__' + 'manifest' + $outputFileSuffix
 
-$outputFileArray = @($compFileName, $srvFileName, $blockingFeatures, $linkedServers, $dbsizes, $dbClusterNodes, $objectList, $tableList, $indexList, $columnDatatypes, $userConnectionList, $perfMonOutput, $dbccTraceFlg, $diskVolumeInfo, $dbServerFlags)
+$outputFileArray = @($compFileName,
+                    $srvFileName,
+                    $blockingFeatures,
+                    $linkedServers,
+                    $dbsizes,
+                    $dbClusterNodes,
+                    $objectList,
+                    $tableList,
+                    $indexList,
+                    $columnDatatypes,
+                    $userConnectionList,
+                    $perfMonOutput,
+                    $dbccTraceFlg,
+                    $diskVolumeInfo,
+                    $dbServerFlags,
+                    $dbServerConfig,
+                    $dbServerDmvPerfmon,
+                    $manifestFile)
 
 WriteLog -logMessage "Checking directory path + output file name lengths for max length limitations..." -logOperation "MESSAGE"
 foreach ($directory in $outputFileArray) {
@@ -255,6 +279,9 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server DBC
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Disk Volume Info..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -d master -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
 
+WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Configuration Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\dbServerConfigurationSettings.sql -d master -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$dbServerConfig
+   
 ### First establish headers for the collection files which could execute against multiple databases in the instance
 Set-Content -Path $foldername\$objectList -Encoding utf8 -Value "PKEY|database_name|schema_name|object_name|object_type|object_type_desc|object_count|lines_of_code|associated_table_name|dma_source_id|dma_manual_id"
 Set-Content -Path $foldername\$tableList -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|partition_count|is_memory_optimized|temporal_type|is_external|lock_escalation|is_tracked_by_cdc|text_in_row_limit|is_replicated|row_count|data_compression|total_space_mb|used_space_mb|unused_space_mb|dma_source_id|dma_manual_id"
@@ -262,6 +289,7 @@ Set-Content -Path $foldername\$indexList -Encoding utf8 -Value "PKEY|database_na
 Set-Content -Path $foldername\$columnDatatypes -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|datatype|max_length|precision|scale|is_computed|is_filestream|is_masked|encryption_type|is_sparse|rule_object_id|column_count|dma_source_id|dma_manual_id"
 Set-Content -Path $foldername\$userConnectionList -Encoding utf8 -Value "PKEY|database_name|is_user_process|host_name|program_name|login_name|num_reads|num_writes|last_read|last_write|reads|logical_reads|writes|client_interface_name|nt_domain|nt_user_name|client_net_address|local_net_address|dma_source_id|dma_manual_id"
 Set-Content -Path $foldername\$dbsizes -Encoding utf8 -Value "PKEY|database_name|type_desc|current_size_mb|dma_source_id|dma_manual_id"
+Set-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8 -Value "PKEY|collection_time|available_mbytes|physicaldisk_avg_disk_bytes_read|physicaldisk_avg_disk_bytes_write|physicaldisk_avg_disk_bytes_read_sec|physicaldisk_avg_disk_bytes_write_sec|physicaldisk_disk_reads_sec|physicaldisk_disk_writes_sec|processor_idle_time_pct|processor_total_time_pct|processor_frequency|processor_queue_length|buffer_cache_hit_ratio|checkpoint_pages_sec|free_list_stalls_sec|page_life_expectancy|page_lookups_sec|page_reads_sec|page_writes_sec|user_connection_count|memory_grants_pending|target_server_memory_kb|total_server_memory_kb|batch_requests_sec|dma_source_id|dma_manual_id"
 
 ### Iterate through collections that could execute against multiple databases in the instance
 foreach ($databaseName in $dbNameArray) {
@@ -282,6 +310,9 @@ foreach ($databaseName in $dbNameArray) {
 
     WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Database Size Info for Database $databaseName ..." -logOperation "BOTH"
         sqlcmd -S $serverName -i sql\dbSizes.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbsizes -Encoding utf8
+
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server DMV Perfmon Info for Database $databaseName ..." -logOperation "BOTH"
+        sqlcmd -S $serverName -i sql\dbServerDmvPerfmon.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8
 }
 
 # Pull perfmon file if we are running from same server.  Generate empty file if running on remote server

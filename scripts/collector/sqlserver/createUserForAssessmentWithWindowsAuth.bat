@@ -15,7 +15,7 @@
 @echo off
 set user=
 set pass=
-set port=
+set port=default
 set serverName=
 
 :loop 
