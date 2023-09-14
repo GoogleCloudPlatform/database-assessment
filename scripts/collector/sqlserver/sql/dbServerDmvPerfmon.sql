@@ -21,13 +21,18 @@ SET QUOTED_IDENTIFIER ON;
 
 DECLARE @PKEY AS VARCHAR(256)
 DECLARE @PRODUCT_VERSION AS INTEGER
+DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256)
 DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
 DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
 SELECT @PKEY = N'$(pkey)';
 SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
+
+IF @ASSESSMENT_DATABSE_NAME = 'all'
+   SELECT @ASSESSMENT_DATABSE_NAME = '%'
 
 IF OBJECT_ID('tempdb..#serverDmvPerfmon') IS NOT NULL  
     DROP TABLE #serverDmvPerfmon;
@@ -95,7 +100,7 @@ sample_iops AS (
         SUM(num_of_bytes_written) AS DISK_num_of_bytes_written,
         SUM(io_stall) AS io_stall
     FROM sys.dm_io_virtual_file_stats(NULL, NULL) AS vfs
-        INNER JOIN sys.master_files AS mf WITH (NOLOCK) ON vfs.database_id = mf.database_id
+        INNER JOIN sys.database_files AS mf WITH (NOLOCK) ON vfs.database_id = (select db_id(@ASSESSMENT_DATABSE_NAME))
         AND vfs.file_id = mf.file_id
     GROUP BY mf.physical_name
 )
