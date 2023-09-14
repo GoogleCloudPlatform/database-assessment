@@ -79,13 +79,12 @@ if ([string]::IsNullorEmpty($serverName)) {
     if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
         $inputServerName = $serverName
-        $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
+        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v database=$database)
-        $dmaSourceId = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1)
+        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1)
         if ([string]$database -ne "all") {
             $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v database=$database | findstr /v /c:"-"
-            $countValidDBs = $validDBObj
-            if (([string]::IsNullorEmpty($obj)) -or ([int]$countValidDBs -eq 0)) {
+            if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
                 Exit 1                
@@ -95,13 +94,12 @@ if ([string]::IsNullorEmpty($serverName)) {
         $inputServerName = $serverName
         $serverName = "$serverName,$port"
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
-        $obj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
+        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v database=$database)
-        $dmaSourceId = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1)
+        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1)
         if ([string]$database -ne "all") {
             $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v database=$database | findstr /v /c:"-"
-            $countValidDBs = $validDBObj
-            if (([string]::IsNullorEmpty($obj)) -or ([int]$countValidDBs -eq 0)) {
+            if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
                 Exit 1                
@@ -110,13 +108,13 @@ if ([string]::IsNullorEmpty($serverName)) {
     }
 }
 
-if ([string]::IsNullorEmpty($obj)) {
+if ([string]::IsNullorEmpty($folderObj)) {
     Write-Output " "
     Write-Output "Connection Error to SQL Server $serverName.  Exiting Script...."
     Exit 1
 }
 
-$splitobj = $obj[1].Split('')
+$splitobj = $folderObj[1].Split('')
 $values = $splitobj | ForEach-Object { if($_.Trim() -ne '') { $_ } }
 
 $dbversion = $values[0].Replace('.','')
@@ -129,7 +127,7 @@ if ([string]$database -eq "all") {
 $instancename = $values[3]
 $current_ts = $values[4]
 $pkey = $values[5]
-$dmaSourceId = $dmaSourceId[0]
+$dmaSourceId = $dmaSourceIdObj[0]
 
 $op_version = "4.3.19"
 
@@ -176,8 +174,14 @@ $PSVersionTable | out-string | Add-Content -Encoding utf8 -Path $foldername\$log
 WriteLog -logLocation $foldername\$logFile -logMessage "Output Encoding Table" -logOperation "FILE"
 $OutputEncoding | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
 
-WriteLog -logLocation $foldername\$logFile -logMessage "DMA Source Id: $dmaSourceId " -logOperation "FILE"
-WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
+if ([string]::IsNullorEmpty($dmaSourceId)) {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Derived parameter DMASourceID is not populated.  Defaulting value...." -logOperation "BOTH"
+    WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "BOTH"
+    $dmaSourceId = 'NotPopulated'
+} else {
+    WriteLog -logLocation $foldername\$logFile -logMessage "DMA Source Id: $dmaSourceId " -logOperation "FILE"
+    WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
+}
 
 WriteLog -logLocation $foldername\$logFile -logMessage "DMA Manual Id: $collectionTag " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
