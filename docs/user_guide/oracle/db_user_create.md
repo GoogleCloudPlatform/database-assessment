@@ -16,8 +16,8 @@ grant connect, create session to dmacollector;
 ```sql
 select * from v$system_parameter where name='common_user_prefix';
 --C##
-create user C##dmacollector identified by "Pa55w__rd123";
-grant connect, create session to C##dmacollector;
+create user c##dmacollector identified by "Pa55w__rd123";
+grant connect, create session to c##dmacollector;
 ```
 
 ## Grants
