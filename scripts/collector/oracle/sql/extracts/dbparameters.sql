@@ -15,6 +15,7 @@ limitations under the License.
 */
 column default_value format a255
 spool &outputdir/opdb__dbparameters__&v_tag
+prompt PKEY|INST_ID|CON_ID|NAME|VALUE|DEFAULT_VALUE|ISDEFAULT|DMA_SOURCE_ID|DMA_MANUAL_ID
 
 WITH vparam AS (
 SELECT '&&v_host'
@@ -31,7 +32,7 @@ SELECT '&&v_host'
 FROM   gv$system_parameter a
 ORDER  BY 2,3 )
 SELECT pkey , inst_id , con_id , name , value , default_value , isdefault,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vparam;
 spool off
 column default_value clear

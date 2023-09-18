@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__dblinks__&v_tag
-
+prompt PKEY|CON_ID|OWNER|COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdbl AS (
 SELECT '&&v_host'
        || '_'
@@ -33,6 +33,6 @@ GROUP BY '&&v_host'
        || '&&v_hora',
        &v_a_con_id , owner)
 SELECT pkey , con_id , owner , count,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vdbl;
 spool off

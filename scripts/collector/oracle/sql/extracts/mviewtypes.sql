@@ -20,7 +20,7 @@ COLUMN REFRESH_MODE FORMAT A20
 COLUMN FAST_REFRESHABLE FORMAT A20
 COLUMN COMPILE_STATE FORMAT A20
 spool &outputdir/opdb__mviewtypes__&v_tag
-
+prompt PKEY|CON_ID|OWNER|UPDATABLE|REWRITE_ENABLED|REFRESH_MODE|REFRESH_METHOD|FAST_REFRESHABLE|COMPILE_STATE|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH mvinfo AS (
 SELECT
     &v_a_con_id AS con_id,
@@ -49,7 +49,7 @@ SELECT '&&v_host'
        refresh_method,
        fast_refreshable,
        compile_state,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM  mvinfo;
 spool off
 COLUMN UPDATABLE CLEAR

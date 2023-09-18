@@ -13,9 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-
+set echo on
 spool &outputdir/opdb__awrhistosstat__&v_tag
-
+prompt PKEY|DBID|INSTANCE_NUMBER|HH|STAT_NAME|HH24_TOTAL_SECS|CUMULATIVE_VALUE|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|MIN_VALUE|MAX_VALUE|SUM_VALUE|COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH v_osstat_all
      AS (SELECT os.dbid,
                      os.instance_number,
@@ -51,14 +51,17 @@ WITH v_osstat_all
                        TO_CHAR(os.begin_interval_time, 'hh24'), os.stat_name) AS
                      "PERC100"
               FROM (SELECT snap.begin_interval_time, snap.end_interval_time, s.*,
-                    NVL(DECODE(GREATEST(value, NVL(LAG(value)
-                    OVER (
-                    PARTITION BY s.dbid, s.instance_number, s.stat_name
-                    ORDER BY s.snap_id), 0)), value, value - LAG(value)
-                       OVER (
-                       PARTITION BY s.dbid, s.instance_number, s.stat_name
-                       ORDER BY s.snap_id),
-                    0), 0) AS delta_value
+		    CASE WHEN s.stat_name IN ('IDLE_TIME' ,'BUSY_TIME' ,'USER_TIME' ,'SYS_TIME' ,'IOWAIT_TIME' ,'NICE_TIME' ,'RSRC_MGR_CPU_WAIT_TIME' ,'VM_IN_BYTES' ,'VM_OUT_BYTES')
+		       	THEN
+			    NVL(DECODE(GREATEST(value, NVL(LAG(value)
+			    OVER (
+			    PARTITION BY s.dbid, s.instance_number, s.stat_name
+			    ORDER BY s.snap_id), 0)), value, value - LAG(value)
+			       OVER (
+			       PARTITION BY s.dbid, s.instance_number, s.stat_name
+			       ORDER BY s.snap_id),
+			    0), 0)
+			ELSE s.value END AS delta_value
                     FROM &v_tblprefix._hist_osstat s
                          inner join &v_tblprefix._hist_snapshot snap
                          ON s.snap_id = snap.snap_id
@@ -103,6 +106,6 @@ GROUP  BY '&&v_host'
 SELECT pkey , dbid , instance_number , hh24 , stat_name , hh24_total_secs ,
        cumulative_value , avg_value , mode_value , median_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100 ,
 	     min_value , max_value , sum_value , count,
-	       '&v_dma_source_id' AS DMA_SOURCE_ID
+	       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vossummary;
 spool off

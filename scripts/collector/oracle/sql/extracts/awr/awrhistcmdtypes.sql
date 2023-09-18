@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 spool &outputdir/opdb__awrhistcmdtypes__&v_tag
-
+prompt PKEY|CON_ID|HH|COMMAND_TYPE|CNT|AVG_BUFFER_GETS|AVG_ELASPED_TIME|AVG_ROWS_PROCESSED|AVG_EXECUTIONS|AVG_CPU_TIME|AVG_IOWAIT|AVG_CLWAIT|AVG_APWAIT|AVG_CCWAIT|AVG_PLSEXEC_TIME|COMMAND_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vcmdtype AS(
 SELECT '&&v_host'
        || '_'
@@ -61,6 +61,6 @@ GROUP  BY '&&v_host'
 SELECT pkey , con_id , hh24 , command_type , cnt , avg_buffer_gets , avg_elasped_time ,
        avg_rows_processed , avg_executions , avg_cpu_time , avg_iowait , avg_clwait ,
        avg_apwait , avg_ccwait , avg_plsexec_time, command_name,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vcmdtype;
 spool off

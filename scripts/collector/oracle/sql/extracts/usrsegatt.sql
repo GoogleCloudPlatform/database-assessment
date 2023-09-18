@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__usrsegatt__&v_tag
-
+prompt PKEY|CON_ID|OWNER|SEGMENT_NAME|SEGMENT_TYPE|TABLESPACE_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vuseg AS (
  SELECT '&&v_host'
        || '_'
@@ -32,6 +32,6 @@ WITH vuseg AS (
 @&EXTRACTSDIR/exclude_schemas.sql
 )
 SELECT pkey , con_id , owner , segment_name , segment_type , tablespace_name,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vuseg;
 spool off

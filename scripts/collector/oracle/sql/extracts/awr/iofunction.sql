@@ -188,7 +188,7 @@ SELECT pkey , dbid , instance_number , hour , function_name ,
        total_reads_req_P100 ,
        total_writes_mb_P100 ,
        total_write_req_P100,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM viof;
 spool off
 column hour clear

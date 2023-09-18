@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__usedspacedetails__&v_tag
-
+prompt PKEY|CON_ID|OWNER|SEGMENT_TYPE|GB|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vused AS (
 SELECT '&&v_host'
        || '_'
@@ -36,6 +36,6 @@ SELECT '&&v_host'
               || '&&v_hora',
               &v_a_con_id , owner, segment_type )
 SELECT pkey , con_id , owner , segment_type , GB,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vused;
 spool off

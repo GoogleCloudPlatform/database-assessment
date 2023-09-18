@@ -41,6 +41,7 @@ END;
 SELECT :xml_select_sql AS p_xml_select FROM dual;
 
 spool &outputdir/opdb__tabletypes__&v_tag
+prompt PKEY|CON_ID|OWNER|PAR|IOT_TYPE|NESTED|TEMPORARY|SECONDARY|CLUSTERED_TABLE|TABLE_COUNT|OBJECT_TABLE|XML_TABLE|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH tblinfo AS (
 SELECT
     &v_a_con_id AS con_id,
@@ -154,7 +155,7 @@ SELECT '&&v_host'
        table_count,
        object_table,
        xml_table,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM  tblinfo;
 spool off
 COLUMN TEMPORARY CLEAR

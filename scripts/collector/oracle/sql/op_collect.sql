@@ -18,8 +18,9 @@ set termout on pause on
 SET DEFINE "&"
 DEFINE SQLDIR=&2
 DEFINE v_dodiagnostics=&3
-DEFINe v_tag=&4
+DEFINE v_tag=&4
 DEFINE outputdir=&5
+DEFINE v_collectionTag=&6
 
 DEFINE EXTRACTSDIR=&SQLDIR/extracts
 DEFINE AWRDIR=&EXTRACTSDIR/awr

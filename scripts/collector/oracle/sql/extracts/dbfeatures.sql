@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__dbfeatures__&v_tag
-
+prompt PKEY|CON_ID|NAME|CURRE|DETECTED_USAGES|TOTAL_SAMPLES|FIRST_USAGE|LAST_USAGE|AUX_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdbf AS(
 SELECT '&&v_host'
        || '_'
@@ -34,6 +34,6 @@ WHERE dbid = &&v_dbid
 ORDER  BY name)
 SELECT pkey , con_id , name , currently_used , detected_usages ,
        total_samples , first_usage , last_usage , aux_count,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vdbf;
 spool off

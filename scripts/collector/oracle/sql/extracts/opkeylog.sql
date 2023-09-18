@@ -16,7 +16,7 @@ limitations under the License.
 COLUMN DB_NAME FORMAT A20
 COLUMN INSTANCE_NAME FORMAT A20
 spool &outputdir/opdb__opkeylog__&v_tag
-
+prompt PKEY|OPSCRI|DB_|HOSTNAME|DB_NAME|INSTANCE_NAME|COLLECTION_T|DB_ID|C|DMA_SOURCE_ID|DMA_MANUAL_ID
 with vop as (
 select '&&v_host'
        || '_'
@@ -28,7 +28,7 @@ select '&&v_host'
 from dual)
 select pkey , opscriptversion , db_version , hostname
        , db_name , instance_name , collection_time , db_id , CMNT,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 from vop;
 spool off
 COLUMN DB_NAME CLEAR

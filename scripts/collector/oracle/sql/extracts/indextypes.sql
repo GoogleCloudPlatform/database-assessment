@@ -22,7 +22,7 @@ COLUMN CUSTOM_INDEX_TYPE FORMAT A20
 COLUMN VISIBILITY FORMAT A20
 COLUMN COMPRESSION FORMAT A11
 spool &outputdir/opdb__indextypes__&v_tag
-
+prompt PKEY|CON_ID|OWNER|INDEX_TYPE|UNIQUENESS|COMPRESSION|PARTITIONED|TEMPORARY|SECONDARY|VISIBILITY|JOIN_INDEX|CUSTOM_INDEX_TYPE|CNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vidxtype AS (
 SELECT '&&v_host'
        || '_'
@@ -74,7 +74,7 @@ SELECT pkey ,
        join_index,
        custom_index_type,
        cnt,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vidxtype;
 spool off
 COLUMN PARTITIONED CLEAR

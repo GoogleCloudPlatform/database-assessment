@@ -1,5 +1,6 @@
 
 spool &outputdir/opdb__defines__&v_tag
+prompt appinfo is OFF and set to "DB MIGRATION ASSESSMENT"
 SHOW appinfo
 SHOW colsep
 SHOW define

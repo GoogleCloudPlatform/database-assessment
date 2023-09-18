@@ -16,7 +16,7 @@ limitations under the License.
 COLUMN EDITIONABLE FORMAT A11
 
 spool &outputdir/opdb__dbobjects__&v_tag
-
+prompt PKEY|CON_ID|OWNER|OBJECT_TYPE|EDITIONABLE|COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH 
 vdbobji AS (
         SELECT
@@ -60,7 +60,7 @@ SELECT pkey ,
        object_type , 
        editionable ,
        count  ,
-       '&v_dma_source_id' AS DMA_SOURCE_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vdbobj a;
 spool off
 

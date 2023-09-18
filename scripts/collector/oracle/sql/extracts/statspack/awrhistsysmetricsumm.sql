@@ -27,7 +27,7 @@ COLUMN PERC90        FORMAT 999999999999999999999999999999999999999999999999
 COLUMN PERC100       FORMAT 999999999999999999999999999999999999999999999999
 
 spool &outputdir/opdb__awrhistsysmetricsumm__&v_tag
-
+prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|METRIC_NAME|METRIC_UNIT|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|MIN_VALUE|MAX_VALUE|SUM_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsysmetricsumm AS (
 SELECT '&&v_host'
        || '_'
@@ -105,7 +105,7 @@ vsysmetricsummperhour as (
 SELECT pkey , dbid , instance_number , hour , metric_name ,
        metric_unit , avg_value , mode_value , median_value , min_value , max_value ,
 	   sum_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100,
-	       '&v_dma_source_id' AS DMA_SOURCE_ID
+	       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vsysmetricsummperhour;
 spool off
 COLUMN HOUR          CLEAR
