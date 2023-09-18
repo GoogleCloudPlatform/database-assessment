@@ -24,11 +24,14 @@ DECLARE @PRODUCT_VERSION AS INTEGER
 DECLARE @TABLE_PERMISSION_COUNT AS INTEGER
 DECLARE @MACHINENAME AS VARCHAR(256)
 DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
+DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
 SELECT @PKEY = N'$(pkey)';
-SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
 SELECT @CLOUDTYPE = 'NONE'
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
+SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
+
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
@@ -36,7 +39,6 @@ IF CHARINDEX('\', @@SERVERNAME)-1 = -1
   SELECT @MACHINENAME = UPPER(@@SERVERNAME)
 ELSE
   SELECT @MACHINENAME = UPPER(SUBSTRING(CONVERT(nvarchar, @@SERVERNAME),1,CHARINDEX('\', CONVERT(nvarchar, @@SERVERNAME))-1))
-
 
 IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  
    DROP TABLE #serverProperties;
@@ -281,6 +283,7 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''TotalMemoryInUseIncludingProcessesInMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info')
     exec('INSERT INTO #serverProperties SELECT ''TotalLockedPageAllocInMB'', CONVERT(varchar, 0)')
     exec('INSERT INTO #serverProperties SELECT ''TotalUserVirtualMemoryInMB'', CONVERT(varchar, 0)')
+    exec('INSERT INTO #serverProperties SELECT ''MaxConfiguredSQLServerMemoryMB'', CASE WHEN value = maximum THEN ''0'' ELSE CONVERT(varchar, (value)) END from sys.configurations where name = ''max server memory (MB)''')
 END
 IF @CLOUDTYPE = 'NONE'
 BEGIN
@@ -297,7 +300,7 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''TotalMemoryInUseIncludingProcessesInMB'', CONVERT(varchar, (physical_memory_in_use_kb/1024)) FROM sys.dm_os_process_memory')
     exec('INSERT INTO #serverProperties SELECT ''TotalLockedPageAllocInMB'', CONVERT(varchar, (locked_page_allocations_kb/1024)) FROM sys.dm_os_process_memory')
     exec('INSERT INTO #serverProperties SELECT ''TotalUserVirtualMemoryInMB'', CONVERT(varchar, (total_virtual_address_space_kb/1024)) FROM sys.dm_os_process_memory')
-
+    exec('INSERT INTO #serverProperties SELECT ''MaxConfiguredSQLServerMemoryMB'', CASE WHEN value = maximum THEN ''0'' ELSE CONVERT(varchar, (value)) END from sys.configurations where name = ''max server memory (MB)''')
     IF @PRODUCT_VERSION >= 15
     BEGIN
     exec('INSERT INTO #serverProperties SELECT ''IsHybridBufferPoolEnabled'', CONVERT(nvarchar,is_enabled) from sys.server_memory_optimized_hybrid_buffer_pool_configuration /* SQL Server 2019 (15.x) and later versions */');
@@ -439,7 +442,12 @@ BEGIN
 exec('INSERT INTO #serverProperties VALUES (''MaintenancePlansEnabled'', CONVERT(varchar,0))');
 END;
 
-SELECT @PKEY as PKEY, a.*, @DMA_SOURCE_ID as dma_source_id FROM #serverProperties a;
+SELECT 
+    @PKEY as PKEY,
+    a.*,
+    @DMA_SOURCE_ID as dma_source_id,
+    @DMA_MANUAL_ID as dma_manual_id
+FROM #serverProperties a;
 
 IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  
    DROP TABLE #serverProperties;

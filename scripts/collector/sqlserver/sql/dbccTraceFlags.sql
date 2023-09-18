@@ -20,9 +20,11 @@ SET LANGUAGE us_english;
 
 DECLARE @PKEY AS VARCHAR(256)
 DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
+DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
 SELECT @PKEY = N'$(pkey)';
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
+SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
 IF OBJECT_ID('tempdb..#dbccTraceTable') IS NOT NULL  
    DROP TABLE #dbccTraceTable;
@@ -36,7 +38,12 @@ CREATE TABLE #dbccTraceTable (
 
 INSERT INTO #dbccTraceTable exec('dbcc tracestatus()');
 
-SELECT @PKEY as PKEY, a.*, @DMA_SOURCE_ID as dma_source_id from #dbccTraceTable a;
+SELECT 
+    @PKEY as PKEY,
+    a.*,
+    @DMA_SOURCE_ID as dma_source_id,
+    @DMA_MANUAL_ID as dma_manual_id
+from #dbccTraceTable a;
 
 IF OBJECT_ID('tempdb..#dbccTraceTable') IS NOT NULL  
    DROP TABLE #dbccTraceTable;

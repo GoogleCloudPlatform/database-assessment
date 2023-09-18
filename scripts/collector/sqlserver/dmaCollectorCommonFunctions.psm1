@@ -55,3 +55,17 @@ function getCurrentTimestamp {
     $currentTimestamp = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
     return $currentTimestamp 
 }
+
+function checkStringForSpecialChars {
+    param(
+      [string]$inputString
+    )
+    # Check if the string contains only letters, numbers and no spaces
+    if ($inputString -match ('^[0-9a-zA-Z]+$')) {
+      $validTest = "pass"
+      return $validTest
+    }
+    # Otherwise, the string is invalid
+      $validTest = "fail"
+      return $validTest
+  }
