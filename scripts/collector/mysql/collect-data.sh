@@ -72,7 +72,7 @@ function checkPlatform {
     then
       SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
       SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
-
+      
       if [ "${1}" == "oracle" ]
         then
            SQLCMD=${SQLCMD}.exe
@@ -205,13 +205,13 @@ export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port
 
 if [ -f sql/${V_FILE_TAG}_mysqlcollector.sql ]; 
 then
-  rm sql/${V_FILE_TAG}_mysqlcollector.sql
+rm sql/${V_FILE_TAG}_mysqlcollector.sql
 fi
 
 for f in $(ls -1 sql/*.sql | grep -v -e _mysqlcollector.sql -e init.sql)
 do
   fname=$(echo ${f} | cut -d '/' -f 2 | cut -d '.' -f 1)
-  ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__${fname}__${V_TAG} <<EOF
+    ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__${fname}__${V_TAG} <<EOF
 SET @DMASOURCEID='${DMA_SOURCE_ID}' ; 
 SET @DMAMANUALID='${V_MANUAL_ID}' ;
 source ${f}
@@ -422,7 +422,7 @@ DBTYPE="$3"
 MANUALID=""
 if [[ $# -eq 4 ]]; 
 then
-    MANUALID=$(echo "$4" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]')
+  MANUALID=$(echo "$4" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]')
 fi
 
 checkPlatform $DBTYPE
@@ -437,14 +437,14 @@ if [ "$DBTYPE" == "oracle" ] ; then
     fi
   else if [ "$DBTYPE" == "mysql" ] ; then
     sqlcmd_result=$(checkVersionMysql "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r' )
-        if [[ "${sqlcmd_result}" = "" ]];
+    if [[ "${sqlcmd_result}" = "" ]];
       then
       echo "Unable to connect to the target MySQL database using ${connectString}.  Please verify the connection information and target database status."
       exit 255
     fi
     else if [ "$DBTYPE" == "postgres" ] ; then
       sqlcmd_result=$(checkVersionPg "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r' )
-            if [[ "${sqlcmd_result}" = "" ]];
+      if [[ "${sqlcmd_result}" = "" ]];
         then
         echo "Unable to connect to the target Postgres database using ${connectString}.  Please verify the connection information and target database status."
         exit 255
@@ -479,7 +479,7 @@ if [ $retval -eq 0 ]; then
        echo "Oracle 10 support is experimental."
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    
+
     if [ "$3" == "oracle" ] ; then
       executeOPOracle "${connectString}" ${OpVersion} ${DIAGPACKACCESS}
       retval=$?
