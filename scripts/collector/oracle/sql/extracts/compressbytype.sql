@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__compressbytype__&v_tag
+prompt PKEY|CON_ID|OWNER|BASIC|OLTP|QUERY_LOW|QUERY_HIGH|ARCHIVE_LOW|ARCHIVE_HIGH|TOTAL_GB|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vcompresstype AS (
      SELECT '&&v_host'
             || '_'
