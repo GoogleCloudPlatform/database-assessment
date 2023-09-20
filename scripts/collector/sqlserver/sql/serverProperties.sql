@@ -98,8 +98,6 @@ SELECT 'IsIntegratedSecurityOnly', CONVERT(nvarchar, SERVERPROPERTY('IsIntegrate
 UNION ALL
 SELECT 'IsLocalDB', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsLocalDB')), '0')
 UNION ALL
-SELECT 'IsPolyBaseInstalled',  COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsPolyBaseInstalled')), '0')
-UNION ALL
 SELECT 'IsSingleUser', CONVERT(nvarchar, SERVERPROPERTY('IsSingleUser'))
 UNION ALL
 SELECT 'IsXTPSupported', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsXTPSupported')), '0')
@@ -154,8 +152,6 @@ SELECT 'FullVersion', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), ' '), CHAR(
 UNION ALL
 SELECT 'IsResourceGovenorEnabled', CONVERT(varchar, is_enabled) from sys.resource_governor_configuration
 UNION ALL
-SELECT 'IsTDEInUse', CONVERT(nvarchar, count(*)) from sys.databases where is_encrypted <> 0
-UNION ALL
 SELECT 'LogicalCpuCount', CONVERT(varchar, cpu_count) from sys.dm_os_sys_info
 UNION ALL
 SELECT 'PhysicalCpuCount', CONVERT(varchar, (cpu_count/hyperthread_ratio)) from sys.dm_os_sys_info
@@ -163,37 +159,6 @@ UNION ALL
 SELECT 'SqlServerStartTime', CONVERT(varchar, (sqlserver_start_time)) from sys.dm_os_sys_info
 UNION ALL
 SELECT 'BULK_INSERT', CONVERT(varchar,count(p.permission_name)) FROM fn_my_permissions(NULL, 'SERVER') p WHERE permission_name like '%ADMINISTER BULK OPERATIONS%';
-WITH check_sysadmin_role AS (
-    SELECT
-        name,
-        type_desc,
-        is_disabled
-    FROM
-        sys.server_principals
-    WHERE
-        IS_SRVROLEMEMBER ('sysadmin', name) = 1
-        AND name NOT LIKE '%NT SERVICE%'
-        AND name <> 'sa'
-    UNION
-    SELECT
-        name,
-        type_desc,
-        is_disabled
-    FROM
-        sys.server_principals
-    WHERE
-        IS_SRVROLEMEMBER ('dbcreator', name) = 1
-        AND name NOT LIKE '%NT SERVICE%'
-        AND name <> 'sa'
-)
-INSERT INTO #serverProperties 
-    SELECT 'sysadmin_role',
-    CASE WHEN count(*) > 0
-    THEN '1'
-    ELSE '0'
-	END
-FROM
-    check_sysadmin_role;
 WITH BUFFER_POOL_SIZE AS (
 	SELECT database_id AS DatabaseID
 		,DB_NAME(database_id) AS DatabaseName
@@ -233,13 +198,6 @@ BEGIN
             exec('INSERT INTO #serverProperties SELECT ''IsRemoteLoginEnabled'', ''0''')
     END CATCH
     BEGIN TRY
-        exec('INSERT INTO #serverProperties SELECT ''ServerLevelTriggers'', CONVERT(varchar, count(*)) from sys.server_triggers')
-    END TRY
-    BEGIN CATCH
-        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
-            exec('INSERT INTO #serverProperties SELECT ''ServerLevelTriggers'', ''0''')
-    END CATCH
-    BEGIN TRY
         exec('INSERT INTO #serverProperties SELECT ''CountServiceBrokerEndpoints'', CONVERT(varchar, count(*)) from sys.service_broker_endpoints')
     END TRY
     BEGIN CATCH
@@ -254,27 +212,18 @@ BEGIN
             exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', ''0'' /* SQL Server 2016 (13.x) and above */');
     END CATCH
     BEGIN TRY
-            exec('INSERT INTO #serverProperties SELECT ''IsBufferPoolExtensionEnabled'', CONVERT(nvarchar, state) FROM sys.dm_os_buffer_pool_extension_configuration /* SQL Server 2014 (13.x) above */');
-    END TRY
-    BEGIN CATCH
-        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
-                exec('INSERT INTO #serverProperties SELECT ''IsBufferPoolExtensionEnabled'', ''0'' /* SQL Server 2014 (13.x) above */');
-    END CATCH
-    BEGIN TRY
             exec('INSERT INTO #serverProperties SELECT ''CountTSQLEndpoints'', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535')
     END TRY
     BEGIN CATCH
         IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
                 exec('INSERT INTO #serverProperties SELECT ''CountTSQLEndpoints'', ''0''')
     END CATCH
-    
-    exec('INSERT INTO #serverProperties SELECT ''IsHybridBufferPoolEnabled'', CONVERT(nvarchar,is_enabled) from sys.server_memory_optimized_hybrid_buffer_pool_configuration /* SQL Server 2019 (15.x) and later versions */');
+
     exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Azure VM''');
     exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', ''Linux''');
     exec('INSERT INTO #serverProperties SELECT ''HostRelease'', ''UNKNOWN''');
     exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', ''UNKNOWN''');
     exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'', ''UNKNOWN''');
-    exec('INSERT INTO #serverProperties SELECT ''IsStretchDatabaseEnabled'', CONVERT(nvarchar, count(*)) FROM sys.remote_data_archive_databases');
     exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, committed_kb/1024) FROM sys.dm_os_sys_info');
     exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info');
     /* Default Memory Usage to SQLServerMemoryTargetInMB for Azure SQL Database because data is not available */
@@ -291,7 +240,6 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''IsRpcOutEnabled'', CONVERT(nvarchar, is_rpc_out_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
     exec('INSERT INTO #serverProperties SELECT ''IsRemoteProcTransactionPromotionEnabled'', CONVERT(nvarchar, is_remote_proc_transaction_promotion_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
     exec('INSERT INTO #serverProperties SELECT ''IsRemoteLoginEnabled'', CONVERT(nvarchar, is_remote_login_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
-    exec('INSERT INTO #serverProperties SELECT ''ServerLevelTriggers'', CONVERT(varchar, count(*)) from sys.server_triggers')
     exec('INSERT INTO #serverProperties SELECT ''CountServiceBrokerEndpoints'', CONVERT(varchar, count(*)) from sys.service_broker_endpoints')
     exec('INSERT INTO #serverProperties SELECT ''CountTSQLEndpoints'', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535')
     /* Query Memory usage at OS level */
@@ -301,10 +249,6 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''TotalLockedPageAllocInMB'', CONVERT(varchar, (locked_page_allocations_kb/1024)) FROM sys.dm_os_process_memory')
     exec('INSERT INTO #serverProperties SELECT ''TotalUserVirtualMemoryInMB'', CONVERT(varchar, (total_virtual_address_space_kb/1024)) FROM sys.dm_os_process_memory')
     exec('INSERT INTO #serverProperties SELECT ''MaxConfiguredSQLServerMemoryMB'', CASE WHEN value = maximum THEN ''0'' ELSE CONVERT(varchar, (value)) END from sys.configurations where name = ''max server memory (MB)''')
-    IF @PRODUCT_VERSION >= 15
-    BEGIN
-    exec('INSERT INTO #serverProperties SELECT ''IsHybridBufferPoolEnabled'', CONVERT(nvarchar,is_enabled) from sys.server_memory_optimized_hybrid_buffer_pool_configuration /* SQL Server 2019 (15.x) and later versions */');
-    END;
     IF @PRODUCT_VERSION >= 14
     BEGIN
     exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', SUBSTRING(CONVERT(nvarchar,host_platform),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
@@ -331,115 +275,15 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, 0) /* Parameter defaulted because its not avaliable in this version */');
     exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, 0) /* Parameter defaulted because its not avaliable in this version */');
     END;
-    IF @PRODUCT_VERSION >= 13 AND @PRODUCT_VERSION <= 16
-    BEGIN
-    exec('INSERT INTO #serverProperties SELECT ''IsStretchDatabaseEnabled'', CONVERT(nvarchar, count(*)) FROM sys.remote_data_archive_databases /* SQL Server 2016 (13.x) and Up to 2022 */');
-    END;
     IF @PRODUCT_VERSION >= 13
     BEGIN
     exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', CONVERT(nvarchar, count(*)) from sys.availability_groups where dtc_support is not null /* SQL Server 2016 (13.x) and above */');
-    END;
-    IF @PRODUCT_VERSION >= 12
-    BEGIN
-    exec('INSERT INTO #serverProperties SELECT ''IsBufferPoolExtensionEnabled'', CONVERT(nvarchar, state) FROM sys.dm_os_buffer_pool_extension_configuration /* SQL Server 2014 (13.x) above */');
     END;
     IF @PRODUCT_VERSION >= 11
     BEGIN
     exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, committed_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
     exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
-    exec('WITH check_filestream AS (
-        SELECT
-            Name,
-            ISNULL ((
-                    SELECT
-                        1
-                    FROM
-                        sys.master_files AS mf
-                    WHERE
-                        mf.database_id = db.database_id
-                        AND mf.type = 2),
-                    0) AS hasfs
-        FROM
-            sys.databases AS db
-    )
-    INSERT INTO #serverProperties SELECT
-        ''IsFileStreamEnabled'',
-        sum(hasfs)
-    FROM
-        check_filestream
-    /* SQL Server 2012 (11.x) above */');
     END;
-END;
-
-/* check the table permissions temp table before we run this query. Otherwise default the value to show that mail is off */
-SELECT @TABLE_PERMISSION_COUNT = COUNT(*) FROM #myPerms 
-WHERE LOWER(entity_name) in ('dbo.sysmail_profile','dbo.sysmail_profileaccount','dbo.sysmail_account','dbo.sysmail_server') and UPPER(permission_name) = 'SELECT';
-IF @TABLE_PERMISSION_COUNT >= 4 AND @CLOUDTYPE = 'NONE'
-BEGIN
-    BEGIN TRY
-    exec('INSERT INTO #serverProperties
-    SELECT
-        ''IsDbMailEnabled'', CONVERT(nvarchar, count(*))
-    FROM
-        msdb.dbo.sysmail_profile p
-        JOIN msdb.dbo.sysmail_profileaccount pa ON p.profile_id = pa.profile_id
-        JOIN msdb.dbo.sysmail_account a ON pa.account_id = a.account_id
-        JOIN msdb.dbo.sysmail_server s ON a.account_id = s.account_id');
-    END TRY
-    BEGIN CATCH
-    IF ERROR_NUMBER() = 40515 AND ERROR_SEVERITY() = 15 AND ERROR_STATE() = 1
-        exec('INSERT INTO #serverProperties
-        SELECT
-            ''IsDbMailEnabled'', ''0''');
-    END CATCH
-END;
-ELSE
-BEGIN
-exec('INSERT INTO #serverProperties
-SELECT ''IsDbMailEnabled'', CAST(COALESCE(value_in_use,0) as NVARCHAR)  FROM  sys.configurations WHERE name = ''Database Mail XPs''
-');
-END;
-SELECT @TABLE_PERMISSION_COUNT = COUNT(*) FROM #myPerms 
-WHERE LOWER(entity_name) in ('dbo.log_shipping_primary_databases','dbo.log_shipping_secondary_databases') and UPPER(permission_name) = 'SELECT';
-IF @TABLE_PERMISSION_COUNT >= 2 AND @CLOUDTYPE = 'NONE'
-BEGIN
-exec('WITH log_shipping_count AS (
-    SELECT
-        count(*) log_shipping
-    FROM
-        msdb..log_shipping_primary_databases
-    UNION ALL
-    SELECT
-        count(*) log_shipping
-    FROM
-        msdb..log_shipping_secondary_databases
-)
-INSERT INTO #serverProperties SELECT
-    ''IsLogShippingEnabled'', CONVERT(varchar,COALESCE(sum(log_shipping),0))
-FROM
-    log_shipping_count');
-END;
-ELSE
-BEGIN
-exec('INSERT INTO #serverProperties VALUES (''IsLogShippingEnabled'', CONVERT(varchar,0))');
-END;
-SELECT @TABLE_PERMISSION_COUNT = COUNT(*) FROM #myPerms 
-WHERE LOWER(entity_name) in ('dbo.sysmaintplan_subplans','dbo.sysjobs') and UPPER(permission_name) = 'SELECT';
-IF @TABLE_PERMISSION_COUNT >= 2
-BEGIN
-exec('INSERT INTO #serverProperties SELECT
-    ''MaintenancePlansEnabled'',
-    CONVERT(varchar, COALESCE(count(*),0))
-FROM
-    msdb..sysmaintplan_plans p
-    INNER JOIN msdb..sysmaintplan_subplans sp ON p.id = sp.plan_id
-    INNER JOIN msdb..sysjobs j ON sp.job_id = j.job_id
-WHERE
-    j.[enabled] = 1');
-END;
-ELSE
-BEGIN
-exec('INSERT INTO #serverProperties VALUES (''MaintenancePlansEnabled'', CONVERT(varchar,0))');
 END;
 
 SELECT 
