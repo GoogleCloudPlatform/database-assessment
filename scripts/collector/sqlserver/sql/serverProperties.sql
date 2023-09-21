@@ -156,9 +156,7 @@ SELECT 'LogicalCpuCount', CONVERT(varchar, cpu_count) from sys.dm_os_sys_info
 UNION ALL
 SELECT 'PhysicalCpuCount', CONVERT(varchar, (cpu_count/hyperthread_ratio)) from sys.dm_os_sys_info
 UNION ALL
-SELECT 'SqlServerStartTime', CONVERT(varchar, (sqlserver_start_time)) from sys.dm_os_sys_info
-UNION ALL
-SELECT 'BULK_INSERT', CONVERT(varchar,count(p.permission_name)) FROM fn_my_permissions(NULL, 'SERVER') p WHERE permission_name like '%ADMINISTER BULK OPERATIONS%';
+SELECT 'SqlServerStartTime', CONVERT(varchar, (sqlserver_start_time)) from sys.dm_os_sys_info;
 WITH BUFFER_POOL_SIZE AS (
 	SELECT database_id AS DatabaseID
 		,DB_NAME(database_id) AS DatabaseName
@@ -198,25 +196,11 @@ BEGIN
             exec('INSERT INTO #serverProperties SELECT ''IsRemoteLoginEnabled'', ''0''')
     END CATCH
     BEGIN TRY
-        exec('INSERT INTO #serverProperties SELECT ''CountServiceBrokerEndpoints'', CONVERT(varchar, count(*)) from sys.service_broker_endpoints')
-    END TRY
-    BEGIN CATCH
-        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
-            exec('INSERT INTO #serverProperties SELECT ''CountServiceBrokerEndpoints'', ''0''')
-    END CATCH
-    BEGIN TRY
         exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', CONVERT(nvarchar, count(*)) from sys.availability_groups where dtc_support is not null /* SQL Server 2016 (13.x) and above */');
     END TRY
     BEGIN CATCH
         IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
             exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', ''0'' /* SQL Server 2016 (13.x) and above */');
-    END CATCH
-    BEGIN TRY
-            exec('INSERT INTO #serverProperties SELECT ''CountTSQLEndpoints'', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535')
-    END TRY
-    BEGIN CATCH
-        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
-                exec('INSERT INTO #serverProperties SELECT ''CountTSQLEndpoints'', ''0''')
     END CATCH
 
     exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Azure VM''');
@@ -240,8 +224,6 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''IsRpcOutEnabled'', CONVERT(nvarchar, is_rpc_out_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
     exec('INSERT INTO #serverProperties SELECT ''IsRemoteProcTransactionPromotionEnabled'', CONVERT(nvarchar, is_remote_proc_transaction_promotion_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
     exec('INSERT INTO #serverProperties SELECT ''IsRemoteLoginEnabled'', CONVERT(nvarchar, is_remote_login_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
-    exec('INSERT INTO #serverProperties SELECT ''CountServiceBrokerEndpoints'', CONVERT(varchar, count(*)) from sys.service_broker_endpoints')
-    exec('INSERT INTO #serverProperties SELECT ''CountTSQLEndpoints'', CONVERT(varchar, count(*)) from sys.tcp_endpoints where endpoint_id > 65535')
     /* Query Memory usage at OS level */
     exec('INSERT INTO #serverProperties SELECT ''TotalOSMemoryMB'', CONVERT(varchar, (total_physical_memory_kb/1024)) FROM sys.dm_os_sys_memory')
     exec('INSERT INTO #serverProperties SELECT ''AvailableOSMemoryMB'', CONVERT(varchar, (available_physical_memory_kb/1024)) FROM sys.dm_os_sys_memory')

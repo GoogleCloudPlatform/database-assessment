@@ -21,6 +21,7 @@ SET LANGUAGE us_english;
 DECLARE @PKEY AS VARCHAR(256)
 DECLARE @CLOUDTYPE AS VARCHAR(256)
 DECLARE @PRODUCT_VERSION AS INTEGER
+DECLARE @TABLE_PERMISSION_COUNT AS INTEGER
 DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
 DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
@@ -72,9 +73,9 @@ BEGIN
     INSERT INTO #FeaturesEnabled 
     SELECT
         ''IsDbMailEnabled'', 
-        CAST(value_in_use as INT) , 
-        CASE WHEN value_in_use > 0 THEN ''1''
-        ELSE ''0''
+        CONVERT(nvarchar, value_in_use),
+        CASE WHEN value_in_use > 0 THEN 1
+        ELSE 0
         END
     FROM sys.configurations
     WHERE name = ''Database Mail XPs''');
@@ -85,8 +86,8 @@ BEGIN
     INSERT INTO #FeaturesEnabled 
     SELECT
         ''IsDbMailEnabled'', 
-        0 , 
-        ''0''
+        ''0'', 
+        0
     FROM sys.configurations
     WHERE name = ''Database Mail XPs''');
 END;
@@ -97,9 +98,9 @@ BEGIN
     INSERT INTO #FeaturesEnabled 
     SELECT
         ''IsExternalScriptsEnabled'', 
-        CAST(value_in_use as INT) , 
-        CASE WHEN value_in_use > 0 THEN ''1''
-        ELSE ''0''
+        CONVERT(nvarchar, value_in_use),
+        CASE WHEN value_in_use > 0 THEN 1
+        ELSE 0
         END
     FROM sys.configurations
     WHERE name = ''external scripts enabled''');
@@ -150,7 +151,11 @@ IF @CLOUDTYPE = 'AZURE'
 BEGIN
     exec('INSERT INTO #FeaturesEnabled 
             SELECT ''IsHybridBufferPoolEnabled'', 
-            CONVERT(nvarchar,is_enabled) 
+            CONVERT(nvarchar,is_enabled),
+            CASE 
+                WHEN value_in_use > 0 THEN 1
+                ELSE 0
+            END
             from sys.server_memory_optimized_hybrid_buffer_pool_configuration 
             /* SQL Server 2019 (15.x) and later versions */');
 END
@@ -160,7 +165,7 @@ BEGIN
     BEGIN
     exec('INSERT INTO #FeaturesEnabled 
             SELECT ''IsHybridBufferPoolEnabled'', 
-            CONVERT(nvarchar,is_enabled)
+            CONVERT(nvarchar,is_enabled),
             CASE 
                 WHEN is_enabled > 0 THEN 1
                 ELSE 0
@@ -186,16 +191,17 @@ BEGIN
         FROM
             msdb..log_shipping_secondary_databases
     )
-    INSERT INTO #FeaturesEnabled SELECT
+    INSERT INTO #FeaturesEnabled 
+		SELECT
         ''IsLogShippingEnabled'', 
-        CONVERT(varchar,COALESCE(sum(log_shipping),0)),
+        COALESCE(CONVERT(varchar,sum(log_shipping)),''0''),
         COALESCE(sum(log_shipping),0))
     FROM
         log_shipping_count');
 END;
 ELSE
 BEGIN
-    exec('INSERT INTO #FeaturesEnabled VALUES (''IsLogShippingEnabled'', CONVERT(varchar,0)), 0');
+    exec('INSERT INTO #FeaturesEnabled VALUES (''IsLogShippingEnabled'', ''0'', 0)');
 END;
 
 --maintenance plans enabled
@@ -223,7 +229,7 @@ BEGIN
 END;
 ELSE
 BEGIN
-    exec('INSERT INTO #FeaturesEnabled VALUES (''MaintenancePlansEnabled'', CONVERT(varchar,0)), 0');
+    exec('INSERT INTO #FeaturesEnabled VALUES (''MaintenancePlansEnabled'', ''0'', 0)');
 END;
 
 --Polybase Enabled
@@ -232,9 +238,10 @@ BEGIN
     INSERT INTO #FeaturesEnabled 
     SELECT
         ''IsPolybaseEnabled'', 
-        CAST(value_in_use as INT) , 
-        CASE WHEN value_in_use > 0 THEN ''1''
-        ELSE ''0''
+        CONVERT(nvarchar, value_in_use), 
+        CASE
+            WHEN value_in_use > 0 THEN 1
+            ELSE 0
         END
     FROM sys.configurations
     WHERE name = ''polybase enabled''');
@@ -261,7 +268,7 @@ BEGIN
             SELECT 
                 ''IsStretchDatabaseEnabled'',
                 CONVERT(nvarchar, count(*)),
-                ONVERT(int, count(*)) 
+                CONVERT(int, count(*)) 
             FROM sys.remote_data_archive_databases');
 END
 
@@ -288,7 +295,7 @@ exec('INSERT INTO #FeaturesEnabled
             SELECT
                 ''IsTDEInUse'',
                 CONVERT(nvarchar, count(*)),
-                CONVERT(int, count(*)),
+                CONVERT(int, count(*))
             FROM sys.databases 
             WHERE is_encrypted <> 0');
 END
@@ -299,9 +306,10 @@ BEGIN
     INSERT INTO #FeaturesEnabled 
     SELECT
         ''IsTempDbMetadataMemoryOptimized'', 
-        CAST(value_in_use as INT) , 
-        CASE WHEN value_in_use > 0 THEN ''1''
-        ELSE ''0''
+        CONVERT(nvarchar, value_in_use), 
+        CASE 
+            WHEN value_in_use > 0 THEN 1
+            ELSE 0
         END
     FROM sys.configurations
     WHERE name = ''tempdb metadata memory-optimized''');
@@ -358,12 +366,12 @@ BEGIN
                         THEN ''1''
                         ELSE ''0''
                     END,
-                    CONVERT(varchar, count(*))
+                    CONVERT(int, count(*))
                 from sys.server_triggers');
     END TRY
     BEGIN CATCH
         IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
-            exec('INSERT INTO #serverProperties 
+            exec('INSERT INTO #FeaturesEnabled 
                     SELECT 
                         ''ServerLevelTriggers'', 
                         ''0'', 
@@ -371,20 +379,122 @@ BEGIN
     END CATCH
 END;
 
+--OPENROWSET 
+BEGIN
+    exec('
+    INSERT INTO #FeaturesEnabled 
+    SELECT
+        ''OPENROWSET'', 
+        CONVERT(nvarchar, value_in_use) , 
+        CASE
+            WHEN value_in_use > 0 THEN 1
+            ELSE 0
+        END
+    FROM sys.configurations
+    WHERE name = ''Ad Hoc Distributed Queries''');
+END;
+
+--BULK INSERT
+INSERT INTO #FeaturesEnabled 
+    SELECT 
+        'BULK_INSERT',
+        CASE
+            WHEN count(p.permission_name) > 0 THEN '1'
+            ELSE '0'
+        END,
+        CONVERT(int,count(p.permission_name)) 
+    FROM fn_my_permissions(NULL, 'SERVER') p 
+    WHERE permission_name like '%ADMINISTER BULK OPERATIONS%';
+
+-- CountServiceBrokerEndpoints
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+            SELECT 
+                ''CountServiceBrokerEndpoints'',
+                CASE 
+                    WHEN count(*) > 0 THEN ''1''
+                    ELSE ''0''
+                END,
+                CONVERT(int, count(*))
+            FROM sys.service_broker_endpoints');
+END TRY
+BEGIN CATCH
+    IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+        exec('INSERT INTO #FeaturesEnabled SELECT ''CountServiceBrokerEndpoints'', ''0'', 0');
+END CATCH
+
+-- CountTSQLEndpoints
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+            SELECT 
+                ''CountTSQLEndpoints'', 
+                CASE 
+                    WHEN count(*) > 0 THEN ''1''
+                    ELSE ''0''
+                END,
+                CONVERT(int, count(*))
+            FROM sys.tcp_endpoints
+            WHERE endpoint_id > 65535');
+END TRY
+BEGIN CATCH
+    IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+    BEGIN
+        exec('INSERT INTO #FeaturesEnabled SELECT ''CountTSQLEndpoints'', ''0'', 0');
+    END
+    ELSE
+    BEGIN
+        exec('INSERT INTO #FeaturesEnabled SELECT ''CountTSQLEndpoints'', ''0'', 0');
+    END
+END CATCH
+
+--Security Policies
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+            SELECT 
+                ''SP'', 
+                CASE 
+                    WHEN count(*) > 0 THEN ''1''
+                    ELSE ''0''
+                END,
+                CONVERT(int, count(*))
+            FROM sys.security_policies');
+END TRY
+BEGIN CATCH
+    IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+    BEGIN
+        exec('INSERT INTO #FeaturesEnabled SELECT ''SP'', ''0'', 0');
+    END
+    ELSE
+    BEGIN
+        exec('INSERT INTO #FeaturesEnabled SELECT ''SP'', ''0'', 0');
+    END
+END CATCH
+
+--Memory Optimized OLTP Tables
+/* Select from tableList.sql 
+    Population will occur in the loader and will just check "is_memory_optimized" on sys.tables
+    1 - is_memory_optimized
+    0 - is not memory optimized
+*/
+
+--Reporting Services
+/* Select from componentsInstalled.sql */
+
+--Analysis Services
+/* Select from componentsInstalled.sql */
+
+--BACPAC File Import Services
+/* Not determined yet */
+
+--DATA QUALITY Services
+/* Not determined yet */
+
 --Service Broker tasks
 DECLARE @ServBrokerTasksUsed as INT, @IS_ServBrokerTasksUsed as NVARCHAR(4);
 select @ServBrokerTasksUsed = count(*)  from sys.dm_broker_activated_tasks;
-IF @ServBrokerTasksUsed > 0 SET @IS_ServBrokerTasksUsed = 'Yes'  ELSE  SET @IS_ServBrokerTasksUsed = 'No' ;
+IF @ServBrokerTasksUsed > 0 SET @IS_ServBrokerTasksUsed = '1'  ELSE  SET @IS_ServBrokerTasksUsed = '0' ;
 INSERT INTO #FeaturesEnabled VALUES (
 'Service Broker Tasks Used', @IS_ServBrokerTasksUsed, ISNULL(@ServBrokerTasksUsed,0) );
-
---Endpoints
-/* Covered in the serverproperties query 
-DECLARE @EndpointsUsed as INT, @IS_EndpointsUsed as NVARCHAR(4);
-SELECT @EndpointsUsed = count(*)  FROM sys.tcp_endpoints where state = 0 and endpoint_id > 5;
-IF @EndpointsUsed > 0 SET @IS_EndpointsUsed = 'Yes'  ELSE  SET @IS_EndpointsUsed = 'No' ;
-INSERT INTO #FeaturesEnabled VALUES (
-'Endpoints Used', @IS_EndpointsUsed, ISNULL(@EndpointsUsed,0) ); */
 
 --External Assemblies
 IF @CLOUDTYPE = 'AZURE'
@@ -396,7 +506,7 @@ ELSE
 BEGIN
     DECLARE @ExternalAssembliesUsed as INT, @IS_ExternalAssembliesUsed as NVARCHAR(4);
     select @ExternalAssembliesUsed = COUNT(*) from sys.server_permissions where permission_name = 'External access assembly' and state='G';
-    IF @ExternalAssembliesUsed > 0 SET @IS_ExternalAssembliesUsed = 'Yes'  ELSE  SET @IS_ExternalAssembliesUsed = 'No' ;
+    IF @ExternalAssembliesUsed > 0 SET @IS_ExternalAssembliesUsed = '1'  ELSE  SET @IS_ExternalAssembliesUsed = '0' ;
     INSERT INTO #FeaturesEnabled VALUES (
     'External Assemblies Used', @IS_ExternalAssembliesUsed, ISNULL(@ExternalAssembliesUsed,0) );
 END
@@ -431,13 +541,13 @@ END
 DECLARE @PoliciesEnabled_value as INT, @IS_PoliciesEnabled as NVARCHAR(4)
 BEGIN TRY
     exec('SELECT @PoliciesEnabled_value = count(*) FROM msdb.dbo.syspolicy_policies where is_enabled =1;
-	IF @PoliciesEnabled_value > 0 SET @IS_PoliciesEnabled = ''Yes''  ELSE  SET @IS_PoliciesEnabled = ''No'' ;
+	IF @PoliciesEnabled_value > 0 SET @IS_PoliciesEnabled = ''1''  ELSE  SET @IS_PoliciesEnabled = ''0'' ;
 	INSERT INTO #FeaturesEnabled VALUES (
-		''Policy Based Management'', @IS_PoliciesEnabled, ISNULL(@PoliciesEnabled_value,0) );');
+		''Policy-Based Management'', @IS_PoliciesEnabled, ISNULL(@PoliciesEnabled_value,0) );');
 END TRY
 BEGIN CATCH
 	IF ERROR_NUMBER() = 40515 AND ERROR_SEVERITY() = 15 AND ERROR_STATE() = 1
-    exec('INSERT INTO #FeaturesEnabled VALUES (''Policy Based Management'', ''No'', ''0'')')
+    exec('INSERT INTO #FeaturesEnabled VALUES (''Policy-Based Management'', ''0'', 0)')
 END CATCH
 
 /* Certain clouds do not allow access to certain tables so we need to catch the table does not exist error and default the setting */
