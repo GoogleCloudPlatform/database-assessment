@@ -22,6 +22,7 @@ DECLARE @PKEY AS VARCHAR(256)
 DECLARE @CLOUDTYPE AS VARCHAR(256)
 DECLARE @PRODUCT_VERSION AS INTEGER
 DECLARE @TABLE_PERMISSION_COUNT AS INTEGER
+DECLARE @ROW_COUNT_VAR AS INTEGER
 DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
 DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
@@ -147,6 +148,8 @@ BEGIN
 END
 
 --hybrid buffer pool enabled
+SELECT @ROW_COUNT_VAR = count(*) from sys.server_memory_optimized_hybrid_buffer_pool_configuration;
+
 IF @CLOUDTYPE = 'AZURE'
 BEGIN
     exec('INSERT INTO #FeaturesEnabled 
@@ -163,15 +166,35 @@ ELSE
 BEGIN
     IF @PRODUCT_VERSION >= 15
     BEGIN
-    exec('INSERT INTO #FeaturesEnabled 
-            SELECT ''IsHybridBufferPoolEnabled'', 
-            CONVERT(nvarchar,is_enabled),
-            CASE 
-                WHEN is_enabled > 0 THEN 1
+        IF @ROW_COUNT_VAR = 0
+        BEGIN
+            exec('INSERT INTO #FeaturesEnabled 
+                    SELECT 
+                        ''IsHybridBufferPoolEnabled'',
+                        ''0'',
+                        0');
+        END;
+        IF @ROW_COUNT_VAR > 0
+        BEGIN
+            exec('INSERT INTO #FeaturesEnabled
+                SELECT ''IsHybridBufferPoolEnabled'',
+                COALESCE(CONVERT(nvarchar,is_enabled), 0),
+                CASE 
+                    WHEN is_enabled > 0 THEN 1
                 ELSE 0
-            END
-            from sys.server_memory_optimized_hybrid_buffer_pool_configuration
-            /* SQL Server 2019 (15.x) and later versions */');
+                END
+                from sys.server_memory_optimized_hybrid_buffer_pool_configuration
+                /* SQL Server 2019 (15.x) and later versions */');
+        END;
+    END;
+    ELSE
+    BEGIN
+    exec('INSERT INTO #FeaturesEnabled 
+            SELECT 
+            ''IsHybridBufferPoolEnabled'', 
+            ''0'',
+            0
+            /* Earlier than SQL Server 2019 (15.x) versions */');
     END;
 END;
 
