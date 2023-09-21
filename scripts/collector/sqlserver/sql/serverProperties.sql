@@ -96,10 +96,6 @@ SELECT 'IsHadrEnabled', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsHadrEnabled
 UNION ALL
 SELECT 'IsIntegratedSecurityOnly', CONVERT(nvarchar, SERVERPROPERTY('IsIntegratedSecurityOnly'))
 UNION ALL
-SELECT 'IsLocalDB', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsLocalDB')), '0')
-UNION ALL
-SELECT 'IsSingleUser', CONVERT(nvarchar, SERVERPROPERTY('IsSingleUser'))
-UNION ALL
 SELECT 'IsXTPSupported', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('IsXTPSupported')), '0')
 UNION ALL
 SELECT 'LCID', CONVERT(nvarchar, SERVERPROPERTY('LCID'))
@@ -142,15 +138,11 @@ SELECT 'SqlSortOrder', CONVERT(nvarchar, SERVERPROPERTY('SqlSortOrder'))
 UNION ALL
 SELECT 'SqlSortOrderName', CONVERT(nvarchar, SERVERPROPERTY('SqlSortOrderName'))
 UNION ALL
-SELECT 'FilestreamShareName', COALESCE(CONVERT(nvarchar, SERVERPROPERTY('FilestreamShareName')),'NONE')
-UNION ALL
 SELECT 'FilestreamConfiguredLevel', CONVERT(nvarchar, SERVERPROPERTY('FilestreamConfiguredLevel'))
 UNION ALL
 SELECT 'FilestreamEffectiveLevel', CONVERT(nvarchar, SERVERPROPERTY('FilestreamEffectiveLevel'))
 UNION ALL
 SELECT 'FullVersion', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), ' '), CHAR(10), ' '),1,1024)
-UNION ALL
-SELECT 'IsResourceGovenorEnabled', CONVERT(varchar, is_enabled) from sys.resource_governor_configuration
 UNION ALL
 SELECT 'LogicalCpuCount', CONVERT(varchar, cpu_count) from sys.dm_os_sys_info
 UNION ALL
@@ -233,38 +225,42 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''MaxConfiguredSQLServerMemoryMB'', CASE WHEN value = maximum THEN ''0'' ELSE CONVERT(varchar, (value)) END from sys.configurations where name = ''max server memory (MB)''')
     IF @PRODUCT_VERSION >= 14
     BEGIN
-    exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', SUBSTRING(CONVERT(nvarchar,host_platform),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
-    exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(CONVERT(nvarchar,host_distribution),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
-    exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,host_release),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
-    exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,host_service_pack_level),1,1024), ''UNKNOWN'')  FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
-    exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+        exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', SUBSTRING(CONVERT(nvarchar,host_platform),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+        exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(CONVERT(nvarchar,host_distribution),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+        exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,host_release),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+        exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,host_service_pack_level),1,1024), ''UNKNOWN'')  FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
+        exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
     END;
     IF @PRODUCT_VERSION >= 11 AND @PRODUCT_VERSION < 14
     BEGIN
-    exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows'' FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
-    exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,windows_release),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
-    exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,windows_service_pack_level),1,1024), ''UNKNOWN'') FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
-    exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
-    exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024) /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x) */');
+        exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows'' FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+        exec('INSERT INTO #serverProperties SELECT ''HostRelease'', SUBSTRING(CONVERT(nvarchar,windows_release),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+        exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,windows_service_pack_level),1,1024), ''UNKNOWN'') FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+        exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',SUBSTRING(CONVERT(nvarchar, os_language_version),1,1024) FROM sys.dm_os_windows_info /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x)  */');
+        exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024) /* SQL Server 2016 (13.x) and SQL Server 2012 (11.x) */');
     END
     IF @PRODUCT_VERSION < 11
     BEGIN   /* Versions before SQL Server 2012 (11.x)   */
-    exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows''');
-    exec('INSERT INTO #serverProperties SELECT ''HostRelease'', REPLACE(REPLACE(SUBSTRING(@@VERSION,4 + charindex ('' ON '',@@VERSION),LEN(@@VERSION)), CHAR(13), ''''), CHAR(10), '''')');
-    exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,SERVERPROPERTY(''ProductLevel'')),1,1024), ''UNKNOWN'') ');
-    exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',''UNKNOWN''');
-    exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024)');
-    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, 0) /* Parameter defaulted because its not avaliable in this version */');
-    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, 0) /* Parameter defaulted because its not avaliable in this version */');
+        exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows''');
+        exec('INSERT INTO #serverProperties SELECT ''HostRelease'', REPLACE(REPLACE(SUBSTRING(@@VERSION,4 + charindex ('' ON '',@@VERSION),LEN(@@VERSION)), CHAR(13), ''''), CHAR(10), '''')');
+        exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,SERVERPROPERTY(''ProductLevel'')),1,1024), ''UNKNOWN'') ');
+        exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',''UNKNOWN''');
+        exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024)');
+        exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, 0) /* Parameter defaulted because its not avaliable in this version */');
+        exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, 0) /* Parameter defaulted because its not avaliable in this version */');
     END;
     IF @PRODUCT_VERSION >= 13
     BEGIN
-    exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', CONVERT(nvarchar, count(*)) from sys.availability_groups where dtc_support is not null /* SQL Server 2016 (13.x) and above */');
+        exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', CONVERT(nvarchar, count(*)) from sys.availability_groups where dtc_support is not null /* SQL Server 2016 (13.x) and above */');
+    END;
+    ELSE
+    BEGIN
+        exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', ''0'' /* SQL Server 2016 (13.x) and above */');
     END;
     IF @PRODUCT_VERSION >= 11
     BEGIN
-    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, committed_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
-    exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
+        exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, committed_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
+        exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
     END;
 END;
 

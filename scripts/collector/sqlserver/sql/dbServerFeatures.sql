@@ -272,17 +272,16 @@ END;
 
 --Resource Governor
 BEGIN
-DECLARE @ResourceGovernorEnabled as INT, @IS_ResourceGovernorEnabled as NVARCHAR(4);
-    select @ResourceGovernorEnabled = count(*) 
-    FROM sys.resource_governor_workload_groups 
-    where group_id > 2;
-IF @ResourceGovernorEnabled > 0 SET @IS_ResourceGovernorEnabled = '1' ELSE SET @IS_ResourceGovernorEnabled = '0' ;
-INSERT INTO #FeaturesEnabled 
-VALUES (
-    'IsResourceGovernorEnabled', 
-    @IS_ResourceGovernorEnabled,
-    ISNULL(@ResourceGovernorEnabled,0));
-END
+exec ('INSERT INTO #FeaturesEnabled 
+    SELECT 
+        ''IsResourceGovenorEnabled'', 
+        CONVERT(nvarchar, is_enabled),
+        CASE 
+            WHEN is_enabled > 0 THEN 1
+            ELSE 0
+        END
+    FROM sys.resource_governor_configuration');
+END;
 
 --Stretch Database
 IF @CLOUDTYPE = 'AZURE'
