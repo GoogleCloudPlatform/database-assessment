@@ -112,18 +112,9 @@ IF @PRODUCT_VERSION >= 11
 BEGIN
     exec('WITH check_filestream AS (
         SELECT
-            Name,
-            ISNULL ((
-                    SELECT
-                        1
-                    FROM
-                        sys.master_files AS mf
-                    WHERE
-                        mf.database_id = db.database_id
-                        AND mf.type = 2),
-                    0) AS hasfs
-        FROM
-            sys.databases AS db
+            name,
+            ISNULL((SELECT count(1) FROM sys.master_files AS mf WHERE mf.database_id = db.database_id AND mf.type = 2),0) AS hasfs
+        FROM sys.databases AS db
     )
     INSERT INTO #FeaturesEnabled SELECT
         ''IsFileStreamEnabled'',
