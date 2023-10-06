@@ -16,7 +16,8 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.13"
+OpVersion="4.3.21"
+dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
 export LANG=C
@@ -90,7 +91,7 @@ set pagesize 0 lines 400 feedback off verify off heading off echo off timing off
 column vname new_value v_name noprint
 select min(object_name) as vname from dba_objects where object_name in ('V\$INSTANCE', 'GV\$INSTANCE');
 select 'DMAFILETAG~'|| i.version||'|'||substr(replace(i.version,'.',''),0,3)||'_'||'${OpVersion}_'||i.host_name||'_'||d.name||'_'||i.instance_name||'_'||to_char(sysdate,'MMDDRRHH24MISS')||'~'
-from ( SELECT version, host_name, instance_name FROM &&v_name WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v\$database d;
+from ( SELECT case when version like '9%' then '0' || version else version end as version, host_name, instance_name FROM &&v_name WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v\$database d;
 exit;
 EOF
 }
@@ -99,6 +100,7 @@ function executeOP {
 connectString="$1"
 OpVersion=$2
 DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
+collectionTag="${4}"
 
 if ! [ -x "$(command -v ${SQLPLUS})" ]; then
   echo "Could not find ${SQLPLUS} command. Source in environment and try again"
@@ -109,7 +111,7 @@ fi
 
 ${SQLPLUS} -s /nolog << EOF
 connect ${connectString}
-@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${SQLOUTPUT_DIR}
+@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${SQLOUTPUT_DIR} "${collectionTag}"
 exit;
 EOF
 
@@ -183,10 +185,21 @@ ZIPFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.zip
 
 locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
 
+echo "dbmajor = ${dbmajor}"  >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
 echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
 
 cd ${OUTPUT_DIR}
-ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt > opdb__manifest__${V_FILE_TAG}.txt	
+if [ -f opdb__manifest__${V_FILE_TAG}.txt ];
+then
+  rm opdb__manifest__${V_FILE_TAG}.txt
+fi
+
+for file in $(ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt)
+do
+ MD5=$(md5sum $file | cut -d ' ' -f 1)
+ echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
+done
+
 if [ ! "${ZIP}" = "" ]
 then
   $ZIP $ZIPFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
@@ -238,26 +251,121 @@ fi
 
 }
 
-### Validate input
-#############################################################################
 
-if [[  $# -ne 2  || (  "$2" != "UseDiagnostics" && "$2" != "NoDiagnostics" ) ]]
+function printUsage()
+{
+echo " Usage:"
+echo "  Parameters"
+echo ""
+echo "  Connection definition must one of:"
+echo "      {"
+echo "        --connectionStr       Oracle EasyConnect string formatted as {user}/{password}@//{db host}:{listener port}/{service name}"
+echo "       or"
+echo "        --hostName            Database server host name"
+echo "        --port                Database Listener port"
+echo "        --databaseService     Database service name"
+echo "        --collectionUserName  Database user name"
+echo "        --collectionUserPass  Database password"
+echo "      }"
+echo "  Performance statistics source"
+echo "      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE"
+echo
+echo
+echo " Example:"
+echo
+echo
+echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR"
+echo " or"
+echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR"
+
+}
+### Validate input
+
+hostName=""
+port=""
+databaseService=""
+collectionUserName=""
+collectionUserPass=""
+dbType=""
+statsSrc=""
+connStr=""
+collectionTag=""
+
+ if [[ $(($# & 1)) == 1 ]] ;
  then
-  echo 
-  echo "You must indicate whether or not to use the Diagnostics Pack views."
-  echo "If this database is licensed to use the Diagnostics pack:"
-  echo "  $0 $1 UseDiagnostics"
-  echo " "
-  echo "If this database is NOT licensed to use the Diagnostics pack:"
-  echo "  $0 $1 NoDiagnostics"
-  echo " "
-  exit 1
-fi
+  echo "Invalid number of parameters "
+  printUsage
+  exit 
+ fi
+
+ while (( "$#" )); do
+	 if   [[ "$1" == "--hostName" ]];           then hostName="${2}"
+	 elif [[ "$1" == "--port" ]];               then port="${2}"
+	 elif [[ "$1" == "--databaseService" ]];    then databaseService="${2}"
+	 elif [[ "$1" == "--collectionUserName" ]]; then collectionUserName="${2}"
+	 elif [[ "$1" == "--collectionUserPass" ]]; then collectionUserPass="${2}"
+	 elif [[ "$1" == "--dbType" ]];             then dbType=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
+	 elif [[ "$1" == "--statsSrc" ]];           then statsSrc=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
+	 elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
+	 elif [[ "$1" == "--collectionTag" ]];      then collectionTag="${2}"
+	 else
+		 echo "Unknown parameter ${1}"
+		 printUsage
+		 exit
+	 fi
+	 shift 2
+ done
+
+
+ if [[ "${dbType}" != "oracle" ]] ; then
+	 dbType="oracle"
+ fi
+
+ if [[ "${statsSrc}" = "awr" ]]; then
+          DIAGPACKACCESS="UseDiagnostics"
+ elif [[ "${stasSrc}" = "statspack" ]] ; then
+          DIAGPACKACCESS="NoDiagnostics"
+ else 
+	 echo No performance data will be collected.
+         DIAGPACKACCESS="nostatspack"
+ fi
+
+ if [[ "${connStr}" == "" ]] ; then 
+	 if [[ "${hostName}" != "" && "${port}" != "" && "${databaseService}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
+		 connStr="${collectionUserName}/${collectionUserPass}@//${hostName}:${port}/${databaseService}"
+		 echo Got Connection ${connStr}
+	 else
+		 echo "Connection information incomplete"
+		 printUsage
+		 exit
+	 fi
+ fi
+
+ if [[ "${collectionTag}" != "" ]]; then
+	 collectionTag=$(echo "${collectionTag}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+ else collectionTag='NA'
+ fi
+
+
+#############################################################################
+#
+#if [[  $# -ne 2  || (  "$2" != "UseDiagnostics" && "$2" != "NoDiagnostics" ) ]]
+# then
+#  echo 
+#  echo "You must indicate whether or not to use the Diagnostics Pack views."
+#  echo "If this database is licensed to use the Diagnostics pack:"
+#  echo "  $0 $1 UseDiagnostics"
+#  echo " "
+#  echo "If this database is NOT licensed to use the Diagnostics pack:"
+#  echo "  $0 $1 NoDiagnostics"
+#  echo " "
+#  exit 1
+#fi
 
 # MAIN
 #############################################################################
 
-connectString="$1"
+connectString="${connStr}"
 sqlcmd_result=$(checkVersion "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | cut -d '~' -f 2)
 if [[ "${sqlcmd_result}" = "" ]];
 then
@@ -267,7 +375,7 @@ fi
 
 retval=$?
 
-DIAGPACKACCESS="$2"
+# DIAGPACKACCESS="$2"
 
 extractorVersion="$(getVersion)"
 
@@ -290,9 +398,14 @@ if [ $retval -eq 0 ]; then
     if [ "${dbmajor}" = "10" ]
     then
        echo "Oracle 10 support is experimental."
+    else if [ "${dbmajor}" = "09" ]
+      then
+       echo "Oracle 9 support is experimental."
+       DIAGPACKACCESS="NoDiagnostics"
+      fi  
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS}
+    executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS} "${collectionTag}"
     retval=$?
     if [ $retval -ne 0 ]; then
       createErrorLog  $(echo ${V_TAG} | sed 's/.csv//g')

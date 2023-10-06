@@ -43,6 +43,7 @@ END;
 SELECT :xml_select_sql AS p_xml_select FROM dual;
 
 spool &outputdir/opdb__tabletypedtl__&v_tag
+prompt PKEY|CON_ID|OWNER|TABLE_NAME|PAR|IOT_TYPE|NESTED|TEMPORARY|SECONDARY|CLUSTERED_TABLE|OBJECT_TABLE|XML_TABLE|PARTITIONING_TYPE|SUBPARTITIONING_TYPE|PARTITION_COUNT|SUBPARTITION_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH tblinfo AS (
 SELECT
     &v_a_con_id AS con_id,
@@ -138,7 +139,7 @@ SELECT '&&v_host'
        p.subpartitioning_type,
        p.partition_count,
        sp.cnt AS subpartition_count,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM  tblinfo a
 LEFT OUTER JOIN &v_tblprefix._part_tables p
               ON a.owner = p.owner

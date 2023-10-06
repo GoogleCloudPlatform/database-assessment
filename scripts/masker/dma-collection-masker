@@ -19,8 +19,8 @@ import random
 import shutil
 import string
 import sys
-import zipfile as zf
 import tarfile
+import zipfile as zf
 from collections import namedtuple
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -32,7 +32,9 @@ __all__ = [
     "main",
     "run_masker",
 ]
-__version__ = "4.3.13"
+
+__version__ = "4.3.21"
+
 logger = logging.getLogger(__name__)
 
 here = Path(__file__).parent
@@ -60,6 +62,7 @@ DATA_MASK_CONFIG = [
     DataMaskRule(mask_type="Schema Name", table_name="triggers", column_position=2, missing_ok=True),
     DataMaskRule(mask_type="Schema Name", table_name="usedspacedetails", column_position=2, missing_ok=True),
     DataMaskRule(mask_type="Schema Name", table_name="usrsegatt", column_position=2, missing_ok=True),
+    DataMaskRule(mask_type="Schema Name", table_name="users", column_position=2, missing_ok=True),
 ]
 
 
@@ -89,7 +92,7 @@ def run_masker(input_dir: Optional[Path] = None, output_path: Optional[Path] = N
 
         collections = _find_collections_to_process(input_dir)
         if len(collections) == 0:
-            logger.info("No collections found in location " + str(input_dir))
+            logger.info("No collections found in location %s", str(input_dir))
             logger.info("Exiting...")
             exit(1)
 
@@ -125,27 +128,19 @@ def _find_collections_to_process(search_path: Path) -> List[Path]:
     Args:
         search_path (Path): The path to search for collections
 
+        Check for zip and gzip files and return list of paths.
+
     Returns:
         List[Path]: list of files found matching the collection pattern
     """
-
-    """
-    Check for zip files
-    """
-    file_list = set(Path(str(search_path)).glob("opdb_oracle_*.zip")).difference(
-        set(Path(str(search_path)).glob("opdb_oracle_*ERROR.zip"))
-    )
-
-    """
-    Check for gzip files
-    """
-    file_list = file_list.union(
-        set(Path(str(search_path)).glob("opdb_oracle_*.gz")).difference(
-            set(Path(str(search_path)).glob("opdb_oracle_*ERROR.gz"))
+    file_list = (
+        set(search_path.glob("opdb_oracle_*.zip"))
+        .union(set(search_path.glob("opdb_oracle_*.gz")))
+        .difference(
+            set(search_path.glob("opdb_oracle_*ERROR.zip")).union(set(search_path.glob("opdb_oracle_*ERROR.gz")))
         )
     )
-
-    return file_list
+    return list(file_list)
 
 
 def _extract_collection(collection_file: Path, extract_path: Path) -> None:
@@ -188,6 +183,7 @@ def _find_file_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> Opti
         raise ApplicationError(f"Found too many files when searching for {rule.table_name}.  Found {matched_file}")
     if matched_file and len(matched_file) == 1:
         return matched_file[0]
+    return None
 
 
 def _generate_identity_map_from_rule(
@@ -268,10 +264,7 @@ def _package_collection(
     Returns:
         Tuple[Path, Path]: The new key file and archive file.
     """
-    if collection.stem.endswith("zip"):
-        file_stem = collection.stem
-    else:
-        file_stem = collection.stem.rstrip(".tar")
+    file_stem = collection.stem if collection.stem.endswith("zip") else collection.stem.rstrip(".tar")
 
     logger.info("Zipping %s", collection.stem)
     archive_file = Path(output_path / f"{file_stem}.zip")

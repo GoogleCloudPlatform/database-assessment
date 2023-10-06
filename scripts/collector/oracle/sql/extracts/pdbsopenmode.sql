@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__pdbsopenmode__&v_tag
-
+prompt PKEY|CON_ID|NAME|OPEN_MODE|TOTAL_GB|CON_UID|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vpdbmode as (
 SELECT '&&v_host'
        || '_'
@@ -28,6 +28,6 @@ SELECT '&&v_host'
        con_uid
 FROM   v$pdbs )
 SELECT pkey , con_id , name , open_mode , TOTAL_GB, con_uid,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vpdbmode;
 spool off

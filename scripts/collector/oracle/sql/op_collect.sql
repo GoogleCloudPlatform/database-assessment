@@ -18,8 +18,9 @@ set termout on pause on
 SET DEFINE "&"
 DEFINE SQLDIR=&2
 DEFINE v_dodiagnostics=&3
-DEFINe v_tag=&4
+DEFINE v_tag=&4
 DEFINE outputdir=&5
+DEFINE v_collectionTag=&6
 
 DEFINE EXTRACTSDIR=&SQLDIR/extracts
 DEFINE AWRDIR=&EXTRACTSDIR/awr
@@ -53,14 +54,14 @@ set termout &TERMOUTOFF
 @&EXTRACTSDIR/defines.sql
 @&EXTRACTSDIR/archlogs.sql
 @&EXTRACTSDIR/users.sql
-@&EXTRACTSDIR/backups.sql
+@&EXTRACTSDIR/&v_ora9ind.backups.sql
 @&EXTRACTSDIR/columntypes.sql
---@&EXTRACTSDIR/compressbytype.sql
-@&EXTRACTSDIR/cpucoresusage.sql
+@&EXTRACTSDIR/compressbytype.sql
+@&EXTRACTSDIR/&v_ora9ind.cpucoresusage.sql
 @&EXTRACTSDIR/dataguard.sql
 @&EXTRACTSDIR/datatypes.sql
-@&EXTRACTSDIR/dbfeatures.sql
-@&EXTRACTSDIR/dbhwmarkstatistics.sql
+@&EXTRACTSDIR/&v_ora9ind.dbfeatures.sql
+@&EXTRACTSDIR/&v_ora9ind.dbhwmarkstatistics.sql
 @&EXTRACTSDIR/dbinstances.sql
 @&EXTRACTSDIR/dblinks.sql
 @&EXTRACTSDIR/dbobjects.sql

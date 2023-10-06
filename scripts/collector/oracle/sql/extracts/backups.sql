@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__backups__&v_tag
-
+prompt PKEY|BACKUP_START_DATE|CON_ID|INPUT_TYPE|ELAPSED_SECONDS|MBYTES_IN|MBYTES_OUT|DMA_SOURCE_ID|DMA_MANUAL_ID
 SELECT '&&v_host'
        || '_'
        || '&&v_dbname'
@@ -26,7 +26,7 @@ SELECT '&&v_host'
        round(sum(elapsed_seconds)) AS elapsed_seconds, 
        round(sum(input_bytes)/1024/1024) AS mbytes_in, 
        round(sum(output_bytes)/1024/1024) AS mbytes_out,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM v$rman_backup_job_details a
 WHERE start_time >= trunc(sysdate) - '&&dtrange'
 GROUP BY trunc(start_time), input_type, &v_a_con_id

@@ -25,6 +25,14 @@
 .PARAMETER managedInstanceName
     Enter the named instance name (Optional, unless using a named instance)
 	If collecting from a named instance, enter the instance name or the default instance will be used.
+.PARAMETER perfmonOutDir
+    Final Output Directory (Required)
+.PARAMETER perfmonOutFile
+    Final Output File Name (Required)
+.PARAMETER dmaSourceId
+    DMA derived unique id (Required)
+.PARAMETER dmaManualId
+    Customer Unique collection tag or dma manual unique id (Optional)
 .EXAMPLE
     C:\dmaSQLServerPerfmonDataset.ps1 -operation create -mssqlInstanceName [named Instance] / $null
 .NOTES
@@ -50,7 +58,15 @@ param (
 	[Parameter(
 		Mandatory=$False,
 		HelpMessage="The pkey value for the final perfmon combined file"
-	)][string]$pkey=$null
+	)][string]$pkey=$null,
+	[Parameter(
+		Mandatory=$True,
+		HelpMessage="The dma_source_id value for the final perfmon combined file"
+	)][string]$dmaSourceId,
+	[Parameter(
+		Mandatory=$False,
+		HelpMessage="The dma_manual_id / customer supplied tag value for the final perfmon combined file"
+	)][string]$dmaManualId="NA"
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
@@ -430,7 +446,6 @@ param(
 	}
 }
 function Yellow{    process { Write-Host $_ -ForegroundColor Yellow }}
-
 function CollectDMAPerfmonDataSet
 {
 param(
@@ -438,7 +453,9 @@ param(
 	[string]$perfmonOutDir,
 	[string]$perfmonOutFile,
 	[string]$pkey,
-	[string]$logFile
+	[string]$logFile,
+	[string]$dmaSourceId,
+	[string]$dmaManualId
 	)
 	
 	$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
@@ -464,7 +481,7 @@ param(
 		foreach($file in Get-ChildItem -Path $env:TEMP\*$dataSet*.csv) {
 			$tempFileName = 'PKEY_' + (Split-Path $file -leaf)
 			Get-Content -Path $file | ForEach-Object {
-				'"' + $pkey + '"|' + $_
+				'"' + $pkey + '"|' + $_ + '|"' + $dmaSourceId + '"|"' + $dmaManualId + '"'
 			} | Out-File -FilePath $env:TEMP\$tempFileName -Encoding utf8
 		}
 	} else {
@@ -477,23 +494,23 @@ param(
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Concatenating and adding header to perfmon files..." -logOperation "BOTH"
 	if ($fileExists)  {
 
-		$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"'
+		$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"|"DMA_SOURCE_ID"|"DMA_MANUAL_ID"'
 		Set-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
 		((Get-Content -Path $env:TEMP\PKEY_*$dataSet*.csv -Raw ) -replace ',','|') | Add-Content -Encoding utf8 -Path $outputDir\$outputFileName
 	
 	}
 	else {
 
-		$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"'
+		$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"|"DMA_SOURCE_ID"|"DMA_MANUAL_ID"'
 		Set-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
 
 		$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
-		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
+		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"'
 		Add-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
 
 		$futureDate = (Get-Date).AddMinutes(1)
 		$tempDate = $futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")
-		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
+		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"'
 		Add-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
 
 	}	
@@ -501,8 +518,15 @@ param(
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Clean up Temp File area..." -logOperation "BOTH"
 		Remove-Item -Path $env:TEMP\*$dataSet*.csv
 	}
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
+	WriteLog -logLocation $foldername\$logFile -logMessage "DMA Source Id: $dmaSourceId " -logOperation "FILE"
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
+	WriteLog -logLocation $foldername\$logFile -logMessage "DMA Manual Id: $dmaManualId " -logOperation "FILE"
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Collecting current state of perfmon dataset: $dataset..." -logOperation "BOTH"
 	logman.exe query -n $dataset | out-string | Add-Content -Encoding utf8 -Path $outputDir\$perfmonLogFile
+
+
 }
 
 function CreateEmptyFile
@@ -512,12 +536,19 @@ function CreateEmptyFile
 		[string]$perfmonOutDir,
 		[string]$perfmonOutFile,
 		[string]$pkey,
-		[string]$logFile
+		[string]$logFile,
+		[string]$dmaSourceId,
+		[string]$dmaManualId
 		)
 		
 		$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
 		$outputFileName = $perfmonOutFile
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Creating an empty Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
+		WriteLog -logLocation $foldername\$logFile -logMessage "DMA Source Id: $dmaSourceId " -logOperation "FILE"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
+		WriteLog -logLocation $foldername\$logFile -logMessage "DMA Manual Id: $dmaManualId " -logOperation "FILE"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
 	
 		if (!(Test-Path -PathType container $outputDir)) {
 			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
@@ -525,16 +556,16 @@ function CreateEmptyFile
 			$null = New-Item -ItemType Directory -Path $outputDir
 		}
 
-		$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"'
+		$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"|"DMA_SOURCE_ID"|"DMA_MANUAL_ID"'
 		Set-Content $env:TEMP\emptyStrings.csv -Value $tempContent -Encoding utf8
 
 		$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
-		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
+		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"'
 		Add-Content $env:TEMP\emptyStrings.csv -Value $tempContent -Encoding utf8
 
 		$futureDate = (Get-Date).AddMinutes(1)
 		$tempDate = $futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")
-		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"'
+		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"'
 		Add-Content $env:TEMP\emptyStrings.csv -Value $tempContent -Encoding utf8
 
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Concatenating and adding header to perfmon files to $outputFileName ..." -logOperation "BOTH"
@@ -575,9 +606,9 @@ if ($operation.ToLower() -eq "create") {
 } elseif ($operation.ToLower() -eq "delete") {
 	DeleteDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -logFile $perfmonLogFile
 } elseif ($operation.ToLower() -eq "collect") {
-	CollectDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey -logFile $perfmonLogFile
+	CollectDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $dmaManualId -logFile $perfmonLogFile
 } elseif ($operation.ToLower() -eq "createemptyfile") {
-	CreateEmptyFile -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey -logFile $perfmonLogFile
+	CreateEmptyFile -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $dmaManualId -logFile $perfmonLogFile
 } else {
 	Write-Output "Operation $operation specified is invalid"
 }

@@ -23,7 +23,7 @@ SELECT  CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '&AW
 FROM DUAL;
 
 spool &outputdir/opdb__sourceconn__&v_tag
-
+prompt PKEY|DBID|INSTANCE_NUMBER|HO|PROGRAM|MODULE|MACHINE|COMMAND_NAME|CNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsrcconn AS (
 SELECT '&&v_host'
        || '_'
@@ -62,7 +62,7 @@ group by '&&v_host'
        scmd.command_name)
 SELECT pkey , dbid , instance_number , hour , program ,
        module , machine , command_name , cnt,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vsrcconn
 order by hour;
 spool off

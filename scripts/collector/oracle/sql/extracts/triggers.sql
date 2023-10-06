@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__triggers__&v_tag
-
+prompt PKEY|CON_ID|OWNER|TRIGGER_TYPE|TRIGGERING_EVENT|BASE_OBJECT_TYPE|TRIGGER_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH trginfo AS (
 SELECT
     &v_a_con_id AS con_id,
@@ -61,6 +61,6 @@ SELECT '&&v_host'
        triggering_event,
        base_object_type,
        trigger_count,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM  trginfo;
 spool off

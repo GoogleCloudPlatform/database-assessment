@@ -16,7 +16,7 @@ limitations under the License.
 define cdbjoin = "AND 1=1"
 column FORCE_LOGGING format A15
 spool &outputdir/opdb__dbsummary__&v_tag
-
+prompt PKEY|DBID|DB_NAME|CDB|DB_VERSION|DB_FULLVERSION|LOG_MODE|FORCE_LOGGING|REDO_GB_PER_DAY|RAC_DBINSTANCES|CHARACTERSET|PLATFORM_NAME|STARTUP_TIME|USER_SCHEMAS|BUFFER_CACHE_MB|SHARED_POOL_MB|TOTAL_PGA_ALLOCATED_MB|DB_SIZE_ALLOCATED_GB|DB_SIZE_IN_USE_GB|DB_LONG_SIZE_GB|DG_DATABASE_ROLE|DG_PROTECTION_MODE|DG_PROTECTION_LEVEL|DB_SIZE_TEMP_ALLOCATED_GB|DB_SIZE_REDO_ALLOCATED_GB|EBS_OWNER|SIEBEL_OWNER|PSFT_OWNER|RDS_FLAG|OCI_AUTONOMOUS_FLAG|DBMS_CLOUD_PKG_INSTALLED|APEX_INSTALLED|SAP_OWNER|DB_UNIQUE_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID 
 WITH vdbsummary AS (
 SELECT '&&v_host'
        || '_'
@@ -47,7 +47,7 @@ SELECT '&&v_host'
                 GROUP  BY TRUNC(first_time)),
                v$log)                                                           AS redo_gb_per_day,
        (SELECT COUNT(1)
-        FROM   gv$instance)                                                     AS rac_dbinstaces,
+        FROM   gv$instance)                                                     AS rac_dbinstances,
        (SELECT value
         FROM   nls_database_parameters a
         WHERE  a.parameter = 'NLS_LANGUAGE')
@@ -59,7 +59,7 @@ SELECT '&&v_host'
        || (SELECT value
            FROM   nls_database_parameters a
            WHERE  a.parameter = 'NLS_CHARACTERSET')                             AS characterset,
-       (SELECT platform_name
+       (SELECT &v_platform_name as  platform_name
         FROM   v$database)                                                      AS platform_name,
        (SELECT TO_CHAR(startup_time, 'YYYY-MM-DD HH24:MI:SS')
         FROM   v$instance)                                                      AS startup_time,
@@ -103,15 +103,15 @@ SELECT '&&v_host'
              v$logfile f
         WHERE f.group# = l.group#     )                                         AS db_size_redo_allocated_gb,
 @&EXTRACTSDIR/app_schemas.sql
-        , (SELECT db_unique_name
+        , (SELECT &v_db_unique_name as db_unique_name
            FROM v$database)                                                     AS db_unique_name
 FROM   dual)
 SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , force_logging ,
-       redo_gb_per_day , rac_dbinstaces , characterset , platform_name , startup_time , user_schemas ,
+       redo_gb_per_day , rac_dbinstances , characterset , platform_name , startup_time , user_schemas ,
 	   buffer_cache_mb , shared_pool_mb , total_pga_allocated_mb , db_size_allocated_gb , db_size_in_use_gb ,
 	   db_long_size_gb , dg_database_role , dg_protection_mode , dg_protection_level, 
            db_size_temp_allocated_gb, db_size_redo_allocated_gb,
            ebs_owner, siebel_owner, psft_owner, rds_flag, oci_autonomous_flag, dbms_cloud_pkg_installed,
-           apex_installed, sap_owner, db_unique_name, '&v_uniq_id' AS V_UNIQ_ID
+           apex_installed, sap_owner, db_unique_name, '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vdbsummary;
 spool off

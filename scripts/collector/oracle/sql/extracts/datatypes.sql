@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__datatypes__&v_tag
-
+prompt PKEY|CON_ID|OWNER|DATA_TYPE|CNT|DATA_LENGTH|DATA_PRECISION|DATA_SCALE|AVG_COL_LEN|DISTINCT_TABLE_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdtype AS (
 SELECT /*+ USE_HASH(b a) NOPARALLEL */ '&&v_host'
        || '_'
@@ -48,6 +48,6 @@ GROUP  BY '&&v_host'
 )
 SELECT pkey , con_id , owner , data_type , cnt,
        data_length, data_precision, data_scale, avg_col_len, distinct_table_count,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vdtype;
 spool off

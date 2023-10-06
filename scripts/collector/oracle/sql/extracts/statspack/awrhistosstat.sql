@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 spool &outputdir/opdb__awrhistosstat__&v_tag
-
+prompt PKEY|DBID|INSTANCE_NUMBER|HH|STAT_NAME|HH24_TOTAL_SECS|CUMULATIVE_VALUE|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|MIN_VALUE|MAX_VALUE|SUM_VALUE|COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH v_osstat_all
      AS (SELECT os.dbid,
                      os.instance_number,
@@ -104,7 +104,7 @@ GROUP  BY '&&v_host'
 SELECT pkey, dbid, instance_number, hh24, stat_name, hh24_total_secs ,
        cumulative_value, avg_value, mode_value, median_value, PERC50, PERC75, PERC90, PERC95, PERC100,
        min_value, max_value, sum_value, count,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vossummary;
 
 spool off

@@ -17,13 +17,19 @@ limitations under the License.
 
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
+
 DECLARE @PKEY AS VARCHAR(256)
 DECLARE @CLOUDTYPE AS VARCHAR(256)
 DECLARE @PRODUCT_VERSION AS INTEGER
+DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
+DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
 SELECT @PKEY = N'$(pkey)';
+SELECT @CLOUDTYPE = 'NONE';
 SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
-SELECT @CLOUDTYPE = 'NONE'
+SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
+SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
+
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
@@ -80,7 +86,12 @@ IF @CLOUDTYPE = 'AZURE'
         '''' as cluster_block_size
     FROM sum_sizes');
 
-SELECT @PKEY as PKEY, a.* from #gcpDMADiskVolumeInfo a;
+SELECT 
+    @PKEY as PKEY, 
+    a.*, 
+    @DMA_SOURCE_ID as dma_source_id,
+    @DMA_MANUAL_ID as dma_manual_id
+from #gcpDMADiskVolumeInfo a;
 
 IF OBJECT_ID('tempdb..#gcpDMADiskVolumeInfo') IS NOT NULL  
    DROP TABLE #gcpDMADiskVolumeInfo;

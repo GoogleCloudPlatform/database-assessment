@@ -15,7 +15,7 @@ limitations under the License.
 */
 COLUMN HOUR FORMAT A4
 spool &outputdir/opdb__dbahistsysstat__&v_tag
-
+prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|STAT_NAME|CNT|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|MIN_VALUE|MAX_VALUE|SUM_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsysstat AS (
 SELECT
        '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora' as pkey,
@@ -88,7 +88,7 @@ GROUP BY
 SELECT pkey , dbid , instance_number , hour , stat_name , cnt ,
        avg_value , mode_value , median_value , min_value , max_value ,
 	   sum_value , perc50 , perc75 , perc90 , perc95 , perc100,
-	       '&v_uniq_id' AS V_UNIQ_ID
+	       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vsysstat;
 
 spool off

@@ -44,7 +44,7 @@
 #>
 Param(
 [Parameter(Mandatory=$true)][string]$serverName="",
-[Parameter(Mandatory=$true)][string]$port="",
+[Parameter(Mandatory=$true)][string]$port="default",
 [Parameter(Mandatory=$true)][string]$user="",
 [Parameter(Mandatory=$true)][string]$pass="",
 [Parameter(Mandatory=$false)][string]$collectionUserName="",
@@ -53,9 +53,6 @@ Param(
 
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
-    Exit 1
-} elseif ([string]::IsNullorEmpty($port)) {
-    Write-Output "Server Admin Port parameter $port is empty.  Ensure that the parameter is provided"
     Exit 1
 } elseif ([string]::IsNullorEmpty($user)) {
     Write-Output "Server Admin Username parameter $user is empty.  Ensure that the parameter is provided"
@@ -71,16 +68,13 @@ if ([string]::IsNullorEmpty($serverName)) {
     Exit 1
 }
 
-Write-Output "Creating Collection User in $serverName"
-
-
-if ([string]::IsNullorEmpty($port)) {
+if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
     Write-Output "Creating Collection User in $serverName"
-    sqlcmd -S $serverName -i sql\createCollectionUser.sql -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
+    sqlcmd -S $serverName -i sql\createCollectionUser.sql -d master -U $user -P $pass -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
 } else {
     $serverName = "$serverName,$port"
     Write-Output "Creating Collection User in $serverName, using PORT $port"
-    sqlcmd -S $serverName -i sql\createCollectionUser.sql -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
+    sqlcmd -S $serverName -i sql\createCollectionUser.sql -d master -U $user -P $pass -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
 }
 
 Exit 0

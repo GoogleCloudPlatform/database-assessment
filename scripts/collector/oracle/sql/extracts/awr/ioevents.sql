@@ -15,7 +15,7 @@ limitations under the License.
 */
 column hour format a4
 spool &outputdir/opdb__ioevents__&v_tag
-
+prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|WAIT_CLASS|EVENT_NAME|TOT_WAITS_DELTA_VALUE_P95|TOT_TOUT_DELTA_VALUE_P95|TIME_WA_US_DELTA_VALUE_P95|TOT_WAITS_DELTA_VALUE_P100|TOT_TOUT_DELTA_VALUE_P100|TIME_WA_US_DELTA_VALUE_P100|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vrawev AS (
 SELECT '&&v_host'
        || '_'
@@ -98,7 +98,7 @@ SELECT pkey , dbid , instance_number , hour , wait_class , event_name ,
        tot_waits_delta_value_P100 ,
        tot_tout_delta_value_P100 ,
        time_wa_us_delta_value_P100,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vfev;
 spool off
 column hour clear

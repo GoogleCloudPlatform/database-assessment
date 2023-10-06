@@ -1,5 +1,6 @@
 
 spool &outputdir/opdb__defines__&v_tag
+prompt appinfo is OFF and set to "DB MIGRATION ASSESSMENT"
 SHOW appinfo
 SHOW colsep
 SHOW define
@@ -24,8 +25,10 @@ prompt v_a_con_id         = &v_a_con_id
 prompt v_b_con_id         = &v_b_con_id 
 prompt v_c_con_id         = &v_c_con_id 
 prompt v_h_con_id         = &v_h_con_id 
+prompt v_data_type_exp    = &v_data_type_exp
 prompt v_db_container_col = &v_db_container_col
 prompt v_dbid             = &v_dbid 
+prompt v_dma_source_id    = &v_dma_source_id
 prompt v_dbname           = &v_dbname 
 prompt v_dbparam_dflt_col = &v_dbparam_dflt_col 
 prompt v_dbversion        = &v_dbversion 
@@ -43,5 +46,4 @@ prompt v_umf_test         = &v_umf_test
 prompt Applies to STATSPACK collections only: 
 prompt v_max_snaptime     = &v_max_snaptime
 prompt v_min_snaptime     = &v_min_snaptime
-prompt v_uniq_id          = &v_uniq_id
 spool off

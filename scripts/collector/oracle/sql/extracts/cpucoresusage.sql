@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__cpucoresusage__&v_tag
-
+prompt PKEY|DT|CPU_COUNT|CPU_CORE_COUNT|CPU_SOCKET_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vcpursc AS (
 SELECT '&&v_host'
        || '_'
@@ -28,6 +28,6 @@ SELECT '&&v_host'
 FROM   dba_cpu_usage_statistics
 ORDER  BY timestamp)
 SELECT pkey , dt , cpu_count , cpu_core_count , cpu_socket_count,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vcpursc;
 spool off

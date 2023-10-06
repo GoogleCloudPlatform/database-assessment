@@ -15,7 +15,8 @@
 @echo off
 set user=
 set pass=
-set port=1433
+set port=default
+set serverName=
 
 :loop 
 if "%1" == "" goto evaluateUser
@@ -25,7 +26,6 @@ if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-collectionUserPass" set "pass=%2"
 
 set helpMessage=Usage: .\createUserForAssessmentWithWindowsAuth.bat -serverName [servername] -port [port number] -collectionUserName [username] -collectionUserPass [password]
-
 
 if %1 == help (
     echo %helpMessage%
@@ -43,7 +43,7 @@ if not [%user%]==[] goto execWithCustomCreds
 if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 if [%pass%] == [] goto error
-echo Creating Collection User with Custom Credentials
+
 PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createUserWithWindowsAuth.ps1 -serverName %serverName% -port %port% -collectionUserName %user% -collectionUserPass %pass%
 if %errorlevel% == 1 goto exit
 goto done

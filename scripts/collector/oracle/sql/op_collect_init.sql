@@ -32,7 +32,7 @@ set pagesize 0 embedded on
 set feed off
 set underline off
 set verify off
-set head on
+set head off
 set scan on
 set pause off
 set wrap on
@@ -79,7 +79,7 @@ column min_snaptime new_value v_min_snaptime noprint
 column max_snapid new_value v_max_snapid noprint
 column max_snaptime new_value v_max_snaptime noprint
 column umf_test new_value v_umf_test noprint
-column uniq_id new_value v_uniq_id noprint
+column p_dma_source_id new_value v_dma_source_id noprint
 column p_dbid new_value v_dbid noprint
 column p_tblprefix new_value v_tblprefix noprint
 column p_is_container new_value v_is_container noprint
@@ -115,50 +115,48 @@ SELECT substr(replace(version,'.',''),0,3) dbversion
 FROM v$instance
 /
 
---select d.dbid || '_' || d.db_unique_name || '_' || i.host_name AS uniq_id
---from v$database d 
---  join (select host_name from gv$instance where inst_id = (select min(inst_id) from gv$instance)) i
---/
+COLUMN p_data_type_exp NEW_VALUE v_data_type_exp noprint
+COLUMN p_ora9ind NEW_VALUE v_ora9ind noprint
+SELECT CASE WHEN  '&v_dbversion' LIKE '9%' THEN 'data_type_col_9i.sql'
+            ELSE 'data_type_col_regex.sql'
+       END as p_data_type_exp,
+       CASE WHEN  '&v_dbversion' LIKE '9%' THEN '9i_'
+            ELSE ''
+       END AS p_ora9ind
+FROM dual;
+
+COLUMN p_dg_valid_role         new_value v_dg_valid_role         noprint
+COLUMN p_dg_verify             new_value v_dg_verify             noprint
+COLUMN p_db_unique_name        new_value v_db_unique_name        noprint
+COLUMN p_platform_name         new_value v_platform_name         noprint
+SELECT 
+        '''N/A''' AS p_dg_valid_role, 
+        '''N/A''' AS p_dg_verify,
+        'name'    AS p_db_unique_name,
+        '''N/A''' AS p_platform_name
+FROM DUAL 
+WHERE '&v_dbversion' LIKE '9%'
+UNION
+SELECT
+        REPLACE('REPLACE(valid_role ,"|", " ")', chr(34), chr(39)) ,
+        'verify'  ,
+        'db_unique_name' AS p_db_unique_name,
+        'platform_name'  AS p_platform_name
+FROM DUAL
+WHERE '&v_dbversion' NOT LIKE '9%';
 
 column vname new_value v_name noprint
 SELECT min(object_name) AS vname 
 FROM dba_objects 
 WHERE object_name IN ('V$INSTANCE', 'GV$INSTANCE');
 
-SELECT lower(i.host_name||'_'||d.db_unique_name||'_'||d.dbid) AS uniq_id
+SELECT lower(i.host_name||'_'||&v_db_unique_name||'_'||d.dbid) AS p_dma_source_id
 FROM ( 
 	SELECT version, host_name
 	FROM &&v_name 
 	WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v$database d
 /
 
-/*
-WITH control_params AS 
-(
-SELECT 'dba' as tblprefix,
-       0 as is_container,
-       '''N/A''' as editionable_col,
-       '112' as this_version,
-       'op_collect_nopluggable_info.sql' as do_pluggable,
-       '''N/A''' as db_container_col
-FROM DUAL
-UNION
-SELECT 'cdb' as tblprefix,
-       1 as is_container,
-       'EDITIONABLE' as editionable_col,
-       'OTHER' as this_version,
-       'op_collect_pluggable_info.sql' as do_pluggable,
-       'cdb'  as db_container_col
-FROM DUAL
-)
-SELECT tblprefix AS p_tblprefix,
-       is_container AS p_is_container,
-       editionable_col AS p_editionable_col, 
-       do_pluggable AS p_dopluggable,
-       db_container_col as p_db_container_col
-FROM control_params WHERE ('&v_dbversion'  = '112' AND this_version = '&v_dbversion') 
-                       OR ('&v_dbversion' != '112' AND this_version = 'OTHER')
-*/
 
 var lv_tblprefix VARCHAR2(3);
 var lv_is_container NUMBER;
@@ -218,7 +216,7 @@ BEGIN
     ELSE
       :pdb_logging_flag := 'Y';
     END IF; 
-  ELSE IF  '&v_dbversion'  LIKE '11%' OR  '&v_dbversion'  LIKE '10%' THEN
+  ELSE IF  '&v_dbversion'  LIKE '11%' OR  '&v_dbversion'  LIKE '10%'  OR  '&v_dbversion'  LIKE '9%'  THEN
           :dflt_value_flag := 'N';
           :pdb_logging_flag := 'N';
        END IF;
@@ -358,7 +356,10 @@ BEGIN
            l_tab_name := 'STATS$SNAPSHOT'; 
            l_col_name := 'snap_time';
          END IF;
-       ELSE l_tab_name :=  'ERROR - Unexpected parameter: &v_dodiagnostics';
+       ELSE IF  '&v_dodiagnostics' = 'nostatspack' THEN
+           :sp  := 'prompt_nostatspack.sql';
+         ELSE l_tab_name :=  'ERROR - Unexpected parameter: &v_dodiagnostics';
+         END IF;
        END IF;
   END IF; 
   BEGIN
@@ -431,4 +432,8 @@ FROM DUAL;
 column CON_ID &v_h_con_id
 
 set numwidth 48
-column v_uniq_id format a100
+column v_dma_source_id format a100
+column v_dma_manual_id format a100
+column dma_source_id format a100
+column dma_manual_id format a100
+

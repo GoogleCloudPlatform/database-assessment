@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__compressbytype__&v_tag
-
+prompt PKEY|CON_ID|OWNER|BASIC|OLTP|QUERY_LOW|QUERY_HIGH|ARCHIVE_LOW|ARCHIVE_HIGH|TOTAL_GB|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vcompresstype AS (
      SELECT '&&v_host'
             || '_'
@@ -93,7 +93,7 @@ WITH vcompresstype AS (
      )
 SELECT pkey , con_id , owner , basic , oltp , query_low ,
        query_high , archive_low , archive_high , total_gb,
-       '&v_uniq_id' AS V_UNIQ_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
 FROM vcompresstype
 ORDER BY total_gb DESC;
 spool off
