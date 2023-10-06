@@ -1,7 +1,7 @@
 \i sql/init.sql
 \i sql/applications.sql
---\i sql/awsextensiondependency.sql
---\i sql/awsoracleexists.sql
+\i sql/awsextensiondependency.sql
+\i sql/awsoracleexists.sql
 --\i sql/awsoracleversion.sql
 \i sql/bgwriterstats.sql
 \i sql/databasesize.sql
