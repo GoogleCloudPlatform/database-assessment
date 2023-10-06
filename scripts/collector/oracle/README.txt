@@ -9,9 +9,18 @@ for analysis by Database Migration Assessment.
     This utility extracts metadata about the tables, partitions and SQL workload in a database into CSV files.
     These CSV files are then used by Database Migration Assessment internally to analyze the data with Google Database Migration Assessment.
 
+    a) License Requirements
+    -----------------------
+    !!! IMPORTANT !!! Google Database Migration Assessment accesses DBA_HIST% views that are licensed
+    separately under the Oracle Diagnostics Pack and DBMS_SQLTUNE/DBMS_SQL_MONITOR packages
+    to generate Real-Time SQL Monitoring reports that are licensed separately under the
+    Oracle Tuning Pack. Please ensure you have the correct licenses to run this utility.
+
     b) Database Privileges
     ----------------------
-    TBD
+    This utility must be run as a database user with privileges to SELECT from certain data dictionary views.
+    The script sql/setup/grants_wrapper.sql is supplied to grant the required privileges.  Instructions for
+    exeuting it are below.
 
     c) System Requirements
     ----------------------
@@ -23,7 +32,8 @@ for analysis by Database Migration Assessment.
     grep 
     locale
     mkdir
-    sed 
+    sed
+    sqlplus
     tar
     tr
     which
@@ -35,12 +45,45 @@ for analysis by Database Migration Assessment.
 
     a) Unzip the install archive.
 
-    b) TBD
+    b) Ensure sqlplus is in the path.
+
+    c) If the extract will be run by a user that does not have SYSDBA privilege, connect to the database 
+       as a user with SYSDBA privileges and create the user if needed.  If this is a multi-tenant database,
+       create the user as a common user in the root container. The Dma_collector does not currently support
+       running in individual pluggable databases.
+
+        sqlplus "sys/password@//hostname:port/dbservicename"
+        SQL> create user DMA_COLLECTOR identified by password;
+        SQL> grant connect, create session to DMA_COLLECTOR;
+
+    d) Execute grants_wrapper.sql.  You will be prompted for the name of a database user 
+       (Note that input is case-sensitive and must match the username created above) to be granted 
+       privileges on the objects required for data collection.
+       You will also be prompted whether or not to allow access to the AWR/ASH data.
+
+    Ex:
+        SQL> @grants_wrapper.sql
+
+        SQL> Please enter the DB Local Username(Or CDB Username) to receive all required grants: DMA_COLLECTOR
+        SQL> Please enter Y or N to allow or disallow use of the Tuning and Diagnostic Pack (AWR/ASH) data (Y) Y
+
+    e) The grant_wrapper script will grant privileges required and will output a list of what has been granted.
 
 3. Execution
 ------------
 
-    TBD
+    a) Execute collect-data.sh, passing the database connection string and indicator on whether to use AWR/ASH diagnostic data.
+
+        To use the AWR/ASH data:
+        ./collect-data.sh 'username/password@//hostname.domain.com:1521/dbname.domain.com' UseDiagnostics
+
+        To prevent use of AWR/ASH data and use STATSPACK data (if available) instead:
+        ./collect-data.sh 'username/password@//hostname.domain.com:1521/dbname.domain.com' NoDiagnostics
+
+        Notes:
+            1) Google Database Migration Assessment Data Extractor extracts data for the entire database. In multitenant
+               CDB databases, you must connect to the container database.  Running this from within a 
+               pluggable database will not collect the proper data.
 
 
 4. Results
