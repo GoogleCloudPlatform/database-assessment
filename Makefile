@@ -127,7 +127,7 @@ package-collector:
 	
 	@echo  "=> Packaging Database Migration Assessment Collector for Postgres..."
 	@echo "Zipping files in ./$(BUILD_DIR)/collector/postgres"
-	@cd $(BASE_DIR)/$(BUILD_DIR)/collector/postgres; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-posrgres.zip  *
+	@cd $(BASE_DIR)/$(BUILD_DIR)/collector/postgres; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-postgres.zip  *
 
 .PHONY: build
 build: build-collector        ## Build and package the collectors
