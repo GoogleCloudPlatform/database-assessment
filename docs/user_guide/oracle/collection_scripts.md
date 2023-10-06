@@ -116,14 +116,14 @@ or
 Collections can be run as SYS if needed by setting ORACLE_SID and running on the database host:
 
 ```shell
-./collect-data.sh '/ as sysdba' --statsSrc AWR 
+./collect-data.sh --connectionStr '/ as sysdba' --statsSrc AWR 
 ```
 
 OR
 To avoid using the licensed Oracle Tuning and Diagnostics pack data:
 
 ```shell
-./collect-data.sh '/ as sysdba' --statsSrc STATSPACK
+./collect-data.sh  --connectionStr '/ as sysdba' --statsSrc STATSPACK
 ```
 
 ## Upload Collections
