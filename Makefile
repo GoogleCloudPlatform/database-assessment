@@ -62,8 +62,8 @@ clean-collector:
 
 .PHONY: build-collector
 build-collector: clean-collector      ## Build the collector SQL scripts.
-	@echo "=> Building Assessment Data Collection Scripts for Oracle version $(VERSION)..."
 	@rm -rf ./$(BUILD_DIR)/collector
+	@echo "=> Building Assessment Data Collection Scripts for Oracle version $(VERSION)..."
 	@mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts
 	@mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts/awr
 	@mkdir -p $(BUILD_DIR)/collector/oracle/sql/setup
@@ -89,7 +89,6 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 	@echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/sqlserver/VERSION.txt
 
 	@echo "=> Building Assessment Data Collection Scripts for MySQL version $(VERSION)..."
-	@rm -rf ./$(BUILD_DIR)/collector
 	@mkdir -p $(BUILD_DIR)/collector/mysql/sql/
 	@cp scripts/collector/mysql/sql/*.sql $(BUILD_DIR)/collector/mysql/sql
 	@cp scripts/collector/mysql/collect-data.sh $(BUILD_DIR)/collector/mysql/
@@ -98,7 +97,6 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 	@echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/mysql/VERSION.txt
 
 	@echo "=> Building Assessment Data Collection Scripts for Postgresql version $(VERSION)..."
-	@rm -rf ./$(BUILD_DIR)/collector
 	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/
 	@cp scripts/collector/postgres/sql/*.sql $(BUILD_DIR)/collector/postgres/sql
 	@cp scripts/collector/postgres/collect-data.sh $(BUILD_DIR)/collector/postgres/
