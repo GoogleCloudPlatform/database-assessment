@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.21"
+OpVersion="4.3.23"
 dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
@@ -34,10 +34,20 @@ SQL_DIR=${SCRIPT_DIR}/sql
 
 GREP=$(which grep)
 SED=$(which sed)
-if [ $(uname) = "SunOS" ]
+MD5SUM=$(which md5sum)
+MD5COL=1
+
+if [ "$(uname)" = "SunOS" ]
 then
       GREP=/usr/xpg4/bin/grep
       SED=/usr/xpg4/bin/sed
+fi
+
+if [ "$(uname)" = "HP-UX" ]; then
+  if [ -f /usr/local/bin/md5 ]; then
+    MD5SUM=/usr/local/bin/md5
+    MD5COL=4
+  fi
 fi
 
 ZIP=$(which zip 2>/dev/null)
@@ -147,10 +157,16 @@ do
     sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
     cp sed_${V_FILE_TAG}.tmp ${outfile}
     rm sed_${V_FILE_TAG}.tmp
+  else if [ "$(uname)" = "HP-UX" ]
+  then
+    sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
+    cp sed_${V_FILE_TAG}.tmp ${outfile}
+    rm sed_${V_FILE_TAG}.tmp
   else
     sed -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d' ${outfile} > sed_${V_FILE_TAG}.tmp
     cp sed_${V_FILE_TAG}.tmp ${outfile}
     rm sed_${V_FILE_TAG}.tmp
+  fi
   fi
   fi
  fi
@@ -196,7 +212,7 @@ fi
 
 for file in $(ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt)
 do
- MD5=$(md5sum $file | cut -d ' ' -f 1)
+ MD5=$(${MD5SUM} $file | cut -d ' ' -f ${MD5COL})
  echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
 done
 
