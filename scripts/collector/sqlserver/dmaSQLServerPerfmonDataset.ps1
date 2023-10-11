@@ -34,7 +34,7 @@
 .PARAMETER dmaManualId
     Customer Unique collection tag or dma manual unique id (Optional)
 .EXAMPLE
-    C:\dmaSQLServerPerfmonDataset.ps1 -operation create -mssqlInstanceName [named Instance] / $null
+    C:\dmaSQLServerPerfmonDataset.ps1 -operation create -managedInstanceName [named Instance] / $null
 .NOTES
     https://googlecloudplatform.github.io/database-assessment/
 #>
