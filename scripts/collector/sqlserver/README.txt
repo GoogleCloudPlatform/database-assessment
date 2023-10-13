@@ -95,7 +95,15 @@ Operating System Versions:
 3. Execution
 ------------
 
+#### Perfmon Requirements (Optional)
+
     If you have your own perfmon counters capturing the following statistics or run on a SQL Server Product such as Amazon RDS or Google CloudSQL for SQL Server, skip to step b, otherwise proceed to step a.
+
+    NOTE: Executing Perfmon is OPTIONAL. If not executed the tool will evaluate complexity of migration, but not rightsizing requirements.
+
+    If perfmon is not gathered, skip to step (b).
+
+    Perfmon Counters gahtered:
 
             \Memory\Available MBytes
             \PhysicalDisk(_Total)\Avg. Disk Bytes/Read

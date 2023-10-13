@@ -105,7 +105,7 @@ In order to begin running the Database Migration Assessment Collection process, 
                     -serverName  ** Required
                     -port  ** Optional (Defaults to 1433)
                     -collectionUserName  ** Required
-                    -collectionUserPass  ** Required
+                    -collectionUserPass  ** Optional (If not provided will be prompted)
 
             For a Named Instance:
                 createUserForAssessmentWithWindowsAuth.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
@@ -118,6 +118,8 @@ In order to begin running the Database Migration Assessment Collection process, 
 ## Execution
 
 #### Perfmon Requirements (Optional)
+
+- NOTE: Executing Perfmon is OPTIONAL. If not executed the tool will evaluate complexity of migration, but not rightsizing requirements.
 
 - If you have your own perfmon counters capturing the following statistics or run on a SQL Server Product such as Amazon RDS or Google CloudSQL for SQL Server, skip to step b, otherwise proceed to step a.
   \*\* The Perfmon data collection process is optional and can be safely skipped. However, there will be no right sizing information in the assessment report.
