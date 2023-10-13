@@ -139,7 +139,7 @@ BEGIN
 END
 
 --hybrid buffer pool enabled
-SELECT @ROW_COUNT_VAR = count(*) from sys.server_memory_optimized_hybrid_buffer_pool_configuration;
+
 
 IF @CLOUDTYPE = 'AZURE'
 BEGIN
@@ -157,6 +157,7 @@ ELSE
 BEGIN
     IF @PRODUCT_VERSION >= 15
     BEGIN
+        SELECT @ROW_COUNT_VAR = count(*) from sys.server_memory_optimized_hybrid_buffer_pool_configuration;
         IF @ROW_COUNT_VAR = 0
         BEGIN
             exec('INSERT INTO #FeaturesEnabled 
