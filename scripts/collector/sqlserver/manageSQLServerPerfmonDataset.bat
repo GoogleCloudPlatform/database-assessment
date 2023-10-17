@@ -15,17 +15,17 @@
 @echo off
 
 set validPerfmonOperations=create start stop delete collect createemptyfile help
-set validInstances=default managed
+set validInstances=default named
 set isValidPerfmonOperation=false
 set isValidInstance=false
 
 
 set perfmonOperation=""
 set instance=""
-set managedInstanceName=
+set namedInstanceName=
 
-set helpMessage=Usage manageSQLServerPerfmonDataset.bat -operation [create/start/stop/delete/collect/createemptyfile/help] -instanceType [managed/default] -managedInstanceName [instance name]
-set helpExample=Example: .\manageSQLServerPerfmonDataset.bat -operation create -instanceType default or .\manageSQLServerPerfmonDataset.bat -operation create -instanceType managed -managedInstanceName SQL2019
+set helpMessage=Usage manageSQLServerPerfmonDataset.bat -operation [create/start/stop/delete/collect/createemptyfile/help] -instanceType [named/named] -namedInstanceName [instance name]
+set helpExample=Example: .\manageSQLServerPerfmonDataset.bat -operation create -instanceType default or .\manageSQLServerPerfmonDataset.bat -operation create -instanceType named -namedInstanceName SQL2019
 
 if [%1]==[] (
     goto helpOperation
@@ -34,7 +34,7 @@ if [%1]==[] (
 :loop 
 if /i "%1" == "-operation" set "perfmonOperation=%2"
 if /i "%1" == "-instanceType" set "instance=%2"
-if /i "%1" == "-managedInstanceName" set "managedInstanceName=%2"
+if /i "%1" == "-namedInstanceName" set "namedInstanceName=%2"
 if /i "%1" == "help" goto helpOperation
 if "%1" == "" goto runAssessmentOperation
 
@@ -45,7 +45,7 @@ goto :loop
 
 echo perfmonOperation is %perfmonOperation%
 echo instance is %instance%
-echo managedInstanceName is %managedInstanceName%
+echo namedInstanceName is %namedInstanceName%
 
 if %perfmonOperation%==help (
     goto helpOperation
@@ -80,9 +80,9 @@ if %isValidInstance%==false (
     goto exit
 )
 
-if %instance%==managed (
-    if [%managedInstanceName%]==[] (
-        echo Please pass a valid entry for parameter -managedInstanceName
+if %instance%==named (
+    if [%namedInstanceName%]==[] (
+        echo Please pass a valid entry for parameter -namedInstanceName
         goto exit
     )
 )
@@ -94,9 +94,9 @@ if %instance%==default (
     goto done
 )
 
-if %instance%==managed (
-    echo Managing Perfmon Collection for Managed Instance %managedInstanceName%
-    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dmaSQLServerPerfmonDataset.ps1 -operation %perfmonOperation% -managedInstanceName %managedInstanceName%
+if %instance%==named (
+    echo Managing Perfmon Collection for named Instance %namedInstanceName%
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dmaSQLServerPerfmonDataset.ps1 -operation %perfmonOperation% -namedInstanceName %namedInstanceName%
 
     goto done
 )

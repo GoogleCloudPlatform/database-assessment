@@ -22,7 +22,7 @@
 		stop - stops the collection
 		delete - deletes the collection and leaves any data set collection files present int eh appropriate location
 		collect - moves the dataset collection to the downloads directory and creates a tar of the results
-.PARAMETER managedInstanceName
+.PARAMETER namedInstanceName
     Enter the named instance name (Optional, unless using a named instance)
 	If collecting from a named instance, enter the instance name or the default instance will be used.
 .PARAMETER perfmonOutDir
@@ -34,7 +34,7 @@
 .PARAMETER dmaManualId
     Customer Unique collection tag or dma manual unique id (Optional)
 .EXAMPLE
-    C:\dmaSQLServerPerfmonDataset.ps1 -operation create -managedInstanceName [named Instance] / $null
+    C:\dmaSQLServerPerfmonDataset.ps1 -operation create -namedInstanceName [named Instance] / $null
 .NOTES
     https://googlecloudplatform.github.io/database-assessment/
 #>
@@ -46,7 +46,7 @@ param (
 	[Parameter(
 		Mandatory=$False,
 		HelpMessage="The instance name if a named instance is used"
-	)][string]$managedInstanceName=$null,
+	)][string]$namedInstanceName=$null,
 	[Parameter(
 		Mandatory=$False,
 		HelpMessage="The dir name for the final perfmon combined file"
@@ -60,7 +60,7 @@ param (
 		HelpMessage="The pkey value for the final perfmon combined file"
 	)][string]$pkey=$null,
 	[Parameter(
-		Mandatory=$True,
+		Mandatory=$False,
 		HelpMessage="The dma_source_id value for the final perfmon combined file"
 	)][string]$dmaSourceId,
 	[Parameter(
@@ -71,18 +71,18 @@ param (
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
 
-if ($null -eq $machinename) {
+if (!$machinename) {
 	$machinename = hostname
 }
 
-if ($null -eq $current_ts) {
+if (!$current_ts) {
 	$current_ts = Get-Date -Format "MMddyyyyTHHmmss"
 }
 
-if ($null -eq $managedInstanceName) {
-	$perfmonLogFile = 'opdb__perfMonLog' + '__' + $operation + '_' + $machinename + '_MSSQLSERVER' + $current_ts + '.log'
+if ($namedInstanceName) {
+	$perfmonLogFile = 'opdb__perfMonLog' + '__' + $operation + '_' + $machinename + '_' + $namedInstanceName + '_' + $current_ts + '.log'
 } else {
-	$perfmonLogFile = 'opdb__perfMonLog' + '__' + $operation + '_' + $machinename + '_' + $managedInstanceName + '_' + $current_ts + '.log'
+	$perfmonLogFile = 'opdb__perfMonLog' + '__' + $operation + '_' + $machinename + '_MSSQLSERVER_' + $current_ts + '.log'
 }
 
 function CreateDMAPerfmonDataSet 
@@ -584,8 +584,8 @@ function CreateEmptyFile
 if (!$operation) {
 	$operation = read-host -Prompt "Enter an operation: create, stop, delete, collect, createemptyfile" 
 }
-if ($managedInstanceName) {
-	$datasetName = "Google-DMA-SQLServerDataSet-$managedInstanceName"
+if ($namedInstanceName) {
+	$datasetName = "Google-DMA-SQLServerDataSet-$namedInstanceName"
 } else {
 	$datasetName = "Google-DMA-SQLServerDataSet-MSSQLSERVER"
 }
@@ -598,7 +598,7 @@ if (!(Test-Path -Path $PSScriptRoot\$perfmonOutDir)) {
 
 
 if ($operation.ToLower() -eq "create") {
-	CreateDMAPerfmonDataSet -instanceName $managedInstanceName -dataSet $datasetName -perfmonOutDir $perfmonOutDir -logFile $perfmonLogFile
+	CreateDMAPerfmonDataSet -instanceName $namedInstanceName -dataSet $datasetName -perfmonOutDir $perfmonOutDir -logFile $perfmonLogFile
 } elseif ($operation.ToLower() -eq "start") {
 	StartDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -logFile $perfmonLogFile
 } elseif ($operation.ToLower() -eq "stop") {

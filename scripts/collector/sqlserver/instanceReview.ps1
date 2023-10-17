@@ -1,4 +1,4 @@
-﻿# Copyright 2023 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,6 +57,28 @@ Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
 $powerShellVersion = $PSVersionTable.PSVersion.Major
 $foldername = ""
 $errorCount = 0
+
+if ($ignorePerfmon -eq "true") {
+    Write-Host "#############################################################"
+    Write-Host "#                                                           #"
+    Write-Host "#  !!!! No Windows Perfmon Data Will be Collected !!!!      #"
+    Write-Host "#   A migration complexity score will be computed only ...  #"
+    Write-Host "#                                                           #"
+    Write-Host "#          No Right-Sizing Data will be collected           #"
+    Write-Host "#                                                           #"
+    Write-Host "#                                                           #"
+    Write-Host "#############################################################"
+    Write-Host ""
+    Write-Host ""
+    Write-Host ""
+    $ignorePerfmonAck = Read-Host -Prompt "Acknowledge with a 'Y' to Continue"
+
+    if ($ignorePerfmonAck.ToUpper() -ne "Y") {
+        Write-Host "Did not Acknowldege Perfmon Warning..."
+        Write-Host "Exiting Collector......."
+        Exit
+    }
+}
 
 if (([string]::IsNullorEmpty($collectionUserPass)) -or ([string]$collectionUserPass -eq "false")) {
 	Write-Output ""
