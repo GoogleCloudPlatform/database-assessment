@@ -105,7 +105,7 @@ In order to begin running the Database Migration Assessment Collection process, 
                     -serverName  ** Required
                     -port  ** Optional (Defaults to 1433)
                     -collectionUserName  ** Required
-                    -collectionUserPass  ** Required
+                    -collectionUserPass  ** Optional (If not provided will be prompted)
 
             For a Named Instance:
                 createUserForAssessmentWithWindowsAuth.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
@@ -118,6 +118,8 @@ In order to begin running the Database Migration Assessment Collection process, 
 ## Execution
 
 #### Perfmon Requirements (Optional)
+
+- NOTE: Executing Perfmon is OPTIONAL. If not executed the tool will evaluate complexity of migration, but not rightsizing requirements.
 
 - If you have your own perfmon counters capturing the following statistics or run on a SQL Server Product such as Amazon RDS or Google CloudSQL for SQL Server, skip to step b, otherwise proceed to step a.
   \*\* The Perfmon data collection process is optional and can be safely skipped. However, there will be no right sizing information in the assessment report.
@@ -151,19 +153,19 @@ In order to begin running the Database Migration Assessment Collection process, 
 
 - From a command prompt session in "Administrator Mode" on the server you would like to collect data on, execute the following command:
 
-* ManageSqlServerPerfmonDatset.bat
+* manageSQLServerPerfmonDataset.bat
   The following parameters can be specified:
   - -operation \*\* Required (create, start, stop, delete, collect, createemptyfile, help)
-  - -instanceType \*\* Required (default, managed)
-  - -mssqlInstanceName \*\* Required if instanceType is "managed" (should be the instance name without the server name)
+  - -instanceType \*\* Required (default, named)
+  - -namedInstanceName \*\* Required if instanceType is "named" (should be the instance name without the server name)
 
 To create and start the perfmon collection:
 
         For a default instance:
-            ManageSqlServerPerfmonDatset.bat -operation create -instanceType default
+            manageSQLServerPerfmonDataset.bat -operation create -instanceType default
 
         For a named instance:
-            ManageSqlServerPerfmonDatset.bat -operation create -instanceType managed -mssqlInstanceName [instance name]
+            manageSQLServerPerfmonDataset.bat -operation create -instanceType named -namedInstanceName [instance name]
 
 The script will create a permon data set that will collect the above metrics at a 1 minute interval for 8 days. The dataset will automatically stop after 8 days of collection. To get the most accurate statistics, it would be good to have this collection run over the busiest time for the server.
 

@@ -38,12 +38,12 @@ CREATE TABLE #myperms
   );
 INSERT INTO #myperms
 SELECT *
-FROM   Fn_my_permissions('sys.xp_regread', 'OBJECT')
+FROM   fn_my_permissions('sys.xp_regread', 'OBJECT')
 WHERE  Upper(permission_name) = 'EXECUTE'
        AND subentity_name = '';
 INSERT INTO #myperms
 SELECT *
-FROM   Fn_my_permissions('sys.xp_servicecontrol', 'OBJECT')
+FROM   fn_my_permissions('sys.xp_servicecontrol', 'OBJECT')
 WHERE  Upper(permission_name) = 'EXECUTE'
        AND subentity_name = '';
 SELECT @TABLE_PERMISSION_COUNT = Count(*)

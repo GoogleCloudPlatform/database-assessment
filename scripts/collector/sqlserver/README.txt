@@ -95,7 +95,15 @@ Operating System Versions:
 3. Execution
 ------------
 
+#### Perfmon Requirements (Optional)
+
     If you have your own perfmon counters capturing the following statistics or run on a SQL Server Product such as Amazon RDS or Google CloudSQL for SQL Server, skip to step b, otherwise proceed to step a.
+
+    NOTE: Executing Perfmon is OPTIONAL. If not executed the tool will evaluate complexity of migration, but not rightsizing requirements.
+
+    If perfmon is not gathered, skip to step (b).
+
+    Perfmon Counters gahtered:
 
             \Memory\Available MBytes
             \PhysicalDisk(_Total)\Avg. Disk Bytes/Read
@@ -123,19 +131,19 @@ Operating System Versions:
 
     a) From a command prompt session in "Administrator Mode" on the server you would like to collect data on, execute the following command:
    
-            ManageSqlServerPerfmonDatset.bat
+            manageSQLServerPerfmonDataset.bat
             The following parameters can be specified:
                 - -operation **Required (create, start, stop, delete, collect, createemptyfile, help)
-                - -instanceType **Required (default, managed)
-                - -mssqlInstanceName **Required if instanceType is "managed" (should be the instance name without the server name)
+                - -instanceType **Required (default, named)
+                - -namedInstanceName **Required if instanceType is "named" (should be the instance name without the server name)
 
             To execute the perfmon collection:
 
                 For a default instance:
-                    ManageSqlServerPerfmonDatset.bat -operation create -instanceType default
+                    manageSQLServerPerfmonDataset.bat -operation create -instanceType default
 
                 For a named instance:
-                    ManageSqlServerPerfmonDatset.bat -operation create -instanceType managed -mssqlInstanceName [instance name]
+                    manageSQLServerPerfmonDataset.bat -operation create -instanceType named -namedInstanceName [instance name]
 
         The script will create a permon data set that will collect the above metrics at a 1 minute interval for 8 days.  The dataset will automatically stop after 8 days of collection.  To get the most accurate statistics, it would be good to have this collection run over the busiest time for the server.
 

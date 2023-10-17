@@ -58,6 +58,28 @@ $powerShellVersion = $PSVersionTable.PSVersion.Major
 $foldername = ""
 $errorCount = 0
 
+if ($ignorePerfmon -eq "true") {
+    Write-Host "#############################################################"
+    Write-Host "#                                                           #"
+    Write-Host "#  !!!! No Windows Perfmon Data Will be Collected !!!!      #"
+    Write-Host "#   A migration complexity score will be computed only ...  #"
+    Write-Host "#                                                           #"
+    Write-Host "#          No Right-Sizing Data will be collected           #"
+    Write-Host "#                                                           #"
+    Write-Host "#                                                           #"
+    Write-Host "#############################################################"
+    Write-Host ""
+    Write-Host ""
+    Write-Host ""
+    $ignorePerfmonAck = Read-Host -Prompt "Acknowledge with a 'Y' to Continue"
+
+    if ($ignorePerfmonAck.ToUpper() -ne "Y") {
+        Write-Host "Did not Acknowldege Perfmon Warning..."
+        Write-Host "Exiting Collector......."
+        Exit
+    }
+}
+
 if (([string]::IsNullorEmpty($collectionUserPass)) -or ([string]$collectionUserPass -eq "false")) {
 	Write-Output ""
     Write-Output "Collection Username password parameter is not provided"
@@ -79,11 +101,11 @@ if ([string]::IsNullorEmpty($serverName)) {
     if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
         $inputServerName = $serverName
-        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
-        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v database=$database)
-        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1)
+        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
+        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -v database=$database)
+        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1)
         if ([string]$database -ne "all") {
-            $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v database=$database | findstr /v /c:"-"
+            $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -v database=$database | findstr /v /c:"-"
             if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
@@ -94,11 +116,11 @@ if ([string]::IsNullorEmpty($serverName)) {
         $inputServerName = $serverName
         $serverName = "$serverName,$port"
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
-        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
-        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v database=$database)
-        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1)
+        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -v database=$database | findstr /v /c:"---"
+        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -v database=$database)
+        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1)
         if ([string]$database -ne "all") {
-            $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v database=$database | findstr /v /c:"-"
+            $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -v database=$database | findstr /v /c:"-"
             if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
@@ -129,7 +151,7 @@ $current_ts = $values[4]
 $pkey = $values[5]
 $dmaSourceId = $dmaSourceIdObj[0]
 
-$op_version = "4.3.23"
+$op_version = "4.3.24"
 
 if ($ignorePerfmon -eq "true") {
     $perfCounterLabel = "NoPerfCounter"
@@ -256,31 +278,31 @@ foreach ($dbNameList in $dbNameArray) {
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Installed Components..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\componentsInstalled.sql -d master -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$compFileName
+    sqlcmd -S $serverName -i sql\componentsInstalled.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$compFileName
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Properties..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\serverProperties.sql -d master -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
+    sqlcmd -S $serverName -i sql\serverProperties.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server CloudSQL Unsupported Flag Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\dbServerUnsupportedFlags.sql -d master -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$dbServerFlags
+    sqlcmd -S $serverName -i sql\dbServerUnsupportedFlags.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$dbServerFlags
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Features in Use Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\dbServerFeatures.sql -d master -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
+    sqlcmd -S $serverName -i sql\dbServerFeatures.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Linked Server Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\linkedServers.sql -d master -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
+    sqlcmd -S $serverName -i sql\linkedServers.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Cluster Node Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\dbClusterNodes.sql -d master -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
+    sqlcmd -S $serverName -i sql\dbClusterNodes.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server DBCC Trace Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -d master -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
+    sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Disk Volume Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -d master -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
+    sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Configuration Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\dbServerConfigurationSettings.sql -d master -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$dbServerConfig
+    sqlcmd -S $serverName -i sql\dbServerConfigurationSettings.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" > $foldername\$dbServerConfig
    
 ### First establish headers for the collection files which could execute against multiple databases in the instance
 Set-Content -Path $foldername\$objectList -Encoding utf8 -Value "PKEY|database_name|schema_name|object_name|object_type|object_type_desc|object_count|lines_of_code|associated_table_name|dma_source_id|dma_manual_id"
@@ -294,25 +316,25 @@ Set-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8 -Value "PKEY|co
 ### Iterate through collections that could execute against multiple databases in the instance
 foreach ($databaseName in $dbNameArray) {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Object Info for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\objectList.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$objectList -Encoding utf8
+        sqlcmd -S $serverName -i sql\objectList.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$objectList -Encoding utf8
 
     WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Table Info for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\tableList.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$tableList -Encoding utf8
+        sqlcmd -S $serverName -i sql\tableList.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$tableList -Encoding utf8
 
     WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Index Info for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\indexList.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$indexList -Encoding utf8
+        sqlcmd -S $serverName -i sql\indexList.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$indexList -Encoding utf8
 
     WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Column Datatype Info for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\columnDatatypes.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$columnDatatypes -Encoding utf8
+        sqlcmd -S $serverName -i sql\columnDatatypes.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$columnDatatypes -Encoding utf8
 
     WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server User Connection Info for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\userConnectionInfo.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$userConnectionList -Encoding utf8
+        sqlcmd -S $serverName -i sql\userConnectionInfo.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$userConnectionList -Encoding utf8
 
     WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Database Size Info for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\dbSizes.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbsizes -Encoding utf8
+        sqlcmd -S $serverName -i sql\dbSizes.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbsizes -Encoding utf8
 
     WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server DMV Perfmon Info for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\dbServerDmvPerfmon.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8
+        sqlcmd -S $serverName -i sql\dbServerDmvPerfmon.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$collectionTag -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8
 }
 
 # Pull perfmon file if we are running from same server.  Generate empty file if running on remote server
@@ -323,18 +345,18 @@ if ($ignorePerfmon -eq "true") {
     if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
         .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $collectionTag
     } else {
-        .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $collectionTag
+        .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -namedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $collectionTag
     }
 } else {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving Perfmon Information..."  -logOperation "FILE"
     if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper())) {
         .\dmaSQLServerPerfmonDataset.ps1 -operation collect -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $collectionTag
     } elseif (($instancename -ne "MSSQLSERVER") -and ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper())) {
-        .\dmaSQLServerPerfmonDataset.ps1 -operation collect -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $collectionTag
+        .\dmaSQLServerPerfmonDataset.ps1 -operation collect -namedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $collectionTag
     } elseif (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
         .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $collectionTag
     } elseif (($instancename -ne "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
-        .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -managedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $collectionTag
+        .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -namedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $collectionTag
     }
 }
 
