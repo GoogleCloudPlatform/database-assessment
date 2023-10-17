@@ -110,7 +110,7 @@ function executeOP {
 connectString="$1"
 OpVersion=$2
 DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
-collectionTag="${4}"
+manualUniqueId="${4}"
 
 if ! [ -x "$(command -v ${SQLPLUS})" ]; then
   echo "Could not find ${SQLPLUS} command. Source in environment and try again"
@@ -121,7 +121,7 @@ fi
 
 ${SQLPLUS} -s /nolog << EOF
 connect ${connectString}
-@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${SQLOUTPUT_DIR} "${collectionTag}"
+@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${SQLOUTPUT_DIR} "${manualUniqueId}"
 exit;
 EOF
 
@@ -305,7 +305,7 @@ collectionUserPass=""
 dbType=""
 statsSrc=""
 connStr=""
-collectionTag=""
+manualUniqueId=""
 
  if [[ $(($# & 1)) == 1 ]] ;
  then
@@ -323,7 +323,7 @@ collectionTag=""
 	 elif [[ "$1" == "--dbType" ]];             then dbType=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
 	 elif [[ "$1" == "--statsSrc" ]];           then statsSrc=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
 	 elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
-	 elif [[ "$1" == "--collectionTag" ]];      then collectionTag="${2}"
+	 elif [[ "$1" == "--manualUniqueId" ]];      then manualUniqueId="${2}"
 	 else
 		 echo "Unknown parameter ${1}"
 		 printUsage
@@ -357,9 +357,9 @@ collectionTag=""
 	 fi
  fi
 
- if [[ "${collectionTag}" != "" ]]; then
-	 collectionTag=$(echo "${collectionTag}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
- else collectionTag='NA'
+ if [[ "${manualUniqueId}" != "" ]]; then
+	 manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+ else manualUniqueId='NA'
  fi
 
 
@@ -421,7 +421,7 @@ if [ $retval -eq 0 ]; then
       fi  
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS} "${collectionTag}"
+    executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS} "${manualUniqueId}"
     retval=$?
     if [ $retval -ne 0 ]; then
       createErrorLog  $(echo ${V_TAG} | sed 's/.csv//g')

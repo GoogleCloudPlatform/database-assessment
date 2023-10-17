@@ -34,6 +34,6 @@ WHERE dbid = &&v_dbid
 ORDER  BY name)
 SELECT pkey , con_id , name , currently_used , detected_usages ,
        total_samples , first_usage , last_usage , aux_count,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
 FROM vdbf;
 spool off

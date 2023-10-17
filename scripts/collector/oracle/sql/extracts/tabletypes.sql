@@ -155,7 +155,7 @@ SELECT '&&v_host'
        table_count,
        object_table,
        xml_table,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
 FROM  tblinfo;
 spool off
 COLUMN TEMPORARY CLEAR

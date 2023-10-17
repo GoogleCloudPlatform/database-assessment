@@ -71,6 +71,6 @@ GROUP  BY '&&v_host'
           owner)
 SELECT pkey , con_id , owner , pk , uk , ck ,
        ri , vwck , vwro , hashexpr , suplog , num_tables , total_cons,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
 FROM vnopk;
 spool off

@@ -99,7 +99,7 @@ SELECT pkey , dbid , instance_number , hour , wait_class , event_name ,
        tot_waits_delta_value_P100 ,
        tot_tout_delta_value_P100 ,
        time_wa_us_delta_value_P100,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
 FROM vfev;
 spool off
 column hour clear
