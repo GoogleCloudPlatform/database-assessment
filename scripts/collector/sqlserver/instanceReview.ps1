@@ -95,7 +95,7 @@ if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Collection Username parameter $collectionUserName is empty.  Ensure that the parameter is provided"
     Exit 1
 } elseif (((checkStringForSpecialChars -inputString $manualUniqueId) -eq "fail") -and (![string]::IsNullorEmpty($manualUniqueId))) {
-    Write-Output "Collection Tag parameter $manualUniqueId contains spaces or special characters.  Ensure that the parameter contains only letters, numbers and no spaces"
+    Write-Output "Manual Unique Id parameter $manualUniqueId contains spaces or special characters.  Ensure that the parameter contains only letters, numbers and no spaces"
     Exit 1
 } else {
     if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
