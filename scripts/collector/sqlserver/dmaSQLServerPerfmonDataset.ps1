@@ -60,7 +60,7 @@ param (
 		HelpMessage="The pkey value for the final perfmon combined file"
 	)][string]$pkey=$null,
 	[Parameter(
-		Mandatory=$True,
+		Mandatory=$False,
 		HelpMessage="The dma_source_id value for the final perfmon combined file"
 	)][string]$dmaSourceId,
 	[Parameter(
@@ -71,18 +71,18 @@ param (
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
 
-if ($null -eq $machinename) {
+if (!$machinename) {
 	$machinename = hostname
 }
 
-if ($null -eq $current_ts) {
+if (!$current_ts) {
 	$current_ts = Get-Date -Format "MMddyyyyTHHmmss"
 }
 
-if ($null -eq $namedInstanceName) {
-	$perfmonLogFile = 'opdb__perfMonLog' + '__' + $operation + '_' + $machinename + '_MSSQLSERVER' + $current_ts + '.log'
-} else {
+if ($namedInstanceName) {
 	$perfmonLogFile = 'opdb__perfMonLog' + '__' + $operation + '_' + $machinename + '_' + $namedInstanceName + '_' + $current_ts + '.log'
+} else {
+	$perfmonLogFile = 'opdb__perfMonLog' + '__' + $operation + '_' + $machinename + '_MSSQLSERVER_' + $current_ts + '.log'
 }
 
 function CreateDMAPerfmonDataSet 

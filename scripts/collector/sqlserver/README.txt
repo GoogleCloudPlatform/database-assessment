@@ -131,7 +131,7 @@ Operating System Versions:
 
     a) From a command prompt session in "Administrator Mode" on the server you would like to collect data on, execute the following command:
    
-            ManageSqlServerPerfmonDatset.bat
+            manageSQLServerPerfmonDataset.bat
             The following parameters can be specified:
                 - -operation **Required (create, start, stop, delete, collect, createemptyfile, help)
                 - -instanceType **Required (default, named)
@@ -140,10 +140,10 @@ Operating System Versions:
             To execute the perfmon collection:
 
                 For a default instance:
-                    ManageSqlServerPerfmonDatset.bat -operation create -instanceType default
+                    manageSQLServerPerfmonDataset.bat -operation create -instanceType default
 
                 For a named instance:
-                    ManageSqlServerPerfmonDatset.bat -operation create -instanceType named -namedInstanceName [instance name]
+                    manageSQLServerPerfmonDataset.bat -operation create -instanceType named -namedInstanceName [instance name]
 
         The script will create a permon data set that will collect the above metrics at a 1 minute interval for 8 days.  The dataset will automatically stop after 8 days of collection.  To get the most accurate statistics, it would be good to have this collection run over the busiest time for the server.
 
