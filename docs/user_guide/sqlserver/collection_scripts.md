@@ -156,8 +156,8 @@ In order to begin running the Database Migration Assessment Collection process, 
 * ManageSqlServerPerfmonDatset.bat
   The following parameters can be specified:
   - -operation \*\* Required (create, start, stop, delete, collect, createemptyfile, help)
-  - -instanceType \*\* Required (default, managed)
-  - -managedInstanceName \*\* Required if instanceType is "managed" (should be the instance name without the server name)
+  - -instanceType \*\* Required (default, named)
+  - -namedInstanceName \*\* Required if instanceType is "named" (should be the instance name without the server name)
 
 To create and start the perfmon collection:
 
@@ -165,7 +165,7 @@ To create and start the perfmon collection:
             ManageSqlServerPerfmonDatset.bat -operation create -instanceType default
 
         For a named instance:
-            ManageSqlServerPerfmonDatset.bat -operation create -instanceType managed -managedInstanceName [instance name]
+            ManageSqlServerPerfmonDatset.bat -operation create -instanceType named -namedInstanceName [instance name]
 
 The script will create a permon data set that will collect the above metrics at a 1 minute interval for 8 days. The dataset will automatically stop after 8 days of collection. To get the most accurate statistics, it would be good to have this collection run over the busiest time for the server.
 
