@@ -28,6 +28,6 @@ SELECT '&&v_host'
        con_uid
 FROM   v$pdbs )
 SELECT pkey , con_id , name , open_mode , TOTAL_GB, con_uid,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
 FROM vpdbmode;
 spool off

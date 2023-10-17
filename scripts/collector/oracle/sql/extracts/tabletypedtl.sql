@@ -139,7 +139,7 @@ SELECT '&&v_host'
        p.subpartitioning_type,
        p.partition_count,
        sp.cnt AS subpartition_count,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_collectionTag' || chr(39) AS DMA_MANUAL_ID
+       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
 FROM  tblinfo a
 LEFT OUTER JOIN &v_tblprefix._part_tables p
               ON a.owner = p.owner

@@ -32,7 +32,7 @@
 .PARAMETER dmaSourceId
     DMA derived unique id (Required)
 .PARAMETER dmaManualId
-    Customer Unique collection tag or dma manual unique id (Optional)
+    Customer Manual Unique ID or dma manual unique id (Optional)
 .EXAMPLE
     C:\dmaSQLServerPerfmonDataset.ps1 -operation create -namedInstanceName [named Instance] / $null
 .NOTES
