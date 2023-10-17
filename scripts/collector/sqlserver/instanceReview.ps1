@@ -303,6 +303,7 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Dis
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server Configuration Info..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\dbServerConfigurationSettings.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$dbServerConfig
+
    
 ### First establish headers for the collection files which could execute against multiple databases in the instance
 Set-Content -Path $foldername\$objectList -Encoding utf8 -Value "PKEY|database_name|schema_name|object_name|object_type|object_type_desc|object_count|lines_of_code|associated_table_name|dma_source_id|dma_manual_id"
