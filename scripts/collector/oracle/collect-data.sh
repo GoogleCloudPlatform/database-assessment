@@ -339,7 +339,7 @@ manualUniqueId=""
 
  if [[ "${statsSrc}" = "awr" ]]; then
           DIAGPACKACCESS="UseDiagnostics"
- elif [[ "${stasSrc}" = "statspack" ]] ; then
+ elif [[ "${statsSrc}" = "statspack" ]] ; then
           DIAGPACKACCESS="NoDiagnostics"
  else 
 	 echo No performance data will be collected.
