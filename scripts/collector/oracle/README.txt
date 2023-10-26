@@ -74,11 +74,45 @@ for analysis by Database Migration Assessment.
 
     a) Execute collect-data.sh, passing the database connection string and indicator on whether to use AWR/ASH diagnostic data.
 
+       Parameters:
+      
+       Connection definition must one of:
+           {
+             --connectionStr       Oracle EasyConnect string formatted as {user}/{password}@//{db host}:{listener port}/{service name}.
+            or
+             --hostName            Database server host name.
+             --port                Database Listener port.
+             --databaseService     Database service name.
+             --collectionUserName  Database user name.
+             --collectionUserPass  Database password.
+           }
+       Performance statistics source
+           --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.
+   
+   
+      Examples:
+   
         To use the AWR/ASH data:
-        ./collect-data.sh 'username/password@//hostname.domain.com:1521/dbname.domain.com' UseDiagnostics
+          ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR
+         or
+          ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR
+  
 
-        To prevent use of AWR/ASH data and use STATSPACK data (if available) instead:
-        ./collect-data.sh 'username/password@//hostname.domain.com:1521/dbname.domain.com' NoDiagnostics
+        To use the STATSPACK data:
+          ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc STATSPACK
+         or
+          ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc STATSPACK
+
+
+
+        Collections can be run as SYS if needed by setting ORACLE_SID and running on the database host:
+        
+          ./collect-data.sh --connectionStr '/ as sysdba' --statsSrc AWR 
+
+         or to avoid using the licensed Oracle Tuning and Diagnostics pack data:
+
+          ./collect-data.sh  --connectionStr '/ as sysdba' --statsSrc STATSPACK
+
 
         Notes:
             1) Google Database Migration Assessment Data Extractor extracts data for the entire database. In multitenant
