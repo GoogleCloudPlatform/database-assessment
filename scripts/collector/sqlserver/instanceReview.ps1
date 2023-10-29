@@ -361,6 +361,12 @@ if ($ignorePerfmon -eq "true") {
     }
 }
 
+## Getting HW Specs.
+$computerSpecsFile = 'opdb' + '__' + 'DbComputerSpecs' + $outputFileSuffix
+$dbCollectOut=$foldername + '/' + $computerSpecsFile
+WriteLog -logMessage "Getting HW Shape Info of $machinename"
+.\dmaSQLServerHWSpecs.ps1 -computerName $machinename -outputPath $dbCollectOut -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId
+
 WriteLog -logLocation $foldername\$logFile -logMessage "Remove special characters and UTF8 BOM from extracted files..." -logOperation "BOTH"
 foreach($file in Get-ChildItem -Path $foldername\*.csv) {
 	$inputFile = Split-Path -Leaf $file
