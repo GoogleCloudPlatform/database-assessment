@@ -362,7 +362,7 @@ if ($ignorePerfmon -eq "true") {
 }
 
 ## Getting HW Specs.
-$computerSpecsFile = 'opdb' + '__' + 'DbComputerSpecs' + $outputFileSuffix
+$computerSpecsFile = 'opdb' + '__' + 'DbMachineSpecs' + $outputFileSuffix
 $dbCollectOut=$foldername + '/' + $computerSpecsFile
 WriteLog -logMessage "Getting HW Shape Info of $machinename"
 .\dmaSQLServerHWSpecs.ps1 -computerName $machinename -outputPath $dbCollectOut -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId
