@@ -17,7 +17,7 @@
 .DESCRIPTION
     Collects HW Specs using Get-WmiObject to be uploaded to Google Database Migration Assistant for MS SQL Server.
 .PARAMETER computerName
-    The target computer name to collect the HW specs from (Required).
+    The target computer name to collect the HW specs from (Optional).
 .PARAMETER outputPath
     The output full path of the csv that this scripts creates (Required).
 .PARAMETER pkey
