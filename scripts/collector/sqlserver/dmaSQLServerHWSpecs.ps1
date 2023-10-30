@@ -33,9 +33,9 @@
 #>
 param (
 	[Parameter(
-		Mandatory=$True,
+		Mandatory=$False,
 		HelpMessage="The computer name"
-	)][string]$computerName,
+	)][string]$computerName = $env:COMPUTERNAME,
 	[Parameter(
 		Mandatory=$True,
 		HelpMessage="The Output path"
@@ -57,11 +57,18 @@ param (
 try {
 	Write-Host "Params: computer:$computerName, dma_src: $dmaSourceId, output:$outputPath"
 
+	$credential = $null
+	# This will create a pop up for the user to enter credentials for shape sizing collection.
+	if ($computerName -ne $env:COMPUTERNAME) {
+		Write-Host "Identified a remote computer, please add credentials"
+       $credential = Get-Credential -Message "Please enter system credentials for machine shape sizing:"
+	}
+
 	# Logical cores count.
-	$cores=(Get-WmiObject Win32_Processor -ComputerName $computerName | Measure-Object -Property NumberOfCores -Sum).Sum
+	$cores=(Get-WmiObject Win32_Processor -Credential $credential -ComputerName $computerName | Measure-Object -Property NumberOfCores -Sum).Sum
 	
 	# Total memory in bytes.
-	$memoryBytes=(Get-WmiObject Win32_PhysicalMemory -ComputerName $computerName | Measure-Object -Property Capacity -Sum).Sum
+	$memoryBytes=(Get-WmiObject Win32_PhysicalMemory -Credential $credential -ComputerName $computerName | Measure-Object -Property Capacity -Sum).Sum
 	
 	# CSV data.
 	$csvData = [PSCustomObject]@{
