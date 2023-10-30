@@ -440,14 +440,16 @@ echo "        --collectionUserPass  Database password"
 echo "      }"
 echo "  Performance statistics source"
 echo "      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE"
+echo "  Source database type"
+echo "      --dbType                Required. Must be one of ORACLE, POSTGRES, MYSQL"
 echo
 echo
 echo " Example:"
 echo
 echo
-echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR"
+echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR --dbType ORACLE"
 echo " or"
-echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR"
+echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR --dbType ORACLE"
 
 }
 ### Validate input
