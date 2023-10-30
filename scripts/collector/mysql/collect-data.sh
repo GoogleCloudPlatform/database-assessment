@@ -647,4 +647,3 @@ else
   echo "Error executing SQL*Plus"
   exit 255
 fi
-
