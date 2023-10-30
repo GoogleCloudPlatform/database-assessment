@@ -120,7 +120,7 @@ function checkVersionPg {
 
     # SELECT 'DMAFILETAG~' , version();
     dbversion=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t --no-align << EOF
-SELECT current_setting('server_version');
+SELECT current_setting('server_version_num');
 EOF
 )
 echo 'DMAFILETAG~'${dbversion}'|'${dbversion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
