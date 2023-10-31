@@ -440,6 +440,7 @@ fi
 
 }
 
+
 function printUsage()
 {
 echo " Usage:"
@@ -465,7 +466,6 @@ echo " or"
 echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} "
 
 }
-
 ### Validate input
 
 hostName=""
@@ -656,4 +656,3 @@ else
   echo "Error executing SQL*Plus"
   exit 255
 fi
-
