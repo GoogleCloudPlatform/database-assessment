@@ -120,7 +120,7 @@ function checkVersionPg {
 
     # SELECT 'DMAFILETAG~' , version();
     dbversion=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t --no-align << EOF
-SELECT current_setting('server_version');
+SELECT current_setting('server_version_num');
 EOF
 )
 echo 'DMAFILETAG~'${dbversion}'|'${dbversion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
@@ -214,13 +214,15 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
 fi
 
 export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/init.sql | tr -d '\r')
+export DMA_PASSWORD_COL=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/password_column.sql | tr -d '\r')
+
 
 if [ -f sql/${V_FILE_TAG}_mysqlcollector.sql ]; 
 then
 rm sql/${V_FILE_TAG}_mysqlcollector.sql
 fi
 
-for f in $(ls -1 sql/*.sql | grep -v -e _mysqlcollector.sql -e init.sql)
+for f in $(ls -1 sql/*.sql | grep -v -e _mysqlcollector.sql -e init.sql -e password_column.sql -e usersno${DMA_PASSWORD_COL})
 do
   fname=$(echo ${f} | cut -d '/' -f 2 | cut -d '.' -f 1)
     ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__${fname}__${V_TAG} <<EOF
@@ -440,14 +442,16 @@ echo "        --collectionUserPass  Database password"
 echo "      }"
 echo "  Performance statistics source"
 echo "      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE"
+echo "  Source database type"
+echo "      --dbType                Required. Must be one of ORACLE, POSTGRES, MYSQL"
 echo
 echo
 echo " Example:"
 echo
 echo
-echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR"
+echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR --dbType ORACLE"
 echo " or"
-echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR"
+echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR --dbType ORACLE"
 
 }
 ### Validate input
@@ -541,21 +545,21 @@ checkPlatform $DBTYPE
 
 if [ "$DBTYPE" == "oracle" ] ; then
   sqlcmd_result=$(checkVersionOracle "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | cut -d '~' -f 2)
-  if [[ "${sqlcmd_result}" = "" ]];
+  if [[ "${sqlcmd_result}" == "" ]];
     then
       echo "Unable to connect to the target Oracle database using ${connectString}.  Please verify the connection information and target database status."
       exit 255
     fi
   else if [ "$DBTYPE" == "mysql" ] ; then
     sqlcmd_result=$(checkVersionMysql "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r' )
-    if [[ "${sqlcmd_result}" = "" ]];
+    if [[ "${sqlcmd_result}" == "" ]];
       then
       echo "Unable to connect to the target MySQL database using ${connectString}.  Please verify the connection information and target database status."
       exit 255
     fi
     else if [ "$DBTYPE" == "postgres" ] ; then
       sqlcmd_result=$(checkVersionPg "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r' )
-      if [[ "${sqlcmd_result}" = "" ]];
+      if [[ "${sqlcmd_result}" == "" ]];
         then
         echo "Unable to connect to the target Postgres database using ${connectString}.  Please verify the connection information and target database status."
         exit 255
