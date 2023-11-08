@@ -87,15 +87,8 @@ try {
 }
 catch {
 	WriteLog -logLocation $logLocation -logMessage "ERROR - Failed fetching machine HW specs of $computerName" -logOperation "FILE"	
-	# Empty CSV data.
-	$csvData = [PSCustomObject]@{
-		"pkey" = $null
-		"dma_source_id" = $null
-		"dma_manual_id" = $null
-		"computer_name" = $null
-		"cores" = $null
-		"memory_bytes" = $null
-	}
-	# Writing headers only to csv.
-	$csvData | Export-Csv -Path $outputPath -Delimiter "|" -NoTypeInformation -Encoding UTF8
+
+	# Writing Empty CSV File.
+	$headers = '"pkey"|"dma_source_id"|"dma_manual_id"|"computer_name"|"cores"|"memory_bytes"'
+	$headers | Out-File -FilePath $outputPath -Encoding UTF8
 }
