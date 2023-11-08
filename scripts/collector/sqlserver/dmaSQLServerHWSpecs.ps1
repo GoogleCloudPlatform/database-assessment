@@ -26,6 +26,8 @@
     DMA derived unique id (Required).
 .PARAMETER dmaManualId
     Customer Manual Unique ID or dma manual unique id (Optional).
+.PARAMETER logLocation
+    Location of log file to output the script (Optional).
 .EXAMPLE
     C:\dmaSQLServerHWSpecs.ps1 -computerName localhost -outputPath a.out -pkey pkey1 -dmaSourceId src1
 .NOTES
@@ -51,11 +53,17 @@ param (
 	[Parameter(
 		Mandatory=$False,
 		HelpMessage="The dma_manual_id"
-	)][string]$dmaManualId="NA"
+	)][string]$dmaManualId="NA",
+	[Parameter(
+		Mandatory=$False,
+		HelpMessage="The log file location"
+	)][string]$logLocation="$PSScriptRoot\dmaSqlServerHWSpecs.log"
 )
 
+Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
+
 try {
-	Write-Host "Params: computer:$computerName, dma_src: $dmaSourceId, output:$outputPath"
+	WriteLog -logLocation $logLocation -logMessage "Fetching machine HW specs from computer:$computerName and storing it in output:$outputPath" -logOperation "FILE"
 
 	# Logical cores count.
 	$cores=(Get-WmiObject Win32_Processor -ComputerName $computerName | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum
@@ -75,8 +83,8 @@ try {
 	
 	# Writing to csv.
 	$csvData | Export-Csv -Path $outputPath -Delimiter "|" -NoTypeInformation
-	Write-Host "Success to retrieve information from $computerName."
+	WriteLog -logLocation $logLocation -logMessage "Successfully fetched machine HW specs of $computerName to output:$outputPath" -logOperation "FILE"	
 }
 catch {
-	Write-Host "Failed to retrieve hardware information from $computerName, skipping."
+	WriteLog -logLocation $logLocation -logMessage "ERROR - Failed fetching machine HW specs of $computerName" -logOperation "FILE"	
 }
