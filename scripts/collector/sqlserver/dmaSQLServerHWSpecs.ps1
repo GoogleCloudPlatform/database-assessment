@@ -89,6 +89,5 @@ catch {
 	WriteLog -logLocation $logLocation -logMessage "ERROR - Failed fetching machine HW specs of $computerName" -logOperation "FILE"	
 
 	# Writing Empty CSV File.
-	$headers = '"pkey"|"dma_source_id"|"dma_manual_id"|"computer_name"|"cores"|"memory_bytes"'
-	$headers | Out-File -FilePath $outputPath -Encoding UTF8
+	Set-Content -Path $outputPath -Encoding UTF8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"computer_name"|"cores"|"memory_bytes"'
 }
