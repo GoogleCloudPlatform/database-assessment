@@ -57,7 +57,7 @@ param (
 	[Parameter(
 		Mandatory=$False,
 		HelpMessage="The log file location"
-	)][string]$logLocation="$PSScriptRoot\dmaSqlServerHWSpecs.log"
+	)][string]$logLocation="dmaSqlServerHWSpecs.log"
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
