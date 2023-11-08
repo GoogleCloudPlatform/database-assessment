@@ -239,6 +239,7 @@ $dbServerFlags = 'opdb' + '__' + 'DbServerFlags' + $outputFileSuffix
 $dbServerConfig = 'opdb' + '__' + 'DbServerConfig' + $outputFileSuffix
 $dbServerDmvPerfmon = 'opdb' + '__' + 'DmvPerfmon' + $outputFileSuffix
 $manifestFile = 'opdb' + '__' + 'manifest' + $outputFileSuffix
+$computerSpecsFile = 'opdb' + '__' + 'DbMachineSpecs' + $outputFileSuffix
 
 $outputFileArray = @($compFileName,
                     $srvFileName,
@@ -257,7 +258,8 @@ $outputFileArray = @($compFileName,
                     $dbServerFlags,
                     $dbServerConfig,
                     $dbServerDmvPerfmon,
-                    $manifestFile)
+                    $manifestFile,
+                    $computerSpecsFile)
 
 WriteLog -logMessage "Checking directory path + output file name lengths for max length limitations..." -logOperation "MESSAGE"
 foreach ($directory in $outputFileArray) {
@@ -361,8 +363,7 @@ if ($ignorePerfmon -eq "true") {
     }
 }
 
-## Getting HW Specs.
-   $computerSpecsFile = 'opdb' + '__' + 'DbMachineSpecs' + $outputFileSuffix
+## Getting HW Specs.   
    $dbCollectOut=$foldername + '/' + $computerSpecsFile   
    WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server HW Shape Info for Machine $machinename ..." -logOperation "FILE"
    .\dmaSQLServerHWSpecs.ps1 -computerName $machinename -outputPath $dbCollectOut -logLocation $foldername\$logFile -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId
