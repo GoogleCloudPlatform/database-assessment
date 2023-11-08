@@ -65,7 +65,7 @@ try {
 	}
 
 	# Logical cores count.
-	$cores=(Get-WmiObject Win32_Processor -Credential $credential -ComputerName $computerName | Measure-Object -Property NumberOfCores -Sum).Sum
+	$cores=(Get-WmiObject Win32_Processor -Credential $credential -ComputerName $computerName | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum
 	
 	# Total memory in bytes.
 	$memoryBytes=(Get-WmiObject Win32_PhysicalMemory -Credential $credential -ComputerName $computerName | Measure-Object -Property Capacity -Sum).Sum
