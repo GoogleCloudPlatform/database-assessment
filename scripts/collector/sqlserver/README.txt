@@ -128,6 +128,8 @@ Operating System Versions:
             \SQLServer:Memory Manager\Target Server Memory (KB)
             \SQLServer:Memory Manager\Total Server Memory (KB)
             \SQLServer:SQL Statistics\Batch Requests/sec
+            \NUMA Node Memory(_Total)\Total MBytes
+            \NUMA Node Memory(_Total)\Available MBytes
 
     a) From a command prompt session in "Administrator Mode" on the server you would like to collect data on, execute the following command:
    
