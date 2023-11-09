@@ -65,8 +65,11 @@ Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
 try {
 	WriteLog -logLocation $logLocation -logMessage "Fetching machine HW specs from computer:$computerName and storing it in output:$outputPath" -logOperation "FILE"
 
+	# Physical cores count.
+	$PhysicalCpuCount=(Get-WmiObject Win32_Processor -ComputerName $computerName | Measure-Object -Property NumberOfCores -Sum).Sum
+
 	# Logical cores count.
-	$cores=(Get-WmiObject Win32_Processor -ComputerName $computerName | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum
+	$LogicalCpuCount=(Get-WmiObject Win32_Processor -ComputerName $computerName | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum
 	
 	# Total memory in bytes.
 	$memoryBytes=(Get-WmiObject Win32_PhysicalMemory -ComputerName $computerName | Measure-Object -Property Capacity -Sum).Sum
@@ -77,8 +80,9 @@ try {
 		"dma_source_id" = $dmaSourceId
 		"dma_manual_id" = $dmaManualId
 		"computer_name" = $computerName
-		"cores" = $cores
-		"memory_bytes" = $memoryBytes
+		"PhysicalCpuCount" = $PhysicalCpuCount
+		"LogicalCpuCount" = $LogicalCpuCount
+		"TotalOSMemoryMB" = $memoryBytes/1024/1024
 	}
 	
 	# Writing to csv.
@@ -89,5 +93,5 @@ catch {
 	WriteLog -logLocation $logLocation -logMessage "ERROR - Failed fetching machine HW specs of $computerName" -logOperation "FILE"	
 
 	# Writing Empty CSV File.
-	Set-Content -Path $outputPath -Encoding UTF8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"computer_name"|"cores"|"memory_bytes"'
+	Set-Content -Path $outputPath -Encoding UTF8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"computer_name"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
 }
