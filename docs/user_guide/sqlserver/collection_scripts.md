@@ -149,7 +149,7 @@ In order to begin running the Database Migration Assessment Collection process, 
           \SQLServer:Memory Manager\Total Server Memory (KB)
           \SQLServer:SQL Statistics\Batch Requests/sec
           \NUMA Node Memory(_Total)\Total MBytes
-		      \NUMA Node Memory(_Total)\Available MBytes
+          \NUMA Node Memory(_Total)\Available MBytes
 
       <br/>
 
