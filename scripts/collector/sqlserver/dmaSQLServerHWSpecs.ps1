@@ -79,7 +79,7 @@ try {
 		"pkey" = $pkey
 		"dma_source_id" = $dmaSourceId
 		"dma_manual_id" = $dmaManualId
-		"computer_name" = $computerName
+		"MachineName" = $computerName
 		"PhysicalCpuCount" = $PhysicalCpuCount
 		"LogicalCpuCount" = $LogicalCpuCount
 		"TotalOSMemoryMB" = $memoryBytes/1024/1024
@@ -93,5 +93,5 @@ catch {
 	WriteLog -logLocation $logLocation -logMessage "ERROR - Failed fetching machine HW specs of $computerName" -logOperation "FILE"	
 
 	# Writing Empty CSV File.
-	Set-Content -Path $outputPath -Encoding UTF8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"computer_name"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
+	Set-Content -Path $outputPath -Encoding UTF8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"MachineName"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
 }
