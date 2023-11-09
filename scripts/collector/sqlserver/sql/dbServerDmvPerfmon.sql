@@ -103,16 +103,16 @@ sample_iops AS (
     SELECT
         ''' + @PKEY + ''' AS PKEY,
         --mf.physical_name AS DISK_Drive,
-        SUM(sample_ms) as sample_ms,
-        SUM(num_of_reads) AS DISK_num_of_reads,
-        SUM(io_stall_read_ms) AS DISK_io_stall_read_ms,
-        SUM(num_of_writes) AS DISK_num_of_writes,
-        SUM(io_stall_write_ms) AS DISK_io_stall_write_ms,
-        SUM(num_of_bytes_read) AS DISK_num_of_bytes_read,
-        SUM(num_of_bytes_written) AS DISK_num_of_bytes_written,
-        SUM(io_stall) AS io_stall
+        SUM(CONVERT(bigint,sample_ms)) as sample_ms,
+        SUM(CONVERT(bigint,num_of_reads)) AS DISK_num_of_reads,
+        SUM(CONVERT(bigint,io_stall_read_ms)) AS DISK_io_stall_read_ms,
+        SUM(CONVERT(bigint,num_of_writes)) AS DISK_num_of_writes,
+        SUM(CONVERT(bigint,io_stall_write_ms)) AS DISK_io_stall_write_ms,
+        SUM(CONVERT(bigint,num_of_bytes_read)) AS DISK_num_of_bytes_read,
+        SUM(CONVERT(bigint,num_of_bytes_written)) AS DISK_num_of_bytes_written,
+        SUM(CONVERT(bigint,io_stall)) AS io_stall
     FROM sys.dm_io_virtual_file_stats(NULL, NULL) AS vfs
-        INNER JOIN sys.database_files AS mf WITH (NOLOCK) ON vfs.database_id = (select db_id(''' + @ASSESSMENT_DATABSE_NAME + '''))
+        INNER JOIN sys.database_files AS mf WITH (NOLOCK) ON vfs.database_id = (select db_id(DB_NAME()))
         AND vfs.file_id = mf.file_id
     --GROUP BY mf.physical_name
 ),
