@@ -44,7 +44,8 @@ table_indexes as (
         count(1) as index_count,
         sum(
             IF(s.INDEX_TYPE = 'FULLTEXT', 1, 0)
-        ) as fulltext_index_count
+        ) as fulltext_index_count,
+        sum(IF(s.INDEX_TYPE = 'SPATIAL', 1, 0)) as spatial_index_count
     FROM information_schema.STATISTICS S
     where S.table_schema NOT IN (
             'mysql',
@@ -70,7 +71,8 @@ user_tables as (
         IF(pt.PARTITION_METHOD is not null, 1, 0) as is_partitioned,
         COALESCE(pt.PARTITION_COUNT, 0) as partition_count,
         COALESCE(idx.index_count, 0) as index_count,
-        COALESCE(idx.fulltext_index_count, 0) as fulltext_index_count
+        COALESCE(idx.fulltext_index_count, 0) as fulltext_index_count,
+        COALESCE(idx.spatial_index_count, 0) as spatial_index_count
     FROM information_schema.TABLES t
         left join table_partitions pt on (
             t.table_schema = pt.table_schema
