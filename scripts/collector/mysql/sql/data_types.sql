@@ -15,7 +15,7 @@ with src as (
         i.TABLE_SCHEMA,
         i.DATA_TYPE
 )
-select concat(char(39), @DMA_MANUAL_ID, char(39)) as PKE,
+select concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,
     concat(char(39), @DMA_SOURCE_ID, char(39)) as DMA_SOURCE_ID,
     concat(char(39), @DMA_MANUAL_ID, char(39)) as DMA_MANUAL_ID,
     src.table_catalog,

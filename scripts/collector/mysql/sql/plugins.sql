@@ -14,7 +14,10 @@ with src as (
         plugin_auth_version as plugin_auth_version
     from information_schema.PLUGINS
 )
-select src.plugin_name,
+select concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,
+    concat(char(39), @DMA_SOURCE_ID, char(39)) as DMA_SOURCE_ID,
+    concat(char(39), @DMA_MANUAL_ID, char(39)) as DMA_MANUAL_ID,
+    src.plugin_name,
     src.plugin_version,
     src.plugin_status,
     src.plugin_type,

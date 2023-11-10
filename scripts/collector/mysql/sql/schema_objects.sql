@@ -99,7 +99,10 @@ with src as (
             'sys'
         )
 )
-select src.object_catalog,
+select concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,
+    concat(char(39), @DMA_SOURCE_ID, char(39)) as DMA_SOURCE_ID,
+    concat(char(39), @DMA_MANUAL_ID, char(39)) as DMA_MANUAL_ID,
+    src.object_catalog,
     src.object_schema,
     src.object_category,
     src.object_type,
