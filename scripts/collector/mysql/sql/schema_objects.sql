@@ -36,16 +36,64 @@ with src as (
     union
     select i.TABLE_CATALOG as object_catalog,
         i.TABLE_SCHEMA as object_schema,
-        case
-            when i.TABLE_TYPE = 'VIEW' then 'VIEW'
-            else 'TABLE'
-        end as object_category,
+        'VIEW' as object_category,
         i.TABLE_TYPE as object_type,
         null as object_schema_schema,
         null as object_owner,
         i.TABLE_NAME as object_name
     from information_schema.TABLES i
-    WHERE i.TABLE_SCHEMA NOT IN (
+    where i.table_type = 'VIEW'
+        and i.TABLE_SCHEMA NOT IN (
+            'mysql',
+            'information_schema',
+            'performance_schema',
+            'sys'
+        )
+    union
+    select i.TABLE_CATALOG as object_catalog,
+        i.TABLE_SCHEMA as object_schema,
+        'TABLE' as object_category,
+        IF(
+            pt.PARTITION_METHOD is null,
+            'TABLE',
+            if(
+                pt.SUBPARTITION_METHOD is not null,
+                concat(
+                    'TABLE-COMPOSITE_PARTITIONED-',
+                    pt.PARTITION_METHOD,
+                    '-',
+                    pt.SUBPARTITION_METHOD
+                ),
+                concat('TABLE-PARTITIONED-', pt.PARTITION_METHOD)
+            )
+        ) as object_type,
+        null as object_schema_schema,
+        null as object_owner,
+        i.TABLE_NAME as object_name
+    from information_schema.TABLES i
+        left join (
+            SELECT TABLE_SCHEMA,
+                TABLE_NAME,
+                PARTITION_METHOD,
+                SUBPARTITION_METHOD,
+                COUNT(1) AS PARTITION_COUNT
+            FROM information_schema.PARTITIONS
+            WHERE table_schema NOT IN (
+                    'mysql',
+                    'information_schema',
+                    'performance_schema',
+                    'sys'
+                )
+            GROUP BY TABLE_SCHEMA,
+                TABLE_NAME,
+                PARTITION_METHOD,
+                SUBPARTITION_METHOD
+        ) pt on (
+            i.TABLE_NAME = pt.TABLE_NAME
+            and i.TABLE_SCHEMA = pt.TABLE_SCHEMA
+        )
+    where i.table_type != 'VIEW'
+        and i.TABLE_SCHEMA NOT IN (
             'mysql',
             'information_schema',
             'performance_schema',
@@ -93,6 +141,28 @@ with src as (
         i.EVENT_NAME as object_name
     FROM information_schema.EVENTS i
     WHERE i.EVENT_SCHEMA NOT IN (
+            'mysql',
+            'information_schema',
+            'performance_schema',
+            'sys'
+        )
+    UNION
+    select i.TABLE_CATALOG as object_catalog,
+        i.TABLE_SCHEMA as object_schema,
+        'INDEX' as object_category,
+        case
+            when i.INDEX_TYPE = 'BTREE' then 'INDEX'
+            when i.INDEX_TYPE = 'HASH' then 'INDEX-HASH'
+            when i.INDEX_TYPE = 'FULLTEXT' then 'INDEX-FULLTEXT'
+            when i.INDEX_TYPE = 'SPATIAL' then 'INDEX-SPATIAL'
+            else 'INDEX-UNCATEGORIZED'
+        end as object_type,
+        i.TABLE_SCHEMA as object_owner_schema,
+        i.TABLE_NAME as object_owner,
+        i.INDEX_NAME as object_name
+    from information_schema.STATISTICS i
+    where i.INDEX_NAME != 'PRIMARY'
+        and i.TABLE_SCHEMA NOT IN (
             'mysql',
             'information_schema',
             'performance_schema',
