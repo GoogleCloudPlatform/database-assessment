@@ -47,7 +47,9 @@ space_free_pct NVARCHAR(255),
 cluster_block_size NVARCHAR(255)
 )
 
+BEGIN
 IF @CLOUDTYPE = 'NONE'
+    BEGIN TRY
     exec('
     INSERT INTO #gcpDMADiskVolumeInfo
     SELECT DISTINCT
@@ -65,7 +67,13 @@ IF @CLOUDTYPE = 'NONE'
         sys.master_files AS f WITH (
             NOLOCK)
         CROSS APPLY sys.dm_os_volume_stats (f.database_id, f.[file_id]) AS vs OPTION (RECOMPILE)');
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            WAITFOR DELAY '00:00:00'
+    END CATCH
 IF @CLOUDTYPE = 'AZURE'
+    BEGIN TRY
     exec('
     WITH db_sizes as (SELECT MAX(start_time) max_collection_time
         , database_name, MAX(storage_in_megabytes) storage_in_megabytes
@@ -85,6 +93,12 @@ IF @CLOUDTYPE = 'AZURE'
         total_size_gb/available_size_gb as space_free_pct,
         '''' as cluster_block_size
     FROM sum_sizes');
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            WAITFOR DELAY '00:00:00'
+    END CATCH
+END;
 
 SELECT 
     @PKEY as PKEY, 
