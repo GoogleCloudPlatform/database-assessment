@@ -17,8 +17,7 @@
 ### Setup directories needed for execution
 #############################################################################
 OpVersion="4.3.25"
-dbmajor=""
-
+dbmajor="" 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
 export LANG=C
 export LANG=${LOCALE}.UTF-8
@@ -119,11 +118,11 @@ function checkVersionPg {
     fi
 
     # SELECT 'DMAFILETAG~' , version();
-    dbversion=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t --no-align << EOF
+    dbVersion=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t --no-align << EOF
 SELECT current_setting('server_version_num');
 EOF
 )
-echo 'DMAFILETAG~'${dbversion}'|'${dbversion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
+echo 'DMAFILETAG~'${dbVersion}'|'${dbVersion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
 }
 
 function checkVersionMysql {
@@ -143,11 +142,11 @@ function checkVersionMysql {
       exit 1
     fi
 
-dbversion=$(${SQLCMD}  --user=$user --password=$pass -h $host -P $port -s $db << EOF
+dbVersion=$(${SQLCMD}  --user=$user --password=$pass -h $host -P $port -s $db << EOF
 SELECT version();
 EOF
 )
-echo 'DMAFILETAG~'${dbversion}'|'${dbversion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
+echo 'DMAFILETAG~'${dbVersion}'|'${dbVersion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
 }
 
 
