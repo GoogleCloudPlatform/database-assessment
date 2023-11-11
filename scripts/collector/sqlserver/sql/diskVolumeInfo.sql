@@ -47,7 +47,9 @@ space_free_pct NVARCHAR(255),
 cluster_block_size NVARCHAR(255)
 )
 
+BEGIN
 IF @CLOUDTYPE = 'NONE'
+    BEGIN TRY
     exec('
     INSERT INTO #gcpDMADiskVolumeInfo
     SELECT DISTINCT
@@ -59,13 +61,19 @@ IF @CLOUDTYPE = 'NONE'
 		END,
         CONVERT(NVARCHAR, (vs.total_bytes / 1073741824.0)) AS total_size_gb,
         CONVERT(NVARCHAR, (vs.available_bytes / 1073741824.0)) AS available_size_gb,
-        CONVERT(NVARCHAR, ROUND((CONVERT(numeric,vs.available_bytes) / CONVERT(numeric, vs.total_bytes)),4)) AS space_free_pct,
+        CONVERT(NVARCHAR, (CONVERT(numeric,vs.available_bytes) / CONVERT(numeric, vs.total_bytes))*100,2) AS space_free_pct,
         '''' as cluster_block_size
     FROM
         sys.master_files AS f WITH (
             NOLOCK)
         CROSS APPLY sys.dm_os_volume_stats (f.database_id, f.[file_id]) AS vs OPTION (RECOMPILE)');
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            WAITFOR DELAY '00:00:00'
+    END CATCH
 IF @CLOUDTYPE = 'AZURE'
+    BEGIN TRY
     exec('
     WITH db_sizes as (SELECT MAX(start_time) max_collection_time
         , database_name, MAX(storage_in_megabytes) storage_in_megabytes
@@ -82,13 +90,25 @@ IF @CLOUDTYPE = 'AZURE'
         ''CLOUD'' as logical_volume_name, 
         total_size_gb, 
         available_size_gb, 
-        total_size_gb/available_size_gb as space_free_pct,
+        CONVERT(NVARCHAR, (CONVERT(numeric,vs.available_bytes) / CONVERT(numeric, vs.total_bytes))*100,2) AS space_free_pct,
         '''' as cluster_block_size
     FROM sum_sizes');
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            WAITFOR DELAY '00:00:00'
+    END CATCH
+END;
 
 SELECT 
     @PKEY as PKEY, 
-    a.*, 
+    a.volume_mount_point,
+	a.file_system_type,
+	a.logical_volume_name,
+	ROUND(a.total_size_gb,2) as total_size_gb,
+	ROUND(a.available_size_gb,2) as available_size_gb,
+	ROUND(a.space_free_pct,2) as space_free_pct,
+	a.cluster_block_size, 
     @DMA_SOURCE_ID as dma_source_id,
     @DMA_MANUAL_ID as dma_manual_id
 from #gcpDMADiskVolumeInfo a;
