@@ -359,7 +359,7 @@ BEGIN TRY
           N'sqlbrowser'
 
         UPDATE #servicesservicestatus
-        SET    servicename = 'Intergration Service - Instance Independent'
+        SET    servicename = 'Integration Service - Instance Independent'
         WHERE  rowid = @@identity
 
         UPDATE #servicesservicestatus
@@ -380,7 +380,7 @@ BEGIN TRY
         VALUES      ('NOT INSTALLED')
 
         UPDATE #servicesservicestatus
-        SET    servicename = 'Intergration Service - Instance Independent'
+        SET    servicename = 'Integration Service - Instance Independent'
         WHERE  rowid = @@identity
 
         UPDATE #servicesservicestatus
@@ -398,13 +398,13 @@ BEGIN TRY
   BEGIN
     INSERT INTO #servicesservicestatus
                 (physicalsrvername,servername,servicename,servicestatus)
-    VALUES      (@PhysicalSrvName,@TrueSrvName,'Intergration Service - Instance Independent','N/A')
+    VALUES      (@PhysicalSrvName,@TrueSrvName,'Integration Service - Instance Independent','N/A')
   END
 END TRY
 BEGIN CATCH
   INSERT INTO #servicesservicestatus
               (physicalsrvername,servername,servicename,servicestatus)
-  VALUES      (@PhysicalSrvName,@TrueSrvName,'Intergration Service - Instance Independent','N/A')
+  VALUES      (@PhysicalSrvName,@TrueSrvName,'Integration Service - Instance Independent','N/A')
 END CATCH
 
 /* ---------------------------------- Reporting Service Section ------------------------------------------------*/

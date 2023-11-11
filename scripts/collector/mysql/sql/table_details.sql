@@ -39,15 +39,15 @@ tables_with_pks as (
         ) = COUNT(*)
 ),
 table_indexes as (
-    SELECT S.table_schema,
-        S.table_name,
+    SELECT s.table_schema,
+        s.table_name,
         count(1) as index_count,
         sum(
             IF(s.INDEX_TYPE = 'FULLTEXT', 1, 0)
         ) as fulltext_index_count,
         sum(IF(s.INDEX_TYPE = 'SPATIAL', 1, 0)) as spatial_index_count
-    FROM information_schema.STATISTICS S
-    where S.table_schema NOT IN (
+    FROM information_schema.STATISTICS s
+    where s.table_schema NOT IN (
             'mysql',
             'information_schema',
             'performance_schema',
