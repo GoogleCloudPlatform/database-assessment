@@ -203,7 +203,8 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, committed_kb/1024) FROM sys.dm_os_sys_info');
     exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info');
     /* Default Memory Usage to SQLServerMemoryTargetInMB for Azure SQL Database because data is not available */
-    exec('INSERT INTO #serverProperties SELECT ''TotalOSMemoryMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info')
+    exec('INSERT INTO #serverProperties SELECT ''TotalOSMemoryMB'', CONVERT(varchar, (total_physical_memory_kb/1024)) FROM sys.dm_os_sys_memory')
+    exec('INSERT INTO #serverProperties SELECT ''TotalSQLServerCommittedMemoryMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info')
     exec('INSERT INTO #serverProperties SELECT ''AvailableOSMemoryMB'', CONVERT(varchar, 0)')
     exec('INSERT INTO #serverProperties SELECT ''TotalMemoryInUseIncludingProcessesInMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info')
     exec('INSERT INTO #serverProperties SELECT ''TotalLockedPageAllocInMB'', CONVERT(varchar, 0)')
@@ -241,6 +242,8 @@ BEGIN
     END
     IF @PRODUCT_VERSION < 11
     BEGIN   /* Versions before SQL Server 2012 (11.x)   */
+        /* Must Query a different column for committed memory in versions below 11.x */
+        exec('INSERT INTO #serverProperties SELECT ''TotalSQLServerCommittedMemoryMB'', CONVERT(nvarchar, bpool_committed/1024) FROM sys.dm_os_sys_info')
         exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Windows''');
         exec('INSERT INTO #serverProperties SELECT ''HostRelease'', REPLACE(REPLACE(SUBSTRING(@@VERSION,4 + charindex ('' ON '',@@VERSION),LEN(@@VERSION)), CHAR(13), ''''), CHAR(10), '''')');
         exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(nvarchar,SERVERPROPERTY(''ProductLevel'')),1,1024), ''UNKNOWN'') ');
@@ -261,7 +264,9 @@ BEGIN
     BEGIN
         exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(nvarchar, committed_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
         exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
-    END;
+        /* Must Query a different column for committed memory in versions above 10.x */
+        exec('INSERT INTO #serverProperties SELECT ''TotalSQLServerCommittedMemoryMB'', CONVERT(nvarchar, committed_target_kb/1024) FROM sys.dm_os_sys_info')
+   END;
 END;
 
 SELECT 
