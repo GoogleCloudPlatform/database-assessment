@@ -1,3 +1,4 @@
 bump2version 
 ruff
-black
+sqlfluff
+pre-commit
