@@ -28,6 +28,10 @@
     Collection username (required)
 .PARAMETER collectionUserPass
     Collection username password (required)
+.PARAMETER serverUserName
+    Remote login username with WMI GetObject Access (optional)
+.PARAMETER serverUserPass
+    Remote login password with WMI GetObject Access (optional)
 .PARAMETER ignorePerfmon
     Signals if the perfmon collection should be skipped (default:false) 
 .PARAMETER manualUniqueId
@@ -48,6 +52,8 @@ Param(
 [Parameter(Mandatory=$false)][string]$database="all",
 [Parameter(Mandatory=$false)][string]$collectionUserName,
 [Parameter(Mandatory=$false)][string]$collectionUserPass,
+[Parameter(Mandatory=$false)][string]$serverUserName=$null,
+[Parameter(Mandatory=$false)][string]$serverUserPass=$null,
 [Parameter(Mandatory=$false)][string]$ignorePerfmon="false",
 [Parameter(Mandatory=$false)][string]$manualUniqueId="NA"
 )
@@ -366,7 +372,7 @@ if ($ignorePerfmon -eq "true") {
 ## Getting HW Specs.   
    $dbCollectOut=$foldername + '/' + $computerSpecsFile   
    WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server HW Shape Info for Machine $machinename ..." -logOperation "FILE"
-   .\dmaSQLServerHWSpecs.ps1 -computerName $machinename -outputPath $dbCollectOut -logLocation $foldername\$logFile -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId
+   .\dmaSQLServerHWSpecs.ps1 -computerName $machinename -outputPath $dbCollectOut -username $serverUserName -password $serverUserPass -logLocation $foldername\$logFile -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Remove special characters and UTF8 BOM from extracted files..." -logOperation "BOTH"
 foreach($file in Get-ChildItem -Path $foldername\*.csv) {
