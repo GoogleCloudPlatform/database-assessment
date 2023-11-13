@@ -16,8 +16,9 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.25"
-dbmajor="" 
+OpVersion="4.3.26"
+dbmajor=""
+
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
 export LANG=C
 export LANG=${LOCALE}.UTF-8
