@@ -30,6 +30,7 @@ src as (
 select concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,
     concat(char(39), @DMA_SOURCE_ID, char(39)) as DMA_SOURCE_ID,
     concat(char(39), @DMA_MANUAL_ID, char(39)) as DMA_MANUAL_ID,
+    src.variable_category,
     src.variable_name,
     src.variable_value
 from src;
