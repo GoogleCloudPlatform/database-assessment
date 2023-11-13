@@ -1,4 +1,4 @@
-\ o output / opdb__awsextensiondependency_ :VTAG.csv (
+\ o output / opdb__aws_extension_dependency_ :VTAG.csv (
   WITH alias1 AS (
     SELECT alias1.proname,
       ns.nspname,
@@ -449,15 +449,15 @@ UNION
       ) AS alias2
     WHERE def ~* 'aws_oracle_ext.*'
   )
-  SELECT chr(39) || :PKEY || chr(39),
-    chr(39) || :DMA_SOURCE_ID || chr(39) AS DMA_SOURCE_ID,
-    chr(39) || :DMA_MANUAL_ID || chr(39) AS DMA_MANUAL_ID,
-    function_schema AS schemaName,
-    function_language AS LANGUAGE,
-    'Procedures' AS TYPE,
-    function_name AS typeName,
-    funcname AS AWSExtensionDependency,
-    sum(cnt) AS SCTFunctionReferenceCount
+  SELECT chr(39) || :PKEY || chr(39) as pkey,
+    chr(39) || :DMA_SOURCE_ID || chr(39) AS dma_source_id,
+    chr(39) || :DMA_MANUAL_ID || chr(39) AS dma_manual_id,
+    function_schema AS object_schema_name,
+    function_language AS object_language,
+    'Procedures' AS as object_type,
+    function_name AS object_name,
+    funcname AS aws_extension_dependency,
+    sum(cnt) AS sct_function_reference_count
   FROM alias2
   WHERE 1 = 1
   GROUP BY function_schema,
