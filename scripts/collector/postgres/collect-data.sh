@@ -37,7 +37,7 @@ GREP=$(which grep)
 SED=$(which sed)
 MD5SUM=$(which md5sum)
 MD5COL=1
-
+ 
 if [ "$(uname)" = "SunOS" ]
 then
       GREP=/usr/xpg4/bin/grep
@@ -49,7 +49,7 @@ if [ "$(uname)" = "HP-UX" ]; then
     MD5SUM=/usr/local/bin/md5
     MD5COL=4
   fi
-fi
+fi 
 
 ZIP=$(which zip 2>/dev/null)
 if [ "${ZIP}" = "" ]
@@ -120,7 +120,7 @@ function checkVersionPg {
 
     # SELECT 'DMAFILETAG~' , version();
     dbVersion=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t --no-align << EOF
-SELECT current_setting('server_version_num');
+SELECT current_setting('server_version');
 EOF
 )
 echo 'DMAFILETAG~'${dbVersion}'|'${dbVersion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
