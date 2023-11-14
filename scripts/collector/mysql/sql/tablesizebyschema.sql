@@ -1,4 +1,5 @@
-SELECT /*+ MAX_EXECUTION_TIME(5000) */ CONCAT(table_schema, '.', TABLE_NAME) Schema_Table,
+SELECT /*+ MAX_EXECUTION_TIME(5000) */ table_schema,
+                                       TABLE_NAME,
                                        ROUND(table_rows / 1000000, 2) Rows_Count,
                                        ROUND(data_length / (1024 * 1024 * 1024), 2) Data_Size,
                                        ROUND(index_length / (1024 * 1024 * 1024), 2) Index_Size
