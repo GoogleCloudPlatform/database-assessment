@@ -1,4 +1,7 @@
-\ o output / opdb__relationsizesummary_ :VTAG.csv with src as (
+\ o output / opdb__pg_table_details_ :VTAG.csv;
+
+
+with src as (
     select t.relid as object_id,
         t.relname as table_name,
         t.schemaname as schema_name,
