@@ -1,5 +1,3 @@
-\ o output / opdb__pg_bg_writer_stats_ :VTAG.csv;
-
 with src as (
     select w.checkpoints_timed,
         w.checkpoints_req as checkpoints_requested,

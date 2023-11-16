@@ -1,5 +1,3 @@
-\ o output / opdb__pg_replication_slots_ :VTAG.csv;
-
 with src as (
     select s.slot_name,
         s.plugin,

@@ -1,5 +1,3 @@
-\ o output / opdb__pg_extensions_ :VTAG.csv;
-
 with src as (
     select e.oid as extension_id,
         e.extname as extension_name,

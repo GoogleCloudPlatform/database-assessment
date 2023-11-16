@@ -1,5 +1,3 @@
-\ o output / opdb__settings_ :VTAG.csv;
-
 with src as (
     select s.category as setting_category,
         s.name as setting_name,

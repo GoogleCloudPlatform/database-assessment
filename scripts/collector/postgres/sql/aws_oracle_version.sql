@@ -1,6 +1,5 @@
-\ o output / opdb__aws_oracle_version_ :VTAG.csv
-SELECT chr(39) || :PKEY || chr(39),
-    chr(39) || :DMA_SOURCE_ID || chr(39) AS DMA_SOURCE_ID,
-    chr(39) || :DMA_MANUAL_ID || chr(39) AS DMA_MANUAL_ID,
-    componentversion AS AWSExtensionVersion
-FROM aws_oracle_ext.versions AS extVersion
+select chr(39) || :PKEY || chr(39),
+    chr(39) || :DMA_SOURCE_ID || chr(39) as DMA_SOURCE_ID,
+    chr(39) || :DMA_MANUAL_ID || chr(39) as DMA_MANUAL_ID,
+    componentversion as aws_extension_version
+from aws_oracle_ext.versions as extVersion

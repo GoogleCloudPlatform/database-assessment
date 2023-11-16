@@ -1,5 +1,3 @@
-\ o output / opdb__pg_replication_stats_ :VTAG.csv;
-
 with src as (
     select r.pid,
         r.usesysid,
