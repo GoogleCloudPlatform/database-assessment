@@ -1,21 +1,21 @@
 with table_columns as (
-  select n.nspname::TEXT as table_schema,
+  select n.nspname as table_schema,
     case
       c.relkind
-      when 'r'::"char" then 'TABLE'::text
-      when 'v'::"char" then 'VIEW'::text
-      when 'm'::"char" then 'MATERIALIZED_VIEW'::text
-      when 'S'::"char" then 'SEQUENCE'::text
-      when 'f'::"char" then 'FOREIGN_TABLE'::text
-      when 'p'::"char" then 'PARTITIONED_TABLE'::text
-      when 'c'::"char" then 'COMPOSITE_TYPE'::text
-      when 'I'::"char" then 'PARTITIONED INDEX'::text
-      when 't'::"char" then 'TOAST_TABLE'::text
-      else 'UNCATEGORIZED'::text
+      when 'r' then 'TABLE'
+      when 'v' then 'VIEW'
+      when 'm' then 'MATERIALIZED_VIEW'
+      when 'S' then 'SEQUENCE'
+      when 'f' then 'FOREIGN_TABLE'
+      when 'p' then 'PARTITIONED_TABLE'
+      when 'c' then 'COMPOSITE_TYPE'
+      when 'I' then 'PARTITIONED INDEX'
+      when 't' then 'TOAST_TABLE'
+      else 'UNCATEGORIZED'
     end as table_type,
-    c.relname::TEXT as table_name,
-    a.attname::TEXT as column_name,
-    t.typname::TEXT as data_type
+    c.relname as table_name,
+    a.attname as column_name,
+    t.typname as data_type
   from pg_attribute a
     join pg_class c on a.attrelid = c.oid
     join pg_namespace n on n.oid = c.relnamespace
@@ -23,13 +23,13 @@ with table_columns as (
   where a.attnum > 0
     and (
       n.nspname <> all (
-        ARRAY ['pg_catalog'::name, 'information_schema'::name]
+        ARRAY ['pg_catalog', 'information_schema']
       )
-      and n.nspname !~ '^pg_toast'::text
+      and n.nspname !~ '^pg_toast'
     )
     and (
       c.relkind = ANY (
-        ARRAY ['r'::"char", 'p'::"char", 'S'::"char", 'v'::"char", 'f'::"char", 'm'::"char",'c'::"char",'I'::"char",'t'::"char"]
+        ARRAY ['r', 'p', 'S', 'v', 'f', 'm','c','I','t']
       )
     )
 ),

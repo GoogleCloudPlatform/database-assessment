@@ -4,7 +4,7 @@ with db as (
         db.datconnlimit as max_connection_limit,
         db.datistemplate as is_template_database,
         pg_encoding_to_char(db.encoding) as character_set_encoding,
-        pg_database_size(db.datname) as total_disk_size_mb
+        pg_database_size(db.datname) as total_disk_size_bytes
     from pg_database db
 ),
 db_size as (
@@ -43,7 +43,7 @@ src as (
         db.max_connection_limit,
         db.is_template_database,
         db.character_set_encoding,
-        db.total_disk_size_mb,
+        db.total_disk_size_bytes,
         db_size.backends_connected,
         db_size.txn_commit_count,
         db_size.txn_rollback_count,
@@ -80,7 +80,7 @@ select chr(39) || :DMA_SOURCE_ID || chr(39) as pkey,
     src.max_connection_limit,
     src.is_template_database,
     src.character_set_encoding,
-    src.total_disk_size_mb,
+    src.total_disk_size_bytes,
     src.backends_connected,
     src.txn_commit_count,
     src.txn_rollback_count,
