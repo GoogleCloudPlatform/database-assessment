@@ -29,7 +29,7 @@ with table_columns as (
     )
     and (
       c.relkind = ANY (
-        ARRAY ['r', 'p', 'S', 'v', 'f', 'm','c','I','t']
+        ARRAY ['r', 'p', 'S', 'v', 'f', 'm', 'c', 'I', 't']
       )
     )
 ),

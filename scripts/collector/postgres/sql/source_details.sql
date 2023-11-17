@@ -4,8 +4,8 @@ with src as (
     case
       when p.prokind = 'f' then 'FUNCTION'
       when p.prokind = 'p' then 'PROCEDURE'
-      when p.prokind = 'a' then 'AGGREGATE FUNCTION'
-      when p.prokind = 'w' then 'WINDOW FUNCTION'
+      when p.prokind = 'a' then 'AGGREGATE_FUNCTION'
+      when p.prokind = 'w' then 'WINDOW_FUNCTION'
       else 'UNCATEGORIZED_PROCEDURE'
     end as object_type,
     p.proname as object_name,

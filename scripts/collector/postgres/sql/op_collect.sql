@@ -48,9 +48,9 @@
 \i sql/settings.sql
 \o
 
--- \o output/opdb__pg_schema_objects_:VTAG.csv
--- \i sql/schema_objects.sql
--- \o
+\o output/opdb__pg_schema_objects_:VTAG.csv
+\i sql/schema_objects.sql
+\o
 
 \o output/opdb__pg_schema_details_:VTAG.csv
 \i sql/schema_details.sql
