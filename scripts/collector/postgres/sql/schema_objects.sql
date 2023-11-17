@@ -58,6 +58,24 @@ all_indexes as (
     join pg_stat_user_tables sut on (i.indrelid = sut.relid)
     join pg_class c on (i.indexrelid = c.oid)
 ),
+all_procedures as (
+  select p.oid as object_id,
+    'SOURCE_CODE' as object_category,
+    ns.nspname as object_schema,
+    case
+      when p.prokind = 'f' then 'FUNCTION'
+      when p.prokind = 'p' then 'PROCEDURE'
+      when p.prokind = 'a' then 'AGGREGATE_FUNCTION'
+      when p.prokind = 'w' then 'WINDOW_FUNCTION'
+      else 'UNCATEGORIZED_PROCEDURE'
+    end as object_type,
+    p.proname as object_name,
+    pg_get_userbyid(p.proowner) as object_database
+  from pg_proc p
+    left join pg_namespace ns on ns.oid = p.pronamespace
+  where ns.nspname <> all (array ['pg_catalog', 'information_schema'])
+    and ns.nspname !~ '^pg_toast'
+),
 src as (
   select a.object_database,
     a.object_category,
@@ -82,6 +100,14 @@ src as (
     a.object_name,
     a.object_id
   from all_indexes a
+  union all
+  select a.object_database,
+    a.object_category,
+    a.object_type,
+    a.object_schema,
+    a.object_name,
+    a.object_id
+  from all_procedures a
 )
 select chr(39) || :DMA_SOURCE_ID || chr(39) as pkey,
   chr(39) || :DMA_SOURCE_ID || chr(39) as dma_source_id,
