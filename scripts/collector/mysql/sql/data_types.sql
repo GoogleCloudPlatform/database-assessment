@@ -4,8 +4,8 @@ with src as (
         i.TABLE_NAME as table_name,
         i.DATA_TYPE as data_type,
         count(1) as data_type_count
-    from information_schema.COLUMNS i
-    WHERE i.TABLE_SCHEMA NOT IN (
+    from information_schema.columns i
+    where i.TABLE_SCHEMA not in (
             'mysql',
             'information_schema',
             'performance_schema',
@@ -13,6 +13,7 @@ with src as (
         )
     group by i.table_catalog,
         i.TABLE_SCHEMA,
+        i.TABLE_NAME,
         i.DATA_TYPE
 )
 select concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,

@@ -1,28 +1,25 @@
 with global_status as (
     select upper(variable_name) as variable_name,
         variable_value
-    from information_schema.GLOBAL_STATUS
+    from performance_schema.global_status
 ),
 all_vars as (
     select upper(variable_name) as variable_name,
         variable_value
-    from information_schema.GLOBAL_VARIABLES
+    from performance_schema.global_variables
     union
     select upper(variable_name),
-        COALESCE(SESSION_VALUE, GLOBAL_VALUE) variable_value
-    from information_schema.SYSTEM_VARIABLES
+        variable_value
+    from performance_schema.session_variables
     where variable_name not in (
             select variable_name
-            from information_schema.GLOBAL_VARIABLES
+            from performance_schema.global_variables
         )
 ),
 calculated_metrics as (
     select 'IS_MARIADB' as variable_name,
-        case
-            when upper(gv.variable_value) like '%MARIADB%' then 1
-            else 0
-        end as variable_value
-    from information_schema.global_variables gv
+        if(upper(gv.variable_value) like '%MARIADB%', 1, 0) as variable_value
+    from performance_schema.global_variables gv
     where gv.variable_name = 'VERSION'
 ),
 src as (

@@ -9,9 +9,7 @@ with src as (
         plugin_author as plugin_author,
         plugin_description as plugin_description,
         plugin_license as plugin_license,
-        load_option as load_option,
-        plugin_maturity as plugin_maturity,
-        plugin_auth_version as plugin_auth_version
+        load_option as load_option
     from information_schema.PLUGINS
 )
 select concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,
@@ -27,7 +25,5 @@ select concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,
     src.plugin_author,
     src.plugin_description,
     src.plugin_license,
-    src.load_option,
-    src.plugin_maturity,
-    src.plugin_auth_version
+    src.load_option
 from src;
