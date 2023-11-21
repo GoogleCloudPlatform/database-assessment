@@ -79,8 +79,8 @@ user_tables as (
             and t.TABLE_NAME = pt.TABLE_NAME
         )
         left join tables_with_pks pks on (
-            t.table_schema = pt.table_schema
-            and t.TABLE_NAME = pt.TABLE_NAME
+            t.table_schema = pks.table_schema
+            and t.TABLE_NAME = pks.TABLE_NAME
         )
         left join table_indexes idx on (
             t.table_schema = idx.table_schema
