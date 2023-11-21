@@ -119,18 +119,18 @@ src as (
         sum(
             if(upper(table_engine) != 'INNODB', index_length, 0)
         ) as non_innodb_index_size_bytes,
-        sum(data_length + index_length) as total_size_bytes,
+        sum(total_length) as total_size_bytes,
         sum(
             if(
                 upper(table_engine) = 'INNODB',
-                data_length + index_length,
+                total_length,
                 0
             )
-        ) as innodb_tototal_size_bytes,
+        ) as innodb_total_size_bytes,
         sum(
             if(
                 upper(table_engine) != 'INNODB',
-                data_length + index_length,
+                total_length,
                 0
             )
         ) as non_innodb_total_size_bytes,
@@ -163,7 +163,7 @@ select
     src.innodb_index_size_bytes,
     src.non_innodb_index_size_bytes,
     src.total_size_bytes,
-    src.innodb_tototal_size_bytes,
+    src.innodb_total_size_bytes,
     src.non_innodb_total_size_bytes,
     src.total_index_count,
     src.innodb_index_count,
