@@ -1,53 +1,53 @@
 with table_partitions as (
-    SELECT TABLE_SCHEMA,
+    select TABLE_SCHEMA,
         TABLE_NAME,
         PARTITION_METHOD,
         SUBPARTITION_METHOD,
-        COUNT(1) AS PARTITION_COUNT
-    FROM information_schema.PARTITIONS
-    WHERE table_schema NOT IN (
+        count(1) as PARTITION_COUNT
+    from information_schema.PARTITIONS
+    where table_schema not in (
             'mysql',
             'information_schema',
             'performance_schema',
             'sys'
         )
-    GROUP BY TABLE_SCHEMA,
+    group by TABLE_SCHEMA,
         TABLE_NAME,
         PARTITION_METHOD,
         SUBPARTITION_METHOD
 ),
 tables_with_pks as (
-    SELECT table_schema,
+    select table_schema,
         TABLE_NAME
-    FROM information_schema.statistics
-    WHERE table_schema NOT IN (
+    from information_schema.statistics
+    where table_schema not in (
             'mysql',
             'information_schema',
             'performance_schema',
             'sys'
         )
-    GROUP BY table_schema,
+    group by table_schema,
         TABLE_NAME,
         index_name
-    HAVING SUM(
-            IF(
+    having SUM(
+            if(
                 non_unique = 0
-                AND NULLABLE != 'YES',
+                and NULLABLE != 'YES',
                 1,
                 0
             )
-        ) = COUNT(*)
+        ) = count(*)
 ),
 table_indexes as (
-    SELECT s.table_schema,
+    select s.table_schema,
         s.table_name,
         count(1) as index_count,
         sum(
-            IF(s.INDEX_TYPE = 'FULLTEXT', 1, 0)
+            if(s.INDEX_TYPE = 'FULLTEXT', 1, 0)
         ) as fulltext_index_count,
-        sum(IF(s.INDEX_TYPE = 'SPATIAL', 1, 0)) as spatial_index_count
-    FROM information_schema.STATISTICS s
-    where s.table_schema NOT IN (
+        sum(if(s.INDEX_TYPE = 'SPATIAL', 1, 0)) as spatial_index_count
+    from information_schema.STATISTICS s
+    where s.table_schema not in (
             'mysql',
             'information_schema',
             'performance_schema',
@@ -67,13 +67,13 @@ user_tables as (
         t.TABLE_TYPE as table_type,
         t.ENGINE as table_engine,
         if(pks.table_name is not null, 1, 0) as has_primary_key,
-        IF(t.ROW_FORMAT = 'COMPRESSED', 1, 0) as is_compressed,
-        IF(pt.PARTITION_METHOD is not null, 1, 0) as is_partitioned,
+        if(t.ROW_FORMAT = 'COMPRESSED', 1, 0) as is_compressed,
+        if(pt.PARTITION_METHOD is not null, 1, 0) as is_partitioned,
         COALESCE(pt.PARTITION_COUNT, 0) as partition_count,
         COALESCE(idx.index_count, 0) as index_count,
         COALESCE(idx.fulltext_index_count, 0) as fulltext_index_count,
         COALESCE(idx.spatial_index_count, 0) as spatial_index_count
-    FROM information_schema.TABLES t
+    from information_schema.TABLES t
         left join table_partitions pt on (
             t.table_schema = pt.table_schema
             and t.TABLE_NAME = pt.TABLE_NAME
@@ -86,21 +86,21 @@ user_tables as (
             t.table_schema = idx.table_schema
             and t.TABLE_NAME = idx.TABLE_NAME
         )
-    WHERE t.table_schema NOT IN (
+    where t.table_schema not in (
             'mysql',
             'information_schema',
             'performance_schema',
             'sys'
         )
 )
-SELECT
+select
     /*+ MAX_EXECUTION_TIME(5000) */
     concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,
     concat(char(39), @DMA_SOURCE_ID, char(39)) as DMA_SOURCE_ID,
     concat(char(39), @DMA_MANUAL_ID, char(39)) as DMA_MANUAL_ID,
     table_schema,
-    is_compressed,
     table_name,
+    table_engine,
     table_rows,
     data_length,
     index_length,
