@@ -4,17 +4,22 @@ with global_status as (
     from performance_schema.global_status
 ),
 all_vars as (
-    select upper(variable_name) as variable_name,
+    select variable_name,
         variable_value
-    from performance_schema.global_variables
-    union
-    select upper(variable_name),
-        variable_value
-    from performance_schema.session_variables
-    where variable_name not in (
-            select variable_name
+    from (
+            select upper(variable_name) as variable_name,
+                variable_value
             from performance_schema.global_variables
-        )
+            union
+            select upper(variable_name),
+                variable_value
+            from performance_schema.session_variables
+            where variable_name not in (
+                    select variable_name
+                    from performance_schema.global_variables
+                )
+        ) a
+    where a.variable_name not in ('FT_BOOLEAN_SYNTAX', 'RSA_PUBLIC_KEY')
 ),
 all_plugins as (
     select if(agg.mysqlx_plugin > 0, 1, 0) as mysqlx_plugin_enabled,
@@ -243,7 +248,7 @@ src as (
 select distinct concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,
     concat(char(39), @DMA_SOURCE_ID, char(39)) as DMA_SOURCE_ID,
     concat(char(39), @DMA_MANUAL_ID, char(39)) as DMA_MANUAL_ID,
-    src.variable_category,
-    src.variable_name,
-    src.variable_value
+    concat(char(39), src.variable_category, char(39)) as variable_category,
+    concat(char(39), src.variable_name, char(39)) as variable_name,
+    concat(char(39), src.variable_value, char(39)) as variable_value
 from src;
