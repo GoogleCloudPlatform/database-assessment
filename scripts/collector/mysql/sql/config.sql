@@ -19,7 +19,9 @@ all_vars as (
                     from performance_schema.global_variables
                 )
         ) a
-    where a.variable_name not in ('FT_BOOLEAN_SYNTAX', 'RSA_PUBLIC_KEY')
+    where a.variable_name not in ('FT_BOOLEAN_SYNTAX')
+        and a.variable_name not like '%PUBLIC_KEY'
+        and a.variable_name not like '%PRIVATE_KEY'
 ),
 all_plugins as (
     select if(agg.mysqlx_plugin > 0, 1, 0) as mysqlx_plugin_enabled,
