@@ -275,7 +275,8 @@ then
 fi
 
 ${SQLCMD}  --user=$user --password -h $host -w -p $port  --no-align <<EOF
-\set VTAG ${V_FILE_TAG}
+\set VTAG '\'${V_FILE_TAG}\''
+\set PKEY '\'${V_FILE_TAG}\''
 \set DMA_SOURCE_ID '\'${DMA_SOURCE_ID}\''
 \set DMA_MANUAL_ID '\'${V_MANUAL_ID}\''
 \i sql/op_collect.sql

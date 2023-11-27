@@ -72,11 +72,12 @@ src as (
     from db
         join db_size on (db.database_oid = db_size.database_oid)
 )
-select chr(39) || :DMA_SOURCE_ID || chr(39) as pkey,
+select chr(39) || :PKEY || chr(39) as pkey,
     chr(39) || :DMA_SOURCE_ID || chr(39) as dma_source_id,
     chr(39) || :DMA_MANUAL_ID || chr(39) as dma_manual_id,
     src.database_oid,
     src.database_name,
+    chr(39) || version() || chr(39) as database_version,
     src.max_connection_limit,
     src.is_template_database,
     src.character_set_encoding,
