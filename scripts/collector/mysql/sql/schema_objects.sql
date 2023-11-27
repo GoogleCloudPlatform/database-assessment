@@ -7,7 +7,7 @@ with src as (
         i.TABLE_NAME as object_owner,
         i.CONSTRAINT_NAME as object_name
     from information_schema.TABLE_CONSTRAINTS i
-    WHERE i.CONSTRAINT_SCHEMA NOT IN (
+    where i.CONSTRAINT_SCHEMA not in (
             'mysql',
             'information_schema',
             'performance_schema',
@@ -27,7 +27,7 @@ with src as (
         i.definer as object_owner,
         i.TRIGGER_NAME as object_name
     from information_schema.TRIGGERS i
-    WHERE i.TRIGGER_SCHEMA NOT IN (
+    where i.TRIGGER_SCHEMA not in (
             'mysql',
             'information_schema',
             'performance_schema',
@@ -43,7 +43,7 @@ with src as (
         i.TABLE_NAME as object_name
     from information_schema.TABLES i
     where i.table_type = 'VIEW'
-        and i.TABLE_SCHEMA NOT IN (
+        and i.TABLE_SCHEMA not in (
             'mysql',
             'information_schema',
             'performance_schema',
@@ -53,7 +53,7 @@ with src as (
     select i.TABLE_CATALOG as object_catalog,
         i.TABLE_SCHEMA as object_schema,
         'TABLE' as object_category,
-        IF(
+        if(
             pt.PARTITION_METHOD is null,
             'TABLE',
             if(
@@ -72,19 +72,19 @@ with src as (
         i.TABLE_NAME as object_name
     from information_schema.TABLES i
         left join (
-            SELECT TABLE_SCHEMA,
+            select TABLE_SCHEMA,
                 TABLE_NAME,
                 PARTITION_METHOD,
                 SUBPARTITION_METHOD,
-                COUNT(1) AS PARTITION_COUNT
-            FROM information_schema.PARTITIONS
-            WHERE table_schema NOT IN (
+                count(1) as PARTITION_COUNT
+            from information_schema.PARTITIONS
+            where table_schema not in (
                     'mysql',
                     'information_schema',
                     'performance_schema',
                     'sys'
                 )
-            GROUP BY TABLE_SCHEMA,
+            group by TABLE_SCHEMA,
                 TABLE_NAME,
                 PARTITION_METHOD,
                 SUBPARTITION_METHOD
@@ -93,7 +93,7 @@ with src as (
             and i.TABLE_SCHEMA = pt.TABLE_SCHEMA
         )
     where i.table_type != 'VIEW'
-        and i.TABLE_SCHEMA NOT IN (
+        and i.TABLE_SCHEMA not in (
             'mysql',
             'information_schema',
             'performance_schema',
@@ -107,9 +107,9 @@ with src as (
         i.ROUTINE_SCHEMA as object_owner_schema,
         i.definer as object_owner,
         i.ROUTINE_NAME as object_name
-    FROM information_schema.ROUTINES i
-    WHERE i.ROUTINE_TYPE = 'PROCEDURE'
-        AND i.ROUTINE_SCHEMA NOT IN (
+    from information_schema.ROUTINES i
+    where i.ROUTINE_TYPE = 'PROCEDURE'
+        and i.ROUTINE_SCHEMA not in (
             'mysql',
             'information_schema',
             'performance_schema',
@@ -123,9 +123,9 @@ with src as (
         i.ROUTINE_SCHEMA as object_owner_schema,
         i.definer as object_owner,
         i.ROUTINE_NAME as object_name
-    FROM information_schema.ROUTINES i
-    WHERE i.ROUTINE_TYPE = 'FUNCTION'
-        AND i.ROUTINE_SCHEMA NOT IN (
+    from information_schema.ROUTINES i
+    where i.ROUTINE_TYPE = 'FUNCTION'
+        and i.ROUTINE_SCHEMA not in (
             'mysql',
             'information_schema',
             'performance_schema',
@@ -139,14 +139,14 @@ with src as (
         i.EVENT_SCHEMA as object_owner_schema,
         i.definer as object_owner,
         i.EVENT_NAME as object_name
-    FROM information_schema.EVENTS i
-    WHERE i.EVENT_SCHEMA NOT IN (
+    from information_schema.EVENTS i
+    where i.EVENT_SCHEMA not in (
             'mysql',
             'information_schema',
             'performance_schema',
             'sys'
         )
-    UNION
+    union
     select i.TABLE_CATALOG as object_catalog,
         i.TABLE_SCHEMA as object_schema,
         'INDEX' as object_category,
@@ -162,21 +162,21 @@ with src as (
         i.INDEX_NAME as object_name
     from information_schema.STATISTICS i
     where i.INDEX_NAME != 'PRIMARY'
-        and i.TABLE_SCHEMA NOT IN (
+        and i.TABLE_SCHEMA not in (
             'mysql',
             'information_schema',
             'performance_schema',
             'sys'
         )
 )
-select concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,
-    concat(char(39), @DMA_SOURCE_ID, char(39)) as DMA_SOURCE_ID,
-    concat(char(39), @DMA_MANUAL_ID, char(39)) as DMA_MANUAL_ID,
-    src.object_catalog,
-    src.object_schema,
-    src.object_category,
-    src.object_type,
-    src.object_owner_schema,
-    src.object_owner,
-    src.object_name
+select concat(char(39), @PKEY, char(39)) as pkey,
+    concat(char(39), @DMA_SOURCE_ID, char(39)) as dma_source_id,
+    concat(char(39), @DMA_MANUAL_ID, char(39)) as dma_manual_id,
+    concat(char(39), src.object_catalog, char(39)) as object_catalog,
+    concat(char(39), src.object_schema, char(39)) as object_schema,
+    concat(char(39), src.object_category, char(39)) as object_category,
+    concat(char(39), src.object_type, char(39)) as object_type,
+    concat(char(39), src.object_owner_schema, char(39)) as object_owner_schema,
+    concat(char(39), src.object_owner, char(39)) as object_owner,
+    concat(char(39), src.object_name, char(39)) as object_name
 from src;

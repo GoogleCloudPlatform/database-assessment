@@ -221,6 +221,7 @@ do
     ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__mysql_${fname}__${V_TAG} <<EOF
 SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}' ; 
 SET @DMA_MANUAL_ID='${V_MANUAL_ID}' ;
+SET @PKEY='${V_FILE_TAG}';
 source ${f}
 exit
 EOF

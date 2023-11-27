@@ -95,18 +95,18 @@ user_tables as (
 )
 select
     /*+ MAX_EXECUTION_TIME(5000) */
-    concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,
-    concat(char(39), @DMA_SOURCE_ID, char(39)) as DMA_SOURCE_ID,
-    concat(char(39), @DMA_MANUAL_ID, char(39)) as DMA_MANUAL_ID,
-    table_schema,
-    table_name,
-    table_engine,
-    table_rows,
-    data_length,
-    index_length,
-    is_compressed,
-    is_partitioned,
-    partition_count,
-    index_count,
-    fulltext_index_count
+    concat(char(39), @PKEY, char(39)) as pkey,
+    concat(char(39), @DMA_SOURCE_ID, char(39)) as dma_source_id,
+    concat(char(39), @DMA_MANUAL_ID, char(39)) as dma_manual_id,
+    concat(char(39), table_schema, char(39)) as table_schema,
+    concat(char(39), table_name, char(39)) as table_name,
+    concat(char(39), table_engine, char(39)) as table_engine,
+    concat(char(39), table_rows, char(39)) as table_rows,
+    concat(char(39), data_length, char(39)) as data_length,
+    concat(char(39), index_length, char(39)) as index_length,
+    concat(char(39), is_compressed, char(39)) as is_compressed,
+    concat(char(39), is_partitioned, char(39)) as is_partitioned,
+    concat(char(39), partition_count, char(39)) as partition_count,
+    concat(char(39), index_count, char(39)) as index_count,
+    concat(char(39), fulltext_index_count, char(39)) as fulltext_index_count
 from user_tables;

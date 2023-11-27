@@ -247,9 +247,9 @@ src as (
         variable_value
     from calculated_metrics
 )
-select distinct concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,
-    concat(char(39), @DMA_SOURCE_ID, char(39)) as DMA_SOURCE_ID,
-    concat(char(39), @DMA_MANUAL_ID, char(39)) as DMA_MANUAL_ID,
+select distinct concat(char(39), @PKEY, char(39)) as pkey,
+    concat(char(39), @DMA_SOURCE_ID, char(39)) as dma_source_id,
+    concat(char(39), @DMA_MANUAL_ID, char(39)) as dma_manual_id,
     concat(char(39), src.variable_category, char(39)) as variable_category,
     concat(char(39), src.variable_name, char(39)) as variable_name,
     concat(char(39), src.variable_value, char(39)) as variable_value

@@ -146,26 +146,42 @@ src as (
 )
 select
     /*+ MAX_EXECUTION_TIME(5000) */
-    concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,
-    concat(char(39), @DMA_SOURCE_ID, char(39)) as DMA_SOURCE_ID,
-    concat(char(39), @DMA_MANUAL_ID, char(39)) as DMA_MANUAL_ID,
-    src.table_schema,
-    src.total_table_count,
-    src.innodb_table_count,
-    src.non_innodb_table_count,
-    src.total_row_count,
-    src.innodb_table_row_count,
-    src.non_innodb_table_row_count,
-    src.total_data_size_bytes,
-    src.innodb_data_size_bytes,
-    src.non_innodb_data_size_bytes,
-    src.total_index_size_bytes,
-    src.innodb_index_size_bytes,
-    src.non_innodb_index_size_bytes,
-    src.total_size_bytes,
-    src.innodb_total_size_bytes,
-    src.non_innodb_total_size_bytes,
-    src.total_index_count,
-    src.innodb_index_count,
-    src.non_innodb_index_count
+    concat(char(39), @PKEY, char(39)) as pkey,
+    concat(char(39), @DMA_SOURCE_ID, char(39)) as dma_source_id,
+    concat(char(39), @DMA_MANUAL_ID, char(39)) as dma_manual_id,
+    concat(char(39), src.table_schema, char(39)) as table_schema,
+    concat(char(39), src.total_table_count, char(39)) as total_table_count,
+    concat(char(39), src.innodb_table_count, char(39)) as innodb_table_count,
+    concat(char(39), src.non_innodb_table_count, char(39)) as non_innodb_table_count,
+    concat(char(39), src.total_row_count, char(39)) as total_row_count,
+    concat(char(39), src.innodb_table_row_count, char(39)) as innodb_table_row_count,
+    concat(
+        char(39),
+        src.non_innodb_table_row_count,
+        char(39)
+    ) as non_innodb_table_row_count,
+    concat(char(39), src.total_data_size_bytes, char(39)) as total_data_size_bytes,
+    concat(char(39), src.innodb_data_size_bytes, char(39)) as innodb_data_size_bytes,
+    concat(
+        char(39),
+        src.non_innodb_data_size_bytes,
+        char(39)
+    ) as non_innodb_data_size_bytes,
+    concat(char(39), src.total_index_size_bytes, char(39)) as total_index_size_bytes,
+    concat(char(39), src.innodb_index_size_bytes, char(39)) as innodb_index_size_bytes,
+    concat(
+        char(39),
+        src.non_innodb_index_size_bytes,
+        char(39)
+    ) as non_innodb_index_size_bytes,
+    concat(char(39), src.total_size_bytes, char(39)) as total_size_bytes,
+    concat(char(39), src.innodb_total_size_bytes, char(39)) as innodb_total_size_bytes,
+    concat(
+        char(39),
+        src.non_innodb_total_size_bytes,
+        char(39)
+    ) as non_innodb_total_size_bytes,
+    concat(char(39), src.total_index_count, char(39)) as total_index_count,
+    concat(char(39), src.innodb_index_count, char(39)) as innodb_index_count,
+    concat(char(39), src.non_innodb_index_count, char(39)) as non_innodb_index_count
 from src;
