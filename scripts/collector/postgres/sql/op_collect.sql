@@ -67,7 +67,3 @@
 \o output/opdb__pg_source_details_:VTAG.csv
 \i sql/source_details.sql
 \o
-
-\o output/opdb__pg_version_:VTAG.csv
-\i sql/version.sql
-\o
