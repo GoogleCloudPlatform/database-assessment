@@ -451,12 +451,12 @@ union
   select chr(39) || :PKEY || chr(39) as pkey,
     chr(39) || :DMA_SOURCE_ID || chr(39) as dma_source_id,
     chr(39) || :DMA_MANUAL_ID || chr(39) as dma_manual_id,
-    function_schema as object_schema_name,
-    function_language as object_language,
-    'Procedures' as as object_type,
-    function_name as object_name,
-    funcname as aws_extension_dependency,
-    sum(cnt) as sct_function_reference_count
+    chr(39) || function_schema || chr(39) as object_schema_name,
+    chr(39) || function_language || chr(39) as object_language,
+    chr(39) || 'Procedures' || chr(39) as object_type,
+    chr(39) || function_name || chr(39) as object_name,
+    chr(39) || funcname || chr(39) as aws_extension_dependency,
+    chr(39) || sum(cnt) || chr(39) as sct_function_reference_count
   from alias2
   where 1 = 1
   group by function_schema,
