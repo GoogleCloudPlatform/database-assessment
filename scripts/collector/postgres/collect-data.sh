@@ -284,7 +284,7 @@ ${SQLCMD}  --user=$user --password -h $host -w -p $port  --no-align <<EOF
 EOF
 specsOut="output/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv"
 host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
-./db-machine-specs.sh $host ${PKEY} ${DMA_SOURCE_ID} ${V_MANUAL_ID} ${specsOut}
+./db-machine-specs.sh $host ${V_FILE_TAG} ${DMA_SOURCE_ID} ${V_MANUAL_ID} ${specsOut}
 }
 
 function createErrorLog {
