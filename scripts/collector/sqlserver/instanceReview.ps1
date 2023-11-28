@@ -232,6 +232,9 @@ if ([string]::IsNullorEmpty($dmaSourceId)) {
 
 WriteLog -logLocation $foldername\$logFile -logMessage "DMA Manual Id: $manualUniqueId " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
+
+WriteLog -logLocation $foldername\$logFile -logMessage "SQL Server Version: $dbversion " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
  
 WriteLog -logLocation $foldername\$logFile -logMessage "Execution Variables List" -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
