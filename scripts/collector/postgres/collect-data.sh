@@ -274,8 +274,6 @@ then
 	DMA_SOURCE_ID="NA"
 fi
 
-PKEY="NA"
-
 ${SQLCMD}  --user=$user --password -h $host -w -p $port  --no-align <<EOF
 \set VTAG ${V_FILE_TAG}
 \set DMA_SOURCE_ID '\'${DMA_SOURCE_ID}\''
