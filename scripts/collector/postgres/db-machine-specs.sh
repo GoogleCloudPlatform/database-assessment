@@ -36,7 +36,7 @@ function writeLog() {
 }
 
 # Output headers
-headers="pkey|dma_source_id|dma_manual_id|MachineName|PhysicalCpuCount|LogicalCpuCount|TotalOSMemoryMB"
+headers="pkey|dma_source_id|dma_manual_id|machine_name|physical_cpu_count|logical_cpu_count|total_os_memory_mb"
 echo "$headers" > "$outputPath"
 
 # Only supported locally.
