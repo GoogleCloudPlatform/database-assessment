@@ -69,43 +69,45 @@ CREATE TABLE #serverTranLogCount (
 );
 
 BEGIN
+IF @PRODUCT_VERSION > 10
+    exec('
     INSERT INTO #serverTranLogCount
     SELECT
-        CONVERT(VARCHAR(19), a.backup_start_date, 101) AS "collection_date",
-        DATEPART (day, a.backup_start_date) "day_of_month",
-        COUNT (1) "total_logs_generated",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 00, 1, 0)) "h0_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 01, 1, 0)) "h1_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 02, 1, 0)) "h2_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 03, 1, 0)) "h3_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 04, 1, 0)) "h4_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 05, 1, 0)) "h5_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 06, 1, 0)) "h6_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 07, 1, 0)) "h7_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 08, 1, 0)) "h8_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 09, 1, 0)) "h9_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 10, 1, 0)) "h10_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 11, 1, 0)) "h11_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 12, 1, 0)) "h12_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 13, 1, 0)) "h13_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 14, 1, 0)) "h14_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 15, 1, 0)) "h15_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 16, 1, 0)) "h16_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 17, 1, 0)) "h17_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 18, 1, 0)) "h18_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 19, 1, 0)) "h19_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 20, 1, 0)) "h20_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 21, 1, 0)) "h21_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 22, 1, 0)) "h22_count",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 23, 1, 0)) "h23_count",
-        CEILING(ROUND (COUNT (1) / 24, 0)) "avg_per_hour"
+        CONVERT(VARCHAR(19), a.backup_start_date, 101) AS collection_date,
+        DATEPART (day, a.backup_start_date) day_of_month,
+        COUNT (1) total_logs_generated,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 00, 1, 0)) h0_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 01, 1, 0)) h1_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 02, 1, 0)) h2_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 03, 1, 0)) h3_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 04, 1, 0)) h4_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 05, 1, 0)) h5_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 06, 1, 0)) h6_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 07, 1, 0)) h7_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 08, 1, 0)) h8_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 09, 1, 0)) h9_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 10, 1, 0)) h10_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 11, 1, 0)) h11_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 12, 1, 0)) h12_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 13, 1, 0)) h13_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 14, 1, 0)) h14_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 15, 1, 0)) h15_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 16, 1, 0)) h16_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 17, 1, 0)) h17_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 18, 1, 0)) h18_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 19, 1, 0)) h19_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 20, 1, 0)) h20_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 21, 1, 0)) h21_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 22, 1, 0)) h22_count,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 23, 1, 0)) h23_count,
+        CEILING(ROUND (COUNT (1) / 24, 0)) avg_per_hour
     FROM msdb.dbo.backupset a
-    WHERE a.type = 'L'
+    WHERE a.type = ''L''
         AND a.backup_start_date < getdate()
     GROUP BY
         CONVERT(VARCHAR(19), a.backup_start_date, 101),
         DATEPART (day, a.backup_start_date) 
-    ORDER BY 1,2;
+    ORDER BY 1,2');
 
 SELECT 
     @PKEY as PKEY,
