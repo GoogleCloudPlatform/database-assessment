@@ -268,6 +268,9 @@ $dbServerConfig = 'opdb' + '__' + 'DbServerConfig' + $outputFileSuffix
 $dbServerDmvPerfmon = 'opdb' + '__' + 'DmvPerfmon' + $outputFileSuffix
 $manifestFile = 'opdb' + '__' + 'manifest' + $outputFileSuffix
 $computerSpecsFile = 'opdb' + '__' + 'DbMachineSpecs' + $outputFileSuffix
+$linkedSrvrsDetail = 'opdb' + '__' + 'LinkedSrvrsDetail' + $outputFileSuffix
+$tranLogBkupCountByDayByHour = 'opdb' + '__' + 'TranLogBkupCountByHourByDay' + $outputFileSuffix
+$tranLogBkupSizeByDayByHour = 'opdb' + '__' + 'TranLogBkupSizeByHourByDay' + $outputFileSuffix
 
 $outputFileArray = @($compFileName,
                     $srvFileName,
@@ -287,7 +290,10 @@ $outputFileArray = @($compFileName,
                     $dbServerConfig,
                     $dbServerDmvPerfmon,
                     $manifestFile,
-                    $computerSpecsFile)
+                    $computerSpecsFile,
+                    $linkedSrvrsDetail,
+                    $tranLogBkupCountByDayByHour,
+                    $tranLogBkupSizeByDayByHour)
 
 WriteLog -logMessage "Checking directory path + output file name lengths for max length limitations..." -logOperation "MESSAGE"
 foreach ($directory in $outputFileArray) {
@@ -321,6 +327,7 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Fe
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Linked Server Info..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\linkedServers.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
+    sqlcmd -S $serverName -i sql\linkedServersDetail.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$linkedSrvrsDetail
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Cluster Node Info..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\dbClusterNodes.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
@@ -334,7 +341,10 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Di
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Configuration Info..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\dbServerConfigurationSettings.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$dbServerConfig
 
-   
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Transaction Log Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\dbServerTranLogBackupCountByDayByHour.sql -d msdb -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$tranLogBkupCountByDayByHour
+    sqlcmd -S $serverName -i sql\dbServerTranLogBackupSizeByDayByHour.sql -d msdb -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$tranLogBkupSizeByDayByHour
+
 ### First establish headers for the collection files which could execute against multiple databases in the instance
 Set-Content -Path $foldername\$objectList -Encoding utf8 -Value "PKEY|database_name|schema_name|object_name|object_type|object_type_desc|object_count|lines_of_code|associated_table_name|dma_source_id|dma_manual_id"
 Set-Content -Path $foldername\$tableList -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|partition_count|is_memory_optimized|temporal_type|is_external|lock_escalation|is_tracked_by_cdc|text_in_row_limit|is_replicated|row_count|data_compression|total_space_mb|used_space_mb|unused_space_mb|dma_source_id|dma_manual_id"
