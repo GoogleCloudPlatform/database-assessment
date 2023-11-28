@@ -100,6 +100,7 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/
 	@cp scripts/collector/postgres/sql/*.sql $(BUILD_DIR)/collector/postgres/sql
 	@cp scripts/collector/postgres/collect-data.sh $(BUILD_DIR)/collector/postgres/
+	@cp scripts/collector/postgres/db-machine-specs.sh $(BUILD_DIR)/collector/postgres/
 	@cp scripts/collector/postgres/README.txt $(BUILD_DIR)/collector/postgres/
 	@cp  LICENSE $(BUILD_DIR)/collector/postgres
 	@echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/postgres/VERSION.txt

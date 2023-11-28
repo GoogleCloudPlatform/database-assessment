@@ -280,6 +280,9 @@ ${SQLCMD}  --user=$user --password -h $host -w -p $port  --no-align <<EOF
 \set DMA_MANUAL_ID '\'${V_MANUAL_ID}\''
 \i sql/op_collect.sql
 EOF
+specsOut="output/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv"
+host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
+./db-machine-specs.sh $host ${V_FILE_TAG} ${DMA_SOURCE_ID} ${V_MANUAL_ID} ${specsOut}
 }
 
 function createErrorLog {
