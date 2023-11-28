@@ -140,6 +140,7 @@ SELECT
     @DMA_SOURCE_ID as dma_source_id,
     @DMA_MANUAL_ID as dma_manual_id
 from #serverTranLogCount;
+END
 
 IF OBJECT_ID('tempdb..#serverTranLogCount') IS NOT NULL  
     DROP TABLE #serverTranLogCount;

@@ -140,6 +140,7 @@ SELECT
     @DMA_SOURCE_ID as dma_source_id,
     @DMA_MANUAL_ID as dma_manual_id
 from #serverTranLogBackupSize;
+END
 
 IF OBJECT_ID('tempdb..#serverTranLogBackupSize') IS NOT NULL  
     DROP TABLE #serverTranLogBackupSize;
