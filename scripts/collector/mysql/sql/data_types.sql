@@ -16,12 +16,12 @@ with src as (
         i.TABLE_NAME,
         i.DATA_TYPE
 )
-select concat(char(39), @PKEY, char(39)) as pkey,
-    concat(char(39), @DMA_SOURCE_ID, char(39)) as dma_source_id,
-    concat(char(39), @DMA_MANUAL_ID, char(39)) as dma_manual_id,
-    concat(char(39), src.table_catalog, char(39)) as table_catalog,
-    concat(char(39), src.table_schema, char(39)) as table_schema,
-    concat(char(39), src.table_name, char(39)) as table_name,
-    concat(char(39), src.data_type, char(39)) as data_type,
-    concat(char(39), src.data_type_count, char(39)) as data_type_count
+select concat(char(34), @PKEY, char(34)) as pkey,
+    concat(char(34), @DMA_SOURCE_ID, char(34)) as dma_source_id,
+    concat(char(34), @DMA_MANUAL_ID, char(34)) as dma_manual_id,
+    concat(char(34), src.table_catalog, char(34)) as table_catalog,
+    concat(char(34), src.table_schema, char(34)) as table_schema,
+    concat(char(34), src.table_name, char(34)) as table_name,
+    concat(char(34), src.data_type, char(34)) as data_type,
+    concat(char(34), src.data_type_count, char(34)) as data_type_count
 from src;
