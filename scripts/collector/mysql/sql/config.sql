@@ -1,7 +1,10 @@
 with global_status as (
     select upper(variable_name) as variable_name,
         variable_value
-    from performance_schema.global_status
+    from performance_schema.global_status a
+    where a.variable_name not in ('FT_BOOLEAN_SYNTAX')
+        and a.variable_name not like '%PUBLIC_KEY'
+        and a.variable_name not like '%PRIVATE_KEY'
 ),
 all_vars as (
     select variable_name,
