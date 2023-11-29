@@ -448,15 +448,15 @@ union
       ) as alias2
     where def ~* 'aws_oracle_ext.*'
   )
-  select chr(39) || :PKEY || chr(39) as pkey,
-    chr(39) || :DMA_SOURCE_ID || chr(39) as dma_source_id,
-    chr(39) || :DMA_MANUAL_ID || chr(39) as dma_manual_id,
-    chr(39) || function_schema || chr(39) as object_schema_name,
-    chr(39) || function_language || chr(39) as object_language,
-    chr(39) || 'Procedures' || chr(39) as object_type,
-    chr(39) || function_name || chr(39) as object_name,
-    chr(39) || funcname || chr(39) as aws_extension_dependency,
-    chr(39) || sum(cnt) || chr(39) as sct_function_reference_count
+  select chr(34) || :PKEY || chr(34) as pkey,
+    chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
+    chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
+    chr(34) || function_schema || chr(34) as object_schema_name,
+    chr(34) || function_language || chr(34) as object_language,
+    chr(34) || 'Procedures' || chr(34) as object_type,
+    chr(34) || function_name || chr(34) as object_name,
+    chr(34) || funcname || chr(34) as aws_extension_dependency,
+    chr(34) || sum(cnt) || chr(34) as sct_function_reference_count
   from alias2
   where 1 = 1
   group by function_schema,

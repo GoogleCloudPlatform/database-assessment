@@ -45,9 +45,9 @@ src as (
     a.table_name,
     a.data_type
 )
-select chr(39) || :PKEY || chr(39) as pkey,
-  chr(39) || :DMA_SOURCE_ID || chr(39) as dma_source_id,
-  chr(39) || :DMA_MANUAL_ID || chr(39) as dma_manual_id,
+select chr(34) || :PKEY || chr(34) as pkey,
+  chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
+  chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
   src.table_schema,
   src.table_type,
   src.table_name,
