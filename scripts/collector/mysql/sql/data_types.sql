@@ -23,5 +23,5 @@ select concat(char(34), @PKEY, char(34)) as pkey,
     concat(char(34), src.table_schema, char(34)) as table_schema,
     concat(char(34), src.table_name, char(34)) as table_name,
     concat(char(34), src.data_type, char(34)) as data_type,
-    concat(char(34), src.data_type_count, char(34)) as data_type_count
+    src.data_type_count as data_type_count
 from src;

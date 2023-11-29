@@ -150,38 +150,22 @@ select
     concat(char(34), @DMA_SOURCE_ID, char(34)) as dma_source_id,
     concat(char(34), @DMA_MANUAL_ID, char(34)) as dma_manual_id,
     concat(char(34), src.table_schema, char(34)) as table_schema,
-    concat(char(34), src.total_table_count, char(34)) as total_table_count,
-    concat(char(34), src.innodb_table_count, char(34)) as innodb_table_count,
-    concat(char(34), src.non_innodb_table_count, char(34)) as non_innodb_table_count,
-    concat(char(34), src.total_row_count, char(34)) as total_row_count,
-    concat(char(34), src.innodb_table_row_count, char(34)) as innodb_table_row_count,
-    concat(
-        char(34),
-        src.non_innodb_table_row_count,
-        char(34)
-    ) as non_innodb_table_row_count,
-    concat(char(34), src.total_data_size_bytes, char(34)) as total_data_size_bytes,
-    concat(char(34), src.innodb_data_size_bytes, char(34)) as innodb_data_size_bytes,
-    concat(
-        char(34),
-        src.non_innodb_data_size_bytes,
-        char(34)
-    ) as non_innodb_data_size_bytes,
-    concat(char(34), src.total_index_size_bytes, char(34)) as total_index_size_bytes,
-    concat(char(34), src.innodb_index_size_bytes, char(34)) as innodb_index_size_bytes,
-    concat(
-        char(34),
-        src.non_innodb_index_size_bytes,
-        char(34)
-    ) as non_innodb_index_size_bytes,
-    concat(char(34), src.total_size_bytes, char(34)) as total_size_bytes,
-    concat(char(34), src.innodb_total_size_bytes, char(34)) as innodb_total_size_bytes,
-    concat(
-        char(34),
-        src.non_innodb_total_size_bytes,
-        char(34)
-    ) as non_innodb_total_size_bytes,
-    concat(char(34), src.total_index_count, char(34)) as total_index_count,
-    concat(char(34), src.innodb_index_count, char(34)) as innodb_index_count,
-    concat(char(34), src.non_innodb_index_count, char(34)) as non_innodb_index_count
+    src.total_table_count as total_table_count,
+    src.innodb_table_count as innodb_table_count,
+    src.non_innodb_table_count as non_innodb_table_count,
+    src.total_row_count as total_row_count,
+    src.innodb_table_row_count as innodb_table_row_count,
+    src.non_innodb_table_row_count as non_innodb_table_row_count,
+    src.total_data_size_bytes as total_data_size_bytes,
+    src.innodb_data_size_bytes as innodb_data_size_bytes,
+    src.non_innodb_data_size_bytes as non_innodb_data_size_bytes,
+    src.total_index_size_bytes as total_index_size_bytes,
+    src.innodb_index_size_bytes as innodb_index_size_bytes,
+    src.non_innodb_index_size_bytes as non_innodb_index_size_bytes,
+    src.total_size_bytes as total_size_bytes,
+    src.innodb_total_size_bytes as innodb_total_size_bytes,
+    src.non_innodb_total_size_bytes as non_innodb_total_size_bytes,
+    src.total_index_count as total_index_count,
+    src.innodb_index_count as innodb_index_count,
+    src.non_innodb_index_count as non_innodb_index_count
 from src;

@@ -33,5 +33,5 @@ select concat(char(34), @PKEY, char(34)) as pkey,
     concat(char(34), @DMA_SOURCE_ID, char(34)) as dma_source_id,
     concat(char(34), @DMA_MANUAL_ID, char(34)) as dma_manual_id,
     concat(char(34), user_host, char(34)) as user_host,
-    concat(char(34), user_count, char(34)) as user_count
+    user_count as user_count
 from src;

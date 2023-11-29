@@ -101,12 +101,12 @@ select
     concat(char(34), table_schema, char(34)) as table_schema,
     concat(char(34), table_name, char(34)) as table_name,
     concat(char(34), table_engine, char(34)) as table_engine,
-    concat(char(34), table_rows, char(34)) as table_rows,
-    concat(char(34), data_length, char(34)) as data_length,
-    concat(char(34), index_length, char(34)) as index_length,
+    table_rows as table_rows,
+    data_length as data_length,
+    index_length as index_length,
     concat(char(34), is_compressed, char(34)) as is_compressed,
     concat(char(34), is_partitioned, char(34)) as is_partitioned,
-    concat(char(34), partition_count, char(34)) as partition_count,
-    concat(char(34), index_count, char(34)) as index_count,
-    concat(char(34), fulltext_index_count, char(34)) as fulltext_index_count
+    partition_count as partition_count,
+    index_count as index_count,
+    fulltext_index_count as fulltext_index_count
 from user_tables;
