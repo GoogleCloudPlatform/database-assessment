@@ -33,29 +33,46 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#LinkedServersData') IS NOT NULL  
-   DROP TABLE #LinkedServersData;  
+IF OBJECT_ID('tempdb..#LinkedServersDetail') IS NOT NULL  
+   DROP TABLE #LinkedServersDetail;  
 
-CREATE TABLE #LinkedServersData
+CREATE TABLE #LinkedServersDetail
 (
-product NVARCHAR(255),
-CountOfLinkedServers INT
+    name nvarchar(255),
+    product nvarchar(255),
+    provider nvarchar(255),
+    data_source nvarchar(4000),
+    location nvarchar(4000),
+    provider_string nvarchar(4000),
+    catalog nvarchar(255)
 )
 
-IF @CLOUDTYPE = 'NONE'    
-    INSERT INTO #LinkedServersData
-    select product, 
-        count(product) as CountOfLinkedServers
+BEGIN TRY
+exec('   
+    INSERT INTO #LinkedServersDetail
+    select 
+        name, 
+        product,
+        provider,
+        data_source,
+        locaton,
+        provider_string,
+        catalog
     from sys.servers
     where is_linked = 1
-    GROUP BY product;
+        and server_id <> 0');
+END TRY
+BEGIN CATCH
+	IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+		WAITFOR DELAY '00:00:00'
+END CATCH
 
 SELECT 
     @PKEY as PKEY, 
     a.*,
     @DMA_SOURCE_ID as DMA_SOURCE_ID,
     @DMA_MANUAL_ID as dma_manual_id
-from #LinkedServersData a;
+from #LinkedServersDetail a;
 
-IF OBJECT_ID('tempdb..#LinkedServersData') IS NOT NULL  
-   DROP TABLE #LinkedServersData;
+IF OBJECT_ID('tempdb..#LinkedServersDetail') IS NOT NULL  
+   DROP TABLE #LinkedServersDetail;

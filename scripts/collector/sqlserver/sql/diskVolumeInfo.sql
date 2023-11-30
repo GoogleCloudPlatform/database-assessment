@@ -59,9 +59,9 @@ IF @CLOUDTYPE = 'NONE'
 		   THEN vs.logical_volume_name
 		ELSE ''''
 		END,
-        CONVERT(NVARCHAR, (vs.total_bytes / 1073741824.0)) AS total_size_gb,
-        CONVERT(NVARCHAR, (vs.available_bytes / 1073741824.0)) AS available_size_gb,
-        CONVERT(NVARCHAR, (CONVERT(numeric,vs.available_bytes) / CONVERT(numeric, vs.total_bytes))*100,2) AS space_free_pct,
+        CONVERT(NVARCHAR, (CONVERT(bigint, vs.total_bytes / 1073741824.0))) AS total_size_gb,
+        CONVERT(NVARCHAR, (CONVERT(bigint, vs.available_bytes / 1073741824.0))) AS available_size_gb,
+        CONVERT(NVARCHAR, (CONVERT(bigint, vs.available_bytes) / CONVERT(bigint, vs.total_bytes))*100,2) AS space_free_pct,
         '''' as cluster_block_size
     FROM
         sys.master_files AS f WITH (
@@ -90,7 +90,7 @@ IF @CLOUDTYPE = 'AZURE'
         ''CLOUD'' as logical_volume_name, 
         total_size_gb, 
         available_size_gb, 
-        CONVERT(NVARCHAR, (CONVERT(numeric,vs.available_bytes) / CONVERT(numeric, vs.total_bytes))*100,2) AS space_free_pct,
+        CONVERT(NVARCHAR, (CONVERT(bigint, vs.available_bytes) / CONVERT(bigint, vs.total_bytes))*100,2) AS space_free_pct,
         '''' as cluster_block_size
     FROM sum_sizes');
     END TRY
