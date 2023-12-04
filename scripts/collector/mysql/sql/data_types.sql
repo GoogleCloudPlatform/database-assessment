@@ -13,6 +13,7 @@ with src as (
         )
     group by i.table_catalog,
         i.TABLE_SCHEMA,
+        i.TABLE_NAME,
         i.DATA_TYPE
 )
 select concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,
