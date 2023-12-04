@@ -119,7 +119,7 @@ function checkVersionPg {
     fi
 
     # SELECT 'DMAFILETAG~' , version();
-    dbversion=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t --no-align << EOF
+    dbversion=$(PGPASSWORD="$pass" ${SQLCMD}  --user=$user -d $db -h $host -w -p $port -t --no-align << EOF
 SELECT current_setting('server_version_num');
 EOF
 )
@@ -258,7 +258,7 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
 fi
 
 
-DMA_SOURCE_ID=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t --no-align <<EOF
+DMA_SOURCE_ID=$(PGPASSWORD="$pass" ${SQLCMD}  --user=$user -d $db -h $host -w -p $port -t --no-align <<EOF
 SELECT system_identifier FROM pg_control_system();
 EOF
 )
@@ -274,7 +274,7 @@ then
 	DMA_SOURCE_ID="NA"
 fi
 
-${SQLCMD}  --user=$user --password -h $host -w -p $port  --no-align <<EOF
+PGPASSWORD="$pass"  ${SQLCMD}  --user=$user -d $db -h $host -w -p $port  --no-align <<EOF
 \set VTAG '\'${V_FILE_TAG}\''
 \set PKEY '\'${V_FILE_TAG}\''
 \set DMA_SOURCE_ID '\'${DMA_SOURCE_ID}\''
