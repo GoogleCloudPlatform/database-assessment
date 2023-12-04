@@ -6,7 +6,7 @@ with src as (
         e.extrelocatable as is_relocatable,
         e.extversion as extension_version
     from pg_extension e
-        join pg_authid a on (e.extowner = a.oid)
+        join pg_roles a on (e.extowner = a.oid)
         join pg_namespace n on (e.extnamespace = n.oid)
 )
 select chr(34) || :PKEY || chr(34) as pkey,

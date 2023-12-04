@@ -4,4 +4,7 @@ select chr(34) || :PKEY || chr(34) as pkey,
     chr(34) || application_name || chr(34) as application_name,
     chr(34) || count(*) || chr(34) as application_count
 from pg_stat_activity
-group by 1
+group by 1,
+    2,
+    3,
+    4
