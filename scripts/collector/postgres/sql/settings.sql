@@ -12,7 +12,10 @@ with src as (
         s.boot_val as boot_value,
         s.reset_val as reset_value,
         s.sourcefile as source_file,
-        s.pending_restart as pending_restart
+        s.pending_restart as pending_restart case
+            when s.source not in ('override', 'default') then 1
+            else 0
+        end as is_default
     from pg_settings s
 )
 select chr(34) || :PKEY || chr(34) as pkey,
@@ -31,5 +34,6 @@ select chr(34) || :PKEY || chr(34) as pkey,
     src.boot_value,
     src.reset_value,
     src.source_file,
-    src.pending_restart
+    src.pending_restart,
+    src.is_default
 from src;
