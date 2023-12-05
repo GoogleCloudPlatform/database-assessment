@@ -227,10 +227,9 @@ exit
 EOF
 done
 
-for x in $(grep -L DMA_SOURCE_ID output/*${V_FILE_TAG}.csv )
-do
-  sed 's/\r//g' ${x} | awk -v SRCID="${DMA_SOURCE_ID}" -v MANID="${V_MANUAL_ID}" -v Q="'" 'BEGIN { FS="|"; OFS="|"; }; {if (NR == 2) { $NF = $NF "DMA_SOURCE_ID" "|" "MANUAL_ID" } else { $NF = $NF Q SRCID Q "|" Q MANID Q "|" } print }' > ${x}.tmp && mv ${x}.tmp ${x}
-done
+specsOut="output/opdb__mysql_db_machine_specs_${V_FILE_TAG}.csv"
+host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
+./db-machine-specs.sh $host ${V_FILE_TAG} ${DMA_SOURCE_ID} ${V_MANUAL_ID} ${specsOut}
 }
 
 
