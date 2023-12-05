@@ -12,7 +12,8 @@ with src as (
         s.boot_val as boot_value,
         s.reset_val as reset_value,
         s.sourcefile as source_file,
-        s.pending_restart as pending_restart case
+        s.pending_restart as pending_restart,
+        case
             when s.source not in ('override', 'default') then 1
             else 0
         end as is_default
