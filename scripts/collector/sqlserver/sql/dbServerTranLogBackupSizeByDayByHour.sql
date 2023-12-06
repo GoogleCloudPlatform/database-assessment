@@ -69,43 +69,45 @@ CREATE TABLE #serverTranLogBackupSize (
 );
 
 BEGIN
+IF @PRODUCT_VERSION > 10
+    exec('
     INSERT INTO #serverTranLogBackupSize
     SELECT
-        CONVERT(VARCHAR(19), a.backup_start_date, 101) AS "collection_date",
-        DATEPART (day, a.backup_start_date) "day_of_month",
-        CEILING(ROUND(SUM(CONVERT(float,a.backup_size) / 1048576),0)) "total_logs_generated_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 00, CEILING(a.backup_size / 1048576), 0)) "h0_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 01, CEILING(a.backup_size / 1048576), 0)) "h1_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 02, CEILING(a.backup_size / 1048576), 0)) "h2_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 03, CEILING(a.backup_size / 1048576), 0)) "h3_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 04, CEILING(a.backup_size / 1048576), 0)) "h4_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 05, CEILING(a.backup_size / 1048576), 0)) "h5_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 06, CEILING(a.backup_size / 1048576), 0)) "h6_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 07, CEILING(a.backup_size / 1048576), 0)) "h7_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 08, CEILING(a.backup_size / 1048576), 0)) "h8_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 09, CEILING(a.backup_size / 1048576), 0)) "h9_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 10, CEILING(a.backup_size / 1048576), 0)) "h10_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 11, CEILING(a.backup_size / 1048576), 0)) "h11_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 12, CEILING(a.backup_size / 1048576), 0)) "h12_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 13, CEILING(a.backup_size / 1048576), 0)) "h13_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 14, CEILING(a.backup_size / 1048576), 0)) "h14_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 15, CEILING(a.backup_size / 1048576), 0)) "h15_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 16, CEILING(a.backup_size / 1048576), 0)) "h16_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 17, CEILING(a.backup_size / 1048576), 0)) "h17_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 18, CEILING(a.backup_size / 1048576), 0)) "h18_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 19, CEILING(a.backup_size / 1048576), 0)) "h19_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 20, CEILING(a.backup_size / 1048576), 0)) "h20_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 21, CEILING(a.backup_size / 1048576), 0)) "h21_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 22, CEILING(a.backup_size / 1048576), 0)) "h22_size_in_mb",
-        SUM (IIF (DATEPART (hh, a.backup_start_date) = 23, CEILING(a.backup_size / 1048576), 0)) "h23_size_in_mb",
-        CEILING(ROUND (SUM(CONVERT(float,a.backup_size) / 1048576) / 24, 0)) "avg_mb_per_hour"
+        CONVERT(VARCHAR(19), a.backup_start_date, 101) AS collection_date,
+        DATEPART (day, a.backup_start_date) day_of_month,
+        CEILING(ROUND(SUM(CONVERT(float,a.backup_size) / 1048576),0)) total_logs_generated_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 00, CEILING(a.backup_size / 1048576), 0)) h0_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 01, CEILING(a.backup_size / 1048576), 0)) h1_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 02, CEILING(a.backup_size / 1048576), 0)) h2_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 03, CEILING(a.backup_size / 1048576), 0)) h3_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 04, CEILING(a.backup_size / 1048576), 0)) h4_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 05, CEILING(a.backup_size / 1048576), 0)) h5_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 06, CEILING(a.backup_size / 1048576), 0)) h6_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 07, CEILING(a.backup_size / 1048576), 0)) h7_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 08, CEILING(a.backup_size / 1048576), 0)) h8_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 09, CEILING(a.backup_size / 1048576), 0)) h9_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 10, CEILING(a.backup_size / 1048576), 0)) h10_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 11, CEILING(a.backup_size / 1048576), 0)) h11_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 12, CEILING(a.backup_size / 1048576), 0)) h12_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 13, CEILING(a.backup_size / 1048576), 0)) h13_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 14, CEILING(a.backup_size / 1048576), 0)) h14_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 15, CEILING(a.backup_size / 1048576), 0)) h15_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 16, CEILING(a.backup_size / 1048576), 0)) h16_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 17, CEILING(a.backup_size / 1048576), 0)) h17_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 18, CEILING(a.backup_size / 1048576), 0)) h18_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 19, CEILING(a.backup_size / 1048576), 0)) h19_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 20, CEILING(a.backup_size / 1048576), 0)) h20_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 21, CEILING(a.backup_size / 1048576), 0)) h21_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 22, CEILING(a.backup_size / 1048576), 0)) h22_size_in_mb,
+        SUM (IIF (DATEPART (hh, a.backup_start_date) = 23, CEILING(a.backup_size / 1048576), 0)) h23_size_in_mb,
+        CEILING(ROUND (SUM(CONVERT(float,a.backup_size) / 1048576) / 24, 0)) avg_mb_per_hour
     FROM msdb.dbo.backupset a
-    WHERE a.type = 'L'
+    WHERE a.type = ''L''
         AND a.backup_start_date < getdate()
     GROUP BY
         CONVERT(VARCHAR(19), a.backup_start_date, 101),
         DATEPART (day, a.backup_start_date) 
-    ORDER BY 1,2;
+    ORDER BY 1,2');
 
 SELECT 
     @PKEY as PKEY,
@@ -140,6 +142,7 @@ SELECT
     @DMA_SOURCE_ID as dma_source_id,
     @DMA_MANUAL_ID as dma_manual_id
 from #serverTranLogBackupSize;
+END
 
 IF OBJECT_ID('tempdb..#serverTranLogBackupSize') IS NOT NULL  
     DROP TABLE #serverTranLogBackupSize;

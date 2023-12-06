@@ -1,1 +1,0 @@
-select  @@server_uuid;

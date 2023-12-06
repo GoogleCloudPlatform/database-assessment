@@ -28,7 +28,7 @@ help:  ## Display this help
 install:	 ## Install the project in dev mode.
 	@if [ "$(VENV_EXISTS)" ]; then source .venv/bin/activate; fi
 	@if [ ! "$(VENV_EXISTS)" ]; then python3 -m venv .venv && source .venv/bin/activate; fi
-	.venv/bin/pip install -U wheel setuptools cython pip && .venv/bin/pip install -U -r requirements.txt
+	.venv/bin/pip install -U wheel setuptools cython pip mypy sqlfluff && .venv/bin/pip install -U -r requirements.txt -r requirements-docs.txt
 	@echo "=> Build environment installed successfully.  ** If you want to re-install or update, 'make install'"
 
 

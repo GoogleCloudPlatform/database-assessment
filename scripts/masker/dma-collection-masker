@@ -33,7 +33,7 @@ __all__ = [
     "run_masker",
 ]
 
-__version__ = "4.3.25"
+__version__ = "4.3.27"
 
 logger = logging.getLogger(__name__)
 
