@@ -291,7 +291,8 @@ host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
 }
 
 
-# Check the output files for error messages
+# Check the output files for error messages.
+# Slightly different selection criteria for each source.
 function createErrorLog {
 V_FILE_TAG=$1
 echo "Checking for errors..."

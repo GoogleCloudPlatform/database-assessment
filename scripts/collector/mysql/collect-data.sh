@@ -119,11 +119,11 @@ function checkVersionPg {
     fi
 
     # SELECT 'DMAFILETAG~' , version();
-    dbversion=$(PGPASSWORD="$pass" ${SQLCMD}  --user=$user -d $db -h $host -w -p $port -t --no-align << EOF
+    dbVersion=$(PGPASSWORD="$pass" ${SQLCMD} -X --user=$user -d $db -h $host -w -p $port -t --no-align << EOF
 SELECT current_setting('server_version_num');
 EOF
 )
-echo 'DMAFILETAG~'${dbversion}'|'${dbversion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
+echo 'DMAFILETAG~'${dbVersion}'|'${dbVersion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
 }
 
 function checkVersionMysql {
@@ -143,11 +143,11 @@ function checkVersionMysql {
       exit 1
     fi
 
-dbversion=$(${SQLCMD}  --user=$user --password=$pass -h $host -P $port -s $db << EOF
+dbVersion=$(${SQLCMD}  --user=$user --password=$pass -h $host -P $port -s $db << EOF
 SELECT version();
 EOF
 )
-echo 'DMAFILETAG~'${dbversion}'|'${dbversion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
+echo 'DMAFILETAG~'${dbVersion}'|'${dbVersion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
 }
 
 
@@ -225,7 +225,7 @@ fi
 for f in $(ls -1 sql/*.sql | grep -v -e _mysqlcollector.sql -e init.sql -e password_column.sql -e usersno${DMA_PASSWORD_COL})
 do
   fname=$(echo ${f} | cut -d '/' -f 2 | cut -d '.' -f 1)
-    ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__${fname}__${V_TAG} <<EOF
+    ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__${fname}__${V_TAG} 2>&1 <<EOF
 SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}' ; 
 SET @DMA_MANUAL_ID='${V_MANUAL_ID}' ;
 source ${f}
@@ -258,7 +258,7 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
 fi
 
 
-DMA_SOURCE_ID=$(PGPASSWORD="$pass" ${SQLCMD}  --user=$user -d $db -h $host -w -p $port -t --no-align <<EOF
+DMA_SOURCE_ID=$(PGPASSWORD="$pass" ${SQLCMD} -X --user=$user -d $db -h $host -w -p $port -t --no-align <<EOF
 SELECT system_identifier FROM pg_control_system();
 EOF
 )
@@ -274,19 +274,37 @@ then
 	DMA_SOURCE_ID="NA"
 fi
 
-PGPASSWORD="$pass"  ${SQLCMD}  --user=$user -d $db -h $host -w -p $port  --no-align <<EOF
-\set VTAG '\'${V_FILE_TAG}\''
+echo ${SQLCMD} -X --user=$user -d $db -h $host -w -p $port  --no-align
+
+PGPASSWORD="$pass"  
+( ${SQLCMD} -X --user=$user -d $db -h $host -w -p $port  --no-align --echo-errors <<EOF
+\set VTAG ${V_FILE_TAG}
 \set PKEY '\'${V_FILE_TAG}\''
 \set DMA_SOURCE_ID '\'${DMA_SOURCE_ID}\''
 \set DMA_MANUAL_ID '\'${V_MANUAL_ID}\''
 \i sql/op_collect.sql
 EOF
+) 2>output/opdb__stderr_${V_FILE_TAG}.log
+specsOut="output/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv"
+host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
+./db-machine-specs.sh $host ${V_FILE_TAG} ${DMA_SOURCE_ID} ${V_MANUAL_ID} ${specsOut}
 }
 
+
+# Check the output files for error messages.
+# Slightly different selection criteria for each source.
 function createErrorLog {
 V_FILE_TAG=$1
 echo "Checking for errors..."
+if [ "$DBTYPE" == "oracle" ] ; then
 $GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+else if [ "$DBTYPE" == "mysql" ] ; then
+$GREP -E '^ERROR ' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+else if [ "$DBTYPE" == "postgres" ]; then
+$GREP -E 'ERROR:' ${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+fi
+fi
+fi
 retval=$?
 if [ ! -f  ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ]; then
   echo "Error creating error log.  Exiting..."
