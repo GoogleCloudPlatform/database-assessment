@@ -286,7 +286,7 @@ host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
 ./db-machine-specs.sh $host ${V_FILE_TAG} ${DMA_SOURCE_ID} ${V_MANUAL_ID} ${specsOut}
 }
 
-function createErrorLog {
+function createErrorLog {  
 V_FILE_TAG=$1
 echo "Checking for errors..."
 $GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
