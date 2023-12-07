@@ -274,17 +274,15 @@ then
 	DMA_SOURCE_ID="NA"
 fi
 
-echo ${SQLCMD} -X --user=$user -d $db -h $host -w -p $port  --no-align
-
-PGPASSWORD="$pass"  
-( ${SQLCMD} -X --user=$user -d $db -h $host -w -p $port  --no-align --echo-errors <<EOF
+export PGPASSWORD="$pass"  
+${SQLCMD} -X --user=$user -d $db -h $host -w -p $port  --no-align --echo-errors 2>output/opdb__stderr_${V_FILE_TAG}.log <<EOF
 \set VTAG ${V_FILE_TAG}
 \set PKEY '\'${V_FILE_TAG}\''
 \set DMA_SOURCE_ID '\'${DMA_SOURCE_ID}\''
 \set DMA_MANUAL_ID '\'${V_MANUAL_ID}\''
 \i sql/op_collect.sql
 EOF
-) 2>output/opdb__stderr_${V_FILE_TAG}.log
+
 specsOut="output/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv"
 host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
 ./db-machine-specs.sh $host ${V_FILE_TAG} ${DMA_SOURCE_ID} ${V_MANUAL_ID} ${specsOut}
