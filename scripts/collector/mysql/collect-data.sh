@@ -218,7 +218,7 @@ export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port
 for f in $(ls -1 sql/*.sql | grep -v -e init.sql)
 do
   fname=$(echo ${f} | cut -d '/' -f 2 | cut -d '.' -f 1)
-    ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__mysql_${fname}__${V_TAG} <<EOF
+    ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__mysql_${fname}__${V_TAG} 2>&1 <<EOF
 SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}' ; 
 SET @DMA_MANUAL_ID='${V_MANUAL_ID}' ;
 SET @PKEY='${V_FILE_TAG}';
@@ -275,17 +275,30 @@ ${SQLCMD}  --user=$user --password -h $host -w -p $port  --no-align <<EOF
 EOF
 }
 
+
+# Check the output files for error messages.
+# Slightly different selection criteria for each source.
 function createErrorLog {
 V_FILE_TAG=$1
 echo "Checking for errors..."
-$GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
-retval=$?
+if [ "$DBTYPE" == "oracle" ] ; then
+	$GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+        retval=$?
+else if [ "$DBTYPE" == "mysql" ] ; then
+	$GREP -E '^ERROR ' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+        retval=$?
+else if [ "$DBTYPE" == "postgres" ]; then
+	$GREP -E 'ERROR:' ${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+        retval=$?
+fi
+fi
+fi
 if [ ! -f  ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ]; then
-  echo "Error creating error log.  Exiting..."
-  return $retval
+	  echo "Error creating error log.  Exiting..."
+	    return $retval
 fi
 if [ -f  ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv ]; then
-  $GREP 'sys.dbms_qopatch.get_opatch_lsinventory' ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv >> ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+	  $GREP 'sys.dbms_qopatch.get_opatch_lsinventory' ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv >> ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
 fi
 }
 
