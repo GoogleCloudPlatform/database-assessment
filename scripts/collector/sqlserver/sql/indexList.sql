@@ -76,10 +76,22 @@ BEGIN
       IF @validDB <> 0
       BEGIN
          exec ('
+            WITH sys_schemas AS (
+                 SELECT name, schema_id
+                 FROM sys.schemas
+            ),
+            sys_views AS (
+                SELECT v.*, s.name AS schema_name
+                FROM sys.views v
+                LEFT JOIN sys_schemas s ON v.schema_id = s.schema_id
+            )
             INSERT INTO #indexList
             SELECT
                DB_NAME() as database_name
-               ,s.name as schema_name
+               ,CASE 
+	            WHEN s.name IS NULL THEN v.schema_name
+		    ELSE s.name
+	        END as schema_name
                ,CASE
                   WHEN t.name IS NULL THEN v.name
                   ELSE t.name
@@ -102,13 +114,17 @@ BEGIN
             JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
             JOIN sys.objects o ON o.object_id = i.object_id AND o.is_ms_shipped = 0
             LEFT JOIN sys.tables t ON i.object_id = t.object_id AND t.is_ms_shipped = 0
-            LEFT JOIN sys.views v ON i.object_id = v.object_id AND v.is_ms_shipped = 0
-            LEFT JOIN sys.schemas s ON s.schema_id = t.schema_id
+            LEFT JOIN sys_views v ON i.object_id = v.object_id AND v.is_ms_shipped = 0
+            LEFT JOIN sys_schemas s ON s.schema_id = t.schema_id
             LEFT JOIN sys.partitions AS p ON p.object_id = i.object_id AND p.index_id = i.index_id
             LEFT JOIN sys.allocation_units AS a ON a.container_id = p.partition_id
             LEFT JOIN sys.partition_schemes ps ON i.data_space_id = ps.data_space_id
+	    WHERE i.NAME is not NULL
             GROUP BY 
-               s.name 
+                CASE 
+	                 WHEN s.name IS NULL THEN v.schema_name
+		              ELSE s.name
+	             END
                ,CASE
                   WHEN t.name IS NULL THEN v.name
                   ELSE t.name
