@@ -62,11 +62,12 @@ statio_user_tables as (
 ),
 foreign_tables as (
     select ft.ftrelid as object_id,
-        s.srvname as foreign_server_name
+        s.srvname as foreign_server_name,
+        w.fdwname as foreign_data_wrapper_name
     from pg_catalog.pg_foreign_table ft
         inner join pg_catalog.pg_class c on c.oid = ft.ftrelid
         inner join pg_catalog.pg_foreign_server s on s.oid = ft.ftserver
-    where pg_catalog.pg_table_is_visible(c.oid)
+        inner join pg_catalog.pg_foreign_data_wrapper w on s.srvfdw = w.oid
 ),
 src as (
     select t.object_id,
@@ -89,6 +90,7 @@ src as (
         t.autoanalyze_count,
         t.autovacuum_count,
         f.foreign_server_name,
+        f.foreign_data_wrapper_name,
         s.heap_blocks_hit,
         s.heap_blocks_read,
         s.index_blocks_hit,
@@ -124,6 +126,7 @@ select chr(34) || :PKEY || chr(34) as pkey,
     chr(34) || src.autoanalyze_count || chr(34) as autoanalyze_count,
     chr(34) || src.autovacuum_count || chr(34) as autovacuum_count,
     chr(34) || src.foreign_server_name || chr(34) as foreign_server_name,
+    chr(34) || src.foreign_data_wrapper_name || chr(34) as foreign_data_wrapper_name,
     chr(34) || src.heap_blocks_hit || chr(34) as heap_blocks_hit,
     chr(34) || src.heap_blocks_read || chr(34) as heap_blocks_read,
     chr(34) || src.index_blocks_hit || chr(34) as index_blocks_hit,
