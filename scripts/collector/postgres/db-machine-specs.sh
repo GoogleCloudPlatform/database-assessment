@@ -36,7 +36,7 @@ function writeLog() {
 }
 
 # Output headers
-headers="pkey|dma_source_id|dma_manual_id|machine_name|physical_cpu_count|logical_cpu_count|total_os_memory_mb"
+headers="pkey|dma_source_id|dma_manual_id|machine_name|physical_cpu_count|logical_cpu_count|total_os_memory_mb|total_size_bytes|used_size_bytes"
 echo "$headers" > "$outputPath"
 
 # Only supported locally.
@@ -57,10 +57,12 @@ writeLog "Fetching machine HW specs from computer: $machine_name and storing it 
 # Get hardware specifications
 physicalCpuCount=$(lscpu | awk '/^Socket/{print $2}')
 logicalCpuCount=$(lscpu | awk '/^Thread/{print $4}')
-memoryBytes=$(free -b | awk '/^Mem/{print $2}')
+memoryMB=$(free -b | awk '/^Mem/{print ($2+0) / (1024*1024)}')
+totalSizeBytes=$(df --total / | awk '/total/{print ($2+0) * 1024}')
+usedSizeBytes=$(df --output=used -B1 / | awk 'NR==2{print $1+0}')
 
 # Writing result to output
-csvData="$pkey|$dmaSourceId|$dmaManualId|$machine_name|$physicalCpuCount|$logicalCpuCount|$(($memoryBytes / 1024 / 1024))"
+csvData="\"$pkey\"|\"$dmaSourceId\"|\"$dmaManualId\"|\"$machine_name\"|$physicalCpuCount|$logicalCpuCount|$memoryMB|$totalSizeBytes|$usedSizeBytes"
 echo "$csvData" >> "$outputPath"
 
 writeLog "Successfully fetched machine HW specs of $machine_name to output: $outputPath"
