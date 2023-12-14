@@ -58,8 +58,8 @@ writeLog "Fetching machine HW specs from computer: $machine_name and storing it 
 physicalCpuCount=$(lscpu | awk '/^Socket/{print $2}')
 logicalCpuCount=$(lscpu | awk '/^Thread/{print $4}')
 memoryMB=$(free -b | awk '/^Mem/{print ($2+0) / (1024*1024)}')
-totalSizeBytes=$(df --total / | awk '/total/{print ($2+0) * 1024}')
-usedSizeBytes=$(df --output=used -B1 / | awk 'NR==2{print $1+0}')
+totalSizeBytes=$(df --total / | awk '/total/{printf("%.0f\n", ($2+0) * 1024)}')
+usedSizeBytes=$(df --output=used -B1 / | awk 'NR==2{printf("%.0f\n", ($1+0))}')
 
 # Writing result to output
 csvData="\"$pkey\"|\"$dmaSourceId\"|\"$dmaManualId\"|\"$machine_name\"|$physicalCpuCount|$logicalCpuCount|$memoryMB|$totalSizeBytes|$usedSizeBytes"
