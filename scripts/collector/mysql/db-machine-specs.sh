@@ -47,7 +47,9 @@ if [ "$machine_name" = "localhost" ]; then
 fi
 
 if [ "$machine_name" != "$(hostname)" ]; then    
-    echo "Specified machine_name ${machine_name} does not match the actual hostname. Writing headers only to $outputPath."    
+    echo "Specified machine_name ${machine_name} does not match the actual hostname. Writing headers only to $outputPath."
+    csvData="\"$pkey\"|\"$dmaSourceId\"|\"$dmaManualId\"|\"$machine_name\"|0|0|0|0|0"
+    echo "$csvData" >> "$outputPath"
     exit 0
 fi
 
