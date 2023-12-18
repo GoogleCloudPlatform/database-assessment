@@ -7,13 +7,13 @@ with src as (
         i.COMMENT as engine_comment
     from information_schema.ENGINES i
 )
-select concat(char(39), @DMA_MANUAL_ID, char(39)) as PKEY,
-    concat(char(39), @DMA_SOURCE_ID, char(39)) as DMA_SOURCE_ID,
-    concat(char(39), @DMA_MANUAL_ID, char(39)) as DMA_MANUAL_ID,
-    src.engine_name,
-    src.engine_support,
-    src.engine_transactions,
-    src.engine_xa,
-    src.engine_savepoints,
-    src.engine_comment
+select concat(char(34), @PKEY, char(34)) as pkey,
+    concat(char(34), @DMA_SOURCE_ID, char(34)) as dma_source_id,
+    concat(char(34), @DMA_MANUAL_ID, char(34)) as dma_manual_id,
+    concat(char(34), src.engine_name, char(34)) as engine_name,
+    concat(char(34), src.engine_support, char(34)) as engine_support,
+    concat(char(34), src.engine_transactions, char(34)) as engine_transactions,
+    concat(char(34), src.engine_xa, char(34)) as engine_xa,
+    concat(char(34), src.engine_savepoints, char(34)) as engine_savepoints,
+    concat(char(34), src.engine_comment, char(34)) as engine_comment
 from src;

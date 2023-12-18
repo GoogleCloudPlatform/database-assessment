@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2022 Google LLC
+# Copyright 2022 Google LLC 
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -214,29 +214,22 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
 fi
 
 export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/init.sql | tr -d '\r')
-export DMA_PASSWORD_COL=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/password_column.sql | tr -d '\r')
 
-
-if [ -f sql/${V_FILE_TAG}_mysqlcollector.sql ]; 
-then
-rm sql/${V_FILE_TAG}_mysqlcollector.sql
-fi
-
-for f in $(ls -1 sql/*.sql | grep -v -e _mysqlcollector.sql -e init.sql -e password_column.sql -e usersno${DMA_PASSWORD_COL})
+for f in $(ls -1 sql/*.sql | grep -v -e init.sql)
 do
   fname=$(echo ${f} | cut -d '/' -f 2 | cut -d '.' -f 1)
-  ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db}  >output/opdb__${fname}__${V_TAG} <<EOF
+    ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__mysql_${fname}__${V_TAG} 2>&1 <<EOF
 SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}' ; 
 SET @DMA_MANUAL_ID='${V_MANUAL_ID}' ;
+SET @PKEY='${V_FILE_TAG}';
 source ${f}
 exit
 EOF
 done
 
-for x in $(grep -L DMA_SOURCE_ID output/*${V_FILE_TAG}.csv )
-do
-  sed 's/\r//g' ${x} | awk -v SRCID="${DMA_SOURCE_ID}" -v MANID="${V_MANUAL_ID}" -v Q="'" 'BEGIN { FS="|"; OFS="|"; }; {if (NR == 2) { $NF = $NF "DMA_SOURCE_ID" "|" "MANUAL_ID" } else { $NF = $NF Q SRCID Q "|" Q MANID Q "|" } print }' > ${x}.tmp && mv ${x}.tmp ${x}
-done
+specsOut="output/opdb__mysql_db_machine_specs_${V_FILE_TAG}.csv"
+host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
+./db-machine-specs.sh $host ${V_FILE_TAG} ${DMA_SOURCE_ID} ${V_MANUAL_ID} ${specsOut}
 }
 
 
@@ -283,17 +276,30 @@ PGPASSWORD="$pass"  ${SQLCMD}  --user=$user -d $db -h $host -w -p $port  --no-al
 EOF
 }
 
+
+# Check the output files for error messages.
+# Slightly different selection criteria for each source.
 function createErrorLog {
 V_FILE_TAG=$1
 echo "Checking for errors..."
-$GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
-retval=$?
+if [ "$DBTYPE" == "oracle" ] ; then
+	$GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+        retval=$?
+else if [ "$DBTYPE" == "mysql" ] ; then
+	$GREP -E '^ERROR ' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+        retval=$?
+else if [ "$DBTYPE" == "postgres" ]; then
+	$GREP -E 'ERROR:' ${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+        retval=$?
+fi
+fi
+fi
 if [ ! -f  ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ]; then
-  echo "Error creating error log.  Exiting..."
-  return $retval
+	  echo "Error creating error log.  Exiting..."
+	    return $retval
 fi
 if [ -f  ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv ]; then
-  $GREP 'sys.dbms_qopatch.get_opatch_lsinventory' ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv >> ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+	  $GREP 'sys.dbms_qopatch.get_opatch_lsinventory' ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv >> ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
 fi
 }
 
