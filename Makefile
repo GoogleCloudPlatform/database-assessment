@@ -92,6 +92,7 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 	@mkdir -p $(BUILD_DIR)/collector/mysql/sql/
 	@cp scripts/collector/mysql/sql/*.sql $(BUILD_DIR)/collector/mysql/sql
 	@cp scripts/collector/mysql/collect-data.sh $(BUILD_DIR)/collector/mysql/
+	@cp scripts/collector/mysql/db-machine-specs.sh $(BUILD_DIR)/collector/mysql/
 	@cp scripts/collector/mysql/README.txt $(BUILD_DIR)/collector/mysql/
 	@cp  LICENSE $(BUILD_DIR)/collector/mysql
 	@echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/mysql/VERSION.txt

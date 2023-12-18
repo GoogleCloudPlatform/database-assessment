@@ -92,21 +92,80 @@ user_tables as (
             'performance_schema',
             'sys'
         )
+),
+src as (
+    select table_schema,
+        count(table_name) as total_table_count,
+        sum(if(upper(table_engine) = 'INNODB', 1, 0)) as innodb_table_count,
+        sum(if(upper(table_engine) != 'INNODB', 1, 0)) as non_innodb_table_count,
+        sum(table_rows) as total_row_count,
+        sum(
+            if(upper(table_engine) = 'INNODB', table_rows, 0)
+        ) as innodb_table_row_count,
+        sum(
+            if(upper(table_engine) != 'INNODB', table_rows, 0)
+        ) as non_innodb_table_row_count,
+        sum(data_length) as total_data_size_bytes,
+        sum(
+            if(upper(table_engine) = 'INNODB', data_length, 0)
+        ) as innodb_data_size_bytes,
+        sum(
+            if(upper(table_engine) != 'INNODB', data_length, 0)
+        ) as non_innodb_data_size_bytes,
+        sum(index_length) as total_index_size_bytes,
+        sum(
+            if(upper(table_engine) = 'INNODB', index_length, 0)
+        ) as innodb_index_size_bytes,
+        sum(
+            if(upper(table_engine) != 'INNODB', index_length, 0)
+        ) as non_innodb_index_size_bytes,
+        sum(total_length) as total_size_bytes,
+        sum(
+            if(
+                upper(table_engine) = 'INNODB',
+                total_length,
+                0
+            )
+        ) as innodb_total_size_bytes,
+        sum(
+            if(
+                upper(table_engine) != 'INNODB',
+                total_length,
+                0
+            )
+        ) as non_innodb_total_size_bytes,
+        sum(index_count) as total_index_count,
+        sum(
+            if(upper(table_engine) = 'INNODB', index_count, 0)
+        ) as innodb_index_count,
+        sum(
+            if(upper(table_engine) != 'INNODB', index_count, 0)
+        ) as non_innodb_index_count
+    from user_tables
+    group by table_schema
 )
 select
     /*+ MAX_EXECUTION_TIME(5000) */
     concat(char(34), @PKEY, char(34)) as pkey,
     concat(char(34), @DMA_SOURCE_ID, char(34)) as dma_source_id,
     concat(char(34), @DMA_MANUAL_ID, char(34)) as dma_manual_id,
-    concat(char(34), table_schema, char(34)) as table_schema,
-    concat(char(34), table_name, char(34)) as table_name,
-    concat(char(34), table_engine, char(34)) as table_engine,
-    table_rows as table_rows,
-    data_length as data_length,
-    index_length as index_length,
-    concat(char(34), is_compressed, char(34)) as is_compressed,
-    concat(char(34), is_partitioned, char(34)) as is_partitioned,
-    partition_count as partition_count,
-    index_count as index_count,
-    fulltext_index_count as fulltext_index_count
-from user_tables;
+    concat(char(34), src.table_schema, char(34)) as table_schema,
+    src.total_table_count as total_table_count,
+    src.innodb_table_count as innodb_table_count,
+    src.non_innodb_table_count as non_innodb_table_count,
+    src.total_row_count as total_row_count,
+    src.innodb_table_row_count as innodb_table_row_count,
+    src.non_innodb_table_row_count as non_innodb_table_row_count,
+    src.total_data_size_bytes as total_data_size_bytes,
+    src.innodb_data_size_bytes as innodb_data_size_bytes,
+    src.non_innodb_data_size_bytes as non_innodb_data_size_bytes,
+    src.total_index_size_bytes as total_index_size_bytes,
+    src.innodb_index_size_bytes as innodb_index_size_bytes,
+    src.non_innodb_index_size_bytes as non_innodb_index_size_bytes,
+    src.total_size_bytes as total_size_bytes,
+    src.innodb_total_size_bytes as innodb_total_size_bytes,
+    src.non_innodb_total_size_bytes as non_innodb_total_size_bytes,
+    src.total_index_count as total_index_count,
+    src.innodb_index_count as innodb_index_count,
+    src.non_innodb_index_count as non_innodb_index_count
+from src;
