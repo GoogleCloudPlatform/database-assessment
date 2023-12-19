@@ -41,8 +41,6 @@ if /i "%1" == "-port" set "port=%2"
 if /i "%1" == "-database" set "database=%2"
 if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-collectionUserPass" set "pass=%2"
-if /i "%1" == "-serverUserName" set "serverUserName=%2"
-if /i "%1" == "-serverUserPass" set "serverUserPass=%2"
 if /i "%1" == "-ignorePerfmon" set "noPerfmon=%2"
 if /i "%1" == "-manualUniqueId" set "manualUniqueId=%2"
 
@@ -60,7 +58,7 @@ if not [%user%]==[] goto execWithCustomUser
 if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -serverUserName %serverUserName% -serverUserPass %serverUserPass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%
+PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%
 
 if %errorlevel% == 1 goto exit
 goto done

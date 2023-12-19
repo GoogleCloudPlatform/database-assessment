@@ -159,8 +159,6 @@ Operating System Versions:
                 -database **Optional (Defaults to all user databases)
                 -collectionUserName **Required
                 -collectionUserPass **Optional (If not provided will be prompted)
-                -serverUserName **Optional (If not provided will attempt to use local credential)
-                -serverUserPass **Optional (If not provided will attempt to use local credential)
                 -ignorePerfmon **Optional (Defaults to "false" / Set to "true" to ignore perfmon collection)
                 -manualUniqueId **Optional (Defaults to "NA" - Gives the ability the user to tag their collection with a unique name)
 
@@ -169,7 +167,6 @@ Operating System Versions:
 
                 Example (default port): runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
                 Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
-                Example (remote windows server with different user): runAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123 -serverUserName saUser -serverUserPass saPassword123 -manualUniqueId [string]
 
         For a Named Instance (single database):
             .\runAssessment.bat -serverName [servername\instanceName] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password] -manualUniqueId [string]
