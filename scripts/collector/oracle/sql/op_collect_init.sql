@@ -20,7 +20,7 @@ Please ensure you have proper licensing. For more information consult Oracle Sup
 prompt Param1 = &1
 
 define version = '&1'
-define dtrange = 30
+define dtrange = &v_statsWindow
 define colspr = '|'
 
 @@op_set_sql_env.sql 
