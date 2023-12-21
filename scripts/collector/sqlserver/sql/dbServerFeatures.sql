@@ -484,6 +484,40 @@ BEGIN CATCH
     END
 END CATCH
 
+/* Collect permissions which are unsupported in CloudSQL SQL Server */
+BEGIN
+    BEGIN TRY
+            exec('INSERT INTO #FeaturesEnabled SELECT
+                    tmp.permission_name,
+					CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
+                    count(1)
+                FROM (
+                    SELECT
+                        pr.name,
+                        pr.type,
+                        pr.type_desc,
+                        p.permission_name,
+                        p.type AS permission_type
+                    FROM
+                        sys.server_permissions p
+                        INNER JOIN sys.server_principals pr ON p.grantee_principal_id = pr.principal_id
+                    WHERE
+                        pr.type IN (''U'', ''S'')
+                        AND pr.name NOT LIKE ''NT SERVICE\%''
+                        AND p.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
+                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
+                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL_SERVER'', 
+                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
+                        ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')) tmp
+                GROUP BY
+                    tmp.permission_name');
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            WAITFOR DELAY '00:00:00'
+    END CATCH
+END
+
 --Memory Optimized OLTP Tables
 /* Select from tableList.sql 
     Population will occur in the loader and will just check "is_memory_optimized" on sys.tables
@@ -583,39 +617,6 @@ BEGIN
     BEGIN CATCH
         IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
                 exec('INSERT INTO #FeaturesEnabled SELECT ''IsBufferPoolExtensionEnabled'', ''0'', 0 /* SQL Server 2014 (13.x) above */');
-    END CATCH
-END
-
-/* Collect permissions which are unsupported in CloudSQL SQL Server */
-BEGIN
-    BEGIN TRY
-            exec('INSERT INTO #FeaturesEnabled SELECT
-                    tmp.permission_name,
-                    count(1)
-                FROM (
-                    SELECT
-                        pr.name,
-                        pr.type,
-                        pr.type_desc,
-                        p.permission_name,
-                        p.type AS permission_type
-                    FROM
-                        sys.server_permissions p
-                        INNER JOIN sys.server_principals pr ON p.grantee_principal_id = pr.principal_id
-                    WHERE
-                        pr.type IN (''U'', ''S'')
-                        AND pr.name NOT LIKE ''NT SERVICE\%''
-                        AND p.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
-                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
-                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL_SERVER'', 
-                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
-                        ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')) tmp
-                GROUP BY
-                    tmp.permission_name');
-    END TRY
-    BEGIN CATCH
-        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
-            WAITFOR DELAY '00:00:00'
     END CATCH
 END
 
