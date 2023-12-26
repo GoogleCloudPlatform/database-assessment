@@ -461,29 +461,6 @@ BEGIN CATCH
     END
 END CATCH
 
---Security Policies
-BEGIN TRY
-    exec('INSERT INTO #FeaturesEnabled
-            SELECT 
-                ''SP'', 
-                CASE 
-                    WHEN count(*) > 0 THEN ''1''
-                    ELSE ''0''
-                END,
-                CONVERT(int, count(*))
-            FROM sys.security_policies');
-END TRY
-BEGIN CATCH
-    IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
-    BEGIN
-        exec('INSERT INTO #FeaturesEnabled SELECT ''SP'', ''0'', 0');
-    END
-    ELSE
-    BEGIN
-        exec('INSERT INTO #FeaturesEnabled SELECT ''SP'', ''0'', 0');
-    END
-END CATCH
-
 /* Collect permissions which are unsupported in CloudSQL SQL Server */
 BEGIN
     BEGIN TRY
@@ -616,7 +593,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
-                exec('INSERT INTO #FeaturesEnabled SELECT ''IsBufferPoolExtensionEnabled'', ''0'', 0 /* SQL Server 2014 (13.x) above */');
+                exec('INSERT INTO #FeaturesEnabled SELECT ''IsBufferPoolExtensionEnabled'', ''0'', 0 /* SQL Server 2014 (13.x) below */');
     END CATCH
 END
 

@@ -278,6 +278,7 @@ $manifestFile = 'opdb' + '__' + 'manifest' + $outputFileSuffix
 $computerSpecsFile = 'opdb' + '__' + 'DbMachineSpecs' + $outputFileSuffix
 $tranLogBkupCountByDayByHour = 'opdb' + '__' + 'TranLogBkupCountByHourByDay' + $outputFileSuffix
 $tranLogBkupSizeByDayByHour = 'opdb' + '__' + 'TranLogBkupSizeByHourByDay' + $outputFileSuffix
+$blockingFeaturesDatabaseLevel = 'opdb' + '__' + 'BlockFeaturesDatabaseLevel' + $outputFileSuffix
 
 $outputFileArray = @($compFileName,
     $srvFileName,
@@ -299,7 +300,8 @@ $outputFileArray = @($compFileName,
     $manifestFile,
     $computerSpecsFile
     $tranLogBkupCountByDayByHour,
-    $tranLogBkupSizeByDayByHour)
+    $tranLogBkupSizeByDayByHour,
+    $blockingFeaturesDatabaseLevel)
 
 WriteLog -logMessage "Checking directory path + output file name lengths for max length limitations..." -logOperation "MESSAGE"
 foreach ($directory in $outputFileArray) {
@@ -328,7 +330,7 @@ sqlcmd -S $serverName -i sql\serverProperties.sql -d master -U $collectionUserNa
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server CloudSQL Unsupported Flag Info..." -logOperation "BOTH"
 sqlcmd -S $serverName -i sql\dbServerUnsupportedFlags.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$dbServerFlags
 
-WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Features in Use Info..." -logOperation "BOTH"
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Blocked Features in Use..." -logOperation "BOTH"
 sqlcmd -S $serverName -i sql\dbServerFeatures.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Linked Server Info..." -logOperation "BOTH"
@@ -358,6 +360,7 @@ Set-Content -Path $foldername\$columnDatatypes -Encoding utf8 -Value "PKEY|datab
 Set-Content -Path $foldername\$userConnectionList -Encoding utf8 -Value "PKEY|database_name|is_user_process|host_name|program_name|login_name|num_reads|num_writes|last_read|last_write|reads|logical_reads|writes|client_interface_name|nt_domain|nt_user_name|client_net_address|local_net_address|dma_source_id|dma_manual_id"
 Set-Content -Path $foldername\$dbsizes -Encoding utf8 -Value "PKEY|database_name|type_desc|current_size_mb|dma_source_id|dma_manual_id"
 Set-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8 -Value "PKEY|collection_time|available_mbytes|physicaldisk_avg_disk_bytes_read|physicaldisk_avg_disk_bytes_write|physicaldisk_avg_disk_bytes_read_sec|physicaldisk_avg_disk_bytes_write_sec|physicaldisk_disk_reads_sec|physicaldisk_disk_writes_sec|processor_idle_time_pct|processor_total_time_pct|processor_frequency|processor_queue_length|buffer_cache_hit_ratio|checkpoint_pages_sec|free_list_stalls_sec|page_life_expectancy|page_lookups_sec|page_reads_sec|page_writes_sec|user_connection_count|memory_grants_pending|target_server_memory_kb|total_server_memory_kb|batch_requests_sec|dma_source_id|dma_manual_id"
+Set-Content -Path $foldername\$blockingFeaturesDatabaseLevel -Encoding utf8 -Value "PKEY|database_name|feature_name|is_enabled_or_used|occurance_count|dma_source_id|dma_manual_id"
 
 ### Iterate through collections that could execute against multiple databases in the instance
 foreach ($databaseName in $dbNameArray) {
@@ -381,6 +384,9 @@ foreach ($databaseName in $dbNameArray) {
 
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server DMV Perfmon Info for Database $databaseName ..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\dbServerDmvPerfmon.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8
+
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Blocked Features for Database $databaseName ..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\dbServerFeaturesDatabaseLevel.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$blockingFeaturesDatabaseLevel -Encoding utf8
 }
 
 # Pull perfmon file if we are running from same server.  Generate empty file if running on remote server
