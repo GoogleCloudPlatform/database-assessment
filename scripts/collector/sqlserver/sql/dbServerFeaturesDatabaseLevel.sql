@@ -71,6 +71,31 @@ BEGIN CATCH
     END
 END CATCH
 
+--File Tables Detected
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabledDbLevel
+            SELECT 
+                db_name(),
+                ''IsFileTablesEnabled'', 
+                CASE 
+                    WHEN count(*) > 0 THEN ''1''
+                    ELSE ''0''
+                END,
+                CONVERT(int, count(*))
+            FROM sys.filetables
+            WHERE is_enabled = 1') /* SQL Server 2016 (13.x) and above */ ;
+END TRY
+BEGIN CATCH
+    IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+    BEGIN
+        exec('INSERT INTO #FeaturesEnabledDbLevel SELECT db_name(), ''IsFileTablesEnabled'', ''0'', 0') /* SQL Server 2014 (12.x) and below */ ;
+    END
+    ELSE
+    BEGIN
+        exec('INSERT INTO #FeaturesEnabledDbLevel SELECT db_name(), ''IsFileTablesEnabled'', ''0'', 0') /* SQL Server 2014 (12.x) and below */ ;
+    END
+END CATCH
+
 SELECT
     @PKEY as PKEY,
     f.*,
