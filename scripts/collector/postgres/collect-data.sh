@@ -511,7 +511,6 @@ DIAGPACKACCESS="postgres"
  if [[ "${connStr}" == "" ]] ; then 
 	 if [[ "${hostName}" != "" && "${port}" != "" && "${databaseService}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
 		 connStr="${collectionUserName}/${collectionUserPass}@//${hostName}:${port}/${databaseService}"
-		 echo Got Connection ${connStr}
 	 else
 		 echo "Connection information incomplete"
 		 printUsage
