@@ -456,18 +456,14 @@ echo "        --databaseService     Database service name"
 echo "        --collectionUserName  Database user name"
 echo "        --collectionUserPass  Database password"
 echo "      }"
-echo "  Performance statistics source"
-echo "      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE"
-echo "  Source database type"
-echo "      --dbType                Required. Must be one of ORACLE, POSTGRES, MYSQL"
 echo
 echo
 echo " Example:"
 echo
 echo
-echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR --dbType ORACLE"
+echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} "
 echo " or"
-echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR --dbType ORACLE"
+echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} "
 
 }
 ### Validate input
@@ -477,7 +473,7 @@ port=""
 databaseService=""
 collectionUserName=""
 collectionUserPass=""
-DBTYPE=""
+DBTYPE="postgres"
 statsSrc=""
 connStr=""
 manualUniqueId=""
@@ -495,8 +491,6 @@ manualUniqueId=""
 	 elif [[ "$1" == "--databaseService" ]];    then databaseService="${2}"
 	 elif [[ "$1" == "--collectionUserName" ]]; then collectionUserName="${2}"
 	 elif [[ "$1" == "--collectionUserPass" ]]; then collectionUserPass="${2}"
-	 elif [[ "$1" == "--dbType" ]];             then DBTYPE=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
-	 elif [[ "$1" == "--statsSrc" ]];           then statsSrc=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
 	 elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
 	 elif [[ "$1" == "--manualUniqueId" ]];      then manualUniqueId="${2}"
 	 else
@@ -512,14 +506,7 @@ manualUniqueId=""
 #	 dbType="oracle"
 # fi
 
- if [[ "${statsSrc}" = "awr" ]]; then
-          DIAGPACKACCESS="UseDiagnostics"
- elif [[ "${stasSrc}" = "statspack" ]] ; then
-          DIAGPACKACCESS="NoDiagnostics"
- else 
-	 echo No performance data will be collected.
-         DIAGPACKACCESS="nostatspack"
- fi
+DIAGPACKACCESS="postgres"
 
  if [[ "${connStr}" == "" ]] ; then 
 	 if [[ "${hostName}" != "" && "${port}" != "" && "${databaseService}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
