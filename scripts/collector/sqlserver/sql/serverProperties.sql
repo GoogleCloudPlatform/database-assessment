@@ -148,7 +148,12 @@ SELECT 'LogicalCpuCount', CONVERT(varchar, cpu_count) from sys.dm_os_sys_info
 UNION ALL
 SELECT 'PhysicalCpuCount', CONVERT(varchar, (cpu_count/hyperthread_ratio)) from sys.dm_os_sys_info
 UNION ALL
-SELECT 'SqlServerStartTime', CONVERT(varchar, (sqlserver_start_time)) from sys.dm_os_sys_info;
+SELECT 'SqlServerStartTime', CONVERT(varchar, (sqlserver_start_time)) from sys.dm_os_sys_info
+UNION ALL
+select 'BackupsToAzureBlobStorage', CASE WHEN count(1) > 0 THEN 1 ELSE 0 END from msdb.dbo.backupmediafamily where physical_device_name like '%blob.core.windows.net%'
+UNION ALL
+select 'BackupsToObjectStorage', CASE WHEN count(1) > 0 THEN 1 ELSE 0 END from msdb.dbo.backupmediafamily where (physical_device_name like '%s3://%') or (physical_device_name like '%blob.core.windows.net%')
+;
 WITH BUFFER_POOL_SIZE AS (
 	SELECT database_id AS DatabaseID
 		,DB_NAME(database_id) AS DatabaseName
