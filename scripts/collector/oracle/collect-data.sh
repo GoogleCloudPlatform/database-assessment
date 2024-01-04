@@ -211,11 +211,16 @@ then
   rm opdb__manifest__${V_FILE_TAG}.txt
 fi
 
-for file in $(ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt)
-do
- MD5=$(${MD5SUM} $file | cut -d ' ' -f ${MD5COL})
- echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
-done
+# Skip creating the manifest file if the platform does not have MD5SUM installed
+if [ -f "$MD5SUM" ] ; then
+  for file in $(ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt)
+  do
+   MD5=$(${MD5SUM} $file | cut -d ' ' -f ${MD5COL})
+   echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
+  done
+else 
+  echo "Executable md5sum not found, skipping manifest file creation."
+fi
 
 if [ ! "${ZIP}" = "" ]
 then
