@@ -176,6 +176,7 @@ done
 
 function compressOpFiles  {
 V_FILE_TAG=$1
+DBTYPE=$2
 V_ERR_TAG=""
 echo ""
 echo "Archiving output files with tag ${V_FILE_TAG}"
@@ -212,15 +213,14 @@ then
 fi
 
 # Skip creating the manifest file if the platform does not have MD5SUM installed
-if [ -f "$MD5SUM" ] ; then
-  for file in $(ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt)
-  do
+for file in $(ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt)
+do
+ if [ -f "$MD5SUM" ] ; then
    MD5=$(${MD5SUM} $file | cut -d ' ' -f ${MD5COL})
-   echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
-  done
-else 
-  echo "Executable md5sum not found, skipping manifest file creation."
-fi
+ else MD5="N/A"
+ fi   
+ echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
+done
 
 if [ ! "${ZIP}" = "" ]
 then
@@ -457,7 +457,7 @@ if [ $retval -eq 0 ]; then
       echo "Exiting...."
       exit 255
     fi
-    compressOpFiles $(echo ${V_TAG} | sed 's/.csv//g')
+    compressOpFiles $(echo ${V_TAG} | sed 's/.csv//g') $dbType
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
