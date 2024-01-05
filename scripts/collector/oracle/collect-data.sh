@@ -274,7 +274,7 @@ fi
 }
 
 
-function printUsage()
+function printUsage 
 {
 echo " Usage:"
 echo "  Parameters"
