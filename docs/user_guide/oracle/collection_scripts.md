@@ -83,6 +83,11 @@ Launch the collection script: (Note that the parameter names have changed from e
      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE
  Performance statistics window
      --statsWindow           Optional. Number of days of performance stats to collect.  Must be one of 7, 30.  Default is 30.
+
+
+ NOTE: If using an Oracle auto-login wallet, specify the tns alias as the connection string:
+  Ex:
+    ./collect-data.sh --connectionStr /@mywalletalias --statsSrc AWR
 ```
 
 
