@@ -34,7 +34,7 @@ SQL_DIR=${SCRIPT_DIR}/sql
 
 GREP=$(which grep)
 SED=$(which sed)
-MD5SUM=$(which md5sum)
+MD5SUM=$(which md5sum 2>/dev/null)
 MD5COL=1
 
 if [ "$(uname)" = "SunOS" ]
