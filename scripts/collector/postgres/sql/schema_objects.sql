@@ -58,6 +58,27 @@ all_indexes as (
     join pg_stat_user_tables sut on (i.indrelid = sut.relid)
     join pg_class c on (i.indexrelid = c.oid)
 ),
+all_constraints as (
+  select con.conrelid as object_id,
+    'CONSTRAINT' as object_subcategory,
+    case
+      when con.contype = 'c' then 'CHECK_CONSTRAINT'
+      when con.contype = 'f' then 'FOREIGN_KEY_CONSTRAINT'
+      when con.contype = 'p' then 'PRIMARY_KEY_CONSTRAINT'
+      when con.contype = 'u' then 'UNIQUE_CONSTRAINT'
+      when con.contype = 't' then 'CONSTRAINT_TRIGGER'
+      when con.contype = 'x' then 'EXCLUSION_CONSTRAINT'
+      else 'UNCATEGORIZED_CONSTRAINT'
+    end as object_type,
+    con.connamespace as object_schema,
+    con.conname as object_name,
+    pg_get_userbyid(c.relowner) as object_database
+  from pg_constraint con
+    join pg_class as c on con.conrelid = c.oid
+    join pg_catalog.pg_namespace as ns on (con.connamespace = ns.oid)
+  where ns.nspname <> all (array ['pg_catalog', 'information_schema'])
+    and ns.nspname !~ '^pg_toast'
+),
 all_procedures as (
   select p.oid as object_id,
     'SOURCE_CODE' as object_category,
