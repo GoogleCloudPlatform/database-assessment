@@ -34,7 +34,7 @@ SQL_DIR=${SCRIPT_DIR}/sql
 
 GREP=$(which grep)
 SED=$(which sed)
-MD5SUM=$(which md5sum)
+MD5SUM=$(which md5sum 2>/dev/null)
 MD5COL=1
 
 if [ "$(uname)" = "SunOS" ]
@@ -111,6 +111,7 @@ connectString="$1"
 OpVersion=$2
 DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
 manualUniqueId="${4}"
+statsWindow=${5}
 
 if ! [ -x "$(command -v ${SQLPLUS})" ]; then
   echo "Could not find ${SQLPLUS} command. Source in environment and try again"
@@ -121,7 +122,7 @@ fi
 
 ${SQLPLUS} -s /nolog << EOF
 connect ${connectString}
-@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${SQLOUTPUT_DIR} "${manualUniqueId}"
+@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${SQLOUTPUT_DIR} "${manualUniqueId}" ${statsWindow}
 exit;
 EOF
 
@@ -175,6 +176,7 @@ done
 
 function compressOpFiles  {
 V_FILE_TAG=$1
+DBTYPE=$2
 V_ERR_TAG=""
 echo ""
 echo "Archiving output files with tag ${V_FILE_TAG}"
@@ -210,9 +212,13 @@ then
   rm opdb__manifest__${V_FILE_TAG}.txt
 fi
 
+# Skip creating the manifest file if the platform does not have MD5SUM installed
 for file in $(ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt)
 do
- MD5=$(${MD5SUM} $file | cut -d ' ' -f ${MD5COL})
+ if [ -f "$MD5SUM" ] ; then
+   MD5=$(${MD5SUM} $file | cut -d ' ' -f ${MD5COL})
+ else MD5="N/A"
+ fi   
  echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
 done
 
@@ -268,7 +274,7 @@ fi
 }
 
 
-function printUsage()
+function printUsage 
 {
 echo " Usage:"
 echo "  Parameters"
@@ -285,6 +291,9 @@ echo "        --collectionUserPass  Database password"
 echo "      }"
 echo "  Performance statistics source"
 echo "      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE"
+echo
+echo "  Performance statistics window"
+echo "      --statsWindow           Optional. Number of days of performance stats to collect.  Must be one of 7, 30.  Default is 30."
 echo
 echo
 echo " Example:"
@@ -306,6 +315,7 @@ dbType=""
 statsSrc=""
 connStr=""
 manualUniqueId=""
+statsWindow=30
 
  if [[ $(($# & 1)) == 1 ]] ;
  then
@@ -323,7 +333,8 @@ manualUniqueId=""
 	 elif [[ "$1" == "--dbType" ]];             then dbType=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
 	 elif [[ "$1" == "--statsSrc" ]];           then statsSrc=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
 	 elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
-	 elif [[ "$1" == "--manualUniqueId" ]];      then manualUniqueId="${2}"
+	 elif [[ "$1" == "--manualUniqueId" ]];     then manualUniqueId="${2}"
+	 elif [[ "$1" == "--statsWindow" ]];        then statsWindow="${2}"
 	 else
 		 echo "Unknown parameter ${1}"
 		 printUsage
@@ -344,6 +355,10 @@ manualUniqueId=""
  else 
 	 echo No performance data will be collected.
          DIAGPACKACCESS="nostatspack"
+ fi
+
+ if [[ ${statsWindow} -ne 30 ]] && [[ ${statsWindow} -ne 7 ]] ; then
+	 statsWindow=30
  fi
 
  if [[ "${connStr}" == "" ]] ; then 
@@ -421,7 +436,7 @@ if [ $retval -eq 0 ]; then
       fi  
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS} "${manualUniqueId}"
+    executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS} "${manualUniqueId}" $statsWindow
     retval=$?
     if [ $retval -ne 0 ]; then
       createErrorLog  $(echo ${V_TAG} | sed 's/.csv//g')
@@ -442,7 +457,7 @@ if [ $retval -eq 0 ]; then
       echo "Exiting...."
       exit 255
     fi
-    compressOpFiles $(echo ${V_TAG} | sed 's/.csv//g')
+    compressOpFiles $(echo ${V_TAG} | sed 's/.csv//g') $dbType
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
