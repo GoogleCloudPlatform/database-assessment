@@ -23,9 +23,11 @@ set isValidInstance=false
 set perfmonOperation=""
 set instance=""
 set namedInstanceName=
+set duration="1152"
+set sampleInterval="600"
 
-set helpMessage=Usage manageSQLServerPerfmonDataset.bat -operation [create/start/stop/delete/collect/createemptyfile/help] -instanceType [named/named] -namedInstanceName [instance name]
-set helpExample=Example: .\manageSQLServerPerfmonDataset.bat -operation create -instanceType default or .\manageSQLServerPerfmonDataset.bat -operation create -instanceType named -namedInstanceName SQL2019
+set helpMessage=Usage manageSQLServerPerfmonDataset.bat -operation [create/start/stop/delete/collect/createemptyfile/help] -instanceType [default/named] -namedInstanceName [instance name] -sampleDuration [number of sample intervals] -sampleInterval [seconds between samples]
+set helpExample=Example: .\manageSQLServerPerfmonDataset.bat -operation create -instanceType default or .\manageSQLServerPerfmonDataset.bat -operation create -instanceType named -namedInstanceName SQL2019 -sampleDuration 1152 -sampleInterval 600
 
 if [%1]==[] (
     goto helpOperation
@@ -35,6 +37,8 @@ if [%1]==[] (
 if /i "%1" == "-operation" set "perfmonOperation=%2"
 if /i "%1" == "-instanceType" set "instance=%2"
 if /i "%1" == "-namedInstanceName" set "namedInstanceName=%2"
+if /i "%1" == "-sampleDuration" set "duration=%2"
+if /i "%1" == "-sampleInterval" set "sampleInterval=%2"
 if /i "%1" == "help" goto helpOperation
 if "%1" == "" goto runAssessmentOperation
 
@@ -89,14 +93,14 @@ if %instance%==named (
 
 if %instance%==default (
     echo Managing Perfmon Collection for Default Instance
-    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dmaSQLServerPerfmonDataset.ps1 -operation %perfmonOperation%
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dmaSQLServerPerfmonDataset.ps1 -operation %perfmonOperation% -perfmonDuration %duration% -perfmonSampleInterval %sampleInterval%
 
     goto done
 )
 
 if %instance%==named (
     echo Managing Perfmon Collection for named Instance %namedInstanceName%
-    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dmaSQLServerPerfmonDataset.ps1 -operation %perfmonOperation% -namedInstanceName %namedInstanceName%
+    PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\dmaSQLServerPerfmonDataset.ps1 -operation %perfmonOperation% -namedInstanceName %namedInstanceName% -perfmonDuration %duration% -perfmonSampleInterval %sampleInterval%
 
     goto done
 )

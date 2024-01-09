@@ -138,16 +138,18 @@ Operating System Versions:
                 - -operation **Required (create, start, stop, delete, collect, createemptyfile, help)
                 - -instanceType **Required (default, named)
                 - -namedInstanceName **Required if instanceType is "named" (should be the instance name without the server name)
+                - -sampleDuration **The number of intervals that perfmon sample will run defaults to 1152 (10 minute samples for 8 days)
+                - -sampleInterval **The interval (in seconds) that perfmon sample will run defaults to 600 (every 10 minutes)
 
             To execute the perfmon collection:
 
                 For a default instance:
-                    manageSQLServerPerfmonDataset.bat -operation create -instanceType default
+                    manageSQLServerPerfmonDataset.bat -operation create -instanceType default -sampleDuration [number of intervals to sample] -sampleInterval [frequency of sample intervals in seconds]
 
                 For a named instance:
-                    manageSQLServerPerfmonDataset.bat -operation create -instanceType named -namedInstanceName [instance name]
+                    manageSQLServerPerfmonDataset.bat -operation create -instanceType named -namedInstanceName [instance name] -sampleDuration [number of intervals to sample] -sampleInterval [frequency of sample intervals in seconds]
 
-        The script will create a permon data set that will collect the above metrics at a 1 minute interval for 8 days.  The dataset will automatically stop after 8 days of collection.  To get the most accurate statistics, it would be good to have this collection run over the busiest time for the server.
+        The script will create a permon data set that will collect the above metrics at a 10 minute interval for 8 days.  The dataset will automatically stop after 8 days of collection.  To get the most accurate statistics, it would be good to have this collection run over the busiest time for the server.
 
     b)  When the perfmon dataset completes or if you would like to execute the collection sooner, execute the following command from a command prompt session in "Administrator Mode" on the server you would like to collect data on
         and return the subsequent .zip file to Google.

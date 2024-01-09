@@ -66,7 +66,15 @@ param (
 	[Parameter(
 		Mandatory=$False,
 		HelpMessage="The dma_manual_id / customer supplied tag value for the final perfmon combined file"
-	)][string]$dmaManualId="NA"
+	)][string]$dmaManualId="NA",
+	[Parameter(
+		Mandatory=$False,
+		HelpMessage="The number of intervals that perfmon sample will run defaults to 1152 (10 minute samples for 8 days)"
+	)][string]$perfmonDuration="1152",
+	[Parameter(
+		Mandatory=$False,
+		HelpMessage="The interval that perfmon sample will run defaults to 600 (every 10 minutes)"
+	)][string]$perfmonSampleInterval="600"
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
@@ -97,8 +105,14 @@ param(
     [string]$instanceName,
 	[string]$dataSet,
 	[string]$perfmonOutDir,
-	[string]$logFile
+	[string]$logFile,
+	[string]$perfmonDuration,
+	[string]$perfmonSampleInterval
     )
+if ((!$perfmonDuration) -or (!$perfmonSampleInterval)) {
+	$perfmonDuration = '1152'
+	$perfmonSampleInterval = '600'
+}
 if ($instanceName) {
 $str = @'
 <DataCollectorSet>
@@ -150,8 +164,8 @@ $str = @'
 		<LatestOutputLocation></LatestOutputLocation>
 		<DataSourceName>
 		</DataSourceName>
-		<SampleInterval>60</SampleInterval>
-		<SegmentMaxRecords>11520</SegmentMaxRecords>
+		<SampleInterval>$perfmonSampleInterval</SampleInterval>
+		<SegmentMaxRecords>$perfmonDuration</SegmentMaxRecords>
 		<LogFileFormat>0</LogFileFormat>
 		<Counter>\Memory\Available MBytes</Counter>
 		<Counter>\PhysicalDisk(_Total)\Avg. Disk Bytes/Read</Counter>
@@ -269,8 +283,8 @@ $str = @'
 		<LatestOutputLocation></LatestOutputLocation>
 		<DataSourceName>
 		</DataSourceName>
-		<SampleInterval>60</SampleInterval>
-		<SegmentMaxRecords>11520</SegmentMaxRecords>
+		<SampleInterval>$perfmonSampleInterval</SampleInterval>
+		<SegmentMaxRecords>$perfmonDuration</SegmentMaxRecords>
 		<LogFileFormat>0</LogFileFormat>
 		<Counter>\Memory\Available MBytes</Counter>
 		<Counter>\PhysicalDisk(_Total)\Avg. Disk Bytes/Read</Counter>
