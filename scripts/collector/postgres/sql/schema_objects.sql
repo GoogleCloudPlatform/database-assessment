@@ -59,8 +59,8 @@ all_indexes as (
     join pg_class c on (i.indexrelid = c.oid)
 ),
 all_constraints as (
-  select con.conrelid as object_id,
-    'CONSTRAINT' as object_subcategory,
+  select distinct con.oid as object_id,
+    'CONSTRAINT' as object_category,
     case
       when con.contype = 'c' then 'CHECK_CONSTRAINT'
       when con.contype = 'f' then 'FOREIGN_KEY_CONSTRAINT'
@@ -70,7 +70,7 @@ all_constraints as (
       when con.contype = 'x' then 'EXCLUSION_CONSTRAINT'
       else 'UNCATEGORIZED_CONSTRAINT'
     end as object_type,
-    con.connamespace as object_schema,
+    ns.nspname as object_schema,
     con.conname as object_name,
     pg_get_userbyid(c.relowner) as object_database
   from pg_constraint con
@@ -97,6 +97,7 @@ all_triggers as (
       when 24 then 'UPDATE_DELETE'
       when 12 then 'INSERT_DELETE'
     end || '_' || 'TRIGGER' as object_type,
+    ns.nspname as object_schema,
     t.tgname as object_name,
     pg_get_userbyid(c.relowner) as object_database
   from pg_trigger t
