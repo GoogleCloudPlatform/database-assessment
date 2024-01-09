@@ -79,6 +79,35 @@ all_constraints as (
   where ns.nspname <> all (array ['pg_catalog', 'information_schema'])
     and ns.nspname !~ '^pg_toast'
 ),
+all_triggers as (
+  select t.tgrelid as object_id,
+    'TRIGGER' as object_category,
+    case
+      t.tgtype::integer & 66
+      when 2 then 'BEFORE'
+      when 64 then 'INSTEAD_OF'
+      else 'AFTER'
+    end || '_' || case
+      t.tgtype::integer & cast(28 as int2)
+      when 16 then 'UPDATE'
+      when 8 then 'DELETE'
+      when 4 then 'INSERT'
+      when 20 then 'INSERT_UPDATE'
+      when 28 then 'INSERT_UPDATE_DELETE'
+      when 24 then 'UPDATE_DELETE'
+      when 12 then 'INSERT_DELETE'
+    end || '_' || 'TRIGGER' as object_type,
+    t.tgname as object_name,
+    pg_get_userbyid(c.relowner) as object_database
+  from pg_trigger t
+    join pg_class c on t.tgrelid = c.oid
+    join pg_namespace ns on ns.oid = c.relnamespace
+    /* exclude triggers generated from constraints */
+  where t.tgrelid not in (
+      select conrelid
+      from pg_constraint
+    )
+),
 all_procedures as (
   select p.oid as object_id,
     'SOURCE_CODE' as object_category,
@@ -129,6 +158,22 @@ src as (
     a.object_name,
     a.object_id
   from all_procedures a
+  union all
+  select a.object_database,
+    a.object_category,
+    a.object_type,
+    a.object_schema,
+    a.object_name,
+    a.object_id
+  from all_constraints a
+  union all
+  select a.object_database,
+    a.object_category,
+    a.object_type,
+    a.object_schema,
+    a.object_name,
+    a.object_id
+  from all_triggers a
 )
 select chr(34) || :PKEY || chr(34) as pkey,
   chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
