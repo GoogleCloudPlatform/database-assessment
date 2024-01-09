@@ -81,6 +81,13 @@ Launch the collection script: (Note that the parameter names have changed from e
     }
  Performance statistics source
      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE
+ Performance statistics window
+     --statsWindow           Optional. Number of days of performance stats to collect.  Must be one of 7, 30.  Default is 30.
+
+
+ NOTE: If using an Oracle auto-login wallet, specify the tns alias as the connection string:
+  Ex:
+    ./collect-data.sh --connectionStr /@mywalletalias --statsSrc AWR
 ```
 
 
@@ -111,6 +118,13 @@ ex:
 ./collect-data.sh --connectionStr MyUser/MyPassword@//dbhost.company.com:1521/MyDbName.company.com --statsSrc STATSPACK
 or
 ./collect-data.sh --collectionUserName MyUser --collectionUserPass MyPassword --hostName dbhost.company.com --port 1521 --databaseService MyDbName.company.com --statsSrc STATSPACK
+
+
+If Statspack has less than 30 days of data, limit collection to the last 7 days using the paramter --statsWindow:
+
+./collect-data.sh --connectionStr MyUser/MyPassword@//dbhost.company.com:1521/MyDbName.company.com --statsSrc STATSPACK --statsWindow 7
+or
+./collect-data.sh --collectionUserName MyUser --collectionUserPass MyPassword --hostName dbhost.company.com --port 1521 --databaseService MyDbName.company.com --statsSrc STATSPACK --statsWindow 7
 ```
 
 Collections can be run as SYS if needed by setting ORACLE_SID and running on the database host:

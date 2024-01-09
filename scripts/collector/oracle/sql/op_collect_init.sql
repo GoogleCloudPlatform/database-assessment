@@ -20,7 +20,7 @@ Please ensure you have proper licensing. For more information consult Oracle Sup
 prompt Param1 = &1
 
 define version = '&1'
-define dtrange = 30
+define dtrange = &v_statsWindow
 define colspr = '|'
 
 @@op_set_sql_env.sql 
@@ -344,6 +344,8 @@ DECLARE
   l_tab_name VARCHAR2(100) := '---';
   l_col_name VARCHAR2(100);
   the_sql VARCHAR2(1000) := '---';
+  table_does_not_exist EXCEPTION;
+  PRAGMA EXCEPTION_INIT (table_does_not_exist, -00942);
 BEGIN 
   :sp  := 'prompt_nostatspack.sql';
   IF '&v_dodiagnostics' = 'usediagnostics' THEN 
@@ -363,13 +365,17 @@ BEGIN
        END IF;
   END IF; 
   BEGIN
-    SELECT count(1) INTO cnt FROM user_tab_privs WHERE table_name = upper(l_tab_name);
-    IF cnt = 0 THEN
-      IF l_tab_name ='---' THEN
-        dbms_output.put_line('This user does not have SELECT privileges on DBA_HIST_SNAPSHOT or STATS$SNAPSHOT.  No performance data will be collected.');
-      ELSE
-        RAISE_APPLICATION_ERROR(-20002, 'This user does not have SELECT privileges on ' || l_tab_name || '.  Please ensure the grants_wrapper.sql script has been executed for this user.');
-      END IF;
+    IF l_tab_name = '---' THEN
+        dbms_output.put_line('No performance data will be collected.');
+    ELSE	
+      BEGIN
+        EXECUTE IMMEDIATE 'SELECT count(1) FROM ' || upper(l_tab_name) || ' WHERE rownum < 2' INTO cnt ;
+        IF cnt = 0 THEN
+            dbms_output.put_line('No data found in ' ||  upper(l_tab_name) || '.  No performance data will be collected.');
+        END IF;
+        EXCEPTION WHEN table_does_not_exist THEN
+          RAISE_APPLICATION_ERROR(-20002, 'This user does not have SELECT privileges on ' || upper(l_tab_name) || '.  Please ensure the grants_wrapper.sql script has been executed for this user.');
+      END;	
     END IF;
   END;
   IF (l_tab_name != '---' AND l_tab_name NOT LIKE 'ERROR%') THEN
