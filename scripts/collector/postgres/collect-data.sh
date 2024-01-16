@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.27"
+OpVersion="4.3.28"
 dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
@@ -37,7 +37,7 @@ GREP=$(which grep)
 SED=$(which sed)
 MD5SUM=$(which md5sum)
 MD5COL=1
-
+ 
 if [ "$(uname)" = "SunOS" ]
 then
       GREP=/usr/xpg4/bin/grep
@@ -49,7 +49,7 @@ if [ "$(uname)" = "HP-UX" ]; then
     MD5SUM=/usr/local/bin/md5
     MD5COL=4
   fi
-fi
+fi 
 
 ZIP=$(which zip 2>/dev/null)
 if [ "${ZIP}" = "" ]
@@ -119,11 +119,11 @@ function checkVersionPg {
     fi
 
     # SELECT 'DMAFILETAG~' , version();
-    dbversion=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t --no-align << EOF
+    dbVersion=$(PGPASSWORD="$pass" ${SQLCMD} -X --user=$user -h $host -w -p $port -t --no-align << EOF
 SELECT current_setting('server_version_num');
 EOF
 )
-echo 'DMAFILETAG~'${dbversion}'|'${dbversion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
+echo 'DMAFILETAG~'${dbVersion}'|'${dbVersion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
 }
 
 function checkVersionMysql {
@@ -143,11 +143,11 @@ function checkVersionMysql {
       exit 1
     fi
 
-dbversion=$(${SQLCMD}  --user=$user --password=$pass -h $host -P $port -s $db << EOF
+dbVersion=$(${SQLCMD}  --user=$user --password=$pass -h $host -P $port -s $db << EOF
 SELECT version();
 EOF
 )
-echo 'DMAFILETAG~'${dbversion}'|'${dbversion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
+echo 'DMAFILETAG~'${dbVersion}'|'${dbVersion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
 }
 
 
@@ -245,11 +245,11 @@ connectString="$1"
 OpVersion=$2
 V_FILE_TAG=$3
 V_MANUAL_ID="${4}"
-user=$(echo ${connectString} | cut -d '/' -f 1)
-pass=$(echo ${connectString} | cut -d '/' -f 2 | cut -d '@' -f 1)
-host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
-port=$(echo ${connectString} | cut -d ':' -f 2 | cut -d '/' -f 1)
-db=$(echo ${connectString} | cut -d '/' -f 5)
+user=$(echo "${connectString}" | cut -d '/' -f 1)
+pass=$(echo "${connectString}" | cut -d '/' -f 2 | cut -d '@' -f 1)
+host=$(echo "${connectString}" | cut -d '/' -f 4 | cut -d ':' -f 1)
+port=$(echo "${connectString}" | cut -d ':' -f 2 | cut -d '/' -f 1)
+db=$(echo "${connectString}" | cut -d '/' -f 5)
 
 if ! [ -x "$(command -v ${SQLCMD})" ]; then
   echo "Could not find ${SQLCMD} command. Source in environment and try again"
@@ -258,7 +258,7 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
 fi
 
 
-DMA_SOURCE_ID=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t --no-align <<EOF
+DMA_SOURCE_ID=$(PGPASSWORD="$pass" ${SQLCMD} -X --user=$user  -h $host -w -p $port -t --no-align <<EOF
 SELECT system_identifier FROM pg_control_system();
 EOF
 )
@@ -274,18 +274,57 @@ then
 	DMA_SOURCE_ID="NA"
 fi
 
-${SQLCMD}  --user=$user --password -h $host -w -p $port  --no-align <<EOF
+# If we are not given a database name, loop through all the databases in the instance and create a collection for each one, then exit.
+if [[ "${db}" == "" ]] ;
+then
+      export OLDIFS=$IFS
+      dblist=$(PGPASSWORD=$pass ${SQLCMD}  --user=$user  -h $host -w -p $port -t --no-align <<EOF
+\l
+EOF
+)
+      IFS=$'\n'
+      alldbs=$( for dbentry in ${dblist}
+                    do
+              	         echo $(echo "${dbentry}" | cut -d '|' -f 1 | cut -d '=' -f 1)
+                    done | grep -v -e template0 -e template1 | sort -u)
+
+      # Parse out the unique database names, excluding the templates.  Handle some special characters in the database name.
+      for db in ${alldbs}
+	do
+            export IFS=$OLDIFS
+  	    ./collect-data.sh --connectionStr ${user}/${pass}@//${host}:${port}/"${db}"  --manualUniqueId ${V_MANUAL_ID}   
+	done
+	exit
+else
+# If given a database name, create a collection for that one database.
+export PGPASSWORD="$pass"  
+${SQLCMD} -X --user=${user} -d "${db}" -h ${host} -w -p ${port}  --no-align --echo-errors 2>output/opdb__stderr_${V_FILE_TAG}.log <<EOF
 \set VTAG ${V_FILE_TAG}
+\set PKEY '\'${V_FILE_TAG}\''
 \set DMA_SOURCE_ID '\'${DMA_SOURCE_ID}\''
 \set DMA_MANUAL_ID '\'${V_MANUAL_ID}\''
 \i sql/op_collect.sql
 EOF
+fi
+specsOut="output/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv"
+host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
+./db-machine-specs.sh $host ${V_FILE_TAG} ${DMA_SOURCE_ID} ${V_MANUAL_ID} ${specsOut}
 }
 
+
+# Check the output files for error messages
 function createErrorLog {
 V_FILE_TAG=$1
 echo "Checking for errors..."
+if [ "$DBTYPE" == "oracle" ] ; then
 $GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+else if [ "$DBTYPE" == "mysql" ] ; then
+$GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+else if [ "$DBTYPE" == "postgres" ]; then
+$GREP  -i -E 'ERROR:' ${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+fi
+fi
+fi
 retval=$?
 if [ ! -f  ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ]; then
   echo "Error creating error log.  Exiting..."
@@ -436,23 +475,23 @@ echo "        --connectionStr       Oracle EasyConnect string formatted as {user
 echo "       or"
 echo "        --hostName            Database server host name"
 echo "        --port                Database Listener port"
-echo "        --databaseService     Database service name"
-echo "        --collectionUserName  Database user name"
+echo "        --databaseService     Database service name (Optional. If not provided DMA will collect data for each database in the instance.)"
+echo "        --collectionUserName  Database user name."
 echo "        --collectionUserPass  Database password"
 echo "      }"
-echo "  Performance statistics source"
-echo "      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE"
-echo "  Source database type"
-echo "      --dbType                Required. Must be one of ORACLE, POSTGRES, MYSQL"
 echo
 echo
 echo " Example:"
 echo
-echo
-echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR --dbType ORACLE"
+echo " To collect data for a single database:"
+echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} "
 echo " or"
-echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR --dbType ORACLE"
-
+echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} "
+echo
+echo " To collect data for all databases in the instance:"
+echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port} "
+echo " or"
+echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} "
 }
 ### Validate input
 
@@ -461,7 +500,7 @@ port=""
 databaseService=""
 collectionUserName=""
 collectionUserPass=""
-DBTYPE=""
+DBTYPE="postgres"
 statsSrc=""
 connStr=""
 manualUniqueId=""
@@ -479,8 +518,6 @@ manualUniqueId=""
 	 elif [[ "$1" == "--databaseService" ]];    then databaseService="${2}"
 	 elif [[ "$1" == "--collectionUserName" ]]; then collectionUserName="${2}"
 	 elif [[ "$1" == "--collectionUserPass" ]]; then collectionUserPass="${2}"
-	 elif [[ "$1" == "--dbType" ]];             then DBTYPE=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
-	 elif [[ "$1" == "--statsSrc" ]];           then statsSrc=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
 	 elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
 	 elif [[ "$1" == "--manualUniqueId" ]];      then manualUniqueId="${2}"
 	 else
@@ -496,19 +533,15 @@ manualUniqueId=""
 #	 dbType="oracle"
 # fi
 
- if [[ "${statsSrc}" = "awr" ]]; then
-          DIAGPACKACCESS="UseDiagnostics"
- elif [[ "${stasSrc}" = "statspack" ]] ; then
-          DIAGPACKACCESS="NoDiagnostics"
- else 
-	 echo No performance data will be collected.
-         DIAGPACKACCESS="nostatspack"
- fi
+DIAGPACKACCESS="postgres"
 
  if [[ "${connStr}" == "" ]] ; then 
-	 if [[ "${hostName}" != "" && "${port}" != "" && "${databaseService}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
-		 connStr="${collectionUserName}/${collectionUserPass}@//${hostName}:${port}/${databaseService}"
-		 echo Got Connection ${connStr}
+	 if [[ "${hostName}" != "" && "${port}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
+		 baseConnStr="${collectionUserName}/${collectionUserPass}@//${hostName}:${port}"
+		 if [[ "${databaseService}" != "" ]]; then
+    		 	connStr="${baseConnStr}/${databaseService}"
+		 else connStr="${baseConnStr}"
+		 fi
 	 else
 		 echo "Connection information incomplete"
 		 printUsage
@@ -654,4 +687,3 @@ else
   echo "Error executing SQL*Plus"
   exit 255
 fi
-

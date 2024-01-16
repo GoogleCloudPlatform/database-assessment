@@ -116,8 +116,8 @@
   "python.globalModuleInstallation": false,
   "python.testing.unittestEnabled": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll.ruff": true,
-    "source.organizeImports.ruff": true
+    "source.fixAll.ruff": "explicit",
+    "source.organizeImports.ruff": "explicit"
   },
   "[python]": {
     "editor.formatOnSave": true,
@@ -127,8 +127,8 @@
     "editor.trimAutoWhitespace": true,
     "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.codeActionsOnSave": {
-      "source.fixAll": true,
-      "source.organizeImports": true
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
     }
   },
   "python.analysis.fixAll": [
