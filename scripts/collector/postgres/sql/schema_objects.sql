@@ -1,5 +1,5 @@
 with all_tables as (
-  select c.oid as object_id,
+  select distinct c.oid as object_id,
     'TABLE' as object_category,
     case
       when c.relkind = 'r' then 'TABLE'
@@ -20,7 +20,7 @@ with all_tables as (
     and c.relkind = ANY (ARRAY ['r', 'p', 'S', 'f', 'c','t'])
 ),
 all_views as (
-  select c.oid as object_id,
+  select distinct c.oid as object_id,
     'VIEW' as object_category,
     case
       when c.relkind = 'v' then 'VIEW'
@@ -37,7 +37,7 @@ all_views as (
     and c.relkind = ANY (ARRAY [ 'v', 'm'])
 ),
 all_indexes as (
-  select i.indexrelid as object_id,
+  select distinct i.indexrelid as object_id,
     'INDEX' as object_category,
     case
       when c.relkind = 'I'
@@ -59,8 +59,8 @@ all_indexes as (
     join pg_class c on (i.indexrelid = c.oid)
 ),
 all_constraints as (
-  select con.conrelid as object_id,
-    'CONSTRAINT' as object_subcategory,
+  select distinct con.oid as object_id,
+    'CONSTRAINT' as object_category,
     case
       when con.contype = 'c' then 'CHECK_CONSTRAINT'
       when con.contype = 'f' then 'FOREIGN_KEY_CONSTRAINT'
@@ -70,7 +70,7 @@ all_constraints as (
       when con.contype = 'x' then 'EXCLUSION_CONSTRAINT'
       else 'UNCATEGORIZED_CONSTRAINT'
     end as object_type,
-    con.connamespace as object_schema,
+    ns.nspname as object_schema,
     con.conname as object_name,
     pg_get_userbyid(c.relowner) as object_database
   from pg_constraint con
@@ -80,7 +80,7 @@ all_constraints as (
     and ns.nspname !~ '^pg_toast'
 ),
 all_triggers as (
-  select t.tgrelid as object_id,
+  select distinct t.tgrelid as object_id,
     'TRIGGER' as object_category,
     case
       t.tgtype::integer & 66
@@ -97,6 +97,7 @@ all_triggers as (
       when 24 then 'UPDATE_DELETE'
       when 12 then 'INSERT_DELETE'
     end || '_' || 'TRIGGER' as object_type,
+    ns.nspname as object_schema,
     t.tgname as object_name,
     pg_get_userbyid(c.relowner) as object_database
   from pg_trigger t
@@ -109,7 +110,7 @@ all_triggers as (
     )
 ),
 all_procedures as (
-  select p.oid as object_id,
+  select distinct p.oid as object_id,
     'SOURCE_CODE' as object_category,
     ns.nspname as object_schema,
     case

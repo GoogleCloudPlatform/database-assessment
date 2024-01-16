@@ -67,3 +67,7 @@
 \o output/opdb__pg_source_details_:VTAG.csv
 \i sql/source_details.sql
 \o
+
+\o output/opdb__pg_calculated_metrics_:VTAG.csv
+\i sql/calculated_metrics.sql
+\o
