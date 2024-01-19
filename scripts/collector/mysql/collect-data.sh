@@ -213,12 +213,12 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
   exit 1
 fi
 
-export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/init.sql | tr -d '\r')
+export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db 2>>${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log < sql/init.sql | tr -d '\r')
 
 for f in $(ls -1 sql/*.sql | grep -v -e init.sql)
 do
   fname=$(echo ${f} | cut -d '/' -f 2 | cut -d '.' -f 1)
-    ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__mysql_${fname}__${V_TAG} 2>&1 <<EOF
+    ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >${OUTPUT_DIR}/opdb__mysql_${fname}__${V_TAG} 2>>${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log  <<EOF
 SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}' ; 
 SET @DMA_MANUAL_ID='${V_MANUAL_ID}' ;
 SET @PKEY='${V_FILE_TAG}';
