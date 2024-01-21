@@ -38,9 +38,10 @@ function writeLog() {
 
 # Output headers
 headers="pkey|dma_source_id|dma_manual_id|machine_name|physical_cpu_count|logical_cpu_count|total_os_memory_mb|total_size_bytes|used_size_bytes"
+# Output defaults. We do some wierd postprocessing that deletes some characters, if not for the quotation marks.
+defaults="\"\"|||$machine_name|||||\"\""
 echo "$headers" > "$outputPath"
-
-# Only supported locally.
+echo "$defaults" >> "$outputPath"
 
 coreScript=$(cat <<'EOF'
     hostName=$(hostname)
@@ -73,13 +74,14 @@ else
         echo "usedSizeBytes=$usedSizeBytes"
 EOF
 )
-    output=$(ssh "$userName@$machine_name" "${@:7}" "$coreScript\n$setScript") || { echo "SSH to $machineName failed"; exit 1; }
+    output=$(ssh "$userName@$machine_name" "${@:7}" "$coreScript; $setScript") || { echo "SSH to $machine_name failed"; exit 1; }
     source <(echo "$output")
 fi
 
 
 # Writing result to output
 csvData="\"$pkey\"|\"$dmaSourceId\"|\"$dmaManualId\"|\"$hostName\"|$physicalCpuCount|$logicalCpuCount|$memoryMB|$totalSizeBytes|$usedSizeBytes"
+echo "$headers" > "$outputPath"
 echo "$csvData" >> "$outputPath"
 
 writeLog "Successfully fetched machine HW specs of $machine_name to output: $outputPath"

@@ -533,9 +533,9 @@ specsPath=""
 	 elif [[ "$1" == "--collectionUserPass" ]]; then collectionUserPass="${2}"
 	 elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
 	 elif [[ "$1" == "--manualUniqueId" ]];     then manualUniqueId="${2}"
-   elif [[ "$1" == "--vmUserName" ]];         then vmUserName="${2}"
-   elif [[ "$1" == "--extraSSHArg" ]];        then extraSSHArgs+=("${2}")
-   elif [[ "$1" == "--specsPath" ]];          then specsPath=("${2}")
+	 elif [[ "$1" == "--vmUserName" ]];         then vmUserName="${2}"
+	 elif [[ "$1" == "--extraSSHArg" ]];        then extraSSHArgs+=("${2}")
+	 elif [[ "$1" == "--specsPath" ]];          then specsPath=("${2}")
 	 else
 		 echo "Unknown parameter ${1}"
 		 printUsage
