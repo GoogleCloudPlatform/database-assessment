@@ -229,7 +229,7 @@ done
 
 specsOut="output/opdb__mysql_db_machine_specs_${V_FILE_TAG}.csv"
 host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
-./db-machine-specs.sh $host ${V_FILE_TAG} ${DMA_SOURCE_ID} ${V_MANUAL_ID} ${specsOut}
+./db-machine-specs.sh "$host" "$vmUserName" "${V_FILE_TAG}" "${DMA_SOURCE_ID}" "${V_MANUAL_ID}" "${specsOut}" "${extraSSHArgs[@]}"
 }
 
 
@@ -447,6 +447,9 @@ echo "        --collectionUserName  Database user name"
 echo "        --collectionUserPass  Database password"
 echo "      }"
 echo
+echo "  VM collection definition (optional):"
+echo "        --vmUserName          Username on the VM the Database is running on."
+echo "        --extraSSHArg         Extra args to be passed as is to ssh. Can be specified multiple times."
 echo
 echo " Example:"
 echo
@@ -467,6 +470,9 @@ DBTYPE="mysql"
 statsSrc=""
 connStr=""
 manualUniqueId=""
+vmUserName=""
+extraSSHArgs=()
+specsPath=""
 
  if [[ $(($# & 1)) == 1 ]] ;
  then
@@ -483,6 +489,9 @@ manualUniqueId=""
 	 elif [[ "$1" == "--collectionUserPass" ]]; then collectionUserPass="${2}"
 	 elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
 	 elif [[ "$1" == "--manualUniqueId" ]];      then manualUniqueId="${2}"
+	 elif [[ "$1" == "--vmUserName" ]];         then vmUserName="${2}"
+	 elif [[ "$1" == "--extraSSHArg" ]];        then extraSSHArgs+=("${2}")
+	 elif [[ "$1" == "--specsPath" ]];          then specsPath=("${2}")
 	 else
 		 echo "Unknown parameter ${1}"
 		 printUsage

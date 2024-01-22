@@ -18,17 +18,18 @@
 #############################################################################
 
 # Validate the number of arguments
-if [ "$#" -ne 5 ]; then
-    echo "Usage: $0 <machine_name> <pkey> <dma_source_id> <dma_manual_id> <outputPath>"
+if [ "$#" -lt 6 ]; then
+    echo "Usage: $0 <machine_name> <user_name> <pkey> <dma_source_id> <dma_manual_id> <outputPath> [<additional_ssh_args>...]"
     exit 1
 fi
 
 # Inputs
 machine_name=$1
-pkey=$2
-dmaSourceId=$3
-dmaManualId=$4
-outputPath=$5
+userName=$2
+pkey=$3
+dmaSourceId=$4
+dmaManualId=$5
+outputPath=$6
 
 # Function to echo log messages
 function writeLog() {
@@ -37,34 +38,49 @@ function writeLog() {
 
 # Output headers
 headers="pkey|dma_source_id|dma_manual_id|machine_name|physical_cpu_count|logical_cpu_count|total_os_memory_mb|total_size_bytes|used_size_bytes"
+# Output defaults. We do some wierd postprocessing that deletes some characters, if not for the quotation marks.
+defaults="\"\"|||$machine_name|||||\"\""
 echo "$headers" > "$outputPath"
+echo "$defaults" >> "$outputPath"
 
-# Only supported locally.
-
-# Check if machineName is "localhost"
-if [ "$machine_name" = "localhost" ]; then
-    machine_name=$(hostname)
-fi
-
-if [ "$machine_name" != "$(hostname)" ]; then    
-    echo "Specified machine_name ${machine_name} does not match the actual hostname. Writing headers only to $outputPath."
-    csvData="\"$pkey\"|\"$dmaSourceId\"|\"$dmaManualId\"|\"$machine_name\"|0|0|0|0|0"
-    echo "$csvData" >> "$outputPath"
-    exit 0
-fi
+coreScript=$(cat <<'EOF'
+    hostName=$(hostname)
+    physicalCpuCount=$(cat /proc/cpuinfo | grep -i '\s*core id\s*:' | sort | uniq | wc -l)
+    logicalCpuCount=$(cat /proc/cpuinfo | grep -c -i '\s*processor\s*:')
+    memoryMB=$(free -b | awk '/^Mem/{print ($2+0) / (1024*1024)}')
+    totalSizeBytes=$(df --total / | awk '/total/{printf("%.0f\n", ($2+0) * 1024)}')
+    usedSizeBytes=$(df --output=used -B1 / | awk 'NR==2{printf("%.0f\n", ($1+0))}')
+EOF
+)
 
 # Main script logic
 writeLog "Fetching machine HW specs from computer: $machine_name and storing it in output: $outputPath"
 
-# Get hardware specifications
-physicalCpuCount=$(lscpu | awk '/^Socket/{print $2}')
-logicalCpuCount=$(lscpu | awk '/^Thread/{print $4}')
-memoryMB=$(free -b | awk '/^Mem/{print ($2+0) / (1024*1024)}')
-totalSizeBytes=$(df --total / | awk '/total/{printf("%.0f\n", ($2+0) * 1024)}')
-usedSizeBytes=$(df --output=used -B1 / | awk 'NR==2{printf("%.0f\n", ($1+0))}')
+# Check if machineName is "localhost"
+if [ "$machine_name" = "0.0.0.0" ] || grep -q "$machine_name" /etc/hosts; then
+    source <(echo "$coreScript")
+else
+    if [[ -z "$userName" ]]; then
+        echo "VM User name not set, skipping."
+        exit 0
+    fi
+    setScript=$(cat <<'EOF'
+        echo "hostName=$hostName"
+        echo "physicalCpuCount=$physicalCpuCount"
+        echo "logicalCpuCount=$logicalCpuCount"
+        echo "memoryMB=$memoryMB"
+        echo "totalSizeBytes=$totalSizeBytes"
+        echo "usedSizeBytes=$usedSizeBytes"
+EOF
+)
+    output=$(ssh "$userName@$machine_name" "${@:7}" "$coreScript; $setScript") || { echo "SSH to $machine_name failed"; exit 1; }
+    source <(echo "$output")
+fi
+
 
 # Writing result to output
-csvData="\"$pkey\"|\"$dmaSourceId\"|\"$dmaManualId\"|\"$machine_name\"|$physicalCpuCount|$logicalCpuCount|$memoryMB|$totalSizeBytes|$usedSizeBytes"
+csvData="\"$pkey\"|\"$dmaSourceId\"|\"$dmaManualId\"|\"$hostName\"|$physicalCpuCount|$logicalCpuCount|$memoryMB|$totalSizeBytes|$usedSizeBytes"
+echo "$headers" > "$outputPath"
 echo "$csvData" >> "$outputPath"
 
 writeLog "Successfully fetched machine HW specs of $machine_name to output: $outputPath"
