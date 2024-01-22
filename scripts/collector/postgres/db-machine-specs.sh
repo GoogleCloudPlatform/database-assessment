@@ -45,8 +45,8 @@ echo "$defaults" >> "$outputPath"
 
 coreScript=$(cat <<'EOF'
     hostName=$(hostname)
-    physicalCpuCount=$(lscpu | awk '/^Socket/{print $2}')
-    logicalCpuCount=$(lscpu | awk '/^Thread/{print $4}')
+    physicalCpuCount=$(cat /proc/cpuinfo | grep -i '\s*core id\s*:' | sort | uniq | wc -l)
+    logicalCpuCount=$(cat /proc/cpuinfo | grep -c -i '\s*processor\s*:')
     memoryMB=$(free -b | awk '/^Mem/{print ($2+0) / (1024*1024)}')
     totalSizeBytes=$(df --total / | awk '/total/{printf("%.0f\n", ($2+0) * 1024)}')
     usedSizeBytes=$(df --output=used -B1 / | awk 'NR==2{printf("%.0f\n", ($1+0))}')
@@ -55,7 +55,6 @@ EOF
 
 # Main script logic
 writeLog "Fetching machine HW specs from computer: $machine_name and storing it in output: $outputPath"
-
 
 # Check if machineName is "localhost"
 if [ "$machine_name" = "0.0.0.0" ] || grep -q "$machine_name" /etc/hosts; then
