@@ -274,6 +274,15 @@ then
 	DMA_SOURCE_ID="NA"
 fi
 
+# Only run once per VM, instead of once per DB.
+specsOut="output/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv"
+if [[ -z "$specsPath" ]] ; then 
+      host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
+      ./db-machine-specs.sh "$host" "$vmUserName" "${V_FILE_TAG}" "${DMA_SOURCE_ID}" "${V_MANUAL_ID}" "${specsOut}" "${extraSSHArgs[@]}"
+else
+      cp "$specsPath" "$specsOut"
+fi
+
 # If we are not given a database name, loop through all the databases in the instance and create a collection for each one, then exit.
 if [[ "${db}" == "" ]] ;
 then
@@ -292,8 +301,9 @@ EOF
       for db in ${alldbs}
 	do
             export IFS=$OLDIFS
-  	    ./collect-data.sh --connectionStr ${user}/${pass}@//${host}:${port}/"${db}"  --manualUniqueId ${V_MANUAL_ID}   
+  	    ./collect-data.sh --connectionStr ${user}/${pass}@//${host}:${port}/"${db}"  --manualUniqueId ${V_MANUAL_ID}  --specsPath "$specsOut"
 	done
+      rm "$specsOut"
 	exit
 else
 # If given a database name, create a collection for that one database.
@@ -307,9 +317,6 @@ ${SQLCMD} -X --user=${user} -d "${db}" -h ${host} -w -p ${port}  --no-align --ec
 EOF
 
 fi
-specsOut="output/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv"
-host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
-./db-machine-specs.sh $host ${V_FILE_TAG} ${DMA_SOURCE_ID} ${V_MANUAL_ID} ${specsOut}
 }
 
 
@@ -481,6 +488,9 @@ echo "        --collectionUserName  Database user name."
 echo "        --collectionUserPass  Database password"
 echo "      }"
 echo
+echo "  VM collection definition (optional):"
+echo "        --vmUserName          Username on the VM the Database is running on."
+echo "        --extraSSHArg         Extra args to be passed as is to ssh. Can be specified multiple times."
 echo
 echo " Example:"
 echo
@@ -505,6 +515,9 @@ DBTYPE="postgres"
 statsSrc=""
 connStr=""
 manualUniqueId=""
+vmUserName=""
+extraSSHArgs=()
+specsPath=""
 
  if [[ $(($# & 1)) == 1 ]] ;
  then
@@ -520,7 +533,10 @@ manualUniqueId=""
 	 elif [[ "$1" == "--collectionUserName" ]]; then collectionUserName="${2}"
 	 elif [[ "$1" == "--collectionUserPass" ]]; then collectionUserPass="${2}"
 	 elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
-	 elif [[ "$1" == "--manualUniqueId" ]];      then manualUniqueId="${2}"
+	 elif [[ "$1" == "--manualUniqueId" ]];     then manualUniqueId="${2}"
+	 elif [[ "$1" == "--vmUserName" ]];         then vmUserName="${2}"
+	 elif [[ "$1" == "--extraSSHArg" ]];        then extraSSHArgs+=("${2}")
+	 elif [[ "$1" == "--specsPath" ]];          then specsPath=("${2}")
 	 else
 		 echo "Unknown parameter ${1}"
 		 printUsage
