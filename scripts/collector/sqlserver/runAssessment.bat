@@ -25,6 +25,7 @@ set helpExample=Example (default port): runAssessment.bat -serverName MS-SERVER1
 set helpExamplePort=Example (specified port): runAssessment.bat -serverName MS-SERVER1 -port 1436 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
 set helpExampleDatabase=Example (default port / single database): runAssessment.bat -serverName MS-SERVER1\SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
 set helpExampleDatabasePort=Example (specified port / single database): runAssessment.bat -serverName MS-SERVER1 -port 1436 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
+set collectVMSpecs=
 
 if [%1]==[] (
     goto helpOperation
@@ -43,6 +44,7 @@ if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-collectionUserPass" set "pass=%2"
 if /i "%1" == "-ignorePerfmon" set "noPerfmon=%2"
 if /i "%1" == "-manualUniqueId" set "manualUniqueId=%2"
+if /i "%1" == "-collectVMSpecs" set "collectVMSpecs=true"
 
 shift
 goto :loop
@@ -58,7 +60,13 @@ if not [%user%]==[] goto execWithCustomUser
 if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%
+SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%"
+
+if "%collectVMSpecs%"=="" (
+	CALL %command% 
+) ELSE (
+	CALL %command% -collectVMSpecs
+)
 
 if %errorlevel% == 1 goto exit
 goto done

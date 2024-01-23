@@ -74,8 +74,8 @@ $params = @{
 if ($requestCreds) {
 	try {
 		Get-WmiObject Win32_Processor -ComputerName $computerName > $null
-	}
- catch {
+	} 
+	catch {
 		if ($_.Exception.GetType().FullName -eq "System.UnauthorizedAccessException") {
 			$params.Credential = $host.ui.PromptForCredential(
 				"Credentials for $computerName", 
@@ -96,7 +96,6 @@ $csvData = [PSCustomObject]@{
 	"LogicalCpuCount"    = $null
 	"TotalOSMemoryBytes" = $null
 	"TotalOSMemoryMB"    = $null
-
 }
 
 try {
