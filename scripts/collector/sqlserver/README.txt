@@ -138,16 +138,18 @@ Operating System Versions:
                 - -operation **Required (create, start, stop, delete, collect, createemptyfile, help)
                 - -instanceType **Required (default, named)
                 - -namedInstanceName **Required if instanceType is "named" (should be the instance name without the server name)
+                - -sampleDuration **The number of intervals that perfmon sample will run defaults to 1152 (10 minute samples for 8 days)
+                - -sampleInterval **The interval (in seconds) that perfmon sample will run defaults to 600 (every 10 minutes)
 
             To execute the perfmon collection:
 
                 For a default instance:
-                    manageSQLServerPerfmonDataset.bat -operation create -instanceType default
+                    manageSQLServerPerfmonDataset.bat -operation create -instanceType default -sampleDuration [number of intervals to sample] -sampleInterval [frequency of sample intervals in seconds]
 
                 For a named instance:
-                    manageSQLServerPerfmonDataset.bat -operation create -instanceType named -namedInstanceName [instance name]
+                    manageSQLServerPerfmonDataset.bat -operation create -instanceType named -namedInstanceName [instance name] -sampleDuration [number of intervals to sample] -sampleInterval [frequency of sample intervals in seconds]
 
-        The script will create a permon data set that will collect the above metrics at a 1 minute interval for 8 days.  The dataset will automatically stop after 8 days of collection.  To get the most accurate statistics, it would be good to have this collection run over the busiest time for the server.
+        The script will create a permon data set that will collect the above metrics at a 10 minute interval for 8 days.  The dataset will automatically stop after 8 days of collection.  To get the most accurate statistics, it would be good to have this collection run over the busiest time for the server.
 
     b)  When the perfmon dataset completes or if you would like to execute the collection sooner, execute the following command from a command prompt session in "Administrator Mode" on the server you would like to collect data on
         and return the subsequent .zip file to Google.
@@ -161,6 +163,7 @@ Operating System Versions:
                 -collectionUserPass **Optional (If not provided will be prompted)
                 -ignorePerfmon **Optional (Defaults to "false" / Set to "true" to ignore perfmon collection)
                 -manualUniqueId **Optional (Defaults to "NA" - Gives the ability the user to tag their collection with a unique name)
+                -collectVMSpecs **Optional switch. See below.
 
         For a Named Instance (all databases):
             .\runAssessment.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password] -manualUniqueId [string]
@@ -199,6 +202,13 @@ Operating System Versions:
             2) Collection scripts should be executed from an "Administrator Mode" command prompt
             3) When using a port to connect only provide the local host name
             4) The manualUniqueId can be used to give the collection a unique identifier specified by the customer
+
+        CollectVMSpecs:
+            To provide rightsizing information the script attempts to connect to the host VM using the current users credentials and collect hardware specs (number of CPUs/amount of memory).
+            If the current user does not have sufficient permissions, it will skip this step. To manually input the correct credentials instead when this occurs, specify the -collectVMSpecs switch.
+            This is recommended if you plan to upload the results to the Migration Center.
+
+            Example: runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string] -collectVMSpecs
 
 4. Results
 ----------

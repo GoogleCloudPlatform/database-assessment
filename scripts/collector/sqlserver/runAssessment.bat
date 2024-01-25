@@ -20,11 +20,13 @@ set pass=false
 set manualUniqueId="NA"
 set database=all
 set noPerfmon=false
-set helpMessage=Usage: runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [username] -collectionUserPass [password] -ignorePerfmon [true/false] -manualUniqueId [unique tag to identify collection]
+set helpMessage=Usage: runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [username] -collectionUserPass [password] -ignorePerfmon [true/false] -manualUniqueId [unique tag to identify collection] [-collectVMSpecs]
 set helpExample=Example (default port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
 set helpExamplePort=Example (specified port): runAssessment.bat -serverName MS-SERVER1 -port 1436 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
 set helpExampleDatabase=Example (default port / single database): runAssessment.bat -serverName MS-SERVER1\SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
 set helpExampleDatabasePort=Example (specified port / single database): runAssessment.bat -serverName MS-SERVER1 -port 1436 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
+set helpExampleCollectVMSpecs=Example (collect specs from host VM): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1 -collectVMSpecs
+set collectVMSpecs=
 
 if [%1]==[] (
     goto helpOperation
@@ -43,6 +45,7 @@ if /i "%1" == "-collectionUserName" set "user=%2"
 if /i "%1" == "-collectionUserPass" set "pass=%2"
 if /i "%1" == "-ignorePerfmon" set "noPerfmon=%2"
 if /i "%1" == "-manualUniqueId" set "manualUniqueId=%2"
+if /i "%1" == "-collectVMSpecs" set "collectVMSpecs=true"
 
 shift
 goto :loop
@@ -58,7 +61,13 @@ if not [%user%]==[] goto execWithCustomUser
 if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 
-PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%
+SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%"
+
+if "%collectVMSpecs%"=="" (
+	CALL %command% 
+) ELSE (
+	CALL %command% -collectVMSpecs
+)
 
 if %errorlevel% == 1 goto exit
 goto done
@@ -90,6 +99,8 @@ echo:
 echo %helpExampleDatabase%
 echo:
 echo %helpExampleDatabasePort%
+echo:
+echo %helpExampleCollectVMSpecs%
 echo:
 goto done
 

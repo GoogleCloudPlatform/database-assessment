@@ -120,6 +120,7 @@ In order to begin running the Database Migration Assessment Collection process, 
 #### Perfmon Requirements (Optional)
 
 - NOTE: Executing Perfmon is OPTIONAL. If not executed the tool will evaluate complexity of migration, but not rightsizing requirements.
+- NOTE: The standard perfmon collector collects every 10 minutes for 8 days.
 
 - If you have your own perfmon counters capturing the following statistics or run on a SQL Server Product such as Amazon RDS or Google CloudSQL for SQL Server, skip to step b, otherwise proceed to step a.
   \*\* The Perfmon data collection process is optional and can be safely skipped. However, there will be no right sizing information in the assessment report.
@@ -160,16 +161,18 @@ In order to begin running the Database Migration Assessment Collection process, 
   - -operation \*\* Required (create, start, stop, delete, collect, createemptyfile, help)
   - -instanceType \*\* Required (default, named)
   - -namedInstanceName \*\* Required if instanceType is "named" (should be the instance name without the server name)
+  - -sampleDuration \*\* The number of intervals that perfmon sample will run defaults to 1152 (10 minute samples for 8 days)
+  - -sampleInterval \*\* The interval that perfmon sample will run defaults to 600 (every 10 minutes)
 
 To create and start the perfmon collection:
 
         For a default instance:
-            manageSQLServerPerfmonDataset.bat -operation create -instanceType default
+            manageSQLServerPerfmonDataset.bat -operation create -instanceType default -sampleDuration [number of intervals to sample] -sampleInterval [frequency of sample intervals in seconds]
 
         For a named instance:
-            manageSQLServerPerfmonDataset.bat -operation create -instanceType named -namedInstanceName [instance name]
+            manageSQLServerPerfmonDataset.bat -operation create -instanceType named -namedInstanceName [instance name] -sampleDuration [number of intervals to sample] -sampleInterval [frequency of sample intervals in seconds]
 
-The script will create a permon data set that will collect the above metrics at a 1 minute interval for 8 days. The dataset will automatically stop after 8 days of collection. To get the most accurate statistics, it would be good to have this collection run over the busiest time for the server.
+The script will create a permon data set that will collect the above metrics at a 10 minute intervals for 8 days. The dataset will automatically stop after 8 days of collection. To get the most accurate statistics, it would be good to have this collection run over the busiest time for the server.
 
 <br/>
 
@@ -188,6 +191,7 @@ The script will create a permon data set that will collect the above metrics at 
   - -collectionUserPass \*\*Required
   - -ignorePerfmon \*\*Optional (Defaults to "false" / Set to "true" to ignore perfmon collection)
   - -manualUniqueId \*\*Optional (Defaults to "NA" - Gives the ability the user to tag their collection with a unique name)
+  - -collectVMSpecs \*\*Optional switch. See [below](#collectvmspecs).
 
 To Execute the Collection:
 
@@ -230,6 +234,16 @@ To Execute the Collection:
           2. Collection scripts should be executed from an "Administrator Mode" command prompt
           3. When using a port to connect only provide the local host name
           4. The manualUniqueId can be used to give the collection a unique identifier specified by the customer
+
+##### CollectVMSpecs:
+To provide rightsizing information the script attempts to connect to the host VM using the current users credentials and collect hardware specs (number of CPUs/amount of memory).
+
+If the current user does not have sufficient permissions, it will skip this step. To manually input the correct credentials instead when this occurs, specify the `-collectVMSpecs` switch.
+  
+This is recommended if you plan to upload the results to the Migration Center.
+
+        Example: runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string] -collectVMSpecs
+
 
 ---
 

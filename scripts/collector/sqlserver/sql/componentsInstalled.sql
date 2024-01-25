@@ -54,43 +54,56 @@ WHERE  Lower(entity_name) IN ( 'sys.xp_regread', 'sys.xp_servicecontrol' )
 /* ------------------------------------------ Inital Setup -----------------------------------------------------*/
 IF Object_id('tempdb..#RegResult') IS NOT NULL
   DROP TABLE #regresult;
+
 IF Object_id('tempdb..#ServicesServiceStatus') IS NOT NULL
   DROP TABLE #servicesservicestatus;
-  CREATE TABLE #regresult
-  (
-     resultvalue NVARCHAR(4)
-  )
-  CREATE TABLE #servicesservicestatus /*Create temp tables*/
-  (
-     rowid             INT IDENTITY(1, 1),
-     servername        NVARCHAR(128),
-     servicename       NVARCHAR(128),
-     servicestatus     VARCHAR(128),
-     statusdatetime    DATETIME DEFAULT (Getdate()),
-     physicalsrvername NVARCHAR(128)
-  )
-  DECLARE @ChkInstanceName NVARCHAR(128) /*Stores SQL Instance Name*/
-        ,
-        @ChkSrvName      NVARCHAR(128) /*Stores Server Name*/
-        ,
-        @TrueSrvName     NVARCHAR(128) /*Stores where code name needed */
-        ,
-        @SQLSrv          NVARCHAR(128) /*Stores server name*/
-        ,
-        @PhysicalSrvName NVARCHAR(128) /*Stores physical name*/
-        ,
-        @FTS             NVARCHAR(128) /*Stores Full Text Search Service name*/
-        ,
-        @RS              NVARCHAR(128) /*Stores Reporting Service name*/
-        ,
-        @SQLAgent        NVARCHAR(128) /*Stores SQL Agent Service name*/
-        ,
-        @OLAP            NVARCHAR(128) /*Stores Analysis Service name*/
-        ,
-        @REGKEY          NVARCHAR(128) /*Stores Registry Key information*/
-    SET @PhysicalSrvName = Cast(Serverproperty('MachineName') AS VARCHAR(128))
-    SET @ChkSrvName = Cast(Serverproperty('INSTANCENAME') AS VARCHAR(128))
-    SET @ChkInstanceName = @@serverName
+
+IF Object_id('tempdb..#tempLanguageServices') IS NOT NULL
+  DROP TABLE #tempLanguageServices;
+
+CREATE TABLE #regresult
+(
+    resultvalue NVARCHAR(4)
+)
+CREATE TABLE #servicesservicestatus /*Create temp tables*/
+(
+    rowid             INT IDENTITY(1, 1),
+    servername        NVARCHAR(128),
+    servicename       NVARCHAR(128),
+    servicestatus     VARCHAR(128),
+    statusdatetime    DATETIME DEFAULT (Getdate()),
+    physicalsrvername NVARCHAR(128)
+)
+CREATE TABLE #tempLanguageServices 
+(
+    servicestatus NVARCHAR(256)
+);
+
+DECLARE @ChkInstanceName NVARCHAR(128) /*Stores SQL Instance Name*/
+      ,
+      @ChkSrvName      NVARCHAR(128) /*Stores Server Name*/
+      ,
+      @TrueSrvName     NVARCHAR(128) /*Stores where code name needed */
+      ,
+      @SQLSrv          NVARCHAR(128) /*Stores server name*/
+      ,
+      @PhysicalSrvName NVARCHAR(128) /*Stores physical name*/
+      ,
+      @FTS             NVARCHAR(128) /*Stores Full Text Search Service name*/
+      ,
+      @RS              NVARCHAR(128) /*Stores Reporting Service name*/
+      ,
+      @SQLAgent        NVARCHAR(128) /*Stores SQL Agent Service name*/
+      ,
+      @OLAP            NVARCHAR(128) /*Stores Analysis Service name*/
+      ,
+      @REGKEY          NVARCHAR(128) /*Stores Registry Key information*/
+      ,
+      @R_INFO_SERVICES NVARCHAR(256) /*Stores Info on R Language Installation information*/
+  SET @PhysicalSrvName = Cast(Serverproperty('MachineName') AS VARCHAR(128))
+  SET @ChkSrvName = Cast(Serverproperty('INSTANCENAME') AS VARCHAR(128))
+  SET @ChkInstanceName = @@serverName
+
 IF @ChkSrvName IS NULL /*Detect default or named instance*/
   BEGIN
       SET @TrueSrvName = 'MSQLSERVER'
@@ -623,6 +636,23 @@ BEGIN CATCH
               (physicalsrvername,servername,servicename,servicestatus)
   VALUES      (@PhysicalSrvName,@TrueSrvName,'Full Text Search Service','N/A')
 END CATCH
+
+
+/* ---------------------------------- Machine Learning and R Language Service Section -----------------------------------------*/
+BEGIN TRY
+	INSERT INTO #tempLanguageServices exec('sp_execute_external_script @language = N''R'', @script = N''OutputDataSet <- data.frame(.libPaths());''');
+	SELECT @R_INFO_SERVICES = servicestatus from #tempLanguageServices;
+	INSERT INTO #servicesservicestatus (physicalsrvername,servername,servicename,servicestatus)
+		VALUES (@PhysicalSrvName,@TrueSrvName,'IsMachineLearningAndREnabled',CASE WHEN @R_INFO_SERVICES IS NOT NULL THEN 'INSTALLED' ELSE 'NOT INSTALLED' END)
+END TRY
+BEGIN CATCH
+	IF ERROR_NUMBER() = 39020 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+		INSERT INTO #servicesservicestatus (physicalsrvername,servername,servicename,servicestatus)
+		VALUES (@PhysicalSrvName,@TrueSrvName,'IsMachineLearningAndREnabled','NOT INSTALLED');
+	IF ERROR_NUMBER() = 39020 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 2
+		INSERT INTO #servicesservicestatus (physicalsrvername,servername,servicename,servicestatus)
+		VALUES (@PhysicalSrvName,@TrueSrvName,'IsMachineLearningAndREnabled','NOT INSTALLED');
+END CATCH;
 /* -------------------------------------------------------------------------------------------------------------*/
 SELECT @PKEY             AS PKEY,
        physicalsrvername AS 'physical_server_name',
@@ -640,3 +670,5 @@ IF Object_id('tempdb..#RegResult') IS NOT NULL
   DROP TABLE #regresult
 IF Object_id('tempdb..#ServicesServiceStatus') IS NOT NULL
   DROP TABLE #servicesservicestatus
+IF Object_id('tempdb..#tempLanguageServices') IS NOT NULL
+  DROP TABLE #tempLanguageServices

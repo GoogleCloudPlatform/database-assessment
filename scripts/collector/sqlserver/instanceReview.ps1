@@ -32,6 +32,9 @@
     Signals if the perfmon collection should be skipped (default:false) 
 .PARAMETER manualUniqueId
     Tag that can be supplied by the customer to make a collection unique.  Maps to the internal variable dmaManualId (optional)
+.PARAMETER collectVMSpecs
+    Whether to explicitly request credentials to collect data from the VM hosting the DB if the current users credentials are not sufficient.
+    Note the script will attempt to collect VM specs using the current users regardless.
 .EXAMPLE
     To use a specific username / password combination for a named instance:
         instanceReview.ps1 -serverName [server name / ip address]\[instance name] -collectionUserName [collection username] -collectionUserPass [collection username password] -ignorePerfmon [true/false] -dmaManualId [string]
@@ -49,7 +52,8 @@ Param(
     [Parameter(Mandatory = $false)][string]$collectionUserName,
     [Parameter(Mandatory = $false)][string]$collectionUserPass,
     [Parameter(Mandatory = $false)][string]$ignorePerfmon = "false",
-    [Parameter(Mandatory = $false)][string]$manualUniqueId = "NA"
+    [Parameter(Mandatory = $false)][string]$manualUniqueId = "NA",
+    [Parameter(Mandatory = $false)][switch]$collectVMSpecs
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
@@ -105,7 +109,7 @@ else {
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
         $inputServerName = $serverName
         $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v database=$database | findstr /v /c:"---"
-        $validSQLInstanceVersion = sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 | findstr /v /c:"---"
+        $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768)
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$database)
         $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768)
         if ([string]$database -ne "all") {
@@ -122,7 +126,7 @@ else {
         $serverName = "$serverName,$port"
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
         $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v database=$database | findstr /v /c:"---"
-        $validSQLInstanceVersion = sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 | findstr /v /c:"---"
+        $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768)
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$database)
         $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1-w 32768)
         if ([string]$database -ne "all") {
@@ -142,7 +146,31 @@ if ([string]::IsNullorEmpty($folderObj)) {
     Exit 1
 }
 
-if ([string]($validSQLInstanceVersion) -eq "N") {
+<# Fixup Variables to build folder name, check valid version, check if cloud #>
+$splitobj = $folderObj[1].Split('')
+$values = $splitobj | ForEach-Object { if ($_.Trim() -ne '') { $_ } }
+
+$dbversion = $values[0].Replace('.', '')
+$machinename = $values[1]
+if ([string]$database -eq "all") {
+    $dbname = $values[2]
+}
+else {
+    $dbname = $database
+}
+$instancename = $values[3]
+$current_ts = $values[4]
+$pkey = $values[5]
+$dmaSourceId = $dmaSourceIdObj[0]
+
+$splitValidInstanceVerisionCheckObj = $validSQLInstanceVersionCheckArray[0].Split('')
+$validSQLInstanceVersionCheckValues = $splitValidInstanceVerisionCheckObj | ForEach-Object { if ($_.Trim() -ne '') { $_ } }
+$isValidSQLInstanceVersion = $validSQLInstanceVersionCheckValues[0]
+$isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
+
+$op_version = "4.3.29" 
+
+if ([string]($isValidSQLInstanceVersion) -eq "N") {
     Write-Host "#############################################################"
     Write-Host "#                                                           #"
     Write-Host "#          !!!! Collector has not been tested !!!!          #"
@@ -164,24 +192,6 @@ if ([string]($validSQLInstanceVersion) -eq "N") {
         Exit
     }
 }
-
-$splitobj = $folderObj[1].Split('')
-$values = $splitobj | ForEach-Object { if ($_.Trim() -ne '') { $_ } }
-
-$dbversion = $values[0].Replace('.', '')
-$machinename = $values[1]
-if ([string]$database -eq "all") {
-    $dbname = $values[2]
-}
-else {
-    $dbname = $database
-}
-$instancename = $values[3]
-$current_ts = $values[4]
-$pkey = $values[5]
-$dmaSourceId = $dmaSourceIdObj[0]
-
-$op_version = "4.3.28"
 
 if ($ignorePerfmon -eq "true") {
     $perfCounterLabel = "NoPerfCounter"
@@ -278,6 +288,7 @@ $manifestFile = 'opdb' + '__' + 'manifest' + $outputFileSuffix
 $computerSpecsFile = 'opdb' + '__' + 'DbMachineSpecs' + $outputFileSuffix
 $tranLogBkupCountByDayByHour = 'opdb' + '__' + 'TranLogBkupCountByHourByDay' + $outputFileSuffix
 $tranLogBkupSizeByDayByHour = 'opdb' + '__' + 'TranLogBkupSizeByHourByDay' + $outputFileSuffix
+$databaseLevelBlockingFeatures = 'opdb' + '__' + 'DatabaseLevelBlockFeatures' + $outputFileSuffix
 
 $outputFileArray = @($compFileName,
     $srvFileName,
@@ -299,7 +310,8 @@ $outputFileArray = @($compFileName,
     $manifestFile,
     $computerSpecsFile
     $tranLogBkupCountByDayByHour,
-    $tranLogBkupSizeByDayByHour)
+    $tranLogBkupSizeByDayByHour,
+    $databaseLevelBlockingFeatures)
 
 WriteLog -logMessage "Checking directory path + output file name lengths for max length limitations..." -logOperation "MESSAGE"
 foreach ($directory in $outputFileArray) {
@@ -328,7 +340,7 @@ sqlcmd -S $serverName -i sql\serverProperties.sql -d master -U $collectionUserNa
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server CloudSQL Unsupported Flag Info..." -logOperation "BOTH"
 sqlcmd -S $serverName -i sql\dbServerUnsupportedFlags.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$dbServerFlags
 
-WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Features in Use Info..." -logOperation "BOTH"
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Blocked Features in Use..." -logOperation "BOTH"
 sqlcmd -S $serverName -i sql\dbServerFeatures.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Linked Server Info..." -logOperation "BOTH"
@@ -346,18 +358,26 @@ sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -d master -U $collectionUserName
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Configuration Info..." -logOperation "BOTH"
 sqlcmd -S $serverName -i sql\dbServerConfigurationSettings.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$dbServerConfig
 
-WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Transaction Log Info..." -logOperation "BOTH"
-sqlcmd -S $serverName -i sql\dbServerTranLogBackupCountByDayByHour.sql -d msdb -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$tranLogBkupCountByDayByHour
-sqlcmd -S $serverName -i sql\dbServerTranLogBackupSizeByDayByHour.sql -d msdb -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$tranLogBkupSizeByDayByHour
+if ($isCloudOrLinuxHost -eq "AZURE") {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Unavailable in AZURE.....Skipping SQL Server Transaction Log Backup Info..." -logOperation "BOTH"
+    Set-Content -Path $foldername\$tranLogBkupCountByDayByHour -Encoding utf8 -Value "PKEY|collection_date|day_of_month|total_logs_generated|h0_count|h1_count|h2_count|h3_count|h4_count|h5_count|h6_count|h7_count|h8_count|h9_count|h10_count|h11_count|h12_count|h13_count|h14_count|h15_count|h16_count|h17_count|h18_count|h19_count|h20_count|h21_count|h22_count|h23_count|avg_per_hour|dma_source_id|dma_manual_id"
+    Set-Content -Path $foldername\$tranLogBkupSizeByDayByHour -Encoding utf8 -Value "PKEY|collection_date|day_of_month|total_logs_generated_in_mb|h0_size_in_mb|h1_size_in_mb|h2_size_in_mb|h3_size_in_mb|h4_size_in_mb|h5_size_in_mb|h6_size_in_mb|h7_size_in_mb|h8_size_in_mb|h9_size_in_mb|h10_size_in_mb|h11_size_in_mb|h12_size_in_mb|h13_size_in_mb|h14_size_in_mb|h15_size_in_mb|h16_size_in_mb|h17_size_in_mb|h18_size_in_mb|h19_size_in_mb|h20_size_in_mb|h21_size_in_mb|h22_size_in_mb|h23_size_in_mb|avg_mb_per_hour|dma_source_id|dma_manual_id"
+}
+else {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Transaction Log Backup Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\dbServerTranLogBackupCountByDayByHour.sql -d msdb -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$tranLogBkupCountByDayByHour
+    sqlcmd -S $serverName -i sql\dbServerTranLogBackupSizeByDayByHour.sql -d msdb -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$tranLogBkupSizeByDayByHour    
+}
 
 ### First establish headers for the collection files which could execute against multiple databases in the instance
 Set-Content -Path $foldername\$objectList -Encoding utf8 -Value "PKEY|database_name|schema_name|object_name|object_type|object_type_desc|object_count|lines_of_code|associated_table_name|dma_source_id|dma_manual_id"
 Set-Content -Path $foldername\$tableList -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|partition_count|is_memory_optimized|temporal_type|is_external|lock_escalation|is_tracked_by_cdc|text_in_row_limit|is_replicated|row_count|data_compression|total_space_mb|used_space_mb|unused_space_mb|dma_source_id|dma_manual_id"
 Set-Content -Path $foldername\$indexList -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|index_name|index_type|is_primary_key|is_unique|fill_factor|allow_page_locks|has_filter|data_compression|data_compression_desc|is_partitioned|count_key_ordinal|count_partition_ordinal|count_is_included_column|total_space_mb|dma_source_id|dma_manual_id"
 Set-Content -Path $foldername\$columnDatatypes -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|datatype|max_length|precision|scale|is_computed|is_filestream|is_masked|encryption_type|is_sparse|rule_object_id|column_count|dma_source_id|dma_manual_id"
-Set-Content -Path $foldername\$userConnectionList -Encoding utf8 -Value "PKEY|database_name|is_user_process|host_name|program_name|login_name|num_reads|num_writes|last_read|last_write|reads|logical_reads|writes|client_interface_name|nt_domain|nt_user_name|client_net_address|local_net_address|dma_source_id|dma_manual_id"
+Set-Content -Path $foldername\$userConnectionList -Encoding utf8 -Value "PKEY|database_name|is_user_process|host_name|program_name|login_name|num_reads|num_writes|last_read|last_write|reads|logical_reads|writes|client_interface_name|nt_domain|nt_user_name|client_net_address|local_net_address|dma_source_id|dma_manual_id,protocol_type|protocol_version|protocol_hex_version"
 Set-Content -Path $foldername\$dbsizes -Encoding utf8 -Value "PKEY|database_name|type_desc|current_size_mb|dma_source_id|dma_manual_id"
 Set-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8 -Value "PKEY|collection_time|available_mbytes|physicaldisk_avg_disk_bytes_read|physicaldisk_avg_disk_bytes_write|physicaldisk_avg_disk_bytes_read_sec|physicaldisk_avg_disk_bytes_write_sec|physicaldisk_disk_reads_sec|physicaldisk_disk_writes_sec|processor_idle_time_pct|processor_total_time_pct|processor_frequency|processor_queue_length|buffer_cache_hit_ratio|checkpoint_pages_sec|free_list_stalls_sec|page_life_expectancy|page_lookups_sec|page_reads_sec|page_writes_sec|user_connection_count|memory_grants_pending|target_server_memory_kb|total_server_memory_kb|batch_requests_sec|dma_source_id|dma_manual_id"
+Set-Content -Path $foldername\$databaseLevelBlockingFeatures -Encoding utf8 -Value "PKEY|database_name|feature_name|is_enabled_or_used|occurance_count|dma_source_id|dma_manual_id"
 
 ### Iterate through collections that could execute against multiple databases in the instance
 foreach ($databaseName in $dbNameArray) {
@@ -381,6 +401,9 @@ foreach ($databaseName in $dbNameArray) {
 
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server DMV Perfmon Info for Database $databaseName ..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\dbServerDmvPerfmon.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8
+
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Blocked Features for Database $databaseName ..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\dbServerFeaturesDatabaseLevel.sql -d $databaseName -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$databaseLevelBlockingFeatures -Encoding utf8
 }
 
 # Pull perfmon file if we are running from same server.  Generate empty file if running on remote server
@@ -411,10 +434,19 @@ else {
     }
 }
 
-## Getting HW Specs.   
-$dbCollectOut = $foldername + '/' + $computerSpecsFile   
-WriteLog -logLocation $foldername\$logFile -logMessage "Retriving SQL Server HW Shape Info for Machine $machinename ..." -logOperation "FILE"
-.\dmaSQLServerHWSpecs.ps1 -computerName $machinename -outputPath $dbCollectOut -logLocation $foldername\$logFile -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId
+<# Getting HW Specs. #>
+if ($isCloudOrLinuxHost -eq "AZURE") {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Unavailable in AZURE... Skipping SQL Server HW Shape Info for Machine $machinename ..." -logOperation "BOTH"
+    Set-Content -Path $foldername\$computerSpecsFile -Encoding utf8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"MachineName"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
+}
+elseif ($isCloudOrLinuxHost -eq "LINUX") {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Unavailable for Linux Host... Skipping SQL Server HW Shape Info for Machine $machinename ..." -logOperation "BOTH"
+    Set-Content -Path $foldername\$computerSpecsFile -Encoding utf8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"MachineName"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
+}
+else {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server HW Shape Info for Machine $machinename ..." -logOperation "BOTH"
+    .\dmaSQLServerHWSpecs.ps1 -computerName $machinename -outputPath $foldername\$computerSpecsFile -logLocation $foldername\$logFile -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId -requestCreds:$collectVMSpecs
+}
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Remove special characters and UTF8 BOM from extracted files..." -logOperation "BOTH"
 foreach ($file in Get-ChildItem -Path $foldername\*.csv) {

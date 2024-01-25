@@ -61,6 +61,10 @@ CREATE TABLE #connectionInfo(
     ,nt_user_name nvarchar(255)
     ,client_net_address nvarchar(255)
     ,local_net_address nvarchar(255)
+    ,client_version nvarchar(255)
+	,protocol_type nvarchar(255)
+	,protocol_version nvarchar(255)
+	,protocol_hex_version nvarchar(255)
     );
 
 BEGIN
@@ -95,6 +99,10 @@ BEGIN
                 ,sdes.nt_user_name
                 ,sdec.client_net_address
                 ,sdec.local_net_address
+                ,sdes.client_version
+                ,sdec.protocol_type
+                ,sdec.protocol_version
+                ,CONVERT(VARCHAR(1000),(CONVERT(BINARY(4),sdec.protocol_version,2)),2) as protocol_hex_version
             FROM sys.dm_exec_sessions AS sdes
             INNER JOIN sys.dm_exec_connections AS sdec
                     ON sdec.session_id = sdes.session_id
@@ -122,6 +130,10 @@ BEGIN
                 ,sdes.nt_user_name
                 ,sdec.client_net_address
                 ,sdec.local_net_address
+                ,sdes.client_version
+                ,sdec.protocol_type
+                ,sdec.protocol_version
+                ,CONVERT(VARCHAR(1000),(CONVERT(BINARY(4),sdec.protocol_version,2)),2) as protocol_hex_version
             FROM sys.dm_exec_sessions AS sdes
             INNER JOIN sys.dm_exec_connections AS sdec
                     ON sdec.session_id = sdes.session_id
@@ -143,9 +155,29 @@ END
 
 SELECT 
     @PKEY as PKEY,
-    a.*,
+    database_name,
+    is_user_process,
+    host_name,
+    program_name,
+    login_name,
+    num_reads,
+    num_writes,
+    last_read,
+    last_write,
+    reads,
+    logical_reads,
+    writes,
+    client_interface_name,
+    nt_domain,
+    nt_user_name,
+    client_net_address,
+    local_net_address,
     @DMA_SOURCE_ID as dma_source_id,
-    @DMA_MANUAL_ID as dma_manual_id
+    @DMA_MANUAL_ID as dma_manual_id,
+    client_version,
+    protocol_type,
+    protocol_version,
+    protocol_hex_version
 from #connectionInfo a;
 
 IF OBJECT_ID('tempdb..#connectionInfo') IS NOT NULL
