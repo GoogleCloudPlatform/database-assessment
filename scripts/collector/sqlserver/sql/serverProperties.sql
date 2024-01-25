@@ -261,7 +261,7 @@ IF @CLOUDTYPE = 'NONE'
 BEGIN
     exec('INSERT INTO #serverProperties SELECT ''InstanceName'', CONVERT(nvarchar, COALESCE(SERVERPROPERTY(''InstanceName''),@@ServiceName))')
     exec('INSERT INTO #serverProperties SELECT ''BackupsToAzureBlobStorage'', CASE WHEN count(1) > 0 THEN ''1'' ELSE ''0'' END from msdb.dbo.backupmediafamily where physical_device_name like ''%blob.core.windows.net%''')
-    exec('INSERT INTO #serverProperties SELECT ''BackupsToObjectStorage'', CASE WHEN count(1) > 0 THEN ''1'' ELSE ''0'' END from msdb.dbo.backupmediafamily where (physical_device_name like ''%s3://%'') or (physical_device_name like ''%blob.core.windows.net%''')
+    exec('INSERT INTO #serverProperties SELECT ''BackupsToObjectStorage'', CASE WHEN count(1) > 0 THEN ''1'' ELSE ''0'' END from msdb.dbo.backupmediafamily where (physical_device_name like ''%s3://%'') or (physical_device_name like ''%blob.core.windows.net%'')')
     exec('INSERT INTO #serverProperties SELECT ''IsRpcOutEnabled'', CONVERT(nvarchar, is_rpc_out_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
     exec('INSERT INTO #serverProperties SELECT ''IsRemoteProcTransactionPromotionEnabled'', CONVERT(nvarchar, is_remote_proc_transaction_promotion_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
     exec('INSERT INTO #serverProperties SELECT ''IsRemoteLoginEnabled'', CONVERT(nvarchar, is_remote_login_enabled) FROM sys.servers WHERE name = @@SERVERNAME')
