@@ -163,8 +163,10 @@ $current_ts = $values[4]
 $pkey = $values[5]
 $dmaSourceId = $dmaSourceIdObj[0]
 
-$isValidSQLInstanceVersion = $validSQLInstanceVersionCheckArray[0]
-$isCloudOrLinuxHost = $validSQLInstanceVersionCheckArray[1]
+$splitValidInstanceVerisionCheckObj = $validSQLInstanceVersionCheckArray[0].Split('')
+$validSQLInstanceVersionCheckValues = $splitValidInstanceVerisionCheckObj | ForEach-Object { if ($_.Trim() -ne '') { $_ } }
+$isValidSQLInstanceVersion = $validSQLInstanceVersionCheckValues[0]
+$isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
 
 $op_version = "4.3.29" 
 

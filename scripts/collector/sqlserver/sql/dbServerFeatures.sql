@@ -36,7 +36,7 @@ IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
 IF OBJECT_ID('tempdb..#FeaturesEnabled') IS NOT NULL  
-   DROP TABLE #FeaturesEnabled;  
+   DROP TABLE #FeaturesEnabled;
 
 CREATE TABLE #FeaturesEnabled
 (
@@ -48,26 +48,51 @@ CREATE TABLE #FeaturesEnabled
 IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL  
    DROP TABLE #myPerms;
 
-CREATE TABLE #myPerms (
-    entity_name nvarchar(255), 
-    subentity_name nvarchar(255), 
+CREATE TABLE #myPerms
+(
+    entity_name nvarchar(255),
+    subentity_name nvarchar(255),
     permission_name nvarchar(255)
 );
 
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmail_server', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmail_profile', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmail_profileaccount', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmail_account', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.log_shipping_secondary_databases', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.log_shipping_primary_databases', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysmaintplan_subplans', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
-INSERT INTO #myPerms SELECT * FROM fn_my_permissions('msdb.dbo.sysjobs', 'OBJECT') WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms
+SELECT *
+FROM fn_my_permissions('msdb.dbo.sysmail_server', 'OBJECT')
+WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms
+SELECT *
+FROM fn_my_permissions('msdb.dbo.sysmail_profile', 'OBJECT')
+WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms
+SELECT *
+FROM fn_my_permissions('msdb.dbo.sysmail_profileaccount', 'OBJECT')
+WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms
+SELECT *
+FROM fn_my_permissions('msdb.dbo.sysmail_account', 'OBJECT')
+WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms
+SELECT *
+FROM fn_my_permissions('msdb.dbo.log_shipping_secondary_databases', 'OBJECT')
+WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms
+SELECT *
+FROM fn_my_permissions('msdb.dbo.log_shipping_primary_databases', 'OBJECT')
+WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms
+SELECT *
+FROM fn_my_permissions('msdb.dbo.sysmaintplan_subplans', 'OBJECT')
+WHERE permission_name = 'SELECT' and subentity_name ='';
+INSERT INTO #myPerms
+SELECT *
+FROM fn_my_permissions('msdb.dbo.sysjobs', 'OBJECT')
+WHERE permission_name = 'SELECT' and subentity_name ='';
 
 --DB Mail
-SELECT @TABLE_PERMISSION_COUNT = COUNT(*) 
-FROM #myPerms 
-WHERE LOWER(entity_name) IN ('dbo.sysmail_profile','dbo.sysmail_profileaccount','dbo.sysmail_account','dbo.sysmail_server') 
-AND UPPER(permission_name) = 'SELECT';
+SELECT @TABLE_PERMISSION_COUNT = COUNT(*)
+FROM #myPerms
+WHERE LOWER(entity_name) IN ('dbo.sysmail_profile','dbo.sysmail_profileaccount','dbo.sysmail_account','dbo.sysmail_server')
+    AND UPPER(permission_name) = 'SELECT';
 IF @TABLE_PERMISSION_COUNT >= 4 AND @CLOUDTYPE = 'NONE'
 BEGIN
     exec('
@@ -110,23 +135,33 @@ END
 --filestream enabled
 IF @PRODUCT_VERSION >= 11
 BEGIN
-    exec('WITH check_filestream AS (
-        SELECT
-            name,
-            ISNULL((SELECT count(1) FROM sys.master_files AS mf WHERE mf.database_id = db.database_id AND mf.type = 2),0) AS hasfs
-        FROM sys.databases AS db
-    )
-    INSERT INTO #FeaturesEnabled SELECT
-        ''IsFileStreamEnabled'',
-        CASE WHEN sum(hasfs) > 0 THEN ''1''
-        ELSE ''0''
-        END,
-        CASE WHEN sum(hasfs) > 0 THEN 1
-        ELSE 0
-        END       
-    FROM
-        check_filestream
-    /* SQL Server 2012 (11.x) above */');
+    BEGIN TRY
+        exec('WITH check_filestream AS (
+            SELECT
+                name,
+                ISNULL((SELECT count(1) FROM sys.master_files AS mf WHERE mf.database_id = db.database_id AND mf.type = 2),0) AS hasfs
+            FROM sys.databases AS db
+        )
+        INSERT INTO #FeaturesEnabled SELECT
+            ''IsFileStreamEnabled'',
+            CASE WHEN sum(hasfs) > 0 THEN ''1''
+            ELSE ''0''
+            END,
+            CASE WHEN sum(hasfs) > 0 THEN 1
+            ELSE 0
+            END       
+        FROM
+            check_filestream
+        /* SQL Server 2012 (11.x) above */');
+    END TRY
+    BEGIN CATCH
+        exec('
+        INSERT INTO #FeaturesEnabled VALUES (
+            ''IsFileStreamEnabled'',
+            ''0'',
+            0)
+        ');
+    END CATCH
 END
 ELSE
 BEGIN
@@ -147,7 +182,7 @@ BEGIN
             SELECT ''IsHybridBufferPoolEnabled'', 
             CONVERT(nvarchar,is_enabled),
             CASE 
-                WHEN value_in_use > 0 THEN 1
+                WHEN is_configured > 0 THEN 1
                 ELSE 0
             END
             from sys.server_memory_optimized_hybrid_buffer_pool_configuration 
@@ -157,7 +192,8 @@ ELSE
 BEGIN
     IF @PRODUCT_VERSION >= 15
     BEGIN
-        SELECT @ROW_COUNT_VAR = count(*) from sys.server_memory_optimized_hybrid_buffer_pool_configuration;
+        SELECT @ROW_COUNT_VAR = count(*)
+        from sys.server_memory_optimized_hybrid_buffer_pool_configuration;
         IF @ROW_COUNT_VAR = 0
         BEGIN
             exec('INSERT INTO #FeaturesEnabled 
@@ -181,7 +217,7 @@ BEGIN
     END;
     ELSE
     BEGIN
-    exec('INSERT INTO #FeaturesEnabled 
+        exec('INSERT INTO #FeaturesEnabled 
             SELECT 
             ''IsHybridBufferPoolEnabled'', 
             ''0'',
@@ -191,7 +227,8 @@ BEGIN
 END;
 
 --log shipping enabled
-SELECT @TABLE_PERMISSION_COUNT = COUNT(*) FROM #myPerms 
+SELECT @TABLE_PERMISSION_COUNT = COUNT(*)
+FROM #myPerms
 WHERE LOWER(entity_name) in ('dbo.log_shipping_primary_databases','dbo.log_shipping_secondary_databases') and UPPER(permission_name) = 'SELECT';
 IF @TABLE_PERMISSION_COUNT >= 2 AND @CLOUDTYPE = 'NONE'
 BEGIN
@@ -220,7 +257,8 @@ BEGIN
 END;
 
 --maintenance plans enabled
-SELECT @TABLE_PERMISSION_COUNT = COUNT(*) FROM #myPerms 
+SELECT @TABLE_PERMISSION_COUNT = COUNT(*)
+FROM #myPerms
 WHERE LOWER(entity_name) in ('dbo.sysmaintplan_subplans','dbo.sysjobs') and UPPER(permission_name) = 'SELECT';
 IF @TABLE_PERMISSION_COUNT >= 2
 BEGIN
@@ -264,7 +302,7 @@ END;
 
 --Resource Governor
 BEGIN
-exec ('INSERT INTO #FeaturesEnabled 
+    exec ('INSERT INTO #FeaturesEnabled 
     SELECT 
         ''IsResourceGovenorEnabled'', 
         CONVERT(nvarchar, is_enabled),
@@ -305,7 +343,7 @@ END
 
 --TDE in Use
 BEGIN
-exec('INSERT INTO #FeaturesEnabled 
+    exec('INSERT INTO #FeaturesEnabled 
             SELECT
                 ''IsTDEInUse'',
                 CONVERT(nvarchar, count(*)),
@@ -331,42 +369,45 @@ END;
 
 --Sysadmin role
 BEGIN
-    WITH check_sysadmin_role AS (
-        SELECT
-            name,
-            type_desc,
-            is_disabled
-        FROM
-            sys.server_principals
-        WHERE
+    WITH
+        check_sysadmin_role
+        AS
+        (
+                            SELECT
+                    name,
+                    type_desc,
+                    is_disabled
+                FROM
+                    sys.server_principals
+                WHERE
             IS_SRVROLEMEMBER ('sysadmin', name) = 1
-            AND name NOT LIKE '%NT SERVICE%'
-            AND name <> 'sa'
-        UNION
-        SELECT
-            name,
-            type_desc,
-            is_disabled
-        FROM
-            sys.server_principals
-        WHERE
+                    AND name NOT LIKE '%NT SERVICE%'
+                    AND name <> 'sa'
+            UNION
+                SELECT
+                    name,
+                    type_desc,
+                    is_disabled
+                FROM
+                    sys.server_principals
+                WHERE
             IS_SRVROLEMEMBER ('dbcreator', name) = 1
-            AND name NOT LIKE '%NT SERVICE%'
-            AND name <> 'sa'
-    )
-    INSERT INTO #FeaturesEnabled 
-        SELECT 
-            'sysadmin_role',
-            CASE WHEN count(*) > 0
+                    AND name NOT LIKE '%NT SERVICE%'
+                    AND name <> 'sa'
+        )
+    INSERT INTO #FeaturesEnabled
+    SELECT
+        'sysadmin_role',
+        CASE WHEN count(*) > 0
                 THEN '1'
             ELSE '0'
 			END,
-            CASE WHEN count(*) > 0
+        CASE WHEN count(*) > 0
                 THEN count(*)
             ELSE 0
 			END
-        FROM
-            check_sysadmin_role;
+    FROM
+        check_sysadmin_role;
 END;
 
 --Server level triggers
@@ -409,16 +450,16 @@ BEGIN
 END;
 
 --BULK INSERT
-INSERT INTO #FeaturesEnabled 
-    SELECT 
-        'BULK_INSERT',
-        CASE
+INSERT INTO #FeaturesEnabled
+SELECT
+    'BULK_INSERT',
+    CASE
             WHEN count(p.permission_name) > 0 THEN '1'
             ELSE '0'
         END,
-        CONVERT(int,count(p.permission_name)) 
-    FROM fn_my_permissions(NULL, 'SERVER') p 
-    WHERE permission_name like '%ADMINISTER BULK OPERATIONS%';
+    CONVERT(int,count(p.permission_name))
+FROM fn_my_permissions(NULL, 'SERVER') p
+WHERE permission_name like '%ADMINISTER BULK OPERATIONS%';
 
 -- CountServiceBrokerEndpoints
 BEGIN TRY
@@ -453,12 +494,12 @@ END TRY
 BEGIN CATCH
     IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
     BEGIN
-        exec('INSERT INTO #FeaturesEnabled SELECT ''CountTSQLEndpoints'', ''0'', 0');
-    END
+    exec('INSERT INTO #FeaturesEnabled SELECT ''CountTSQLEndpoints'', ''0'', 0');
+END
     ELSE
     BEGIN
-        exec('INSERT INTO #FeaturesEnabled SELECT ''CountTSQLEndpoints'', ''0'', 0');
-    END
+    exec('INSERT INTO #FeaturesEnabled SELECT ''CountTSQLEndpoints'', ''0'', 0');
+END
 END CATCH
 
 /* Collect permissions which are unsupported in CloudSQL SQL Server */
@@ -516,24 +557,33 @@ END
 
 --Service Broker tasks
 DECLARE @ServBrokerTasksUsed as INT, @IS_ServBrokerTasksUsed as NVARCHAR(4);
-select @ServBrokerTasksUsed = count(*)  from sys.dm_broker_activated_tasks;
+select @ServBrokerTasksUsed = count(*)
+from sys.dm_broker_activated_tasks;
 IF @ServBrokerTasksUsed > 0 SET @IS_ServBrokerTasksUsed = '1'  ELSE  SET @IS_ServBrokerTasksUsed = '0' ;
-INSERT INTO #FeaturesEnabled VALUES (
-'Service Broker Tasks Used', @IS_ServBrokerTasksUsed, ISNULL(@ServBrokerTasksUsed,0) );
+INSERT INTO #FeaturesEnabled
+VALUES
+    (
+        'Service Broker Tasks Used', @IS_ServBrokerTasksUsed, ISNULL(@ServBrokerTasksUsed,0) );
 
 --External Assemblies
 IF @CLOUDTYPE = 'AZURE'
 BEGIN
-    INSERT INTO #FeaturesEnabled VALUES (
-    'External Assemblies Used', 'No', 0);
+    INSERT INTO #FeaturesEnabled
+    VALUES
+        (
+            'External Assemblies Used', 'No', 0);
 END
 ELSE
 BEGIN
     DECLARE @ExternalAssembliesUsed as INT, @IS_ExternalAssembliesUsed as NVARCHAR(4);
-    select @ExternalAssembliesUsed = COUNT(*) from sys.server_permissions where permission_name = 'External access assembly' and state='G';
+    select @ExternalAssembliesUsed = COUNT(*)
+    from sys.server_permissions
+    where permission_name = 'External access assembly' and state='G';
     IF @ExternalAssembliesUsed > 0 SET @IS_ExternalAssembliesUsed = '1'  ELSE  SET @IS_ExternalAssembliesUsed = '0' ;
-    INSERT INTO #FeaturesEnabled VALUES (
-    'External Assemblies Used', @IS_ExternalAssembliesUsed, ISNULL(@ExternalAssembliesUsed,0) );
+    INSERT INTO #FeaturesEnabled
+    VALUES
+        (
+            'External Assemblies Used', @IS_ExternalAssembliesUsed, ISNULL(@ExternalAssembliesUsed,0) );
 END
 
 --CLR Enabled
@@ -549,8 +599,10 @@ END
 --Linked Servers
 IF @CLOUDTYPE = 'AZURE'
 BEGIN
-    INSERT INTO #FeaturesEnabled VALUES (
-    'IsLinkedServersUsed', '0', 0);
+    INSERT INTO #FeaturesEnabled
+    VALUES
+        (
+            'IsLinkedServersUsed', '0', 0);
 END
 ELSE
 BEGIN
