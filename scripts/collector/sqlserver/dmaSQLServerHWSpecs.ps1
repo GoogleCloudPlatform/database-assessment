@@ -28,6 +28,8 @@
     Customer Manual Unique ID or dma manual unique id (Optional).
 .PARAMETER logLocation
     Location of log file to output the script (Optional).
+.PARAMETER requestCreds
+	Whether to request credentials if connecting via WMI using the current user fails.
 .EXAMPLE
     C:\dmaSQLServerHWSpecs.ps1 -computerName localhost -outputPath a.out -pkey pkey1 -dmaSourceId src1
 .NOTES
@@ -35,63 +37,89 @@
 #>
 param (
 	[Parameter(
-		Mandatory=$False,
-		HelpMessage="The computer name"
+		Mandatory = $False,
+		HelpMessage = "The computer name"
 	)][string]$computerName = $env:COMPUTERNAME,
 	[Parameter(
-		Mandatory=$True,
-		HelpMessage="The Output path"
+		Mandatory = $True,
+		HelpMessage = "The Output path"
 	)][string]$outputPath,
 	[Parameter(
-		Mandatory=$True,
-		HelpMessage="The pkey value"
+		Mandatory = $True,
+		HelpMessage = "The pkey value"
 	)][string]$pkey,
 	[Parameter(
-		Mandatory=$True,
-		HelpMessage="The dma_source_id"
+		Mandatory = $True,
+		HelpMessage = "The dma_source_id"
 	)][string]$dmaSourceId,
 	[Parameter(
-		Mandatory=$False,
-		HelpMessage="The dma_manual_id"
-	)][string]$dmaManualId="NA",
+		Mandatory = $False,
+		HelpMessage = "The dma_manual_id"
+	)][string]$dmaManualId = "NA",
 	[Parameter(
-		Mandatory=$False,
-		HelpMessage="The log file location"
-	)][string]$logLocation="dmaSqlServerHWSpecs.log"
+		Mandatory = $False,
+		HelpMessage = "The log file location"
+	)][string]$logLocation = "dmaSqlServerHWSpecs.log",
+	[Parameter(
+		Mandatory = $False,
+		HelpMessage = "Request credentials if connecting via WMI without credentials fails"
+	)][switch]$requestCreds
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
+
+$params = @{
+	ComputerName = $computerName
+}
+if ($requestCreds) {
+	try {
+		Get-WmiObject Win32_Processor -ComputerName $computerName > $null
+	}
+ catch {
+		if ($_.Exception.GetType().FullName -eq "System.UnauthorizedAccessException") {
+			$params.Credential = $host.ui.PromptForCredential(
+				"Credentials for $computerName", 
+				"Please provide Windows credentials (not SQL Server credentials) for ${computerName}:", 
+				"", 
+				"")
+		}
+	}
+}
+
+# CSV data.
+$csvData = [PSCustomObject]@{
+	"pkey"               = $pkey
+	"dma_source_id"      = $dmaSourceId
+	"dma_manual_id"      = $dmaManualId
+	"MachineName"        = $computerName
+	"PhysicalCpuCount"   = $null
+	"LogicalCpuCount"    = $null
+	"TotalOSMemoryBytes" = $null
+	"TotalOSMemoryMB"    = $null
+
+}
 
 try {
 	WriteLog -logLocation $logLocation -logMessage "Fetching machine HW specs from computer:$computerName and storing it in output:$outputPath" -logOperation "FILE"
 
 	# Physical cores count.
-	$PhysicalCpuCount=(Get-WmiObject Win32_Processor -ComputerName $computerName | Measure-Object -Property NumberOfCores -Sum).Sum
+	$csvData.PhysicalCpuCount = (Get-WmiObject Win32_Processor @params | Measure-Object -Property NumberOfCores -Sum).Sum
 
 	# Logical cores count.
-	$LogicalCpuCount=(Get-WmiObject Win32_Processor -ComputerName $computerName | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum
+	$csvData.LogicalCpuCount = (Get-WmiObject Win32_Processor @params | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum
 	
 	# Total memory in bytes.
-	$memoryBytes=(Get-WmiObject Win32_PhysicalMemory -ComputerName $computerName | Measure-Object -Property Capacity -Sum).Sum
-	
-	# CSV data.
-	$csvData = [PSCustomObject]@{
-		"pkey" = $pkey
-		"dma_source_id" = $dmaSourceId
-		"dma_manual_id" = $dmaManualId
-		"MachineName" = $computerName
-		"PhysicalCpuCount" = $PhysicalCpuCount
-		"LogicalCpuCount" = $LogicalCpuCount
-		"TotalOSMemoryMB" = $memoryBytes/1024/1024
-	}
+	$csvData.TotalOSMemoryBytes = (Get-WmiObject Win32_PhysicalMemory @params | Measure-Object -Property Capacity -Sum).Sum
+
+	# Total memory in MB.
+	$csvData.TotalOSMemoryMB = [Math]::Floor([decimal]($csvData.TotalOSMemoryBytes / 1000000))
 	
 	# Writing to csv.
 	$csvData | Export-Csv -Path $outputPath -Delimiter "|" -NoTypeInformation -Encoding UTF8
 	WriteLog -logLocation $logLocation -logMessage "Successfully fetched machine HW specs of $computerName to output:$outputPath" -logOperation "FILE"	
 }
 catch {
-	WriteLog -logLocation $logLocation -logMessage "ERROR - Failed fetching machine HW specs of $computerName" -logOperation "FILE"	
-
-	# Writing Empty CSV File.
-	Set-Content -Path $outputPath -Encoding UTF8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"MachineName"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
+	WriteLog -logLocation $logLocation -logMessage "ERROR - Failed fetching machine HW specs of $computerName" -logOperation "BOTH"	
+	# Write at least MachineName to CSV.
+	$csvData | Export-Csv -Path $outputPath -Delimiter "|" -NoTypeInformation -Encoding UTF8
 }
