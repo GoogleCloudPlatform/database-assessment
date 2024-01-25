@@ -111,7 +111,7 @@ try {
 	$csvData.TotalOSMemoryBytes = (Get-WmiObject Win32_PhysicalMemory @params | Measure-Object -Property Capacity -Sum).Sum
 
 	# Total memory in MB.
-	$csvData.TotalOSMemoryMB = [Math]::Floor([decimal]($csvData.TotalOSMemoryBytes / 1000000))
+	$csvData.TotalOSMemoryMB = [Math]::Floor([decimal]($csvData.TotalOSMemoryBytes / 1048576))
 	
 	# Writing to csv.
 	$csvData | Export-Csv -Path $outputPath -Delimiter "|" -NoTypeInformation -Encoding UTF8

@@ -163,6 +163,7 @@ Operating System Versions:
                 -collectionUserPass **Optional (If not provided will be prompted)
                 -ignorePerfmon **Optional (Defaults to "false" / Set to "true" to ignore perfmon collection)
                 -manualUniqueId **Optional (Defaults to "NA" - Gives the ability the user to tag their collection with a unique name)
+                -collectVMSpecs **Optional switch. See below.
 
         For a Named Instance (all databases):
             .\runAssessment.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password] -manualUniqueId [string]
@@ -201,6 +202,13 @@ Operating System Versions:
             2) Collection scripts should be executed from an "Administrator Mode" command prompt
             3) When using a port to connect only provide the local host name
             4) The manualUniqueId can be used to give the collection a unique identifier specified by the customer
+
+        CollectVMSpecs:
+            To provide rightsizing information the script attempts to connect to the host VM using the current users credentials and collect hardware specs (number of CPUs/amount of memory).
+            If the current user does not have sufficient permissions, it will skip this step. To manually input the correct credentials instead when this occurs, specify the -collectVMSpecs switch.
+            This is recommended if you plan to upload the results to the Migration Center.
+
+            Example: runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string] -collectVMSpecs
 
 4. Results
 ----------
