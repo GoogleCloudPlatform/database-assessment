@@ -74,8 +74,8 @@ $params = @{
 if ($requestCreds) {
 	try {
 		Get-WmiObject Win32_Processor -ComputerName $computerName > $null
-	}
- catch {
+	} 
+	catch {
 		if ($_.Exception.GetType().FullName -eq "System.UnauthorizedAccessException") {
 			$params.Credential = $host.ui.PromptForCredential(
 				"Credentials for $computerName", 
@@ -96,7 +96,6 @@ $csvData = [PSCustomObject]@{
 	"LogicalCpuCount"    = $null
 	"TotalOSMemoryBytes" = $null
 	"TotalOSMemoryMB"    = $null
-
 }
 
 try {
@@ -112,7 +111,7 @@ try {
 	$csvData.TotalOSMemoryBytes = (Get-WmiObject Win32_PhysicalMemory @params | Measure-Object -Property Capacity -Sum).Sum
 
 	# Total memory in MB.
-	$csvData.TotalOSMemoryMB = [Math]::Floor([decimal]($csvData.TotalOSMemoryBytes / 1000000))
+	$csvData.TotalOSMemoryMB = [Math]::Floor([decimal]($csvData.TotalOSMemoryBytes / 1048576))
 	
 	# Writing to csv.
 	$csvData | Export-Csv -Path $outputPath -Delimiter "|" -NoTypeInformation -Encoding UTF8
