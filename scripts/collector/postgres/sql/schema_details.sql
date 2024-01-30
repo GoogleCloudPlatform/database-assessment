@@ -55,6 +55,6 @@ select chr(34) || :PKEY || chr(34) as pkey,
   src.table_count,
   src.view_count,
   src.function_count,
-  src.table_data_size_bytes,
-  src.total_table_size_bytes
+  COALESCE(src.table_data_size_bytes,0) as table_data_size_bytes,
+  COALESCE(src.total_table_size_bytes,0) as total_table_size_bytes
 from src;
