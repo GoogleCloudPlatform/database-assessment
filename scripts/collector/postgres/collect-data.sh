@@ -566,9 +566,9 @@ DIAGPACKACCESS="postgres"
 	 fi
  fi
 
- if [[ "${manualUniqueId}" != "" ]]; then
-	 manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
- else manualUniqueId='NA'
+ if [[ "${manualUniqueId}" != "" && "${manualUniqueId}" != "NA" ]] ; then
+	         manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+ else manualUniqueId="NA"
  fi
 
 #############################################################################
