@@ -166,3 +166,5 @@ scripts/collector/oracle/privs.sql
 scripts/collector/oracle/VERSION.txt
 scripts/collector/sqlserver/output/
 scripts/collector/oracle/login.sql
+
+node_modules

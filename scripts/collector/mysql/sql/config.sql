@@ -233,6 +233,11 @@ calculated_metrics as (
     select 'FIREWALL_PLUGIN' as variable_name,
         p.firewall_plugin_enabled as variable_value
     from all_plugins p
+    union
+    select 'VERSION_NUM' as variable_name,
+        regexp_substr(gv.variable_value,'[0-9]+\.[0-9]+\.[0-9]+') as variable_value 
+    from performance_schema.global_variables gv
+    where gv.variable_name = 'VERSION'
 ),
 src as (
     select 'ALL_VARIABLES' as variable_category,
