@@ -185,5 +185,5 @@ select chr(34) || :PKEY || chr(34) as pkey,
   src.object_schema,
   src.object_name,
   src.object_id,
-  current_database() as database_name
+  chr(34) || current_database() || chr(34) as database_name
 from src;

@@ -57,5 +57,5 @@ select chr(34) || :PKEY || chr(34) as pkey,
   src.function_count,
   COALESCE(src.table_data_size_bytes,0) as table_data_size_bytes,
   COALESCE(src.total_table_size_bytes,0) as total_table_size_bytes,
-  current_database() as database_name
+  chr(34) || current_database() || chr(34) as database_name
 from src;
