@@ -23,9 +23,11 @@ import * as arrow from "apache-arrow"
     await db.instantiate(bundle.mainModule, bundle.pthreadWorker)
 
     const conn = await db.connect()
-    await conn.query<{ v: arrow.Int }>(
+    const arrowResult = await conn.query<{ v: arrow.Int }>(
       `SELECT count(*)::INTEGER as v FROM generate_series(0, 100) t(v)`
     )
+    const result = arrowResult.toArray().map((row) => row.toJSON())
+    console.log(result[0].v)
 
     await conn.close()
     await db.terminate()
