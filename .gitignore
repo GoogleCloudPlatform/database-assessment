@@ -168,3 +168,6 @@ scripts/collector/sqlserver/output/
 scripts/collector/oracle/login.sql
 
 node_modules
+
+src/dma/static
+src/dma/templates/*

@@ -6,6 +6,9 @@ classifiers = [
   "License :: OSI Approved :: MIT License",
   "Natural Language :: English",
   "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python",
@@ -34,12 +37,9 @@ allow-direct-references = true
 
 [tool.hatch.build]
 dev-mode-dirs = ["src/"]
+exclude = ["resources/", "tests", "docs/", "scripts/"]
 include = ["src/dma/templates/**/*"]
 packages = ["src/dma"]
-
-[tool.hatch.build.targets.app]
-pyapp-version = "v4"
-python-version = "3.11"
 
 [tool.pdm.scripts]
 lint = "pdm run pre-commit run --all-files"
@@ -51,9 +51,9 @@ test = "pdm run pytest tests"
 test_coverage = { composite = ["pdm run pytest tests", "pdm run coverage html", "pdm run coverage xml"] }
 
 [tool.pdm.dev-dependencies]
-dev = ["nodeenv"]
+dev = ["nodeenv", "bump2version"]
 docs = ['mkdocs', 'mkdocs-material', 'mkdocstrings', 'mkdocstrings-python']
-linting = ["pre-commit", "mypy", "ruff", "types-click", "types-pyyaml", "pylint"]
+linting = ["pre-commit", "mypy", "ruff", "types-click", "types-pyyaml", "pylint", "sqlfluff"]
 test = ["pytest", "pytest-mock", "pytest-cov", "coverage"]
 
 [tool.black]
@@ -98,7 +98,7 @@ omit = ["tests/*", "scripts/*"]
 addopts = ["-ra"]
 env_files = [".env.testing"]
 env_override_existing_values = 1
-filterwarnings = []
+filterwarnings = ["ignore::DeprecationWarning:pkg_resources"]
 testpaths = ["tests"]
 
 [tool.ruff]
@@ -189,10 +189,19 @@ convention = "google"
 max-complexity = 12
 
 [tool.ruff.pep8-naming]
-classmethod-decorators = ["classmethod"]
+classmethod-decorators = [
+  "classmethod",
+  "pydantic.validator",
+  "pydantic.root_validator",
+  "pydantic.field_validator",
+  "sqlalchemy.ext.declarative.declared_attr",
+  "sqlalchemy.orm.declared_attr.directive",
+  "sqlalchemy.orm.declared_attr",
+]
+
 
 [tool.ruff.isort]
-known-first-party = ['tests', 'dma']
+known-first-party = ['tests', 'dma', 'scripts']
 
 [tool.ruff.per-file-ignores]
 "__init__.py" = ['F401', 'D104']
@@ -232,6 +241,38 @@ warn_unused_ignores = true
 disallow_untyped_decorators = false
 module = ["tests.*"]
 
+
+[[tool.mypy.overrides]]
+ignore_missing_imports = true
+module = [
+  "aiohttp.*",
+  "fsspec.*",
+  "gcsfs.*",
+  "google.auth",
+  "google.cloud.*",
+  "google.protobuf.*",
+  "jsbeautifier",
+  "jsbeautifier.*",
+  "pyarrow.*",
+  "re2.*",
+  "saq.*",
+  "sqlalchemy.*",
+  "uvicorn.*",
+  "googleapiclient",
+  "googleapiclient.*",
+  "uvloop.*",
+  "uvloop.*",
+]
+
+[[tool.mypy.overrides]]
+ignore_errors = true
+module = [
+  "dma.db.migrations.*",
+  "dma.lib.dto.*",
+  "pyspark.sql.connect.proto",
+  "pyspark.sql.connect.proto.*",
+  "scripts.*",
+]
 
 [tool.pyright]
 include = ["src/dma", "tests"]
