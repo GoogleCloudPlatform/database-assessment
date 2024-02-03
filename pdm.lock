@@ -5,7 +5,7 @@
 groups = ["default", "dev", "docs", "linting", "test"]
 strategy = ["cross_platform", "inherit_metadata"]
 lock_version = "4.4.1"
-content_hash = "sha256:90d93f0a7fb27dddfc0a919c860d40efc5983041c98e1fb6dbd32eef9513329b"
+content_hash = "sha256:9c5b991503ef1fc0eb206a1c9af03c4fd7c90d5d95eda658508b390cea683179"
 
 [[package]]
 name = "aiosql"
@@ -547,7 +547,7 @@ name = "jinja2"
 version = "3.1.3"
 requires_python = ">=3.7"
 summary = "A very fast and expressive template engine."
-groups = ["docs", "linting"]
+groups = ["default", "docs", "linting"]
 dependencies = [
     "MarkupSafe>=2.0",
 ]
@@ -589,7 +589,7 @@ name = "markupsafe"
 version = "2.1.4"
 requires_python = ">=3.7"
 summary = "Safely add untrusted strings to HTML/XML markup."
-groups = ["docs", "linting"]
+groups = ["default", "docs", "linting"]
 files = [
     {file = "MarkupSafe-2.1.4-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:de8153a7aae3835484ac168a9a9bdaa0c5eee4e0bc595503c95d53b942879c84"},
     {file = "MarkupSafe-2.1.4-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:e888ff76ceb39601c59e219f281466c6d7e66bd375b4ec1ce83bcdc68306796b"},

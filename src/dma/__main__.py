@@ -12,7 +12,7 @@ def run_cli() -> None:
     current_path = Path(__file__).parent.parent.resolve()
     sys.path.append(str(current_path))
     try:
-        from litestar.__main__ import run_cli as run_litestar_cli
+        from dma.cli.main import app_group
 
     except ImportError as exc:
         print(  # noqa: T201
@@ -21,7 +21,7 @@ def run_cli() -> None:
         )
         print(exc)  # noqa: T201
         sys.exit(1)
-    run_litestar_cli()
+    app_group()
 
 
 if __name__ == "__main__":

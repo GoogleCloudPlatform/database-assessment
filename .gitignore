@@ -171,3 +171,5 @@ node_modules
 
 src/dma/static
 src/dma/templates/*
+.astro
+.vite
