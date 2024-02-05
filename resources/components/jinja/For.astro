@@ -1,0 +1,14 @@
+---
+import Tag from "./Tag.astro";
+
+export interface Props {
+    itemName: string;
+    sourceList: string;
+}
+
+const { itemName, sourceList } = Astro.props as Props;
+---
+
+<Tag expression={`for ${itemName} in ${sourceList}`} />
+<slot />
+<Tag expression="endfor" />

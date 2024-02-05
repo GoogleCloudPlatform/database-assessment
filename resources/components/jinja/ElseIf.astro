@@ -1,0 +1,12 @@
+---
+import Tag from "./Tag.astro";
+
+export interface Props {
+    expression: string;
+}
+
+const { expression } = Astro.props as Props;
+---
+
+<Tag expression={`elif ${expression}`} />
+<slot />

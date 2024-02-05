@@ -1,0 +1,11 @@
+---
+import Tag from "./Tag.astro"
+
+export interface Props {
+  tagLibraryName: string
+}
+
+const { tagLibraryName } = Astro.props as Props
+---
+
+<Tag expression={`include ${tagLibraryName}`} />
