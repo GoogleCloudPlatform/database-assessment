@@ -108,4 +108,3 @@ SELECT pkey, dbid, instance_number, hh24, stat_name, hh24_total_secs ,
 FROM vossummary;
 
 spool off
-

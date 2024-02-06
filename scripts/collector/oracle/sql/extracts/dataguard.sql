@@ -35,18 +35,18 @@ SELECT  '&&v_host'
         || '&&v_dbname'
         || '_'
         || '&&v_hora' AS pkey,
-        &v_a_con_id as con_id, inst_id, 
-        dest_id, 
-        dest_name, 
-        REPLACE(destination ,'|', ' ')destination, 
-        status, 
-        REPLACE(target  ,'|', ' ')target, 
-        schedule, 
+        &v_a_con_id as con_id, inst_id,
+        dest_id,
+        dest_name,
+        REPLACE(destination ,'|', ' ')destination,
+        status,
+        REPLACE(target  ,'|', ' ')target,
+        schedule,
         register,
-        REPLACE(alternate  ,'|', ' ')alternate, 
-        transmit_mode, 
-        affirm, 
-        &v_dg_valid_role AS valid_role, 
+        REPLACE(alternate  ,'|', ' ')alternate,
+        transmit_mode,
+        affirm,
+        &v_dg_valid_role AS valid_role,
         &v_dg_verify     AS verify,
         'N/A' as log_archive_config
 FROM gv$archive_dest a
@@ -71,4 +71,3 @@ COLUMN AFFIRM CLEAR
 COLUMN VALID_ROLE CLEAR
 COLUMN VERIFY CLEAR
 COLUMN LOG_ARCHIVE_CONFIG CLEAR
-

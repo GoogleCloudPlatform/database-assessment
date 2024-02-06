@@ -33,7 +33,9 @@ repos:
         exclude: "scripts/"
         additional_dependencies:
           [
-            jinja,
+            jinja2,
+            click,
+            rich-click,
             nodeenv,
             types-freezegun,
             types-python-jose,

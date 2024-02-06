@@ -36,10 +36,8 @@ version = "5.0.0"
 dma = "dma.__main__:run_cli"
 
 [project.optional-dependencies]
+mysql = ["asyncmy>=0.2.9"]
 postgres = ["asyncpg>=0.29.0"]
-mysql = [
-    "asyncmy>=0.2.9",
-]
 
 [build-system]
 build-backend = "hatchling.build"
@@ -51,7 +49,7 @@ allow-direct-references = true
 [tool.hatch.build]
 dev-mode-dirs = ["src/"]
 exclude = ["resources/", "tests", "docs/", "scripts/"]
-include = ["src/dma/templates/**/*"]
+include = ["src/dma/collector/sql/**/*"]
 packages = ["src/dma"]
 
 [tool.pdm.scripts]
@@ -64,10 +62,10 @@ test = "pdm run pytest tests"
 test_coverage = { composite = ["pdm run pytest tests", "pdm run coverage html", "pdm run coverage xml"] }
 
 [tool.pdm.dev-dependencies]
-dev = ["nodeenv", "bump2version"]
+dev = ["nodeenv", "bump2version", "anyio"]
 docs = ['mkdocs', 'mkdocs-material', 'mkdocstrings', 'mkdocstrings-python']
-linting = ["pre-commit", "mypy", "ruff", "types-click", "types-pyyaml", "pylint", "sqlfluff"]
-test = ["pytest", "pytest-mock", "pytest-cov", "coverage"]
+linting = ["pre-commit", "mypy", "ruff", "types-click", "types-pyyaml", "pylint", "sqlfluff", "asyncpg-stubs"]
+test = ["pytest", "pytest-mock", "pytest-cov", "coverage", "pytest-click"]
 
 [tool.black]
 exclude = '''
@@ -109,8 +107,6 @@ omit = ["tests/*", "scripts/*"]
 
 [tool.pytest.ini_options]
 addopts = ["-ra"]
-env_files = [".env.testing"]
-env_override_existing_values = 1
 filterwarnings = ["ignore::DeprecationWarning:pkg_resources"]
 testpaths = ["tests"]
 

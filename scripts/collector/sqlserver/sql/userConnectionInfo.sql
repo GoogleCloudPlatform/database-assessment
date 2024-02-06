@@ -40,7 +40,7 @@ IF @ASSESSMENT_DATABSE_NAME = 'all'
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#connectionInfo') IS NOT NULL  
+IF OBJECT_ID('tempdb..#connectionInfo') IS NOT NULL
    DROP TABLE #connectionInfo;
 
 CREATE TABLE #connectionInfo(
@@ -70,7 +70,7 @@ CREATE TABLE #connectionInfo(
 BEGIN
     BEGIN
         SELECT @validDB = COUNT(1)
-        FROM sys.databases 
+        FROM sys.databases
         WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
         AND name like @ASSESSMENT_DATABSE_NAME
         AND state = 0
@@ -153,7 +153,7 @@ BEGIN
 
 END
 
-SELECT 
+SELECT
     @PKEY as PKEY,
     database_name,
     is_user_process,

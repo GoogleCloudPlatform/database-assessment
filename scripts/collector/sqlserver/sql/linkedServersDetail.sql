@@ -33,8 +33,8 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#LinkedServersDetail') IS NOT NULL  
-   DROP TABLE #LinkedServersDetail;  
+IF OBJECT_ID('tempdb..#LinkedServersDetail') IS NOT NULL
+   DROP TABLE #LinkedServersDetail;
 
 CREATE TABLE #LinkedServersDetail
 (
@@ -48,10 +48,10 @@ CREATE TABLE #LinkedServersDetail
 )
 
 BEGIN TRY
-exec('   
+exec('
     INSERT INTO #LinkedServersDetail
-    select 
-        name, 
+    select
+        name,
         product,
         provider,
         data_source,
@@ -67,12 +67,12 @@ BEGIN CATCH
 		WAITFOR DELAY '00:00:00'
 END CATCH
 
-SELECT 
-    @PKEY as PKEY, 
+SELECT
+    @PKEY as PKEY,
     a.*,
     @DMA_SOURCE_ID as DMA_SOURCE_ID,
     @DMA_MANUAL_ID as dma_manual_id
 from #LinkedServersDetail a;
 
-IF OBJECT_ID('tempdb..#LinkedServersDetail') IS NOT NULL  
+IF OBJECT_ID('tempdb..#LinkedServersDetail') IS NOT NULL
    DROP TABLE #LinkedServersDetail;

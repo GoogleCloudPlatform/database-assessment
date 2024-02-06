@@ -35,8 +35,8 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#FeaturesEnabledDbLevel') IS NOT NULL  
-   DROP TABLE #FeaturesEnabledDbLevel;  
+IF OBJECT_ID('tempdb..#FeaturesEnabledDbLevel') IS NOT NULL
+   DROP TABLE #FeaturesEnabledDbLevel;
 
 CREATE TABLE #FeaturesEnabledDbLevel
 (
@@ -49,10 +49,10 @@ CREATE TABLE #FeaturesEnabledDbLevel
 --Security Policies
 BEGIN TRY
     exec('INSERT INTO #FeaturesEnabledDbLevel
-            SELECT 
+            SELECT
                 db_name(),
-                ''SP'', 
-                CASE 
+                ''SP'',
+                CASE
                     WHEN count(*) > 0 THEN ''1''
                     ELSE ''0''
                 END,
@@ -74,10 +74,10 @@ END CATCH
 --File Tables Detected
 BEGIN TRY
     exec('INSERT INTO #FeaturesEnabledDbLevel
-            SELECT 
+            SELECT
                 db_name(),
-                ''IsFileTablesEnabled'', 
-                CASE 
+                ''IsFileTablesEnabled'',
+                CASE
                     WHEN count(*) > 0 THEN ''1''
                     ELSE ''0''
                 END,
@@ -103,5 +103,5 @@ SELECT
     @DMA_MANUAL_ID as dma_manual_id
 FROM #FeaturesEnabledDbLevel f;
 
-IF OBJECT_ID('tempdb..#FeaturesEnabledDbLevel') IS NOT NULL  
+IF OBJECT_ID('tempdb..#FeaturesEnabledDbLevel') IS NOT NULL
    DROP TABLE #FeaturesEnabledDbLevel;

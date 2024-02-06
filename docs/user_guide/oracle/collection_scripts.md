@@ -71,12 +71,12 @@ Launch the collection script: (Note that the parameter names have changed from e
 ```
  Connection definition must one of:
     {
-       --connectionStr       Oracle EasyConnect string formatted as {user}/{password}@//{db host}:{listener port}/{service name} 
+       --connectionStr       Oracle EasyConnect string formatted as {user}/{password}@//{db host}:{listener port}/{service name}
      or
        --hostName            Database server hostname
        --port                Listener port
        --databaseService     Database service name
-       --collectionUserName  Database username 
+       --collectionUserName  Database username
        --collectionUserPass  Database password
     }
  Performance statistics source
@@ -99,7 +99,7 @@ or
 ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR
 
 ex:
-  
+
 ./collect-data.sh --connectionStr MyUser/MyPassword@//dbhost.company.com:1521/MyDbName.company.com --statsSrc AWR
 or
 ./collect-data.sh --collectionUserName MyUser --collectionUserPass MyPassword --hostName dbhost.company.com --port 1521 --databaseService MyDbName.company.com --statsSrc AWR
@@ -114,7 +114,7 @@ or
 ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc STATSPACK
 
 ex:
-  
+
 ./collect-data.sh --connectionStr MyUser/MyPassword@//dbhost.company.com:1521/MyDbName.company.com --statsSrc STATSPACK
 or
 ./collect-data.sh --collectionUserName MyUser --collectionUserPass MyPassword --hostName dbhost.company.com --port 1521 --databaseService MyDbName.company.com --statsSrc STATSPACK
@@ -130,7 +130,7 @@ or
 Collections can be run as SYS if needed by setting ORACLE_SID and running on the database host:
 
 ```shell
-./collect-data.sh --connectionStr '/ as sysdba' --statsSrc AWR 
+./collect-data.sh --connectionStr '/ as sysdba' --statsSrc AWR
 ```
 
 OR

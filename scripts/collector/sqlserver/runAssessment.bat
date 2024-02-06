@@ -36,7 +36,7 @@ if %1 == help (
     goto helpOperation
 )
 
-:loop 
+:loop
 if "%1" == "" goto evaluateUser
 if /i "%1" == "-serverName" set "serverName=%2"
 if /i "%1" == "-port" set "port=%2"
@@ -64,7 +64,7 @@ if [%user%] == [] goto error
 SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%"
 
 if "%collectVMSpecs%"=="" (
-	CALL %command% 
+	CALL %command%
 ) ELSE (
 	CALL %command% -collectVMSpecs
 )

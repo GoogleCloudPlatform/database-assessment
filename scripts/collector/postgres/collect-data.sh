@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.29" 
+OpVersion="4.3.29"
 dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
@@ -37,7 +37,7 @@ GREP=$(which grep)
 SED=$(which sed)
 MD5SUM=$(which md5sum)
 MD5COL=1
- 
+
 if [ "$(uname)" = "SunOS" ]
 then
       GREP=/usr/xpg4/bin/grep
@@ -49,7 +49,7 @@ if [ "$(uname)" = "HP-UX" ]; then
     MD5SUM=/usr/local/bin/md5
     MD5COL=4
   fi
-fi 
+fi
 
 ZIP=$(which zip 2>/dev/null)
 if [ "${ZIP}" = "" ]
@@ -83,7 +83,7 @@ function checkPlatform {
     then
       SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
       SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
-      
+
       if [ "${1}" == "oracle" ]
         then
            SQLCMD=${SQLCMD}.exe
@@ -217,7 +217,7 @@ export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port
 export DMA_PASSWORD_COL=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db < sql/password_column.sql | tr -d '\r')
 
 
-if [ -f sql/${V_FILE_TAG}_mysqlcollector.sql ]; 
+if [ -f sql/${V_FILE_TAG}_mysqlcollector.sql ];
 then
 rm sql/${V_FILE_TAG}_mysqlcollector.sql
 fi
@@ -226,7 +226,7 @@ for f in $(ls -1 sql/*.sql | grep -v -e _mysqlcollector.sql -e init.sql -e passw
 do
   fname=$(echo ${f} | cut -d '/' -f 2 | cut -d '.' -f 1)
     ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >output/opdb__${fname}__${V_TAG} <<EOF
-SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}' ; 
+SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}' ;
 SET @DMA_MANUAL_ID='${V_MANUAL_ID}' ;
 source ${f}
 exit
@@ -276,7 +276,7 @@ fi
 
 # Only run once per VM, instead of once per DB.
 specsOut="output/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv"
-if [[ -z "$specsPath" ]] ; then 
+if [[ -z "$specsPath" ]] ; then
       host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
       ./db-machine-specs.sh "$host" "$vmUserName" "${V_FILE_TAG}" "${DMA_SOURCE_ID}" "${V_MANUAL_ID}" "${specsOut}" "${extraSSHArgs[@]}"
 else
@@ -307,7 +307,7 @@ EOF
 	exit
 else
 # If given a database name, create a collection for that one database.
-export PGPASSWORD="$pass"  
+export PGPASSWORD="$pass"
 ${SQLCMD} -X --user=${user} -d "${db}" -h ${host} -w -p ${port}  --no-align --echo-errors 2>output/opdb__stderr_${V_FILE_TAG}.log <<EOF
 \set VTAG ${V_FILE_TAG}
 \set PKEY '\'${V_FILE_TAG}\''
@@ -523,7 +523,7 @@ specsPath=""
  then
   echo "Invalid number of parameters "
   printUsage
-  exit 
+  exit
  fi
 
  while (( "$#" )); do
@@ -552,7 +552,7 @@ specsPath=""
 
 DIAGPACKACCESS="postgres"
 
- if [[ "${connStr}" == "" ]] ; then 
+ if [[ "${connStr}" == "" ]] ; then
 	 if [[ "${hostName}" != "" && "${port}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
 		 baseConnStr="${collectionUserName}/${collectionUserPass}@//${hostName}:${port}"
 		 if [[ "${databaseService}" != "" ]]; then
@@ -647,7 +647,7 @@ if [ $retval -eq 0 ]; then
       then
        echo "Oracle 9 support is experimental."
        DIAGPACKACCESS="NoDiagnostics"
-      fi  
+      fi
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
 

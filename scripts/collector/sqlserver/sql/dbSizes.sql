@@ -43,7 +43,7 @@ IF UPPER(@@VERSION) LIKE '%AZURE%'
 BEGIN
    BEGIN
       SELECT @validDB = COUNT(1)
-      FROM sys.databases 
+      FROM sys.databases
       WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
       AND name like @ASSESSMENT_DATABSE_NAME
       AND state = 0
@@ -53,19 +53,19 @@ BEGIN
         IF @validDB <> 0
         BEGIN
             SELECT
-                @PKEY as PKEY, 
-                sizing.*, 
+                @PKEY as PKEY,
+                sizing.*,
                 @DMA_SOURCE_ID as dma_source_id,
                 @DMA_MANUAL_ID as dma_manual_id
             FROM(
             SELECT
-                db_name() AS database_name, 
-                type_desc, 
+                db_name() AS database_name,
+                type_desc,
                 SUM(size/128.0) AS current_size_mb
             FROM sys.database_files sm
             WHERE db_name() NOT IN ('master', 'model', 'msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
             AND type IN (0,1)
-            AND EXISTS (SELECT 1 FROM sys.databases sd WHERE state = 0 
+            AND EXISTS (SELECT 1 FROM sys.databases sd WHERE state = 0
             AND sd.name NOT IN ('master','model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
             AND sd.name like @ASSESSMENT_DATABSE_NAME
             AND sd.state = 0

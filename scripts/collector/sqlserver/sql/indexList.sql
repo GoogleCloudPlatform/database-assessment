@@ -40,7 +40,7 @@ IF @ASSESSMENT_DATABSE_NAME = 'all'
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#indexList') IS NOT NULL  
+IF OBJECT_ID('tempdb..#indexList') IS NOT NULL
    DROP TABLE #objectList;
 
 CREATE TABLE #indexList(
@@ -66,12 +66,12 @@ CREATE TABLE #indexList(
 BEGIN
    BEGIN
       SELECT @validDB = COUNT(1)
-      FROM sys.databases 
+      FROM sys.databases
       WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
       AND name like @ASSESSMENT_DATABSE_NAME
       AND state = 0
    END
-   
+
    BEGIN TRY
       IF @validDB <> 0
       BEGIN
@@ -88,14 +88,14 @@ BEGIN
             INSERT INTO #indexList
             SELECT
                DB_NAME() as database_name
-               ,CASE 
+               ,CASE
 	            WHEN s.name IS NULL THEN v.schema_name
 		    ELSE s.name
 	        END as schema_name
                ,CASE
                   WHEN t.name IS NULL THEN v.name
                   ELSE t.name
-               END as table_name 
+               END as table_name
                ,i.name as index_name
                ,i.type_desc as index_type
                ,i.is_primary_key
@@ -120,17 +120,17 @@ BEGIN
             LEFT JOIN sys.allocation_units AS a ON a.container_id = p.partition_id
             LEFT JOIN sys.partition_schemes ps ON i.data_space_id = ps.data_space_id
 	    WHERE i.NAME is not NULL
-            GROUP BY 
-                CASE 
+            GROUP BY
+                CASE
 	                 WHEN s.name IS NULL THEN v.schema_name
 		              ELSE s.name
 	             END
                ,CASE
                   WHEN t.name IS NULL THEN v.name
                   ELSE t.name
-               END    
-               ,i.name  
-               ,i.type_desc 
+               END
+               ,i.name
+               ,i.type_desc
                ,i.is_primary_key
                ,i.is_unique
                ,i.fill_factor
@@ -152,14 +152,14 @@ BEGIN
          SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
    END CATCH
 
-END 
+END
 
-SELECT 
+SELECT
    @PKEY as PKEY,
    a.*,
    @DMA_SOURCE_ID as dma_source_id,
    @DMA_MANUAL_ID as dma_manual_id
 from #indexList a;
 
-IF OBJECT_ID('tempdb..#indexList') IS NOT NULL  
+IF OBJECT_ID('tempdb..#indexList') IS NOT NULL
    DROP TABLE #indexList;

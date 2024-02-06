@@ -239,7 +239,7 @@ To Execute the Collection:
 To provide rightsizing information the script attempts to connect to the host VM using the current users credentials and collect hardware specs (number of CPUs/amount of memory).
 
 If the current user does not have sufficient permissions, it will skip this step. To manually input the correct credentials instead when this occurs, specify the `-collectVMSpecs` switch.
-  
+
 This is recommended if you plan to upload the results to the Migration Center.
 
         Example: runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string] -collectVMSpecs

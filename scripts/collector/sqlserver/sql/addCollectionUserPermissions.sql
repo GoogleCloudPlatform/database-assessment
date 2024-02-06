@@ -22,9 +22,9 @@ DECLARE @dbname VARCHAR(50);
 DECLARE @COLLECTION_USER VARCHAR(256);
 DECLARE @PRODUCT_VERSION AS INTEGER
 
-DECLARE db_cursor CURSOR FOR 
+DECLARE db_cursor CURSOR FOR
 SELECT name
-FROM MASTER.sys.databases 
+FROM MASTER.sys.databases
 WHERE name NOT IN ('model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
 AND state = 0;
 
@@ -32,8 +32,8 @@ SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPRO
 SELECT @COLLECTION_USER = N'$(collectionUser)'
 
 BEGIN
-    IF EXISTS 
-        (SELECT name  
+    IF EXISTS
+        (SELECT name
         FROM master.sys.server_principals
         WHERE name = @COLLECTION_USER)
     BEGIN
@@ -52,8 +52,8 @@ BEGIN
     END;
 END;
 
-OPEN db_cursor  
-FETCH NEXT FROM db_cursor INTO @dbname  
+OPEN db_cursor
+FETCH NEXT FROM db_cursor INTO @dbname
 
 WHILE @@FETCH_STATUS = 0
 BEGIN
@@ -71,5 +71,5 @@ BEGIN
     FETCH NEXT FROM db_cursor INTO @dbname;
 END;
 
-CLOSE db_cursor  
+CLOSE db_cursor
 DEALLOCATE db_cursor

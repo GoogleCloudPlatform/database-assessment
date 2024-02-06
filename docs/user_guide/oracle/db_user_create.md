@@ -35,4 +35,3 @@ Execute the grants_wrapper script
 
 
 > AWR is a licensed feature of Oracle. If you don't have license to run AWR you can answer "N" to the above prompt and it will exclude the AWR data from collection.  If STATSPACK data is available, it will use that instead.
-

@@ -40,7 +40,7 @@ IF @ASSESSMENT_DATABSE_NAME = 'all'
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#tableList') IS NOT NULL  
+IF OBJECT_ID('tempdb..#tableList') IS NOT NULL
    DROP TABLE #tableList;
 
 CREATE TABLE #tableList(
@@ -65,7 +65,7 @@ CREATE TABLE #tableList(
 BEGIN
    	BEGIN
 		SELECT @validDB = COUNT(1)
-		FROM sys.databases 
+		FROM sys.databases
 		WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
 		AND name like @ASSESSMENT_DATABSE_NAME
 		AND state = 0
@@ -76,7 +76,7 @@ BEGIN
 		BEGIN
 		exec ('
 		WITH TableData AS (
-			SELECT 
+			SELECT
 				[schema_name]      = s.[name]
 				,[table_name]       = t.[name]
 				,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -117,7 +117,7 @@ BEGIN
 			WHERE t.is_ms_shipped = 0 -- Not a system table
 				AND i.type IN (0,1,5))
 			INSERT INTO #tableList
-			SELECT 
+			SELECT
 				DB_NAME() as database_name,
 				schema_name,
 				table_name,
@@ -140,7 +140,7 @@ BEGIN
 		BEGIN
 		exec ('
 		WITH TableData AS (
-			SELECT 
+			SELECT
 				[schema_name]      = s.[name]
 				,[table_name]       = t.[name]
 				,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -181,7 +181,7 @@ BEGIN
 			WHERE t.is_ms_shipped = 0 -- Not a system table
 				AND i.type IN (0,1,5))
 			INSERT INTO #tableList
-			SELECT 
+			SELECT
 				DB_NAME() as database_name,
 				schema_name,
 				table_name,
@@ -204,7 +204,7 @@ BEGIN
       	BEGIN
 		exec ('
 		WITH TableData AS (
-			SELECT 
+			SELECT
 				[schema_name]      = s.[name]
 				,[table_name]       = t.[name]
 				,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -245,7 +245,7 @@ BEGIN
 			WHERE t.is_ms_shipped = 0 -- Not a system table
 				AND i.type IN (0,1,5))
 			INSERT INTO #tableList
-			SELECT 
+			SELECT
 				DB_NAME() as database_name,
 				schema_name,
 				table_name,
@@ -276,9 +276,9 @@ BEGIN
 		SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
 	END CATCH
 
-END 
+END
 
-SELECT 
+SELECT
 	@PKEY as PKEY,
 	a.*,
 	@DMA_SOURCE_ID as dma_source_id,

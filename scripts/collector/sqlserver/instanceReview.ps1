@@ -29,7 +29,7 @@
 .PARAMETER collectionUserPass
     Collection username password (required)
 .PARAMETER ignorePerfmon
-    Signals if the perfmon collection should be skipped (default:false) 
+    Signals if the perfmon collection should be skipped (default:false)
 .PARAMETER manualUniqueId
     Tag that can be supplied by the customer to make a collection unique.  Maps to the internal variable dmaManualId (optional)
 .PARAMETER collectVMSpecs
@@ -38,7 +38,7 @@
 .EXAMPLE
     To use a specific username / password combination for a named instance:
         instanceReview.ps1 -serverName [server name / ip address]\[instance name] -collectionUserName [collection username] -collectionUserPass [collection username password] -ignorePerfmon [true/false] -dmaManualId [string]
-    
+
     To use a specific username / password combination for a default instance:
         instanceReview.ps1 -serverName [server name / ip address] -collectionUserName [collection username] -collectionUserPass [collection username password] -ignorePerfmon [true/false] -dmaManualId [string]
 
@@ -90,7 +90,7 @@ if (([string]::IsNullorEmpty($collectionUserPass)) -or ([string]$collectionUserP
     $passPrompt = Read-Host 'Please enter your password' -AsSecureString
     $collectionUserPass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($passPrompt))
     Write-Output ""
-} 
+}
 
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
@@ -117,7 +117,7 @@ else {
             if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
-                Exit 1                
+                Exit 1
             }
         }
     }
@@ -134,7 +134,7 @@ else {
             if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
-                Exit 1                
+                Exit 1
             }
         }
     }
@@ -168,7 +168,7 @@ $validSQLInstanceVersionCheckValues = $splitValidInstanceVerisionCheckObj | ForE
 $isValidSQLInstanceVersion = $validSQLInstanceVersionCheckValues[0]
 $isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
 
-$op_version = "4.3.29" 
+$op_version = "4.3.29"
 
 if ([string]($isValidSQLInstanceVersion) -eq "N") {
     Write-Host "#############################################################"
@@ -253,7 +253,7 @@ WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 
 WriteLog -logLocation $foldername\$logFile -logMessage "SQL Server Version: $dbversion " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
- 
+
 WriteLog -logLocation $foldername\$logFile -logMessage "Execution Variables List" -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "serverName = $inputServerName " -logOperation "FILE"
@@ -366,7 +366,7 @@ if ($isCloudOrLinuxHost -eq "AZURE") {
 else {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Transaction Log Backup Info..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\dbServerTranLogBackupCountByDayByHour.sql -d msdb -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$tranLogBkupCountByDayByHour
-    sqlcmd -S $serverName -i sql\dbServerTranLogBackupSizeByDayByHour.sql -d msdb -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$tranLogBkupSizeByDayByHour    
+    sqlcmd -S $serverName -i sql\dbServerTranLogBackupSizeByDayByHour.sql -d msdb -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$tranLogBkupSizeByDayByHour
 }
 
 ### First establish headers for the collection files which could execute against multiple databases in the instance

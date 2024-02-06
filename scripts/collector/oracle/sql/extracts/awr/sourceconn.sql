@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 COLUMN t_sql_cmd   NEW_VALUE  v_sql_cmd NOPRINT
-COLUMN t_machine   NEW_VALUE  v_machine NOPRINT 
+COLUMN t_machine   NEW_VALUE  v_machine NOPRINT
 COLUMN MACHINE FORMAT A60
 
 

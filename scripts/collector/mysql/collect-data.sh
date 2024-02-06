@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2022 Google LLC 
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -83,7 +83,7 @@ function checkPlatform {
     then
       SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
       SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
-      
+
       if [ "${1}" == "oracle" ]
         then
            SQLCMD=${SQLCMD}.exe
@@ -219,7 +219,7 @@ for f in $(ls -1 sql/*.sql | grep -v -e init.sql)
 do
   fname=$(echo ${f} | cut -d '/' -f 2 | cut -d '.' -f 1)
     ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >${OUTPUT_DIR}/opdb__mysql_${fname}__${V_TAG} 2>>${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log  <<EOF
-SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}' ; 
+SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}' ;
 SET @DMA_MANUAL_ID='${V_MANUAL_ID}' ;
 SET @PKEY='${V_FILE_TAG}';
 source ${f}
@@ -478,7 +478,7 @@ specsPath=""
  then
   echo "Invalid number of parameters "
   printUsage
-  exit 
+  exit
  fi
 
  while (( "$#" )); do
@@ -507,7 +507,7 @@ specsPath=""
 
 DIAGPACKACCESS="mysql"
 
- if [[ "${connStr}" == "" ]] ; then 
+ if [[ "${connStr}" == "" ]] ; then
 	 if [[ "${hostName}" != "" && "${port}" != "" && "${databaseService}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
 		 connStr="${collectionUserName}/${collectionUserPass}@//${hostName}:${port}/${databaseService}"
 	 else
@@ -598,7 +598,7 @@ else if [ "${dbmajor}" == "09" ]
       then
        echo "Oracle 9 support is experimental."
        DIAGPACKACCESS="NoDiagnostics"
-      fi  
+      fi
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
 

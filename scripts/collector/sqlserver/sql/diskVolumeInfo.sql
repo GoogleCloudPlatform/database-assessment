@@ -33,7 +33,7 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#gcpDMADiskVolumeInfo') IS NOT NULL  
+IF OBJECT_ID('tempdb..#gcpDMADiskVolumeInfo') IS NOT NULL
    DROP TABLE #gcpDMADiskVolumeInfo;
 
 CREATE TABLE #gcpDMADiskVolumeInfo
@@ -78,18 +78,18 @@ BEGIN
         WITH db_sizes as (SELECT MAX(start_time) max_collection_time
             , database_name, MAX(storage_in_megabytes) storage_in_megabytes
             , MAX(allocated_storage_in_megabytes) allocated_storage_in_megabytes
-        FROM sys.resource_stats 
+        FROM sys.resource_stats
         GROUP BY database_name),
         sum_sizes as (SELECT sum(storage_in_megabytes/1024) total_size_gb
         ,sum(allocated_storage_in_megabytes/1024) available_size_gb
         FROM db_sizes)
         INSERT INTO #gcpDMADiskVolumeInfo
-        SELECT 
-            ''CLOUD'' as volume_mount_point, 
-            ''AZURE'' as file_system_type, 
-            ''CLOUD'' as logical_volume_name, 
-            CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, total_size_gb),2)) as total_size_gb, 
-            CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, available_size_gb),2)) as available_size_gb, 
+        SELECT
+            ''CLOUD'' as volume_mount_point,
+            ''AZURE'' as file_system_type,
+            ''CLOUD'' as logical_volume_name,
+            CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, total_size_gb),2)) as total_size_gb,
+            CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, available_size_gb),2)) as available_size_gb,
             CONVERT(NVARCHAR, ROUND((1 - (total_size_gb / available_size_gb)) * 100,2)) AS space_free_pct,
             '''' as cluster_block_size
         FROM sum_sizes');
@@ -113,5 +113,5 @@ SELECT
     @DMA_MANUAL_ID as dma_manual_id
 from #gcpDMADiskVolumeInfo a;
 
-IF OBJECT_ID('tempdb..#gcpDMADiskVolumeInfo') IS NOT NULL  
+IF OBJECT_ID('tempdb..#gcpDMADiskVolumeInfo') IS NOT NULL
    DROP TABLE #gcpDMADiskVolumeInfo;

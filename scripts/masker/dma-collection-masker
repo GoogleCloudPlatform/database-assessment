@@ -87,14 +87,14 @@ def run_masker(input_dir: Optional[Path] = None, output_path: Optional[Path] = N
         input_dir = input_dir if input_dir else Path("input")
         output_path = output_path if output_path else Path("masked")
 
-        for dir_name in {input_dir, output_path}:
+        for dir_name in (input_dir, output_path):
             dir_name.mkdir(parents=True, exist_ok=True)
 
         collections = _find_collections_to_process(input_dir)
         if len(collections) == 0:
             logger.info("No collections found in location %s", str(input_dir))
             logger.info("Exiting...")
-            exit(1)
+            sys.exit(1)
 
         for collection in collections:
             identity_map: Dict[str, str] = {}
@@ -106,7 +106,7 @@ def run_masker(input_dir: Optional[Path] = None, output_path: Optional[Path] = N
                     _apply_identity_map_to_file(rule, collection_file, identity_map)
             logger.info("Completed work on %s", collection.stem)
             _collection_key_file, _new_collection_archive = _package_collection(
-                collection, identity_map, work_dir, output_path
+                collection, identity_map, work_dir, output_path,
             )
             _clean_folder(work_dir)
 
@@ -137,7 +137,7 @@ def _find_collections_to_process(search_path: Path) -> List[Path]:
         set(search_path.glob("opdb_oracle_*.zip"))
         .union(set(search_path.glob("opdb_oracle_*.gz")))
         .difference(
-            set(search_path.glob("opdb_oracle_*ERROR.zip")).union(set(search_path.glob("opdb_oracle_*ERROR.gz")))
+            set(search_path.glob("opdb_oracle_*ERROR.zip")).union(set(search_path.glob("opdb_oracle_*ERROR.gz"))),
         )
     )
     return list(file_list)
@@ -176,11 +176,14 @@ def _find_file_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> Opti
     """
     matched_file = list(search_path.glob(f"opdb__{rule.table_name}__*.csv"))
     if not matched_file and not rule.missing_ok:
-        raise ApplicationError(f"Could not find a file to match for {rule.table_name}")
+        msg = f"Could not find a file to match for {rule.table_name}"
+        raise ApplicationError(msg)
     if matched_file and not rule.missing_ok and len(matched_file) == 0:
-        raise ApplicationError(f"Could not find a file to match for {rule.table_name}")
+        msg = f"Could not find a file to match for {rule.table_name}"
+        raise ApplicationError(msg)
     if matched_file and len(matched_file) > 1:
-        raise ApplicationError(f"Found too many files when searching for {rule.table_name}.  Found {matched_file}")
+        msg = f"Found too many files when searching for {rule.table_name}.  Found {matched_file}"
+        raise ApplicationError(msg)
     if matched_file and len(matched_file) == 1:
         return matched_file[0]
     return None
@@ -277,7 +280,7 @@ def _package_collection(
             f.write(matched_file, f"{matched_file.stem}{matched_file.suffix}")
     with key_file.open(mode="w", encoding="utf-8") as f:
         f.write(
-            f"Use this file to map the masked values to the original values in collection {archive_file.stem}.zip\n"
+            f"Use this file to map the masked values to the original values in collection {archive_file.stem}.zip\n",
         )
         f.write("ORIGINAL,MASKED\n")
         csv_writer = csv.writer(f, delimiter="|", quotechar='"')
@@ -307,7 +310,8 @@ def main() -> None:
         p = Path(path)
         if p.exists() and p.is_dir() and path is not None:
             return path
-        raise argparse.ArgumentTypeError(f"collection-path {path} is not a valid path")
+        msg = f"collection-path {path} is not a valid path"
+        raise argparse.ArgumentTypeError(msg)
 
     parser = argparse.ArgumentParser(description="Google Database Migration Assessment - Collection Masking Script")
     parser.add_argument(
@@ -329,7 +333,8 @@ def main() -> None:
     )
     args = parser.parse_args(args=None if sys.argv[1:] else ["--help"])
     if Path(args.collection_path) == Path(args.output_path):
-        raise argparse.ArgumentTypeError("output-path must not be the same path as collection-path")
+        msg = "output-path must not be the same path as collection-path"
+        raise argparse.ArgumentTypeError(msg)
     level = args.verbose
     if level == 0:
         level = logging.ERROR

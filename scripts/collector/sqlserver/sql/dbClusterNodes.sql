@@ -28,12 +28,12 @@ SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPRO
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
-IF OBJECT_ID('tempdb..#clusterNodesTable') IS NOT NULL  
+IF OBJECT_ID('tempdb..#clusterNodesTable') IS NOT NULL
     DROP TABLE #clusterNodesTable;
 
 CREATE TABLE #clusterNodesTable (
-    [NodeName] nvarchar(255), 
-    [status] nvarchar(255), 
+    [NodeName] nvarchar(255),
+    [status] nvarchar(255),
     [status_description] nvarchar(255)
 );
 
@@ -42,8 +42,8 @@ BEGIN TRY
     exec ('
     INSERT INTO #clusterNodesTable
     SELECT
-	    NodeName AS node_name, 
-        status, 
+	    NodeName AS node_name,
+        status,
         status_description
     FROM sys.dm_os_cluster_nodes');
 END TRY
@@ -57,8 +57,8 @@ BEGIN TRY
     exec ('
     INSERT INTO #clusterNodesTable
     SELECT
-	    NodeName, 
-        NULL, 
+	    NodeName,
+        NULL,
         NULL
     FROM sys.dm_os_cluster_nodes');
 END TRY
@@ -76,7 +76,7 @@ BEGIN CATCH
         SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message
 END CATCH
 
-SELECT 
+SELECT
     @PKEY as PKEY,
     NodeName AS node_name,
     status,
@@ -85,5 +85,5 @@ SELECT
     @DMA_MANUAL_ID as dma_manual_id
 from #clusterNodesTable;
 
-IF OBJECT_ID('tempdb..#clusterNodesTable') IS NOT NULL  
+IF OBJECT_ID('tempdb..#clusterNodesTable') IS NOT NULL
     DROP TABLE #clusterNodesTable;

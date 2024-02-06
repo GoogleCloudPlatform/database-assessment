@@ -40,7 +40,7 @@ IF @ASSESSMENT_DATABSE_NAME = 'all'
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#objectList') IS NOT NULL  
+IF OBJECT_ID('tempdb..#objectList') IS NOT NULL
    DROP TABLE #objectList;
 
 CREATE TABLE #objectList(
@@ -56,7 +56,7 @@ CREATE TABLE #objectList(
 BEGIN
     BEGIN
         SELECT @validDB = COUNT(1)
-        FROM sys.databases 
+        FROM sys.databases
         WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
         AND name like @ASSESSMENT_DATABSE_NAME
         AND state = 0
@@ -67,8 +67,8 @@ BEGIN
         BEGIN
             exec ('
             INSERT INTO #objectList
-            SELECT 
-            database_name 
+            SELECT
+            database_name
             , schema_name
             , NameOfObject as object_name
             , RTRIM(LTRIM(type)) as type
@@ -76,30 +76,30 @@ BEGIN
             , count(*) AS object_count
             , ISNULL(SUM(LinesOfCode),0) AS lines_of_code
             , associated_table_name
-            FROM 
+            FROM
             (
             SELECT
             DB_NAME(DB_ID()) as database_name,
             s.name as schema_name,
-            RTRIM(LTRIM(o.type)) as type, 
-            o.type_desc, 
+            RTRIM(LTRIM(o.type)) as type,
+            o.type_desc,
             ISNULL(LEN(a.definition)- LEN(
                 REPLACE(
-                a.definition, 
-                CHAR(10), 
+                a.definition,
+                CHAR(10),
                 ''''
                 )
-            ),0) AS LinesOfCode, 
+            ),0) AS LinesOfCode,
             OBJECT_NAME(o.object_id) AS NameOfObject ,
             NULL as associated_table_name
-            FROM 
+            FROM
             sys.objects o
             JOIN sys.schemas s ON s.schema_id = o.schema_id
             LEFT OUTER JOIN sys.all_sql_modules a ON a.OBJECT_ID = o.object_id
-            WHERE 
+            WHERE
             o.type NOT IN (
                 ''S'' --SYSTEM_TABLE
-                , 
+                ,
                 ''IT'' --INTERNAL_TABLE
                 ,
                 ''F'' --FOREIGN KEY
@@ -115,7 +115,7 @@ BEGIN
                 ''TR'' --TRIGGER
                 ,
                 ''V'' --VIEW
-                ) 
+                )
             AND OBJECTPROPERTY(o.object_id, ''IsMSShipped'') = 0
             UNION
             select DB_NAME(DB_ID()) as database_name,
@@ -124,8 +124,8 @@ BEGIN
             type_desc,
             ISNULL(LEN(a.definition)- LEN(
                 REPLACE(
-                a.definition, 
-                CHAR(10), 
+                a.definition,
+                CHAR(10),
                 ''''
                 )
             ),0) AS LinesOfCode,
@@ -142,8 +142,8 @@ BEGIN
             type_desc,
             ISNULL(LEN(a.definition)- LEN(
                 REPLACE(
-                a.definition, 
-                CHAR(10), 
+                a.definition,
+                CHAR(10),
                 ''''
                 )
             ),0) AS LinesOfCode,
@@ -160,8 +160,8 @@ BEGIN
             type_desc,
             ISNULL(LEN(a.definition)- LEN(
                 REPLACE(
-                a.definition, 
-                CHAR(10), 
+                a.definition,
+                CHAR(10),
                 ''''
                 )
             ),0) AS LinesOfCode,
@@ -178,8 +178,8 @@ BEGIN
             type_desc,
             ISNULL(LEN(a.definition)- LEN(
                 REPLACE(
-                a.definition, 
-                CHAR(10), 
+                a.definition,
+                CHAR(10),
                 ''''
                 )
             ),0) AS LinesOfCode,
@@ -196,8 +196,8 @@ BEGIN
             t.type_desc,
             ISNULL(LEN(a.definition)- LEN(
                 REPLACE(
-                a.definition, 
-                CHAR(10), 
+                a.definition,
+                CHAR(10),
                 ''''
                 )
             ),0) AS LinesOfCode,
@@ -215,8 +215,8 @@ BEGIN
             type_desc,
             ISNULL(LEN(a.definition)- LEN(
                 REPLACE(
-                a.definition, 
-                CHAR(10), 
+                a.definition,
+                CHAR(10),
                 ''''
                 )
             ),0) AS LinesOfCode,
@@ -226,12 +226,12 @@ BEGIN
             JOIN sys.schemas s ON s.schema_id = v.schema_id
             LEFT OUTER JOIN sys.all_sql_modules a ON a.OBJECT_ID = v.object_id
             WHERE v.is_ms_shipped = 0
-            ) SubQuery 
-                GROUP BY 
+            ) SubQuery
+                GROUP BY
                 database_name,
                 schema_name,
                 NameOfObject,
-                type, 
+                type,
                 type_desc,
                 associated_table_name');
         END;
@@ -256,5 +256,5 @@ SELECT
     @DMA_MANUAL_ID as dma_manual_id
 from #objectList a;
 
-IF OBJECT_ID('tempdb..#objectList') IS NOT NULL  
+IF OBJECT_ID('tempdb..#objectList') IS NOT NULL
    DROP TABLE #objectList;

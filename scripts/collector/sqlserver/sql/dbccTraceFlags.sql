@@ -26,24 +26,24 @@ SELECT @PKEY = N'$(pkey)';
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
-IF OBJECT_ID('tempdb..#dbccTraceTable') IS NOT NULL  
+IF OBJECT_ID('tempdb..#dbccTraceTable') IS NOT NULL
    DROP TABLE #dbccTraceTable;
 
 CREATE TABLE #dbccTraceTable (
-    [name] int, 
-    [status] int, 
-    [global] int, 
+    [name] int,
+    [status] int,
+    [global] int,
     [session] int
 );
 
 INSERT INTO #dbccTraceTable exec('dbcc tracestatus()');
 
-SELECT 
+SELECT
     @PKEY as PKEY,
     a.*,
     @DMA_SOURCE_ID as dma_source_id,
     @DMA_MANUAL_ID as dma_manual_id
 from #dbccTraceTable a;
 
-IF OBJECT_ID('tempdb..#dbccTraceTable') IS NOT NULL  
+IF OBJECT_ID('tempdb..#dbccTraceTable') IS NOT NULL
    DROP TABLE #dbccTraceTable;

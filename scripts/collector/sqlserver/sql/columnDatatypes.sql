@@ -40,7 +40,7 @@ IF @ASSESSMENT_DATABSE_NAME = 'all'
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#columnDatatypes') IS NOT NULL  
+IF OBJECT_ID('tempdb..#columnDatatypes') IS NOT NULL
    DROP TABLE #columnDatatypes;
 
 CREATE TABLE #columnDatatypes(
@@ -63,12 +63,12 @@ CREATE TABLE #columnDatatypes(
 BEGIN
    BEGIN
       SELECT @validDB = COUNT(1)
-      FROM sys.databases 
+      FROM sys.databases
       WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
       AND name like @ASSESSMENT_DATABSE_NAME
       AND state = 0
    END
-   
+
    BEGIN TRY
       IF @PRODUCT_VERSION > 12 AND @validDB <> 0 AND @CLOUDTYPE = 'NONE'
       BEGIN
@@ -86,7 +86,7 @@ BEGIN
          ,encryption_type
          ,is_sparse
          ,rule_object_id
-         ,column_count 
+         ,column_count
       )
       SELECT s.name AS schema_name
             , o.name AS table_name
@@ -101,14 +101,14 @@ BEGIN
             , c.is_sparse
             , c.rule_object_id
             , count(1) column_count
-         FROM  sys.objects o 
+         FROM  sys.objects o
          JOIN  sys.schemas s
             ON  s.schema_id = o.schema_id
          JOIN  sys.columns c
          ON  o.object_id = c.object_id
          JOIN  sys.types t
          ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-      WHERE o.type_desc = ''USER_TABLE'' 
+      WHERE o.type_desc = ''USER_TABLE''
          AND t.system_type_id = t.user_type_id
       GROUP BY s.name
             , o.name
@@ -139,7 +139,7 @@ BEGIN
          ,encryption_type
          ,is_sparse
          ,rule_object_id
-         ,column_count 
+         ,column_count
       )
       SELECT s.name AS schema_name
             , o.name AS table_name
@@ -154,14 +154,14 @@ BEGIN
             , c.is_sparse
             , c.rule_object_id
             , count(1) column_count
-         FROM  sys.objects o 
+         FROM  sys.objects o
          JOIN  sys.schemas s
             ON  s.schema_id = o.schema_id
          JOIN  sys.columns c
          ON  o.object_id = c.object_id
          JOIN  sys.types t
          ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-      WHERE o.type_desc = ''USER_TABLE'' 
+      WHERE o.type_desc = ''USER_TABLE''
          AND t.system_type_id = t.user_type_id
       GROUP BY s.name
             , o.name
@@ -190,7 +190,7 @@ BEGIN
          ,encryption_type
          ,is_sparse
          ,rule_object_id
-         ,column_count 
+         ,column_count
       )
       SELECT s.name AS schema_name
             , o.name AS table_name
@@ -205,14 +205,14 @@ BEGIN
             , c.is_sparse
             , c.rule_object_id
             , count(1) column_count
-         FROM  sys.objects o 
+         FROM  sys.objects o
          JOIN  sys.schemas s
             ON  s.schema_id = o.schema_id
          JOIN  sys.columns c
          ON  o.object_id = c.object_id
          JOIN  sys.types t
          ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-      WHERE o.type_desc = ''USER_TABLE'' 
+      WHERE o.type_desc = ''USER_TABLE''
          AND t.system_type_id = t.user_type_id
       GROUP BY s.name
             , o.name
@@ -238,15 +238,15 @@ BEGIN
          SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
          SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
    END CATCH
-   
+
 END
 
-SELECT 
-   @PKEY as PKEY, 
-   a.*, 
+SELECT
+   @PKEY as PKEY,
+   a.*,
    @DMA_SOURCE_ID as dma_source_id,
    @DMA_MANUAL_ID as dma_manual_id
 from #columnDatatypes a;
 
-IF OBJECT_ID('tempdb..#columnDatatypes') IS NOT NULL  
+IF OBJECT_ID('tempdb..#columnDatatypes') IS NOT NULL
    DROP TABLE #columnDatatypes;

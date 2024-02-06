@@ -34,7 +34,7 @@ SELECT
 FROM &v_tblprefix._mviews a
 WHERE a.owner NOT IN (
 @&EXTRACTSDIR/exclude_schemas.sql
-       )  
+       )
 )
 SELECT '&&v_host'
        || '_'

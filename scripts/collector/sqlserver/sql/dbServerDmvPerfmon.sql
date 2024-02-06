@@ -41,11 +41,11 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 IF @ASSESSMENT_DATABSE_NAME = 'all'
    SELECT @ASSESSMENT_DATABSE_NAME = '%'
 
-IF OBJECT_ID('tempdb..#serverDmvPerfmon') IS NOT NULL  
+IF OBJECT_ID('tempdb..#serverDmvPerfmon') IS NOT NULL
     DROP TABLE #serverDmvPerfmon;
 
 CREATE TABLE #serverDmvPerfmon (
-    COLLECTION_TIME nvarchar(256), 
+    COLLECTION_TIME nvarchar(256),
     available_mbytes nvarchar(256),
     physicaldisk_avg_disk_bytes_read nvarchar(256),
     physicaldisk_avg_disk_bytes_write nvarchar(256),
@@ -82,7 +82,7 @@ SELECT @ticksNow = OSI.cpu_ticks / CONVERT(float, OSI.cpu_ticks/ms_ticks)
 FROM sys.dm_os_sys_info AS OSI;
 
 WITH util AS (
-    SELECT 
+    SELECT
         ''' + @PKEY + ''' AS PKEY,
         RBS.Rc.value(''(./Record/@id)[1]'', ''bigint'') AS RecordID,
         RBS.Rc.value(''(//SystemHealth/SystemIdle)[1]'', ''bigint'') AS SystemIdle, -- SystemIdle on Linux will be 0
@@ -119,9 +119,9 @@ sample_iops AS (
 dmv_perfmon_counter_data as (
     SELECT
         CONVERT(NVARCHAR,(ROUND((CONVERT(FLOAT,[Buffer cache hit ratio]) * 1.0 / CONVERT(FLOAT,[Buffer cache hit ratio base])) * 100.0,0))) as buffer_cache_hit_ratio,
-        CONVERT(NVARCHAR,[Checkpoint pages/sec]) as checkpoint_pages_sec, 
-        CONVERT(NVARCHAR,[Free list stalls/sec]) as free_list_stalls_sec, 
-        CONVERT(NVARCHAR,[Page life expectancy]) as page_life_expectancy, 
+        CONVERT(NVARCHAR,[Checkpoint pages/sec]) as checkpoint_pages_sec,
+        CONVERT(NVARCHAR,[Free list stalls/sec]) as free_list_stalls_sec,
+        CONVERT(NVARCHAR,[Page life expectancy]) as page_life_expectancy,
         CONVERT(NVARCHAR,[Page lookups/sec]) as page_lookups_sec,
         CONVERT(NVARCHAR,[Page reads/sec]) as page_reads_sec,
         CONVERT(NVARCHAR,[Page writes/sec]) as page_writes_sec,
@@ -130,9 +130,9 @@ dmv_perfmon_counter_data as (
         CONVERT(NVARCHAR,[Target Server Memory (KB)]) as target_server_memory_kb,
         CONVERT(NVARCHAR,[Total Server Memory (KB)]) as total_server_memory_kb,
         CONVERT(NVARCHAR,[Batch Requests/sec]) as batch_requests_sec
-    FROM  
+    FROM
         (
-            SELECT counter_name, cntr_value 
+            SELECT counter_name, cntr_value
             FROM sys.dm_os_performance_counters
             WHERE
                 (object_name = ''SQLServer:Buffer Manager''
@@ -143,16 +143,16 @@ dmv_perfmon_counter_data as (
                 AND counter_name IN (''Memory Grants Pending'',''Target Server Memory (KB)'',''Total Server Memory (KB)''))
                     OR (object_name = ''SQLServer:SQL Statistics''
                 AND counter_name IN (''Batch Requests/sec''))
-        ) AS SourceTable  
-        PIVOT  
-        (  
-            AVG(cntr_value)  
+        ) AS SourceTable
+        PIVOT
+        (
+            AVG(cntr_value)
             FOR counter_name IN (
                 [Buffer cache hit ratio],
                 [Buffer cache hit ratio base],
                 [Checkpoint pages/sec],
                 [Free list stalls/sec],
-                [Page life expectancy], 
+                [Page life expectancy],
                 [Page lookups/sec],
                 [Page reads/sec],
                 [Page writes/sec],
@@ -160,11 +160,11 @@ dmv_perfmon_counter_data as (
                 [Memory Grants Pending],
                 [Target Server Memory (KB)],
                 [Total Server Memory (KB)],
-                [Batch Requests/sec])  
+                [Batch Requests/sec])
         ) AS PivotTable
     )
     INSERT INTO #serverDmvPerfmon
-    SELECT 
+    SELECT
         CONVERT(VARCHAR(23),CONVERT(datetime2(3),DATEADD(ms, -1 * (@ticksNow - UT.EventStamp), GETDATE())),121) AS COLLECTION_TIME,
         NULL AS AVAILABLE_MBYTES,
         CASE
@@ -218,7 +218,7 @@ dmv_perfmon_counter_data as (
     ORDER BY 1 DESC
 ');
 
-SELECT 
+SELECT
     @PKEY as PKEY,
     COLLECTION_TIME,
     AVAILABLE_MBYTES,
@@ -265,5 +265,5 @@ BEGIN
 END
 END CATCH
 
-IF OBJECT_ID('tempdb..#serverDmvPerfmon') IS NOT NULL  
+IF OBJECT_ID('tempdb..#serverDmvPerfmon') IS NOT NULL
     DROP TABLE #serverDmvPerfmon;

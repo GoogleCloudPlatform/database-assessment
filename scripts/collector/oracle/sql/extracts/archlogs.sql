@@ -20,11 +20,11 @@ SELECT '&&v_host'
        || '&&v_dbname'
        || '_'
        || '&&v_hora' AS pkey,
-       trunc(first_Time) as log_start_date, 
+       trunc(first_Time) as log_start_date,
        to_char(first_time, 'HH24') as hour,
-       thread# AS thread_num, 
-       dest_id, 
-       count(1) AS CNT, 
+       thread# AS thread_num,
+       dest_id,
+       count(1) AS CNT,
        round(sum(blocks * block_size)/1024/1024) as mbytes,
        '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
 FROM gv$archived_log
