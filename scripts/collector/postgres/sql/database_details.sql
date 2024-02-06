@@ -107,5 +107,5 @@ select chr(34) || :PKEY || chr(34) as pkey,
     src.sessions_count,
     src.fatal_sessions_count,
     src.killed_sessions_count,
-    src.statistics_last_reset_on
+    coalesce(to_char(statistics_last_reset_on, 'YYYY-MM-DD HH24:MI:SS'), '1970-01-01 00:00:00') as statistics_last_reset_on
 from src;

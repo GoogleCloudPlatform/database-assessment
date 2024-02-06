@@ -12,7 +12,7 @@ with all_tables as (
     end as object_type,
     ns.nspname as object_schema,
     c.relname as object_name,
-    pg_get_userbyid(c.relowner) as object_database
+    pg_get_userbyid(c.relowner) as object_owner
   from pg_class c
     join pg_catalog.pg_namespace as ns on (c.relnamespace = ns.oid)
   where ns.nspname <> all (array ['pg_catalog', 'information_schema'])
@@ -29,7 +29,7 @@ all_views as (
     end as object_type,
     ns.nspname as object_schema,
     c.relname as object_name,
-    pg_get_userbyid(c.relowner) as object_database
+    pg_get_userbyid(c.relowner) as object_owner
   from pg_class c
     join pg_catalog.pg_namespace as ns on (c.relnamespace = ns.oid)
   where ns.nspname <> all (array ['pg_catalog', 'information_schema'])
@@ -50,10 +50,10 @@ all_indexes as (
       and c.relname ~ '^pg_toast' then 'TOAST_INDEX'
       else 'UNCATEGORIZED_INDEX'
     end as object_type,
-    sut.relname as object_owner,
+    sut.relname as table_name,
     sut.schemaname as object_schema,
     c.relname as object_name,
-    pg_get_userbyid(c.relowner) as object_database
+    pg_get_userbyid(c.relowner) as object_owner
   from pg_index i
     join pg_stat_user_tables sut on (i.indrelid = sut.relid)
     join pg_class c on (i.indexrelid = c.oid)
@@ -72,7 +72,7 @@ all_constraints as (
     end as object_type,
     ns.nspname as object_schema,
     con.conname as object_name,
-    pg_get_userbyid(c.relowner) as object_database
+    pg_get_userbyid(c.relowner) as object_owner
   from pg_constraint con
     join pg_class as c on con.conrelid = c.oid
     join pg_catalog.pg_namespace as ns on (con.connamespace = ns.oid)
@@ -99,7 +99,7 @@ all_triggers as (
     end || '_' || 'TRIGGER' as object_type,
     ns.nspname as object_schema,
     t.tgname as object_name,
-    pg_get_userbyid(c.relowner) as object_database
+    pg_get_userbyid(c.relowner) as object_owner
   from pg_trigger t
     join pg_class c on t.tgrelid = c.oid
     join pg_namespace ns on ns.oid = c.relnamespace
@@ -121,14 +121,14 @@ all_procedures as (
       else 'UNCATEGORIZED_PROCEDURE'
     end as object_type,
     p.proname as object_name,
-    pg_get_userbyid(p.proowner) as object_database
+    pg_get_userbyid(p.proowner) as object_owner
   from pg_proc p
     left join pg_namespace ns on ns.oid = p.pronamespace
   where ns.nspname <> all (array ['pg_catalog', 'information_schema'])
     and ns.nspname !~ '^pg_toast'
 ),
 src as (
-  select a.object_database,
+  select a.object_owner,
     a.object_category,
     a.object_type,
     a.object_schema,
@@ -136,7 +136,7 @@ src as (
     a.object_id
   from all_tables a
   union all
-  select a.object_database,
+  select a.object_owner,
     a.object_category,
     a.object_type,
     a.object_schema,
@@ -144,7 +144,7 @@ src as (
     a.object_id
   from all_views a
   union all
-  select a.object_database,
+  select a.object_owner,
     a.object_category,
     a.object_type,
     a.object_schema,
@@ -152,7 +152,7 @@ src as (
     a.object_id
   from all_indexes a
   union all
-  select a.object_database,
+  select a.object_owner,
     a.object_category,
     a.object_type,
     a.object_schema,
@@ -160,7 +160,7 @@ src as (
     a.object_id
   from all_procedures a
   union all
-  select a.object_database,
+  select a.object_owner,
     a.object_category,
     a.object_type,
     a.object_schema,
@@ -168,7 +168,7 @@ src as (
     a.object_id
   from all_constraints a
   union all
-  select a.object_database,
+  select a.object_owner,
     a.object_category,
     a.object_type,
     a.object_schema,
@@ -179,10 +179,11 @@ src as (
 select chr(34) || :PKEY || chr(34) as pkey,
   chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
   chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
-  src.object_database,
+  src.object_owner,
   src.object_category,
   src.object_type,
   src.object_schema,
   src.object_name,
-  src.object_id
+  src.object_id,
+  chr(34) || current_database() || chr(34) as database_name
 from src;

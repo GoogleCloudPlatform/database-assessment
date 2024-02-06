@@ -1,7 +1,7 @@
 with all_schemas as (
   select n.oid as object_id,
     n.nspname as object_schema,
-    pg_get_userbyid(n.nspowner) as object_database,
+    pg_get_userbyid(n.nspowner) as schema_owner,
     case
       when n.nspname !~ '^pg_'
       and (
@@ -28,7 +28,7 @@ all_views as (
 ),
 src as (
   select all_schemas.object_schema,
-    all_schemas.object_database,
+    all_schemas.schema_owner,
     all_schemas.system_object,
     COALESCE(count(all_tables.*), 0) as table_count,
     COALESCE(all_views.view_count, 0) as view_count,
@@ -41,7 +41,7 @@ src as (
     left join all_functions on all_functions.object_schema = all_schemas.object_schema
     left join all_views on all_views.object_schema = all_schemas.object_schema
   group by all_schemas.object_schema,
-    all_schemas.object_database,
+    all_schemas.schema_owner,
     all_schemas.system_object,
     all_views.view_count,
     all_functions.function_count
@@ -50,11 +50,12 @@ select chr(34) || :PKEY || chr(34) as pkey,
   chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
   chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
   src.object_schema,
-  src.object_database,
+  src.schema_owner,
   src.system_object,
   src.table_count,
   src.view_count,
   src.function_count,
-  src.table_data_size_bytes,
-  src.total_table_size_bytes
+  COALESCE(src.table_data_size_bytes,0) as table_data_size_bytes,
+  COALESCE(src.total_table_size_bytes,0) as total_table_size_bytes,
+  chr(34) || current_database() || chr(34) as database_name
 from src;
