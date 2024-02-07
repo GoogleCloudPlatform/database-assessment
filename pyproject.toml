@@ -52,6 +52,9 @@ exclude = ["resources/", "tests", "docs/", "scripts/"]
 include = ["src/dma/collector/sql/**/*"]
 packages = ["src/dma"]
 
+[tool.pdm]
+plugins = ["pdm-packer", "pdm-shell"]
+
 [tool.pdm.scripts]
 lint = "pdm run pre-commit run --all-files"
 post_install = "pdm run python scripts/pre-build.py --install-packages"
