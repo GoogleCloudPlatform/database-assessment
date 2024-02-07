@@ -21,62 +21,85 @@ SET LANGUAGE us_english;
 DECLARE @dbname VARCHAR(50);
 DECLARE @COLLECTION_USER VARCHAR(256);
 DECLARE @COLLECTION_PASS VARCHAR(256);
-DECLARE @PRODUCT_VERSION AS INTEGER
+DECLARE @PRODUCT_VERSION AS INTEGER;
+DECLARE @CLOUDTYPE AS VARCHAR(256);
+
 
 DECLARE db_cursor CURSOR FOR 
 SELECT name
-FROM MASTER.sys.databases 
-WHERE name NOT IN ('model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-AND state = 0;
+FROM sys.databases
+WHERE name NOT IN ('model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
+    AND state = 0;
 
 SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
 SELECT @COLLECTION_USER = N'$(collectionUser)'
 SELECT @COLLECTION_PASS = N'$(collectionPass)'
+SELECT @CLOUDTYPE = 'NONE';
+
+IF UPPER(@@VERSION) LIKE '%AZURE%'
+	SELECT @CLOUDTYPE = 'AZURE'
 
 IF NOT EXISTS 
-    (SELECT name  
-     FROM master.sys.server_principals
-     WHERE name = @COLLECTION_USER)
+    (SELECT name
+FROM master.sys.server_principals
+WHERE name = @COLLECTION_USER)
 	BEGIN
-		exec ('CREATE LOGIN [' + @COLLECTION_USER + '] WITH PASSWORD=N''' + @COLLECTION_PASS + ''', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF');
-	END
+    IF @CLOUDTYPE = 'AZURE'
+            exec ('CREATE LOGIN [' + @COLLECTION_USER + '] WITH PASSWORD=N''' + @COLLECTION_PASS + '''');
+        ELSE
+		    exec ('CREATE LOGIN [' + @COLLECTION_USER + '] WITH PASSWORD=N''' + @COLLECTION_PASS + ''', DEFAULT_DATABASE=[master], CHECK_EXPIRATION=OFF, CHECK_POLICY=OFF');
+END
 BEGIN
-	exec ('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
-	exec ('GRANT VIEW ANY DATABASE TO [' + @COLLECTION_USER + ']');
-	exec ('GRANT VIEW ANY DEFINITION TO [' + @COLLECTION_USER + ']');
-	exec ('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
-    IF @PRODUCT_VERSION > 11
-        BEGIN
-        	exec ('GRANT SELECT ALL USER SECURABLES TO [' + @COLLECTION_USER + ']');
+    IF @CLOUDTYPE = 'AZURE'
+    BEGIN
+        exec ('ALTER SERVER ROLE ##MS_DefinitionReader## ADD MEMBER [' + @COLLECTION_USER + ']');
+        exec ('ALTER SERVER ROLE ##MS_SecurityDefinitionReader## ADD MEMBER [' + @COLLECTION_USER + ']');
+        exec ('ALTER SERVER ROLE ##MS_ServerStateReader## ADD MEMBER [' + @COLLECTION_USER + ']');
+    END;
+
+    IF @CLOUDTYPE <> 'AZURE'
+    BEGIN
+        exec ('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
+        exec ('GRANT VIEW ANY DATABASE TO [' + @COLLECTION_USER + ']');
+        exec ('GRANT VIEW ANY DEFINITION TO [' + @COLLECTION_USER + ']');
+        IF @PRODUCT_VERSION > 11
+            BEGIN
+            exec ('GRANT SELECT ALL USER SECURABLES TO [' + @COLLECTION_USER + ']');
         END;
-    IF @PRODUCT_VERSION > 15
-        BEGIN
+        IF (@PRODUCT_VERSION > 15)
+            BEGIN
             exec('GRANT VIEW SERVER PERFORMANCE STATE TO [' + @COLLECTION_USER + ']');
             exec('GRANT VIEW SERVER SECURITY STATE TO [' + @COLLECTION_USER + ']');
             exec('GRANT VIEW ANY PERFORMANCE DEFINITION TO [' + @COLLECTION_USER + ']');
             exec('GRANT VIEW ANY SECURITY DEFINITION TO [' + @COLLECTION_USER + ']');
         END;
+    END;
 END;
-
-OPEN db_cursor  
-FETCH NEXT FROM db_cursor INTO @dbname  
-
-WHILE @@FETCH_STATUS = 0
+IF @CLOUDTYPE <> 'AZURE'
 BEGIN
+    OPEN db_cursor
+    FETCH NEXT FROM db_cursor INTO @dbname
+
+    WHILE @@FETCH_STATUS = 0
     BEGIN
         exec ('
-        use [' + @dbname + '];
-        IF NOT EXISTS (SELECT [name]
-           FROM [sys].[database_principals]
-           WHERE [type] = N''S'' AND [name] = N''' + @COLLECTION_USER + ''')
-           BEGIN
-             CREATE USER [' + @COLLECTION_USER + '] FOR LOGIN  [' + @COLLECTION_USER + '];
-           END;
-        GRANT VIEW DATABASE STATE TO  [' + @COLLECTION_USER + ']');
+            use [' + @dbname + '];
+            IF NOT EXISTS (SELECT [name]
+            FROM [sys].[database_principals]
+            WHERE [type] = N''S'' AND [name] = N''' + @COLLECTION_USER + ''')
+            BEGIN
+                CREATE USER [' + @COLLECTION_USER + '] FOR LOGIN  [' + @COLLECTION_USER + '];
+            END;
+            GRANT VIEW DATABASE STATE TO  [' + @COLLECTION_USER + ']
+        ');
+
+        FETCH NEXT FROM db_cursor INTO @dbname;
     END;
 
-    FETCH NEXT FROM db_cursor INTO @dbname;
+    CLOSE db_cursor
+    DEALLOCATE db_cursor
 END;
-
-CLOSE db_cursor  
-DEALLOCATE db_cursor
+IF @CLOUDTYPE = 'AZURE'
+BEGIN
+    exec ('CREATE USER [' + @COLLECTION_USER + '] FROM LOGIN [' + @COLLECTION_USER + '] WITH DEFAULT_SCHEMA=dbo');
+END;
