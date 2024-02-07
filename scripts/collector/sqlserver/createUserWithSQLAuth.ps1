@@ -43,38 +43,65 @@
     https://googlecloudplatform.github.io/database-assessment/
 #>
 Param(
-[Parameter(Mandatory=$true)][string]$serverName="",
-[Parameter(Mandatory=$true)][string]$port="default",
-[Parameter(Mandatory=$true)][string]$user="",
-[Parameter(Mandatory=$true)][string]$pass="",
-[Parameter(Mandatory=$false)][string]$collectionUserName="",
-[Parameter(Mandatory=$false)][string]$collectionUserPass=""
+    [Parameter(Mandatory = $true)][string]$serverName = "",
+    [Parameter(Mandatory = $true)][string]$port = "default",
+    [Parameter(Mandatory = $true)][string]$user = "",
+    [Parameter(Mandatory = $true)][string]$pass = "",
+    [Parameter(Mandatory = $false)][string]$collectionUserName = "",
+    [Parameter(Mandatory = $false)][string]$collectionUserPass = ""
 )
+
+Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
 
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
     Exit 1
-} elseif ([string]::IsNullorEmpty($user)) {
+}
+elseif ([string]::IsNullorEmpty($user)) {
     Write-Output "Server Admin Username parameter $user is empty.  Ensure that the parameter is provided"
     Exit 1
-} elseif ([string]::IsNullorEmpty($pass)) {
+}
+elseif ([string]::IsNullorEmpty($pass)) {
     Write-Output "Server Admin Username password parameter $pass is empty.  Ensure that the parameter is provided"
     Exit 1
-} elseif ([string]::IsNullorEmpty($collectionUserName)) {
+}
+elseif ([string]::IsNullorEmpty($collectionUserName)) {
     Write-Output "Collection Username parameter $collectionUserName is empty.  Ensure that the parameter is provided"
     Exit 1
-} elseif ([string]::IsNullorEmpty($collectionUserPass)) {
+}
+elseif ([string]::IsNullorEmpty($collectionUserPass)) {
     Write-Output "Collection Username password parameter $collectionUserPass is empty.  Ensure that the parameter is provided"
     Exit 1
 }
 
 if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
-    Write-Output "Creating Collection User in $serverName"
+    WriteLog -logMessage "Creating collection user in $serverName" -logOperation "MESSAGE"
     sqlcmd -S $serverName -i sql\createCollectionUser.sql -d master -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
-} else {
+    
+    ### If Azure, need to get a list of databases from master and log in to each individually to create the user
+    $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database="all")
+    foreach ($databaseName in $dbNameArray) {
+        WriteLog -logMessage "Adding collection user into the following databases:" -logOperation "MESSAGE"
+        WriteLog -logMessage "            $databaseName" -logOperation "MESSAGE"
+    }
+    foreach ($databaseName in $dbNameArray) {
+        sqlcmd -S $serverName -i sql\createCollectionUser.sql -d databaseName -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName
+    }
+}
+else {
     $serverName = "$serverName,$port"
-    Write-Output "Creating Collection User in $serverName, using PORT $port"
+    WriteLog -logMessage "Creating collection user in $serverName, using PORT $port" -logOperation "MESSAGE"
     sqlcmd -S $serverName -i sql\createCollectionUser.sql -d master -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
+    
+    ### If Azure, need to get a list of databases from master and log in to each individually to create the user
+    $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database="all")
+    foreach ($databaseName in $dbNameArray) {
+        WriteLog -logMessage "Adding collection user into the following databases:" -logOperation "MESSAGE"
+        WriteLog -logMessage "            $databaseName" -logOperation "MESSAGE"
+    }
+    foreach ($databaseName in $dbNameArray) {
+        sqlcmd -S $serverName -i sql\createCollectionUser.sql -d databaseName -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName
+    }
 }
 
 Exit 0
