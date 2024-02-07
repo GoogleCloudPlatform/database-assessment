@@ -44,12 +44,10 @@ if [%serverName%]==[] goto raiseServerError
 if [%saUser%]==[] goto serverUserError
 if [%saPass%]==[] goto serverUserError
 if [%user%]==[] goto error
-if [%pass%]==[] goto error
 if not [%user%]==[] goto execWithCustomCreds
 
 :execWithCustomCreds
 if [%user%] == [] goto error
-if [%pass%] == [] goto error
 if [%serverName%]==[] goto raiseServerError
 
 PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createUserWithSQLAuth.ps1 -serverName %serverName% -port %port% -user %saUser% -pass %saPass% -collectionUserName %user% -collectionUserPass %pass%

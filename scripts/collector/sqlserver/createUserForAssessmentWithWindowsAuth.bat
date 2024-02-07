@@ -42,7 +42,6 @@ if not [%user%]==[] goto execWithCustomCreds
 :execWithCustomCreds
 if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
-if [%pass%] == [] goto error
 
 PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createUserWithWindowsAuth.ps1 -serverName %serverName% -port %port% -collectionUserName %user% -collectionUserPass %pass%
 if %errorlevel% == 1 goto exit
