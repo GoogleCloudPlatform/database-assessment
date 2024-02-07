@@ -39,10 +39,10 @@
     https://googlecloudplatform.github.io/database-assessment/
 #>
 Param(
-[Parameter(Mandatory=$true)][string]$serverName="",
-[Parameter(Mandatory=$true)][string]$port="default",
-[Parameter(Mandatory=$false)][string]$collectionUserName="",
-[Parameter(Mandatory=$false)][string]$collectionUserPass=""
+    [Parameter(Mandatory = $true)][string]$serverName = "",
+    [Parameter(Mandatory = $true)][string]$port = "default",
+    [Parameter(Mandatory = $false)][string]$collectionUserName = "",
+    [Parameter(Mandatory = $false)][string]$collectionUserPass = ""
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
@@ -50,18 +50,24 @@ Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
     Exit 1
-} elseif ([string]::IsNullorEmpty($collectionUserName)) {
+}
+elseif ([string]::IsNullorEmpty($collectionUserName)) {
     Write-Output "Collection Username parameter $collectionUserName is empty.  Ensure that the parameter is provided"
     Exit 1
-} elseif ([string]::IsNullorEmpty($collectionUserPass)) {
-    Write-Output "Collection Username password parameter $collectionUserPass is empty.  Ensure that the parameter is provided"
-    Exit 1
+}
+elseif ([string]::IsNullorEmpty($collectionUserPass)) {
+    Write-Output ""
+    Write-Output "Collection Username password parameter is not provided"
+    $collectionPassPrompt = Read-Host 'Please enter your Collection User password' -AsSecureString
+    $collectionUserPass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($collectionPassPrompt))
+    Write-Output ""
 }
 
 if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
     Write-Output "Creating Collection User in $serverName"
     sqlcmd -S $serverName -i sql\createCollectionUser.sql -d master -C -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
-} else {
+}
+else {
     $serverName = "$serverName,$port"
     Write-Output "Creating Collection User in $serverName, using PORT $port"
     sqlcmd -S $serverName -i sql\createCollectionUser.sql -d master -C -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass

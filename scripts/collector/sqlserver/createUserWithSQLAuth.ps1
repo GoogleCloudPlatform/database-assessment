@@ -46,12 +46,21 @@ Param(
     [Parameter(Mandatory = $true)][string]$serverName = "",
     [Parameter(Mandatory = $true)][string]$port = "default",
     [Parameter(Mandatory = $true)][string]$user = "",
-    [Parameter(Mandatory = $true)][string]$pass = "",
+    [Parameter(Mandatory = $false)][string]$pass = "",
     [Parameter(Mandatory = $false)][string]$collectionUserName = "",
     [Parameter(Mandatory = $false)][string]$collectionUserPass = ""
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
+
+if (([string]::IsNullorEmpty($collectionUserPass)) -or ([string]$collectionUserPass -eq "false")) {
+    Write-Output ""
+    Write-Output "Collection Username password parameter is not provided"
+    $passPrompt = Read-Host 'Please enter your password' -AsSecureString
+    $collectionUserPass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($passPrompt))
+    Write-Output ""
+} 
+
 
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
@@ -62,16 +71,22 @@ elseif ([string]::IsNullorEmpty($user)) {
     Exit 1
 }
 elseif ([string]::IsNullorEmpty($pass)) {
-    Write-Output "Server Admin Username password parameter $pass is empty.  Ensure that the parameter is provided"
-    Exit 1
+    Write-Output ""
+    Write-Output "Server Admin Username password parameter is not provided"
+    $passPrompt = Read-Host 'Please enter your Admin User password' -AsSecureString
+    $pass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($passPrompt))
+    Write-Output ""
 }
 elseif ([string]::IsNullorEmpty($collectionUserName)) {
     Write-Output "Collection Username parameter $collectionUserName is empty.  Ensure that the parameter is provided"
     Exit 1
 }
 elseif ([string]::IsNullorEmpty($collectionUserPass)) {
-    Write-Output "Collection Username password parameter $collectionUserPass is empty.  Ensure that the parameter is provided"
-    Exit 1
+    Write-Output ""
+    Write-Output "Collection Username password parameter is not provided"
+    $collectionPassPrompt = Read-Host 'Please enter your Collection User password' -AsSecureString
+    $collectionUserPass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($collectionPassPrompt))
+    Write-Output ""
 }
 
 if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
