@@ -34,3 +34,12 @@ jobs:
         with:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: dist/db-migration-assessment-collection-scripts-postgres.zip
+      - uses: MCJack123/ghaction-generate-release-hashes@v3
+        with:
+          hash-type: sha256
+          file-name: hashes.txt
+          get-assets: true
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Upload Release Hashes
+          path: hashes.txt
