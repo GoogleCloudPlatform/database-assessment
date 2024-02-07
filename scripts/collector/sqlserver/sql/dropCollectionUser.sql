@@ -23,14 +23,14 @@ DECLARE @COLLECTION_USER VARCHAR(256);
 
 DECLARE db_cursor CURSOR FOR 
 SELECT name
-FROM MASTER.sys.databases 
+FROM sys.databases
 WHERE name NOT IN ('model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-AND state = 0;
+    AND state = 0;
 
 SELECT @COLLECTION_USER = N'$(collectionUser)'
 
-OPEN db_cursor  
-FETCH NEXT FROM db_cursor INTO @dbname  
+OPEN db_cursor
+FETCH NEXT FROM db_cursor INTO @dbname
 
 WHILE @@FETCH_STATUS = 0
 BEGIN
@@ -49,14 +49,14 @@ BEGIN
     FETCH NEXT FROM db_cursor INTO @dbname;
 END;
 
-CLOSE db_cursor  
+CLOSE db_cursor
 DEALLOCATE db_cursor
 
 use [master];
 IF EXISTS 
-    (SELECT name  
-     FROM master.sys.server_principals
-     WHERE name = @COLLECTION_USER)
+    (SELECT name
+FROM master.sys.server_principals
+WHERE name = @COLLECTION_USER)
 	BEGIN
-		exec ('DROP LOGIN [' + @COLLECTION_USER + ']');
-	END;
+    exec ('DROP LOGIN [' + @COLLECTION_USER + ']');
+END;

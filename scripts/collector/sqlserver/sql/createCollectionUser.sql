@@ -27,7 +27,7 @@ DECLARE @CLOUDTYPE AS VARCHAR(256);
 
 DECLARE db_cursor CURSOR FOR 
 SELECT name
-FROM MASTER.sys.databases
+FROM sys.databases
 WHERE name NOT IN ('model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
     AND state = 0;
 
