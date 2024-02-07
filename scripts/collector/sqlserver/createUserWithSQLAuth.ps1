@@ -100,7 +100,7 @@ else {
         WriteLog -logMessage "            $databaseName" -logOperation "MESSAGE"
     }
     foreach ($databaseName in $dbNameArray) {
-        sqlcmd -S $serverName -i sql\createCollectionUser.sql -d databaseName -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName
+        sqlcmd -S $serverName -i sql\createCollectionUser.sql -d $databaseName -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName
     }
 }
 
