@@ -25,6 +25,14 @@ For SQL Server Versions 2022 and above, the following additional permissions wil
             GRANT VIEW ANY SECURITY DEFINITION TO [username];
 ```
 
+For Azure SQL Database, the following grants are executed:
+
+```sql
+            ALTER SERVER ROLE ##MS_DefinitionReader## ADD MEMBER [username];
+            ALTER SERVER ROLE ##MS_SecurityDefinitionReader## ADD MEMBER [username];
+            ALTER SERVER ROLE ##MS_ServerStateReader## ADD MEMBER [username];
+```
+
 In addition the user must also be mapped to all user databases, tempdb and master databases along with the following grant:
 
 ```sql
@@ -48,16 +56,12 @@ If an existing user with SYSADMIN privileges wil not be used, from a command pro
 The following parameters can be specified:
     -serverName  ** Required
     -serverUserName  ** Required
-    -serverUserPass  ** Required
+    -serverUserPass  ** Optional at script level.  Will be prompted if not provided
 
         and
 
     -collectionUserName  ** Required if a custom username will be used
-    -collectionUserPass  ** Required if a custom password will be used
-
-        or
-
-    -useDefaultCreds  ** Required if custom credentials are not desired
+    -collectionUserPass  ** Optional at script level.  Will be prompted if not provided
 ```
 
 #### Windows Authentication
@@ -68,11 +72,7 @@ The following parameters can be specified:
 The following parameters can be specified:
     -serverName  ** Required
     -collectionUserName  ** Required if a custom username will be used
-    -collectionUserPass  ** Required if a custom password will be used
-
-        or
-
-    -useDefaultCreds  ** Required if custom credentials are not desired
+    -collectionUserPass  ** Optional at script level.  Will be prompted if not provided
 
 ```
 

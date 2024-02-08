@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.29" 
+OpVersion="4.3.30" 
 dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
@@ -579,15 +579,17 @@ DIAGPACKACCESS="postgres"
 	 fi
  fi
 
+
  if [[ "${allDbs}" != "Y" && "${allDbs}" != "N" ]] ; then
 	 echo "Invalid value supplied for parameter allDbs.  Must be Y or N."
          printUsage
 	 exit 255
  fi
 
- if [[ "${manualUniqueId}" != "" ]]; then
-	 manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+ if [[ "${manualUniqueId}" != "" && "${manualUniqueId}" != "NA" ]] ; then
+    	     manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
  else manualUniqueId='NA'
+
  fi
 
 #############################################################################

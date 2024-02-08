@@ -43,38 +43,81 @@
     https://googlecloudplatform.github.io/database-assessment/
 #>
 Param(
-[Parameter(Mandatory=$true)][string]$serverName="",
-[Parameter(Mandatory=$true)][string]$port="default",
-[Parameter(Mandatory=$true)][string]$user="",
-[Parameter(Mandatory=$true)][string]$pass="",
-[Parameter(Mandatory=$false)][string]$collectionUserName="",
-[Parameter(Mandatory=$false)][string]$collectionUserPass=""
+    [Parameter()][string]$serverName,
+    [Parameter()][string]$port = "default",
+    [Parameter()][string]$user,
+    [Parameter()][string]$pass,
+    [Parameter()][string]$collectionUserName,
+    [Parameter()][string]$collectionUserPass
 )
+
+Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
+
+if ([string]::IsNullorEmpty($pass)) {
+    Write-Output ""
+    Write-Output "Admin Username password parameter is not provided"
+    $passPrompt = Read-Host 'Please enter your Admin User password' -AsSecureString
+    $pass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($passPrompt))
+    Write-Output ""
+}
+
+if ([string]::IsNullorEmpty($collectionUserPass)) {
+    Write-Output ""
+    Write-Output "Collection Username password parameter is not provided"
+    $collectionPassPrompt = Read-Host 'Please enter your Collection User password' -AsSecureString
+    $collectionUserPass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($collectionPassPrompt))
+    Write-Output ""
+}
 
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
     Exit 1
-} elseif ([string]::IsNullorEmpty($user)) {
+}
+if ([string]::IsNullorEmpty($user)) {
     Write-Output "Server Admin Username parameter $user is empty.  Ensure that the parameter is provided"
     Exit 1
-} elseif ([string]::IsNullorEmpty($pass)) {
-    Write-Output "Server Admin Username password parameter $pass is empty.  Ensure that the parameter is provided"
-    Exit 1
-} elseif ([string]::IsNullorEmpty($collectionUserName)) {
+}
+if ([string]::IsNullorEmpty($collectionUserName)) {
     Write-Output "Collection Username parameter $collectionUserName is empty.  Ensure that the parameter is provided"
     Exit 1
-} elseif ([string]::IsNullorEmpty($collectionUserPass)) {
-    Write-Output "Collection Username password parameter $collectionUserPass is empty.  Ensure that the parameter is provided"
-    Exit 1
 }
+
+$validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -d master -U $user -P $pass -C -l 30 -W -m 1 -u -h-1 -w 32768)
+$splitValidInstanceVerisionCheckObj = $validSQLInstanceVersionCheckArray[0].Split('')
+$validSQLInstanceVersionCheckValues = $splitValidInstanceVerisionCheckObj | ForEach-Object { if ($_.Trim() -ne '') { $_ } }
+# $isValidSQLInstanceVersion = $validSQLInstanceVersionCheckValues[0]
+$isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
 
 if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
-    Write-Output "Creating Collection User in $serverName"
+    WriteLog -logMessage "Creating collection user in $serverName" -logOperation "MESSAGE"
     sqlcmd -S $serverName -i sql\createCollectionUser.sql -d master -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
-} else {
-    $serverName = "$serverName,$port"
-    Write-Output "Creating Collection User in $serverName, using PORT $port"
-    sqlcmd -S $serverName -i sql\createCollectionUser.sql -d master -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
+    
+    ### If Azure, need to get a list of databases from master and log in to each individually to create the user
+    if ($isCloudOrLinuxHost -eq "AZURE") {
+        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database="all")
+        foreach ($databaseName in $dbNameArray) {
+            WriteLog -logMessage "Adding collection user into the following databases:" -logOperation "MESSAGE"
+            WriteLog -logMessage "            $databaseName" -logOperation "MESSAGE"
+        }
+        foreach ($databaseName in $dbNameArray) {
+            sqlcmd -S $serverName -i sql\addCollectionUserToDatabase.sql -d $databaseName -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName
+        }
+    }
 }
-
-Exit 0
+else {
+    $serverName = "$serverName,$port"
+    WriteLog -logMessage "Creating collection user in $serverName, using PORT $port" -logOperation "MESSAGE"
+    sqlcmd -S $serverName -i sql\createCollectionUser.sql -d master -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
+    
+    ### If Azure, need to get a list of databases from master and log in to each individually to create the user
+    if ($isCloudOrLinuxHost -eq "AZURE") {
+        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database="all")
+        foreach ($databaseName in $dbNameArray) {
+            WriteLog -logMessage "Adding collection user into the following databases:" -logOperation "MESSAGE"
+            WriteLog -logMessage "            $databaseName" -logOperation "MESSAGE"
+        }
+        foreach ($databaseName in $dbNameArray) {
+            sqlcmd -S $serverName -i sql\addCollectionUserToDatabase.sql -d $databaseName -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName
+        }
+    }
+}

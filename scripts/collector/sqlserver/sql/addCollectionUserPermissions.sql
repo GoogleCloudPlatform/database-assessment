@@ -24,18 +24,18 @@ DECLARE @PRODUCT_VERSION AS INTEGER
 
 DECLARE db_cursor CURSOR FOR 
 SELECT name
-FROM MASTER.sys.databases 
+FROM sys.databases
 WHERE name NOT IN ('model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-AND state = 0;
+    AND state = 0;
 
 SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
 SELECT @COLLECTION_USER = N'$(collectionUser)'
 
 BEGIN
     IF EXISTS 
-        (SELECT name  
-        FROM master.sys.server_principals
-        WHERE name = @COLLECTION_USER)
+        (SELECT name
+    FROM sys.server_principals
+    WHERE name = @COLLECTION_USER)
     BEGIN
         exec('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
         exec('GRANT SELECT ALL USER SECURABLES TO [' + @COLLECTION_USER + ']');
@@ -44,16 +44,16 @@ BEGIN
         exec('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
         IF @PRODUCT_VERSION > 15
             BEGIN
-                exec('GRANT VIEW SERVER PERFORMANCE STATE TO [' + @COLLECTION_USER + ']');
-                exec('GRANT VIEW SERVER SECURITY STATE TO [' + @COLLECTION_USER + ']');
-                exec('GRANT VIEW ANY PERFORMANCE DEFINITION TO [' + @COLLECTION_USER + ']');
-                exec('GRANT VIEW ANY SECURITY DEFINITION TO [' + @COLLECTION_USER + ']');
-            END;
+            exec('GRANT VIEW SERVER PERFORMANCE STATE TO [' + @COLLECTION_USER + ']');
+            exec('GRANT VIEW SERVER SECURITY STATE TO [' + @COLLECTION_USER + ']');
+            exec('GRANT VIEW ANY PERFORMANCE DEFINITION TO [' + @COLLECTION_USER + ']');
+            exec('GRANT VIEW ANY SECURITY DEFINITION TO [' + @COLLECTION_USER + ']');
+        END;
     END;
 END;
 
-OPEN db_cursor  
-FETCH NEXT FROM db_cursor INTO @dbname  
+OPEN db_cursor
+FETCH NEXT FROM db_cursor INTO @dbname
 
 WHILE @@FETCH_STATUS = 0
 BEGIN
@@ -71,5 +71,5 @@ BEGIN
     FETCH NEXT FROM db_cursor INTO @dbname;
 END;
 
-CLOSE db_cursor  
+CLOSE db_cursor
 DEALLOCATE db_cursor
