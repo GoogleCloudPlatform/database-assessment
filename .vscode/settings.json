@@ -113,7 +113,7 @@
   "evenBetterToml.formatter.columnWidth": 120,
   "evenBetterToml.formatter.arrayAutoCollapse": true,
   "python.globalModuleInstallation": false,
-  "python.testing.unittestEnabled": true,
+  "python.testing.unittestEnabled": false,
   "editor.codeActionsOnSave": {
     "source.fixAll.ruff": "explicit",
     "source.organizeImports.ruff": "explicit"
@@ -137,5 +137,8 @@
   "sqltools.disableReleaseNotifications": true,
   "sqltools.disableNodeDetectNotifications": true,
   "cloudcode.duetAI.enable": true,
-  "cloudcode.compute.sshInternalIp": true
+  "cloudcode.compute.sshInternalIp": true,
+  "python.testing.pytestArgs": [
+    "tests"
+  ]
 }
