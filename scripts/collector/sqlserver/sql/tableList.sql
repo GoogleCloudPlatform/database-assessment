@@ -43,32 +43,34 @@ IF UPPER(@@VERSION) LIKE '%AZURE%'
 IF OBJECT_ID('tempdb..#tableList') IS NOT NULL  
    DROP TABLE #tableList;
 
-CREATE TABLE #tableList(
-	database_name nvarchar(255)
-    ,schema_name nvarchar(255)
-    ,table_name nvarchar(255)
-    ,partition_count nvarchar(10)
-	,is_memory_optimized nvarchar(10)
-	,temporal_type nvarchar(10)
-	,is_external nvarchar(10)
-	,lock_escalation nvarchar(10)
-	,is_tracked_by_cdc nvarchar(10)
-	,text_in_row_limit nvarchar(10)
-	,is_replicated nvarchar(10)
-    ,row_count nvarchar(255)
-    ,data_compression nvarchar(255)
-    ,total_space_mb nvarchar(255)
-    ,used_space_mb nvarchar(255)
-    ,unused_space_mb nvarchar(255)
-    );
+CREATE TABLE #tableList
+(
+	database_name nvarchar(255),
+	schema_name nvarchar(255),
+	table_name nvarchar(255),
+	partition_count nvarchar(10),
+	is_memory_optimized nvarchar(10),
+	temporal_type nvarchar(10),
+	is_external nvarchar(10),
+	lock_escalation nvarchar(10),
+	is_tracked_by_cdc nvarchar(10),
+	text_in_row_limit nvarchar(10),
+	is_replicated nvarchar(10),
+	row_count nvarchar(255),
+	data_compression nvarchar(255),
+	total_space_mb nvarchar(255),
+	used_space_mb nvarchar(255),
+	unused_space_mb nvarchar(255),
+	partition_type nvarchar(255)
+);
 
 BEGIN
-   	BEGIN
+	BEGIN
 		SELECT @validDB = COUNT(1)
-		FROM sys.databases 
+		FROM sys.databases
 		WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-		AND name like @ASSESSMENT_DATABSE_NAME
-		AND state = 0
+			AND name like @ASSESSMENT_DATABSE_NAME
+			AND state = 0
 	END
 
 	BEGIN TRY
@@ -100,20 +102,23 @@ BEGIN
 				,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
 				,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
 				,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+				,[partition_type] = pf.type_desc
 			FROM sys.schemas s
-			JOIN sys.tables  t ON s.schema_id = t.schema_id
-			JOIN sys.indexes i ON t.object_id = i.object_id
+			JOIN sys.tables  t ON (s.schema_id = t.schema_id)
+			JOIN sys.indexes i ON (t.object_id = i.object_id)
 			JOIN (
 				SELECT [object_id], index_id, partition_count=count(*), [rows]=sum([rows]), data_compression_cnt=count(distinct [data_compression])
 				FROM sys.partitions
 				GROUP BY [object_id], [index_id]
-			) p ON i.[object_id] = p.[object_id] AND i.[index_id] = p.[index_id]
+			) p ON (i.[object_id] = p.[object_id] AND i.[index_id] = p.[index_id])
 			JOIN (
 				SELECT p.[object_id], p.[index_id], total_pages = sum(a.total_pages), used_pages = sum(a.used_pages), data_pages=sum(a.data_pages)
 				FROM sys.partitions p
 				JOIN sys.allocation_units a ON p.[partition_id] = a.[container_id]
 				GROUP BY p.[object_id], p.[index_id]
-			) au ON i.[object_id] = au.[object_id] AND i.[index_id] = au.[index_id]
+			) au ON (i.[object_id] = au.[object_id] AND i.[index_id] = au.[index_id])
+			LEFT JOIN sys.partition_schemes ps on (ps.data_space_id = i.data_space_id)
+			LEFT JOIN sys.partition_functions pf on (pf.function_id = ps.function_id)
 			WHERE t.is_ms_shipped = 0 -- Not a system table
 				AND i.type IN (0,1,5))
 			INSERT INTO #tableList
@@ -133,9 +138,10 @@ BEGIN
 				data_compression,
 				total_space_mb,
 				used_space_mb,
-				unused_space_mb
+				unused_space_mb,
+				partition_type
 			FROM TableData');
-		END;
+	END;
 		IF @PRODUCT_VERSION <= 12 AND @validDB <> 0 AND @CLOUDTYPE = 'NONE'
 		BEGIN
 		exec ('
@@ -164,20 +170,23 @@ BEGIN
 				,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
 				,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
 				,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+				,[partition_type] = pf.type_desc
 			FROM sys.schemas s
-			JOIN sys.tables  t ON s.schema_id = t.schema_id
-			JOIN sys.indexes i ON t.object_id = i.object_id
-			JOIN (
+			JOIN sys.tables  t ON (s.schema_id = t.schema_id)
+			JOIN sys.indexes i ON (t.object_id = i.object_id)
+			LEFT JOIN (
 				SELECT [object_id], index_id, partition_count=count(*), [rows]=sum([rows]), data_compression_cnt=count(distinct [data_compression])
 				FROM sys.partitions
 				GROUP BY [object_id], [index_id]
-			) p ON i.[object_id] = p.[object_id] AND i.[index_id] = p.[index_id]
-			JOIN (
+			) p ON (i.[object_id] = p.[object_id] AND i.[index_id] = p.[index_id])
+			LEFT JOIN (
 				SELECT p.[object_id], p.[index_id], total_pages = sum(a.total_pages), used_pages = sum(a.used_pages), data_pages=sum(a.data_pages)
 				FROM sys.partitions p
 				JOIN sys.allocation_units a ON p.[partition_id] = a.[container_id]
 				GROUP BY p.[object_id], p.[index_id]
-			) au ON i.[object_id] = au.[object_id] AND i.[index_id] = au.[index_id]
+			) au ON (i.[object_id] = au.[object_id] AND i.[index_id] = au.[index_id])
+			LEFT JOIN sys.partition_schemes ps on (ps.data_space_id = i.data_space_id)
+			LEFT JOIN sys.partition_functions pf on (pf.function_id = ps.function_id)
 			WHERE t.is_ms_shipped = 0 -- Not a system table
 				AND i.type IN (0,1,5))
 			INSERT INTO #tableList
@@ -197,9 +206,10 @@ BEGIN
 				data_compression,
 				total_space_mb,
 				used_space_mb,
-				unused_space_mb
+				unused_space_mb,
+				partition_type
 			FROM TableData');
-		END;
+	END;
       	IF @PRODUCT_VERSION >= 12 AND @validDB <> 0 AND @CLOUDTYPE = 'AZURE'
       	BEGIN
 		exec ('
@@ -228,20 +238,23 @@ BEGIN
 				,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
 				,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
 				,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+				,[partition_type] = pf.type_desc
 			FROM sys.schemas s
-			JOIN sys.tables  t ON s.schema_id = t.schema_id
-			JOIN sys.indexes i ON t.object_id = i.object_id
-			JOIN (
+			JOIN sys.tables  t ON (s.schema_id = t.schema_id)
+			JOIN sys.indexes i ON (t.object_id = i.object_id)
+			LEFT JOIN (
 				SELECT [object_id], index_id, partition_count=count(*), [rows]=sum([rows]), data_compression_cnt=count(distinct [data_compression])
 				FROM sys.partitions
 				GROUP BY [object_id], [index_id]
-			) p ON i.[object_id] = p.[object_id] AND i.[index_id] = p.[index_id]
-			JOIN (
+			) p ON (i.[object_id] = p.[object_id] AND i.[index_id] = p.[index_id])
+			LEFT JOIN (
 				SELECT p.[object_id], p.[index_id], total_pages = sum(a.total_pages), used_pages = sum(a.used_pages), data_pages=sum(a.data_pages)
 				FROM sys.partitions p
 				JOIN sys.allocation_units a ON p.[partition_id] = a.[container_id]
 				GROUP BY p.[object_id], p.[index_id]
-			) au ON i.[object_id] = au.[object_id] AND i.[index_id] = au.[index_id]
+			) au ON (i.[object_id] = au.[object_id] AND i.[index_id] = au.[index_id])
+			LEFT JOIN sys.partition_schemes ps on (ps.data_space_id = i.data_space_id)
+			LEFT JOIN sys.partition_functions pf on (pf.function_id = ps.function_id)
 			WHERE t.is_ms_shipped = 0 -- Not a system table
 				AND i.type IN (0,1,5))
 			INSERT INTO #tableList
@@ -261,9 +274,10 @@ BEGIN
 				data_compression,
 				total_space_mb,
 				used_space_mb,
-				unused_space_mb
+				unused_space_mb,
+				partition_type
 			FROM TableData');
-		END;
+	END;
     END TRY
    	BEGIN CATCH
       SELECT
@@ -276,13 +290,29 @@ BEGIN
 		SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
 	END CATCH
 
-END 
+END
 
-SELECT 
+SELECT
 	@PKEY as PKEY,
-	a.*,
+	a.database_name,
+	a.schema_name,
+	a.table_name,
+	a.partition_count,
+	a.is_memory_optimized,
+	a.temporal_type,
+	a.is_external,
+	a.lock_escalation,
+	a.is_tracked_by_cdc,
+	a.text_in_row_limit,
+	a.is_replicated,
+	a.row_count,
+	a.data_compression,
+	a.total_space_mb,
+	a.used_space_mb,
+	a.unused_space_mb,
 	@DMA_SOURCE_ID as dma_source_id,
-	@DMA_MANUAL_ID as dma_manual_id
+	@DMA_MANUAL_ID as dma_manual_id,
+	a.partition_type
 from #tableList a;
 
 IF OBJECT_ID('tempdb..#tableList') IS NOT NULL

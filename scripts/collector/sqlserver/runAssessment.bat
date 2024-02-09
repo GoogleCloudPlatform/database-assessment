@@ -46,6 +46,7 @@ if /i "%1" == "-collectionUserPass" set "pass=%2"
 if /i "%1" == "-ignorePerfmon" set "noPerfmon=%2"
 if /i "%1" == "-manualUniqueId" set "manualUniqueId=%2"
 if /i "%1" == "-collectVMSpecs" set "collectVMSpecs=true"
+if /i "%1" == "-useWindowsAuthentication" set "useWindowsAuthentication=false"
 
 shift
 goto :loop
