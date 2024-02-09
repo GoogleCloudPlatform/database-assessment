@@ -493,7 +493,7 @@ echo "        --connectionStr       Connection string formatted as {user}/{passw
 echo "       or"
 echo "        --hostName            Database server host name"
 echo "        --port                Database listener port"
-echo "        --databaseService     Database service name (Optional. Defaults to 'postgres'.)"
+echo "        --databaseService     Database service name.  Required."
 echo "        --collectionUserName  Database user name."
 echo "        --collectionUserPass  Database password"
 echo "      }"
