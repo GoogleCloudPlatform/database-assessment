@@ -527,7 +527,7 @@ specsPath=""
 
  if [[ $(($# & 1)) == 1 ]] ;
  then
-  echo "Invalid number of parameters "
+  echo "Invalid number of parameters.  Each parameter must specify a value. "
   printUsage
   exit 
  fi
