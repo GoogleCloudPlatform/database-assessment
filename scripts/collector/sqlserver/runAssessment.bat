@@ -21,7 +21,7 @@ set manualUniqueId="NA"
 set database=all
 set noPerfmon=false
 set collectVMSpecs=
-set useWindowsAuthentication=
+set useWindowsAuthentication=false
 
 set helpMessage=Usage: runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [username] -collectionUserPass [password] -ignorePerfmon [true/false] -manualUniqueId [unique tag to identify collection] [-collectVMSpecs]
 set helpExample=Example (default port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
@@ -67,11 +67,11 @@ if [%user%] == [] (
     if [%useWindowsAuthentication%]==[] goto error
 )
 
-if "%useWindowsAuthentication%"=="" (
+if "%useWindowsAuthentication%"=="false" (
     if not [%user%]==[] (
         SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%"
-    ) ELSE (
-        SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%"
+	) ELSE (
+        goto error
     )
 ) ELSE (
     if not [%user%]==[] (

@@ -88,7 +88,7 @@ if ($ignorePerfmon -eq "true") {
 }
 
 if ((([string]::IsNullorEmpty($collectionUserPass)) -or ([string]$collectionUserPass -eq "false")) -and (-not $useWindowsAuthentication)) {
-    if ([string]($collectionUserName) -ne $(whoami) -and ([string]($collectionUserName).ToUpper() -contains $Env:UserDomain.toUpper())) {
+    if ([string]($collectionUserName) -ne $(whoami)) {
         Write-Output ""
         Write-Output "Collection Username password parameter is not provided"
         $passPrompt = Read-Host 'Please enter your password' -AsSecureString
@@ -96,6 +96,19 @@ if ((([string]::IsNullorEmpty($collectionUserPass)) -or ([string]$collectionUser
         Set-Item -Path env:SQLCMDUSER -Value $collectionUserName
         Set-Item -Path env:SQLCMDPASSWORD -Value $collectionUserPass
         Write-Output ""
+    }
+    else {
+        Write-Host ""
+        Write-Host ""
+        Write-Host "#############################################################"
+        Write-Host "#                                                           #"
+        Write-Host "#                                                           #"
+        Write-Host "#   Executing Collection with Windows Authenticated User    #"
+        Write-Host "#                                                           #"
+        Write-Host "#                                                           #"
+        Write-Host "#############################################################"
+        Write-Host ""
+        Write-Host ""   
     }
 }
 else {
