@@ -20,13 +20,15 @@ set pass=false
 set manualUniqueId="NA"
 set database=all
 set noPerfmon=false
+set collectVMSpecs=
+set useWindowsAuthentication=
 set helpMessage=Usage: runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [username] -collectionUserPass [password] -ignorePerfmon [true/false] -manualUniqueId [unique tag to identify collection] [-collectVMSpecs]
 set helpExample=Example (default port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
 set helpExamplePort=Example (specified port): runAssessment.bat -serverName MS-SERVER1 -port 1436 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
 set helpExampleDatabase=Example (default port / single database): runAssessment.bat -serverName MS-SERVER1\SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
 set helpExampleDatabasePort=Example (specified port / single database): runAssessment.bat -serverName MS-SERVER1 -port 1436 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
 set helpExampleCollectVMSpecs=Example (collect specs from host VM): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1 -collectVMSpecs
-set collectVMSpecs=
+set helpUseWindowsAuth=Example (collect specs from host VM): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1 -collectVMSpecs -useWindowsAuthentication
 
 if [%1]==[] (
     goto helpOperation
@@ -46,7 +48,7 @@ if /i "%1" == "-collectionUserPass" set "pass=%2"
 if /i "%1" == "-ignorePerfmon" set "noPerfmon=%2"
 if /i "%1" == "-manualUniqueId" set "manualUniqueId=%2"
 if /i "%1" == "-collectVMSpecs" set "collectVMSpecs=true"
-if /i "%1" == "-useWindowsAuthentication" set "useWindowsAuthentication=false"
+if /i "%1" == "-useWindowsAuthentication" set "useWindowsAuthentication=true"
 
 shift
 goto :loop
@@ -62,7 +64,11 @@ if not [%user%]==[] goto execWithCustomUser
 if [%serverName%]==[] goto raiseServerError
 if [%user%] == [] goto error
 
-SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%"
+if "%useWindowsAuthentication%"=="" (
+    SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -Scope LocalMachine -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%"
+) ELSE (
+    SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -Scope LocalMachine -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId% -useWindowsAuthentication"
+)
 
 if "%collectVMSpecs%"=="" (
 	CALL %command% 
@@ -102,6 +108,8 @@ echo:
 echo %helpExampleDatabasePort%
 echo:
 echo %helpExampleCollectVMSpecs%
+echo:
+echo %helpUseWindowsAuth%
 echo:
 goto done
 
