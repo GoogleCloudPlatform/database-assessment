@@ -146,6 +146,7 @@ else {
         $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$database)
         $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
+        
         if ([string]$database -ne "all") {
             $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$database | findstr /v /c:"-"
             if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
@@ -163,6 +164,7 @@ else {
         $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$database)
         $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
+
         if ([string]$database -ne "all") {
             $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$database | findstr /v /c:"-"
             if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
