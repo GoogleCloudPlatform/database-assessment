@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from dma.utils import get_engine
+
 from ._utils import RICH_CLICK_INSTALLED, console
 
 if TYPE_CHECKING or not RICH_CLICK_INSTALLED:  # pragma: no cover
@@ -137,7 +139,13 @@ def collect_data(
 )
 def readiness_check(
     no_prompt: bool,
-    db_type: Literal["mysql", "postgres", "mssql", "oracle"] | None = None,
+    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    username: str,
+    password: str,
+    hostname: str,
+    port: int,
+    database: str,
 ) -> None:
     """Process a collection of advisor extracts."""
     console.rule("Starting readiness check process", align="left")
+    _engine = get_engine(db_type, username, password, hostname, port, database)
