@@ -1,4 +1,4 @@
-::Copyright 2023 Google LLC
+::Copyright 2024 Google LLC
 ::
 ::Licensed under the Apache License, Version 2.0 (the "License");
 ::you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ set database=all
 set noPerfmon=false
 set collectVMSpecs=
 set useWindowsAuthentication=
+
 set helpMessage=Usage: runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [username] -collectionUserPass [password] -ignorePerfmon [true/false] -manualUniqueId [unique tag to identify collection] [-collectVMSpecs]
 set helpExample=Example (default port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
 set helpExamplePort=Example (specified port): runAssessment.bat -serverName MS-SERVER1 -port 1436 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
@@ -62,12 +63,22 @@ if not [%user%]==[] goto execWithCustomUser
 
 :execWithCustomUser
 if [%serverName%]==[] goto raiseServerError
-if [%user%] == [] goto error
+if [%user%] == [] (
+    if [%useWindowsAuthentication%]==[] goto error
+)
 
 if "%useWindowsAuthentication%"=="" (
-    SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -Scope LocalMachine -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%"
+    if not [%user%]==[] (
+        SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%"
+    ) ELSE (
+        SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%"
+    )
 ) ELSE (
-    SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -Scope LocalMachine -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId% -useWindowsAuthentication"
+    if not [%user%]==[] (
+        SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId% -useWindowsAuthentication"
+    ) ELSE (
+        SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId% -useWindowsAuthentication"
+    )
 )
 
 if "%collectVMSpecs%"=="" (
@@ -80,17 +91,19 @@ if %errorlevel% == 1 goto exit
 goto done
 
 :error
-echo Username or Password is not populated
-echo Please specify [-collectionUserName and -collectionUserPass] when invoking the script
+echo:
+echo Please specify [-collectionUserName or -useWindowsAuthentication] must be specified when invoking the script
 goto exit
 
 :raiseServerError
+echo:
 echo Please specify -serverName flag when invoking the script
 echo Format: [server name or ip address]\[instance name] - for a Named Instance
 echo Format: [server name or ip address] - for a Default Instance
 goto exit
 
 :raiseTagError
+echo:
 echo Please specify -manualUniqueId as a string with no spaces and no special characters
 goto exit
 

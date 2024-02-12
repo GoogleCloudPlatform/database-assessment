@@ -1,4 +1,4 @@
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ Param(
     [Parameter(Mandatory = $false)][string]$ignorePerfmon = "false",
     [Parameter(Mandatory = $false)][string]$manualUniqueId = "NA",
     [Parameter(Mandatory = $false)][switch]$collectVMSpecs,
-    [Parameter(Mandatory = $false)][switch]$useWindowsAuthentication = "false"
+    [Parameter(Mandatory = $false)][switch]$useWindowsAuthentication = $false
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
@@ -88,25 +88,37 @@ if ($ignorePerfmon -eq "true") {
 }
 
 if ((([string]::IsNullorEmpty($collectionUserPass)) -or ([string]$collectionUserPass -eq "false")) -and (-not $useWindowsAuthentication)) {
-    Write-Output ""
-    Write-Output "Collection Username password parameter is not provided"
-    $passPrompt = Read-Host 'Please enter your password' -AsSecureString
-    $collectionUserPass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($passPrompt))
-    Set-Item -Path env:SQLCMDUSER -Value $collectionUserName
-    Set-Item -Path env:SQLCMDPASSWORD -Value $collectionUserPass
-    Write-Output ""
+    if ([string]($collectionUserName) -ne $(whoami) -and ([string]($collectionUserName).ToUpper() -contains $Env:UserDomain.toUpper())) {
+        Write-Output ""
+        Write-Output "Collection Username password parameter is not provided"
+        $passPrompt = Read-Host 'Please enter your password' -AsSecureString
+        $collectionUserPass = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($passPrompt))
+        Set-Item -Path env:SQLCMDUSER -Value $collectionUserName
+        Set-Item -Path env:SQLCMDPASSWORD -Value $collectionUserPass
+        Write-Output ""
+    }
 }
 else {
-    Write-Output ""
-    Write-Output "Executing Collection with Windows Authenticated User"
+    Write-Host ""
+    Write-Host ""
+    Write-Host "#############################################################"
+    Write-Host "#                                                           #"
+    Write-Host "#                                                           #"
+    Write-Host "#   Executing Collection with Windows Authenticated User    #"
+    Write-Host "#                                                           #"
+    Write-Host "#                                                           #"
+    Write-Host "#############################################################"
+    Write-Host ""
+    Write-Host ""
 }
 
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
     Exit 1
 }
-elseif ([string]::IsNullorEmpty($collectionUserName)) {
-    Write-Output "Collection Username parameter $collectionUserName is empty.  Ensure that the parameter is provided"
+elseif ([string]::IsNullorEmpty($collectionUserName) -and (-not $useWindowsAuthentication)) {
+    Write-Output "Collection Username parameter $collectionUserName is empty."
+    Write-Output "Ensure that the parameter is provided or -useWindowsAuthentication is specified"
     Exit 1
 }
 elseif (((checkStringForSpecialChars -inputString $manualUniqueId) -eq "fail") -and (![string]::IsNullorEmpty($manualUniqueId))) {
@@ -298,7 +310,13 @@ WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "serverName = $inputServerName " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "port = $port " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "database = $database " -logOperation "FILE"
-WriteLog -logLocation $foldername\$logFile -logMessage "collectionUserName = $collectionUserName " -logOperation "FILE"
+if ($useWindowsAuthentication) {
+    WriteLog -logLocation $foldername\$logFile -logMessage "collectionUserName = $(whoami) " -logOperation "FILE"
+}
+else {
+    WriteLog -logLocation $foldername\$logFile -logMessage "collectionUserName = $collectionUserName " -logOperation "FILE"
+}
+
 WriteLog -logLocation $foldername\$logFile -logMessage "ignorePerfmon = $ignorePerfmon " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "connectionString = $serverName " -logOperation "FILE"
