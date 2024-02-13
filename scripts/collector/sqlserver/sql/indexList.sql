@@ -43,7 +43,8 @@ IF UPPER(@@VERSION) LIKE '%AZURE%'
 IF OBJECT_ID('tempdb..#indexList') IS NOT NULL  
    DROP TABLE #objectList;
 
-CREATE TABLE #indexList(
+CREATE TABLE #indexList
+(
    database_name nvarchar(255),
    schema_name nvarchar(255),
    table_name nvarchar(255),
@@ -61,21 +62,21 @@ CREATE TABLE #indexList(
    count_partition_ordinal nvarchar(10),
    count_is_included_column nvarchar(10),
    total_space_mb nvarchar(255)
-   );
+);
 
 BEGIN
    BEGIN
       SELECT @validDB = COUNT(1)
-      FROM sys.databases 
+      FROM sys.databases
       WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-      AND name like @ASSESSMENT_DATABSE_NAME
-      AND state = 0
+         AND name like @ASSESSMENT_DATABSE_NAME
+         AND state = 0
    END
-   
+
    BEGIN TRY
       IF @validDB <> 0
       BEGIN
-         exec ('
+      exec ('
             WITH sys_schemas AS (
                  SELECT name, schema_id
                  FROM sys.schemas
@@ -108,7 +109,7 @@ BEGIN
                ,ISNULL (ps.name, ''Not Partitioned'') as partition_scheme
                ,ISNULL (SUM(ic.key_ordinal),0) as count_key_ordinal
                ,ISNULL (SUM(ic.partition_ordinal),0) as count_partition_ordinal
-               ,ISNULL (COUNT(ic.is_included_column),0) as count_is_included_column
+               ,ISNULL (SUM(CONVERT(int,ic.is_included_column)),0) as count_is_included_column
                ,CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) as total_space_mb
             FROM sys.indexes i
             JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
@@ -139,22 +140,22 @@ BEGIN
                ,p.data_compression
                ,p.data_compression_desc
                ,ISNULL (ps.name, ''Not Partitioned'')');
-      END;
+   END;
    END TRY
    BEGIN CATCH
       SELECT
-         host_name() as host_name,
-         db_name() as database_name,
-         'indexList' as module_name,
-         SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
-         SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
-         SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
-         SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
+      host_name() as host_name,
+      db_name() as database_name,
+      'indexList' as module_name,
+      SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
+      SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
+      SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
+      SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
    END CATCH
 
-END 
+END
 
-SELECT 
+SELECT
    @PKEY as PKEY,
    a.*,
    @DMA_SOURCE_ID as dma_source_id,
