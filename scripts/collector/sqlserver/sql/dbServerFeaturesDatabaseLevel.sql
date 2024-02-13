@@ -36,7 +36,7 @@ IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
 IF OBJECT_ID('tempdb..#FeaturesEnabledDbLevel') IS NOT NULL  
-   DROP TABLE #FeaturesEnabledDbLevel;  
+   DROP TABLE #FeaturesEnabledDbLevel;
 
 CREATE TABLE #FeaturesEnabledDbLevel
 (
@@ -63,12 +63,16 @@ END TRY
 BEGIN CATCH
     IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
     BEGIN
-        exec('INSERT INTO #FeaturesEnabledDbLevel SELECT db_name(), ''SP'', ''0'', 0') /* SQL Server 2014 (12.x) and below */ ;
-    END
+    exec('INSERT INTO #FeaturesEnabledDbLevel SELECT db_name(), ''SP'', ''0'', 0')
+/* SQL Server 2014 (12.x) and below */
+;
+END
     ELSE
     BEGIN
-        exec('INSERT INTO #FeaturesEnabledDbLevel SELECT db_name(), ''SP'', ''0'', 0') /* SQL Server 2014 (12.x) and below */ ;
-    END
+    exec('INSERT INTO #FeaturesEnabledDbLevel SELECT db_name(), ''SP'', ''0'', 0')
+/* SQL Server 2014 (12.x) and below */
+;
+END
 END CATCH
 
 --File Tables Detected
@@ -88,13 +92,52 @@ END TRY
 BEGIN CATCH
     IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
     BEGIN
-        exec('INSERT INTO #FeaturesEnabledDbLevel SELECT db_name(), ''IsFileTablesEnabled'', ''0'', 0') /* SQL Server 2014 (12.x) and below */ ;
-    END
+    exec('INSERT INTO #FeaturesEnabledDbLevel SELECT db_name(), ''IsFileTablesEnabled'', ''0'', 0')
+/* SQL Server 2014 (12.x) and below */
+;
+END
     ELSE
     BEGIN
-        exec('INSERT INTO #FeaturesEnabledDbLevel SELECT db_name(), ''IsFileTablesEnabled'', ''0'', 0') /* SQL Server 2014 (12.x) and below */ ;
-    END
+    exec('INSERT INTO #FeaturesEnabledDbLevel SELECT db_name(), ''IsFileTablesEnabled'', ''0'', 0')
+/* SQL Server 2014 (12.x) and below */
+;
+END
 END CATCH
+
+/* Collect permissions which are unsupported in CloudSQL SQL Server */
+BEGIN
+    BEGIN TRY
+            exec('INSERT INTO #FeaturesEnabledDbLevel 
+                SELECT
+                    db_name(),
+                    tmp.permission_name,
+					CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
+                    count(1)
+                FROM (
+                    SELECT
+                        pr.name,
+                        pr.type,
+                        pr.type_desc,
+                        dp.permission_name,
+                        dp.type AS permission_type
+                    FROM
+                        sys.database_permissions dp
+                        INNER JOIN sys.server_principals pr ON dp.grantee_principal_id = pr.principal_id
+                    WHERE
+                        pr.name NOT LIKE ''NT SERVICE\%''
+                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
+                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
+                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
+                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
+                        ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')) tmp
+                GROUP BY
+                    tmp.permission_name');
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            WAITFOR DELAY '00:00:00'
+    END CATCH
+END
 
 SELECT
     @PKEY as PKEY,
