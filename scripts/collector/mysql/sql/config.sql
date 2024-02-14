@@ -559,7 +559,7 @@ from (
                     ) p
                 union
                 select 'VERSION_NUM' as variable_name,
-                    regexp_substr(gv.variable_value, '[0-9]+\.[0-9]+\.[0-9]+') as variable_value
+                    gv.variable_value as variable_value
                 from performance_schema.global_variables gv
                 where gv.variable_name = 'VERSION'
             ) calculated_metrics
