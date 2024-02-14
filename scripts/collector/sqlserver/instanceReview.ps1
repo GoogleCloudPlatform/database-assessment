@@ -99,29 +99,41 @@ if ((([string]::IsNullorEmpty($collectionUserPass)) -or ([string]$collectionUser
     }
     else {
         Write-Host ""
-        Write-Host ""
         Write-Host "#############################################################"
-        Write-Host "#                                                           #"
         Write-Host "#                                                           #"
         Write-Host "#   Executing Collection with Windows Authenticated User    #"
         Write-Host "#                                                           #"
-        Write-Host "#                                                           #"
         Write-Host "#############################################################"
-        Write-Host ""
         Write-Host ""   
     }
 }
-else {
-    Write-Host ""
+elseif ($useWindowsAuthentication) {
     Write-Host ""
     Write-Host "#############################################################"
-    Write-Host "#                                                           #"
     Write-Host "#                                                           #"
     Write-Host "#   Executing Collection with Windows Authenticated User    #"
     Write-Host "#                                                           #"
-    Write-Host "#                                                           #"
     Write-Host "#############################################################"
     Write-Host ""
+}
+elseif (-not ([string]::IsNullOrEmpty($collectionUserPass))) {
+    Set-Item -Path env:SQLCMDUSER -Value $collectionUserName
+    Set-Item -Path env:SQLCMDPASSWORD -Value $collectionUserPass
+    Write-Host ""
+    Write-Host "#############################################################"
+    Write-Host "#                                                           #"
+    Write-Host "#     Executing Collection with SQL Authenticated User      #"
+    Write-Host "#                                                           #"
+    Write-Host "#############################################################"   
+    Write-Host ""
+}
+else {
+    Write-Host ""
+    Write-Host "#############################################################"
+    Write-Host "#                                                           #"
+    Write-Host "#   Executing Collection with Windows Authenticated User    #"
+    Write-Host "#                                                           #"
+    Write-Host "#############################################################"
     Write-Host ""
 }
 
