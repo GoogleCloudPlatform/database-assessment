@@ -17,6 +17,7 @@ limitations under the License.
 
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
+SET ANSI_WARNINGS OFF;
 
 DECLARE @PKEY AS VARCHAR(256)
 DECLARE @CLOUDTYPE AS VARCHAR(256)
@@ -139,7 +140,41 @@ BEGIN
                ,i.has_filter
                ,p.data_compression
                ,p.data_compression_desc
-               ,ISNULL (ps.name, ''Not Partitioned'')');
+               ,ISNULL (ps.name, ''Not Partitioned'')
+       UNION
+       SELECT 
+          DB_NAME() as database_name,
+          s.name as schema_name,
+          t.name as table_name,
+          o.name as index_name,
+          ''FULLTEXT'' as index_type,
+          0 as is_primary_key,
+          0 as is_unique,
+          0 as fill_factor,
+          0 as allow_page_locks,
+          0 as has_filter,
+          p.data_compression,
+          p.data_compression_desc,
+          ISNULL (ps.name, ''Not Partitioned'') as partition_scheme,
+          0 as count_key_ordinal,
+          0 as count_partition_ordinal,
+          0 as count_is_included_column,
+          CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) as total_space_mb
+       FROM sys.fulltext_indexes fi
+          JOIN sys.objects o on (o.object_id = fi.object_id)
+          JOIN sys.fulltext_index_columns ic ON fi.object_id = ic.object_id
+          LEFT JOIN sys.tables t ON fi.object_id = t.object_id AND t.is_ms_shipped = 0
+          LEFT JOIN sys_schemas s ON s.schema_id = t.schema_id
+          LEFT JOIN sys.partitions AS p ON p.object_id = fi.object_id
+          LEFT JOIN sys.allocation_units AS a ON a.container_id = p.partition_id
+          LEFT JOIN sys.partition_schemes ps ON fi.data_space_id = ps.data_space_id
+       GROUP BY 
+          s.name,
+          t.name,  
+          o.name,
+          p.data_compression,
+          p.data_compression_desc,
+          ISNULL (ps.name, ''Not Partitioned'')');
    END;
    END TRY
    BEGIN CATCH
