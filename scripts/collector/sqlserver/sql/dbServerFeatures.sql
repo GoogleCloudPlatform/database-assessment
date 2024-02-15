@@ -43,7 +43,7 @@ CREATE TABLE #FeaturesEnabled
     Features NVARCHAR(40),
     Is_EnabledOrUsed NVARCHAR(4),
     Count INT
-)
+);
 
 IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL  
    DROP TABLE #myPerms;
@@ -667,12 +667,12 @@ BEGIN
 END
 
 --Policy based management
-DECLARE @PoliciesEnabled_value as INT, @IS_PoliciesEnabled as NVARCHAR(4)
 BEGIN TRY
-    exec('SELECT @PoliciesEnabled_value = count(*) FROM msdb.dbo.syspolicy_policies where is_enabled =1;
-	IF @PoliciesEnabled_value > 0 SET @IS_PoliciesEnabled = ''1''  ELSE  SET @IS_PoliciesEnabled = ''0'' ;
-	INSERT INTO #FeaturesEnabled VALUES (
-		''Policy-Based Management'', @IS_PoliciesEnabled, ISNULL(@PoliciesEnabled_value,0) );');
+    exec('DECLARE @PoliciesEnabled_value as INT, @IS_PoliciesEnabled as NVARCHAR(4);
+        SELECT @PoliciesEnabled_value = count(*) FROM msdb.dbo.syspolicy_policies where is_enabled =1;
+	        IF @PoliciesEnabled_value > 0 SET @IS_PoliciesEnabled = ''1''  ELSE  SET @IS_PoliciesEnabled = ''0'' ;
+	        INSERT INTO #FeaturesEnabled VALUES (
+		        ''Policy-Based Management'', @IS_PoliciesEnabled, ISNULL(@PoliciesEnabled_value,0) );');
 END TRY
 BEGIN CATCH
 	IF ERROR_NUMBER() = 40515 AND ERROR_SEVERITY() = 15 AND ERROR_STATE() = 1
