@@ -42,7 +42,7 @@ IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
 IF OBJECT_ID('tempdb..#indexList') IS NOT NULL  
-   DROP TABLE #objectList;
+   DROP TABLE #indexList;
 
 CREATE TABLE #indexList
 (
@@ -62,7 +62,8 @@ CREATE TABLE #indexList
    count_key_ordinal nvarchar(10),
    count_partition_ordinal nvarchar(10),
    count_is_included_column nvarchar(10),
-   total_space_mb nvarchar(255)
+   total_space_mb nvarchar(255),
+   is_computed_index nvarchar(10)
 );
 
 BEGIN
@@ -86,6 +87,15 @@ BEGIN
                 SELECT v.*, s.name AS schema_name
                 FROM sys.views v
                 LEFT JOIN sys_schemas s ON v.schema_id = s.schema_id
+            ),
+			   index_computed_cols AS (
+               SELECT distinct i.object_id, i.name as index_name, s.name as schema_name, t.name as table_name, 1 as is_computed_index
+               FROM sys.indexes i
+               JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+               JOIN sys.computed_columns cc ON ic.object_id = cc.object_id and ic.column_id = cc.column_id
+               JOIN sys.objects o ON o.object_id = i.object_id AND o.is_ms_shipped = 0
+               JOIN sys.tables t ON i.object_id = t.object_id AND t.is_ms_shipped = 0
+               JOIN sys.schemas s ON s.schema_id = t.schema_id
             )
             INSERT INTO #indexList
             SELECT
@@ -105,22 +115,27 @@ BEGIN
                ,i.fill_factor
                ,i.allow_page_locks
                ,i.has_filter
-               ,p.data_compression
-               ,p.data_compression_desc
+               ,ISNULL (p.data_compression,0) as data_compression
+               ,ISNULL (p.data_compression_desc,''NONE'') as data_compression_desc
                ,ISNULL (ps.name, ''Not Partitioned'') as partition_scheme
                ,ISNULL (SUM(ic.key_ordinal),0) as count_key_ordinal
                ,ISNULL (SUM(ic.partition_ordinal),0) as count_partition_ordinal
                ,ISNULL (SUM(CONVERT(int,ic.is_included_column)),0) as count_is_included_column
-               ,CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) as total_space_mb
+               ,ISNULL (CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)),0) as total_space_mb
+               ,ISNULL (icc.is_computed_index,0) as is_computed_index
             FROM sys.indexes i
             JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
             JOIN sys.objects o ON o.object_id = i.object_id AND o.is_ms_shipped = 0
             LEFT JOIN sys.tables t ON i.object_id = t.object_id AND t.is_ms_shipped = 0
             LEFT JOIN sys_views v ON i.object_id = v.object_id AND v.is_ms_shipped = 0
-            LEFT JOIN sys_schemas s ON s.schema_id = t.schema_id
-            LEFT JOIN sys.partitions AS p ON p.object_id = i.object_id AND p.index_id = i.index_id
-            LEFT JOIN sys.allocation_units AS a ON a.container_id = p.partition_id
-            LEFT JOIN sys.partition_schemes ps ON i.data_space_id = ps.data_space_id
+            LEFT JOIN sys_schemas s ON (s.schema_id = t.schema_id)
+            LEFT JOIN sys.partitions AS p ON (p.object_id = i.object_id AND p.index_id = i.index_id)
+            LEFT JOIN sys.allocation_units AS a ON (a.container_id = p.partition_id)
+            LEFT JOIN sys.partition_schemes ps ON (i.data_space_id = ps.data_space_id)
+            LEFT JOIN index_computed_cols icc ON (i.object_id = icc.object_id 
+                     and i.name = icc.index_name
+                     and icc.table_name = t.name
+                     and icc.schema_name = s.name)
 	    WHERE i.NAME is not NULL
             GROUP BY 
                 CASE 
@@ -138,9 +153,10 @@ BEGIN
                ,i.fill_factor
                ,i.allow_page_locks
                ,i.has_filter
-               ,p.data_compression
-               ,p.data_compression_desc
+               ,ISNULL (p.data_compression,0)
+               ,ISNULL (p.data_compression_desc,''NONE'')
                ,ISNULL (ps.name, ''Not Partitioned'')
+               ,ISNULL (icc.is_computed_index,0)
        UNION
        SELECT 
           DB_NAME() as database_name,
@@ -159,7 +175,8 @@ BEGIN
           0 as count_key_ordinal,
           0 as count_partition_ordinal,
           0 as count_is_included_column,
-          CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) as total_space_mb
+          CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) as total_space_mb,
+          0 as is_computed_index
        FROM sys.fulltext_indexes fi
           JOIN sys.objects o on (o.object_id = fi.object_id)
           JOIN sys.fulltext_index_columns ic ON fi.object_id = ic.object_id
