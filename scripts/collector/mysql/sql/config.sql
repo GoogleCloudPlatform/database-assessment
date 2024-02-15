@@ -559,8 +559,10 @@ from (
                     ) p
                 union
                 select 'VERSION_NUM' as variable_name,
-                    gv.variable_value as variable_value
-                from performance_schema.global_variables gv
-                where gv.variable_name = 'VERSION'
+                    if(
+                        version() rlike '^[0-9]+\.[0-9]+\.[0-9]+$' = 1,
+                        version(),
+                        SUBSTRING_INDEX(VERSION(), '.', 2) || '.0'
+                    ) as variable_value
             ) calculated_metrics
     ) src;
