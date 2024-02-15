@@ -123,6 +123,10 @@ BEGIN
                ,ISNULL (SUM(CONVERT(int,ic.is_included_column)),0) as count_is_included_column
                ,ISNULL (CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)),0) as total_space_mb
                ,ISNULL (icc.is_computed_index,0) as is_computed_index
+               ,CASE
+                  WHEN v.name IS NOT NULL THEN ''1''
+                  ELSE ''0''
+               END as is_index_on_view
             FROM sys.indexes i
             JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
             JOIN sys.objects o ON o.object_id = i.object_id AND o.is_ms_shipped = 0
@@ -157,6 +161,10 @@ BEGIN
                ,ISNULL (p.data_compression_desc,''NONE'')
                ,ISNULL (ps.name, ''Not Partitioned'')
                ,ISNULL (icc.is_computed_index,0)
+               ,CASE
+                  WHEN v.name IS NOT NULL THEN ''1''
+                  ELSE ''0''
+               END
        UNION
        SELECT 
           DB_NAME() as database_name,
@@ -176,7 +184,8 @@ BEGIN
           0 as count_partition_ordinal,
           0 as count_is_included_column,
           CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) as total_space_mb,
-          0 as is_computed_index
+          0 as is_computed_index,
+          0 as is_index_on_view
        FROM sys.fulltext_indexes fi
           JOIN sys.objects o on (o.object_id = fi.object_id)
           JOIN sys.fulltext_index_columns ic ON fi.object_id = ic.object_id
