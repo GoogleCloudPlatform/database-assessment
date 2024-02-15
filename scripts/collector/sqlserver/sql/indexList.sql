@@ -63,7 +63,8 @@ CREATE TABLE #indexList
    count_partition_ordinal nvarchar(10),
    count_is_included_column nvarchar(10),
    total_space_mb nvarchar(255),
-   is_computed_index nvarchar(10)
+   is_computed_index nvarchar(10),
+   is_index_on_view nvarchar(10)
 );
 
 BEGIN
