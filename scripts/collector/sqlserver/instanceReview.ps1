@@ -313,6 +313,7 @@ else {
     WriteLog -logLocation $foldername\$logFile -logMessage $sqlcmdVersion -logOperation "FILE"
 }
 
+WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "Output Encoding Table" -logOperation "FILE"
 $OutputEncoding | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
 
