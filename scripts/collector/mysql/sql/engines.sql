@@ -1,12 +1,3 @@
-with src as (
-    select i.ENGINE as engine_name,
-        i.SUPPORT as engine_support,
-        i.TRANSACTIONS as engine_transactions,
-        i.xa as engine_xa,
-        i.SAVEPOINTS as engine_savepoints,
-        i.COMMENT as engine_comment
-    from information_schema.ENGINES i
-)
 select concat(char(34), @PKEY, char(34)) as pkey,
     concat(char(34), @DMA_SOURCE_ID, char(34)) as dma_source_id,
     concat(char(34), @DMA_MANUAL_ID, char(34)) as dma_manual_id,
@@ -16,4 +7,12 @@ select concat(char(34), @PKEY, char(34)) as pkey,
     concat(char(34), src.engine_xa, char(34)) as engine_xa,
     concat(char(34), src.engine_savepoints, char(34)) as engine_savepoints,
     concat(char(34), src.engine_comment, char(34)) as engine_comment
-from src;
+from (
+        select i.ENGINE as engine_name,
+            i.SUPPORT as engine_support,
+            i.TRANSACTIONS as engine_transactions,
+            i.xa as engine_xa,
+            i.SAVEPOINTS as engine_savepoints,
+            i.COMMENT as engine_comment
+        from information_schema.ENGINES i
+    ) src;
