@@ -218,9 +218,27 @@ END
 
 SELECT
    @PKEY as PKEY,
-   a.*,
+   a.database_name,
+   a.schema_name,
+   a.table_name,
+   a.index_name,
+   a.index_type,
+   a.is_primary_key,
+   a.is_unique,
+   a.fill_factor,
+   a.allow_page_locks,
+   a.has_filter,
+   a.data_compression,
+   a.data_compression_desc,
+   a.is_partitioned,
+   a.count_key_ordinal,
+   a.count_partition_ordinal,
+   a.count_is_included_column,
+   a.total_space_mb,
    @DMA_SOURCE_ID as dma_source_id,
-   @DMA_MANUAL_ID as dma_manual_id
+   @DMA_MANUAL_ID as dma_manual_id,
+   a.IS_COMPUTED_INDEX as is_computed_index,
+   a.IS_INDEX_ON_VIEW as is_index_on_view
 from #indexList a;
 
 IF OBJECT_ID('tempdb..#indexList') IS NOT NULL  
