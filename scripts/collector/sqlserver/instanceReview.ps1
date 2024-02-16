@@ -455,8 +455,8 @@ else {
 
 ### First establish headers for the collection files which could execute against multiple databases in the instance
 Set-Content -Path $foldername\$objectList -Encoding utf8 -Value "PKEY|database_name|schema_name|object_name|object_type|object_type_desc|object_count|lines_of_code|associated_table_name|dma_source_id|dma_manual_id"
-Set-Content -Path $foldername\$tableList -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|partition_count|is_memory_optimized|temporal_type|is_external|lock_escalation|is_tracked_by_cdc|text_in_row_limit|is_replicated|row_count|data_compression|total_space_mb|used_space_mb|unused_space_mb|dma_source_id|dma_manual_id|partition_type"
-Set-Content -Path $foldername\$indexList -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|index_name|index_type|is_primary_key|is_unique|fill_factor|allow_page_locks|has_filter|data_compression|data_compression_desc|is_partitioned|count_key_ordinal|count_partition_ordinal|count_is_included_column|total_space_mb|dma_source_id|dma_manual_id"
+Set-Content -Path $foldername\$tableList -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|partition_count|is_memory_optimized|temporal_type|is_external|lock_escalation|is_tracked_by_cdc|text_in_row_limit|is_replicated|row_count|data_compression|total_space_mb|used_space_mb|unused_space_mb|dma_source_id|dma_manual_id|partition_type|is_temp_table"
+Set-Content -Path $foldername\$indexList -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|index_name|index_type|is_primary_key|is_unique|fill_factor|allow_page_locks|has_filter|data_compression|data_compression_desc|is_partitioned|count_key_ordinal|count_partition_ordinal|count_is_included_column|total_space_mb|dma_source_id|dma_manual_id|is_computed_index|is_index_on_view"
 Set-Content -Path $foldername\$columnDatatypes -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|datatype|max_length|precision|scale|is_computed|is_filestream|is_masked|encryption_type|is_sparse|rule_object_id|column_count|dma_source_id|dma_manual_id"
 Set-Content -Path $foldername\$userConnectionList -Encoding utf8 -Value "PKEY|database_name|is_user_process|host_name|program_name|login_name|num_reads|num_writes|last_read|last_write|reads|logical_reads|writes|client_interface_name|nt_domain|nt_user_name|client_net_address|local_net_address|dma_source_id|dma_manual_id|client_version|protocol_type|protocol_version|protocol_hex_version"
 Set-Content -Path $foldername\$dbsizes -Encoding utf8 -Value "PKEY|database_name|type_desc|current_size_mb|dma_source_id|dma_manual_id"
@@ -489,6 +489,10 @@ foreach ($databaseName in $dbNameArray) {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Blocked Features for Database $databaseName ..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\dbServerFeaturesDatabaseLevel.sql -d $databaseName -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$databaseLevelBlockingFeatures -Encoding utf8
 }
+
+### Need to execute certain files against tempdb to gather temp table information
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Temp Table Info..." -logOperation "BOTH"
+sqlcmd -S $serverName -i sql\tableList.sql -d tempdb -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$tableList -Encoding utf8
 
 # Pull perfmon file if we are running from same server.  Generate empty file if running on remote server
 # Capability does not exist yet to run against remote computer
