@@ -46,7 +46,7 @@ BEGIN
     exec ('
     INSERT INTO #serverConfigurationParams
     SELECT
-	    CONVERT(nvarchar(255),configuration_id), 
+        CONVERT(nvarchar(255),configuration_id), 
         CONVERT(nvarchar(255),name),
         CONVERT(nvarchar(255),value),
         CONVERT(nvarchar(255),minimum),
