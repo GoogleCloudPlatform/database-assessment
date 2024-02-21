@@ -105,7 +105,7 @@ BEGIN
 						,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
 						,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
 						,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
-						,[partition_type] = IFNULL(pf.type_desc,''NONE'')
+						,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 						,[is_temp_table] = ''0''
 					FROM sys.schemas s
 					JOIN sys.tables  t ON (s.schema_id = t.schema_id)
@@ -174,7 +174,7 @@ BEGIN
 						,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
 						,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
 						,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
-						,[partition_type] = IFNULL(pf.type_desc,''NONE'')
+						,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 						,[is_temp_table] = ''1''
 					FROM sys.schemas s
 					JOIN sys.tables  t ON (s.schema_id = t.schema_id)
@@ -247,7 +247,7 @@ BEGIN
 					,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
 					,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
 					,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
-					,[partition_type] = IFNULL(pf.type_desc,''NONE'')
+					,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 					,[is_temp_table] = ''0''
 				FROM sys.schemas s
 				JOIN sys.tables  t ON (s.schema_id = t.schema_id)
@@ -317,7 +317,7 @@ BEGIN
 					,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
 					,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
 					,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
-					,[partition_type] = IFNULL(pf.type_desc,''NONE'')
+					,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 					,[is_temp_table] = ''1''
 				FROM sys.schemas s
 				JOIN sys.tables  t ON (s.schema_id = t.schema_id)
@@ -390,7 +390,7 @@ BEGIN
 				,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
 				,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
 				,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
-				,[partition_type] = IFNULL(pf.type_desc,''NONE'')
+				,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 				,[is_temp_table] = ''0''
 			FROM sys.schemas s
 			JOIN sys.tables  t ON (s.schema_id = t.schema_id)
@@ -460,7 +460,7 @@ BEGIN
 				,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
 				,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
 				,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
-				,[partition_type] = IFNULL(pf.type_desc,''NONE'')
+				,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 				,[is_temp_table] = ''1''
 			FROM sys.schemas s
 			JOIN sys.tables  t ON (s.schema_id = t.schema_id)
