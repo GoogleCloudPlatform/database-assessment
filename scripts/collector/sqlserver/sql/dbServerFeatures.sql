@@ -449,6 +449,21 @@ BEGIN
     WHERE name = ''Ad Hoc Distributed Queries''');
 END;
 
+--ad hoc distributed queries / distributed transaction coordinator DTC
+BEGIN
+    exec('
+    INSERT INTO #FeaturesEnabled 
+    SELECT
+        ''ad hoc distributed queries'', 
+        CONVERT(nvarchar, value_in_use) , 
+        CASE
+            WHEN value_in_use > 0 THEN 1
+            ELSE 0
+        END
+    FROM sys.configurations
+    WHERE name = ''Ad Hoc Distributed Queries''');
+END;
+
 --BULK INSERT
 INSERT INTO #FeaturesEnabled
 SELECT
