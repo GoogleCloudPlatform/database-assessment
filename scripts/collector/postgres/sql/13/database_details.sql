@@ -72,9 +72,9 @@ src as (
     from db
         join db_size on (db.database_oid = db_size.database_oid)
 )
-select /* chr(34) || :PKEY || chr(34) as pkey,
+select  chr(34) || :PKEY || chr(34) as pkey,
     chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
-    chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id, */
+    chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
     src.database_oid,
     src.database_name,
     chr(34) || version() || chr(34) as database_version,
@@ -101,11 +101,11 @@ select /* chr(34) || :PKEY || chr(34) as pkey,
     src.last_checksum_failure,
     src.block_read_time_ms,
     src.block_write_time_ms,
---    src.session_time_ms,
---    src.active_time_ms,
---    src.idle_in_transaction_time_ms,
---    src.sessions_count,
---    src.fatal_sessions_count,
---    src.killed_sessions_count,
+    ' ' as session_time_ms,
+    ' ' as active_time_ms,
+    ' ' as idle_in_transaction_time_ms,
+    ' ' as sessions_count,
+    ' ' as fatal_sessions_count,
+    ' ' as killed_sessions_count,
     coalesce(to_char(statistics_last_reset_on, 'YYYY-MM-DD HH24:MI:SS'), '1970-01-01 00:00:00') as statistics_last_reset_on
 from src;

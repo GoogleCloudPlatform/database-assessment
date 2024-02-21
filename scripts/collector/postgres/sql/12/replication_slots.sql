@@ -10,15 +10,15 @@ with src as (
         s.xmin,
         s.catalog_xmin,
         s.restart_lsn,
-        s.confirmed_flush_lsn,
-        s.wal_status,
-        s.safe_wal_size --,
+        s.confirmed_flush_lsn
+--        s.wal_status,
+--        s.safe_wal_size --,
 --        s.two_phase
     from pg_replication_slots s
 )
-select /* chr(34) || :PKEY || chr(34) as pkey,
+select chr(34) || :PKEY || chr(34) as pkey,
     chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
-    chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id, */
+    chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
     src.slot_name,
     src.plugin,
     src.slot_type,
@@ -31,7 +31,7 @@ select /* chr(34) || :PKEY || chr(34) as pkey,
     src.catalog_xmin,
     src.restart_lsn,
     src.confirmed_flush_lsn,
-    src.wal_status,
-    src.safe_wal_size --,
-    --src.two_phase
+    ' ' as wal_status,
+    ' ' as safe_wal_size,
+    ' ' as two_phase
 from src;
