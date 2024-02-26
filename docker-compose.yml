@@ -18,6 +18,17 @@ services:
       MYSQL_DATABASE: db
       MYSQL_ROOT_HOST: "%"
       LANG: C.UTF-8
+  mysql5:
+    image: mysql:5.7
+    ports:
+      - "3361:3306" # use a non-standard port here
+    environment:
+      MYSQL_ROOT_PASSWORD: super-secret
+      MYSQL_PASSWORD: super-secret
+      MYSQL_USER: app
+      MYSQL_DATABASE: db
+      MYSQL_ROOT_HOST: "%"
+      LANG: C.UTF-8
   oracle18c:
     image: gvenzl/oracle-xe:18-slim-faststart
     ports:

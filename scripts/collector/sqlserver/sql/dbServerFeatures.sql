@@ -1,5 +1,5 @@
 /*
-Copyright 2023 Google LLC
+Copyright 2024 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ CREATE TABLE #FeaturesEnabled
     Features NVARCHAR(40),
     Is_EnabledOrUsed NVARCHAR(4),
     Count INT
-)
+);
 
 IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL  
    DROP TABLE #myPerms;
@@ -449,6 +449,21 @@ BEGIN
     WHERE name = ''Ad Hoc Distributed Queries''');
 END;
 
+--ad hoc distributed queries / distributed transaction coordinator DTC
+BEGIN
+    exec('
+    INSERT INTO #FeaturesEnabled 
+    SELECT
+        ''ad hoc distributed queries'', 
+        CONVERT(nvarchar, value_in_use) , 
+        CASE
+            WHEN value_in_use > 0 THEN 1
+            ELSE 0
+        END
+    FROM sys.configurations
+    WHERE name = ''Ad Hoc Distributed Queries''');
+END;
+
 --BULK INSERT
 INSERT INTO #FeaturesEnabled
 SELECT
@@ -505,7 +520,8 @@ END CATCH
 /* Collect permissions which are unsupported in CloudSQL SQL Server */
 BEGIN
     BEGIN TRY
-            exec('INSERT INTO #FeaturesEnabled SELECT
+            exec('INSERT INTO #FeaturesEnabled 
+                SELECT
                     tmp.permission_name,
 					CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
                     count(1)
@@ -520,19 +536,81 @@ BEGIN
                         sys.server_permissions p
                         INNER JOIN sys.server_principals pr ON p.grantee_principal_id = pr.principal_id
                     WHERE
-                        pr.type IN (''U'', ''S'')
-                        AND pr.name NOT LIKE ''NT SERVICE\%''
+                        pr.name NOT LIKE ''NT SERVICE\%''
                         AND p.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
                         ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
-                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL_SERVER'', 
+                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
                         ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
-                        ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')) tmp
+                        ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')
+					UNION ALL
+                    SELECT
+                        pr.name,
+                        pr.type,
+                        pr.type_desc,
+                        dp.permission_name,
+                        dp.type AS permission_type
+                    FROM
+                        sys.database_permissions dp
+                        INNER JOIN sys.server_principals pr ON dp.grantee_principal_id = pr.principal_id
+                    WHERE
+                        pr.name NOT LIKE ''NT SERVICE\%''
+                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
+                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
+                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
+                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
+                        ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')     
+                        
+                    ) tmp
                 GROUP BY
                     tmp.permission_name');
     END TRY
     BEGIN CATCH
         IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
-            WAITFOR DELAY '00:00:00'
+            BEGIN TRY
+                    exec('INSERT INTO #FeaturesEnabled 
+                        SELECT
+                            tmp.permission_name,
+                            CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
+                            count(1)
+                        FROM (
+                            SELECT
+                                pr.name,
+                                pr.type,
+                                pr.type_desc,
+                                dp.permission_name,
+                                dp.type AS permission_type
+                            FROM
+                                sys.database_permissions dp
+                                INNER JOIN sys.database_principals pr ON dp.grantee_principal_id = pr.principal_id
+                            WHERE
+                                pr.name NOT LIKE ''NT SERVICE\%''
+                                AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
+                                ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
+                                ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
+                                ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
+                                ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')) tmp
+                        GROUP BY
+                            tmp.permission_name');
+            END TRY
+            BEGIN CATCH
+                IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+                    exec('
+                        INSERT INTO #FeaturesEnabled values (''ADMINISTER BULK OPERATIONS'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''ALTER ANY CREDENTIAL'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''ALTER ANY EVENT NOTIFICATION'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''ALTER ANY EVENT SESSION'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''ALTER RESOURCES'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''ALTER SETTINGS'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''AUTHENTICATE SERVER'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''CONTROL SERVER'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''CREATE ASSEMBLY'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''CREATE DDL EVENT NOTIFICATION'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''CREATE ENDPOINT'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''CREATE TRACE EVENT NOTIFICATION'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''EXTERNAL ACCESS ASSEMBLY'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''SHUTDOWN'',''0'',0);
+                    ');
+            END CATCH
     END CATCH
 END
 
@@ -571,7 +649,7 @@ BEGIN
     INSERT INTO #FeaturesEnabled
     VALUES
         (
-            'External Assemblies Used', 'No', 0);
+            'External Assemblies Used', '0', 0);
 END
 ELSE
 BEGIN
@@ -615,12 +693,12 @@ BEGIN
 END
 
 --Policy based management
-DECLARE @PoliciesEnabled_value as INT, @IS_PoliciesEnabled as NVARCHAR(4)
 BEGIN TRY
-    exec('SELECT @PoliciesEnabled_value = count(*) FROM msdb.dbo.syspolicy_policies where is_enabled =1;
-	IF @PoliciesEnabled_value > 0 SET @IS_PoliciesEnabled = ''1''  ELSE  SET @IS_PoliciesEnabled = ''0'' ;
-	INSERT INTO #FeaturesEnabled VALUES (
-		''Policy-Based Management'', @IS_PoliciesEnabled, ISNULL(@PoliciesEnabled_value,0) );');
+    exec('DECLARE @PoliciesEnabled_value as INT, @IS_PoliciesEnabled as NVARCHAR(4);
+        SELECT @PoliciesEnabled_value = count(*) FROM msdb.dbo.syspolicy_policies where is_enabled =1;
+	        IF @PoliciesEnabled_value > 0 SET @IS_PoliciesEnabled = ''1''  ELSE  SET @IS_PoliciesEnabled = ''0'' ;
+	        INSERT INTO #FeaturesEnabled VALUES (
+		        ''Policy-Based Management'', @IS_PoliciesEnabled, ISNULL(@PoliciesEnabled_value,0) );');
 END TRY
 BEGIN CATCH
 	IF ERROR_NUMBER() = 40515 AND ERROR_SEVERITY() = 15 AND ERROR_STATE() = 1
