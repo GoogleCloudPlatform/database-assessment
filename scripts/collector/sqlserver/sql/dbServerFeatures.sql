@@ -566,40 +566,51 @@ BEGIN
     END TRY
     BEGIN CATCH
         IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
-            WAITFOR DELAY '00:00:00'
-    END CATCH
-END
-
-BEGIN
-    BEGIN TRY
-            exec('INSERT INTO #FeaturesEnabled 
-                SELECT
-                    tmp.permission_name,
-					CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
-                    count(1)
-                FROM (
-                    SELECT
-                        pr.name,
-                        pr.type,
-                        pr.type_desc,
-                        dp.permission_name,
-                        dp.type AS permission_type
-                    FROM
-                        sys.database_permissions dp
-                        INNER JOIN sys.server_principals pr ON dp.grantee_principal_id = pr.principal_id
-                    WHERE
-                        pr.name NOT LIKE ''NT SERVICE\%''
-                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
-                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
-                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
-                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
-                        ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')) tmp
-                GROUP BY
-                    tmp.permission_name');
-    END TRY
-    BEGIN CATCH
-        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
-            WAITFOR DELAY '00:00:00'
+            BEGIN TRY
+                    exec('INSERT INTO #FeaturesEnabled 
+                        SELECT
+                            tmp.permission_name,
+                            CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
+                            count(1)
+                        FROM (
+                            SELECT
+                                pr.name,
+                                pr.type,
+                                pr.type_desc,
+                                dp.permission_name,
+                                dp.type AS permission_type
+                            FROM
+                                sys.database_permissions dp
+                                INNER JOIN sys.database_principals pr ON dp.grantee_principal_id = pr.principal_id
+                            WHERE
+                                pr.name NOT LIKE ''NT SERVICE\%''
+                                AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
+                                ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
+                                ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
+                                ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
+                                ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')) tmp
+                        GROUP BY
+                            tmp.permission_name');
+            END TRY
+            BEGIN CATCH
+                IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+                    exec('
+                        INSERT INTO #FeaturesEnabled values (''ADMINISTER BULK OPERATIONS'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''ALTER ANY CREDENTIAL'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''ALTER ANY EVENT NOTIFICATION'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''ALTER ANY EVENT SESSION'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''ALTER RESOURCES'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''ALTER SETTINGS'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''AUTHENTICATE SERVER'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''CONTROL SERVER'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''CREATE ASSEMBLY'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''CREATE DDL EVENT NOTIFICATION'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''CREATE ENDPOINT'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''CREATE TRACE EVENT NOTIFICATION'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''EXTERNAL ACCESS ASSEMBLY'',''0'',0);
+                        INSERT INTO #FeaturesEnabled values (''SHUTDOWN'',''0'',0);
+                    ');
+            END CATCH
     END CATCH
 END
 
