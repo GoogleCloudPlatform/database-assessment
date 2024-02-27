@@ -132,6 +132,22 @@ BEGIN
     WHERE name = ''external scripts enabled''');
 END
 
+-- Data Quality Services
+BEGIN
+    exec('
+    WITH dqs_service as (
+    select count(*) as dqs_count from syslogins where name like ''##MS_dqs%'')
+    INSERT INTO #FeaturesEnabled 
+        SELECT 
+            ''DATA QUALITY SERVICES'' as Features,
+            CASE 
+                WHEN dqs_count > 0 THEN 1
+                ELSE 0
+            END AS Is_EnabledOrUsed,
+            dqs_count as Count
+        from dqs_service');
+END
+
 --filestream enabled
 IF @PRODUCT_VERSION >= 11
 BEGIN

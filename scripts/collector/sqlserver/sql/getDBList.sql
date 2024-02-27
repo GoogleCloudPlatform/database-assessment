@@ -24,6 +24,6 @@ IF @ASSESSMENT_DATABSE_NAME = 'all'
 
 SELECT name
 FROM sys.databases
-WHERE name NOT IN ('master','model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin','SSISDB','DWDiagnostics','DWConfiguration','DWQueue')
+WHERE name NOT IN ('master','model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin','SSISDB','DWDiagnostics','DWConfiguration','DWQueue', 'DQS_STAGING_DATA')
     AND name like @ASSESSMENT_DATABSE_NAME
     AND state = 0
