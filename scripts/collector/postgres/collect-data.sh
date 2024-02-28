@@ -289,10 +289,6 @@ specsOut="output/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv"
 if [[ -z "$specsPath" ]] ; then 
       host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
       ./db-machine-specs.sh "$host" "$vmUserName" "${V_FILE_TAG}" "${DMA_SOURCE_ID}" "${V_MANUAL_ID}" "${specsOut}" "${extraSSHArgs[@]}"
-else
-	if [[ -f "$specsPath" ]]; then
-           mv "$specsPath" "$specsOut"
-	fi
 fi
 
 # If allDbs = "Y" loop through all the databases in the instance and create a collection for each one, then exit.
