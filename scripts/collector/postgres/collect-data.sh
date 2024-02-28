@@ -253,7 +253,8 @@ connectString="$1"
 OpVersion=$2
 V_FILE_TAG=$3
 V_MANUAL_ID="${4}"
-allDbs="${5}"
+V_PGVERSION="${5}"
+allDbs="${6}"
 user=$(echo "${connectString}" | cut -d '/' -f 1)
 pass=$(echo "${connectString}" | cut -d '/' -f 2 | cut -d '@' -f 1)
 host=$(echo "${connectString}" | cut -d '/' -f 4 | cut -d ':' -f 1)
@@ -288,10 +289,6 @@ specsOut="output/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv"
 if [[ -z "$specsPath" ]] ; then 
       host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
       ./db-machine-specs.sh "$host" "$vmUserName" "${V_FILE_TAG}" "${DMA_SOURCE_ID}" "${V_MANUAL_ID}" "${specsOut}" "${extraSSHArgs[@]}"
-else
-	if [[ -f "$specsPath" ]]; then
-           mv "$specsPath" "$specsOut"
-	fi
 fi
 
 # If allDbs = "Y" loop through all the databases in the instance and create a collection for each one, then exit.
@@ -324,6 +321,7 @@ ${SQLCMD} -X --user=${user} -d "${db}" -h ${host} -w -p ${port}  --no-align --ec
 \set PKEY '\'${V_FILE_TAG}\''
 \set DMA_SOURCE_ID '\'${DMA_SOURCE_ID}\''
 \set DMA_MANUAL_ID '\'${V_MANUAL_ID}\''
+\set VPGVERSION ${V_PGVERSION}
 \i sql/op_collect.sql
 EOF
 
@@ -669,14 +667,16 @@ if [ $retval -eq 0 ]; then
   else
     echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
     dbmajor=$((echo ${sqlcmd_result} | cut -d '|' -f1)  |cut -d '.' -f 1)
-    if [ "${dbmajor}" == "10" ]
-    then
-       echo "Oracle 10 support is experimental."
-    else if [ "${dbmajor}" == "09" ]
+    if [ "$DBTYPE" == "oracle" ] ; then
+      if [ "${dbmajor}" == "10" ]
       then
-       echo "Oracle 9 support is experimental."
-       DIAGPACKACCESS="NoDiagnostics"
-      fi  
+         echo "Oracle 10 support is experimental."
+      else if [ "${dbmajor}" == "09" ]
+        then
+         echo "Oracle 9 support is experimental."
+         DIAGPACKACCESS="NoDiagnostics"
+        fi  
+      fi
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
 
@@ -687,7 +687,12 @@ if [ $retval -eq 0 ]; then
       executeOPMysql "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g') "${manualUniqueId}"
       retval=$?
     else if [ "$DBTYPE" == "postgres" ]; then
-      executeOPPg "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g') "${manualUniqueId}" "${allDbs}"
+      PGVER=$(echo $dbmajor | cut -c 1-2)
+      if [ $PGVER -gt 13 ] ; then
+        PGVER="base"
+      fi
+      echo "Postgres PGVER = $PGVER"
+      executeOPPg "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g') "${manualUniqueId}" "${PGVER}" "${allDbs}"
       retval=$?
       fi
     fi
