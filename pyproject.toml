@@ -36,7 +36,9 @@ version = "5.0.0"
 dma = "dma.__main__:run_cli"
 
 [project.optional-dependencies]
+mssql = ["aioodbc"]
 mysql = ["asyncmy>=0.2.9"]
+oracle = ["oracledb"]
 postgres = ["asyncpg>=0.29.0"]
 
 [build-system]
@@ -67,8 +69,27 @@ test_coverage = { composite = ["pdm run pytest tests", "pdm run coverage html", 
 [tool.pdm.dev-dependencies]
 dev = ["nodeenv", "bump2version", "anyio"]
 docs = ['mkdocs', 'mkdocs-material', 'mkdocstrings', 'mkdocstrings-python']
-linting = ["pre-commit", "mypy", "ruff", "types-click", "types-pyyaml", "pylint", "sqlfluff", "asyncpg-stubs"]
-test = ["pytest", "pytest-mock", "pytest-cov", "coverage", "pytest-click"]
+linting = [
+  "pre-commit",
+  "mypy",
+  "ruff",
+  "types-click",
+  "types-pyyaml",
+  "pylint",
+  "sqlfluff",
+  "asyncpg-stubs",
+  "types-pytest-lazy-fixture",
+]
+test = [
+  "pytest",
+  "pytest-mock",
+  "pytest-cov",
+  "coverage",
+  "pytest-click",
+  "pytest-lazy-fixture",
+  "pytest-xdist",
+  "pytest-mock",
+]
 
 [tool.black]
 exclude = '''
