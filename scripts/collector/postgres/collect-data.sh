@@ -500,6 +500,9 @@ echo "        --collectionUserPass  Database password"
 echo "        --allDbs              Collect data for all databases (Y/N).  Optional. Defaults to 'Y'.  Set to N to collect for only the database service given."
 echo "      }"
 echo
+echo "  Additional Parameters:"
+echo "        --manualUniqueId      (Optional) A short string to be attached to this collection.  Use only when directed."
+echo
 echo "  VM collection definition (optional):"
 echo "        --vmUserName          Username on the VM the Database is running on."
 echo "        --extraSSHArg         Extra args to be passed as is to ssh. Can be specified multiple times."
