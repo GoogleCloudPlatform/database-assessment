@@ -1,252 +1,281 @@
 /*
-Copyright 2023 Google LLC
+ Copyright 2023 Google LLC
+ 
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ 
+ https://www.apache.org/licenses/LICENSE-2.0
+ 
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ 
+ */
+set NOCOUNT on;
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+set LANGUAGE us_english;
 
-    https://www.apache.org/licenses/LICENSE-2.0
+declare @PKEY as VARCHAR(256);
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+declare @CLOUDTYPE as VARCHAR(256);
 
-*/
+declare @ASSESSMENT_DATABSE_NAME as VARCHAR(256);
 
-SET NOCOUNT ON;
-SET LANGUAGE us_english;
+declare @PRODUCT_VERSION as INTEGER;
 
-DECLARE @PKEY AS VARCHAR(256)
-DECLARE @CLOUDTYPE AS VARCHAR(256)
-DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256)
-DECLARE @PRODUCT_VERSION AS INTEGER
-DECLARE @validDB AS INTEGER
-DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
-DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
+declare @VALIDDB as INTEGER;
 
-SELECT @PKEY = N'$(pkey)';
-SELECT @CLOUDTYPE = 'NONE'
-SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
-SELECT @validDB = 0;
-SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
-SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
+declare @DMA_SOURCE_ID as VARCHAR(256);
 
-IF @ASSESSMENT_DATABSE_NAME = 'all'
-   SELECT @ASSESSMENT_DATABSE_NAME = '%'
+declare @DMA_MANUAL_ID as VARCHAR(256);
 
-IF UPPER(@@VERSION) LIKE '%AZURE%'
-	SELECT @CLOUDTYPE = 'AZURE'
+select @PKEY = N'$(pkey)';
 
-IF OBJECT_ID('tempdb..#columnDatatypes') IS NOT NULL
-   DROP TABLE #columnDatatypes;
+select @CLOUDTYPE = 'NONE'
+select @ASSESSMENT_DATABSE_NAME = N'$(database)';
 
-CREATE TABLE #columnDatatypes(
-   database_name nvarchar(255) DEFAULT db_name()
-   ,schema_name nvarchar(255)
-   ,table_name nvarchar(255)
-   ,datatype nvarchar(255)
-   ,max_length nvarchar(255)
-   ,precision nvarchar(255)
-   ,scale nvarchar(255)
-   ,is_computed nvarchar(10)
-   ,is_filestream nvarchar(10)
-   ,is_masked nvarchar(10)
-   ,encryption_type nvarchar(10)
-   ,is_sparse nvarchar(10)
-   ,rule_object_id nvarchar(255)
-   ,column_count nvarchar(255)
+select @PRODUCT_VERSION = convert(
+      INTEGER,
+      PARSENAME(
+         convert(NVARCHAR, SERVERPROPERTY('productversion')),
+         4
+      )
    );
 
-BEGIN
-   BEGIN
-      SELECT @validDB = COUNT(1)
-      FROM sys.databases
-      WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-      AND name like @ASSESSMENT_DATABSE_NAME
-      AND state = 0
-   END
+select @VALIDDB = 0;
 
-   BEGIN TRY
-      IF @PRODUCT_VERSION > 12 AND @validDB <> 0 AND @CLOUDTYPE = 'NONE'
-      BEGIN
-      exec ('
-      INSERT INTO #columnDatatypes (
-         schema_name
-         ,table_name
-         ,datatype
-         ,max_length
-         ,precision
-         ,scale
-         ,is_computed
-         ,is_filestream
-         ,is_masked
-         ,encryption_type
-         ,is_sparse
-         ,rule_object_id
-         ,column_count
-      )
-      SELECT s.name AS schema_name
-            , o.name AS table_name
-            , t.name AS datatype
-            , c.max_length
-            , c.precision
-            , c.scale
-            , c.is_computed
-            , c.is_filestream
-            , c.is_masked
-            , ISNULL(c.encryption_type,0) AS encryption_type
-            , c.is_sparse
-            , c.rule_object_id
-            , count(1) column_count
-         FROM  sys.objects o
-         JOIN  sys.schemas s
-            ON  s.schema_id = o.schema_id
-         JOIN  sys.columns c
-         ON  o.object_id = c.object_id
-         JOIN  sys.types t
-         ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-      WHERE o.type_desc = ''USER_TABLE''
-         AND t.system_type_id = t.user_type_id
-      GROUP BY s.name
-            , o.name
-            , t.name
-            , c.max_length
-            , c.precision
-            , c.scale
-            , c.is_computed
-            , c.is_filestream
-            , c.is_masked
-            , c.encryption_type
-            , c.is_sparse
-            , c.rule_object_id');
-      END;
-      IF @PRODUCT_VERSION <= 12 AND @validDB <> 0 AND @CLOUDTYPE = 'NONE'
-      BEGIN
-      exec ('
-      INSERT INTO #columnDatatypes (
-         schema_name
-         ,table_name
-         ,datatype
-         ,max_length
-         ,precision
-         ,scale
-         ,is_computed
-         ,is_filestream
-         ,is_masked
-         ,encryption_type
-         ,is_sparse
-         ,rule_object_id
-         ,column_count
-      )
-      SELECT s.name AS schema_name
-            , o.name AS table_name
-            , t.name AS datatype
-            , c.max_length
-            , c.precision
-            , c.scale
-            , c.is_computed
-            , c.is_filestream
-            , 0 as is_masked
-            , 0 AS encryption_type
-            , c.is_sparse
-            , c.rule_object_id
-            , count(1) column_count
-         FROM  sys.objects o
-         JOIN  sys.schemas s
-            ON  s.schema_id = o.schema_id
-         JOIN  sys.columns c
-         ON  o.object_id = c.object_id
-         JOIN  sys.types t
-         ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-      WHERE o.type_desc = ''USER_TABLE''
-         AND t.system_type_id = t.user_type_id
-      GROUP BY s.name
-            , o.name
-            , t.name
-            , c.max_length
-            , c.precision
-            , c.scale
-            , c.is_computed
-            , c.is_filestream
-            , c.is_sparse
-            , c.rule_object_id');
-      END;
-      IF @PRODUCT_VERSION >= 12 AND @validDB <> 0 AND @CLOUDTYPE = 'AZURE'
-      BEGIN
-      exec ('
-      INSERT INTO #columnDatatypes (
-         schema_name
-         ,table_name
-         ,datatype
-         ,max_length
-         ,precision
-         ,scale
-         ,is_computed
-         ,is_filestream
-         ,is_masked
-         ,encryption_type
-         ,is_sparse
-         ,rule_object_id
-         ,column_count
-      )
-      SELECT s.name AS schema_name
-            , o.name AS table_name
-            , t.name AS datatype
-            , c.max_length
-            , c.precision
-            , c.scale
-            , c.is_computed
-            , c.is_filestream
-            , c.is_masked
-            , ISNULL(c.encryption_type,0) AS encryption_type
-            , c.is_sparse
-            , c.rule_object_id
-            , count(1) column_count
-         FROM  sys.objects o
-         JOIN  sys.schemas s
-            ON  s.schema_id = o.schema_id
-         JOIN  sys.columns c
-         ON  o.object_id = c.object_id
-         JOIN  sys.types t
-         ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-      WHERE o.type_desc = ''USER_TABLE''
-         AND t.system_type_id = t.user_type_id
-      GROUP BY s.name
-            , o.name
-            , t.name
-            , c.max_length
-            , c.precision
-            , c.scale
-            , c.is_computed
-            , c.is_filestream
-            , c.is_masked
-            , c.encryption_type
-            , c.is_sparse
-            , c.rule_object_id');
-      END;
-   END TRY
-   BEGIN CATCH
-      SELECT
-         host_name() as host_name,
-         db_name() as database_name,
-         'columnDatatypes' as module_name,
-         SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
-         SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
-         SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
-         SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
-   END CATCH
+select @DMA_SOURCE_ID = N'$(dmaSourceId)';
 
-END
+select @DMA_MANUAL_ID = N'$(dmaManualId)';
 
-SELECT
-   @PKEY as PKEY,
-   a.*,
-   @DMA_SOURCE_ID as dma_source_id,
-   @DMA_MANUAL_ID as dma_manual_id
-from #columnDatatypes a;
+if @ASSESSMENT_DATABSE_NAME = 'all'
+select @ASSESSMENT_DATABSE_NAME = '%';
 
-IF OBJECT_ID('tempdb..#columnDatatypes') IS NOT NULL
-   DROP TABLE #columnDatatypes;
+if UPPER(@@VERSION) like '%AZURE%'
+select @CLOUDTYPE = 'AZURE';
+
+if OBJECT_ID('tempdb..#columnDatatypes') is not null drop table #COLUMNDATATYPES;
+create table #COLUMNDATATYPES
+(
+   DATABASE_NAME NVARCHAR(255) default DB_NAME(),
+   SCHEMA_NAME NVARCHAR(255),
+   TABLE_NAME NVARCHAR(255),
+   DATATYPE NVARCHAR(255),
+   MAX_LENGTH NVARCHAR(255),
+   PRECISION NVARCHAR(255),
+   SCALE NVARCHAR(255),
+   IS_COMPUTED NVARCHAR(10),
+   IS_FILESTREAM NVARCHAR(10),
+   IS_MASKED NVARCHAR(10),
+   ENCRYPTION_TYPE NVARCHAR(10),
+   IS_SPARSE NVARCHAR(10),
+   RULE_OBJECT_ID NVARCHAR(255),
+   COLUMN_COUNT NVARCHAR(255)
+);
+
+begin begin
+select @VALIDDB = count(1)
+from SYS.DATABASES
+where NAME not in (
+      'master',
+      'model',
+      'msdb',
+      'tempdb',
+      'distribution',
+      'reportserver',
+      'reportservertempdb',
+      'resource',
+      'rdsadmin'
+   )
+   and NAME like @ASSESSMENT_DATABSE_NAME
+   and STATE = 0
+end begin TRY if @PRODUCT_VERSION > 12
+and @VALIDDB <> 0
+and @CLOUDTYPE = 'NONE' begin exec (
+   '
+         INSERT INTO #columnDatatypes (
+            schema_name
+            ,table_name
+            ,datatype
+            ,max_length
+            ,precision
+            ,scale
+            ,is_computed
+            ,is_filestream
+            ,is_masked
+            ,encryption_type
+            ,is_sparse
+            ,rule_object_id
+            ,column_count 
+         )
+         SELECT s.name AS schema_name
+               , o.name AS table_name
+               , t.name AS datatype
+               , c.max_length
+               , c.precision
+               , c.scale
+               , c.is_computed
+               , c.is_filestream
+               , c.is_masked
+               , ISNULL(c.encryption_type,0) AS encryption_type
+               , c.is_sparse
+               , c.rule_object_id
+               , count(1) column_count
+            FROM  sys.objects o 
+            JOIN  sys.schemas s
+               ON  s.schema_id = o.schema_id
+            JOIN  sys.columns c
+            ON  o.object_id = c.object_id
+            JOIN  sys.types t
+            ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
+         WHERE o.type_desc = ''USER_TABLE'' 
+            -- AND t.system_type_id = t.user_type_id /* Removing to capture datatypes like hierarchyid */
+         GROUP BY s.name
+               , o.name
+               , t.name
+               , c.max_length
+               , c.precision
+               , c.scale
+               , c.is_computed
+               , c.is_filestream
+               , c.is_masked
+               , c.encryption_type
+               , c.is_sparse
+               , c.rule_object_id'
+);
+
+end;
+
+if @PRODUCT_VERSION <= 12
+and @VALIDDB <> 0
+and @CLOUDTYPE = 'NONE' begin exec (
+   '
+         INSERT INTO #columnDatatypes (
+            schema_name
+            ,table_name
+            ,datatype
+            ,max_length
+            ,precision
+            ,scale
+            ,is_computed
+            ,is_filestream
+            ,is_masked
+            ,encryption_type
+            ,is_sparse
+            ,rule_object_id
+            ,column_count 
+         )
+         SELECT s.name AS schema_name
+               , o.name AS table_name
+               , t.name AS datatype
+               , c.max_length
+               , c.precision
+               , c.scale
+               , c.is_computed
+               , c.is_filestream
+               , 0 as is_masked
+               , 0 AS encryption_type
+               , c.is_sparse
+               , c.rule_object_id
+               , count(1) column_count
+            FROM  sys.objects o 
+            JOIN  sys.schemas s
+               ON  s.schema_id = o.schema_id
+            JOIN  sys.columns c
+            ON  o.object_id = c.object_id
+            JOIN  sys.types t
+            ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
+         WHERE o.type_desc = ''USER_TABLE'' 
+            -- AND t.system_type_id = t.user_type_id /* Removing to capture datatypes like hierarchyid */
+         GROUP BY s.name
+               , o.name
+               , t.name
+               , c.max_length
+               , c.precision
+               , c.scale
+               , c.is_computed
+               , c.is_filestream
+               , c.is_sparse
+               , c.rule_object_id'
+);
+
+end;
+
+if @PRODUCT_VERSION >= 12
+and @VALIDDB <> 0
+and @CLOUDTYPE = 'AZURE' begin exec (
+   '
+         INSERT INTO #columnDatatypes (
+            schema_name
+            ,table_name
+            ,datatype
+            ,max_length
+            ,precision
+            ,scale
+            ,is_computed
+            ,is_filestream
+            ,is_masked
+            ,encryption_type
+            ,is_sparse
+            ,rule_object_id
+            ,column_count 
+         )
+         SELECT s.name AS schema_name
+               , o.name AS table_name
+               , t.name AS datatype
+               , c.max_length
+               , c.precision
+               , c.scale
+               , c.is_computed
+               , c.is_filestream
+               , c.is_masked
+               , ISNULL(c.encryption_type,0) AS encryption_type
+               , c.is_sparse
+               , c.rule_object_id
+               , count(1) column_count
+            FROM  sys.objects o 
+            JOIN  sys.schemas s
+               ON  s.schema_id = o.schema_id
+            JOIN  sys.columns c
+            ON  o.object_id = c.object_id
+            JOIN  sys.types t
+            ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
+         WHERE o.type_desc = ''USER_TABLE'' 
+            AND t.system_type_id = t.user_type_id
+         GROUP BY s.name
+               , o.name
+               , t.name
+               , c.max_length
+               , c.precision
+               , c.scale
+               , c.is_computed
+               , c.is_filestream
+               , c.is_masked
+               , c.encryption_type
+               , c.is_sparse
+               , c.rule_object_id'
+);
+
+end;
+
+end TRY begin CATCH
+select HOST_NAME() as HOST_NAME,
+   DB_NAME() as DATABASE_NAME,
+   'columnDatatypes' as MODULE_NAME,
+   SUBSTRING(convert(NVARCHAR, ERROR_NUMBER()), 1, 254) as ERROR_NUMBER,
+   SUBSTRING(convert(NVARCHAR, ERROR_SEVERITY()), 1, 254) as ERROR_SEVERITY,
+   SUBSTRING(convert(NVARCHAR, ERROR_STATE()), 1, 254) as ERROR_STATE,
+   SUBSTRING(convert(NVARCHAR, ERROR_MESSAGE()), 1, 512) as ERROR_MESSAGE;
+
+end CATCH
+end;
+
+select @PKEY as PKEY,
+   A.*,
+   @DMA_SOURCE_ID as DMA_SOURCE_ID,
+   @DMA_MANUAL_ID as DMA_MANUAL_ID
+from #COLUMNDATATYPES A;
+   if OBJECT_ID('tempdb..#columnDatatypes') is not null drop table #COLUMNDATATYPES;

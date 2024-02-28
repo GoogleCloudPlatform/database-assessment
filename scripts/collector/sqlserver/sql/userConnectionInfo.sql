@@ -43,43 +43,44 @@ IF UPPER(@@VERSION) LIKE '%AZURE%'
 IF OBJECT_ID('tempdb..#connectionInfo') IS NOT NULL
    DROP TABLE #connectionInfo;
 
-CREATE TABLE #connectionInfo(
-	database_name nvarchar(255)
-    ,is_user_process nvarchar(255)
-    ,host_name nvarchar(255)
-    ,program_name nvarchar(255)
-    ,login_name nvarchar(255)
-    ,num_reads nvarchar(255)
-    ,num_writes nvarchar(255)
-    ,last_read nvarchar(255)
-    ,last_write nvarchar(255)
-    ,reads nvarchar(255)
-    ,logical_reads nvarchar(255)
-    ,writes nvarchar(255)
-    ,client_interface_name nvarchar(255)
-    ,nt_domain nvarchar(255)
-    ,nt_user_name nvarchar(255)
-    ,client_net_address nvarchar(255)
-    ,local_net_address nvarchar(255)
-    ,client_version nvarchar(255)
-	,protocol_type nvarchar(255)
-	,protocol_version nvarchar(255)
-	,protocol_hex_version nvarchar(255)
-    );
+CREATE TABLE #connectionInfo
+(
+    database_name nvarchar(255),
+    is_user_process nvarchar(255),
+    host_name nvarchar(255),
+    program_name nvarchar(255),
+    login_name nvarchar(255),
+    num_reads nvarchar(255),
+    num_writes nvarchar(255),
+    last_read nvarchar(255),
+    last_write nvarchar(255),
+    reads nvarchar(255),
+    logical_reads nvarchar(255),
+    writes nvarchar(255),
+    client_interface_name nvarchar(255),
+    nt_domain nvarchar(255),
+    nt_user_name nvarchar(255),
+    client_net_address nvarchar(255),
+    local_net_address nvarchar(255),
+    client_version nvarchar(255),
+    protocol_type nvarchar(255),
+    protocol_version nvarchar(255),
+    protocol_hex_version nvarchar(255)
+);
 
 BEGIN
     BEGIN
         SELECT @validDB = COUNT(1)
         FROM sys.databases
         WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-        AND name like @ASSESSMENT_DATABSE_NAME
-        AND state = 0
+            AND name like @ASSESSMENT_DATABSE_NAME
+            AND state = 0
     END
 
     BEGIN TRY
         IF @PRODUCT_VERSION >= 11 AND @validDB <> 0
         BEGIN
-            exec ('
+        exec ('
             INSERT INTO #connectionInfo
             SELECT
                 DB_NAME() as database_name
@@ -102,15 +103,15 @@ BEGIN
                 ,sdes.client_version
                 ,sdec.protocol_type
                 ,sdec.protocol_version
-                ,CONVERT(VARCHAR(1000),(CONVERT(BINARY(4),sdec.protocol_version,2)),2) as protocol_hex_version
+                ,sys.fn_varbintohexstr(sdec.protocol_version) as protocol_hex_version
             FROM sys.dm_exec_sessions AS sdes
             INNER JOIN sys.dm_exec_connections AS sdec
                     ON sdec.session_id = sdes.session_id
             WHERE sdes.session_id <> @@SPID');
-        END
+    END
         IF @PRODUCT_VERSION < 11 AND @validDB <> 0
         BEGIN
-            exec ('
+        exec ('
             INSERT INTO #connectionInfo
             SELECT
                 DB_NAME() as database_name
@@ -133,22 +134,22 @@ BEGIN
                 ,sdes.client_version
                 ,sdec.protocol_type
                 ,sdec.protocol_version
-                ,CONVERT(VARCHAR(1000),(CONVERT(BINARY(4),sdec.protocol_version,2)),2) as protocol_hex_version
+                ,sys.fn_varbintohexstr(sdec.protocol_version) as protocol_hex_version
             FROM sys.dm_exec_sessions AS sdes
             INNER JOIN sys.dm_exec_connections AS sdec
                     ON sdec.session_id = sdes.session_id
             WHERE sdes.session_id <> @@SPID');
-        END
+    END
     END TRY
     BEGIN CATCH
         SELECT
-            host_name() as host_name,
-            db_name() as database_name,
-            'connectionInfo' as module_name,
-            SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
-            SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
-            SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
-            SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
+        host_name() as host_name,
+        db_name() as database_name,
+        'connectionInfo' as module_name,
+        SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
+        SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
+        SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
+        SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
     END CATCH
 
 END

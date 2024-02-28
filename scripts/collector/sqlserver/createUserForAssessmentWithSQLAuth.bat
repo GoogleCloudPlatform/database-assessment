@@ -42,17 +42,26 @@ goto :loop
 :evaluateUser
 if [%serverName%]==[] goto raiseServerError
 if [%saUser%]==[] goto serverUserError
-if [%saPass%]==[] goto serverUserError
 if [%user%]==[] goto error
-if [%pass%]==[] goto error
 if not [%user%]==[] goto execWithCustomCreds
 
 :execWithCustomCreds
 if [%user%] == [] goto error
-if [%pass%] == [] goto error
+if [%saPass%] == [] goto execWithoutSaPass
+if [%pass%] == [] goto execWithoutCollectionPass
 if [%serverName%]==[] goto raiseServerError
 
 PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createUserWithSQLAuth.ps1 -serverName %serverName% -port %port% -user %saUser% -pass %saPass% -collectionUserName %user% -collectionUserPass %pass%
+if %errorlevel% == 1 goto exit
+goto done
+
+:execWithoutCollectionPass
+if [%saPass%]==[] (PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createUserWithSQLAuth.ps1 -serverName %serverName% -port %port% -user %saUser% -collectionUserName %user%) else (PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createUserWithSQLAuth.ps1 -serverName %serverName% -port %port% -user %saUser% -pass %saPass% -collectionUserName %user%)
+if %errorlevel% == 1 goto exit
+goto done
+
+:execWithoutSaPass
+if [%pass%]==[] (PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createUserWithSQLAuth.ps1 -serverName %serverName% -port %port% -user %saUser% -collectionUserName %user%) else (PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\createUserWithSQLAuth.ps1 -serverName %serverName% -port %port% -user %saUser% -collectionUserName %user% -collectionUserPass %pass%)
 if %errorlevel% == 1 goto exit
 goto done
 

@@ -179,6 +179,22 @@ UNION ALL
 UNION ALL
     SELECT 'SqlServerStartTime', CONVERT(varchar, (sqlserver_start_time))
     from sys.dm_os_sys_info
+UNION ALL
+    SELECT 'IsTDS80Used',
+        CASE WHEN conn_type.tds8_count > 0 THEN '1' ELSE '0' END
+    FROM (
+        SELECT COUNT(*) as tds8_count
+        from sys.dm_exec_connections
+        WHERE sys.fn_varbintohexstr(protocol_version) like '0x8%'
+    ) conn_type
+UNION ALL
+    SELECT 'IsResourceGovernorEnabled',
+        CASE WHEN gov_enabled.enabled_count > 0 THEN '1' ELSE '0' END
+    FROM (
+        SELECT COUNT(*) as enabled_count
+        from sys.resource_governor_configuration
+        WHERE is_enabled = 1
+    ) gov_enabled
 ;
 WITH
     BUFFER_POOL_SIZE

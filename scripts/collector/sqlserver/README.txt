@@ -55,6 +55,11 @@ Operating System Versions:
                 GRANT VIEW ANY PERFORMANCE DEFINITION TO [username];
                 GRANT VIEW ANY SECURITY DEFINITION TO [username];
 
+            For Azure SQL Database the follwing permissions are also granted:
+                ALTER SERVER ROLE ##MS_DefinitionReader## ADD MEMBER [username];
+                ALTER SERVER ROLE ##MS_SecurityDefinitionReader## ADD MEMBER [username];
+                ALTER SERVER ROLE ##MS_ServerStateReader## ADD MEMBER [username];
+
         In each user database:
             CREATE USER [username] FOR LOGIN [username];
             GRANT VIEW DATABASE STATE TO [username];
@@ -66,9 +71,9 @@ Operating System Versions:
                     -serverName  ** Required
                     -port  ** Optional (Defaults to 1433)
                     -serverUserName  ** Required
-                    -serverUserPass  ** Required
+                    -serverUserPass  ** Optional at script level.  Will be prompted if not provided
                     -collectionUserName  ** Required
-                    -collectionUserPass  ** Required
+                    -collectionUserPass  ** Optional at script level.  Will be prompted if not provided
 
             For a Named Instance:
                 createUserForAssessmentWithSQLAuth.bat -serverName [servername\instanceName] -port [port number] -serverUserName [existing privileged user] -serverUserPass [privileged user password] -collectionUserName [collection user name] -collectionUserPass [collection user password]
@@ -82,7 +87,7 @@ Operating System Versions:
                     -serverName  ** Required
                     -port  ** Optional (Defaults to 1433)
                     -collectionUserName  ** Required
-                    -collectionUserPass  ** Required
+                    -collectionUserPass  ** Optional at script level.  Will be prompted if not provided
 
             For a Named Instance:
                 createUserForAssessmentWithWindowsAuth.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]

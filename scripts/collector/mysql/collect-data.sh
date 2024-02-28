@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.29"
+OpVersion="4.3.31"
 dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
@@ -119,11 +119,19 @@ function checkVersionPg {
     fi
 
     # SELECT 'DMAFILETAG~' , version();
-    dbversion=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t --no-align << EOF
+    dbVersion=$(PGPASSWORD="$pass" ${SQLCMD} -X --user=$user -h $host -w -p $port -d "${db}" -t --no-align  2>&1 << EOF
 SELECT current_setting('server_version_num');
 EOF
 )
-echo 'DMAFILETAG~'${dbversion}'|'${dbversion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
+retcd=$?
+    if [[ $retcd -ne 0 ]] 
+    then
+	    echo "Error connecting to the target database ${connectString} ."
+	    echo "Connection attempt returned : ${dbVersion}"
+	    return $retcd
+    fi
+
+    echo 'DMAFILETAG~'${dbVersion}'|'${dbVersion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
 }
 
 function checkVersionMysql {
@@ -135,19 +143,24 @@ function checkVersionMysql {
     port=$(echo ${connectString} | cut -d ':' -f 2 | cut -d '/' -f 1)
     db=$(echo ${connectString} | cut -d '/' -f 5)
 
-    echo $user $pass $host $port $db
-
     if ! [ -x "$(command -v ${SQLCMD})" ]; then
       echo "Could not find ${SQLCMD} command. Source in environment and try again"
       echo "Exiting..."
       exit 1
     fi
 
-dbversion=$(${SQLCMD}  --user=$user --password=$pass -h $host -P $port -s $db << EOF
+dbVersion=$(${SQLCMD}  --user=$user --password=$pass -h $host -P $port -s $db << EOF
 SELECT version();
 EOF
 )
-echo 'DMAFILETAG~'${dbversion}'|'${dbversion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
+retcd=$?
+    if [[ $retcd -ne 0 ]] 
+    then
+	    echo "Error connecting to the target database ${connectString} ."
+	    echo "Connection attempt returned : ${dbVersion}"
+	    return $retcd
+    fi
+echo 'DMAFILETAG~'${dbVersion}'|'${dbVersion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
 }
 
 
@@ -238,11 +251,12 @@ connectString="$1"
 OpVersion=$2
 V_FILE_TAG=$3
 V_MANUAL_ID="${4}"
-user=$(echo ${connectString} | cut -d '/' -f 1)
-pass=$(echo ${connectString} | cut -d '/' -f 2 | cut -d '@' -f 1)
-host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
-port=$(echo ${connectString} | cut -d ':' -f 2 | cut -d '/' -f 1)
-db=$(echo ${connectString} | cut -d '/' -f 5)
+allDbs="${5}"
+user=$(echo "${connectString}" | cut -d '/' -f 1)
+pass=$(echo "${connectString}" | cut -d '/' -f 2 | cut -d '@' -f 1)
+host=$(echo "${connectString}" | cut -d '/' -f 4 | cut -d ':' -f 1)
+port=$(echo "${connectString}" | cut -d ':' -f 2 | cut -d '/' -f 1)
+db=$(echo "${connectString}" | cut -d '/' -f 5)
 
 if ! [ -x "$(command -v ${SQLCMD})" ]; then
   echo "Could not find ${SQLCMD} command. Source in environment and try again"
@@ -251,7 +265,7 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
 fi
 
 
-DMA_SOURCE_ID=$(${SQLCMD}  --user=$user --password -h $host -w -p $port -t --no-align <<EOF
+DMA_SOURCE_ID=$(PGPASSWORD="$pass" ${SQLCMD} -X --user=$user  -h $host -w -p $port -d "$db" -t --no-align <<EOF
 SELECT system_identifier FROM pg_control_system();
 EOF
 )
@@ -267,12 +281,51 @@ then
 	DMA_SOURCE_ID="NA"
 fi
 
-${SQLCMD}  --user=$user --password -h $host -w -p $port  --no-align <<EOF
+# Only run once per VM, instead of once per DB.
+specsOut="output/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv"
+if [[ -z "$specsPath" ]] ; then 
+      host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
+      ./db-machine-specs.sh "$host" "$vmUserName" "${V_FILE_TAG}" "${DMA_SOURCE_ID}" "${V_MANUAL_ID}" "${specsOut}" "${extraSSHArgs[@]}"
+else
+	if [[ -f "$specsPath" ]]; then
+           mv "$specsPath" "$specsOut"
+	fi
+fi
+
+# If allDbs = "Y" loop through all the databases in the instance and create a collection for each one, then exit.
+if [[ "${allDbs}" == "Y" ]] ;
+then
+      export OLDIFS=$IFS
+      dblist=$(PGPASSWORD="${pass}" ${SQLCMD}  --user=$user  -h $host -w -p $port -d "${db}" -t --no-align <<EOF
+\l
+EOF
+)
+
+      IFS=$'\n'
+      alldbs=$( for dbentry in ${dblist}
+                    do
+              	         echo $(echo "${dbentry}" | cut -d '|' -f 1 | cut -d '=' -f 1)
+                    done | grep -v -e template0 -e template1 | sort -u)
+
+      # Parse out the unique database names, excluding the templates.  Handle some special characters in the database name.
+      for db in ${alldbs}
+	do
+            export IFS=$OLDIFS
+  	    ./collect-data.sh --connectionStr ${user}/${pass}@//${host}:${port}/"${db}"  --manualUniqueId ${V_MANUAL_ID}  --specsPath "$specsOut" --allDbs N
+	done
+	exit
+else
+# If given a database name, create a collection for that one database.
+export PGPASSWORD="$pass"  
+${SQLCMD} -X --user=${user} -d "${db}" -h ${host} -w -p ${port}  --no-align --echo-errors 2>output/opdb__stderr_${V_FILE_TAG}.log <<EOF
 \set VTAG ${V_FILE_TAG}
+\set PKEY '\'${V_FILE_TAG}\''
 \set DMA_SOURCE_ID '\'${DMA_SOURCE_ID}\''
 \set DMA_MANUAL_ID '\'${V_MANUAL_ID}\''
 \i sql/op_collect.sql
 EOF
+
+fi
 }
 
 
@@ -283,16 +336,14 @@ V_FILE_TAG=$1
 echo "Checking for errors..."
 if [ "$DBTYPE" == "oracle" ] ; then
 	$GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
-        retval=$?
-else if [ "$DBTYPE" == "mysql" ] ; then
-	$GREP -E '^ERROR ' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
-        retval=$?
-else if [ "$DBTYPE" == "postgres" ]; then
-	$GREP -E 'ERROR:' ${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
-        retval=$?
+        else if [ "$DBTYPE" == "mysql" ] ; then
+	$GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+        else if [ "$DBTYPE" == "postgres" ]; then
+	$GREP  -i -E 'ERROR:' ${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+        fi
 fi
 fi
-fi
+retval=$?
 if [ ! -f  ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ]; then
 	  echo "Error creating error log.  Exiting..."
 	    return $retval
@@ -438,14 +489,17 @@ echo "  Parameters"
 echo ""
 echo "  Connection definition must one of:"
 echo "      {"
-echo "        --connectionStr       Oracle EasyConnect string formatted as {user}/{password}@//{db host}:{listener port}/{service name}"
+echo "        --connectionStr       Connection string formatted as {user}/{password}@//{db host}:{listener port}/{service name}"
 echo "       or"
 echo "        --hostName            Database server host name"
-echo "        --port                Database Listener port"
-echo "        --databaseService     Database service name"
-echo "        --collectionUserName  Database user name"
+echo "        --port                Database listener port"
+echo "        --databaseService     Database service name.  Required."
+echo "        --collectionUserName  Database user name."
 echo "        --collectionUserPass  Database password"
 echo "      }"
+echo
+echo "  Additional Parameters:"
+echo "        --manualUniqueId      (Optional) A short string to be attached to this collection.  Use only when directed."
 echo
 echo "  VM collection definition (optional):"
 echo "        --vmUserName          Username on the VM the Database is running on."
@@ -476,7 +530,7 @@ specsPath=""
 
  if [[ $(($# & 1)) == 1 ]] ;
  then
-  echo "Invalid number of parameters "
+  echo "Invalid number of parameters.  Each parameter must specify a value. "
   printUsage
   exit
  fi
@@ -488,7 +542,7 @@ specsPath=""
 	 elif [[ "$1" == "--collectionUserName" ]]; then collectionUserName="${2}"
 	 elif [[ "$1" == "--collectionUserPass" ]]; then collectionUserPass="${2}"
 	 elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
-	 elif [[ "$1" == "--manualUniqueId" ]];      then manualUniqueId="${2}"
+	 elif [[ "$1" == "--manualUniqueId" ]];     then manualUniqueId="${2}"
 	 elif [[ "$1" == "--vmUserName" ]];         then vmUserName="${2}"
 	 elif [[ "$1" == "--extraSSHArg" ]];        then extraSSHArgs+=("${2}")
 	 elif [[ "$1" == "--specsPath" ]];          then specsPath=("${2}")
@@ -517,9 +571,11 @@ DIAGPACKACCESS="mysql"
 	 fi
  fi
 
- if [[ "${manualUniqueId}" != "" ]]; then
+ 
+ if [[ "${manualUniqueId}" != "" && "${manualUniqueId}" != "NA" ]] ; then
 	 manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
  else manualUniqueId='NA'
+
  fi
 
 #############################################################################
@@ -546,32 +602,41 @@ checkPlatform $DBTYPE
 
 if [ "$DBTYPE" == "oracle" ] ; then
   sqlcmd_result=$(checkVersionOracle "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | cut -d '~' -f 2)
+  retval=$?
   if [[ "${sqlcmd_result}" == "" ]];
     then
       echo "Unable to connect to the target Oracle database using ${connectString}.  Please verify the connection information and target database status."
       exit 255
     fi
   else if [ "$DBTYPE" == "mysql" ] ; then
-    sqlcmd_result=$(checkVersionMysql "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r' )
-    if [[ "${sqlcmd_result}" == "" ]];
-      then
-      echo "Unable to connect to the target MySQL database using ${connectString}.  Please verify the connection information and target database status."
-      exit 255
-    fi
-    else if [ "$DBTYPE" == "postgres" ] ; then
-      sqlcmd_result=$(checkVersionPg "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r' )
-      if [[ "${sqlcmd_result}" == "" ]];
+    sqlcmd_result=$(checkVersionMysql "${connectString}" "${OpVersion}" )
+    retval=$?
+      if [[ $retval -ne 0 ]];
         then
+        echo " "
+	      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo "Unable to connect to the target Postgres database using ${connectString}.  Please verify the connection information and target database status."
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         exit 255
+      else
+	    sqlcmd_result=$(echo "$sqlcmd_result" | $GREP DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r' )
+      fi
+    else if [ "$DBTYPE" == "postgres" ] ; then
+      sqlcmd_result=$(checkVersionPg "${connectString}" "${OpVersion}" )
+	    retval=$?
+      if [[ $retval -ne 0 ]];
+        then
+        echo " "
+	      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Unable to connect to the target Postgres database using ${connectString}.  Please verify the connection information and target database status."
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        exit 255
+      else
+	    sqlcmd_result=$(echo "$sqlcmd_result" | $GREP DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r' )
       fi
     fi
   fi
 fi
-
-
-retval=$?
-
 
 extractorVersion="$(getVersion)"
 
@@ -582,7 +647,7 @@ printExtractorVersion "${extractorVersion}"
 echo "==================================================================================="
 
 if [ $retval -eq 0 ]; then
-  if [ "$(echo ${sqlcmd_result} | $GREP -E '(ORA-|SP2-)')" != "" ]; then
+  if [ "$(echo ${sqlcmd_result} | $GREP -E '(ORA-|SP2-|ERROR|FATAL)')" != "" ]; then
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo "Database version check returned error ${sqlcmd_result}"
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -609,7 +674,7 @@ else if [ "${dbmajor}" == "09" ]
       executeOPMysql "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g') "${manualUniqueId}"
       retval=$?
     else if [ "$DBTYPE" == "postgres" ]; then
-      executeOPPg "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g') "${manualUniqueId}"
+      executeOPPg "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g') "${manualUniqueId}" "${allDbs}"
       retval=$?
       fi
     fi

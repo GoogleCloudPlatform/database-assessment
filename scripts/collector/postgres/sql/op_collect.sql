@@ -21,7 +21,7 @@
 \o
 
 \o output/opdb__pg_database_details_:VTAG.csv
-\i sql/database_details.sql
+\i sql/:VPGVERSION/database_details.sql
 \o
 
 \o output/opdb__pg_data_types_:VTAG.csv
@@ -37,7 +37,7 @@
 \o
 
 \o output/opdb__pg_replication_slots_:VTAG.csv
-\i sql/replication_slots.sql
+\i sql/:VPGVERSION/replication_slots.sql
 \o
 
 \o output/opdb__pg_replication_stats_:VTAG.csv
@@ -61,7 +61,7 @@
 \o
 
 \o output/opdb__pg_table_details_:VTAG.csv
-\i sql/table_details.sql
+\i sql/:VPGVERSION/table_details.sql
 \o
 
 \o output/opdb__pg_source_details_:VTAG.csv
