@@ -18,11 +18,11 @@ set NOCOUNT on;
 
 set LANGUAGE us_english;
 
-declare @ASSESSMENT_DATABSE_NAME as VARCHAR(256)
-select @ASSESSMENT_DATABSE_NAME = N'$(database)';
+declare @ASSESSMENT_DATABASE_NAME as VARCHAR(256)
+select @ASSESSMENT_DATABASE_NAME = N'$(database)';
 
-if @ASSESSMENT_DATABSE_NAME = 'all'
-select @ASSESSMENT_DATABSE_NAME = '%'
+if @ASSESSMENT_DATABASE_NAME = 'all'
+select @ASSESSMENT_DATABASE_NAME = '%'
 select name
 from sys.databases
 where name not in (
@@ -40,5 +40,5 @@ where name not in (
         'DWQueue',
         'DQS_STAGING_DATA'
     )
-    and name like @ASSESSMENT_DATABSE_NAME
+    and name like @ASSESSMENT_DATABASE_NAME
     and state = 0

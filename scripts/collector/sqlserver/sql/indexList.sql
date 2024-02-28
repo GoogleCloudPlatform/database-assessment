@@ -20,7 +20,7 @@ set LANGUAGE us_english;
 
 declare @PKEY as VARCHAR(256)
 declare @CLOUDTYPE as VARCHAR(256)
-declare @ASSESSMENT_DATABSE_NAME as VARCHAR(256)
+declare @ASSESSMENT_DATABASE_NAME as VARCHAR(256)
 declare @PRODUCT_VERSION as INTEGER
 declare @validDB as INTEGER
 declare @DMA_SOURCE_ID as VARCHAR(256)
@@ -28,7 +28,7 @@ declare @DMA_MANUAL_ID as VARCHAR(256)
 select @PKEY = N'$(pkey)';
 
 select @CLOUDTYPE = 'NONE'
-select @ASSESSMENT_DATABSE_NAME = N'$(database)';
+select @ASSESSMENT_DATABASE_NAME = N'$(database)';
 
 select @PRODUCT_VERSION = convert(
       INTEGER,
@@ -44,8 +44,8 @@ select @DMA_SOURCE_ID = N'$(dmaSourceId)';
 
 select @DMA_MANUAL_ID = N'$(dmaManualId)';
 
-if @ASSESSMENT_DATABSE_NAME = 'all'
-select @ASSESSMENT_DATABSE_NAME = '%' if UPPER(@@VERSION) like '%AZURE%'
+if @ASSESSMENT_DATABASE_NAME = 'all'
+select @ASSESSMENT_DATABASE_NAME = '%' if UPPER(@@VERSION) like '%AZURE%'
 select @CLOUDTYPE = 'AZURE' if OBJECT_ID('tempdb..#indexList') is not null drop table #indexList;
    create table #indexList
    (
@@ -84,7 +84,7 @@ where name not in (
       'resource',
       'rdsadmin'
    )
-   and name like @ASSESSMENT_DATABSE_NAME
+   and name like @ASSESSMENT_DATABASE_NAME
    and state = 0
 end begin TRY if @validDB <> 0 begin exec (
    '

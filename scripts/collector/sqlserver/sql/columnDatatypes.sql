@@ -22,7 +22,7 @@ declare @PKEY as VARCHAR(256);
 
 declare @CLOUDTYPE as VARCHAR(256);
 
-declare @ASSESSMENT_DATABSE_NAME as VARCHAR(256);
+declare @ASSESSMENT_DATABASE_NAME as VARCHAR(256);
 
 declare @PRODUCT_VERSION as INTEGER;
 
@@ -35,7 +35,7 @@ declare @DMA_MANUAL_ID as VARCHAR(256);
 select @PKEY = N'$(pkey)';
 
 select @CLOUDTYPE = 'NONE'
-select @ASSESSMENT_DATABSE_NAME = N'$(database)';
+select @ASSESSMENT_DATABASE_NAME = N'$(database)';
 
 select @PRODUCT_VERSION = convert(
       INTEGER,
@@ -51,8 +51,8 @@ select @DMA_SOURCE_ID = N'$(dmaSourceId)';
 
 select @DMA_MANUAL_ID = N'$(dmaManualId)';
 
-if @ASSESSMENT_DATABSE_NAME = 'all'
-select @ASSESSMENT_DATABSE_NAME = '%';
+if @ASSESSMENT_DATABASE_NAME = 'all'
+select @ASSESSMENT_DATABASE_NAME = '%';
 
 if UPPER(@@VERSION) like '%AZURE%'
 select @CLOUDTYPE = 'AZURE';
@@ -90,7 +90,7 @@ where NAME not in (
       'resource',
       'rdsadmin'
    )
-   and NAME like @ASSESSMENT_DATABSE_NAME
+   and NAME like @ASSESSMENT_DATABASE_NAME
    and STATE = 0
 end begin TRY if @PRODUCT_VERSION > 12
 and @VALIDDB <> 0

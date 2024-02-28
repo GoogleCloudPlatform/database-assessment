@@ -20,7 +20,7 @@ set LANGUAGE us_english;
 
 declare @PKEY as VARCHAR(256)
 declare @CLOUDTYPE as VARCHAR(256)
-declare @ASSESSMENT_DATABSE_NAME as VARCHAR(256)
+declare @ASSESSMENT_DATABASE_NAME as VARCHAR(256)
 declare @PRODUCT_VERSION as INTEGER
 declare @validDB as INTEGER
 declare @DMA_SOURCE_ID as VARCHAR(256)
@@ -29,7 +29,7 @@ select @PKEY = N'$(pkey)';
 
 select @CLOUDTYPE = 'NONE';
 
-select @ASSESSMENT_DATABSE_NAME = N'$(database)';
+select @ASSESSMENT_DATABASE_NAME = N'$(database)';
 
 select @PRODUCT_VERSION = convert(
         INTEGER,
@@ -45,8 +45,8 @@ select @DMA_SOURCE_ID = N'$(dmaSourceId)';
 
 select @DMA_MANUAL_ID = N'$(dmaManualId)';
 
-if @ASSESSMENT_DATABSE_NAME = 'all'
-select @ASSESSMENT_DATABSE_NAME = '%' if UPPER(@@VERSION) like '%AZURE%'
+if @ASSESSMENT_DATABASE_NAME = 'all'
+select @ASSESSMENT_DATABASE_NAME = '%' if UPPER(@@VERSION) like '%AZURE%'
 select @CLOUDTYPE = 'AZURE' begin begin
 select @validDB = count(1)
 from sys.databases
@@ -60,7 +60,7 @@ where name not in (
         'resource',
         'rdsadmin'
     )
-    and name like @ASSESSMENT_DATABSE_NAME
+    and name like @ASSESSMENT_DATABASE_NAME
     and state = 0
 end begin TRY if @validDB <> 0 begin
 select @PKEY as PKEY,
@@ -97,7 +97,7 @@ from(
                         'resource',
                         'rdsadmin'
                     )
-                    and sd.name like @ASSESSMENT_DATABSE_NAME
+                    and sd.name like @ASSESSMENT_DATABASE_NAME
                     and sd.state = 0
                     and sd.name = db_name()
             )
