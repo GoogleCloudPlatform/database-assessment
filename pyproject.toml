@@ -23,6 +23,8 @@ dependencies = [
   "rich-click>=1.7.3",
   "jinja2>=3.1.3",
   "sqlalchemy>=2.0.25",
+  "typing-extensions>=4.0.0",
+  "greenlet; sys_platform == \"darwin\"",
 ]
 description = "Database Migration Assessment."
 keywords = ["database", "migration", "dma"]
@@ -61,35 +63,16 @@ plugins = ["pdm-packer", "pdm-shell"]
 lint = "pdm run pre-commit run --all-files"
 post_install = "pdm run python scripts/pre-build.py --install-packages"
 pre_build = "pdm run python scripts/pre-build.py --build-assets"
-start-infra = "docker-compose -f docker-compose.yml up --force-recreate -d"
-stop-infra = "docker-compose -f docker-compose.yml down --remove-orphans"
+start-infra = "docker-compose -f tests/docker-compose.yml up --force-recreate -d"
+stop-infra = "docker-compose -f tests/docker-compose.yml down --remove-orphans"
 test = "pdm run pytest tests"
 test_coverage = { composite = ["pdm run pytest tests", "pdm run coverage html", "pdm run coverage xml"] }
 
 [tool.pdm.dev-dependencies]
 dev = ["nodeenv", "bump2version", "anyio"]
 docs = ['mkdocs', 'mkdocs-material', 'mkdocstrings', 'mkdocstrings-python']
-linting = [
-  "pre-commit",
-  "mypy",
-  "ruff",
-  "types-click",
-  "types-pyyaml",
-  "pylint",
-  "sqlfluff",
-  "asyncpg-stubs",
-  "types-pytest-lazy-fixture",
-]
-test = [
-  "pytest",
-  "pytest-mock",
-  "pytest-cov",
-  "coverage",
-  "pytest-click",
-  "pytest-lazy-fixture",
-  "pytest-xdist",
-  "pytest-mock",
-]
+linting = ["pre-commit", "mypy", "ruff", "types-click", "types-pyyaml", "pylint", "sqlfluff", "asyncpg-stubs"]
+test = ["pytest", "pytest-mock", "pytest-cov", "coverage", "pytest-click", "pytest-xdist", "pytest-mock"]
 
 [tool.black]
 exclude = '''
@@ -127,11 +110,21 @@ show_missing = true
 
 [tool.coverage.run]
 branch = true
+concurrency = ["multiprocessing", "thread"]
 omit = ["tests/*", "scripts/*"]
+parallel = true
 
 [tool.pytest.ini_options]
-addopts = ["-ra"]
+addopts = ["--dist", "loadgroup", "-n", "auto"]
 filterwarnings = ["ignore::DeprecationWarning:pkg_resources"]
+markers = [
+  "mysql: MySQL Tests",
+  "postgres: Postgres Tests",
+  "oracle: Oracle Tests",
+  "spanner: Google Cloud Spanner Tests",
+  "duckdb: DuckDB Tests",
+  "mssql: Microsoft SQL Server Tests",
+]
 testpaths = ["tests"]
 
 [tool.ruff]
@@ -281,9 +274,6 @@ module = [
   "aiohttp.*",
   "fsspec.*",
   "gcsfs.*",
-  "google.auth",
-  "google.cloud.*",
-  "google.protobuf.*",
   "jsbeautifier",
   "jsbeautifier.*",
   "pyarrow.*",
@@ -291,21 +281,25 @@ module = [
   "saq.*",
   "sqlalchemy.*",
   "uvicorn.*",
+  "asyncmy",
+  "pyodbc",
+  "google.auth.*",
+  "google.cloud.*",
+  "google.protobuf.*",
+  "pyarrow.*",
+  "pytest_docker.*",
   "googleapiclient",
   "googleapiclient.*",
+  "uuid_utils",
+  "uuid_utils.*",
+  "aioodbc.*",
   "uvloop.*",
   "uvloop.*",
 ]
 
 [[tool.mypy.overrides]]
 ignore_errors = true
-module = [
-  "dma.db.migrations.*",
-  "dma.lib.dto.*",
-  "pyspark.sql.connect.proto",
-  "pyspark.sql.connect.proto.*",
-  "scripts.*",
-]
+module = ["pyspark.sql.connect.proto", "pyspark.sql.connect.proto.*", "scripts.*"]
 
 [tool.pyright]
 include = ["src/dma", "tests"]
