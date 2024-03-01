@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.31" 
+OpVersion="4.3.31"
 dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
@@ -124,7 +124,7 @@ SELECT current_setting('server_version_num');
 EOF
 )
     retcd=$?
-    if [[ $retcd -ne 0 ]] 
+    if [[ $retcd -ne 0 ]]
     then
 	    echo "Error connecting to the target database ${connectString} ."
 	    echo "Connection attempt returned : ${dbVersion}"
@@ -675,7 +675,7 @@ if [ $retval -eq 0 ]; then
         then
          echo "Oracle 9 support is experimental."
          DIAGPACKACCESS="NoDiagnostics"
-        fi  
+        fi
       fi
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG

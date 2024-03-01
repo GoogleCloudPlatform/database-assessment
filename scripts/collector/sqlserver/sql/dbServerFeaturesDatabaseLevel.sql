@@ -1,18 +1,18 @@
 /*
  Copyright 2023 Google LLC
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  https://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
- 
+
  */
 set NOCOUNT on;
 
@@ -118,7 +118,7 @@ end
 end CATCH
 /* Collect permissions which are unsupported in CloudSQL SQL Server */
 begin begin TRY exec(
-    'INSERT INTO #FeaturesEnabledDbLevel 
+    'INSERT INTO #FeaturesEnabledDbLevel
                 SELECT
                     db_name(),
                     tmp.permission_name,
@@ -136,10 +136,10 @@ begin begin TRY exec(
                         INNER JOIN sys.server_principals pr ON dp.grantee_principal_id = pr.principal_id
                     WHERE
                         pr.name NOT LIKE ''NT SERVICE\%''
-                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
-                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
-                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
-                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
+                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
+                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
+                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'',
+                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'',
                         ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')) tmp
                 GROUP BY
                     tmp.permission_name'

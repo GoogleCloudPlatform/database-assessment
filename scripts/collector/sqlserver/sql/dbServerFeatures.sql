@@ -1,18 +1,18 @@
 /*
  Copyright 2024 Google LLC
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  https://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
- 
+
  */
 set NOCOUNT on;
 
@@ -170,10 +170,10 @@ begin exec(
     '
     WITH dqs_service as (
     select count(*) as dqs_count from syslogins where name like ''##MS_dqs%'')
-    INSERT INTO #FeaturesEnabled 
-        SELECT 
+    INSERT INTO #FeaturesEnabled
+        SELECT
             ''DATA QUALITY SERVICES'' as Features,
-            CASE 
+            CASE
                 WHEN dqs_count > 0 THEN 1
                 ELSE 0
             END AS Is_EnabledOrUsed,
@@ -502,8 +502,8 @@ begin exec(
     '
     INSERT INTO #FeaturesEnabled
     SELECT
-        ''OPENROWSET'', 
-        CONVERT(nvarchar, value_in_use) , 
+        ''OPENROWSET'',
+        CONVERT(nvarchar, value_in_use) ,
         CASE
             WHEN value_in_use > 0 THEN 1
             ELSE 0
@@ -517,10 +517,10 @@ end;
 --ad hoc distributed queries / distributed transaction coordinator DTC
 begin exec(
     '
-    INSERT INTO #FeaturesEnabled 
+    INSERT INTO #FeaturesEnabled
     SELECT
-        ''ad hoc distributed queries'', 
-        CONVERT(nvarchar, value_in_use) , 
+        ''ad hoc distributed queries'',
+        CONVERT(nvarchar, value_in_use) ,
         CASE
             WHEN value_in_use > 0 THEN 1
             ELSE 0
@@ -590,7 +590,7 @@ end
 end CATCH
 /* Collect permissions which are unsupported in CloudSQL SQL Server */
 begin begin TRY exec(
-    'INSERT INTO #FeaturesEnabled 
+    'INSERT INTO #FeaturesEnabled
                 SELECT
                     tmp.permission_name,
 					CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
@@ -607,10 +607,10 @@ begin begin TRY exec(
                         INNER JOIN sys.server_principals pr ON p.grantee_principal_id = pr.principal_id
                     WHERE
                         pr.name NOT LIKE ''NT SERVICE\%''
-                        AND p.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
-                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
-                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
-                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
+                        AND p.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
+                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
+                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'',
+                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'',
                         ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')
 					UNION ALL
                     SELECT
@@ -624,12 +624,12 @@ begin begin TRY exec(
                         INNER JOIN sys.server_principals pr ON dp.grantee_principal_id = pr.principal_id
                     WHERE
                         pr.name NOT LIKE ''NT SERVICE\%''
-                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
-                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
-                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
-                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
-                        ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')     
-                        
+                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
+                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
+                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'',
+                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'',
+                        ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')
+
                     ) tmp
                 GROUP BY
                     tmp.permission_name'
@@ -638,7 +638,7 @@ begin begin TRY exec(
 end TRY begin CATCH if ERROR_NUMBER() = 208
 and ERROR_SEVERITY() = 16
 and ERROR_STATE() = 1 begin TRY exec(
-    'INSERT INTO #FeaturesEnabled 
+    'INSERT INTO #FeaturesEnabled
                         SELECT
                             tmp.permission_name,
                             CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
@@ -655,10 +655,10 @@ and ERROR_STATE() = 1 begin TRY exec(
                                 INNER JOIN sys.database_principals pr ON dp.grantee_principal_id = pr.principal_id
                             WHERE
                                 pr.name NOT LIKE ''NT SERVICE\%''
-                                AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
-                                ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
-                                ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
-                                ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
+                                AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
+                                ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
+                                ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'',
+                                ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'',
                                 ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')) tmp
                         GROUP BY
                             tmp.permission_name'

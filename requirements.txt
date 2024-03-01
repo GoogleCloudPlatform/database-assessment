@@ -14,4 +14,4 @@ pygments==2.17.2
 rich==13.7.0
 rich-click==1.7.3
 sqlalchemy==2.0.25
-typing-extensions==4.9.0 
+typing-extensions==4.9.0

@@ -91,7 +91,7 @@ $isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
 if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
     WriteLog -logMessage "Creating collection user in $serverName" -logOperation "MESSAGE"
     sqlcmd -S $serverName -i sql\createCollectionUser.sql -d master -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
-    
+
     ### If Azure, need to get a list of databases from master and log in to each individually to create the user
     if ($isCloudOrLinuxHost -eq "AZURE") {
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database="all")
@@ -108,7 +108,7 @@ else {
     $serverName = "$serverName,$port"
     WriteLog -logMessage "Creating collection user in $serverName, using PORT $port" -logOperation "MESSAGE"
     sqlcmd -S $serverName -i sql\createCollectionUser.sql -d master -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
-    
+
     ### If Azure, need to get a list of databases from master and log in to each individually to create the user
     if ($isCloudOrLinuxHost -eq "AZURE") {
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database="all")

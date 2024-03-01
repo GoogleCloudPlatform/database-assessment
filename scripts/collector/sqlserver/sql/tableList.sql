@@ -1,18 +1,18 @@
 /*
  Copyright 2023 Google LLC
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  https://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
- 
+
  */
 set NOCOUNT on;
 
@@ -80,7 +80,7 @@ and @CLOUDTYPE = 'NONE'
 and @CURRENT_DB_NAME <> 'tempdb' begin exec (
 	'
 				WITH TableData AS (
-					SELECT 
+					SELECT
 						[schema_name]      = s.[name]
 						,[table_name]       = t.[name]
 						,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -124,7 +124,7 @@ and @CURRENT_DB_NAME <> 'tempdb' begin exec (
 					LEFT JOIN sys.partition_functions pf WITH (NOLOCK) on (pf.function_id = ps.function_id)
 					WHERE t.is_ms_shipped = 0 -- Not a system table
 						AND i.type IN (0,1,5))
-					SELECT 
+					SELECT
 						''' + @PKEY + ''' AS PKEY,
 						DB_NAME() as database_name,
 						schema_name,
@@ -156,7 +156,7 @@ and @validDB <> 0
 and @CLOUDTYPE = 'NONE'
 and @CURRENT_DB_NAME = 'tempdb' begin exec(
 	'WITH TableData AS (
-					SELECT 
+					SELECT
 						[schema_name]      = s.[name]
 						,[table_name]       = t.[name]
 						,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -200,7 +200,7 @@ and @CURRENT_DB_NAME = 'tempdb' begin exec(
 					LEFT JOIN sys.partition_functions pf WITH (NOLOCK) on (pf.function_id = ps.function_id)
 					WHERE t.is_ms_shipped = 0 -- Not a system table
 						AND i.type IN (0,1,5)
-						AND (t.name LIKE N''##%'' 
+						AND (t.name LIKE N''##%''
 							OR t.name like N''#%[_]%''
 							AND t.name not like N''#[0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z]''))
 					SELECT
@@ -236,7 +236,7 @@ and @CLOUDTYPE = 'NONE'
 and @CURRENT_DB_NAME <> 'tempdb' begin exec (
 	'
 			WITH TableData AS (
-				SELECT 
+				SELECT
 					[schema_name]      = s.[name]
 					,[table_name]       = t.[name]
 					,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -313,7 +313,7 @@ and @CLOUDTYPE = 'NONE'
 and @CURRENT_DB_NAME = 'tempdb' begin exec (
 	'
 			WITH TableData AS (
-				SELECT 
+				SELECT
 					[schema_name]      = s.[name]
 					,[table_name]       = t.[name]
 					,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -357,7 +357,7 @@ and @CURRENT_DB_NAME = 'tempdb' begin exec (
 				LEFT JOIN sys.partition_functions pf WITH (NOLOCK) on (pf.function_id = ps.function_id)
 				WHERE t.is_ms_shipped = 0 -- Not a system table
 					AND i.type IN (0,1,5)
-					AND (t.name LIKE N''##%'' 
+					AND (t.name LIKE N''##%''
 							OR t.name like N''#%[_]%''
 							AND t.name not like N''#[0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z]''))
 				SELECT
@@ -393,7 +393,7 @@ and @CLOUDTYPE = 'AZURE'
 and @CURRENT_DB_NAME <> 'tempdb' begin exec (
 	'
 		WITH TableData AS (
-			SELECT 
+			SELECT
 				[schema_name]      = s.[name]
 				,[table_name]       = t.[name]
 				,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore

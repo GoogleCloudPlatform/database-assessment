@@ -151,7 +151,8 @@ exclude = [
   '__pycache__',
 ]
 fix = true
-ignore = [
+line-length = 120
+lint.ignore = [
   "E501",    # pycodestyle line too long, handled by black
   "D100",    # pydocstyle - missing docstring in public module
   "D101",    # pydocstyle - missing docstring in public class
@@ -200,21 +201,20 @@ ignore = [
   "TD",
   "PERF203", # ignore for now; investigate
 ]
-line-length = 120
-select = ["ALL"]
+lint.select = ["ALL"]
 unsafe-fixes = true
 # Allow unused variables when underscore-prefixed.
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 src = ["src", "tests/"]
 target-version = "py38"
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = "google"
 
-[tool.ruff.mccabe]
+[tool.ruff.lint.mccabe]
 max-complexity = 12
 
-[tool.ruff.pep8-naming]
+[tool.ruff.lint.pep8-naming]
 classmethod-decorators = [
   "classmethod",
   "pydantic.validator",
@@ -226,12 +226,14 @@ classmethod-decorators = [
 ]
 
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 known-first-party = ['tests', 'dma', 'scripts']
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ['F401', 'D104']
 "scripts/*.py" = ["INP001"]
+"scripts/masker/dma-collection-masker" = ["PYI024", "FA100", "S202", "S311"]
+"scripts/post-build.py" = ["ERA001"]
 "tests/*.py" = ['D103', 'S101', 'D104']
 
 [tool.slotscheck]

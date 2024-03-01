@@ -1,18 +1,18 @@
 /*
  Copyright 2023 Google LLC
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  https://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
- 
+
  */
 set NOCOUNT on;
 
@@ -77,7 +77,7 @@ where name not in (
 end begin TRY if @validDB <> 0 begin exec (
     '
         INSERT INTO #objectList
-        SELECT 
+        SELECT
             database_name,
             schema_name,
             NameOfObject as object_name,
@@ -90,19 +90,19 @@ end begin TRY if @validDB <> 0 begin exec (
             SELECT
                 DB_NAME(DB_ID()) as database_name,
                 s.name as schema_name,
-                RTRIM(LTRIM(o.type)) as type, 
-                o.type_desc, 
-                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS LinesOfCode, 
+                RTRIM(LTRIM(o.type)) as type,
+                o.type_desc,
+                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS LinesOfCode,
                 OBJECT_NAME(o.object_id) AS NameOfObject ,
                 NULL as associated_table_name
-            FROM 
+            FROM
                 sys.objects o
                 JOIN sys.schemas s ON (s.schema_id = o.schema_id)
                 LEFT OUTER JOIN sys.all_sql_modules a ON (a.OBJECT_ID = o.object_id)
-            WHERE 
+            WHERE
                 o.type NOT IN (
                     ''S'' --SYSTEM_TABLE
-                    , 
+                    ,
                     ''IT'' --INTERNAL_TABLE
                     ,
                     ''F'' --FOREIGN KEY
@@ -118,7 +118,7 @@ end begin TRY if @validDB <> 0 begin exec (
                     ''TR'' --TRIGGER
                     ,
                     ''V'' --VIEW
-                    ) 
+                    )
                 AND OBJECTPROPERTY(o.object_id, ''IsMSShipped'') = 0
             UNION
             SELECT
@@ -129,13 +129,13 @@ end begin TRY if @validDB <> 0 begin exec (
                 ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS LinesOfCode,
                 cc.name AS NameOfObject,
                 object_name(cc.parent_object_id) AS associated_table_name
-            FROM 
+            FROM
                 sys.check_constraints cc
                 JOIN sys.schemas s ON (s.schema_id = cc.schema_id)
                 LEFT OUTER JOIN sys.all_sql_modules a ON (a.OBJECT_ID = cc.object_id)
             WHERE cc.is_ms_shipped = 0
             UNION
-            SELECT 
+            SELECT
                 DB_NAME(DB_ID()) as database_name,
                 s.name as schema_name,
                 RTRIM(LTRIM(type)) as type,
@@ -143,13 +143,13 @@ end begin TRY if @validDB <> 0 begin exec (
                 ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS LinesOfCode,
                 fk.name AS NameOfObject ,
                 object_name(fk.parent_object_id) AS associated_table_name
-            FROM 
+            FROM
                 sys.foreign_keys fk
                 JOIN sys.schemas s ON (s.schema_id = fk.schema_id)
                 LEFT OUTER JOIN sys.all_sql_modules a ON (a.OBJECT_ID = fk.object_id)
             WHERE fk.is_ms_shipped = 0
             UNION
-            SELECT 
+            SELECT
                 DB_NAME(DB_ID()) as database_name,
                 s.name as schema_name,
                 RTRIM(LTRIM(type)) as type,
@@ -157,7 +157,7 @@ end begin TRY if @validDB <> 0 begin exec (
                 ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS LinesOfCode,
                 dc.name AS NameOfObject ,
                 object_name(dc.parent_object_id) AS associated_table_name
-            FROM 
+            FROM
                 sys.default_constraints dc
                 JOIN sys.schemas s ON (s.schema_id = dc.schema_id)
                 LEFT OUTER JOIN sys.all_sql_modules a ON (a.OBJECT_ID = dc.object_id)
@@ -177,7 +177,7 @@ end begin TRY if @validDB <> 0 begin exec (
                 LEFT OUTER JOIN sys.all_sql_modules a ON (a.OBJECT_ID = kc.object_id)
             WHERE kc.is_ms_shipped = 0
             UNION
-            SELECT 
+            SELECT
                 DB_NAME(DB_ID()) as database_name,
                 s.name as schema_name,
                 RTRIM(LTRIM(t.type)) as type,
@@ -185,14 +185,14 @@ end begin TRY if @validDB <> 0 begin exec (
                 ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS LinesOfCode,
                 t.name AS NameOfObject ,
                 object_name(t.parent_id) AS associated_table_name
-            FROM 
+            FROM
                 sys.triggers t
                 JOIN sys.tables tbl ON (tbl.object_id = t.parent_id)
                 LEFT OUTER JOIN sys.schemas s ON (s.schema_id = tbl.schema_id)
                 LEFT OUTER JOIN sys.all_sql_modules a ON (a.OBJECT_ID = t.object_id)
             WHERE t.is_ms_shipped = 0
             UNION
-            SELECT 
+            SELECT
                 DB_NAME(DB_ID()) as database_name,
                 s.name as schema_name,
                 RTRIM(LTRIM(type)) as type,
@@ -206,7 +206,7 @@ end begin TRY if @validDB <> 0 begin exec (
                 LEFT OUTER JOIN sys.all_sql_modules a ON (a.OBJECT_ID = v.object_id)
             WHERE v.is_ms_shipped = 0
             UNION
-            SELECT 
+            SELECT
                 DB_NAME(DB_ID()) as database_name,
                 s.name as schema_name,
                 ''TT'' as type,
@@ -218,12 +218,12 @@ end begin TRY if @validDB <> 0 begin exec (
                 sys.types t
                 JOIN sys.schemas s ON (s.schema_id = t.schema_id)
             WHERE t.system_type_id <> t.user_type_id and t.is_user_defined = 1 and t.is_table_type = 1
-        ) SubQuery 
-        GROUP BY 
+        ) SubQuery
+        GROUP BY
             database_name,
             schema_name,
             NameOfObject,
-            type, 
+            type,
             type_desc,
             associated_table_name'
 );

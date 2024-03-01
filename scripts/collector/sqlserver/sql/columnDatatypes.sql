@@ -1,18 +1,18 @@
 /*
  Copyright 2023 Google LLC
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  https://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
- 
+
  */
 set NOCOUNT on;
 
@@ -109,7 +109,7 @@ and @CLOUDTYPE = 'NONE' begin exec (
             ,encryption_type
             ,is_sparse
             ,rule_object_id
-            ,column_count 
+            ,column_count
          )
          SELECT s.name AS schema_name
                , o.name AS table_name
@@ -124,14 +124,14 @@ and @CLOUDTYPE = 'NONE' begin exec (
                , c.is_sparse
                , c.rule_object_id
                , count(1) column_count
-            FROM  sys.objects o 
+            FROM  sys.objects o
             JOIN  sys.schemas s
                ON  s.schema_id = o.schema_id
             JOIN  sys.columns c
             ON  o.object_id = c.object_id
             JOIN  sys.types t
             ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-         WHERE o.type_desc = ''USER_TABLE'' 
+         WHERE o.type_desc = ''USER_TABLE''
             -- AND t.system_type_id = t.user_type_id /* Removing to capture datatypes like hierarchyid */
          GROUP BY s.name
                , o.name
@@ -166,7 +166,7 @@ and @CLOUDTYPE = 'NONE' begin exec (
             ,encryption_type
             ,is_sparse
             ,rule_object_id
-            ,column_count 
+            ,column_count
          )
          SELECT s.name AS schema_name
                , o.name AS table_name
@@ -181,14 +181,14 @@ and @CLOUDTYPE = 'NONE' begin exec (
                , c.is_sparse
                , c.rule_object_id
                , count(1) column_count
-            FROM  sys.objects o 
+            FROM  sys.objects o
             JOIN  sys.schemas s
                ON  s.schema_id = o.schema_id
             JOIN  sys.columns c
             ON  o.object_id = c.object_id
             JOIN  sys.types t
             ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-         WHERE o.type_desc = ''USER_TABLE'' 
+         WHERE o.type_desc = ''USER_TABLE''
             -- AND t.system_type_id = t.user_type_id /* Removing to capture datatypes like hierarchyid */
          GROUP BY s.name
                , o.name
@@ -221,7 +221,7 @@ and @CLOUDTYPE = 'AZURE' begin exec (
             ,encryption_type
             ,is_sparse
             ,rule_object_id
-            ,column_count 
+            ,column_count
          )
          SELECT s.name AS schema_name
                , o.name AS table_name
@@ -236,14 +236,14 @@ and @CLOUDTYPE = 'AZURE' begin exec (
                , c.is_sparse
                , c.rule_object_id
                , count(1) column_count
-            FROM  sys.objects o 
+            FROM  sys.objects o
             JOIN  sys.schemas s
                ON  s.schema_id = o.schema_id
             JOIN  sys.columns c
             ON  o.object_id = c.object_id
             JOIN  sys.types t
             ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-         WHERE o.type_desc = ''USER_TABLE'' 
+         WHERE o.type_desc = ''USER_TABLE''
             AND t.system_type_id = t.user_type_id
          GROUP BY s.name
                , o.name

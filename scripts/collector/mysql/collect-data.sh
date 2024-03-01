@@ -124,7 +124,7 @@ SELECT current_setting('server_version_num');
 EOF
 )
 retcd=$?
-    if [[ $retcd -ne 0 ]] 
+    if [[ $retcd -ne 0 ]]
     then
 	    echo "Error connecting to the target database ${connectString} ."
 	    echo "Connection attempt returned : ${dbVersion}"
@@ -154,7 +154,7 @@ SELECT version();
 EOF
 )
 retcd=$?
-    if [[ $retcd -ne 0 ]] 
+    if [[ $retcd -ne 0 ]]
     then
 	    echo "Error connecting to the target database ${connectString} ."
 	    echo "Connection attempt returned : ${dbVersion}"
@@ -283,7 +283,7 @@ fi
 
 # Only run once per VM, instead of once per DB.
 specsOut="output/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv"
-if [[ -z "$specsPath" ]] ; then 
+if [[ -z "$specsPath" ]] ; then
       host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
       ./db-machine-specs.sh "$host" "$vmUserName" "${V_FILE_TAG}" "${DMA_SOURCE_ID}" "${V_MANUAL_ID}" "${specsOut}" "${extraSSHArgs[@]}"
 else
@@ -316,7 +316,7 @@ EOF
 	exit
 else
 # If given a database name, create a collection for that one database.
-export PGPASSWORD="$pass"  
+export PGPASSWORD="$pass"
 ${SQLCMD} -X --user=${user} -d "${db}" -h ${host} -w -p ${port}  --no-align --echo-errors 2>output/opdb__stderr_${V_FILE_TAG}.log <<EOF
 \set VTAG ${V_FILE_TAG}
 \set PKEY '\'${V_FILE_TAG}\''
@@ -571,7 +571,7 @@ DIAGPACKACCESS="mysql"
 	 fi
  fi
 
- 
+
  if [[ "${manualUniqueId}" != "" && "${manualUniqueId}" != "NA" ]] ; then
 	 manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
  else manualUniqueId='NA'

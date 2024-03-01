@@ -34,9 +34,9 @@
     Tag that can be supplied by the customer to make a collection unique.  Maps to the internal variable dmaManualId (optional)
 .PARAMETER collectVMSpecs
     Whether to explicitly request credentials to collect data from the VM hosting the DB if the current users credentials are not sufficient.
-    Note the script will attempt to collect VM specs using the current users regardless. (default:false) 
+    Note the script will attempt to collect VM specs using the current users regardless. (default:false)
 .PARAMETER useWindowsAuthentication
-    Specifies if the loging to the database will utilize the current Windows Authenticated User or the supplied username / password for SQL Authentication (default:false) 
+    Specifies if the loging to the database will utilize the current Windows Authenticated User or the supplied username / password for SQL Authentication (default:false)
 .EXAMPLE
     To use a specific username / password combination for a named instance:
         instanceReview.ps1 -serverName [server name / ip address]\[instance name] -collectionUserName [collection username] -collectionUserPass [collection username password] -ignorePerfmon [true/false] -dmaManualId [string]
@@ -104,7 +104,7 @@ if ((([string]::IsNullorEmpty($collectionUserPass)) -or ([string]$collectionUser
         Write-Host "#   Executing Collection with Windows Authenticated User    #"
         Write-Host "#                                                           #"
         Write-Host "#############################################################"
-        Write-Host ""   
+        Write-Host ""
     }
 }
 elseif ($useWindowsAuthentication) {
@@ -124,7 +124,7 @@ elseif (-not ([string]::IsNullOrEmpty($collectionUserPass))) {
     Write-Host "#                                                           #"
     Write-Host "#     Executing Collection with SQL Authenticated User      #"
     Write-Host "#                                                           #"
-    Write-Host "#############################################################"   
+    Write-Host "#############################################################"
     Write-Host ""
 }
 else {
@@ -158,7 +158,7 @@ else {
         $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$database)
         $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
-        
+
         if ([string]$database -ne "all") {
             $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$database | findstr /v /c:"-"
             if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
@@ -216,7 +216,7 @@ $validSQLInstanceVersionCheckValues = $splitValidInstanceVerisionCheckObj | ForE
 $isValidSQLInstanceVersion = $validSQLInstanceVersionCheckValues[0]
 $isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
 
-$op_version = "4.3.31" 
+$op_version = "4.3.31"
 
 if ([string]($isValidSQLInstanceVersion) -eq "N") {
     Write-Host "#############################################################"
@@ -451,7 +451,7 @@ if ($isCloudOrLinuxHost -eq "AZURE") {
 else {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Transaction Log Backup Info..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\dbServerTranLogBackupCountByDayByHour.sql -d msdb -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$tranLogBkupCountByDayByHour
-    sqlcmd -S $serverName -i sql\dbServerTranLogBackupSizeByDayByHour.sql -d msdb -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$tranLogBkupSizeByDayByHour    
+    sqlcmd -S $serverName -i sql\dbServerTranLogBackupSizeByDayByHour.sql -d msdb -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$tranLogBkupSizeByDayByHour
 }
 
 ### First establish headers for the collection files which could execute against multiple databases in the instance

@@ -1,18 +1,18 @@
 /*
  Copyright 2023 Google LLC
- 
+
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
  You may obtain a copy of the License at
- 
+
  https://www.apache.org/licenses/LICENSE-2.0
- 
+
  Unless required by applicable law or agreed to in writing, software
  distributed under the License is distributed on an "AS IS" BASIS,
  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  See the License for the specific language governing permissions and
  limitations under the License.
- 
+
  */
 set NOCOUNT on;
 
@@ -145,7 +145,7 @@ end begin TRY if @validDB <> 0 begin exec (
             LEFT JOIN sys.partitions AS p ON (p.object_id = i.object_id AND p.index_id = i.index_id)
             LEFT JOIN sys.allocation_units AS a ON (a.container_id = p.partition_id)
             LEFT JOIN sys.partition_schemes ps ON (i.data_space_id = ps.data_space_id)
-            LEFT JOIN index_computed_cols icc ON (i.object_id = icc.object_id 
+            LEFT JOIN index_computed_cols icc ON (i.object_id = icc.object_id
                      and i.name = icc.index_name
                      and icc.table_name = t.name
                      and icc.schema_name = s.name)
@@ -175,7 +175,7 @@ end begin TRY if @validDB <> 0 begin exec (
                   ELSE ''0''
                END
        UNION
-       SELECT 
+       SELECT
           DB_NAME() as database_name,
           s.name as schema_name,
           t.name as table_name,
@@ -203,9 +203,9 @@ end begin TRY if @validDB <> 0 begin exec (
           LEFT JOIN sys.partitions AS p ON p.object_id = fi.object_id
           LEFT JOIN sys.allocation_units AS a ON a.container_id = p.partition_id
           LEFT JOIN sys.partition_schemes ps ON fi.data_space_id = ps.data_space_id
-       GROUP BY 
+       GROUP BY
           s.name,
-          t.name,  
+          t.name,
           o.name,
           p.data_compression,
           p.data_compression_desc,
