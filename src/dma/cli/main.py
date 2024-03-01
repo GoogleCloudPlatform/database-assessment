@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-from dma.utils import get_engine
+from dma.lib.db import get_engine
 
 from ._utils import RICH_CLICK_INSTALLED, console
 

@@ -14,7 +14,6 @@ import asyncmy
 import asyncpg
 import oracledb
 import pytest
-from oracledb.exceptions import DatabaseError, OperationalError
 
 from tests.helpers import wrap_sync
 
@@ -45,6 +44,7 @@ async def wait_until_responsive(
     raise RuntimeError(msg)
 
 
+SKIP_DOCKER_COMPOSE: bool = bool(os.environ.get("SKIP_DOCKER_COMPOSE", False))
 USE_LEGACY_DOCKER_COMPOSE: bool = bool(os.environ.get("USE_LEGACY_DOCKER_COMPOSE", True))
 
 
@@ -84,23 +84,26 @@ class DockerServiceRegistry:
         pause: float = 0.1,
         **kwargs: Any,
     ) -> None:
+        if SKIP_DOCKER_COMPOSE:
+            self._running_services.add(name)
         if name not in self._running_services:
             self.run_command("up", "-d", name)
             self._running_services.add(name)
 
-            await wait_until_responsive(
-                check=wrap_sync(check),
-                timeout=timeout,
-                pause=pause,
-                host=self.docker_ip,
-                **kwargs,
-            )
+        await wait_until_responsive(
+            check=wrap_sync(check),
+            timeout=timeout,
+            pause=pause,
+            host=self.docker_ip,
+            **kwargs,
+        )
 
     def stop(self, name: str) -> None:
         pass
 
     def down(self) -> None:
-        self.run_command("down", "-t", "5")
+        if not SKIP_DOCKER_COMPOSE:
+            self.run_command("down", "-t", "5")
 
 
 @pytest.fixture(scope="session")
@@ -195,7 +198,7 @@ async def postgres16_responsive(host: str) -> bool:
             database="postgres",
             password="super-secret",  # noqa: S106
         )
-    except (ConnectionError, asyncpg.CannotConnectNowError):
+    except Exception:  # noqa: BLE001
         return False
 
     try:
@@ -213,7 +216,7 @@ async def postgres15_responsive(host: str) -> bool:
             database="postgres",
             password="super-secret",  # noqa: S106
         )
-    except (ConnectionError, asyncpg.CannotConnectNowError):
+    except Exception:  # noqa: BLE001
         return False
 
     try:
@@ -231,7 +234,7 @@ async def postgres14_responsive(host: str) -> bool:
             database="postgres",
             password="super-secret",  # noqa: S106
         )
-    except (ConnectionError, asyncpg.CannotConnectNowError):
+    except Exception:  # noqa: BLE001
         return False
 
     try:
@@ -249,7 +252,7 @@ async def postgres13_responsive(host: str) -> bool:
             database="postgres",
             password="super-secret",  # noqa: S106
         )
-    except (ConnectionError, asyncpg.CannotConnectNowError):
+    except Exception:  # noqa: BLE001
         return False
 
     try:
@@ -267,7 +270,7 @@ async def postgres12_responsive(host: str) -> bool:
             database="postgres",
             password="super-secret",  # noqa: S106
         )
-    except (ConnectionError, asyncpg.CannotConnectNowError):
+    except Exception:  # noqa: BLE001
         return False
 
     try:
@@ -314,7 +317,7 @@ def oracle23c_responsive(host: str) -> bool:
             cursor.execute("SELECT 1 FROM dual")
             resp = cursor.fetchone()
         return resp[0] == 1  # type: ignore
-    except (OperationalError, DatabaseError, Exception):
+    except Exception:  # noqa: BLE001
         return False
 
 
@@ -336,7 +339,7 @@ def oracle18c_responsive(host: str) -> bool:
             cursor.execute("SELECT 1 FROM dual")
             resp = cursor.fetchone()
         return resp[0] == 1  # type: ignore
-    except (OperationalError, DatabaseError, Exception):
+    except Exception:  # noqa: BLE001
         return False
 
 

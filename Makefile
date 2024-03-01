@@ -227,5 +227,7 @@ coverage:  											## Run the tests and generate coverage report
 .PHONY: test
 test:  												## Run the tests
 	@echo "=> Running test cases"
-	@$(ENV_PREFIX)pytest tests
+	@pdm run start-infra
+	@SKIP_DOCKER_COMPOSE=true $(ENV_PREFIX)pytest tests
+	@pdm run stop-infra
 	@echo "=> Tests complete"
