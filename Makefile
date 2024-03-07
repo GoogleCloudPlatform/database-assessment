@@ -99,7 +99,13 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 
 	@echo "=> Building Assessment Data Collection Scripts for Postgresql version $(VERSION)..."
 	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/
+	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/12
+	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/13
+	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/base
 	@cp scripts/collector/postgres/sql/*.sql $(BUILD_DIR)/collector/postgres/sql
+	@cp scripts/collector/postgres/sql/12/*.sql $(BUILD_DIR)/collector/postgres/sql/12
+	@cp scripts/collector/postgres/sql/13/*.sql $(BUILD_DIR)/collector/postgres/sql/13
+	@cp scripts/collector/postgres/sql/base/*.sql $(BUILD_DIR)/collector/postgres/sql/base
 	@cp scripts/collector/postgres/collect-data.sh $(BUILD_DIR)/collector/postgres/
 	@cp scripts/collector/postgres/db-machine-specs.sh $(BUILD_DIR)/collector/postgres/
 	@cp scripts/collector/postgres/README.txt $(BUILD_DIR)/collector/postgres/
