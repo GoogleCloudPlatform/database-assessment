@@ -77,9 +77,8 @@ class DMAFaker():
     ]
 
     def __init__(self) -> None:
-        self._static_hostname: str = self.hostname()
-        self._static_database_name: str = self.database_name()
-        self._static_instance_name: str = self.instance_name()
+        self._collection_key: str
+        self._date_time: str
         self._dbid: str = self._digits(length=10)
 
     def _letters(self, length: int) -> str:
@@ -87,6 +86,23 @@ class DMAFaker():
 
     def _digits(self, length: int) -> str:
         return "".join(random.choices(string.digits, k=length))
+
+    @property
+    def date_time(self) -> str:
+        return self._date_time
+
+    @date_time.setter
+    def date_time(self, value: str) -> str:
+        self._date_time = value
+
+    @property
+    def collection_key(self) -> str:
+        return self._collection_key
+
+    def set_collection_key_from_date_time(self, date_time: str) -> str:
+        if not self._date_time:
+            raise ValueError("date_time is not set")
+        self._collection_key = f"{self.hostname()}_{self.database_name()}_{self.instance_name()}_{date_time}"
 
     def database_name(self) -> str:
         return f"""db-{self._letters(length=8)}""".upper()
@@ -99,20 +115,14 @@ class DMAFaker():
         domain = f"""{self._letters(length=5)}.{random.choice(self.hostname_domains)}"""
         return f"{prefix}.{domain}"
 
-    def date_time(self) -> str:
-        return datetime.now().strftime("%m%d%y%H%M%S")
-
     def pkey(self) -> str:
-        return f"{self.hostname()}_{self.database_name()}_{self.date_time()}"
+        return f"{self.hostname()}_{self.database_name()}_{self.date_time}"
 
     def dma_source_id(self) -> str:
         return f"{self.hostname()}_{self.instance_name()}_{self._dbid}"
 
-    def collection_key_from_date_time(self, date_time: str) -> str:
-        return f"{self._static_hostname}_{self._static_database_name}_{self._static_instance_name}_{date_time}"
-
     def user_name(self) -> str:
-        return f"USER_{self._letters(length=4)}{self._digits(length=2)}"
+        return f"USER_{self._letters(length=4)}{self._digits(length=2)}".upper()
 
 
 fake = DMAFaker()
@@ -196,6 +206,8 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
 
         for collection in collections:
             collection_metadata = _metadata_from_filename(collection)
+            fake.date_time = collection_metadata.date_time
+            fake.set_collection_key_from_date_time(collection_metadata.date_time)
             identity_map: dict[str, str] = {collection_metadata.pkey: fake.pkey()}
             _extract_collection(collection, work_dir)
             for rule in DATA_MASK_CONFIG:
@@ -260,7 +272,7 @@ def _mask_file_collection_key(collection_file: Path) -> Path:
     """
     metadata = _metadata_from_filename(collection_file)
     return collection_file.with_stem(
-        collection_file.stem.replace(metadata.collection_key, fake.collection_key_from_date_time(metadata.date_time))
+        collection_file.stem.replace(metadata.collection_key, fake.collection_key)
     )
 
 
