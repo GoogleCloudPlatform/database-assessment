@@ -22,10 +22,10 @@ import sys
 import tarfile
 import zipfile as zf
 from collections import namedtuple
-from datetime import datetime
 from enum import Flag, auto
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
+from typing import Dict, List, Optional, Tuple
 
 from packaging.version import Version
 from packaging.version import parse as parse_version
@@ -181,13 +181,12 @@ class ApplicationError(Exception):
     """
 
 
-def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -> None:
+def run_masker(input_dir: Optional[Path] = None, output_path: Optional[Path] = None) -> None:
     """Run Masker.
 
     Args:
-        config (Dict[str,str]): dictionary representation of the config.
-        input_dir (Path | None, optional): Path containing collections to mask. Defaults to None.
-        output_path (Path | None, optional): Path to write masked collection. Defaults to None.
+        input_dir (Optional[Path]): Path containing collections to mask. Defaults to None.
+        output_path (Optional[Path]): Path to write masked collection. Defaults to None.
     """
     with TemporaryDirectory() as temp_dir:
         work_dir = Path(temp_dir)
@@ -278,7 +277,7 @@ def _mask_file_collection_key(collection_file: Path) -> Path:
     )
 
 
-def _find_collections_to_process(search_path: Path) -> list[Path]:
+def _find_collections_to_process(search_path: Path) -> List[Path]:
     """Find collections to process.
 
     Args:
@@ -316,7 +315,7 @@ def _extract_collection(collection_file: Path, extract_path: Path) -> None:
         tf.close()
 
 
-def _find_files_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> list[Path] | None:
+def _find_files_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> Optional[Path]:
     """Find files referenced by data masking rule.
 
     Args:
@@ -350,8 +349,8 @@ def _find_files_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> lis
 def _generate_identity_map_from_rule(
     rule: DataMaskRule,
     collection_file: Path,
-    existing_identity_map: dict[str, str] | None = None,
-) -> dict[str, str]:
+    existing_identity_map: Optional[Dict[str, str]] = None,
+) -> Dict[str, str]:
     """Generate identity map from rule.
 
     This function takes a rule and identifies all of the unique values that should be replaced within a collection.
@@ -369,7 +368,7 @@ def _generate_identity_map_from_rule(
     if existing_identity_map is None:
         existing_identity_map = {}
 
-    all_values: list[str] = list(existing_identity_map.keys())
+    all_values: List[str] = list(existing_identity_map.keys())
     collection_metadata = _metadata_from_filename(collection_file)
     column_position = rule.column_position
     if collection_metadata.script_version < Version("4.3.15") and rule.column_position < -2:
@@ -390,7 +389,7 @@ def _generate_identity_map_from_rule(
     }
 
 
-def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, identity_map: dict[str, str]) -> None:
+def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, identity_map: Dict[str, str]) -> None:
     """Apply Identity Map to File.
 
     This function takes the identity map (a dictionary that holds unique values and their masked replacement value) and applies it to a file.
@@ -418,10 +417,10 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
 
 def _package_collection(
     collection: Path,
-    identity_map: dict[str, str],
+    identity_map: Dict[str, str],
     extract_path: Path,
     output_path: Path,
-) -> tuple[Path, Path]:
+) -> Tuple[Path, Path]:
     """Packages de-identified files.
 
     Args:
