@@ -215,9 +215,11 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
                     "4.3.15"
                 ):
                     continue
-                for collection_file in _find_files_referenced_by_rule(rule, work_dir):
-                    identity_map = _generate_identity_map_from_rule(rule, collection_file, identity_map)
-                    _apply_identity_map_to_file(rule, collection_file, identity_map)
+                collection_files = _find_files_referenced_by_rule(rule, work_dir)
+                if collection_files:
+                    for collection_file in collection_files:
+                        identity_map = _generate_identity_map_from_rule(rule, collection_file, identity_map)
+                        _apply_identity_map_to_file(rule, collection_file, identity_map)
             logger.info("Completed work on %s", collection.stem)
             _collection_key_file, _new_collection_archive = _package_collection(
                 collection, identity_map, work_dir, output_path
@@ -368,12 +370,16 @@ def _generate_identity_map_from_rule(
         existing_identity_map = {}
 
     all_values: list[str] = list(existing_identity_map.keys())
+    collection_metadata = _metadata_from_filename(collection_file)
+    column_position = rule.column_position
+    if collection_metadata.script_version < Version("4.3.15") and rule.column_position < -2:
+        column_position += 2
     with collection_file.open(mode="r", encoding="utf-8") as f:
         data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
         for rn, row in enumerate(data_to_mask):
             if rn > 0:
                 # Get the value from column to mask
-                all_values.append(row[rule.column_position])
+                all_values.append(row[column_position])
     unique_values = list(dict.fromkeys(all_values))
     return {
         value: existing_identity_map.get(
@@ -399,9 +405,13 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
     with collection_file.open(mode="r", encoding="utf-8") as f, NamedTemporaryFile(mode="w", delete=False) as t:
         data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
         temp_file = csv.writer(t, delimiter="|", quotechar='"')
+        collection_metadata = _metadata_from_filename(collection_file)
+        column_position = rule.column_position
+        if collection_metadata.script_version < Version("4.3.15") and rule.column_position < -2:
+            column_position += 2
         for rn, row in enumerate(data_to_mask):
             if rn > 0:
-                row[rule.column_position] = identity_map.get(row[rule.column_position], "~~UNMAPPED~~")
+                row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
             temp_file.writerow(row)
         shutil.move(t.name, collection_file)
 
