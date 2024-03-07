@@ -2,4 +2,3 @@ bump2version
 ruff
 sqlfluff
 pre-commit
-faker
