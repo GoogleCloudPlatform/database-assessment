@@ -27,10 +27,6 @@ from enum import Flag, auto
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 
-from faker import Faker
-from faker.providers.internet import ElementsType
-from faker.providers.internet import Provider as InternetProvider
-from faker.providers.lorem.en_US import Provider as LoremProvider
 from packaging.version import Version
 from packaging.version import parse as parse_version
 
@@ -54,23 +50,54 @@ FileMetadata = namedtuple(
 )
 
 
-class DMAFakerProvider(LoremProvider, InternetProvider):
-    """Custom Faker provider to provide masked values"""
+class DMAFaker():
+    """Fake data provider to provide masked values"""
 
-    user_name_formats: ElementsType[str] = ("USER_{{first_name}}##",)
+    hostname_prefixes: list[str] = [
+        "db",
+        "srv",
+        "desktop",
+        "laptop",
+        "lt",
+        "email",
+        "web",
+    ]
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    hostname_domains: list[str] = [
+        "com",
+        "com",
+        "com",
+        "com",
+        "com",
+        "com",
+        "biz",
+        "info",
+        "net",
+        "org",
+    ]
+
+    def __init__(self) -> None:
         self._static_hostname: str = self.hostname()
         self._static_database_name: str = self.database_name()
         self._static_instance_name: str = self.instance_name()
-        self._dbid: str = "".join(random.choices(string.digits, k=10))
+        self._dbid: str = self._digits(length=10)
+
+    def _letters(self, length: int) -> str:
+        return "".join(random.choices(string.ascii_lowercase, k=length))
+
+    def _digits(self, length: int) -> str:
+        return "".join(random.choices(string.digits, k=length))
 
     def database_name(self) -> str:
-        return f"""db-{self.text(max_nb_chars=8).rstrip(".")}""".upper()
+        return f"""db-{self._letters(length=8)}""".upper()
 
     def instance_name(self) -> str:
-        return f"""inst-{self.text(max_nb_chars=8).rstrip(".")}""".upper()
+        return f"""inst-{self._letters(length=8)}""".upper()
+
+    def hostname(self) -> str:
+        prefix = f"""{random.choice(self.hostname_prefixes)}-{self._digits(length=2)}"""
+        domain = f"""{self._letters(length=5)}.{random.choice(self.hostname_domains)}"""
+        return f"{prefix}.{domain}"
 
     def date_time(self) -> str:
         return datetime.now().strftime("%m%d%y%H%M%S")
@@ -85,11 +112,10 @@ class DMAFakerProvider(LoremProvider, InternetProvider):
         return f"{self._static_hostname}_{self._static_database_name}_{self._static_instance_name}_{date_time}"
 
     def user_name(self) -> str:
-        return super().user_name().upper()
+        return f"USER_{self._letters(length=4)}{self._digits(length=2)}"
 
 
-fake = Faker()
-fake.add_provider(DMAFakerProvider)
+fake = DMAFaker()
 
 
 class DataMaskTypes(Flag):
