@@ -99,7 +99,7 @@ class DMAFaker():
     def collection_key(self) -> str:
         return self._collection_key
 
-    def set_collection_key_from_date_time(self, date_time: str) -> str:
+    def set_collection_key_from_date_time(self, date_time: str) -> None:
         if not self._date_time:
             raise ValueError("date_time is not set")
         self._collection_key = f"{self.hostname()}_{self.database_name()}_{self.instance_name()}_{date_time}"
