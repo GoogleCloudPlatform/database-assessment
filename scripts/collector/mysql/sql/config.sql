@@ -104,7 +104,7 @@ from (
                 select 'TABLE_NO_INNODB_SIZE' as variable_name,
                     non_innodb_data_size_bytes as variable_value
                 from (
-                        select ,
+                        select 
                             sum(
                                 if(upper(table_engine) != 'INNODB', data_length, 0)
                             ) as non_innodb_data_size_bytes
