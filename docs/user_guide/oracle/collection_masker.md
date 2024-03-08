@@ -1,10 +1,10 @@
 # Masking a collection
 
-While the collection script do not gather any data or source code, it does contain the name of schemas and hostname information. If there is a requirement to obfuscate this data, there is an optional masking script included with the scripts.
+While the collection script does not gather any data or source code, it does contain the name of schemas and hostname information. If there is a requirement to obfuscate this data, there is an optional masking script included with the scripts.
 
-This script will create a key file that maps the anonymized schema attribute to its original name.
+This script will create a key file that maps the anonymized schema and hostname attributes to its original name.
 
-**Note** This file should is not sent with the collection script and should not be lost, as it can't be recreated.
+**Note** This file should not be sent with the collection and should not be lost, as it can't be recreated.
 
 ## Executing the script
 
