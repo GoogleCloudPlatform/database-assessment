@@ -30,7 +30,7 @@ async def postgres16_async_engine(docker_ip: str, postgres16_service: None) -> A
             host=docker_ip,
             port=5427,
             database="postgres",
-            query={},  # type:ignore[arg-type]
+            query={},
         ),
         poolclass=NullPool,
     )
@@ -47,7 +47,7 @@ async def postgres15_async_engine(docker_ip: str, postgres15_service: None) -> A
             host=docker_ip,
             port=5426,
             database="postgres",
-            query={},  # type:ignore[arg-type]
+            query={},
         ),
         poolclass=NullPool,
     )
@@ -64,7 +64,7 @@ async def postgres14_async_engine(docker_ip: str, postgres14_service: None) -> A
             host=docker_ip,
             port=5425,
             database="postgres",
-            query={},  # type:ignore[arg-type]
+            query={},
         ),
         poolclass=NullPool,
     )
@@ -81,7 +81,7 @@ async def postgres13_async_engine(docker_ip: str, postgres13_service: None) -> A
             host=docker_ip,
             port=5424,
             database="postgres",
-            query={},  # type:ignore[arg-type]
+            query={},
         ),
         poolclass=NullPool,
     )
@@ -98,7 +98,7 @@ async def postgres12_async_engine(docker_ip: str, postgres12_service: None) -> A
             host=docker_ip,
             port=5423,
             database="postgres",
-            query={},  # type:ignore[arg-type]
+            query={},
         ),
         poolclass=NullPool,
     )

@@ -1,7 +1,6 @@
 version: "3"
 
 services:
-
   postgres12:
     networks:
       - default
@@ -114,4 +113,4 @@ services:
       MSSQL_TCP_PORT: 1433
 networks:
   default:
-    driver: bridge 
+    driver: bridge

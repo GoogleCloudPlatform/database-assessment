@@ -8,7 +8,7 @@ import aiosql
 
 from dma import utils
 from dma.collector.query_manager import CollectionQueryManager
-from dma.exceptions import ApplicationError
+from dma.lib.exceptions import ApplicationError
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,11 +29,11 @@ async def provides_collection_queries(
     if rdbms_type == "postgresql":
         driver_adapter = "asyncpg"
     elif rdbms_type == "mysql":
-        driver_adapter = "mysql"
+        driver_adapter = "asyncmy"
     elif rdbms_type == "oracle":
-        driver_adapter = "oracle"
-    elif rdbms_type == "mysql":
-        driver_adapter = "mysql"
+        driver_adapter = "async_oracledb"
+    elif rdbms_type == "mssql":
+        driver_adapter = "mssql"
     else:
         msg = "Unable to identify driver adapter from dialect."
         raise ApplicationError(msg)

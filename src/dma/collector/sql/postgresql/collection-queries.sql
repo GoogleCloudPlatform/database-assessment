@@ -1,4 +1,4 @@
--- name: collector-postgres-applications
+-- name: collection-postgres-applications
 select chr(34) || :PKEY || chr(34) as pkey,
   chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
   chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
@@ -10,7 +10,7 @@ group by 1,
   3,
   4;
 
--- name: extended-collector-postgres-applications
+-- name: extended-collection-postgres-applications
 select chr(34) || :PKEY || chr(34) as pkey,
   chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
   chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
@@ -22,7 +22,7 @@ group by 1,
   3,
   4;
 
--- name: collector-postgres-calculated-metrics
+-- name: collection-postgres-calculated-metrics
 with table_summary as (
   select count(distinct c.oid) as total_table_count
   from pg_class c

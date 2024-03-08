@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-PYAPP_VERSION = "v0.14.0"
+PYAPP_VERSION = "v0.15.1"
 PROJECT_ROOT = Path(__file__).parent.parent
 logging.basicConfig(
     level=logging.INFO,

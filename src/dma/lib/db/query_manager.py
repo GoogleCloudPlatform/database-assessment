@@ -15,7 +15,9 @@ from __future__ import annotations
 
 import contextlib
 import faulthandler
-from typing import TYPE_CHECKING, Any, AsyncIterator, TypeVar
+from typing import TYPE_CHECKING, Any, AsyncIterator, Protocol, TypeVar
+
+from dma.lib.exceptions import ApplicationError
 
 faulthandler.enable()
 if TYPE_CHECKING:
@@ -24,7 +26,7 @@ if TYPE_CHECKING:
 QueryManagerT = TypeVar("QueryManagerT", bound="QueryManager")
 
 
-class QueryManager:
+class QueryManager(Protocol):
     """Stores the queries for a version of the collection."""
 
     queries: Queries
@@ -76,4 +78,4 @@ class QueryManager:
             return getattr(self.queries, method)
         except AttributeError as exc:
             msg = "%s was not found"
-            raise NotImplementedError(msg, method) from exc
+            raise ApplicationError(msg, method) from exc

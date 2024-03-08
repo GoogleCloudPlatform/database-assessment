@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, Literal
 
-from dma.lib.db import get_engine
+from rich import prompt
 
 from ._utils import RICH_CLICK_INSTALLED, console
 
@@ -61,12 +62,83 @@ def app_group(ctx: Context) -> None:
     required=False,
     show_default=False,
 )
+@click.option(
+    "--username",
+    "-u",
+    help="The database user to connect as.",
+    default=None,
+    type=click.STRING,
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--password",
+    "-pw",
+    help="The database user password.",
+    default=None,
+    type=click.STRING,
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--hostname",
+    "-h",
+    help="The hostname of the database server",
+    default=None,
+    type=click.STRING,
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--port",
+    "-p",
+    help="The port of the database server",
+    default=None,
+    type=click.INT,
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--database",
+    "-d",
+    help="The name of the database to connect to.",
+    default=None,
+    type=click.STRING,
+    required=False,
+    show_default=False,
+)
 def collect_data(
     no_prompt: bool,
-    db_type: Literal["mysql", "postgres", "mssql", "oracle"] | None = None,
+    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    username: str | None = None,
+    password: str | None = None,
+    hostname: str | None = None,
+    port: int | None = None,
+    database: str | None = None,
 ) -> None:
     """Process a collection of advisor extracts."""
+    from dma.collector import tasks as collector_tasks
+
     console.rule("Starting data collection process", align="left")
+
+    if hostname is None:
+        hostname = prompt.Prompt.ask("Please enter a hostname for the database")
+    if port is None:
+        port = prompt.IntPrompt.ask("Please enter a port for the database")
+    if database is None:
+        database = prompt.Prompt.ask("Please enter a database name")
+    if username is None:
+        username = prompt.Prompt.ask("Please enter a username")
+    if password is None:
+        password = prompt.Prompt.ask("Please enter a password", password=True)
+    if no_prompt:
+        input_confirmed = True
+    if not no_prompt:
+        input_confirmed = prompt.Confirm.ask("Are you ready to start the assessment?")
+    if input_confirmed:
+        asyncio.run(collector_tasks.readiness_check(db_type, username, password, hostname, port, database))
+    else:
+        console.rule("Skipping execution until input is confirmed", align="left")
 
 
 @app_group.command(
@@ -140,12 +212,31 @@ def collect_data(
 def readiness_check(
     no_prompt: bool,
     db_type: Literal["mysql", "postgres", "mssql", "oracle"],
-    username: str,
-    password: str,
-    hostname: str,
-    port: int,
-    database: str,
+    username: str | None = None,
+    password: str | None = None,
+    hostname: str | None = None,
+    port: int | None = None,
+    database: str | None = None,
 ) -> None:
     """Process a collection of advisor extracts."""
+    from dma.collector import tasks as collector_tasks
+
     console.rule("Starting readiness check process", align="left")
-    _engine = get_engine(db_type, username, password, hostname, port, database)
+    if hostname is None:
+        hostname = prompt.Prompt.ask("Please enter a hostname for the database")
+    if port is None:
+        port = prompt.IntPrompt.ask("Please enter a port for the database")
+    if database is None:
+        database = prompt.Prompt.ask("Please enter a database name")
+    if username is None:
+        username = prompt.Prompt.ask("Please enter a username")
+    if password is None:
+        password = prompt.Prompt.ask("Please enter a password", password=True)
+    if no_prompt:
+        input_confirmed = True
+    if not no_prompt:
+        input_confirmed = prompt.Confirm.ask("Are you ready to start the assessment?")
+    if input_confirmed:
+        asyncio.run(collector_tasks.readiness_check(db_type, username, password, hostname, port, database))
+    else:
+        console.rule("Skipping execution until input is confirmed", align="left")

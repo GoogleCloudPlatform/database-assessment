@@ -29,7 +29,7 @@ async def mysql8_asyncmy_engine(docker_ip: str, mysql8_service: None) -> AsyncEn
             host=docker_ip,
             port=3360,
             database="db",
-            query={},  # type:ignore[arg-type]
+            query={},
         ),
         poolclass=NullPool,
     )
@@ -46,7 +46,7 @@ async def mysql57_asyncmy_engine(docker_ip: str, mysql57_service: None) -> Async
             host=docker_ip,
             port=3363,
             database="db",
-            query={},  # type:ignore[arg-type]
+            query={},
         ),
         poolclass=NullPool,
     )
@@ -63,7 +63,7 @@ async def mysql56_asyncmy_engine(docker_ip: str, mysql56_service: None) -> Async
             host=docker_ip,
             port=3362,
             database="db",
-            query={},  # type:ignore[arg-type]
+            query={},
         ),
         poolclass=NullPool,
     )

@@ -41,4 +41,6 @@ repos:
             types-python-jose,
             types-click,
             types-PyYAML,
+            aiosql,
+            sqlalchemy,
           ]

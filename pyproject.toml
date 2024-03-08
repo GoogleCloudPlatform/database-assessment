@@ -266,6 +266,7 @@ warn_unused_configs = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
+disable_error_code = ["arg-type"]
 disallow_untyped_decorators = false
 module = ["tests.*"]
 
@@ -295,13 +296,19 @@ module = [
   "uuid_utils",
   "uuid_utils.*",
   "aioodbc.*",
-  "uvloop.*",
+  "uvloop",
   "uvloop.*",
 ]
 
 [[tool.mypy.overrides]]
 ignore_errors = true
 module = ["pyspark.sql.connect.proto", "pyspark.sql.connect.proto.*", "scripts.*"]
+
+[[tool.mypy.overrides]]
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+module = ["dma.lib.db.adapters.*", "dma.lib.db.adapters", "dma.lib.db.base", "dma.lib.db"]
+warn_unused_ignores = false
 
 [tool.pyright]
 include = ["src/dma", "tests"]

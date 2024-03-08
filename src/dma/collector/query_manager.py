@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import Any
 
 from dma.cli._utils import console
-from dma.lib.query_manager import QueryManager
+from dma.lib.db.query_manager import QueryManager
 
 
 class CollectionQueryManager(QueryManager):
@@ -26,32 +26,40 @@ class CollectionQueryManager(QueryManager):
     def collection_queries(self) -> list[str]:
         """Get transformation scripts."""
         return sorted(
-            [q for q in self.queries.available_queries if q.startswith("collection")],
+            [q for q in self.queries.available_queries if q.startswith("collection") and not q.endswith("cursor")],
         )
 
     @property
     def extended_collection_queries(self) -> list[str]:
         """Get load scripts."""
         return sorted(
-            [q for q in self.queries.available_queries if q.startswith("extended-collection")],
+            [
+                q
+                for q in self.queries.available_queries
+                if q.startswith("extended-collection") and not q.endswith("cursor")
+            ],
         )
 
-    def execute_collection_queries(self, *args: Any, **kwargs: Any) -> None:
+    async def execute_collection_queries(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         """Execute pre-processing queries."""
         console.print("executing collection queries")
+        results: dict[str, Any] = {}
         for script in self.collection_queries:
             console.print(f".. executing collection query {script}")
-            getattr(self, script)()
+            script_result = await self.select(script, PKEY="test", DMA_SOURCE_ID="testing", DMA_MANUAL_ID=None)
+            results.update({script: script_result})
+        return results
 
-    def execute_extended_collection_queries(self) -> None:
+    async def execute_extended_collection_queries(self) -> dict[str, Any]:
         """Execute extended collection queries.
 
         Returns: None
         """
         console.print("executing extended collection queries")
-
+        results: dict[str, Any] = {}
         for script in self.extended_collection_queries:
-            fn = getattr(self, script)
             console.print(f".. executing extended collection query {script}")
-
-            fn()
+            script_result = await self.select(script, PKEY="test", DMA_SOURCE_ID="testing", DMA_MANUAL_ID=None)
+            results.update({script: script_result})
+            await self.select(script)
+        return results
