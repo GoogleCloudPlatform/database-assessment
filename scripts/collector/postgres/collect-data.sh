@@ -285,8 +285,8 @@ then
 fi
 
 # Only run once per VM, instead of once per DB.
-specsOut="output/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv"
-if [[ -z "$specsPath" ]] ; then 
+specsOut="output/opdb__pg_db_machine_specs_${host}.csv"
+if [[ ! -f "${specsOut}" ]] ; then 
       host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
       ./db-machine-specs.sh "$host" "$vmUserName" "${V_FILE_TAG}" "${DMA_SOURCE_ID}" "${V_MANUAL_ID}" "${specsOut}" "${extraSSHArgs[@]}"
 fi
@@ -309,9 +309,13 @@ EOF
       # Parse out the unique database names, excluding the templates.  Handle some special characters in the database name.
       for db in ${alldbs}
 	do
+            export DMA_RECURSION=1
             export IFS=$OLDIFS
   	    ./collect-data.sh --connectionStr ${user}/${pass}@//${host}:${port}/"${db}"  --manualUniqueId ${V_MANUAL_ID}  --specsPath "$specsOut" --allDbs N
 	done
+        if [ -f ${specsOut} ]; then 
+          rm ${specsOut}
+        fi
 	exit
 else
 # If given a database name, create a collection for that one database.
@@ -387,6 +391,7 @@ done
 
 function compressOpFiles  {
 V_FILE_TAG=$1
+V_HOSTNAME=$2
 V_ERR_TAG=""
 echo ""
 echo "Archiving output files with tag ${V_FILE_TAG}"
@@ -396,6 +401,14 @@ if [ -f VERSION.txt ]; then
   cp VERSION.txt ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
 else
   echo "No Version file found" >  ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
+fi
+# Copy machine specs file to final file name.
+if [ -f ${OUTPUT_DIR}/opdb__pg_db_machine_specs_${V_HOSTNAME}.csv ]; then
+  cp ${OUTPUT_DIR}/opdb__pg_db_machine_specs_${V_HOSTNAME}.csv ${OUTPUT_DIR}/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv
+fi
+# If not a recursive call, remove the db_machine_specs file
+if [[ ${DMA_RECURSION} -ne 1 ]] && [[ -f ${OUTPUT_DIR}/opdb__pg_db_machine_specs_${V_HOSTNAME}.csv ]]; then
+  rm  ${OUTPUT_DIR}/opdb__pg_db_machine_specs_${V_HOSTNAME}.csv
 fi
 ERRCNT=$(wc -l < ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log)
 if [[ ${ERRCNT} -ne 0 ]]
@@ -579,6 +592,8 @@ DIAGPACKACCESS="postgres"
 		 printUsage
 		 exit
 	 fi
+ else
+     hostName=$(echo ${connStr} | cut -d '/' -f 4 | cut -d ':' -f 1)
  fi
 
 
@@ -691,7 +706,6 @@ if [ $retval -eq 0 ]; then
       if [ $PGVER -gt 13 ] ; then
         PGVER="base"
       fi
-      echo "Postgres PGVER = $PGVER"
       executeOPPg "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g') "${manualUniqueId}" "${PGVER}" "${allDbs}"
       retval=$?
       fi
@@ -700,7 +714,7 @@ if [ $retval -eq 0 ]; then
 
     if [ $retval -ne 0 ]; then
       createErrorLog  $(echo ${V_TAG} | ${SED} 's/.csv//g')
-      compressOpFiles $(echo ${V_TAG} | ${SED} 's/.csv//g')
+      compressOpFiles $(echo ${V_TAG} | ${SED} 's/.csv//g') ${hostName}
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${LOG_DIR}"
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -717,7 +731,7 @@ if [ $retval -eq 0 ]; then
       echo "Exiting...."
       exit 255
     fi
-    compressOpFiles $(echo ${V_TAG} | ${SED} 's/.csv//g')
+    compressOpFiles $(echo ${V_TAG} | ${SED} 's/.csv//g') ${hostName}
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
