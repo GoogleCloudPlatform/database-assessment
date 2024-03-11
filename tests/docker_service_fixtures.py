@@ -293,27 +293,27 @@ async def postgres12_responsive(host: str) -> bool:
 
 @pytest.fixture()
 async def postgres16_service(docker_services: DockerServiceRegistry) -> None:
-    await docker_services.start("postgres16", check=postgres16_responsive)
+    await docker_services.start("postgres16", timeout=45, pause=1, check=postgres16_responsive)
 
 
 @pytest.fixture()
 async def postgres15_service(docker_services: DockerServiceRegistry) -> None:
-    await docker_services.start("postgres15", check=postgres15_responsive)
+    await docker_services.start("postgres15", timeout=45, pause=1, check=postgres15_responsive)
 
 
 @pytest.fixture()
 async def postgres14_service(docker_services: DockerServiceRegistry) -> None:
-    await docker_services.start("postgres14", check=postgres15_responsive)
+    await docker_services.start("postgres14", timeout=45, pause=1, check=postgres15_responsive)
 
 
 @pytest.fixture()
 async def postgres13_service(docker_services: DockerServiceRegistry) -> None:
-    await docker_services.start("postgres13", check=postgres13_responsive)
+    await docker_services.start("postgres13", timeout=45, pause=1, check=postgres13_responsive)
 
 
 @pytest.fixture()
 async def postgres12_service(docker_services: DockerServiceRegistry) -> None:
-    await docker_services.start("postgres12", check=postgres12_responsive)
+    await docker_services.start("postgres12", timeout=45, pause=1, check=postgres12_responsive)
 
 
 def oracle23c_responsive(host: str) -> bool:
@@ -357,7 +357,7 @@ def oracle18c_responsive(host: str) -> bool:
 
 @pytest.fixture()
 async def oracle18c_service(docker_services: DockerServiceRegistry) -> None:
-    await docker_services.start("oracle18c", check=oracle18c_responsive, timeout=120)
+    await docker_services.start("oracle18c", timeout=120, pause=1, check=oracle18c_responsive)
 
 
 async def mssql_responsive(host: str) -> bool:
