@@ -43,6 +43,9 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Start Database Services
+      run: docker-compose -f tests/docker-compose.yml up -d
+
     - name: Install Hatch
       run: pip install --upgrade hatch hatch-pip-compile
 
@@ -52,7 +55,8 @@ jobs:
 
     - name: Run tests and track code coverage
       run: hatch run test:cov
-
+    - name: Stop Database Services
+      run: docker compose -f tests/docker-compose.yml down --remove-orphans --volumes
   run-container-matrix:
     name: Container matrix on Linux
     runs-on: ubuntu-latest
@@ -65,8 +69,14 @@ jobs:
       with:
         python-version: '3.12'
 
+    - name: Start Database Services
+      run: docker compose -f tests/docker-compose.yml up -d
+
     - name: Install Hatch
       run: pip install --upgrade hatch hatch-containers hatch-pip-compile
 
     - name: Run tests in container matrix
       run: hatch run test:no-cov
+
+    - name: Stop Database Services
+      run: docker compose -f tests/docker-compose.yml down --remove-orphans --volumes
