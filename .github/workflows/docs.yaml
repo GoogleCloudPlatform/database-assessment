@@ -21,7 +21,7 @@ jobs:
         python-version: 3.12
 
     - name: Install Hatch
-      run: pip install --upgrade hatch
+      run: pip install --upgrade hatch hatch-pip-compile
 
     - name: Build docs
       run: hatch run docs:mkdocs gh-deploy --force

@@ -34,7 +34,7 @@ env:
     pp*
 
 jobs:
-  binary-collection-scripts:
+  collection-scripts:
     name: Package collections scripts for release
     runs-on: ubuntu-latest
     steps:
@@ -182,7 +182,7 @@ jobs:
         python-version: ${{ env.STABLE_PYTHON_VERSION }}
 
     - name: Install Hatch
-      run: pip install -U hatch
+      run: pip install -U hatch hatch-pip-compile
 
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
@@ -220,6 +220,7 @@ jobs:
   publish:
     name: Publish release
     needs:
+    - collection-scripts
     - binary-wheels-standard
     - pure-python-wheel-and-sdist
     - binary-wheels-arm
