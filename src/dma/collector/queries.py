@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, AsyncIterator
+from typing import TYPE_CHECKING
 
 import aiosql
 
@@ -11,6 +11,8 @@ from dma.lib.exceptions import ApplicationError
 from dma.utils import module_to_os_path
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     from sqlalchemy.ext.asyncio import AsyncSession
 
 root_path = module_to_os_path("dma")

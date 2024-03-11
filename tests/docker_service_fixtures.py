@@ -10,7 +10,7 @@ import subprocess
 import sys
 import timeit
 from pathlib import Path
-from typing import Any, Awaitable, Callable, Generator
+from typing import TYPE_CHECKING, Any, Callable
 
 import aioodbc
 import asyncmy
@@ -19,6 +19,9 @@ import oracledb
 import pytest
 
 from tests.helpers import wrap_sync
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Generator
 
 
 async def wait_until_responsive(

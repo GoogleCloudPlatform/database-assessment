@@ -15,12 +15,14 @@ from __future__ import annotations
 
 import contextlib
 import faulthandler
-from typing import TYPE_CHECKING, Any, AsyncIterator, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from dma.lib.exceptions import ApplicationError
 
 faulthandler.enable()
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     from aiosql.queries import Queries
 
 QueryManagerT = TypeVar("QueryManagerT", bound="QueryManager")

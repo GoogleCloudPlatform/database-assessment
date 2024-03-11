@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import platform
 from sys import version_info
-from typing import TYPE_CHECKING, AsyncGenerator, cast
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from pytest import FixtureRequest
@@ -16,6 +16,8 @@ from dma.collector.queries import provides_collection_queries
 if version_info < (3, 10):  # pragma: nocover
     from dma.utils import anext_ as anext  # noqa: A001
 if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+
     from dma.collector.query_manager import CollectionQueryManager
 
 pytestmark = [
