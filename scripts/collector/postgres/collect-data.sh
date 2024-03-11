@@ -296,18 +296,11 @@ if [[ "${allDbs}" == "Y" ]] ;
 then
       export OLDIFS=$IFS
       dblist=$(PGPASSWORD="${pass}" ${SQLCMD}  --user=$user  -h $host -w -p $port -d "${db}" -t --no-align <<EOF
-\l
+SELECT datname FROM pg_database WHERE datname NOT LIKE 'template%' ORDER BY datname;
 EOF
 )
 
-      IFS=$'\n'
-      alldbs=$( for dbentry in ${dblist}
-                    do
-              	         echo $(echo "${dbentry}" | cut -d '|' -f 1 | cut -d '=' -f 1)
-                    done | grep -v -e template0 -e template1 | sort -u)
-
-      # Parse out the unique database names, excluding the templates.  Handle some special characters in the database name.
-      for db in ${alldbs}
+      for db in ${dblist}
 	do
             export DMA_RECURSION=1
             export IFS=$OLDIFS
@@ -654,7 +647,7 @@ if [ "$DBTYPE" == "oracle" ] ; then
             then
 	    echo " "
 	    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-            echo "Unable to connect to the target Postgres database using ${connectString}.  Please verify the connection information and target database status."
+            echo "Unable to connect to the target Postgres database.  Please verify the connection information and target database status."
 	    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
             exit 255
         else
