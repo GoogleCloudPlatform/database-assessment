@@ -17,7 +17,7 @@ env:
 
 jobs:
   build-collection-scripts:
-    name: Generate and Package Standalone collection scripts
+    name: Collection Scripts
     runs-on: ubuntu-latest
 
     steps:
@@ -66,7 +66,7 @@ jobs:
         python-version: '3.12'
 
     - name: Install Hatch
-      run: pip install --upgrade hatch hatch-containers
+      run: pip install --upgrade hatch hatch-containers hatch-pip-compile
 
     - name: Run tests in container matrix
       run: hatch run test:no-cov
