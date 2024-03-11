@@ -84,6 +84,12 @@ clean: 														## remove all build, testing, and static documentation file
 	@find . -name '.ipynb_checkpoints' -exec rm -rf {} +
 	@echo "=> Source cleaned successfully"
 
+deep-clean: clean destroy-venv destroy-node_modules							## Clean everything up
+	@hatch python remove all
+	@echo "=> Hatch environments pruned and python installations trimmed"
+	@uv cache clean
+	@echo "=> UV Cache cleaned successfully"
+
 destroy-venv: 											## Destroy the virtual environment
 	@hatch env prune
 	@hatch env remove lint
@@ -91,7 +97,7 @@ destroy-venv: 											## Destroy the virtual environment
 	@rm -Rf .direnv
 
 destroy-node_modules: 											## Destroy the node environment
-	@rm -rf node_modules
+	@rm -rf node_modules .astro
 
 
 .PHONY: build-collector
