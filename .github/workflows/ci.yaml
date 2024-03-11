@@ -13,6 +13,7 @@ concurrency:
 env:
   PYTHONUNBUFFERED: "1"
   FORCE_COLOR: "1"
+  SKIP_DOCKER_COMPOSE: "1"
 
 jobs:
   build-collection-scripts:
@@ -54,7 +55,7 @@ jobs:
           && sudo apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
     - if: runner.os == 'Linux'
       name: Start Database Services
-      run: docker compose -f tests/docker-compose.yml up -d
+      run: sudo docker compose -f tests/docker-compose.yml up -d
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
