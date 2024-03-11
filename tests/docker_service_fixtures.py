@@ -62,7 +62,7 @@ class DockerServiceRegistry:
         self._base_command.extend(
             [
                 f"--file={Path(__file__).parent / 'docker-compose.yml'}",
-                f"--project-name=advanced_alchemy-{worker_id}",
+                f"--project-name=dma-{worker_id}",
             ],
         )
 

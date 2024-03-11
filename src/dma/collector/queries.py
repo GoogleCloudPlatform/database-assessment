@@ -15,7 +15,15 @@ if TYPE_CHECKING:
 
     from sqlalchemy.ext.asyncio import AsyncSession
 
-root_path = module_to_os_path("dma")
+_root_path = module_to_os_path("dma")
+
+canonical_queries = aiosql.from_path(sql_path=f"{_root_path}/collector/sql/canonical", driver_adapter="duckdb")
+postgres_queries = aiosql.from_path(sql_path=f"{_root_path}/collector/sql/sources/postgres", driver_adapter="asyncpg")
+mysql_queries = aiosql.from_path(sql_path=f"{_root_path}/collector/sql/sources/mysql", driver_adapter="asyncmy")
+oracle_queries = aiosql.from_path(
+    sql_path=f"{_root_path}/collector/sql/sources/oracle", driver_adapter="async_oracledb"
+)
+mssql_queries = aiosql.from_path(sql_path=f"{_root_path}/collector/sql/sources/mssql", driver_adapter="aioodbc")
 
 
 async def provides_collection_queries(
@@ -31,16 +39,14 @@ async def provides_collection_queries(
         raise ApplicationError(msg)
     rdbms_type = dialect.name
     if rdbms_type == "postgresql":
-        driver_adapter = "asyncpg"
+        query_manager = CollectionQueryManager(connection=raw_connection.driver_connection, queries=postgres_queries)
     elif rdbms_type == "mysql":
-        driver_adapter = "asyncmy"
+        query_manager = CollectionQueryManager(connection=raw_connection.driver_connection, queries=mysql_queries)
     elif rdbms_type == "oracle":
-        driver_adapter = "async_oracledb"
+        query_manager = CollectionQueryManager(connection=raw_connection.driver_connection, queries=oracle_queries)
     elif rdbms_type == "mssql":
-        driver_adapter = "mssql"
+        query_manager = CollectionQueryManager(connection=raw_connection.driver_connection, queries=mssql_queries)
     else:
         msg = "Unable to identify driver adapter from dialect."
         raise ApplicationError(msg)
-    sql_path = f"{root_path}/collector/sql/{rdbms_type}"
-    queries = aiosql.from_path(sql_path=sql_path, driver_adapter=driver_adapter)
-    yield CollectionQueryManager(connection=raw_connection.driver_connection, queries=queries)
+    yield query_manager

@@ -1,61 +1,61 @@
 -- name: collection-postgres-applications
-select chr(34) || :PKEY || chr(34) as pkey,
-  chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
-  chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
-  chr(34) || application_name || chr(34) as application_name,
-  count(*) as application_count
+select :PKEY as pkey,
+    :DMA_SOURCE_ID as dma_source_id,
+    :DMA_MANUAL_ID as dma_manual_id,
+    application_name as application_name,
+    count(*) as application_count
 from pg_stat_activity
-group by 1,
-  2,
-  3,
-  4;
+group by :PKEY,
+    :DMA_SOURCE_ID,
+    :DMA_MANUAL_ID,
+    application_name;
 
 -- name: extended-collection-postgres-applications
-select chr(34) || :PKEY || chr(34) as pkey,
-  chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
-  chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
-  chr(34) || application_name || chr(34) as application_name,
-  count(*) as application_count
+select :PKEY as pkey,
+    :DMA_SOURCE_ID as dma_source_id,
+    :DMA_MANUAL_ID as dma_manual_id,
+    application_name as application_name,
+    count(*) as application_count
 from pg_stat_activity
-group by 1,
-  2,
-  3,
-  4;
+group by :PKEY,
+    :DMA_SOURCE_ID,
+    :DMA_MANUAL_ID,
+    application_name;
 
 -- name: collection-postgres-calculated-metrics
 with table_summary as (
-  select count(distinct c.oid) as total_table_count
-  from pg_class c
-    join pg_catalog.pg_namespace as ns on (c.relnamespace = ns.oid)
-  where ns.nspname <> all (array ['pg_catalog', 'information_schema'])
-    and ns.nspname !~ '^pg_toast'
-    and c.relkind = ANY (ARRAY ['r', 'p', 't'])
+    select count(distinct c.oid) as total_table_count
+    from pg_class c
+        join pg_catalog.pg_namespace as ns on (c.relnamespace = ns.oid)
+    where ns.nspname <> all (array ['pg_catalog', 'information_schema'])
+        and ns.nspname !~ '^pg_toast'
+        and c.relkind = ANY (ARRAY ['r', 'p', 't'])
 ),
 foreign_table_summary as (
-  select count(distinct ft.ftrelid) total_foreign_table_count,
-    count(
-      distinct case
-        when w.fdwname = ANY (ARRAY ['oracle_fdw', 'orafdw']) then ft.ftrelid
-        else null
-      end
-    ) as supported_foreign_table_count,
-    count(
-      distinct case
-        when w.fdwname != all (ARRAY ['oracle_fdw', 'orafdw']) then ft.ftrelid
-        else null
-      end
-    ) as unsupported_foreign_table_count
-  from pg_catalog.pg_foreign_table ft
-    inner join pg_catalog.pg_class c on c.oid = ft.ftrelid
-    inner join pg_catalog.pg_foreign_server s on s.oid = ft.ftserver
-    inner join pg_catalog.pg_foreign_data_wrapper w on s.srvfdw = w.oid
+    select count(distinct ft.ftrelid) total_foreign_table_count,
+        count(
+            distinct case
+                when w.fdwname = ANY (ARRAY ['oracle_fdw', 'orafdw']) then ft.ftrelid
+                else null
+            end
+        ) as supported_foreign_table_count,
+        count(
+            distinct case
+                when w.fdwname != all (ARRAY ['oracle_fdw', 'orafdw']) then ft.ftrelid
+                else null
+            end
+        ) as unsupported_foreign_table_count
+    from pg_catalog.pg_foreign_table ft
+        inner join pg_catalog.pg_class c on c.oid = ft.ftrelid
+        inner join pg_catalog.pg_foreign_server s on s.oid = ft.ftserver
+        inner join pg_catalog.pg_foreign_data_wrapper w on s.srvfdw = w.oid
 ),
 extension_summary as (
-  select count(distinct e.extname) total_extension_count,
-    count(
-      distinct case
-        when e.extname = any (
-          array ['btree_gin',
+    select count(distinct e.extname) total_extension_count,
+        count(
+            distinct case
+                when e.extname = any (
+                    array ['btree_gin',
                 'btree_gist',
                 'chkpass',
                 'citext',
@@ -123,14 +123,14 @@ extension_summary as (
                 'tsm_system_time',
                 'unaccent',
                 'uuid-ossp']
-        ) then e.extname
-        else null
-      end
-    ) as supported_extension_count,
-    count(
-      distinct case
-        when e.extname != all (
-          array ['btree_gin',
+                ) then e.extname
+                else null
+            end
+        ) as supported_extension_count,
+        count(
+            distinct case
+                when e.extname != all (
+                    array ['btree_gin',
                 'btree_gist',
                 'chkpass',
                 'citext',
@@ -198,54 +198,54 @@ extension_summary as (
                 'tsm_system_time',
                 'unaccent',
                 'uuid-ossp']
-        ) then e.extname
-        else null
-      end
-    ) as unsupported_extension_count
-  from pg_extension e
+                ) then e.extname
+                else null
+            end
+        ) as unsupported_extension_count
+    from pg_extension e
 ),
 calculated_metrics as (
-  select 'VERSION' as metric_name,
-    current_setting('server_version_num') as metric_value
-  union
-  select 'UNSUPPORTED_EXTENSION_COUNT' as metric_name,
-    cast(es.unsupported_extension_count as varchar) as metric_value
-  from extension_summary es
-  union
-  select 'SUPPORTED_EXTENSION_COUNT' as metric_name,
-    cast(es.supported_extension_count as varchar) as metric_value
-  from extension_summary es
-  union all
-  select 'EXTENSION_COUNT' as metric_name,
-    cast(es.total_extension_count as varchar) as metric_value
-  from extension_summary es
-  union all
-  select 'FOREIGN_TABLE_COUNT' as metric_name,
-    cast(fts.total_foreign_table_count as varchar) as metric_value
-  from foreign_table_summary fts
-  union all
-  select 'UNSUPPORTED_FOREIGN_TABLE_COUNT' as metric_name,
-    cast(fts.unsupported_foreign_table_count as varchar) as metric_value
-  from foreign_table_summary fts
-  union all
-  select 'SUPPORTED_FOREIGN_TABLE_COUNT' as metric_name,
-    cast(fts.supported_foreign_table_count as varchar) as metric_value
-  from foreign_table_summary fts
-  union all
-  select 'TABLE_COUNT' as metric_name,
-    cast(ts.total_table_count as varchar) as metric_value
-  from table_summary ts
+    select 'VERSION' as metric_name,
+        current_setting('server_version_num') as metric_value
+    union
+    select 'UNSUPPORTED_EXTENSION_COUNT' as metric_name,
+        cast(es.unsupported_extension_count as varchar) as metric_value
+    from extension_summary es
+    union
+    select 'SUPPORTED_EXTENSION_COUNT' as metric_name,
+        cast(es.supported_extension_count as varchar) as metric_value
+    from extension_summary es
+    union all
+    select 'EXTENSION_COUNT' as metric_name,
+        cast(es.total_extension_count as varchar) as metric_value
+    from extension_summary es
+    union all
+    select 'FOREIGN_TABLE_COUNT' as metric_name,
+        cast(fts.total_foreign_table_count as varchar) as metric_value
+    from foreign_table_summary fts
+    union all
+    select 'UNSUPPORTED_FOREIGN_TABLE_COUNT' as metric_name,
+        cast(fts.unsupported_foreign_table_count as varchar) as metric_value
+    from foreign_table_summary fts
+    union all
+    select 'SUPPORTED_FOREIGN_TABLE_COUNT' as metric_name,
+        cast(fts.supported_foreign_table_count as varchar) as metric_value
+    from foreign_table_summary fts
+    union all
+    select 'TABLE_COUNT' as metric_name,
+        cast(ts.total_table_count as varchar) as metric_value
+    from table_summary ts
 ),
 src as (
-  select 'CALCULATED_METRIC' as metric_category,
-    metric_name,
-    metric_value
-  from calculated_metrics
+    select 'CALCULATED_METRIC' as metric_category,
+        metric_name,
+        metric_value
+    from calculated_metrics
 )
-select chr(34) || :PKEY || chr(34) as pkey,
-  chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
-  chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
-  chr(34) || src.metric_category || chr(34) as metric_category,
-  chr(34) || src.metric_name || chr(34) as metric_name,
-  chr(34) || src.metric_value || chr(34) as metric_value
+select :PKEY as pkey,
+    :DMA_SOURCE_ID as dma_source_id,
+    :DMA_MANUAL_ID as dma_manual_id,
+    src.metric_category as metric_category,
+    src.metric_name as metric_name,
+    src.metric_value as metric_value
 from src;
