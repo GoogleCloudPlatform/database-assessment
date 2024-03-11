@@ -1,46 +1,25 @@
+exclude: '^docs/conf.py'
+
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: check-ast
-      - id: check-case-conflict
-      - id: check-merge-conflict
-      - id: check-toml
-      - id: debug-statements
-      - id: end-of-file-fixer
-      - id: mixed-line-ending
-      - id: trailing-whitespace
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.3.0"
-    hooks:
-      - id: ruff
-        args: ["--fix"]
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: "v4.0.0-alpha.8"
-    hooks:
-      - id: prettier
-        exclude: "templates|migrations|scripts|docs|dist|.venv|public"
-  - repo: https://github.com/ariebovenberg/slotscheck
-    rev: v0.17.3
-    hooks:
-      - id: slotscheck
-        exclude: "test_*|docs|migrations|scripts"
-        entry: env PYTHONPATH=src slotscheck
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.8.0"
-    hooks:
-      - id: mypy
-        exclude: "scripts/"
-        additional_dependencies:
-          [
-            jinja2,
-            click,
-            rich-click,
-            nodeenv,
-            types-freezegun,
-            types-python-jose,
-            types-click,
-            types-PyYAML,
-            aiosql,
-            sqlalchemy,
-          ]
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.5.0
+  hooks:
+  - id: trailing-whitespace
+  - id: check-added-large-files
+  - id: check-ast
+  - id: check-json
+  - id: check-merge-conflict
+  - id: check-xml
+  - id: check-yaml
+    args: ['--unsafe']  # needed for !! tags in mkdocs.yml
+  - id: debug-statements
+  - id: end-of-file-fixer
+  - id: mixed-line-ending
+    args: ['--fix=auto']  # replace 'auto' with 'lf' to enforce Linux/Mac line endings or 'crlf' for Windows
+
+# Ruff replaces black, flake8, autoflake and isort
+- repo: https://github.com/charliermarsh/ruff-pre-commit
+  rev: 'v0.3.2'  # make sure this is always consistent with hatch configs
+  hooks:
+    - id: ruff
+      args: [  --config, ./pyproject.toml]

@@ -1,18 +1,14 @@
 .DEFAULT_GOAL:=help
 .ONESHELL:
-USING_PDM		          =	$(shell grep "tool.pdm" pyproject.toml && echo "yes")
 USING_NPM             = $(shell python3 -c "if __import__('pathlib').Path('package-lock.json').exists(): print('yes')")
 ENV_PREFIX		        =.venv/bin/
 VENV_EXISTS           =	$(shell python3 -c "if __import__('pathlib').Path('.venv/bin/activate').exists(): print('yes')")
 NODE_MODULES_EXISTS		=	$(shell python3 -c "if __import__('pathlib').Path('node_modules').exists(): print('yes')")
-VERSION               := $(shell grep -m 1 current_version .bumpversion.cfg | tr -s ' ' | tr -d '"' | tr -d "'" | cut -d' ' -f3)
 BUILD_DIR             =dist
 SRC_DIR               =src
 COLLECTOR_SRC_DIR     =scripts/collector
 COLLECTOR_PACKAGE     =db-migration-assessment-collection-scripts
 BASE_DIR              =$(shell pwd)
-PDM_OPTS 		          ?=
-PDM 			            ?= 	pdm $(PDM_OPTS)
 
 .EXPORT_ALL_VARIABLES:
 
@@ -31,46 +27,53 @@ help:  ## Display this help
 # =============================================================================
 # Developer Utils
 # =============================================================================
-install-pdm: 										## Install latest version of PDM
-	@curl -sSLO https://pdm.fming.dev/install-pdm.py && \
-	curl -sSL https://pdm.fming.dev/install-pdm.py.sha256 | shasum -a 256 -c - && \
-	python3 install-pdm.py && \
-	rm install-pdm.py
+install-pipx: 										## Install pipx
+	@python3 -m pip install --upgrade --user pipx
+
+install-hatch: 										## Install Hatch, UV, and Ruff
+	@pipx install hatch --force
+	@pipx inject hatch ruff uv hatch-pip-compile hatch-vcs --include-deps --include-apps --force
+
+configure-hatch: 										## Configure Hatch defaults
+	@hatch config set dirs.env.virtual .direnv
+	@hatch config set dirs.env.pip-compile .direnv
+	@npm config set fund false
 
 
-install:											## Install the project and
-	@if ! $(PDM) --version > /dev/null; then echo '=> Installing PDM'; $(MAKE) install-pdm; fi
-	@if [ "$(VENV_EXISTS)" ]; then echo "=> Removing existing virtual environment"; fi
-	@if [ "$(VENV_EXISTS)" ]; then $(MAKE) destroy-venv; fi
-	@if [ "$(VENV_EXISTS)" ]; then $(MAKE) clean; fi
-	@if [ "$(NODE_MODULES_EXISTS)" ]; then echo "=> Removing existing node modules"; fi
-	@if [ "$(NODE_MODULES_EXISTS)" ]; then $(MAKE) destroy-node_modules; fi
-	@if [ "$(USING_PDM)" ]; then $(PDM) config venv.in_project true && python3 -m venv --copies .venv && . $(ENV_PREFIX)/activate && $(ENV_PREFIX)/pip install --quiet -U wheel setuptools cython pip mypy nodeenv; fi
-	@if [ "$(USING_PDM)" ]; then $(PDM) install -dG:all; fi
+upgrade-hatch: 										## Update Hatch, UV, and Ruff
+	@pipx upgrade hatch --include-injected
+
+install: 										## Install the project and
+	@if [ "$(VENV_EXISTS)" ]; then echo "=> Removing existing virtual environment"; $(MAKE) destroy-venv; fi
+	@$(MAKE) clean
+	@if [ "$(NODE_MODULES_EXISTS)" ]; then echo "=> Removing existing node modules"; $(MAKE) destroy-node_modules; fi
+	@if ! pipx --version > /dev/null; then echo '=> Installing PipX'; $(MAKE) install-pipx ; fi
+	@if ! hatch --version > /dev/null; then echo '=> Installing Hatch'; $(MAKE) install-hatch ; fi
+	@if ! hatch-pip-compile --version > /dev/null; then echo '=> Updating Hatch and installing plugins'; $(MAKE) upgrade-hatch ; fi
+	@echo "=> Creating Python environments..."
+	@$(MAKE) configure-hatch
+	@hatch env create local
+	@hatch env create lint
+	@hatch env create test
+	@hatch env create docs
+	@if [ "$(USING_NPM)" ]; then echo "=> Installing NPM packages..."; npm ci; fi
 	@echo "=> Install complete! Note: If you want to re-install re-run 'make install'"
 
 .PHONY: upgrade
 upgrade:       										## Upgrade all dependencies to the latest stable versions
 	@echo "=> Updating all dependencies"
-	@if [ "$(USING_PDM)" ]; then $(PDM) update; fi
+	@hatch-pip-compile --upgrade --all
 	@echo "=> Python Dependencies Updated"
 	@if [ "$(USING_NPM)" ]; then npm upgrade --latest; fi
 	@echo "=> Node Dependencies Updated"
-	@$(ENV_PREFIX)pre-commit autoupdate
+	@hatch run lint:pre-commit autoupdate
 	@echo "=> Updated Pre-commit"
 
-.PHONY: refresh-lockfiles
-refresh-lockfiles:                                 ## Sync lockfiles with requirements files.
-	@pdm update --update-reuse --group :all
-
-.PHONY: lock
-lock:                                             ## Rebuild lockfiles from scratch, updating all dependencies
-	@pdm update --update-eager --group :all
 
 .PHONY: clean
-clean: clean-collector      ## remove all build, testing, and static documentation files
+clean: 														## remove all build, testing, and static documentation files
 	@echo "=> Cleaning working directory"
-	@rm -rf .pytest_cache .ruff_cache .hypothesis build/ -rf dist/ .eggs/ .coverage coverage.xml coverage.json htmlcov/ .mypy_cache
+	@rm -rf .pytest_cache .ruff_cache .hypothesis build/ dist/ .eggs/ .coverage coverage.xml coverage.json htmlcov/ .mypy_cache
 	@find . -name '*.egg-info' -exec rm -rf {} +
 	@find . -name '*.egg' -exec rm -f {} +
 	@find . -name '*.pyc' -exec rm -f {} +
@@ -81,21 +84,18 @@ clean: clean-collector      ## remove all build, testing, and static documentati
 	@find . -name '.ipynb_checkpoints' -exec rm -rf {} +
 	@echo "=> Source cleaned successfully"
 
-.PHONY: clean-collector
-clean-collector:
-	@echo  "=> Cleaning previous build artifcats for data collector scripts..."
-	@rm -Rf $(BUILD_DIR)/collector/*
-
-
 destroy-venv: 											## Destroy the virtual environment
-	@rm -rf .venv
+	@hatch env prune
+	@hatch env remove lint
+	@rm -Rf .venv
+	@rm -Rf .direnv
 
 destroy-node_modules: 											## Destroy the node environment
 	@rm -rf node_modules
 
 
 .PHONY: build-collector
-build-collector: clean-collector      ## Build the collector SQL scripts.
+build-collector: 										## Build the collector SQL scripts.
 	@rm -rf ./$(BUILD_DIR)/collector
 	@echo "=> Building Assessment Data Collection Scripts for Oracle version $(VERSION)..."
 	@mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts
@@ -109,7 +109,7 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 	@cp scripts/collector/oracle/sql/extracts/statspack/*.sql $(BUILD_DIR)/collector/oracle/sql/extracts/statspack
 	@cp scripts/collector/oracle/collect-data.sh $(BUILD_DIR)/collector/oracle/
 	@cp scripts/collector/oracle/README.txt $(BUILD_DIR)/collector/oracle/
-	@cp  LICENSE $(BUILD_DIR)/collector/oracle
+	@cp  LICENSE.txt $(BUILD_DIR)/collector/oracle
 	echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/oracle/VERSION.txt
 
 	@echo "=> Building Assessment Data Collection Scripts for Microsoft SQL Server version $(VERSION)..."
@@ -119,7 +119,7 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 	@cp scripts/collector/sqlserver/*.ps1 $(BUILD_DIR)/collector/sqlserver/
 	@cp scripts/collector/sqlserver/*.psm1 $(BUILD_DIR)/collector/sqlserver/
 	@cp scripts/collector/sqlserver/README.txt $(BUILD_DIR)/collector/sqlserver/
-	@cp  LICENSE $(BUILD_DIR)/collector/sqlserver
+	@cp  LICENSE.txt $(BUILD_DIR)/collector/sqlserver
 	@echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/sqlserver/VERSION.txt
 
 	@echo "=> Building Assessment Data Collection Scripts for MySQL version $(VERSION)..."
@@ -128,7 +128,7 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 	@cp scripts/collector/mysql/collect-data.sh $(BUILD_DIR)/collector/mysql/
 	@cp -L scripts/collector/mysql/db-machine-specs.sh $(BUILD_DIR)/collector/mysql/
 	@cp scripts/collector/mysql/README.txt $(BUILD_DIR)/collector/mysql/
-	@cp  LICENSE $(BUILD_DIR)/collector/mysql
+	@cp  LICENSE.txt $(BUILD_DIR)/collector/mysql
 	@echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/mysql/VERSION.txt
 
 	@echo "=> Building Assessment Data Collection Scripts for Postgresql version $(VERSION)..."
@@ -137,7 +137,7 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 	@cp scripts/collector/postgres/collect-data.sh $(BUILD_DIR)/collector/postgres/
 	@cp scripts/collector/postgres/db-machine-specs.sh $(BUILD_DIR)/collector/postgres/
 	@cp scripts/collector/postgres/README.txt $(BUILD_DIR)/collector/postgres/
-	@cp  LICENSE $(BUILD_DIR)/collector/postgres
+	@cp  LICENSE.txt $(BUILD_DIR)/collector/postgres
 	@echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/postgres/VERSION.txt
 
 	@make package-collector
@@ -164,17 +164,26 @@ package-collector:
 	@cd $(BASE_DIR)/$(BUILD_DIR)/collector/postgres; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-postgres.zip  *
 
 .PHONY: build
-build: build-collector        ## Build and package the collectors
+build: clean        ## Build and package the collectors
+	@echo "=> Building assets..."
+	@if [ "$(USING_NPM)" ]; then echo "=> Building assets..."; npm run build; fi
 	@echo "=> Building package..."
-	@if [ "$(USING_PDM)" ]; then pdm build; fi
+	@hatch build
+	@echo "=> Package build complete..."
+
+.PHONY: build-all
+build-all: clean			## Build collector, wheel, and standalone collector binary
+	@$(MAKE) build-collector
+	@echo "=> Building sdist, wheel and binary packages..."
+	@scripts/build-binary-package.sh
 	@echo "=> Package build complete..."
 
 
 .PHONY: pre-release
 pre-release:       ## bump the version and create the release tag
-	make gen-docs
+	make docs
 	make clean
-	./.venv/bin/bump2version $(increment)
+	hatch run local:bump2version $(increment)
 	head .bumpversion.cfg | grep ^current_version
 	make build
 
@@ -197,14 +206,13 @@ doc-privs:   ## Extract the list of privileges required from code and create the
 	 EOF
 	 grep "rectype_(" scripts/collector/oracle/sql/setup/grants_wrapper.sql | grep -v FUNCTION | sed "s/rectype_(//g;s/),//g;s/)//g;s/'//g;s/,/ ON /1;s/,/./g" >> docs/user_guide/oracle/permissions.md
 
-.PHONY: gen-docs
-gen-docs:       ## generate HTML documentation
-	./.venv/bin/mkdocs build
+.PHONY: serve-docs
+serve-docs:       ## Serve HTML documentation
+	@hatch run docs:serve
 
 .PHONY: docs
 docs:       ## generate HTML documentation and serve it to the browser
-	./.venv/bin/mkdocs build
-	./.venv/bin/mkdocs serve
+	@hatch run docs:build
 
 
 # =============================================================================
@@ -213,21 +221,13 @@ docs:       ## generate HTML documentation and serve it to the browser
 .PHONY: lint
 lint: 												## Runs pre-commit hooks; includes ruff linting, codespell, black
 	@echo "=> Running pre-commit process"
-	@$(ENV_PREFIX)pre-commit run --all-files
+	@hatch run lint:fix
 	@echo "=> Pre-commit complete"
-
-.PHONY: coverage
-coverage:  											## Run the tests and generate coverage report
-	@echo "=> Running tests with coverage"
-	@$(ENV_PREFIX)pytest tests --cov=app
-	@$(ENV_PREFIX)coverage html
-	@$(ENV_PREFIX)coverage xml
-	@echo "=> Coverage report generated"
 
 .PHONY: test
 test:  												## Run the tests
 	@echo "=> Running test cases"
-	@pdm run start-infra
-	@SKIP_DOCKER_COMPOSE=true $(ENV_PREFIX)pytest tests
-	@pdm run stop-infra
+	@docker-compose -f tests/docker-compose.yml up --force-recreate -d
+	@SKIP_DOCKER_COMPOSE=true hatch run test:cov
+	@docker-compose -f tests/docker-compose.yml down --remove-orphans
 	@echo "=> Tests complete"

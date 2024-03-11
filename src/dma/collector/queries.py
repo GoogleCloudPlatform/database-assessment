@@ -6,12 +6,14 @@ from typing import TYPE_CHECKING, AsyncIterator
 
 import aiosql
 
-from dma import utils
 from dma.collector.query_manager import CollectionQueryManager
 from dma.lib.exceptions import ApplicationError
+from dma.utils import module_to_os_path
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
+
+root_path = module_to_os_path("dma")
 
 
 async def provides_collection_queries(
@@ -37,10 +39,6 @@ async def provides_collection_queries(
     else:
         msg = "Unable to identify driver adapter from dialect."
         raise ApplicationError(msg)
-    sql_path = f"{utils.module_to_os_path('dma')}/collector/sql/{rdbms_type}"
+    sql_path = f"{root_path}/collector/sql/{rdbms_type}"
     queries = aiosql.from_path(sql_path=sql_path, driver_adapter=driver_adapter)
-    async with CollectionQueryManager.from_connection(
-        queries,
-        connection=raw_connection.driver_connection,
-    ) as query_manager:
-        yield query_manager
+    yield CollectionQueryManager(connection=raw_connection.driver_connection, queries=queries)

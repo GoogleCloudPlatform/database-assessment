@@ -33,7 +33,7 @@ __all__ = [
     "run_masker",
 ]
 
-__version__ = "4.3.31"
+__version__ = "5.0.0"
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +106,10 @@ def run_masker(input_dir: Optional[Path] = None, output_path: Optional[Path] = N
                     _apply_identity_map_to_file(rule, collection_file, identity_map)
             logger.info("Completed work on %s", collection.stem)
             _collection_key_file, _new_collection_archive = _package_collection(
-                collection, identity_map, work_dir, output_path,
+                collection,
+                identity_map,
+                work_dir,
+                output_path,
             )
             _clean_folder(work_dir)
 
@@ -240,7 +243,9 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
         collection_file (Path): the current collection file to mask
         identity_map (Dict[str, str]): The key/replacement key dictionary.
     """
-    with collection_file.open(mode="r", encoding="utf-8") as f, NamedTemporaryFile(mode="w", delete=False) as t:
+    with collection_file.open(mode="r", encoding="utf-8") as f, NamedTemporaryFile(
+        mode="w", delete=False, encoding="utf-8"
+    ) as t:
         data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
         temp_file = csv.writer(t, delimiter="|", quotechar='"')
         for rn, row in enumerate(data_to_mask):

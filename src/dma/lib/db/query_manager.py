@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import contextlib
 import faulthandler
-from typing import TYPE_CHECKING, Any, AsyncIterator, Protocol, TypeVar
+from typing import TYPE_CHECKING, Any, AsyncIterator, TypeVar
 
 from dma.lib.exceptions import ApplicationError
 
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 QueryManagerT = TypeVar("QueryManagerT", bound="QueryManager")
 
 
-class QueryManager(Protocol):
+class QueryManager:
     """Stores the queries for a version of the collection."""
 
     queries: Queries
@@ -62,7 +62,7 @@ class QueryManager(Protocol):
         return await self.fn(method)(conn=self.connection, **binds)
 
     async def insert_update_delete(self, method: str, **binds: Any) -> None:
-        return await self.fn(method)(conn=self.connection, **binds)  # type: ignore
+        return await self.fn(method)(conn=self.connection, **binds)
 
     async def insert_update_delete_many(self, method: str, **binds: Any) -> Any | None:
         return await self.fn(method)(conn=self.connection, **binds)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from sys import version_info
 from typing import TYPE_CHECKING, AsyncGenerator, cast
 
 import pytest
@@ -10,6 +11,9 @@ from sqlalchemy import URL, NullPool
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from dma.collector.queries import provides_collection_queries
+
+if version_info < (3, 10):  # pragma: nocover
+    from dma.utils import anext_ as anext  # noqa: A001
 
 if TYPE_CHECKING:
     from dma.collector.query_manager import CollectionQueryManager
@@ -26,11 +30,11 @@ async def postgres16_async_engine(docker_ip: str, postgres16_service: None) -> A
         URL(
             drivername="postgresql+asyncpg",
             username="postgres",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
             host=docker_ip,
             port=5427,
             database="postgres",
-            query={},
+            query={},  # type: ignore[arg-type]
         ),
         poolclass=NullPool,
     )
@@ -43,11 +47,11 @@ async def postgres15_async_engine(docker_ip: str, postgres15_service: None) -> A
         URL(
             drivername="postgresql+asyncpg",
             username="postgres",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
             host=docker_ip,
             port=5426,
             database="postgres",
-            query={},
+            query={},  # type: ignore[arg-type]
         ),
         poolclass=NullPool,
     )
@@ -60,11 +64,11 @@ async def postgres14_async_engine(docker_ip: str, postgres14_service: None) -> A
         URL(
             drivername="postgresql+asyncpg",
             username="postgres",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
             host=docker_ip,
             port=5425,
             database="postgres",
-            query={},
+            query={},  # type: ignore[arg-type]
         ),
         poolclass=NullPool,
     )
@@ -77,11 +81,11 @@ async def postgres13_async_engine(docker_ip: str, postgres13_service: None) -> A
         URL(
             drivername="postgresql+asyncpg",
             username="postgres",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
             host=docker_ip,
             port=5424,
             database="postgres",
-            query={},
+            query={},  # type: ignore[arg-type]
         ),
         poolclass=NullPool,
     )
@@ -94,11 +98,11 @@ async def postgres12_async_engine(docker_ip: str, postgres12_service: None) -> A
         URL(
             drivername="postgresql+asyncpg",
             username="postgres",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
             host=docker_ip,
             port=5423,
             database="postgres",
-            query={},
+            query={},  # type: ignore[arg-type]
         ),
         poolclass=NullPool,
     )

@@ -1,3 +1,14 @@
+# SPDX-FileCopyrightText: 2023-present Cody Fincher <codyfincher@google.com>
+#
+# SPDX-License-Identifier: MIT
+"""Dummy conftest.py for `DMA`.
+
+If you don't know what this is for, just leave it empty.
+Read more about conftest.py under:
+- https://docs.pytest.org/en/stable/fixture.html
+- https://docs.pytest.org/en/stable/writing_plugins.html
+"""
+
 from __future__ import annotations
 
 import asyncio

@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from collections import defaultdict
 from contextlib import asynccontextmanager
+from typing import Any
 
 from aiosql.utils import VAR_REF
 
@@ -13,9 +16,8 @@ class MaybeAcquire:
         if "acquire" in dir(self.client):
             self._managed_conn = await self.client.acquire()
             return self._managed_conn
-        else:
-            self._managed_conn = None
-            return self.client
+        self._managed_conn = None
+        return self.client
 
     async def __aexit__(self, exc_type, exc, tb):
         if self._managed_conn is not None:
@@ -26,7 +28,7 @@ class AsyncMYAdapter:
     is_aio_driver = True
 
     def __init__(self) -> None:
-        self.var_sorted = defaultdict(list)
+        self.var_sorted: dict[str, Any] = defaultdict(list)  # type: ignore[assignment]
 
     def process_sql(self, query_name, _op_type, sql):
         adj = 0
@@ -66,11 +68,10 @@ class AsyncMYAdapter:
     def maybe_order_params(self, query_name, parameters):
         if isinstance(parameters, dict):
             return [parameters[rk] for rk in self.var_sorted[query_name]]
-        elif isinstance(parameters, tuple):
+        if isinstance(parameters, tuple):
             return parameters
-        else:
-            msg = f"Parameters expected to be dict or tuple, received {parameters}"
-            raise ValueError(msg)
+        msg = f"Parameters expected to be dict or tuple, received {parameters}"
+        raise ValueError(msg)
 
     async def select(self, conn, query_name, sql, parameters, record_class=None):
         parameters = self.maybe_order_params(query_name, parameters)
@@ -107,8 +108,7 @@ class AsyncMYAdapter:
             res = await connection.fetchrow(sql, *parameters)
             if res:
                 return res[0] if len(res) == 1 else res
-            else:
-                return None
+            return None
 
     async def insert_update_delete(self, conn, query_name, sql, parameters):
         parameters = self.maybe_order_params(query_name, parameters)

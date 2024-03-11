@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2023-present Cody Fincher <codyfincher@google.com>
+#
+# SPDX-License-Identifier: MIT
 from __future__ import annotations
 
 import asyncio
@@ -60,7 +63,8 @@ class DockerServiceRegistry:
             ],
         )
 
-    def _get_docker_ip(self) -> str:
+    @staticmethod
+    def _get_docker_ip() -> str:
         docker_host = os.environ.get("DOCKER_HOST", "").strip()
         if not docker_host or docker_host.startswith("unix://"):
             return "127.0.0.1"
@@ -130,12 +134,12 @@ async def mysql8_responsive(host: str) -> bool:
             port=3360,
             user="app",
             database="db",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
         )
         async with conn.cursor() as cursor:
             await cursor.execute("select 1 as is_available")
             resp = await cursor.fetchone()
-        return resp[0] == 1  # type: ignore
+        return resp[0] == 1
     except asyncmy.errors.OperationalError:
         return False
 
@@ -147,12 +151,12 @@ async def mysql56_responsive(host: str) -> bool:
             port=3362,
             user="app",
             database="db",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
         )
         async with conn.cursor() as cursor:
             await cursor.execute("select 1 as is_available")
             resp = await cursor.fetchone()
-        return resp[0] == 1  # type: ignore
+        return resp[0] == 1
     except asyncmy.errors.OperationalError:
         return False
 
@@ -164,12 +168,12 @@ async def mysql57_responsive(host: str) -> bool:
             port=3363,
             user="app",
             database="db",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
         )
         async with conn.cursor() as cursor:
             await cursor.execute("select 1 as is_available")
             resp = await cursor.fetchone()
-        return resp[0] == 1  # type: ignore
+        return resp[0] == 1
     except asyncmy.errors.OperationalError:
         return False
 
@@ -196,13 +200,14 @@ async def postgres16_responsive(host: str) -> bool:
             port=5427,
             user="postgres",
             database="postgres",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
         )
     except Exception:  # noqa: BLE001
         return False
 
     try:
-        return (await conn.fetchrow("SELECT 1"))[0] == 1  # type: ignore
+        db_open = await conn.fetchrow("SELECT 1")
+        return bool(db_open is not None and db_open[0] == 1)
     finally:
         await conn.close()
 
@@ -214,13 +219,14 @@ async def postgres15_responsive(host: str) -> bool:
             port=5426,
             user="postgres",
             database="postgres",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
         )
     except Exception:  # noqa: BLE001
         return False
 
     try:
-        return (await conn.fetchrow("SELECT 1"))[0] == 1  # type: ignore
+        db_open = await conn.fetchrow("SELECT 1")
+        return bool(db_open is not None and db_open[0] == 1)
     finally:
         await conn.close()
 
@@ -232,13 +238,14 @@ async def postgres14_responsive(host: str) -> bool:
             port=5425,
             user="postgres",
             database="postgres",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
         )
     except Exception:  # noqa: BLE001
         return False
 
     try:
-        return (await conn.fetchrow("SELECT 1"))[0] == 1  # type: ignore
+        db_open = await conn.fetchrow("SELECT 1")
+        return bool(db_open is not None and db_open[0] == 1)
     finally:
         await conn.close()
 
@@ -250,13 +257,14 @@ async def postgres13_responsive(host: str) -> bool:
             port=5424,
             user="postgres",
             database="postgres",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
         )
     except Exception:  # noqa: BLE001
         return False
 
     try:
-        return (await conn.fetchrow("SELECT 1"))[0] == 1  # type: ignore
+        db_open = await conn.fetchrow("SELECT 1")
+        return bool(db_open is not None and db_open[0] == 1)
     finally:
         await conn.close()
 
@@ -268,13 +276,14 @@ async def postgres12_responsive(host: str) -> bool:
             port=5423,
             user="postgres",
             database="postgres",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
         )
     except Exception:  # noqa: BLE001
         return False
 
     try:
-        return (await conn.fetchrow("SELECT 1"))[0] == 1  # type: ignore
+        db_open = await conn.fetchrow("SELECT 1")
+        return bool(db_open is not None and db_open[0] == 1)
     finally:
         await conn.close()
 
@@ -311,12 +320,12 @@ def oracle23c_responsive(host: str) -> bool:
             port=1513,
             user="app",
             service_name="FREEPDB1",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
         )
         with conn.cursor() as cursor:
             cursor.execute("SELECT 1 FROM dual")
             resp = cursor.fetchone()
-        return resp[0] == 1  # type: ignore
+        return resp[0] == 1 if resp is not None else False
     except Exception:  # noqa: BLE001
         return False
 
@@ -333,12 +342,12 @@ def oracle18c_responsive(host: str) -> bool:
             port=1512,
             user="app",
             service_name="xepdb1",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
         )
         with conn.cursor() as cursor:
             cursor.execute("SELECT 1 FROM dual")
             resp = cursor.fetchone()
-        return resp[0] == 1  # type: ignore
+        return resp[0] == 1 if resp is not None else False
     except Exception:  # noqa: BLE001
         return False
 
@@ -361,7 +370,7 @@ async def mssql_responsive(host: str) -> bool:
         async with conn.cursor() as cursor:
             cursor.execute("select 1 as is_available")
             resp = cursor.fetchone()
-            return resp[0] == 1  # type: ignore
+            return resp[0] == 1 if resp is not None else False
     except Exception:  # noqa: BLE001
         return False
 

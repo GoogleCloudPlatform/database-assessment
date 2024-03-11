@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Literal
 
 from rich import prompt
 
-from ._utils import RICH_CLICK_INSTALLED, console
+from dma.cli._utils import RICH_CLICK_INSTALLED, console
 
 if TYPE_CHECKING or not RICH_CLICK_INSTALLED:  # pragma: no cover
     import click
@@ -30,16 +30,16 @@ else:  # pragma: no cover
     click.rich_click.APPEND_METAVARS_HELP = True
 
 
-__all__ = ("app_group",)
+__all__ = ("app",)
 
 
 @group(name="DMA", context_settings={"help_option_names": ["-h", "--help"]})
 @pass_context
-def app_group(ctx: Context) -> None:
+def app(ctx: Context) -> None:
     """Database Migration Assessment"""
 
 
-@app_group.command(
+@app.command(
     name="collect-data",
     no_args_is_help=True,
     short_help="Collect data from a source database..",
@@ -117,7 +117,7 @@ def collect_data(
     database: str | None = None,
 ) -> None:
     """Process a collection of advisor extracts."""
-    from dma.collector import tasks as collector_tasks
+    from dma.collector import tasks as collector_tasks  # noqa: PLC0415
 
     console.rule("Starting data collection process", align="left")
 
@@ -141,7 +141,7 @@ def collect_data(
         console.rule("Skipping execution until input is confirmed", align="left")
 
 
-@app_group.command(
+@app.command(
     name="readiness-check",
     no_args_is_help=True,
     short_help="Execute the DMS migration readiness checklist.",
@@ -219,7 +219,7 @@ def readiness_check(
     database: str | None = None,
 ) -> None:
     """Process a collection of advisor extracts."""
-    from dma.collector import tasks as collector_tasks
+    from dma.collector import tasks as collector_tasks  # noqa: PLC0415
 
     console.rule("Starting readiness check process", align="left")
     if hostname is None:

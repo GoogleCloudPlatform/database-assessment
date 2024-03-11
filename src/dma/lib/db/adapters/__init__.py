@@ -1,5 +1,5 @@
-from .asyncmy import AsyncMYAdapter
-from .asyncpg import AsyncPGAdapter
-from .oracledb import AsyncOracleDBAdapter
+from dma.lib.db.adapters.asyncmy import AsyncMYAdapter
+from dma.lib.db.adapters.asyncpg import AsyncPGAdapter
+from dma.lib.db.adapters.oracledb import AsyncOracleDBAdapter
 
-__all__ = ("AsyncPGAdapter", "AsyncMYAdapter", "AsyncOracleDBAdapter")
+__all__ = ("AsyncMYAdapter", "AsyncOracleDBAdapter", "AsyncPGAdapter")

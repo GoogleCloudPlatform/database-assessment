@@ -19,9 +19,8 @@ class MaybeAcquire:
         if "acquire" in dir(self.client):
             self._managed_conn = await self.client.acquire()
             return self._managed_conn
-        else:
-            self._managed_conn = None
-            return self.client
+        self._managed_conn = None
+        return self.client
 
     async def __aexit__(self, exc_type, exc, tb):
         if self._managed_conn is not None:
@@ -32,7 +31,7 @@ class AsyncOracleDBAdapter:
     is_aio_driver = True
 
     def __init__(self) -> None:
-        self.var_sorted = defaultdict(list)
+        self.var_sorted: dict[str, Any] = defaultdict(list)  # type: ignore[assignment]
 
     def process_sql(self, query_name: str, op_type: SQLOperationType, sql: str) -> str:
         adj = 0
@@ -112,8 +111,7 @@ class AsyncOracleDBAdapter:
             res = await connection.fetchrow(sql, *parameters)
             if res:
                 return res[0] if len(res) == 1 else res
-            else:
-                return None
+            return None
 
     async def insert_update_delete(self, conn, query_name, sql, parameters):
         parameters = self.maybe_order_params(query_name, parameters)

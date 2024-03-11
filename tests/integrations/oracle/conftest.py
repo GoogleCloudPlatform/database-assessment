@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import platform
+from sys import version_info
 from typing import TYPE_CHECKING, AsyncGenerator, cast
 
 import pytest
@@ -12,6 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engin
 
 from dma.collector.queries import provides_collection_queries
 
+if version_info < (3, 10):  # pragma: nocover
+    from dma.utils import anext_ as anext  # noqa: A001
 if TYPE_CHECKING:
     from dma.collector.query_manager import CollectionQueryManager
 

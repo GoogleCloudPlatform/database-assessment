@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from sys import version_info
 from typing import TYPE_CHECKING, AsyncGenerator, cast
 
 import pytest
@@ -8,6 +9,9 @@ from sqlalchemy import URL, NullPool
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
 
 from dma.collector.queries import provides_collection_queries
+
+if version_info < (3, 10):  # pragma: nocover
+    from dma.utils import anext_ as anext  # noqa: A001
 
 if TYPE_CHECKING:
     from dma.collector.query_manager import CollectionQueryManager
@@ -25,11 +29,11 @@ async def mysql8_asyncmy_engine(docker_ip: str, mysql8_service: None) -> AsyncEn
         URL(
             drivername="mysql+asyncmy",
             username="app",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
             host=docker_ip,
             port=3360,
             database="db",
-            query={},
+            query={},  # type: ignore[arg-type]
         ),
         poolclass=NullPool,
     )
@@ -42,11 +46,11 @@ async def mysql57_asyncmy_engine(docker_ip: str, mysql57_service: None) -> Async
         URL(
             drivername="mysql+asyncmy",
             username="app",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
             host=docker_ip,
             port=3363,
             database="db",
-            query={},
+            query={},  # type: ignore[arg-type]
         ),
         poolclass=NullPool,
     )
@@ -59,11 +63,11 @@ async def mysql56_asyncmy_engine(docker_ip: str, mysql56_service: None) -> Async
         URL(
             drivername="mysql+asyncmy",
             username="app",
-            password="super-secret",  # noqa: S106
+            password="super-secret",
             host=docker_ip,
             port=3362,
             database="db",
-            query={},
+            query={},  # type: ignore[arg-type]
         ),
         poolclass=NullPool,
     )

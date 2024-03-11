@@ -54,6 +54,6 @@ def wrap_sync(fn: Callable[P, T]) -> Callable[P, Awaitable[T]]:
         return fn
 
     async def wrapped(*args: P.args, **kwargs: P.kwargs) -> T:
-        return await anyio.to_thread.run_sync(partial(fn, *args, **kwargs))  # type: ignore[no-any-return]
+        return await anyio.to_thread.run_sync(partial(fn, *args, **kwargs))
 
     return wrapped

@@ -1,3 +1,4 @@
+from sys import version_info
 from typing import Literal
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -5,6 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dma.cli._utils import console
 from dma.collector.queries import provides_collection_queries
 from dma.lib.db.base import get_engine
+
+if version_info < (3, 10):  # pragma: nocover
+    from dma.utils import anext_ as anext  # noqa: A001
 
 
 async def readiness_check(
