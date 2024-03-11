@@ -44,7 +44,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Start Database Services
-      run: docker-compose -f tests/docker-compose.yml up -d
+      run: docker compose -f tests/docker-compose.yml up -d
 
     - name: Install Hatch
       run: pip install --upgrade hatch hatch-pip-compile
