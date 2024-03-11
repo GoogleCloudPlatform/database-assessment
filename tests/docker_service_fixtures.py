@@ -51,7 +51,9 @@ async def wait_until_responsive(
 
 
 SKIP_DOCKER_COMPOSE: bool = bool(os.environ.get("SKIP_DOCKER_COMPOSE", False))
-USE_LEGACY_DOCKER_COMPOSE: bool = bool(os.environ.get("USE_LEGACY_DOCKER_COMPOSE", True))
+USE_LEGACY_DOCKER_COMPOSE: bool = bool(
+    os.environ.get("USE_LEGACY_DOCKER_COMPOSE", os.getenv("GITHUB_ACTIONS") != "true")
+)
 
 
 class DockerServiceRegistry:
@@ -371,7 +373,7 @@ async def mssql_responsive(host: str) -> bool:
             timeout=2,
         )
         async with conn.cursor() as cursor:
-            cursor.execute("select 1 as is_available")
+            await cursor.execute("select 1 as is_available")
             resp = cursor.fetchone()
             return resp[0] == 1 if resp is not None else False
     except Exception:  # noqa: BLE001
