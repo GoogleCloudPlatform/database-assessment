@@ -2,7 +2,7 @@
 
 While the collection script does not gather any data or source code, it does contain the name of schemas and hostname information. If there is a requirement to obfuscate this data, there is an optional masking script included with the scripts.
 
-This script will create a key file that maps the anonymized schema and hostname attributes to its original name.
+This one-way script will create a key file that maps the anonymized schema and hostname attributes to its original name.  This anonymized data can not be reversed in any way and requires the key to be decoded.  It currently is only supported for Oracle database collections.
 
 **Note** This file should not be sent with the collection and should not be lost, as it can't be recreated.
 
@@ -15,7 +15,8 @@ The script can be executed at the shell or command prompt and requires 2 paramet
 
 ```bash
 $ ./masker/dma-collection-masker
-usage: dma-collection-masker [-h] [--verbose] [--collection-path COLLECTION_PATH] [--output-path OUTPUT_PATH]
+usage: dma-collection-masker [-h] [--verbose] 
+  [--collection-path COLLECTION_PATH] [--output-path OUTPUT_PATH]
 
 Google Database Migration Assessment - Collection Masking Script
 
