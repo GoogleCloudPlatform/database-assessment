@@ -572,7 +572,7 @@ pip-compile-constraint = "default"
 type = "pip-compile"
 
 [tool.hatch.envs.local.scripts]
-start-infra = "docker-compose -f tests/docker-compose.yml up -d"
+start-infra = "docker-compose -f tests/docker-compose.yml up --force-recreate -d"
 stop-infra = "docker-compose -f tests/docker-compose.yml down --remove-orphans --volumes"
 
 
