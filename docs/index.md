@@ -2,20 +2,18 @@
 
 ## Moving Database Workloads to Google Cloud
 
-- User executed self-check
-- Get the recommended Google Cloud configuration your current Oracle and SQL Server environments.
-- Facts based approach to sizing that leverages metadata from your environment.
+* Get the recommended Google Cloud configuration your current Oracle and SQL Server environments.
+* Facts based approach to sizing that leverages metadata from your environment.
 
-Database Advisor
+## Quick Start
 
-## Quick Start - Shell Script
+Download the collection scripts from the latest release. Instructions for execution are included in the bundled README.
+* [Oracle](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip)
+* [MSSQL](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-sqlserver.zip)
+* [Postgres](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-postgres.zip)
+* [MySQL](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-mysql.zip)
 
-Grab the latest collection scripts for your environment:
-    - [Oracle](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip)
-    - [MSSQL](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-mssql.zip)
-    - [Postgres](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-postgres.zip)
-    - [MySQL](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-mysql.zip)
-
+Instructions for execution are included in the README bundled with the collection scripts.
 ## Navigation
 
 Documentation for specific `MAJOR.MINOR` versions can be chosen by using the dropdown on the top of every page.
