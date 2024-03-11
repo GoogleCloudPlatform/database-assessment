@@ -373,7 +373,7 @@ end;
 begin exec (
     'INSERT INTO #FeaturesEnabled
     SELECT
-        ''IsResourceGovenorEnabled'',
+        ''IsResourceGovernorEnabled'',
         CONVERT(nvarchar, is_enabled),
         CASE
             WHEN is_enabled > 0 THEN 1

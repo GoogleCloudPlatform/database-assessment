@@ -25,6 +25,10 @@ nav:
         - Workflows: developer_guide/workflows.md
         - Releases: developer_guide/releases.md
   - Sizing Scripts:
+    - Postgres Data Collection:
+        - Data Collection: user_guide/postgres/collection_scripts.md
+    - MySQL Data Collection:
+        - Data Collection: user_guide/mysql/collection_scripts.md
     - Oracle Collection:
         - Data Collection: user_guide/oracle/collection_scripts.md
         - Permissions Required: user_guide/oracle/permissions.md
