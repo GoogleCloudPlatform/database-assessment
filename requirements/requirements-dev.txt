@@ -174,7 +174,7 @@ gitpython==3.1.42
     # via mkdocs-git-revision-date-localized-plugin
 greenlet==3.0.3
     # via sqlalchemy
-griffe==0.41.3
+griffe==0.42.0
     # via mkdocstrings-python
 h11==0.14.0
     # via httpcore
@@ -184,7 +184,7 @@ httpcore==1.0.4
     # via httpx
 httpx==0.27.0
     # via jupyterlab
-hypothesis==6.99.2
+hypothesis==6.99.4
 identify==2.5.35
     # via pre-commit
 idna==3.6
@@ -262,7 +262,7 @@ jupyter-server-terminals==0.5.2
 jupyterlab==4.1.4
 jupyterlab-pygments==0.3.0
     # via nbconvert
-jupyterlab-server==2.25.3
+jupyterlab-server==2.25.4
     # via jupyterlab
 kiwisolver==1.4.5
     # via matplotlib
@@ -354,7 +354,7 @@ numpy==1.26.4
     #   matplotlib
     #   pandas
     #   seaborn
-oracledb==2.0.1
+oracledb==2.1.0
 overrides==7.7.0
     # via jupyter-server
 packaging==24.0
@@ -552,10 +552,10 @@ traitlets==5.14.1
     #   nbformat
 types-click==7.1.8
 types-decorator==5.1.8.20240310
-types-python-dateutil==2.8.19.20240106
+types-python-dateutil==2.8.19.20240311
     # via arrow
-types-pyyaml==6.0.12.12
-types-six==1.16.21.20240310
+types-pyyaml==6.0.12.20240311
+types-six==1.16.21.20240311
 typing-extensions==4.10.0
     # via
     #   asyncpg-stubs

@@ -37,6 +37,25 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - if: runner.os == 'Linux'
+      name:  Install Microsoft ODBC Drivers & Free additional space
+      run: |
+          sudo ACCEPT_EULA=Y apt-get install msodbcsql18 -y || true
+          sudo docker rmi $(docker image ls -aq) >/dev/null 2>&1 || true
+          sudo rm -rf \
+          /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+          /usr/local/share/powershell /usr/share/swift /usr/local/.ghcup \
+          /usr/lib/jvm || true
+          sudo apt-get autoremove -y \
+          && sudo apt-get clean -y \
+          && sudo rm -rf /root/.cache \
+          && sudo rm -rf /var/apt/lists/* \
+          && sudo rm -rf /var/cache/apt/* \
+          && sudo apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
+    - if: runner.os == 'Linux'
+      name: Start Database Services
+      run: docker compose -f tests/docker-compose.yml up -d
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
@@ -52,17 +71,21 @@ jobs:
     - name: Run tests and track code coverage
       run: hatch run test:cov
 
+    - if: runner.os == 'Linux'
+      name: Start Database Services
+      run: sudo docker compose -f tests/docker-compose.yml down --remove-orphans --volumes
+
   run-container-matrix:
     name: Container matrix on Linux
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    - name: Install Microsoft ODBC Drivers
-      run: sudo ACCEPT_EULA=Y apt-get install msodbcsql18 -y
 
-    - name: Free additional space
+    - if: runner.os == 'Linux'
+      name:  Install Microsoft ODBC Drivers & Free additional space
       run: |
+          sudo ACCEPT_EULA=Y apt-get install msodbcsql18 -y || true
           sudo docker rmi $(docker image ls -aq) >/dev/null 2>&1 || true
           sudo rm -rf \
           /usr/share/dotnet /usr/local/lib/android /opt/ghc \
@@ -74,13 +97,15 @@ jobs:
           && sudo rm -rf /var/apt/lists/* \
           && sudo rm -rf /var/cache/apt/* \
           && sudo apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
+
     - name: Set up Python 3.12
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
 
-    # - name: Start Database Services
-    #   run: docker compose -f tests/docker-compose.yml up -d
+    - if: runner.os == 'Linux'
+      name: Start Database Services
+      run: sudo docker compose -f tests/docker-compose.yml up -d
 
     - name: Install Hatch
       run: pip install --upgrade hatch hatch-containers hatch-pip-compile
@@ -88,5 +113,6 @@ jobs:
     - name: Run tests in container matrix
       run: hatch run test:no-cov
 
-    # - name: Stop Database Services
-    #   run: docker compose -f tests/docker-compose.yml down --remove-orphans --volumes
+    - if: runner.os == 'Linux'
+      name: Stop Database Services
+      run: sudo docker compose -f tests/docker-compose.yml down --remove-orphans --volumes

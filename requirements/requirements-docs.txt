@@ -98,7 +98,7 @@ gitpython==3.1.42
     # via mkdocs-git-revision-date-localized-plugin
 greenlet==3.0.3
     # via sqlalchemy
-griffe==0.41.3
+griffe==0.42.0
     # via mkdocstrings-python
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
@@ -178,7 +178,7 @@ mypy==1.9.0
 mypy-extensions==1.0.0
     # via mypy
 nodeenv==1.8.0
-oracledb==2.0.1
+oracledb==2.1.0
 packaging==24.0
     # via
     #   mkdocs
