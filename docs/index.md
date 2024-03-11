@@ -7,10 +7,11 @@
 
 ## Quick Start
 
-- Grab the Oracle collection scripts from the latest release [here](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip).
-
-
-- Grab the SQL Server collection scripts from the latest release [here](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-sqlserver.zip).
+Download the latest collection scripts for your environment:
+    - [Oracle](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip)
+    - [MSSQL](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-mssql.zip)
+    - [Postgres](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-postgres.zip)
+    - [MySQL](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-mysql.zip)
 
 
 Instructions for execution are included in the README bundled with the collection scripts.
