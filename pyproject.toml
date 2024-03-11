@@ -252,10 +252,34 @@ ban-relative-imports = "all"
 "__init__.py" = ['F401', 'D104']
 "__main__.py" = ["E402"]
 "scripts/*.py" = ["INP001", "S404"]
-"scripts/masker/dma-collection-masker" = ["PYI024", "FA100", "S202", "S311", "UP006", "UP035"]
+"scripts/masker/dma-collection-masker" = [
+    "PYI024",
+    "FA100",
+    "S202",
+    "S311",
+    "UP006",
+    "UP035",
+    "FA102",
+    "EM101",
+    "TRY003",
+    "PLR6301",
+]
 "scripts/post_build.py" = ["ERA001"]
 "scripts/pre_build.py" = ["ERA001"]
-"tests/**/*" = ["PLR2004", "S101", "TID252", "ERA001", "ANN201", "ANN001", "D103", "D104", "T201", "S404"]
+"tests/**/*" = [
+    "PLR2004",
+    "S101",
+    "TID252",
+    "ERA001",
+    "ANN201",
+    "ANN001",
+    "D103",
+    "D104",
+    "T201",
+    "S404",
+    "PLR6301",
+    "FA102",
+]
 # temp
 "src/dma/lib/db/adapters/*.py" = ["ANN001", "ANN201", "ANN204", "PLR6301"]
 
