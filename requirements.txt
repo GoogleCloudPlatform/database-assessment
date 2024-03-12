@@ -30,7 +30,7 @@ pygments==2.17.2
     # via rich
 rich==13.7.1
     # via rich-click
-rich-click==1.7.3
+rich-click==1.7.4
 sqlalchemy==2.0.28
 typing-extensions==4.10.0
     # via
