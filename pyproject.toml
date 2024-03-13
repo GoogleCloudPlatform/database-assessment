@@ -15,7 +15,7 @@ requires-python = ">=3.9,<3.13"
 
 # keywords for easier look-up on PyPI
 authors = [{ name = "Cody Fincher", email = "cody.fincher@gmail.com" }]
-keywords = ["database", "migration", "dma"]
+keywords = ["database", "migration", "assessment", "postgres", "mysql", "oracle", "mssql", "duckdb", "litestar", "dma"]
 # options under https://pypi.org/classifiers/
 classifiers = [ # ToDo: Modify according to your needs!
     "Development Status :: 2 - Pre-Alpha",
@@ -57,7 +57,7 @@ server = [
     "litestar[cli,jinja]>=2.7.0",
     "litestar-granian>=0.1.4",
     "httptools",
-    "uvloop<0.19",                # granian requires <0.19.0
+    "uvloop<0.19; platform_system != 'Windows'", # granian requires <0.19.0
 ]
 
 [project.scripts]
@@ -413,7 +413,7 @@ dependencies = [
     "litestar-granian>=0.1.4",
     "httptools",
     "msgspec",
-    "uvloop<0.19",                # granian requires <0.19.0
+    "uvloop<0.19; platform_system != 'Windows'", # granian requires <0.19.0
     "pyinfra",
     # required test dependencies
     "cython",
@@ -454,7 +454,7 @@ dependencies = [
     "litestar-granian>=0.1.4",
     "httptools",
     "msgspec",
-    "uvloop<0.19",                # granian requires <0.19.0
+    "uvloop<0.19; platform_system != 'Windows'", # granian requires <0.19.0
     "pyinfra",
     # required test dependencies
     "cython",
@@ -502,7 +502,7 @@ dependencies = [
     "litestar-granian>=0.1.4",
     "httptools",
     "msgspec",
-    "uvloop<0.19",                # granian requires <0.19.0
+    "uvloop<0.19; platform_system != 'Windows'", # granian requires <0.19.0
     "pyinfra",
     # required test dependencies
     "cython",
@@ -571,7 +571,7 @@ dependencies = [
     "litestar-granian>=0.1.4",
     "httptools",
     "msgspec",
-    "uvloop<0.19",                # granian requires <0.19.0
+    "uvloop<0.19; platform_system != 'Windows'", # granian requires <0.19.0
     "pyinfra",
     # required test dependencies
     "cython",

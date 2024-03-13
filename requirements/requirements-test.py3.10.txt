@@ -13,7 +13,7 @@
 # - litestar-granian>=0.1.4
 # - httptools
 # - msgspec
-# - uvloop<0.19
+# - uvloop<0.19; platform_system != "Windows"
 # - pyinfra
 # - cython
 # - anyio

@@ -44,12 +44,9 @@ upgrade-hatch: 										## Update Hatch, UV, and Ruff
 	@pipx upgrade hatch --include-injected
 
 install: 										## Install the project and
-	@if [ "$(VENV_EXISTS)" ]; then echo "=> Removing existing virtual environment"; $(MAKE) destroy-venv; fi
-	@$(MAKE) clean
-	@if [ "$(NODE_MODULES_EXISTS)" ]; then echo "=> Removing existing node modules"; $(MAKE) destroy-node_modules; fi
-	@if ! pipx --version > /dev/null; then echo '=> Installing PipX'; $(MAKE) install-pipx ; fi
-	@if ! hatch --version > /dev/null; then echo '=> Installing Hatch'; $(MAKE) install-hatch ; fi
-	@if ! hatch-pip-compile --version > /dev/null; then echo '=> Updating Hatch and installing plugins'; $(MAKE) upgrade-hatch ; fi
+	@if ! pipx --version > /dev/null; then echo '=> Installing `pipx`'; $(MAKE) install-pipx ; fi
+	@if ! hatch --version > /dev/null; then echo '=> Installing `hatch` with `pipx`'; $(MAKE) install-hatch ; fi
+	@if ! hatch-pip-compile --version > /dev/null; then echo '=> Updating `hatch` and installing plugins'; $(MAKE) upgrade-hatch ; fi
 	@echo "=> Creating Python environments..."
 	@$(MAKE) configure-hatch
 	@hatch env create local
@@ -58,6 +55,12 @@ install: 										## Install the project and
 	@hatch env create docs
 	@if [ "$(USING_NPM)" ]; then echo "=> Installing NPM packages..."; npm ci; fi
 	@echo "=> Install complete! Note: If you want to re-install re-run 'make install'"
+
+clean-install: 										## Install the project and
+	@if [ "$(VENV_EXISTS)" ]; then echo "=> Removing existing virtual environment"; $(MAKE) destroy-venv; fi
+	@$(MAKE) clean
+	@if [ "$(NODE_MODULES_EXISTS)" ]; then echo "=> Removing existing node modules"; $(MAKE) destroy-node_modules; fi
+	@$(MAKE) install
 
 .PHONY: upgrade
 upgrade:       										## Upgrade all dependencies to the latest stable versions

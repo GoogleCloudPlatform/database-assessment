@@ -13,7 +13,7 @@
 # - litestar-granian>=0.1.4
 # - httptools
 # - msgspec
-# - uvloop<0.19
+# - uvloop<0.19; platform_system != "Windows"
 # - pyinfra
 # - cython
 # - anyio
@@ -320,6 +320,7 @@ markdown==3.5.2
     #   mkdocs-autorefs
     #   mkdocs-material
     #   mkdocstrings
+    #   mkdocstrings-python
     #   pymdown-extensions
 markdown-it-py==3.0.0
     # via rich
@@ -373,7 +374,7 @@ mkdocs-redirects==1.2.1
 mkdocs-section-index==0.3.8
 mkdocstrings==0.24.1
     # via mkdocstrings-python
-mkdocstrings-python==1.8.0
+mkdocstrings-python==1.9.0
     # via mkdocstrings
 msgspec==0.18.6
     # via litestar
