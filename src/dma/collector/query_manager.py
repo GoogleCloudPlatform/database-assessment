@@ -42,12 +42,14 @@ class CollectionQueryManager(QueryManager):
 
     async def execute_collection_queries(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         """Execute pre-processing queries."""
-        console.print("executing collection queries")
+        console.rule("executing collection queries...", align="left")
         results: dict[str, Any] = {}
         for script in self.collection_queries:
-            console.print(f".. executing collection query {script}")
+            console.print(f" [yellow]*[/] executing collection query {script}")
             script_result = await self.select(script, PKEY="test", DMA_SOURCE_ID="testing", DMA_MANUAL_ID=None)
-            results.update({script: script_result})
+            results[script] = script_result
+        if not self.collection_queries:
+            console.print(" [dim yellow]*[/] No collection queries for this database type")
         return results
 
     async def execute_extended_collection_queries(self) -> dict[str, Any]:
@@ -55,11 +57,55 @@ class CollectionQueryManager(QueryManager):
 
         Returns: None
         """
-        console.print("executing extended collection queries")
+        console.rule("executing extended collection queries...", align="left")
         results: dict[str, Any] = {}
         for script in self.extended_collection_queries:
-            console.print(f".. executing extended collection query {script}")
+            console.print(f" [yellow]*[/] executing extended collection query {script}")
             script_result = await self.select(script, PKEY="test", DMA_SOURCE_ID="testing", DMA_MANUAL_ID=None)
             results.update({script: script_result})
             await self.select(script)
+        if not self.extended_collection_queries:
+            console.print(" [dim yellow]*[/] No extended collection queries for this database type")
+        return results
+
+
+class CanonicalQueryManager(QueryManager):
+    """Canonical Query Manager"""
+
+    @property
+    def transformation_queries(self) -> list[str]:
+        """Get transformation scripts."""
+        return sorted(
+            [q for q in self.queries.available_queries if q.startswith("transformation") and not q.endswith("cursor")],
+        )
+
+    def execute_transformation_queries(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        """Execute pre-processing queries."""
+        console.rule("executing transformation queries...", align="left")
+        results: dict[str, Any] = {}
+        for script in self.transformation_queries:
+            console.print(f" [yellow]*[/] executing transformation query {script}")
+            script_result = self.select(script, PKEY="test", DMA_SOURCE_ID="testing", DMA_MANUAL_ID=None)
+            results[script] = script_result
+        if not self.transformation_queries:
+            console.print(" [dim yellow]*[/] No transformation queries for this database type")
+        return results
+
+    @property
+    def assessment_queries(self) -> list[str]:
+        """Get load scripts."""
+        return sorted(
+            [q for q in self.queries.available_queries if q.startswith("assessment") and not q.endswith("cursor")],
+        )
+
+    def execute_assessment_queries(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        """Execute pre-processing queries."""
+        console.rule("executing assessment queries...", align="left")
+        results: dict[str, Any] = {}
+        for script in self.assessment_queries:
+            console.print(f" [yellow]*[/] executing assessment query {script}")
+            script_result = self.select(script, PKEY="test", DMA_SOURCE_ID="testing", DMA_MANUAL_ID=None)
+            results[script] = script_result
+        if not self.assessment_queries:
+            console.print(" [dim yellow]*[/] No assessment queries for this database type.  Skipping stage...")
         return results

@@ -136,7 +136,7 @@ def collect_data(
     if not no_prompt:
         input_confirmed = prompt.Confirm.ask("Are you ready to start the assessment?")
     if input_confirmed:
-        asyncio.run(collector_tasks.readiness_check(db_type, username, password, hostname, port, database))
+        asyncio.run(collector_tasks.readiness_check(console, db_type, username, password, hostname, port, database))
     else:
         console.rule("Skipping execution until input is confirmed", align="left")
 
@@ -237,6 +237,6 @@ def readiness_check(
     if not no_prompt:
         input_confirmed = prompt.Confirm.ask("Are you ready to start the assessment?")
     if input_confirmed:
-        asyncio.run(collector_tasks.readiness_check(db_type, username, password, hostname, port, database))
+        asyncio.run(collector_tasks.readiness_check(console, db_type, username, password, hostname, port, database))
     else:
         console.rule("Skipping execution until input is confirmed", align="left")

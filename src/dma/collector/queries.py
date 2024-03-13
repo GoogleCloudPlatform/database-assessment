@@ -6,13 +6,16 @@ from typing import TYPE_CHECKING
 
 import aiosql
 
-from dma.collector.query_manager import CollectionQueryManager
+from dma.collector.query_manager import CanonicalQueryManager, CollectionQueryManager
+from dma.lib.db.local import get_duckdb_connection
 from dma.lib.exceptions import ApplicationError
 from dma.utils import module_to_os_path
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator
+    from collections.abc import AsyncIterator, Generator
+    from pathlib import Path
 
+    import duckdb
     from sqlalchemy.ext.asyncio import AsyncSession
 
 _root_path = module_to_os_path("dma")
@@ -50,3 +53,14 @@ async def provides_collection_queries(
         msg = "Unable to identify driver adapter from dialect."
         raise ApplicationError(msg)
     yield query_manager
+
+
+def provide_canonical_queries(
+    local_db: duckdb.DuckDBPyConnection | None = None, working_path: Path | None = None
+) -> Generator[CanonicalQueryManager, None, None]:
+    """Construct repository and service objects for the request."""
+    if local_db:
+        yield CanonicalQueryManager(connection=local_db, queries=canonical_queries)
+    else:
+        with get_duckdb_connection(working_path=working_path) as db_connection:
+            yield CanonicalQueryManager(connection=db_connection, queries=canonical_queries)
