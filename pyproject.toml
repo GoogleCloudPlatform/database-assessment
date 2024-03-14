@@ -65,12 +65,7 @@ mysql = ["asyncmy>=0.2.9"]
 oracle = ["oracledb"]
 postgres = ["asyncpg>=0.29.0"]
 remote = ["pyinfra"]
-server = [
-    "litestar[structlog,jinja]>=2.7.0",
-    "litestar-granian>=0.2.3",
-    "httptools",
-    "uvloop<0.19; sys_platform != \"win32\" or platform_system != \"Windows\"", # granian requires <0.19.0
-]
+server = ["litestar[structlog,jinja]>=2.7.0", "litestar-granian>=0.2.3"]
 
 [project.scripts]
 dma = "dma.cli.main:app"
@@ -428,10 +423,10 @@ extra-dependencies = [
     "pytest-xdist",
 ]
 features = ["server", "remote", "oracle", "mysql", "mssql", "postgres"]
-lock-filename = "requirements/requirements-{env_name}.txt"
-pip-compile-constraint = "default"
+# lock-filename = "requirements/requirements-{env_name}.txt"
+# pip-compile-constraint = "default"
 template = "default"
-type = "pip-compile"
+type = "virtual"
 
 # Test matrix for various Python versions replacing the functionality of tox
 [[tool.hatch.envs.test.matrix]]
