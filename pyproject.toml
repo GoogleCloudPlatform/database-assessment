@@ -400,26 +400,11 @@ upgrade-pkg = "PIP_COMPILE_UPGRADE='{args}' hatch env run --env {env_name} -- py
 
 # Test environment with test-only dependencies
 [tool.hatch.envs.test]
-dependencies = [
+extra-dependencies = [
     "nodeenv",
-    "bump2version",
-    # database backends
-    "aioodbc",
-    "asyncmy",
-    "oracledb",
-    "asyncpg",
-    # server components
-    "litestar[cli,jinja]>=2.7.0",
-    "litestar-granian>=0.1.4",
-    "httptools",
-    "msgspec",
-    "uvloop<0.19; platform_system != 'Windows'", # granian requires <0.19.0
-    "pyinfra",
     # required test dependencies
     "cython",
     "anyio",
-    "nodeenv",
-    "mypy",
     "coverage[toml]>=6.2",
     "pytest",
     "pytest-cov",
@@ -430,9 +415,15 @@ dependencies = [
     "pytest-click",
     "pytest-xdist",
 ]
+features = ["server", "remote", "oracle", "mysql", "mssql", "postgres"]
 lock-filename = "requirements/requirements-{env_name}.txt"
 pip-compile-constraint = "default"
+template = "default"
 type = "pip-compile"
+
+# Test matrix for various Python versions replacing the functionality of tox
+[[tool.hatch.envs.test.matrix]]
+python = ["3.9", "3.10", "3.11", "3.12"]
 
 [tool.hatch.envs.test.scripts]
 cov = "pytest -n auto --dist loadgroup --cov-report=term-missing --cov-config=pyproject.toml --cov=src/dma --cov=tests {args}"
@@ -440,85 +431,9 @@ debug = "cov --no-cov -s --pdb --pdbcls=IPython.core.debugger:Pdb {args}"
 no-cov = "cov --no-cov {args}"
 
 
-# Lint environment
-[tool.hatch.envs.lint]
-dependencies = [
-    "nodeenv",
-    # database backends
-    "aioodbc",
-    "asyncmy",
-    "oracledb",
-    "asyncpg",
-    # server components
-    "litestar[cli,jinja]>=2.7.0",
-    "litestar-granian>=0.1.4",
-    "httptools",
-    "msgspec",
-    "uvloop<0.19; platform_system != 'Windows'", # granian requires <0.19.0
-    "pyinfra",
-    # required test dependencies
-    "cython",
-    "anyio",
-    "nodeenv",
-    # additional test & development dependencies
-    "pyyaml>=6",
-    "mypy",
-    "ruff",
-    "pylint",
-    "pre-commit",
-    "types-click",
-    "types-six",
-    "types-decorator",
-    "types-pyyaml",
-    "asyncpg-stubs",
-]
-detached = true
-python-version = "3.12"
-
-[tool.hatch.envs.lint.scripts]
-check = ["style", "typing"]
-fix = [
-    "typing",
-    "ruff format {args:.}",
-    "ruff check --fix {args:.}",
-    "style",                      # feedback on what is not fixable
-    "pre-commit run --all-files",
-]
-style = ["echo \"VERSION: `ruff --version`\"", "ruff check {args:.}", "ruff format --check {args:.}"]
-typing = ["echo \"VERSION: `mypy --version`\"", "mypy --install-types --non-interactive {args}"]
-
 # Docs environment
 [tool.hatch.envs.docs]
-dependencies = [
-    "nodeenv",
-    "bump2version",
-    # database backends
-    "aioodbc",
-    "asyncmy",
-    "oracledb",
-    "asyncpg",
-    # server components
-    "litestar[cli,jinja]>=2.7.0",
-    "litestar-granian>=0.1.4",
-    "httptools",
-    "msgspec",
-    "uvloop<0.19; platform_system != 'Windows'", # granian requires <0.19.0
-    "pyinfra",
-    # required test dependencies
-    "cython",
-    "anyio",
-    "nodeenv",
-    "mypy",
-    "coverage[toml]>=6.2",
-    "pytest",
-    "pytest-cov",
-    "coverage",
-    "pytest-mock",
-    "pytest-vcr",
-    "pytest-sugar",
-    "pytest-click",
-    "pytest-xdist",
-    # actual doc deps
+extra-dependencies = [
     "mkdocs>=1.5",
     "mkdocs-material>=9.4",
     # Plugins
@@ -539,8 +454,11 @@ dependencies = [
     # Validation
     "linkchecker>=10.3",
 ]
+features = ["server", "remote", "oracle", "mysql", "mssql", "postgres"]
 lock-filename = "requirements/requirements-docs.txt"
-pip-compile-constraint = "default"
+pip-compile-constraint = "test"
+python = "3.12"
+template = "test"
 type = "pip-compile"
 
 [tool.hatch.envs.docs.env-vars]
@@ -558,77 +476,35 @@ validate = "linkchecker --config .linkcheckerrc --ignore-url=/reference --ignore
 build-check = ["build", "validate"]
 
 [tool.hatch.envs.local]
-dependencies = [
-    "nodeenv",
+extra-dependencies = [
     "bump2version",
-    # database backends
-    "aioodbc",
-    "asyncmy",
-    "oracledb",
-    "asyncpg",
-    # server components
-    "litestar[cli,jinja]>=2.7.0",
-    "litestar-granian>=0.1.4",
-    "httptools",
-    "msgspec",
-    "uvloop<0.19; platform_system != 'Windows'", # granian requires <0.19.0
-    "pyinfra",
-    # required test dependencies
+    # cli databasae brwoser
+    "harlequin",
+    # linting
     "cython",
     "anyio",
-    "nodeenv",
-    "mypy",
-    "coverage[toml]>=6.2",
-    "pytest",
-    "pytest-cov",
-    "coverage",
-    "pytest-mock",
-    "pytest-vcr",
-    "pytest-sugar",
-    "pytest-click",
-    "pytest-xdist",
-    # additional test & development dependencies
-    # ToDo: Modify according to your needs!
-    "hypothesis",
-    "jupyterlab",
-    "ipython",
-    "seaborn",
-    "pandas",
-    "duckdb",
-    "pyyaml>=6",
     "mypy",
     "ruff",
     "pylint",
     "pre-commit",
     "types-click",
-    "types-pyyaml",
     "types-six",
     "types-decorator",
+    "types-pyyaml",
     "asyncpg-stubs",
-    # actual doc deps
-    "mkdocs>=1.5",
-    "mkdocs-material>=9.4",
-    # Plugins
-    "mkdocs-include-markdown-plugin",
-    "mkdocs-gen-files",
-    "mkdocs-literate-nav",
-    "mkdocs-minify-plugin>=0.5",
-    "mkdocs-section-index",
-    "mkdocs-git-revision-date-localized-plugin>=1.1",
-    "mkdocstrings[python]",
-    "mkdocs-redirects>=1.2",
-    "mkdocs-glightbox>=0.3.0",
-    "mike>=2.0.0",
-    # Extensions
-    "pymdown-extensions>=10.5",
-    # Necessary for syntax highlighting in code blocks
-    "pygments>=2.13",
-    # Validation
-    "linkchecker>=10.3",
+    # extras
+    "jupyterlab",
+    "ipython",
+    "seaborn",
+    "pandas",
+
 ]
+features = ["server", "remote", "oracle", "mysql", "mssql", "postgres"]
 lock-filename = "requirements/requirements-dev.txt"
 path = ".venv/"
-pip-compile-constraint = "default"
+pip-compile-constraint = "test"
+python = "3.12"
+template = "test"
 type = "pip-compile"
 
 [tool.hatch.envs.local.scripts]
@@ -636,15 +512,34 @@ start-infra = "docker-compose -f tests/docker-compose.yml up --force-recreate -d
 stop-infra = "docker-compose -f tests/docker-compose.yml down --remove-orphans --volumes"
 
 
-# Test matrix for various Python versions replacing the functionality of tox
-[[tool.hatch.envs.test.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12"]
+# Lint environment
+[tool.hatch.envs.lint]
+detached = true
+extra-dependencies = [
+    "pyyaml>=6",
+    "cython",
+    "anyio",
+    "mypy",
+    "ruff",
+    "pylint",
+    "pre-commit",
+    "types-click",
+    "types-six",
+    "types-decorator",
+    "types-pyyaml",
+    "asyncpg-stubs",
+]
+features = ["server", "remote", "oracle", "mysql", "mssql", "postgres"]
+python-version = "3.12"
 
-[[tool.hatch.envs.docs.matrix]]
-python = ["3.12"]
-
-[[tool.hatch.envs.lint.matrix]]
-python = ["3.12"]
-
-[[tool.hatch.envs.local.matrix]]
-python = ["3.12"]
+[tool.hatch.envs.lint.scripts]
+check = ["style", "typing"]
+fix = [
+    "typing",
+    "ruff format {args:.}",
+    "ruff check --fix {args:.}",
+    "style",                      # feedback on what is not fixable
+    "pre-commit run --all-files",
+]
+style = ["echo \"VERSION: `ruff --version`\"", "ruff check {args:.}", "ruff format --check {args:.}"]
+typing = ["echo \"VERSION: `mypy --version`\"", "mypy --install-types --non-interactive {args}"]

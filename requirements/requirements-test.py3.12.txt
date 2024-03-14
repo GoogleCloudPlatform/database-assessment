@@ -4,21 +4,8 @@
 # [constraints] requirements.txt (SHA256: 64a48db10301bb575117ee30829782ff3d20d6b134179afc39ba69505cfadc0d)
 #
 # - nodeenv
-# - bump2version
-# - aioodbc
-# - asyncmy
-# - oracledb
-# - asyncpg
-# - litestar[cli,jinja]>=2.7.0
-# - litestar-granian>=0.1.4
-# - httptools
-# - msgspec
-# - uvloop<0.19; platform_system != "Windows"
-# - pyinfra
 # - cython
 # - anyio
-# - nodeenv
-# - mypy
 # - coverage[toml]>=6.2
 # - pytest
 # - pytest-cov
@@ -38,6 +25,15 @@
 # - rich-click>=1.7.3
 # - sqlalchemy>=2.0.25
 # - typing-extensions>=4.0.0
+# - aioodbc
+# - asyncmy>=0.2.9
+# - oracledb
+# - asyncpg>=0.29.0
+# - pyinfra
+# - httptools
+# - litestar-granian>=0.1.4
+# - litestar[cli,jinja]>=2.7.0
+# - uvloop<0.19; platform_system != "Windows"
 #
 
 aioodbc==0.5.0
@@ -51,7 +47,6 @@ asyncmy==0.2.9
 asyncpg==0.29.0
 bcrypt==4.1.2
     # via paramiko
-bump2version==1.0.1
 certifi==2024.2.2
     # via
     #   httpcore
@@ -138,9 +133,6 @@ multidict==6.0.5
     # via
     #   litestar
     #   yarl
-mypy==1.9.0
-mypy-extensions==1.0.0
-    # via mypy
 nodeenv==1.8.0
 numpy==1.26.4
     # via pyarrow
@@ -231,7 +223,6 @@ typer==0.9.0
 typing-extensions==4.10.0
     # via
     #   litestar
-    #   mypy
     #   polyfactory
     #   rich-click
     #   sqlalchemy

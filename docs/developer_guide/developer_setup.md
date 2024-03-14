@@ -19,7 +19,7 @@ default-keyring=keyring.backends.fail.Keyring
 EOF
 # install  development essentials
 sudo apt update \
- && sudo apt install -y google-cloud-sdk postgresql-15 redis python-is-python3 rustc npm libbz2-dev libffi-dev liblzma-dev libreadline-dev libsqlite3-dev libssl-dev tk-dev zlib1g-dev build-essential
+ && sudo apt install -y postgresql-15 redis python-is-python3 rustc npm nodejs libbz2-dev libffi-dev liblzma-dev libreadline-dev libsqlite3-dev libssl-dev tk-dev zlib1g-dev build-essential
 
 if ! grep -qe "^export PATH=\"\${HOME}/.local/bin:\${PATH}\"" ~/.bashrc; then
   echo "" >> ~/.bashrc
@@ -58,14 +58,14 @@ activate, or enter, an environment. Instead, you use `hatch run env_name:command
 is assumed for a command if there is no colon found. Thus you must always define your environment in a declarative
 way and hatch makes sure that the environment reflects your declaration by updating it whenever you issue
 a `hatch run ...`. This helps with reproducibility and avoids forgetting to specify dependencies since the
-hatch workflow is to specify everything directly in [pyproject.toml](pyproject.toml). Only in rare cases, you
+hatch workflow is to specify everything directly in [pyproject.toml]. Only in rare cases, you
 will use `hatch local:shell` to enter the `local` environment, which is similar to what you may know from other tools.
 
 To get you started, use `hatch run test:cov` or `hatch run test:no-cov` to run the unit test with or without coverage reports,
 respectively. Use `hatch run lint:all` to run all kinds of typing and linting checks. Try to automatically fix linting
 problems with `hatch run lint:fix` and use `hatch run docs:serve` to build and serve your documentation.
 You can also easily define your own environments and commands. Check out the environment setup of hatch
-in [pyproject.toml](pyproject.toml) for more commands as well as the package, build and tool configuration.
+in [pyproject.toml] for more commands as well as the package, build and tool configuration.
 
 !!! tip
     There is a `Makefile` entry to automate testing and linting.  Executing `make test` will test all supported Python versions.  `make lint` will run the linting workflow against the source code, and `make serve-docs` will launch the local documentation server.
@@ -87,3 +87,4 @@ To manage database infrastructure that could be useful for testing, run `hatch r
 [pre-commit]: https://pre-commit.com/
 [VS Code]: https://code.visualstudio.com/docs/python/environments#_where-the-extension-looks-for-environments
 [hatch-pip-compile]: https://github.com/juftin/hatch-pip-compile
+[pyproject.toml]: https://packaging.python.org/en/latest/guides/writing-pyproject-toml/
