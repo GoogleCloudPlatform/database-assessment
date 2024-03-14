@@ -49,7 +49,7 @@ class CollectionQueryManager(QueryManager):
             script_result = await self.select(script, PKEY="test", DMA_SOURCE_ID="testing", DMA_MANUAL_ID=None)
             results[script] = script_result
         if not self.collection_queries:
-            console.print(" [dim yellow]*[/] No collection queries for this database type")
+            console.print(" [dim yellow]*[/] [dim]No collection queries for this database type. Skipping stage...[/]")
         return results
 
     async def execute_extended_collection_queries(self) -> dict[str, Any]:
@@ -65,7 +65,7 @@ class CollectionQueryManager(QueryManager):
             results.update({script: script_result})
             await self.select(script)
         if not self.extended_collection_queries:
-            console.print(" [dim yellow]*[/] No extended collection queries for this database type")
+            console.print(" [dim yellow]*[/] [dim]No extended collection queries for this database type. Skipping stage...[/]")
         return results
 
 
@@ -88,7 +88,7 @@ class CanonicalQueryManager(QueryManager):
             script_result = self.select(script, PKEY="test", DMA_SOURCE_ID="testing", DMA_MANUAL_ID=None)
             results[script] = script_result
         if not self.transformation_queries:
-            console.print(" [dim yellow]*[/] No transformation queries for this database type")
+            console.print(" [dim yellow]*[/] [dim]No transformation queries for this database type. Skipping stage...[/]")
         return results
 
     @property
@@ -107,5 +107,5 @@ class CanonicalQueryManager(QueryManager):
             script_result = self.select(script, PKEY="test", DMA_SOURCE_ID="testing", DMA_MANUAL_ID=None)
             results[script] = script_result
         if not self.assessment_queries:
-            console.print(" [dim yellow]*[/] No assessment queries for this database type.  Skipping stage...")
+            console.print(" [dim yellow]*[/] [dim]No assessment queries for this database type.  Skipping stage...[/]")
         return results
