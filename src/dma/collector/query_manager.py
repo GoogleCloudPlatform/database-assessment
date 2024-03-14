@@ -65,7 +65,9 @@ class CollectionQueryManager(QueryManager):
             results.update({script: script_result})
             await self.select(script)
         if not self.extended_collection_queries:
-            console.print(" [dim yellow]*[/] [dim]No extended collection queries for this database type. Skipping stage...[/]")
+            console.print(
+                " [dim yellow]*[/] [dim]No extended collection queries for this database type. Skipping stage...[/]"
+            )
         return results
 
 
@@ -88,7 +90,9 @@ class CanonicalQueryManager(QueryManager):
             script_result = self.select(script, PKEY="test", DMA_SOURCE_ID="testing", DMA_MANUAL_ID=None)
             results[script] = script_result
         if not self.transformation_queries:
-            console.print(" [dim yellow]*[/] [dim]No transformation queries for this database type. Skipping stage...[/]")
+            console.print(
+                " [dim yellow]*[/] [dim]No transformation queries for this database type. Skipping stage...[/]"
+            )
         return results
 
     @property

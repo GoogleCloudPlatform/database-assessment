@@ -15,7 +15,19 @@ requires-python = ">=3.9,<3.13"
 
 # keywords for easier look-up on PyPI
 authors = [{ name = "Cody Fincher", email = "cody.fincher@gmail.com" }]
-keywords = ["database", "migration", "assessment", "postgres", "mysql", "oracle", "mssql", "duckdb", "litestar", "dma"]
+keywords = [
+    "database",
+    "migration",
+    "assessment",
+    "postgres",
+    "mysql",
+    "oracle",
+    "mssql",
+    "duckdb",
+    "litestar",
+    "dma",
+    "granian",
+]
 # options under https://pypi.org/classifiers/
 classifiers = [ # ToDo: Modify according to your needs!
     "Development Status :: 2 - Pre-Alpha",
@@ -54,8 +66,8 @@ oracle = ["oracledb"]
 postgres = ["asyncpg>=0.29.0"]
 remote = ["pyinfra"]
 server = [
-    "litestar[cli,jinja]>=2.7.0",
-    "litestar-granian>=0.1.4",
+    "litestar[structlog,jinja]>=2.7.0",
+    "litestar-granian>=0.2.3",
     "httptools",
     "uvloop<0.19; sys_platform != 'win32'", # granian requires <0.19.0
 ]

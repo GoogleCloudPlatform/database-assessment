@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
 
     from dma.collector.query_manager import CollectionQueryManager
+
 pytestmark = [
     pytest.mark.anyio,
     pytest.mark.postgres,

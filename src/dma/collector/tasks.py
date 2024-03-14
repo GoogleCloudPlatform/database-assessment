@@ -32,6 +32,9 @@ async def readiness_check(
     hostname: str,
     port: int,
     database: str,
+    # pkey: str,
+    # dma_source_id: str,
+    # dma_manual_id: str,
     working_path: Path | None = None,
 ) -> None:
     """Assess the migration readiness for a Database for Database Migration Services"""
@@ -59,7 +62,8 @@ def import_data_to_local_db(
 ) -> duckdb.DuckDBPyConnection:
     """Loads Dictionary of type dict[str,list[dict]] to a DuckDB connection."""
     for table_name, table_data in data.items():
-        local_db.register(table_name, pl.from_dicts(table_data))
+        if len(table_data) > 0:
+            local_db.register(table_name, pl.from_dicts(table_data, infer_schema_length=10000))
     return local_db
 
 
