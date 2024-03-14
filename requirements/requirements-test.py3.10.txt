@@ -33,7 +33,7 @@
 # - httptools
 # - litestar-granian>=0.1.4
 # - litestar[cli,jinja]>=2.7.0
-# - uvloop<0.19; platform_system != "Windows"
+# - uvloop<0.19; sys_platform != "win32"
 #
 
 aioodbc==0.5.0
