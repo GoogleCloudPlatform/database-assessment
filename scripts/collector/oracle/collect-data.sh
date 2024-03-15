@@ -188,6 +188,10 @@ else
   echo "No Version file found" >  ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
 fi
 ERRCNT=$(wc -l < ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log)
+if [ ! -f ${OUTPUT_DIR}/opdb__eoj__${V_FILE_TAG}.csv ] ; then
+	ERRCNT=$((${ERRCNT} + 1))
+	echo "End of job marker file not found.  Data collection did not complete."
+fi
 if [[ ${ERRCNT} -ne 0 ]]
 then
   V_ERR_TAG="_ERROR"
