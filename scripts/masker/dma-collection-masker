@@ -50,10 +50,10 @@ FileMetadata = namedtuple(
 )
 
 
-class DMAFaker():
+class DMAFaker:
     """Fake data provider to provide masked values"""
 
-    hostname_prefixes: list[str] = [
+    hostname_prefixes: List[str] = [
         "db",
         "srv",
         "desktop",
@@ -63,7 +63,7 @@ class DMAFaker():
         "web",
     ]
 
-    hostname_domains: list[str] = [
+    hostname_domains: List[str] = [
         "com",
         "com",
         "com",
