@@ -11,3 +11,4 @@ __all__ = (
 
 RICH_CLICK_INSTALLED = find_spec("rich_click") is not None
 console = get_console()
+console._width = 80

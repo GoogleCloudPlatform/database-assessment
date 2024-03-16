@@ -12,9 +12,11 @@ if TYPE_CHECKING or not RICH_CLICK_INSTALLED:  # pragma: no cover
     from click import Context, group, pass_context
 else:  # pragma: no cover
     import rich_click as click
+    from rich.traceback import install as rich_click_traceback_install
     from rich_click import Context, group, pass_context
     from rich_click.cli import patch as rich_click_patch
 
+    rich_click_traceback_install(suppress=["click", "rich_click", "rich"])
     rich_click_patch()
     click.rich_click.USE_RICH_MARKUP = True
     click.rich_click.USE_MARKDOWN = False
@@ -107,6 +109,15 @@ def app(ctx: Context) -> None:
     required=False,
     show_default=False,
 )
+@click.option(
+    "--collection-identifier",
+    "-id",
+    help="An optional identifier used to tag the collection.  If one is not provided, the identifier will be generated from the database configuration.",
+    default=None,
+    type=click.STRING,
+    required=False,
+    show_default=False,
+)
 def collect_data(
     no_prompt: bool,
     db_type: Literal["mysql", "postgres", "mssql", "oracle"],
@@ -115,6 +126,7 @@ def collect_data(
     hostname: str | None = None,
     port: int | None = None,
     database: str | None = None,
+    collection_identifier: str | None = None,
 ) -> None:
     """Process a collection of advisor extracts."""
     from dma.collector import tasks as collector_tasks  # noqa: PLC0415
@@ -136,7 +148,17 @@ def collect_data(
     if not no_prompt:
         input_confirmed = prompt.Confirm.ask("Are you ready to start the assessment?")
     if input_confirmed:
-        asyncio.run(collector_tasks.readiness_check(console, db_type, username, password, hostname, port, database))
+        asyncio.run(
+            collector_tasks.readiness_check(
+                console=console,
+                db_type=db_type,
+                username=username,
+                password=password,
+                hostname=hostname,
+                port=port,
+                database=database,
+            )
+        )
     else:
         console.rule("Skipping execution until input is confirmed", align="left")
 
