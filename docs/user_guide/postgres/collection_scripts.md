@@ -75,9 +75,9 @@ To collect data for a single database:
   ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --allDbs N
 
  To collect data for all databases in the instance:
-  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}
+  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name}
  or
-  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port}
+  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name}
 ```
 
 ## Upload Collections
