@@ -1,0 +1,9 @@
+---
+interface Props {
+  expression: string
+}
+
+const { expression } = Astro.props as Props
+---
+
+<Fragment set:html={`{% ${expression} %}`} />

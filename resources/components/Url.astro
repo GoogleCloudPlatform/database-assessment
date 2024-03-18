@@ -1,0 +1,21 @@
+---
+import { type HTMLAttributes } from "astro/types"
+
+interface Props extends Omit<HTMLAttributes<"a">, "href"> {
+  name: string
+  args?: string
+}
+
+const { name, args, ...rest } = Astro.props as Props
+
+// Lord forgive me for I have sinned
+// I have no idea how to do this in a better way
+// Astro *reaaaaaaally* likes escaping things
+// So I just kinda... render stuff myself
+const href = `{% url \"${name}\"${args ? " " + args + " " : " "}%}`
+const rendered = `<a href=\"${href}\" ${Object.entries(rest)
+  .map(([key, value]) => `${key}=\"${value}\"`)
+  .join(" ")}>${await Astro.slots.render("default")}</a>`
+---
+
+<Fragment set:html={rendered} />

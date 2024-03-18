@@ -1,0 +1,13 @@
+---
+import Tag from "./Tag.astro"
+
+interface Props {
+  blockName: string
+}
+
+const { blockName } = Astro.props as Props
+---
+
+<Tag expression={`block ${blockName}`} />
+<slot />
+<Tag expression={`endblock`} />
