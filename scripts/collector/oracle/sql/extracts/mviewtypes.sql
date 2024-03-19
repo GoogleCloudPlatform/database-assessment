@@ -36,11 +36,7 @@ WHERE a.owner NOT IN (
 @&EXTRACTSDIR/exclude_schemas.sql
        )  
 )
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        con_id,
        owner,
        updatable,

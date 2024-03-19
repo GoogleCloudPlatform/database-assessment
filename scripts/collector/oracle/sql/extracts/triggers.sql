@@ -50,11 +50,7 @@ GROUP BY
     trigger_type,
     triggering_event,
     base_object_type)
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        con_id,
        owner,                         
        trigger_type,

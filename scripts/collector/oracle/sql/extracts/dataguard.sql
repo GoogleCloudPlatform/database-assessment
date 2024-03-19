@@ -30,11 +30,7 @@ COLUMN LOG_ARCHIVE_CONFIG FORMAT A200
 spool &outputdir/opdb__dataguard__&v_tag
 prompt PKEY|CON_ID|INST_ID|LOG_ARCHIVE_CONFIG|DEST_ID|DEST_NAME|DESTINATION|STATUS|TARGET|SCHEDULE|REGISTER|ALTERNATE|TRANSMIT_MODE|AFFIRM|VALID_ROLE|VERIFY|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vodg AS (
-SELECT  '&&v_host'
-        || '_'
-        || '&&v_dbname'
-        || '_'
-        || '&&v_hora' AS pkey,
+SELECT  :v_pkey AS pkey,
         &v_a_con_id as con_id, inst_id, 
         dest_id, 
         dest_name, 

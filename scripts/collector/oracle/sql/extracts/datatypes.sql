@@ -16,11 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__datatypes__&v_tag
 prompt PKEY|CON_ID|OWNER|DATA_TYPE|CNT|DATA_LENGTH|DATA_PRECISION|DATA_SCALE|AVG_COL_LEN|DISTINCT_TABLE_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdtype AS (
-SELECT /*+ USE_HASH(b a) NOPARALLEL */ '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT /*+ USE_HASH(b a) NOPARALLEL */ :v_pkey AS pkey,
        &v_a_con_id con_id,
        a.owner,
        data_type,

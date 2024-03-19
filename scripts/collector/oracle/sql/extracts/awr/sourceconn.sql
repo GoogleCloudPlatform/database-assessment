@@ -25,11 +25,7 @@ FROM DUAL;
 spool &outputdir/opdb__sourceconn__&v_tag
 prompt PKEY|DBID|INSTANCE_NUMBER|HO|PROGRAM|MODULE|MACHINE|COMMAND_NAME|CNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsrcconn AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        has.dbid,
        has.instance_number,
        TO_CHAR(dhsnap.begin_interval_time, 'hh24') hour,

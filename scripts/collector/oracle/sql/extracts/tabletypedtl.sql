@@ -119,11 +119,7 @@ GROUP BY &v_d_con_id,
        d.table_owner,
        d.table_name
 )
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        a.con_id,
        a.owner,
        a.table_name,

@@ -21,11 +21,7 @@ COLUMN MAX_BEGIN_INTERVAL_TIME FORMAT A30
 spool &outputdir/opdb__awrsnapdetails__&v_tag
 prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|MIN_SNAP_ID|MAX_SNAP_ID|MIN_BEGIN_INTERVAL_TIME|MAX_BEGIN_INTERVAL_TIME|CNT|SUM_SNAPS_DIFF_SECS|AVG_SNAPS_DIFF_SECS|MEDIAN_SNAPS_DIFF_SECS|MODE_SNAPS_DIFF_SECS|MIN_SNAPS_DIFF_SECS|MAX_SNAPS_DIFF_SECS|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vawrsnap as (
-SELECT  '&&v_host'
-        || '_'
-        || '&&v_dbname'
-        || '_'
-        || '&&v_hora'                                                            AS pkey,
+SELECT  :v_pkey AS pkey,
         dbid, instance_number, hour,
         min(snap_id) min_snap_id, max(snap_id) max_snap_id,
         TO_CHAR(min(snap_time), 'YYYY-MM-DD HH24:MI:SS') min_begin_interval_time, 

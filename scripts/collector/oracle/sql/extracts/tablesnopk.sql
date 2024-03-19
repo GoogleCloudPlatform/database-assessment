@@ -16,11 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__tablesnopk__&v_tag
 prompt PKEY|CON_ID|OWNER|PK|UK|CK|RI|VWCK|VWRO|HASHEXPR|SUPLOG|NUM_TABLES|TOTAL_CONS|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vnopk AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'              AS pkey,
+SELECT :v_pkey AS pkey,
        con_id,
        owner,
        SUM(pk)                    pk,

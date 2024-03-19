@@ -17,11 +17,7 @@ column hour format a4
 spool &outputdir/opdb__iofunction__&v_tag
 
 WITH vrawiof AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        snap.begin_interval_time, snap.end_interval_time,
        TO_CHAR(snap.begin_interval_time, 'hh24') hour,
        iof.snap_id, iof.dbid, iof.instance_number, iof.function_id, iof.function_name,

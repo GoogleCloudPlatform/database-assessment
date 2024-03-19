@@ -51,11 +51,7 @@ vsrc   AS (SELECT
 ),
 vdbobj AS (
         SELECT /*+ USE_HASH(i x s) */
-               '&&v_host'
-               || '_'
-               || '&&v_dbname'
-               || '_'
-               || '&&v_hora' AS pkey,
+               :v_pkey AS pkey,
                i.con_id,
                i.owner,
                chr(34) || i.object_name || chr(34) as object_name ,

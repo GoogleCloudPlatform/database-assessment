@@ -16,11 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__cpucoresusage__&v_tag
 prompt PKEY|DT|CPU_COUNT|CPU_CORE_COUNT|CPU_SOCKET_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vcpursc AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'                          AS pkey,
+SELECT :v_pkey AS pkey,
        TO_CHAR(timestamp, 'MM/DD/YY HH24:MI') dt,
        cpu_count,
        cpu_core_count,

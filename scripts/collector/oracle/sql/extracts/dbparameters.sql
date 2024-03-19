@@ -18,11 +18,7 @@ spool &outputdir/opdb__dbparameters__&v_tag
 prompt PKEY|INST_ID|CON_ID|NAME|VALUE|DEFAULT_VALUE|ISDEFAULT|DMA_SOURCE_ID|DMA_MANUAL_ID
 
 WITH vparam AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'                                   AS pkey,
+SELECT :v_pkey AS pkey,
        inst_id,
        &v_a_con_id AS con_id,
        replace(name, chr(39), chr(34))   name,

@@ -139,11 +139,7 @@ GROUP BY
     'Y',
     'N'
 )
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        con_id,
        owner,
        partitioned,

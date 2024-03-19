@@ -17,11 +17,7 @@ column hour format a4
 spool &outputdir/opdb__ioevents__&v_tag
 prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|WAIT_CLASS|EVENT_NAME|TOT_WAITS_DELTA_VALUE_P95|TOT_TOUT_DELTA_VALUE_P95|TIME_WA_US_DELTA_VALUE_P95|TOT_WAITS_DELTA_VALUE_P100|TOT_TOUT_DELTA_VALUE_P100|TIME_WA_US_DELTA_VALUE_P100|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vrawev AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'                            AS pkey,
+SELECT :v_pkey AS pkey,
        sev.dbid,
        sev.instance_number,
        dhsnap.snap_time,

@@ -167,11 +167,7 @@ GROUP BY
     owner,
     segment_name)
 SELECT
-    '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+    :v_pkey AS pkey,
     c.con_id,
     c.owner,
     c.table_name,

@@ -38,11 +38,7 @@ vdbobjx AS (
 @&EXTRACTSDIR/exclude_schemas.sql
               ),
 vdbobj AS (
-        SELECT '&&v_host'
-               || '_'
-               || '&&v_dbname'
-               || '_'
-               || '&&v_hora' AS pkey,
+        SELECT :v_pkey AS pkey,
                i.con_id,
                i.owner,
                i.object_type,

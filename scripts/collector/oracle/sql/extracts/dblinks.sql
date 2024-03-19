@@ -16,11 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__dblinks__&v_tag
 prompt PKEY|CON_ID|OWNER|COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdbl AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        &v_a_con_id AS con_id,
        owner,
        count(1) count

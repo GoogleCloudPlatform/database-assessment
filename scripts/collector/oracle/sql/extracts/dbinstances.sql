@@ -16,11 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__dbinstances__&v_tag
 prompt PKEY|INST_ID|INSTANCE_NAME|HOST_NAME|VERSION|STATUS|DATABASE_STATUS|INSTANCE_ROLE|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdbinst as (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        inst_id,
        instance_name,
        host_name,

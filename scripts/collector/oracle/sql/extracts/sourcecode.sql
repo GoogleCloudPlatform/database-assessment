@@ -28,11 +28,7 @@ SELECT pkey,
        SUM(count_dbms_sql) count_dbms_sql,
        SUM(count_dbms_utl) sum_nr_lines_w_dbms_utl,
        SUM(count_total)    sum_count_total
-FROM   (SELECT '&&v_host'
-               || '_'
-               || '&&v_dbname'
-               || '_'
-               || '&&v_hora' AS pkey,
+FROM   (SELECT :v_pkey AS pkey,
                &v_a_con_id AS con_id,
                owner,
                name,

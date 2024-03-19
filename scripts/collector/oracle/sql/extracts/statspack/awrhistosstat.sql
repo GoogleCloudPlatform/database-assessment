@@ -68,11 +68,7 @@ WITH v_osstat_all
                     WHERE snap.snap_time BETWEEN (SELECT max(snap_time) FROM  STATS$SNAPSHOT WHERE snap_time < '&&v_min_snaptime'  ) AND '&&v_max_snaptime'
                     AND s.dbid = '&&v_dbid') os ) ,
 vossummary AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'        AS pkey,
+SELECT :v_pkey AS pkey,
        dbid,
        instance_number,
        hh24,

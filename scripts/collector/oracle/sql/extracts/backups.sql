@@ -15,11 +15,7 @@ limitations under the License.
 */
 spool &outputdir/opdb__backups__&v_tag
 prompt PKEY|BACKUP_START_DATE|CON_ID|INPUT_TYPE|ELAPSED_SECONDS|MBYTES_IN|MBYTES_OUT|DMA_SOURCE_ID|DMA_MANUAL_ID
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        trunc(start_time) AS backup_start_date, 
        &v_a_con_id AS con_id, 
        input_type, 

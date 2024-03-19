@@ -19,11 +19,7 @@ column logging format a10
 spool &outputdir/opdb__pdbsinfo__&v_tag
 prompt PKEY|DBID|PDB_ID|PDB_NAME|STATUS|LOGGING|CON_ID|CON_UID|EBS_OWNER|SIEBEL_OWNER|PSFT_OWNER|RDS_FLAG|OCI_AUTONOMOUS_FLAG|DBMS_CLOUD_PKG_INSTALLED|APEX_INSTALLED|SAP_OWNER|SGA_ALLOCATED_BYTES|PGA_USED_BYTES|PGA_ALLOCATED_BYTES|PGA_MAX_BYTES|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH opdbinfo AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        dbid,
        pdb_id,
        pdb_name,
@@ -31,14 +27,9 @@ SELECT '&&v_host'
        &v_pluggablelogging AS logging,
        con_id,
        con_uid
-FROM   &v_tblprefix._pdbs 
+FROM   &v_tblprefix._pdbs
 UNION
-SELECT 
-       '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        c.dbid, 
        c.con_id# AS pdb_id, 
        o.name, 

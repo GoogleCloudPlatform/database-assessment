@@ -70,11 +70,7 @@ WITH v_osstat_all
                     WHERE s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
                     AND s.dbid = &&v_dbid) os ) ,
 vossummary AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'        AS pkey,
+SELECT :v_pkey AS pkey,
        dbid,
        instance_number,
        hh24,
