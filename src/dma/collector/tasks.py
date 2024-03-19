@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from sys import version_info
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, cast
 
 import polars as pl
-from rich.progress import Progress
+from rich.padding import Padding
 from rich.table import Table
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     import duckdb
     from rich.console import Console
 
-    from dma.collector.query_manager import CanonicalQueryManager
+    from dma.collector.query_manager import CanonicalQueryManager, CollectionQueryManager
 
 if version_info < (3, 10):  # pragma: nocover
     from dma.utils import anext_ as anext  # noqa: A001
@@ -39,9 +39,9 @@ async def readiness_check(
 ) -> None:
     """Assess the migration readiness for a Database for Database Migration Services"""
     async_engine = get_engine(db_type, username, password, hostname, port, database)
-    with get_duckdb_connection(working_path) as local_db, Progress(console=console) as _progress:
+    with get_duckdb_connection(working_path) as local_db:
         async with AsyncSession(async_engine) as db_session:
-            collection_manager = await anext(provides_collection_queries(db_session))
+            collection_manager = cast("CollectionQueryManager", await anext(provides_collection_queries(db_session)))
             pipeline_manager = next(provide_canonical_queries(local_db))
             # collect data
             _collection = await collection_manager.execute_collection_queries()
@@ -52,7 +52,7 @@ async def readiness_check(
 
             # transform data
             local_db = execute_local_db_pipeline(local_db, pipeline_manager)
-
+            console.print(Padding("COLLECTION SUMMARY", 1, style="bold magenta on white", expand=True), width=80)
             # print summary
             print_summary(console, local_db, pipeline_manager)
 
@@ -86,7 +86,7 @@ def print_summary(
             from collection_postgres_calculated_metrics
         """,
     ).fetchall()
-    count_table = Table(title="Database Calculated Metrics Overview")
+    count_table = Table(show_edge=False)
     count_table.add_column("Metric Category", justify="right", style="green")
     count_table.add_column("Metric", justify="right", style="green")
     count_table.add_column("Value", justify="right", style="green")
