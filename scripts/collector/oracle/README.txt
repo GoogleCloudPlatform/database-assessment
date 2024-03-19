@@ -53,8 +53,8 @@ for analysis by Database Migration Assessment.
        running in individual pluggable databases.
 
         sqlplus "sys/password@//hostname:port/dbservicename"
-        SQL> create user DMA_COLLECTOR identified by password;
-        SQL> grant connect, create session to DMA_COLLECTOR;
+        SQL> create user c##DMA_COLLECTOR identified by password;
+        SQL> grant connect, create session to c##DMA_COLLECTOR;
 
     d) Execute grants_wrapper.sql.  You will be prompted for the name of a database user 
        (Note that input is case-sensitive and must match the username created above) to be granted 
