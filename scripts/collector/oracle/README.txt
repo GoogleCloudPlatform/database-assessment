@@ -52,19 +52,32 @@ for analysis by Database Migration Assessment.
        create the user as a common user in the root container. The Dma_collector does not currently support
        running in individual pluggable databases.
 
-        sqlplus "sys/password@//hostname:port/dbservicename"
-        SQL> create user c##DMA_COLLECTOR identified by password;
-        SQL> grant connect, create session to c##DMA_COLLECTOR;
+       For non-CDB databases:
+           sqlplus "sys/password@//hostname:port/dbservicename as sysdba"
+           SQL> create user DMA_COLLECTOR identified by password;
+           SQL> grant connect, create session to DMA_COLLECTOR;
 
-    d) Execute grants_wrapper.sql.  You will be prompted for the name of a database user 
+        For multitenant databases:
+           sqlplus "sys/password@//hostname:port/dbservicename as sysdba"
+           SQL> create user C##DMA_COLLECTOR identified by password;
+           SQL> grant connect, create session to C##DMA_COLLECTOR;
+
+    d) Navigate to the sql/setup directory and execute grants_wrapper.sql as a user with SYSDBA privileges.  
+       You will be prompted for the name of a database user 
        (Note that input is case-sensitive and must match the username created above) to be granted 
        privileges on the objects required for data collection.
        You will also be prompted whether or not to allow access to the AWR/ASH data.
 
-    Ex:
+       Example for non-CDB databases:
         SQL> @grants_wrapper.sql
 
         SQL> Please enter the DB Local Username(Or CDB Username) to receive all required grants: DMA_COLLECTOR
+        SQL> Please enter Y or N to allow or disallow use of the Tuning and Diagnostic Pack (AWR/ASH) data (Y) Y
+
+       Example for multitenant databases:
+        SQL> @grants_wrapper.sql
+
+        SQL> Please enter the DB Local Username(Or CDB Username) to receive all required grants: C##DMA_COLLECTOR
         SQL> Please enter Y or N to allow or disallow use of the Tuning and Diagnostic Pack (AWR/ASH) data (Y) Y
 
     e) The grant_wrapper script will grant privileges required and will output a list of what has been granted.
