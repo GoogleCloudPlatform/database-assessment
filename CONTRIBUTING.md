@@ -31,9 +31,9 @@ on the [issue tracker].
 If you don't see anything useful there, please feel free to fire an issue report.
 
 !!! tip
-    Please don't forget to include the closed issues in your search.
-    Sometimes a solution was already reported, and the problem is considered
-    **solved**.
+Please don't forget to include the closed issues in your search.
+Sometimes a solution was already reported, and the problem is considered
+**solved**.
 
 New issue reports should include information about your programming environment
 (e.g., operating system, Python version) and steps to reproduce the problem.
@@ -51,16 +51,16 @@ This means that the docs are kept in the same repository as the project code, an
 that any documentation update is done in the same way was a code contribution.
 
 !!! tip
-      Please notice that the [GitHub web interface] provides a quick way for
-      proposing changes. While this mechanism can  be tricky for normal code contributions,
-      it works perfectly fine for contributing to the docs, and can be quite handy.
-      If you are interested in trying this method out, please navigate to
-      the `docs` folder in the source [repository], find which file you
-      would like to propose changes and click in the little pencil icon at the
-      top, to open [GitHub's code editor]. Once you finish editing the file,
-      please write a message in the form at the bottom of the page describing
-      which changes have you made and what are the motivations behind them and
-      submit your proposal.
+Please notice that the [GitHub web interface] provides a quick way for
+proposing changes. While this mechanism can be tricky for normal code contributions,
+it works perfectly fine for contributing to the docs, and can be quite handy.
+If you are interested in trying this method out, please navigate to
+the `docs` folder in the source [repository], find which file you
+would like to propose changes and click in the little pencil icon at the
+top, to open [GitHub's code editor]. Once you finish editing the file,
+please write a message in the form at the bottom of the page describing
+which changes have you made and what are the motivations behind them and
+submit your proposal.
 
 When working on documentation changes in your local machine, you can
 build and serve them using [hatch] with `hatch run docs:build` and
@@ -78,7 +78,7 @@ This often provides additional considerations and avoids unnecessary work.
 
 1. Create a user account on GitHub if you do not already have one.
 
-2. Fork the project [repository]: click on the *Fork* button near the top of the
+2. Fork the project [repository]: click on the _Fork_ button near the top of the
    page. This creates a copy of the code under your account on GitHub.
 
 3. Clone this copy to your local disk:
@@ -129,14 +129,12 @@ This often provides additional considerations and avoids unnecessary work.
    This should automatically use [ruff] to check/fix the code style
    in a way that is compatible with the project.
 
-    !!! info
-        Don't forget to add unit tests and documentation in case your
-        contribution adds a feature and is not just a bugfix. Writing an [descriptive commit message] is highly recommended.
-        In case of doubt, you can check the commit history with:
-        ```
-        git log --graph --decorate --pretty=oneline --abbrev-commit --all
-        ```
-        to look for recurring communication patterns.
+   !!! info
+   Don't forget to add unit tests and documentation in case your
+   contribution adds a feature and is not just a bugfix. Writing an [descriptive commit message] is highly recommended.
+   In case of doubt, you can check the commit history with:
+   `git log --graph --decorate --pretty=oneline --abbrev-commit --all`
+   to look for recurring communication patterns.
 
 5. Please check that your changes don't break any unit tests with
    `hatch run test:cov` or `hatch run test:no-cov` to run the tests with
@@ -146,9 +144,9 @@ This often provides additional considerations and avoids unnecessary work.
 
 1. If everything works fine, push your local branch to the remote server with:
 
-    ```console
-    git push -u origin my-feature
-    ```
+   ```console
+   git push -u origin my-feature
+   ```
 
 2. Go to the web page of your fork and click "Create pull request"
    to send your changes for review.
@@ -157,7 +155,8 @@ This often provides additional considerations and avoids unnecessary work.
    the PR as a draft first and mark it as ready for review after the feedbacks
    from the continuous integration (CI) system or any required fixes.
 
-[^contrib1]: Even though, these resources focus on open source projects and
+[^contrib1]:
+    Even though, these resources focus on open source projects and
     communities, the general ideas behind collaborating with other developers
     to collectively create software are general and can be applied to all sorts
     of environments, including private companies and proprietary code bases.
@@ -171,6 +170,6 @@ This often provides additional considerations and avoids unnecessary work.
 [other kinds of contributions]: https://opensource.guide/how-to-contribute
 [pre-commit]: https://pre-commit.com/
 [pipx]: https://pypa.github.io/pipx/
-[Google's Open Source Community Guidelines]:  https://opensource.google/conduct/
+[Google's Open Source Community Guidelines]: https://opensource.google/conduct/
 [Google style]: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
 [guide created by FreeCodeCamp]: https://github.com/FreeCodeCamp/how-to-contribute-to-open-source
