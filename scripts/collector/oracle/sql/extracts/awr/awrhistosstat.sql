@@ -102,6 +102,6 @@ GROUP  BY '&&v_host'
 SELECT pkey , dbid , instance_number , hh24 , stat_name , hh24_total_secs ,
        cumulative_value , avg_value , mode_value , median_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100 ,
 	     min_value , max_value , sum_value , count,
-	       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+	       :v_dma_source_id AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
 FROM vossummary;
 spool off

@@ -79,6 +79,8 @@ variable b_index_visibility            VARCHAR2(30);
 
 variable b_io_function_sql             VARCHAR2(20);
 
+variable v_dma_source_id               VARCHAR2(100);
+
 -- Session settings to support creating substitution variables for the scripts.
 column instnc new_value v_inst noprint
 column hostnc new_value v_host noprint
@@ -90,7 +92,7 @@ column min_snaptime new_value v_min_snaptime noprint
 column max_snapid new_value v_max_snapid noprint
 column max_snaptime new_value v_max_snaptime noprint
 column umf_test new_value v_umf_test noprint
-column p_dma_source_id new_value v_dma_source_id noprint
+--column p_dma_source_id new_value v_dma_source_id noprint
 column p_dbid new_value v_dbid noprint
 column p_tblprefix new_value v_tblprefix noprint
 column p_is_container new_value v_is_container noprint
@@ -127,8 +129,8 @@ SELECT substr(replace(version,'.',''),0,3) dbversion
 FROM v$instance
 /
 BEGIN
-  v_pkey := '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora';
-END
+  :v_pkey := '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora';
+END;
 /
   
 -- Define some session info for the extraction -- END
@@ -176,11 +178,13 @@ SELECT min(object_name) AS vname
 FROM dba_objects 
 WHERE object_name IN ('V$INSTANCE', 'GV$INSTANCE');
 
-SELECT lower(i.host_name||'_'||&v_db_unique_name||'_'||d.dbid) AS p_dma_source_id
+BEGIN
+SELECT lower(i.host_name||'_'||&v_db_unique_name||'_'||d.dbid) INTO :v_dma_source_id 
 FROM ( 
 	SELECT version, host_name
 	FROM &&v_name 
-	WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v$database d
+	WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v$database d;
+END;
 /
 -- Define a source id that will be consistent regardless of which RAC instance we are connected to.  --END
 

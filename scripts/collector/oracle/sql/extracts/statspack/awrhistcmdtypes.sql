@@ -177,7 +177,7 @@ GROUP BY '&&v_host'
 SELECT pkey , con_id AS sp_con_id, hh24 , command_type , cnt , avg_buffer_gets , avg_elapsed_time ,
        avg_rows_processed , avg_executions , avg_cpu_time , avg_iowait , avg_clwait ,
        avg_apwait , avg_ccwait , avg_plsexec_time, command_name,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
 FROM vcmdtype;
 spool off
 COLUMN sp_con_id CLEAR

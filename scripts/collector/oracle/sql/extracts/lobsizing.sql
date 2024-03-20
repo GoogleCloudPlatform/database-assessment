@@ -163,7 +163,7 @@ SELECT  :v_pkey AS pkey,
        table_avg_lob_bytes,
        partition_avg_lob_bytes,
        subpartition_avg_lob_bytes,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
 FROM lobdata;
 spool off
 

@@ -24,7 +24,7 @@ select :v_pkey AS pkey,
 from dual)
 select pkey , opscriptversion , db_version , hostname
        , db_name , instance_name , collection_time , db_id , CMNT,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
 from vop;
 spool off
 COLUMN DB_NAME CLEAR

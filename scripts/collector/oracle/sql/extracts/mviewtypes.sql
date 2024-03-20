@@ -45,7 +45,7 @@ SELECT :v_pkey AS pkey,
        refresh_method,
        fast_refreshable,
        compile_state,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
 FROM  mvinfo;
 spool off
 COLUMN UPDATABLE CLEAR
