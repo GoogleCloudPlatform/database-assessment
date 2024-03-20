@@ -65,14 +65,14 @@ for analysis by Database Migration Assessment.
  Example:
 
  To collect data for a single database:
+  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --allDbs N
+ or
+  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --allDbs N
+
+ To collect data for all databases in the instance:
   ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name}
  or
   ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name}
-
- To collect data for all databases in the instance:
-  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}
- or
-  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port}
 
 
 

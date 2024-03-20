@@ -514,14 +514,14 @@ echo
 echo " Example:"
 echo
 echo " To collect data for a single database:"
-echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} "
+echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --allDbs N"
 echo " or"
-echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} "
+echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --allDbs N"
 echo
 echo " To collect data for all databases in the instance:"
-echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port} "
+echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} "
 echo " or"
-echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} "
+echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name}"
 }
 ### Validate input
 
