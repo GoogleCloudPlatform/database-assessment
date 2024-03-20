@@ -1,3 +1,3 @@
 # Contributors
 
-* [Cody Fincher](https://github.com/cofin)
+- [Cody Fincher](https://github.com/cofin)
