@@ -187,11 +187,7 @@ AND a.instance_number = b.instance_number
 AND a.dbid = b.dbid
 AND b.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
 AND b.dbid = &&v_dbid
-GROUP BY '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora',
+GROUP BY :v_pkey,
        b.dbid, b.instance_number, force_matching_signature
 ORDER BY elapsed_time_total DESC)
 SELECT pkey , con_id AS sp_con_id , dbid , instance_number , force_matching_signature , sql_id ,

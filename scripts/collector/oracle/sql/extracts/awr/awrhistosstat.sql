@@ -90,11 +90,7 @@ SELECT :v_pkey AS pkey,
        ROUND(SUM(delta_value))           sum_value,
        COUNT(1)             count
 FROM   v_osstat_all
-GROUP  BY '&&v_host'
-          || '_'
-          || '&&v_dbname'
-          || '_'
-          || '&&v_hora',
+GROUP  BY :v_pkey,
           dbid,
           instance_number,
           hh24,

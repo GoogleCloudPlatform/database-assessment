@@ -48,7 +48,7 @@ WHERE  s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
 AND dbid = &&v_dbid
 )
 WHERE startup_time = lag_startup_time
-GROUP BY '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora', dbid, instance_number, hour)
+GROUP BY :v_pkey, dbid, instance_number, hour)
 SELECT pkey , dbid , instance_number , hour , min_snap_id , max_snap_id , min_begin_interval_time ,
        max_begin_interval_time , cnt , sum_snaps_diff_secs , avg_snaps_diff_secs , median_snaps_diff_secs ,
        mode_snaps_diff_secs , min_snaps_diff_secs , max_snaps_diff_secs,

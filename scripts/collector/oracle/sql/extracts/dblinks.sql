@@ -22,11 +22,7 @@ SELECT :v_pkey AS pkey,
        count(1) count
 FROM   &v_tblprefix._db_links a
 WHERE username IS NOT NULL
-GROUP BY '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora',
+GROUP BY :v_pkey,
        &v_a_con_id , owner)
 SELECT pkey , con_id , owner , count,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID

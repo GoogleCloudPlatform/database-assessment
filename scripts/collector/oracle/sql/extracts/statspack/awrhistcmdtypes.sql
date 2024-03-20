@@ -167,11 +167,7 @@ From STATS$SQL_SUMMARY s
     LEFT OUTER join audit_actions aa
                  ON ss.command_type = aa.action
 WHERE sn.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-GROUP BY '&&v_host'
-         || '_'
-         || '&&v_dbname'
-         || '_'
-         || '&&v_hora'  ,
+GROUP BY :v_pkey,
           'N/A' , TO_CHAR(sn.snap_time, 'hh24'),  ss.command_type, aa.name
 )
 SELECT pkey , con_id AS sp_con_id, hh24 , command_type , cnt , avg_buffer_gets , avg_elapsed_time ,

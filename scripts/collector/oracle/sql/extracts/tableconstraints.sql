@@ -58,11 +58,7 @@ FROM   (SELECT &v_a_con_id AS con_id,
         WHERE a.owner NOT IN 
 @&EXTRACTSDIR/exclude_schemas.sql
        )
-GROUP  BY '&&v_host'
-          || '_'
-          || '&&v_dbname'
-          || '_'
-          || '&&v_hora',
+GROUP  BY :v_pkey,
           con_id,
           owner,
           table_name)

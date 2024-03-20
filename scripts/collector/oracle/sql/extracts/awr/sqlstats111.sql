@@ -55,11 +55,7 @@ AND b.dbid = &&v_dbid
 -- AND &v_a_con_id = &v_b_con_id
 --and t.command_type <> 47
 -- and s.executions_total > 100
-GROUP BY '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora',
+GROUP BY :v_pkey,
        &v_a_con_id, b.dbid, b.instance_number, force_matching_signature
 ORDER BY elapsed_time_total DESC)
 SELECT pkey , con_id , dbid , instance_number , force_matching_signature , sql_id ,

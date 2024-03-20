@@ -45,11 +45,7 @@ FROM   &v_tblprefix._hist_sysmetric_history hsm
                   AND hsm.dbid = dhsnap.dbid
 WHERE  hsm.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
 AND hsm.dbid = &&v_dbid
-GROUP  BY '&&v_host'
-          || '_'
-          || '&&v_dbname'
-          || '_'
-          || '&&v_hora',
+GROUP  BY :v_pkey,
           hsm.dbid,
           hsm.instance_number,
           TO_CHAR(hsm.begin_time, 'hh24'),

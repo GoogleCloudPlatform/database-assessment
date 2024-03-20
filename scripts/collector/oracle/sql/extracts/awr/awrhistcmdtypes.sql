@@ -46,11 +46,7 @@ FROM   &v_tblprefix._hist_sqlstat a
        left outer join audit_actions aa on b.command_type = aa.action
 WHERE  a.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
 AND a.dbid = &&v_dbid
-GROUP  BY '&&v_host'
-          || '_'
-          || '&&v_dbname'
-          || '_'
-          || '&&v_hora',
+GROUP  BY :v_pkey,
           &v_a_con_id,
           TO_CHAR(c.begin_interval_time, 'hh24'),
           b.command_type, aa.name)

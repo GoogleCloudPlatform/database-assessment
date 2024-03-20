@@ -29,11 +29,7 @@ SELECT /*+ USE_HASH(b a) NOPARALLEL */ :v_pkey AS pkey,
 FROM   &v_tblprefix._tab_columns a INNER JOIN &v_tblprefix._objects b ON &v_a_con_id = &v_b_con_id AND a.owner = b.owner AND a.table_name = b.object_name and b.object_type = 'TABLE'
 WHERE  a.owner NOT IN
 @&EXTRACTSDIR/exclude_schemas.sql
-GROUP  BY '&&v_host'
-          || '_'
-          || '&&v_dbname'
-          || '_'
-          || '&&v_hora',
+GROUP  BY :v_pkey,
           &v_a_con_id ,
           a.owner,
           data_type,

@@ -44,11 +44,7 @@ FROM &v_tblprefix._HIST_ACTIVE_SESS_HISTORY has
 WHERE  has.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
 AND has.dbid = &&v_dbid
 AND has.session_type = 'FOREGROUND'
-group by '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora',
+group by :v_pkey,
        TO_CHAR(dhsnap.begin_interval_time, 'hh24'),
        has.dbid,
        has.instance_number,

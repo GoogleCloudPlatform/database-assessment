@@ -19,7 +19,7 @@ spool &outputdir/opdb__dbahistsystimemodel__&v_tag
 prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|STAT_NAME|CNT|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|MIN_VALUE|MAX_VALUE|SUM_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vtimemodel AS (
 SELECT
-       '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora' as pkey,
+       :v_pkey as pkey,
        dbid,
        instance_number,
        hour,
@@ -68,7 +68,7 @@ WHERE  s.snap_id = g.snap_id
        AND s.dbid = '&&v_dbid'
 )
 GROUP BY
-      '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora',
+      :v_pkey,
       dbid,
       instance_number,
       hour,

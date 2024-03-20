@@ -56,11 +56,7 @@ FROM   (
                   AND hsm.dbid = dhsnap.dbid
 WHERE  dhsnap.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
 AND hsm.dbid = &&v_dbid
-GROUP  BY '&&v_host'
-          || '_'
-          || '&&v_dbname'
-          || '_'
-          || '&&v_hora',
+GROUP  BY :v_pkey,
           hsm.dbid,
           hsm.instance_number,
           TO_CHAR(dhsnap.snap_time, 'hh24'),
