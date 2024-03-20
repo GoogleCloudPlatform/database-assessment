@@ -88,7 +88,7 @@ set termout &TERMOUTOFF
 @&SQLDIR/op_collect_&v_dodiagnostics
 @&EXTRACTSDIR/lobsizing.sql
 --@&EXTRACTSDIR/opatch.sql
-
+@&EXTRACTSDIR/eoj.sql
 
 set termout on
 prompt Step completed.

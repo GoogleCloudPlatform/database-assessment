@@ -13,15 +13,17 @@
 # limitations under the License.
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiosql
-from aiosql.queries import Queries
 from rich.padding import Padding
 
 from dma.cli._utils import console
 from dma.lib.db.query_manager import QueryManager
 from dma.utils import module_to_os_path
+
+if TYPE_CHECKING:
+    from aiosql.queries import Queries
 
 _root_path = module_to_os_path("dma")
 
@@ -70,23 +72,23 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
         super().__init__(connection, queries)
 
 
-class PostgresCollectionQueryManager(CollectionQueryManager):
+class MySQLCollectionQueryManager(CollectionQueryManager):
     def __init__(
         self,
         connection: Any,
         queries: Queries = aiosql.from_path(
-            sql_path=f"{_root_path}/collector/sql/sources/postgres", driver_adapter="asyncpg"
+            sql_path=f"{_root_path}/collector/sql/sources/mysql", driver_adapter="asyncpg"
         ),
     ) -> None:
         super().__init__(connection, queries)
 
 
-class PostgresCollectionQueryManager(CollectionQueryManager):
+class OracleCollectionQueryManager(CollectionQueryManager):
     def __init__(
         self,
         connection: Any,
         queries: Queries = aiosql.from_path(
-            sql_path=f"{_root_path}/collector/sql/sources/postgres", driver_adapter="asyncpg"
+            sql_path=f"{_root_path}/collector/sql/sources/oracle", driver_adapter="asyncpg"
         ),
     ) -> None:
         super().__init__(connection, queries)

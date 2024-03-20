@@ -415,7 +415,6 @@ extra-dependencies = [
     "coverage[toml]>=6.2",
     "pytest",
     "pytest-cov",
-    "coverage",
     "pytest-mock",
     "pytest-vcr",
     "pytest-sugar",
