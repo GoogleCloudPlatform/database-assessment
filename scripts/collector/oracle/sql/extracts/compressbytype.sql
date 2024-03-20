@@ -89,7 +89,7 @@ WITH vcompresstype AS (
      )
 SELECT pkey , con_id , owner , basic , oltp , query_low ,
        query_high , archive_low , archive_high , total_gb,
-       :v_dma_source_id AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vcompresstype
 ORDER BY total_gb DESC;
 spool off

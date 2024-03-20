@@ -27,6 +27,6 @@ SELECT :v_pkey AS pkey,
 FROM   gv$instance )
 SELECT pkey , inst_id , instance_name , host_name ,
        version , status , database_status , instance_role,
-       :v_dma_source_id AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdbinst;
 spool off

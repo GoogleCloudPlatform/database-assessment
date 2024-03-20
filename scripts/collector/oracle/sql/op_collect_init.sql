@@ -80,6 +80,7 @@ variable b_index_visibility            VARCHAR2(30);
 variable b_io_function_sql             VARCHAR2(20);
 
 variable v_dma_source_id               VARCHAR2(100);
+variable v_manual_unique_id            VARCHAR2(100);
 
 -- Session settings to support creating substitution variables for the scripts.
 column instnc new_value v_inst noprint
@@ -499,6 +500,13 @@ FROM DUAL;
 
 column CON_ID &v_h_con_id
 -- This is where we set the substitution variables for working within container databases. -- END
+
+-- Set manual_unique_id 
+BEGIN
+  :v_manual_unique_id :=  chr(39) || '&v_manualUniqueId' || chr(39);
+END;
+/
+
 
 -- Session settings for output
 set numwidth 48

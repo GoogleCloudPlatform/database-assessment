@@ -31,6 +31,6 @@ SELECT pkey,
 FROM vrawidx
 GROUP BY pkey, con_id, idx_cnt)
 SELECT pkey , con_id , tab_count , idx_cnt , idx_perc,
-       :v_dma_source_id AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vcidx;
 spool off

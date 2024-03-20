@@ -28,7 +28,7 @@ SELECT :v_pkey AS pkey,
 FROM   gv$system_parameter a
 ORDER  BY 2,3 )
 SELECT pkey , inst_id , con_id , name , value , default_value , isdefault,
-       :v_dma_source_id AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vparam;
 spool off
 column default_value clear

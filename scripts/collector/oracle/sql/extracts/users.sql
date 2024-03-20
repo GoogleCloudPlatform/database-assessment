@@ -22,6 +22,6 @@ SELECT :v_pkey AS pkey,
 FROM   &v_tblprefix._users a
 ORDER  BY username)
 SELECT pkey , con_id, username,
-       :v_dma_source_id AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vuser;
 spool off

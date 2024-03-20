@@ -58,7 +58,7 @@ group by '&&v_host'
        scmd.command_name)
 SELECT pkey , dbid , instance_number , hour , program ,
        module , machine , command_name , cnt,
-       :v_dma_source_id AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vsrcconn
 order by hour;
 spool off
