@@ -216,7 +216,7 @@ $validSQLInstanceVersionCheckValues = $splitValidInstanceVerisionCheckObj | ForE
 $isValidSQLInstanceVersion = $validSQLInstanceVersionCheckValues[0]
 $isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
 
-$op_version = "5.0.0"
+$op_version = "4.3.32" 
 
 if ([string]($isValidSQLInstanceVersion) -eq "N") {
     Write-Host "#############################################################"

@@ -37,7 +37,7 @@ __all__ = [
     "run_masker",
 ]
 
-__version__ = "5.0.0"
+__version__ = "4.3.32"
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ FileMetadata = namedtuple(
 class DMAFaker:
     """Fake data provider to provide masked values"""
 
-    hostname_prefixes: list[str] = [
+    hostname_prefixes: List[str] = [
         "db",
         "srv",
         "desktop",
@@ -63,7 +63,7 @@ class DMAFaker:
         "web",
     ]
 
-    hostname_domains: list[str] = [
+    hostname_domains: List[str] = [
         "com",
         "com",
         "com",
@@ -275,9 +275,7 @@ def _mask_file_collection_key(collection_file: Path) -> Path:
         Path: masked collection key file path.
     """
     metadata = _metadata_from_filename(collection_file)
-    return collection_file.with_stem(
-        collection_file.stem.replace(metadata.collection_key, fake.collection_key)
-    )
+    return Path(f"{collection_file.with_name(collection_file.stem.replace(metadata.collection_key, fake.collection_key))}{collection_file.suffix}")
 
 
 def _find_collections_to_process(search_path: Path) -> List[Path]:
