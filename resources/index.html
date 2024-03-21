@@ -1,17 +1,25 @@
 <!doctype html>
 <html class="h-full">
-  <head>
+
+<head>
     <meta charset="utf-8" />
     <!--IE compatibility-->
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
-    />
-  </head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+</head>
 
-  <body class="h-full">
+<body class="h-full">
     <div id="root" class="h-full"></div>
     <script type="module" src="/main.tsx"></script>
-  </body>
+    <script>
+        var apidata;
+        try {
+            apidata = __DATA_TOKEN__;
+        }
+        catch (e) {
+            apidata = "";
+        }
+    </script>
+</body>
+
 </html>
