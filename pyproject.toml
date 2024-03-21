@@ -394,7 +394,7 @@ exclude_lines = [
 
 # Default environment with production dependencies
 [tool.hatch.envs.default]
-lock-filename = "requirements.txt"
+lock-filename = "requirements/requirements.txt"
 pip-compile-hashes = false
 pip-compile-installer = "uv"
 pip-compile-resolver = "uv"
@@ -440,6 +440,19 @@ no-cov = "cov --no-cov {args}"
 # Docs environment
 [tool.hatch.envs.docs]
 extra-dependencies = [
+    # tests
+    "nodeenv",
+    # required test dependencies
+    "cython",
+    "anyio",
+    "coverage[toml]>=6.2",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-vcr",
+    "pytest-sugar",
+    "pytest-click",
+    "pytest-xdist",
     "mkdocs>=1.5",
     "mkdocs-material>=9.4",
     # Plugins
@@ -462,7 +475,7 @@ extra-dependencies = [
 ]
 features = ["server", "remote", "oracle", "mysql", "mssql", "postgres"]
 lock-filename = "requirements/requirements-docs.txt"
-pip-compile-constraint = "test"
+pip-compile-constraint = "default"
 python = "3.12"
 template = "test"
 type = "pip-compile"
@@ -508,7 +521,7 @@ extra-dependencies = [
 features = ["server", "remote", "oracle", "mysql", "mssql", "postgres"]
 lock-filename = "requirements/requirements-dev.txt"
 path = ".venv/"
-pip-compile-constraint = "test"
+pip-compile-constraint = "docs"
 python = "3.12"
 template = "test"
 type = "pip-compile"
