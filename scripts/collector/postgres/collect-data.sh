@@ -509,6 +509,8 @@ echo "        --manualUniqueId      (Optional) A short string to be attached to 
 echo
 echo "  VM collection definition (optional):"
 echo "        --vmUserName          Username on the VM the Database is running on."
+echo "                              Must be supplied to collect hardware configuration of the database server if"
+echo "                              the collection script is not run dirctly on the database server."
 echo "        --extraSSHArg         Extra args to be passed as is to ssh. Can be specified multiple times."
 echo
 echo " Example:"
