@@ -38,10 +38,18 @@ def manage_resources(setup_kwargs: Any) -> Any:
         kwargs["shell"] = True
     if install_packages is not None:
         logger.info("Installing NPM packages.")
-        subprocess.run(["npm", "install"], **kwargs)  # noqa: S607, PLW1510
+        try:
+            subprocess.run(["npm", "install"], **kwargs)  # noqa: S607, PLW1510
+        except FileNotFoundError:
+            # handle file not found error.
+            logger.info("NPM not found in path.  Skipping.")
     if build_assets is not None:
         logger.info("Building NPM static assets.")
-        subprocess.run(["npm", "run", "build"], **kwargs)  # noqa: S607, PLW1510
+        try:
+            subprocess.run(["npm", "run", "build"], **kwargs)  # noqa: S607, PLW1510
+        except FileNotFoundError:
+            # handle file not found error.
+            logger.info("NPM not found in path.  Skipping.")
     return setup_kwargs
 
 

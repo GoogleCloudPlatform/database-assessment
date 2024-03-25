@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "hatchling.build"
-requires = ["hatchling", "hatch-pip-compile"]
+requires = ["hatchling", "hatch-pip-compile", "nodeenv"]
 
 ####################
 # Project Metadata #
@@ -95,7 +95,7 @@ support-legacy = true           # Create setup.py
 packages = ["src/dma"]
 
 [tool.hatch.build.targets.app]
-pyapp-version = "0.15.1"
+# pyapp-version = "0.15.1"
 python-version = "3.12"
 scripts = ["dma"]
 
@@ -429,7 +429,7 @@ type = "virtual"
 
 # Test matrix for various Python versions replacing the functionality of tox
 [[tool.hatch.envs.test.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12"]
+python-version = ["3.9", "3.10", "3.11", "3.12"]
 
 [tool.hatch.envs.test.scripts]
 cov = "pytest -n auto --dist loadgroup --cov-report=term-missing --cov-config=pyproject.toml --cov=src/dma --cov=tests {args}"
@@ -476,7 +476,7 @@ extra-dependencies = [
 features = ["server", "remote", "oracle", "mysql", "mssql", "postgres"]
 lock-filename = "requirements/requirements-docs.txt"
 pip-compile-constraint = "default"
-python = "3.12"
+python-version = "3.12"
 template = "test"
 type = "pip-compile"
 
@@ -497,6 +497,7 @@ build-check = ["build", "validate"]
 [tool.hatch.envs.local]
 extra-dependencies = [
     "bump2version",
+    "nodeenv",
     # cli databasae brwoser
     "harlequin",
     # linting
@@ -522,7 +523,7 @@ features = ["server", "remote", "oracle", "mysql", "mssql", "postgres"]
 lock-filename = "requirements/requirements-dev.txt"
 path = ".venv/"
 pip-compile-constraint = "docs"
-python = "3.12"
+python-version = "3.12"
 template = "test"
 type = "pip-compile"
 

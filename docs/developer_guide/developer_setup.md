@@ -11,15 +11,9 @@ Assuming you are using an Ubuntu/Debian based x86_64 machine for development, th
 - Postgres 15 client, redis (optional), Rust (required for binary standalone build)
 
 ```bash
-# add some overrides for keyring
-mkdir -p ~/.config/python_keyring
-tee ~/.config/python_keyring/keyringrc.cfg <<EOF
-[backend]
-default-keyring=keyring.backends.fail.Keyring
-EOF
 # install  development essentials
 sudo apt update \
- && sudo apt install -y postgresql-15 redis python-is-python3 rustc npm nodejs libbz2-dev libffi-dev liblzma-dev libreadline-dev libsqlite3-dev libssl-dev tk-dev zlib1g-dev build-essential
+ && sudo apt install -y postgresql-15 redis pipx unixodbc-dev libmysqlclient-dev python-is-python3 rustc npm nodejs libbz2-dev libffi-dev liblzma-dev libreadline-dev libsqlite3-dev libssl-dev tk-dev zlib1g-dev build-essential
 
 if ! grep -qe "^export PATH=\"\${HOME}/.local/bin:\${PATH}\"" ~/.bashrc; then
   echo "" >> ~/.bashrc
