@@ -52,9 +52,9 @@ async def readiness_check(
 
             # transform data
             local_db = execute_local_db_pipeline(local_db, pipeline_manager)
-            console.print(Padding("COLLECTION SUMMARY", 1, style="bold magenta on white", expand=True), width=80)
+            console.print(Padding("COLLECTION SUMMARY", 1, style="bold", expand=True), width=80)
             # print summary
-            print_summary(console, local_db, pipeline_manager)
+            print_summary(console, local_db, pipeline_manager, db_type)
 
 
 def import_data_to_local_db(
@@ -77,8 +77,26 @@ def execute_local_db_pipeline(
 
 
 def print_summary(
-    console: Console, local_db: duckdb.DuckDBPyConnection, _manager: CanonicalQueryManager
-) -> duckdb.DuckDBPyConnection:
+    console: Console,
+    local_db: duckdb.DuckDBPyConnection,
+    _manager: CanonicalQueryManager,
+    _db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+) -> None:
+    """Print Summary of the Migration Readiness Assessment."""
+    if _db_type == "postgres":
+        _print_summary_postgres(console, local_db, _manager)
+    elif _db_type == "mysql":
+        _print_summary_mysql(console, local_db, _manager)
+    else:
+        msg = f"{_db_type} is not implemented."
+        raise NotImplementedError(msg)
+
+
+def _print_summary_postgres(
+    console: Console,
+    local_db: duckdb.DuckDBPyConnection,
+    _manager: CanonicalQueryManager,
+) -> None:
     """Print Summary of the Migration Readiness Assessment."""
     calculated_metrics = local_db.sql(
         """
@@ -94,4 +112,25 @@ def print_summary(
     for row in calculated_metrics:
         count_table.add_row(*[str(col) for col in row])
     console.print(count_table)
-    return local_db
+
+
+def _print_summary_mysql(
+    console: Console,
+    local_db: duckdb.DuckDBPyConnection,
+    _manager: CanonicalQueryManager,
+) -> None:
+    """Print Summary of the Migration Readiness Assessment."""
+    calculated_metrics = local_db.sql(
+        """
+            select variable_category, variable_name, variable_value
+            from collection_mysql_config
+        """,
+    ).fetchall()
+    count_table = Table(show_edge=False)
+    count_table.add_column("Variable Category", justify="right", style="green")
+    count_table.add_column("Variable", justify="right", style="green")
+    count_table.add_column("Value", justify="right", style="green")
+
+    for row in calculated_metrics:
+        count_table.add_row(*[str(col) for col in row])
+    console.print(count_table)

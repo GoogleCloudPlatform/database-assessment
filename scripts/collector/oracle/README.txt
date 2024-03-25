@@ -62,9 +62,9 @@ for analysis by Database Migration Assessment.
            SQL> create user C##DMA_COLLECTOR identified by password;
            SQL> grant connect, create session to C##DMA_COLLECTOR;
 
-    d) Navigate to the sql/setup directory and execute grants_wrapper.sql as a user with SYSDBA privileges.  
-       You will be prompted for the name of a database user 
-       (Note that input is case-sensitive and must match the username created above) to be granted 
+    d) Navigate to the sql/setup directory and execute grants_wrapper.sql as a user with SYSDBA privileges.
+       You will be prompted for the name of a database user
+       (Note that input is case-sensitive and must match the username created above) to be granted
        privileges on the objects required for data collection.
        You will also be prompted whether or not to allow access to the AWR/ASH data.
 
