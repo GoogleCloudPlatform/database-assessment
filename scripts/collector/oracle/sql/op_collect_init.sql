@@ -405,28 +405,39 @@ DECLARE
   table_does_not_exist EXCEPTION;
   PRAGMA EXCEPTION_INIT (table_does_not_exist, -00942);
 BEGIN 
+  -- Set default performance metrics to NONE.
   :sp  := 'prompt_nostatspack.sql';
+
+  -- Use AWR repository if requested.
   IF '&v_dodiagnostics' = 'usediagnostics' THEN 
      l_tab_name := 'DBA_HIST_SNAPSHOT'; 
      l_col_name := 'begin_interval_time';
+
+  -- If STATSPACK has been requested, check that it is installed and permissions granted.
   ELSE IF '&v_dodiagnostics' = 'nodiagnostics' THEN
          SELECT count(1) INTO cnt FROM all_tables WHERE owner ='PERFSTAT' AND table_name IN ('STATS$OSSTAT', 'STATS$OSSTATNAME', 'STATS$SNAPSHOT', 'STATS$SQL_SUMMARY', 'STATS$SYSSTAT', 'STATS$SYSTEM_EVENT', 'STATS$SYS_TIME_MODEL', 'STATS$TIME_MODEL_STATNAME');
-         IF cnt = 8 THEN 
+
+         -- If we have access to STATSPACK, use STATSPACK as the source of performance metrics
+ 	 IF cnt = 8 THEN 
            :sp := 'op_collect_statspack.sql';
            l_tab_name := 'STATS$SNAPSHOT'; 
            l_col_name := 'snap_time';
          END IF;
+       -- If instructed to not collect performance metrics, do not collect stats.
        ELSE IF  '&v_dodiagnostics' = 'nostatspack' THEN
-           :sp  := 'prompt_nostatspack.sql';
-         ELSE l_tab_name :=  'ERROR - Unexpected parameter: &v_dodiagnostics';
-         END IF;
+              :sp  := 'prompt_nostatspack.sql';
+            -- If we get here, then there was a problem.
+            ELSE l_tab_name :=  'ERROR - Unexpected parameter: &v_dodiagnostics';
+            END IF;
        END IF;
   END IF; 
+
   BEGIN
     IF l_tab_name = '---' THEN
         dbms_output.put_line('No performance data will be collected.');
-    ELSE	
-      BEGIN
+    ELSE
+      -- Verify there are metrics to collect.	
+      BEGIN 
         EXECUTE IMMEDIATE 'SELECT count(1) FROM ' || upper(l_tab_name) || ' WHERE rownum < 2' INTO cnt ;
         IF cnt = 0 THEN
             dbms_output.put_line('No data found in ' ||  upper(l_tab_name) || '.  No performance data will be collected.');
@@ -437,6 +448,7 @@ BEGIN
     END IF;
   END;
   IF (l_tab_name != '---' AND l_tab_name NOT LIKE 'ERROR%') THEN
+     -- Get the snapshot range for AWR stats.
      IF l_tab_name = 'DBA_HIST_SNAPSHOT' THEN
        THE_SQL := 'SELECT min(snap_id) , max(snap_id) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
        EXECUTE IMMEDIATE the_sql INTO  :minsnap, :maxsnap USING '&&v_dbid' ;
@@ -449,6 +461,7 @@ BEGIN
           :v_info_prompt := 'between snaps ' || :minsnap || ' and ' || :maxsnap;
        END IF;
      ELSE
+       -- Get the snapshot range for STATSPACE stats.
        THE_SQL := 'SELECT min(snap_time) , max(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
        EXECUTE IMMEDIATE the_sql INTO  :minsnaptime, :maxsnaptime USING '&&v_dbid' ;
        IF :minsnaptime IS NULL THEN
