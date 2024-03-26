@@ -32,7 +32,11 @@ from (
             if(pks.table_name is not null, 1, 0) as has_primary_key,
             if(t.ROW_FORMAT = 'COMPRESSED', 1, 0) as is_compressed,
             if(pt.PARTITION_METHOD is not null, 1, 0) as is_partitioned,
-            if(locate('ENCRYPTED', t.CREATE_OPTIONS) > 0, 1, 0) as is_encrypted,
+            if(
+                locate('ENCRYPTED', upper(t.CREATE_OPTIONS)) > 0,
+                1,
+                0
+            ) as is_encrypted,
             COALESCE(pt.PARTITION_COUNT, 0) as partition_count,
             COALESCE(idx.index_count, 0) as index_count,
             COALESCE(idx.fulltext_index_count, 0) as fulltext_index_count,
