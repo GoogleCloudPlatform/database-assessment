@@ -13,7 +13,12 @@ select
     concat(char(34), is_partitioned, char(34)) as is_partitioned,
     partition_count as partition_count,
     index_count as index_count,
-    fulltext_index_count as fulltext_index_count
+    fulltext_index_count as fulltext_index_count,
+    concat(char(34), is_encrypted, char(34)) as is_encrypted,
+    spatial_index_count as spatial_index_count,
+    concat(char(34), has_primary_key, char(34)) as has_primary_key,
+    concat(char(34), row_format, char(34)) as row_format,
+    concat(char(34), table_type, char(34)) as table_type
 from (
         select t.table_schema as table_schema,
             t.table_name as table_name,
@@ -27,6 +32,11 @@ from (
             if(pks.table_name is not null, 1, 0) as has_primary_key,
             if(t.ROW_FORMAT = 'COMPRESSED', 1, 0) as is_compressed,
             if(pt.PARTITION_METHOD is not null, 1, 0) as is_partitioned,
+            if(
+                locate('ENCRYPTED', upper(t.CREATE_OPTIONS)) > 0,
+                1,
+                0
+            ) as is_encrypted,
             COALESCE(pt.PARTITION_COUNT, 0) as partition_count,
             COALESCE(idx.index_count, 0) as index_count,
             COALESCE(idx.fulltext_index_count, 0) as fulltext_index_count,
