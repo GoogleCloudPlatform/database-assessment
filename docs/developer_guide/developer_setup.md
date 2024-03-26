@@ -13,7 +13,7 @@ Assuming you are using an Ubuntu/Debian based x86_64 machine for development, th
 ```bash
 # install  development essentials
 sudo apt update \
- && sudo apt install -y postgresql-15 redis pipx unixodbc-dev libmysqlclient-dev python-is-python3 rustc npm nodejs libbz2-dev libffi-dev liblzma-dev libreadline-dev libsqlite3-dev libssl-dev tk-dev zlib1g-dev build-essential
+ && sudo apt install -y libpq-dev python3-dev pipx unixodbc-dev libmysqlclient-dev python-is-python3 rustc npm nodejs libbz2-dev libffi-dev liblzma-dev libreadline-dev libsqlite3-dev libssl-dev tk-dev zlib1g-dev build-essential pkg-config cmake-data
 
 if ! grep -qe "^export PATH=\"\${HOME}/.local/bin:\${PATH}\"" ~/.bashrc; then
   echo "" >> ~/.bashrc

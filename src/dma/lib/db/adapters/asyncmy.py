@@ -1,126 +1,69 @@
-from __future__ import annotations
-
-from collections import defaultdict
 from contextlib import asynccontextmanager
-from typing import Any
 
-from aiosql.utils import VAR_REF
-
-
-class MaybeAcquire:
-    def __init__(self, client, driver=None) -> None:
-        self.client = client
-        self._driver = driver
-
-    async def __aenter__(self):
-        if "acquire" in dir(self.client):
-            self._managed_conn = await self.client.acquire()
-            return self._managed_conn
-        self._managed_conn = None
-        return self.client
-
-    async def __aexit__(self, exc_type, exc, tb):
-        if self._managed_conn is not None:
-            await self.client.release(self._managed_conn)
+import asyncmy
 
 
 class AsyncMYAdapter:
     is_aio_driver = True
 
-    def __init__(self) -> None:
-        self.var_sorted: dict[str, Any] = defaultdict(list)  # type: ignore[assignment]
+    def process_sql(self, _query_name, _op_type, sql):
+        """Pass through function because the ``asyncmy`` driver can already handle the
+        ``:var_name`` format used by aiosql and doesn't need any additional processing.
 
-    def process_sql(self, query_name, _op_type, sql):
-        adj = 0
+        Args:
+            _query_name (str): The name of the sql query.
+            _op_type (SQLOperationType): The type of SQL operation performed by the query.
+            sql: The sql as written before processing.
 
-        for match in VAR_REF.finditer(sql):
-            gd = match.groupdict()
-            # Do nothing if the match is found within quotes.
-            if gd["dquote"] is not None or gd["squote"] is not None:
-                continue
-
-            var_name = gd["var_name"]
-            if var_name in self.var_sorted[query_name]:
-                replacement = f"${self.var_sorted[query_name].index(var_name) + 1}"
-            else:
-                replacement = f"${len(self.var_sorted[query_name]) + 1}"
-                self.var_sorted[query_name].append(var_name)
-
-            # Determine the offset of the start and end of the original
-            # variable that we are replacing, taking into account an adjustment
-            # factor based on previous replacements (see the note below).
-            start = match.start() + len(gd["lead"]) + adj
-            end = match.end() + adj
-
-            sql = sql[:start] + replacement + sql[end:]
-
-            # If the replacement and original variable were different lengths,
-            # then the offsets of subsequent matches will be wrong by the
-            # difference.  Calculate an adjustment to apply to reconcile those
-            # offsets with the modified string.
-            #
-            # The "- 1" is to account for the leading ":" character in the
-            # original string.
-            adj += len(replacement) - len(var_name) - 1
-
+        Returns:
+        - str: Original SQL text unchanged.
+        """
         return sql
 
-    def maybe_order_params(self, query_name, parameters):
-        if isinstance(parameters, dict):
-            return [parameters[rk] for rk in self.var_sorted[query_name]]
-        if isinstance(parameters, tuple):
-            return parameters
-        msg = f"Parameters expected to be dict or tuple, received {parameters}"
-        raise ValueError(msg)
-
-    async def select(self, conn, query_name, sql, parameters, record_class=None):
-        parameters = self.maybe_order_params(query_name, parameters)
-        async with MaybeAcquire(conn) as connection:
-            results = await connection.fetch(sql, *parameters)
+    async def select(self, conn, _query_name, sql, parameters, record_class=None):
+        async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
+            await cur.execute(sql)
+            results = await cur.fetchall()
             if record_class is not None:
-                results = [record_class(**dict(rec)) for rec in results]
+                column_names = [c[0] for c in cur.description]
+                results = [record_class(**dict(zip(column_names, row))) for row in results]
         return results
 
-    async def select_one(self, conn, query_name, sql, parameters, record_class=None):
-        parameters = self.maybe_order_params(query_name, parameters)
-        async with MaybeAcquire(conn) as connection:
-            result = await connection.fetchrow(sql, *parameters)
+    async def select_one(self, conn, _query_name, sql, parameters, record_class=None):
+        async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
+            await cur.execute(sql)
+            result = await cur.fetchone()
             if result is not None and record_class is not None:
-                result = record_class(**dict(result))
+                column_names = [c[0] for c in cur.description]
+                result = record_class(**dict(zip(column_names, result)))
         return result
 
-    async def select_value(self, conn, query_name, sql, parameters):
-        parameters = self.maybe_order_params(query_name, parameters)
-        async with MaybeAcquire(conn) as connection:
-            return await connection.fetchval(sql, *parameters)
+    async def select_value(self, conn, _query_name, sql, parameters):
+        async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
+            await cur.execute(sql)
+            result = await cur.fetchone()
+        return result[0] if result else None
 
     @asynccontextmanager
-    async def select_cursor(self, conn, query_name, sql, parameters):
-        parameters = self.maybe_order_params(query_name, parameters)
-        async with MaybeAcquire(conn) as connection:
-            stmt = await connection.prepare(sql)
-            async with connection.transaction():
-                yield stmt.cursor(*parameters)
+    async def select_cursor(self, conn, _query_name, sql, parameters):
+        async with conn.cursor(cursor=asyncmy.cursors.DictCursor) as cur:
+            yield cur
 
-    async def insert_returning(self, conn, query_name, sql, parameters):
-        parameters = self.maybe_order_params(query_name, parameters)
-        async with MaybeAcquire(conn) as connection:
-            res = await connection.fetchrow(sql, *parameters)
-            if res:
-                return res[0] if len(res) == 1 else res
-            return None
+    async def insert_returning(self, conn, _query_name, sql, parameters):
+        async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
+            await cur.execute(sql)
+            return cur.lastrowid
 
-    async def insert_update_delete(self, conn, query_name, sql, parameters):
-        parameters = self.maybe_order_params(query_name, parameters)
-        async with MaybeAcquire(conn) as connection:
-            # TODO extract integer last result
-            return await connection.execute(sql, *parameters)
+    async def insert_update_delete(self, conn, _query_name, sql, parameters):
+        async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
+            await cur.execute(sql)
+            return cur.rowcount
 
-    async def insert_update_delete_many(self, conn, query_name, sql, parameters):
-        parameters = [self.maybe_order_params(query_name, params) for params in parameters]
-        async with MaybeAcquire(conn) as connection:
-            return await connection.executemany(sql, parameters)
+    async def insert_update_delete_many(self, conn, _query_name, sql, parameters):
+        async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
+            await cur.executemany(sql, parameters)
 
-    async def execute_script(self, conn, sql):
-        async with MaybeAcquire(conn) as connection:
-            return await connection.execute(sql)
+    async def execute_script(self, conn, _query_name, sql, parameters):
+        async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
+            await cur.execute(sql)
+        return "DONE"
