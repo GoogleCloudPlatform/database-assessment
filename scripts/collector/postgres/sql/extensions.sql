@@ -4,10 +4,12 @@ with src as (
         a.rolname as extension_owner,
         n.nspname as extension_schema,
         e.extrelocatable as is_relocatable,
-        e.extversion as extension_version
+        e.extversion as extension_version,
+        d.datname as database_name
     from pg_extension e
         join pg_roles a on (e.extowner = a.oid)
         join pg_namespace n on (e.extnamespace = n.oid)
+        join pg_database d on (d.datdba = e.extowner)
 )
 select chr(34) || :PKEY || chr(34) as pkey,
     chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
