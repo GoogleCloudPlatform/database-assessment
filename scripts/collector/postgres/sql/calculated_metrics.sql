@@ -10,13 +10,13 @@ foreign_table_summary as (
   select count(distinct ft.ftrelid) total_foreign_table_count,
     count(
       distinct case
-        when w.fdwname = ANY (ARRAY ['oracle_fdw', 'orafdw']) then ft.ftrelid
+        when w.fdwname = ANY (ARRAY ['oracle_fdw', 'orafdw','postgres_fdw']) then ft.ftrelid
         else null
       end
     ) as supported_foreign_table_count,
     count(
       distinct case
-        when w.fdwname != all (ARRAY ['oracle_fdw', 'orafdw']) then ft.ftrelid
+        when w.fdwname != all (ARRAY ['oracle_fdw', 'orafdw','postgres_fdw']) then ft.ftrelid
         else null
       end
     ) as unsupported_foreign_table_count
