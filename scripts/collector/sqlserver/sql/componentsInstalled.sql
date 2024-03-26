@@ -26,7 +26,7 @@ SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
 /* need to record table permissions in order to determine if we can run certain server level queryies
-    as some tables are not available in managed instances 
+    as some tables are not available in managed instances
 */
 IF Object_id('tempdb..#myPerms') IS NOT NULL
   DROP TABLE #myperms;
@@ -74,7 +74,7 @@ CREATE TABLE #servicesservicestatus /*Create temp tables*/
     statusdatetime    DATETIME DEFAULT (Getdate()),
     physicalsrvername NVARCHAR(128)
 )
-CREATE TABLE #tempLanguageServices 
+CREATE TABLE #tempLanguageServices
 (
     servicestatus NVARCHAR(256)
 );

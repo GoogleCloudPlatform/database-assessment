@@ -20,10 +20,10 @@ for analysis by Database Migration Assessment.
     cat
     cut
     dirname
-    grep 
+    grep
     locale
     mkdir
-    sed 
+    sed
     tar
     tr
     which
@@ -81,7 +81,7 @@ for analysis by Database Migration Assessment.
 4. Results
 ----------
 
-    An archive of the extracted results will be created in the directory collector/output. 
+    An archive of the extracted results will be created in the directory collector/output.
     The full path and file name will be displayed on completion.
 
 
@@ -100,4 +100,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-

@@ -86,4 +86,3 @@ To collect data for a single database:
 
 Upon completion, the tool will automatically create an archive of the extracted metrics that can be uploaded into the assessment tool.
 One ZIP file will be created per database.
-

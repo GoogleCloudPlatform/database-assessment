@@ -20,11 +20,11 @@ SELECT '&&v_host'
        || '&&v_dbname'
        || '_'
        || '&&v_hora' AS pkey,
-       trunc(start_time) AS backup_start_date, 
-       &v_a_con_id AS con_id, 
-       input_type, 
-       round(sum(elapsed_seconds)) AS elapsed_seconds, 
-       round(sum(input_bytes)/1024/1024) AS mbytes_in, 
+       trunc(start_time) AS backup_start_date,
+       &v_a_con_id AS con_id,
+       input_type,
+       round(sum(elapsed_seconds)) AS elapsed_seconds,
+       round(sum(input_bytes)/1024/1024) AS mbytes_in,
        round(sum(output_bytes)/1024/1024) AS mbytes_out,
        '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
 FROM v$rman_backup_job_details a

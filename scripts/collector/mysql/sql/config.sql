@@ -53,7 +53,7 @@ from (
                 select 'TABLE_SIZE' as variable_name,
                     total_data_size_bytes as variable_value
                 from (
-                        select 
+                        select
                             sum(data_length) as total_data_size_bytes
                         from (
                                 select t.table_schema as table_schema,
@@ -104,7 +104,7 @@ from (
                 select 'TABLE_NO_INNODB_SIZE' as variable_name,
                     non_innodb_data_size_bytes as variable_value
                 from (
-                        select 
+                        select
                             sum(
                                 if(upper(table_engine) != 'INNODB', data_length, 0)
                             ) as non_innodb_data_size_bytes
@@ -157,7 +157,7 @@ from (
                 select 'TABLE_INNODB_SIZE' as variable_name,
                     innodb_data_size_bytes as variable_value
                 from (
-                        select 
+                        select
                             sum(
                                 if(upper(table_engine) = 'INNODB', data_length, 0)
                             ) as innodb_data_size_bytes
@@ -210,7 +210,7 @@ from (
                 select 'TABLE_COUNT' as variable_name,
                     total_table_count as variable_value
                 from (
-                        select 
+                        select
                             count(table_name) as total_table_count
                         from (
                                 select t.table_schema as table_schema,
@@ -261,7 +261,7 @@ from (
                 select 'TABLE_NO_INNODB_COUNT' as variable_name,
                     non_innodb_table_count as variable_value
                 from (
-                        select 
+                        select
                             sum(if(upper(table_engine) != 'INNODB', 1, 0)) as non_innodb_table_count
                         from (
                                 select t.table_schema as table_schema,
@@ -312,7 +312,7 @@ from (
                 select 'TABLE_INNODB_COUNT' as variable_name,
                     innodb_table_count as variable_value
                 from (
-                        select 
+                        select
                             sum(if(upper(table_engine) = 'INNODB', 1, 0)) as innodb_table_count
                         from (
                                 select t.table_schema as table_schema,
@@ -363,7 +363,7 @@ from (
                 select 'TABLE_NO_PK_COUNT' as variable_name,
                     total_tables_without_primary_key as variable_value
                 from (
-                        select 
+                        select
                             sum(if(has_primary_key = 0, 1, 0)) as total_tables_without_primary_key
                         from (
                                 select t.table_schema as table_schema,

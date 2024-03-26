@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Module",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "dma",
+            "args": ["readiness-check","--db-type","postgres","--hostname","localhost","--no-prompt","--port","5427","--database","postgres","--username","postgres","--password","super-secret"]
+        }
+    ]
+}

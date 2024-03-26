@@ -15,7 +15,7 @@
 .SYNOPSIS
     .
 .DESCRIPTION
-    Creates a user within the SQL Server Database using "Windows Authentication" with the necessary permissions 
+    Creates a user within the SQL Server Database using "Windows Authentication" with the necessary permissions
     needed to execute subsequent scripts to collect data from SQL Server and Perfmon to be uploaded to Google Database Migration Assistant for review.
 
     If user and password are supplied, that will be used to execute the script.  Otherwise default credentials hardcoded in the script will be used
@@ -30,9 +30,9 @@
 .EXAMPLE
     To use a specific username / password combination:
         C:\createuserwithwindowsauth.ps1 -serverName [server name / ip address]\[instance name] -collectionUserName [collection username] -collectionUserPass [collection username password]
-    
+
     or
-    
+
     To use default credentials:
         C:\createuserwithwindowsauth.ps1 -serverName [server name / ip address]\[instance name]
 .NOTES

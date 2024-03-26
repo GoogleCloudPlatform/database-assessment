@@ -47,15 +47,15 @@ DECLARE
     objowner varchar2(30),
     objname varchar2(30)
     );
-    
+
     TYPE t_source_table_list IS
         TABLE OF rectype;
 
     TABLE_DOES_NOT_EXIST EXCEPTION;
     PRAGMA EXCEPTION_INIT(TABLE_DOES_NOT_EXIST, -00942);
-        
+
     v_source_table_list t_source_table_list;
-    
+
     v_table_owner       VARCHAR2(30);
     v_table_name        VARCHAR2(30);
     v_table_priv        VARCHAR2(30);
@@ -96,7 +96,7 @@ DECLARE
     END;
 
 
-    PROCEDURE grant_privs(p_priv_list t_source_table_list) 
+    PROCEDURE grant_privs(p_priv_list t_source_table_list)
     IS
       v_sql VARCHAR2(2000);
     BEGIN
@@ -107,20 +107,20 @@ DECLARE
         v_table_name  := p_priv_list(x).objname;
 
         BEGIN
-          SELECT count(1) 
-          INTO v_cnt 
+          SELECT count(1)
+          INTO v_cnt
           FROM dba_objects
           WHERE owner = v_table_owner
             AND object_name = v_table_name;
-            
+
           IF v_cnt != 0 THEN
             v_sql := 'GRANT ' || v_table_priv || ' ON ' || v_table_owner || '.' || v_table_name || ' TO "&dbusername" ' ;
             dbms_output.put_line(v_sql || ';' );
             EXECUTE IMMEDIATE v_sql;
-          END IF;  
+          END IF;
         END;
      END LOOP;
-    
+
     SELECT count(1) INTO v_cnt FROM dba_tab_columns WHERE table_name ='V_$DATABASE' AND column_name ='CDB';
     IF (v_cnt > 0) THEN
        EXECUTE IMMEDIATE 'SELECT count(1) FROM v$containers' INTO v_cnt;
@@ -132,8 +132,8 @@ DECLARE
        END IF;
     END IF;
     END;
-  
-      
+
+
     FUNCTION rectype_( p_objpriv VARCHAR2, p_objowner VARCHAR2, p_objname VARCHAR2) RETURN RECTYPE IS
       retval rectype;
     BEGIN
@@ -142,7 +142,7 @@ DECLARE
       retval.objname  := p_objname;
       RETURN retval;
     END;
-    
+
 BEGIN
 
   -- The rectype entries in the code blocks below are parsed to generate documentation.
@@ -173,7 +173,7 @@ BEGIN
       rectype_('SELECT','SYS','DBA_HIST_SYSTEM_EVENT'),
       rectype_('SELECT','SYS','DBA_HIST_SYS_TIME_MODEL')
       );
-    grant_privs(v_source_table_list); 
+    grant_privs(v_source_table_list);
   END IF;
 
   v_source_table_list := t_source_table_list(
@@ -286,9 +286,8 @@ BEGIN
       rectype_('SELECT','SYS','V_$VERSION'),
       rectype_('SELECT','SYSTEM','LOGSTDBY$SKIP_SUPPORT')
     );
-  grant_privs(v_source_table_list); 
+  grant_privs(v_source_table_list);
 
 END;
 /
 exit
-

@@ -34,11 +34,11 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#serverTranLogBackupSize') IS NOT NULL  
+IF OBJECT_ID('tempdb..#serverTranLogBackupSize') IS NOT NULL
     DROP TABLE #serverTranLogBackupSize;
 
 CREATE TABLE #serverTranLogBackupSize (
-    collection_date nvarchar(256), 
+    collection_date nvarchar(256),
     day_of_month nvarchar(256),
     total_logs_generated_in_mb nvarchar(256),
     h0_size_in_mb nvarchar(256),
@@ -106,12 +106,12 @@ IF @PRODUCT_VERSION > 10
         AND a.backup_start_date < getdate()
     GROUP BY
         CONVERT(VARCHAR(19), a.backup_start_date, 101),
-        DATEPART (day, a.backup_start_date) 
+        DATEPART (day, a.backup_start_date)
     ORDER BY 1,2');
 
-SELECT 
+SELECT
     @PKEY as PKEY,
-    collection_date, 
+    collection_date,
     day_of_month,
     total_logs_generated_in_mb,
     h0_size_in_mb,
@@ -144,5 +144,5 @@ SELECT
 from #serverTranLogBackupSize;
 END
 
-IF OBJECT_ID('tempdb..#serverTranLogBackupSize') IS NOT NULL  
+IF OBJECT_ID('tempdb..#serverTranLogBackupSize') IS NOT NULL
     DROP TABLE #serverTranLogBackupSize;

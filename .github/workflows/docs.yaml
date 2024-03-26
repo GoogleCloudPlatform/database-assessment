@@ -5,14 +5,23 @@ on:
     branches: [main]
     types:
       - completed
+env:
+  PYTHONUNBUFFERED: "1"
+  FORCE_COLOR: "1"
 jobs:
   docs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-      - run: pip install mkdocs-material mkdocstrings[python] black
-      - run: mkdocs gh-deploy --force
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.12
+
+    - name: Install Hatch
+      run: pip install --upgrade hatch hatch-pip-compile
+
+    - name: Build docs
+      run: hatch run docs:mkdocs gh-deploy --force

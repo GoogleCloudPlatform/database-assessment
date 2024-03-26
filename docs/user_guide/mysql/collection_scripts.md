@@ -49,7 +49,7 @@ The example above will connect to a database named 'sys' on host myhost.example.
        or
         --hostName            Database server host name
         --port                Database listener port
-        --databaseService     Database service name 
+        --databaseService     Database service name
         --collectionUserName  Database user name
         --collectionUserPass  Database password
       }
@@ -81,4 +81,3 @@ To collect data for a single database:
 ## Upload Collections
 
 Upon completion, the tool will automatically create an archive of the extracted metrics that can be uploaded into the assessment tool.
-

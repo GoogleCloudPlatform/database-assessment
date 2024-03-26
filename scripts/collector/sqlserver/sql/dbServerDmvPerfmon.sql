@@ -1,51 +1,64 @@
 /*
-Copyright 2023 Google LLC
+ Copyright 2023 Google LLC
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
 
-    https://www.apache.org/licenses/LICENSE-2.0
+ https://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
 
-*/
+ */
+set NOCOUNT on;
 
-SET NOCOUNT ON;
-SET LANGUAGE us_english;
-SET QUOTED_IDENTIFIER ON;
-SET NUMERIC_ROUNDABORT OFF;
-SET ANSI_NULLS ON;
-SET ANSI_PADDING ON;
-SET ANSI_WARNINGS ON;
-SET ARITHABORT ON;
-SET CONCAT_NULL_YIELDS_NULL ON;
-SET QUOTED_IDENTIFIER ON;
+set LANGUAGE us_english;
 
-DECLARE @PKEY AS VARCHAR(256)
-DECLARE @PRODUCT_VERSION AS INTEGER
-DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256)
-DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
-DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
+set QUOTED_IDENTIFIER on;
 
-SELECT @PKEY = N'$(pkey)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
-SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
-SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
-SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
+set NUMERIC_ROUNDABORT OFF;
 
-IF @ASSESSMENT_DATABSE_NAME = 'all'
-   SELECT @ASSESSMENT_DATABSE_NAME = '%'
+set ANSI_NULLS on;
 
-IF OBJECT_ID('tempdb..#serverDmvPerfmon') IS NOT NULL  
-    DROP TABLE #serverDmvPerfmon;
+set ANSI_PADDING on;
 
-CREATE TABLE #serverDmvPerfmon (
-    COLLECTION_TIME nvarchar(256), 
+set ANSI_WARNINGS on;
+
+set ARITHABORT on;
+
+set CONCAT_NULL_YIELDS_NULL on;
+
+set QUOTED_IDENTIFIER on;
+
+declare @PKEY as VARCHAR(256)
+declare @PRODUCT_VERSION as INTEGER
+declare @ASSESSMENT_DATABASE_NAME as VARCHAR(256)
+declare @DMA_SOURCE_ID as VARCHAR(256)
+declare @DMA_MANUAL_ID as VARCHAR(256)
+select @PKEY = N'$(pkey)';
+
+select @PRODUCT_VERSION = convert(
+        INTEGER,
+        PARSENAME(
+            convert(nvarchar, SERVERPROPERTY('productversion')),
+            4
+        )
+    );
+
+select @ASSESSMENT_DATABASE_NAME = N'$(database)';
+
+select @DMA_SOURCE_ID = N'$(dmaSourceId)';
+
+select @DMA_MANUAL_ID = N'$(dmaManualId)';
+
+if @ASSESSMENT_DATABASE_NAME = 'all'
+select @ASSESSMENT_DATABASE_NAME = '%' if OBJECT_ID('tempdb..#serverDmvPerfmon') is not null drop table #serverDmvPerfmon;
+    create table #serverDmvPerfmon (
+    COLLECTION_TIME nvarchar(256),
     available_mbytes nvarchar(256),
     physicaldisk_avg_disk_bytes_read nvarchar(256),
     physicaldisk_avg_disk_bytes_write nvarchar(256),
@@ -71,9 +84,8 @@ CREATE TABLE #serverDmvPerfmon (
     batch_requests_sec nvarchar(256)
 );
 
-BEGIN TRY
-BEGIN
-exec('
+begin TRY begin exec(
+    '
 DECLARE @ticksNow bigint, @ticksMs bigint;
 
 -- Calculate ticks to timestamp
@@ -82,7 +94,7 @@ SELECT @ticksNow = OSI.cpu_ticks / CONVERT(float, OSI.cpu_ticks/ms_ticks)
 FROM sys.dm_os_sys_info AS OSI;
 
 WITH util AS (
-    SELECT 
+    SELECT
         ''' + @PKEY + ''' AS PKEY,
         RBS.Rc.value(''(./Record/@id)[1]'', ''bigint'') AS RecordID,
         RBS.Rc.value(''(//SystemHealth/SystemIdle)[1]'', ''bigint'') AS SystemIdle, -- SystemIdle on Linux will be 0
@@ -119,9 +131,9 @@ sample_iops AS (
 dmv_perfmon_counter_data as (
     SELECT
         CONVERT(NVARCHAR,(ROUND((CONVERT(FLOAT,[Buffer cache hit ratio]) * 1.0 / CONVERT(FLOAT,[Buffer cache hit ratio base])) * 100.0,0))) as buffer_cache_hit_ratio,
-        CONVERT(NVARCHAR,[Checkpoint pages/sec]) as checkpoint_pages_sec, 
-        CONVERT(NVARCHAR,[Free list stalls/sec]) as free_list_stalls_sec, 
-        CONVERT(NVARCHAR,[Page life expectancy]) as page_life_expectancy, 
+        CONVERT(NVARCHAR,[Checkpoint pages/sec]) as checkpoint_pages_sec,
+        CONVERT(NVARCHAR,[Free list stalls/sec]) as free_list_stalls_sec,
+        CONVERT(NVARCHAR,[Page life expectancy]) as page_life_expectancy,
         CONVERT(NVARCHAR,[Page lookups/sec]) as page_lookups_sec,
         CONVERT(NVARCHAR,[Page reads/sec]) as page_reads_sec,
         CONVERT(NVARCHAR,[Page writes/sec]) as page_writes_sec,
@@ -130,9 +142,9 @@ dmv_perfmon_counter_data as (
         CONVERT(NVARCHAR,[Target Server Memory (KB)]) as target_server_memory_kb,
         CONVERT(NVARCHAR,[Total Server Memory (KB)]) as total_server_memory_kb,
         CONVERT(NVARCHAR,[Batch Requests/sec]) as batch_requests_sec
-    FROM  
+    FROM
         (
-            SELECT counter_name, cntr_value 
+            SELECT counter_name, cntr_value
             FROM sys.dm_os_performance_counters
             WHERE
                 (object_name = ''SQLServer:Buffer Manager''
@@ -143,16 +155,16 @@ dmv_perfmon_counter_data as (
                 AND counter_name IN (''Memory Grants Pending'',''Target Server Memory (KB)'',''Total Server Memory (KB)''))
                     OR (object_name = ''SQLServer:SQL Statistics''
                 AND counter_name IN (''Batch Requests/sec''))
-        ) AS SourceTable  
-        PIVOT  
-        (  
-            AVG(cntr_value)  
+        ) AS SourceTable
+        PIVOT
+        (
+            AVG(cntr_value)
             FOR counter_name IN (
                 [Buffer cache hit ratio],
                 [Buffer cache hit ratio base],
                 [Checkpoint pages/sec],
                 [Free list stalls/sec],
-                [Page life expectancy], 
+                [Page life expectancy],
                 [Page lookups/sec],
                 [Page reads/sec],
                 [Page writes/sec],
@@ -160,11 +172,11 @@ dmv_perfmon_counter_data as (
                 [Memory Grants Pending],
                 [Target Server Memory (KB)],
                 [Total Server Memory (KB)],
-                [Batch Requests/sec])  
+                [Batch Requests/sec])
         ) AS PivotTable
     )
     INSERT INTO #serverDmvPerfmon
-    SELECT 
+    SELECT
         CONVERT(VARCHAR(23),CONVERT(datetime2(3),DATEADD(ms, -1 * (@ticksNow - UT.EventStamp), GETDATE())),121) AS COLLECTION_TIME,
         NULL AS AVAILABLE_MBYTES,
         CASE
@@ -216,10 +228,10 @@ dmv_perfmon_counter_data as (
     FROM util AS UT
         JOIN sample_iops SI ON (UT.PKEY = SI.PKEY)
     ORDER BY 1 DESC
-');
+'
+);
 
-SELECT 
-    @PKEY as PKEY,
+select @PKEY as PKEY,
     COLLECTION_TIME,
     AVAILABLE_MBYTES,
     PHYSICALDISK_AVG_DISK_BYTES_READ,
@@ -247,23 +259,19 @@ SELECT
     @DMA_SOURCE_ID as dma_source_id,
     @DMA_MANUAL_ID as dma_manual_id
 from #serverDmvPerfmon;
-END;
-END TRY
-BEGIN CATCH
-BEGIN
-	IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
-		WAITFOR DELAY '00:00:00'
-	ELSE
-      SELECT
-         host_name() as host_name,
-         db_name() as database_name,
-         'dmvPerfmon' as module_name,
-         SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
-         SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
-         SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
-         ERROR_MESSAGE() as error_message;
-END
-END CATCH
+end;
 
-IF OBJECT_ID('tempdb..#serverDmvPerfmon') IS NOT NULL  
-    DROP TABLE #serverDmvPerfmon;
+end TRY begin CATCH begin if ERROR_NUMBER() = 208
+and ERROR_SEVERITY() = 16
+and ERROR_STATE() = 1 WAITFOR DELAY '00:00:00'
+else
+select host_name() as host_name,
+    db_name() as database_name,
+    'dmvPerfmon' as module_name,
+    SUBSTRING(convert(nvarchar, ERROR_NUMBER()), 1, 254) as error_number,
+    SUBSTRING(convert(nvarchar, ERROR_SEVERITY()), 1, 254) as error_severity,
+    SUBSTRING(convert(nvarchar, ERROR_STATE()), 1, 254) as error_state,
+    ERROR_MESSAGE() as error_message;
+
+end
+end CATCH if OBJECT_ID('tempdb..#serverDmvPerfmon') is not null drop table #serverDmvPerfmon;

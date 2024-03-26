@@ -15,7 +15,7 @@ The script can be executed at the shell or command prompt and requires 2 paramet
 
 ```bash
 $ ./masker/dma-collection-masker
-usage: dma-collection-masker [-h] [--verbose] 
+usage: dma-collection-masker [-h] [--verbose]
   [--collection-path COLLECTION_PATH] [--output-path OUTPUT_PATH]
 
 Google Database Migration Assessment - Collection Masking Script

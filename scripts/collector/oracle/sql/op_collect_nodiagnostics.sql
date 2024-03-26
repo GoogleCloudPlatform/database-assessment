@@ -21,4 +21,3 @@ set termout &TERMOUTOFF
 PROMPT Running script &p_sp_script for STATSPACK
 
 @&SQLDIR/&p_sp_script
-

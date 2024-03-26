@@ -39,7 +39,7 @@ if %1 == help (
     goto helpOperation
 )
 
-:loop 
+:loop
 if "%1" == "" goto evaluateUser
 if /i "%1" == "-serverName" set "serverName=%2"
 if /i "%1" == "-port" set "port=%2"
@@ -82,7 +82,7 @@ if "%useWindowsAuthentication%"=="false" (
 )
 
 if "%collectVMSpecs%"=="" (
-	CALL %command% 
+	CALL %command%
 ) ELSE (
 	CALL %command% -collectVMSpecs
 )

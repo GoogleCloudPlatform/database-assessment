@@ -23,7 +23,7 @@ COLUMN XML_TABLE FORMAT A20
 VARIABLE xml_select_sql VARCHAR2(100);
 COLUMN p_xml_select new_value v_xml_select noprint
 
-DECLARE 
+DECLARE
   cnt NUMBER;
 BEGIN
   SELECT count(1) INTO cnt
@@ -63,7 +63,7 @@ SELECT
 FROM &v_tblprefix._tables a
 WHERE a.owner NOT IN (
 @&EXTRACTSDIR/exclude_schemas.sql
-       )  
+       )
 GROUP BY
     &v_a_con_id,
     a.owner,
@@ -96,7 +96,7 @@ SELECT
 FROM &v_xml_select b
 WHERE b.owner NOT IN (
 @&EXTRACTSDIR/exclude_schemas.sql
-       )  
+       )
 GROUP BY
     &v_b_con_id,
     b.owner
@@ -121,7 +121,7 @@ SELECT
 FROM &v_tblprefix._object_tables c
 WHERE c.owner NOT IN (
 @&EXTRACTSDIR/exclude_schemas.sql
-       )  
+       )
 GROUP BY
     &v_c_con_id,
     c.owner,

@@ -55,7 +55,7 @@
             AND object_type = 'PACKAGE'
             AND ROWNUM = 1
             &cdbjoin
-            AND EXISTS (SELECT 1 FROM &v_tblprefix._users 
+            AND EXISTS (SELECT 1 FROM &v_tblprefix._users
                         WHERE username ='apex_public_user'
                         &cdbjoin
                        )) AS apex_installed ,
