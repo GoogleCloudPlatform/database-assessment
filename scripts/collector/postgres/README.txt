@@ -60,6 +60,8 @@ for analysis by Database Migration Assessment.
 
   VM collection definition (optional):
         --vmUserName          Username for the ssh session to --hostName for collecting machine information.
+                              Must be supplied to collect hardware configuration of the database server if
+                              the collection script is not run dirctly on the database server.
         --extraSSHArg         Extra args to be passed as is to ssh. Can be specified multiple times or as a single quoted string..
 
  Example:
