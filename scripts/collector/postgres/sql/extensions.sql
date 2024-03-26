@@ -4,7 +4,8 @@ with src as (
         a.rolname as extension_owner,
         n.nspname as extension_schema,
         e.extrelocatable as is_relocatable,
-        e.extversion as extension_version
+        e.extversion as extension_version,
+        current_database() as database_name
     from pg_extension e
         join pg_roles a on (e.extowner = a.oid)
         join pg_namespace n on (e.extnamespace = n.oid)
@@ -17,5 +18,6 @@ select chr(34) || :PKEY || chr(34) as pkey,
     src.extension_owner,
     src.extension_schema,
     src.is_relocatable,
-    src.extension_version
+    src.extension_version,
+    chr(34) || src.database_name || chr(34) as database_name
 from src;
