@@ -57,7 +57,7 @@ set termout &TERMOUTOFF
 @&EXTRACTSDIR/users.sql
 @&EXTRACTSDIR/&v_ora9ind.backups.sql
 @&EXTRACTSDIR/columntypes.sql
-@&EXTRACTSDIR/compressbytype.sql
+-- @&EXTRACTSDIR/compressbytype.sql
 @&EXTRACTSDIR/&v_ora9ind.cpucoresusage.sql
 @&EXTRACTSDIR/dataguard.sql
 @&EXTRACTSDIR/datatypes.sql
