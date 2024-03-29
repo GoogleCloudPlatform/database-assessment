@@ -150,22 +150,7 @@ WITH coltypes AS (
            ) 
    GROUP BY 
     con_id, owner, table_name
-),
-segs AS (
-SELECT
-    &v_a_con_id AS con_id,
-    owner,
-    segment_name,
-    SUM(bytes) as bytes
-FROM
-    &v_tblprefix._segments a
-WHERE
-    owner NOT IN 
-@&EXTRACTSDIR/exclude_schemas.sql
-GROUP BY
-    &v_a_con_id,
-    owner,
-    segment_name)
+)
 SELECT
     '&&v_host'
        || '_'
@@ -210,10 +195,9 @@ SELECT
     c.XMLTYPE_COL_COUNT                          ,
     c.UNDEFINED_COL_COUNT                        ,
     c.USER_DEFINED_COL_COUNT                     ,
-    NVL(s.bytes,0) as bytes                      ,
+    0 as bytes                                   ,
     '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
 FROM  coltypes c 
-LEFT JOIN segs s ON c.con_id = s.con_id and s.owner = c.owner and s.segment_name = c.table_name 
 ORDER BY 1,2,3,4
 ;
 
