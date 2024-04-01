@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.32" 
+OpVersion="4.3.33" 
 dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
@@ -509,19 +509,21 @@ echo "        --manualUniqueId      (Optional) A short string to be attached to 
 echo
 echo "  VM collection definition (optional):"
 echo "        --vmUserName          Username on the VM the Database is running on."
+echo "                              Must be supplied to collect hardware configuration of the database server if"
+echo "                              the collection script is not run dirctly on the database server."
 echo "        --extraSSHArg         Extra args to be passed as is to ssh. Can be specified multiple times."
 echo
 echo " Example:"
 echo
 echo " To collect data for a single database:"
-echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} "
+echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --allDbs N"
 echo " or"
-echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} "
+echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --allDbs N"
 echo
 echo " To collect data for all databases in the instance:"
-echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port} "
+echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} "
 echo " or"
-echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} "
+echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name}"
 }
 ### Validate input
 

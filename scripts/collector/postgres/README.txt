@@ -60,19 +60,21 @@ for analysis by Database Migration Assessment.
 
   VM collection definition (optional):
         --vmUserName          Username for the ssh session to --hostName for collecting machine information.
+                              Must be supplied to collect hardware configuration of the database server if
+                              the collection script is not run dirctly on the database server.
         --extraSSHArg         Extra args to be passed as is to ssh. Can be specified multiple times or as a single quoted string..
 
  Example:
 
  To collect data for a single database:
+  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --allDbs N
+ or
+  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --allDbs N
+
+ To collect data for all databases in the instance:
   ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name}
  or
   ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name}
-
- To collect data for all databases in the instance:
-  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}
- or
-  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port}
 
 
 

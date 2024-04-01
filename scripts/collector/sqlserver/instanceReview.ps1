@@ -151,16 +151,18 @@ elseif (((checkStringForSpecialChars -inputString $manualUniqueId) -eq "fail") -
     Exit 1
 }
 else {
+    ### Surround the databaseName variable with quotes to protect from values that have spaces in it
+    $databaseNameFilter = '"{0}"' -f $database
     if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
         $inputServerName = $serverName
-        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -C -l 30 -W -m 1 -u -w 32768 -v database=$database | findstr /v /c:"---"
+        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -C -l 30 -W -m 1 -u -w 32768 -v database=$databaseNameFilter | findstr /v /c:"---"
         $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
-        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$database)
+        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter)
         $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
         
         if ([string]$database -ne "all") {
-            $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$database | findstr /v /c:"-"
+            $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter | findstr /v /c:"-"
             if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
@@ -172,13 +174,13 @@ else {
         $inputServerName = $serverName
         $serverName = "$serverName,$port"
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
-        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -C -l 30 -W -m 1 -u -w 32768 -v database=$database | findstr /v /c:"---"
+        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -C -l 30 -W -m 1 -u -w 32768 -v database=$databaseNameFilter | findstr /v /c:"---"
         $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
-        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$database)
+        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter)
         $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
 
         if ([string]$database -ne "all") {
-            $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$database | findstr /v /c:"-"
+            $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter | findstr /v /c:"-"
             if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
@@ -201,10 +203,10 @@ $values = $splitobj | ForEach-Object { if ($_.Trim() -ne '') { $_ } }
 $dbversion = $values[0].Replace('.', '')
 $machinename = $values[1]
 if ([string]$database -eq "all") {
-    $dbname = $values[2]
+    $dbname = $values[2] -replace '\s', ''
 }
 else {
-    $dbname = $database
+    $dbname = $database -replace '\s', ''
 }
 $instancename = $values[3]
 $current_ts = $values[4]
@@ -216,7 +218,7 @@ $validSQLInstanceVersionCheckValues = $splitValidInstanceVerisionCheckObj | ForE
 $isValidSQLInstanceVersion = $validSQLInstanceVersionCheckValues[0]
 $isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
 
-$op_version = "4.3.32" 
+$op_version = "4.3.33" 
 
 if ([string]($isValidSQLInstanceVersion) -eq "N") {
     Write-Host "#############################################################"
@@ -337,7 +339,7 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Execution Variables List
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "serverName = $inputServerName " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "port = $port " -logOperation "FILE"
-WriteLog -logLocation $foldername\$logFile -logMessage "database = $database " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "database = $databaseNameFilter " -logOperation "FILE"
 if ($useWindowsAuthentication) {
     WriteLog -logLocation $foldername\$logFile -logMessage "collectionUserName = $(whoami) " -logOperation "FILE"
 }
@@ -411,6 +413,7 @@ foreach ($directory in $outputFileArray) {
     }
 }
 
+### Just write the names of the databases that the collector will act upon to the screen and the log file
 WriteLog -logLocation $foldername\$logFile -logMessage "Executing Assessment on Server $serverName Against the Following Databases:" -logOperation "BOTH"
 foreach ($dbNameList in $dbNameArray) {
     WriteLog -logLocation $foldername\$logFile -logMessage "            $dbNameList" -logOperation "BOTH"
@@ -466,7 +469,9 @@ Set-Content -Path $foldername\$databaseLevelBlockingFeatures -Encoding utf8 -Val
 
 ### Iterate through collections that could execute against multiple databases in the instance
 foreach ($databaseName in $dbNameArray) {
-    if ($databaseName -ne 'tempdb') {
+    ### Surround the databaseName variable with quotes to protect from values that have spaces in it
+    $databaseName = '"{0}"' -f $databaseName
+    if ($databaseName -inotmatch "tempdb") {
         WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Object Info for Database $databaseName ..." -logOperation "BOTH"
         sqlcmd -S $serverName -i sql\objectList.sql -d $databaseName -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$objectList -Encoding utf8
 
