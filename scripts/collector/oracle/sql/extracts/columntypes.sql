@@ -152,11 +152,7 @@ WITH coltypes AS (
     con_id, owner, table_name
 )
 SELECT
-    '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+    :v_pkey AS pkey,
     c.con_id,
     c.owner,
     c.table_name,
@@ -196,7 +192,7 @@ SELECT
     c.UNDEFINED_COL_COUNT                        ,
     c.USER_DEFINED_COL_COUNT                     ,
     0 as bytes                                   ,
-    '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+    :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM  coltypes c 
 ORDER BY 1,2,3,4
 ;

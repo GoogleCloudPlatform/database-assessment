@@ -16,11 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__idxpertable__&v_tag
 prompt PKEY|CON_ID|TAB_COUNT|IDX_CNT|IDX_PERC|DMA_SOURCE_ID|DMA_MANUAL_ID 
 WITH vrawidx AS(
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        &v_a_con_id AS con_id, table_owner, table_name, count(1) idx_cnt
 FROM &v_tblprefix._indexes a
 WHERE  owner NOT IN
@@ -35,6 +31,6 @@ SELECT pkey,
 FROM vrawidx
 GROUP BY pkey, con_id, idx_cnt)
 SELECT pkey , con_id , tab_count , idx_cnt , idx_perc,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vcidx;
 spool off

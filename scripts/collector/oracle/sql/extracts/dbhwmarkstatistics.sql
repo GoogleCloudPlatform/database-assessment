@@ -17,11 +17,7 @@ spool &outputdir/opdb__dbhwmarkstatistics__&v_tag
 prompt PKEY|DESCRIPTION|HIGHWATER|LAST_VALUE|CON_ID|DMA_SOURCE_ID|DMA_MANUAL_ID
 
 WITH vhwmst AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        description,
        highwater,
        last_value,
@@ -29,6 +25,6 @@ SELECT '&&v_host'
 FROM   &v_tblprefix._high_water_mark_statistics a
 ORDER  BY description)
 SELECT pkey , description , highwater , last_value, con_id,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vhwmst;
 spool off

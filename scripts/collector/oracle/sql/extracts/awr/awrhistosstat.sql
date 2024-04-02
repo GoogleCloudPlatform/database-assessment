@@ -70,11 +70,7 @@ WITH v_osstat_all
                     WHERE s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
                     AND s.dbid = &&v_dbid) os ) ,
 vossummary AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'        AS pkey,
+SELECT :v_pkey AS pkey,
        dbid,
        instance_number,
        hh24,
@@ -94,11 +90,7 @@ SELECT '&&v_host'
        ROUND(SUM(delta_value))           sum_value,
        COUNT(1)             count
 FROM   v_osstat_all
-GROUP  BY '&&v_host'
-          || '_'
-          || '&&v_dbname'
-          || '_'
-          || '&&v_hora',
+GROUP  BY :v_pkey,
           dbid,
           instance_number,
           hh24,
@@ -106,6 +98,6 @@ GROUP  BY '&&v_host'
 SELECT pkey , dbid , instance_number , hh24 , stat_name , hh24_total_secs ,
        cumulative_value , avg_value , mode_value , median_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100 ,
 	     min_value , max_value , sum_value , count,
-	       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+	       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vossummary;
 spool off

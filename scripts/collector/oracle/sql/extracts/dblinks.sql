@@ -16,23 +16,15 @@ limitations under the License.
 spool &outputdir/opdb__dblinks__&v_tag
 prompt PKEY|CON_ID|OWNER|COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdbl AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        &v_a_con_id AS con_id,
        owner,
        count(1) count
 FROM   &v_tblprefix._db_links a
 WHERE username IS NOT NULL
-GROUP BY '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora',
+GROUP BY :v_pkey,
        &v_a_con_id , owner)
 SELECT pkey , con_id , owner , count,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdbl;
 spool off

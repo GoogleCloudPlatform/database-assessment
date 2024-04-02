@@ -16,11 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__awrhistsysmetrichist__&v_tag
 prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|METRIC_NAME|METRIC_UNIT|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|MIN_VALUE|MAX_VALUE|SUM_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsysmetric AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'                            AS pkey,
+SELECT :v_pkey AS pkey,
        hsm.dbid,
        hsm.instance_number,
        TO_CHAR(hsm.begin_time, 'hh24')          hour,
@@ -49,11 +45,7 @@ FROM   &v_tblprefix._hist_sysmetric_history hsm
                   AND hsm.dbid = dhsnap.dbid
 WHERE  hsm.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
 AND hsm.dbid = &&v_dbid
-GROUP  BY '&&v_host'
-          || '_'
-          || '&&v_dbname'
-          || '_'
-          || '&&v_hora',
+GROUP  BY :v_pkey,
           hsm.dbid,
           hsm.instance_number,
           TO_CHAR(hsm.begin_time, 'hh24'),
@@ -66,6 +58,6 @@ ORDER  BY hsm.dbid,
 SELECT pkey , dbid , instance_number , hour , metric_name ,
        metric_unit , avg_value , mode_value , median_value , min_value , max_value ,
 	   sum_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100,
-	       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+	       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vsysmetric;
 spool off

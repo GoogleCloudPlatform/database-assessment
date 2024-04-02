@@ -16,11 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__pdbsopenmode__&v_tag
 prompt PKEY|CON_ID|NAME|OPEN_MODE|TOTAL_GB|CON_UID|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vpdbmode as (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'                   AS pkey,
+SELECT :v_pkey AS pkey,
        con_id,
        name,
        open_mode,
@@ -28,6 +24,6 @@ SELECT '&&v_host'
        con_uid
 FROM   v$pdbs )
 SELECT pkey , con_id , name , open_mode , TOTAL_GB, con_uid,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vpdbmode;
 spool off

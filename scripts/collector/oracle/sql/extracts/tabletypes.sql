@@ -139,11 +139,7 @@ GROUP BY
     'Y',
     'N'
 )
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        con_id,
        owner,
        partitioned,
@@ -155,7 +151,7 @@ SELECT '&&v_host'
        table_count,
        object_table,
        xml_table,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM  tblinfo;
 spool off
 COLUMN TEMPORARY CLEAR

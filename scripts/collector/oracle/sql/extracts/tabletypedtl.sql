@@ -119,11 +119,7 @@ GROUP BY &v_d_con_id,
        d.table_owner,
        d.table_name
 )
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        a.con_id,
        a.owner,
        a.table_name,
@@ -139,7 +135,7 @@ SELECT '&&v_host'
        p.subpartitioning_type,
        p.partition_count,
        sp.cnt AS subpartition_count,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM  tblinfo a
 LEFT OUTER JOIN &v_tblprefix._part_tables p
               ON a.owner = p.owner

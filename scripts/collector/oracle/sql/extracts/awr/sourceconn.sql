@@ -25,11 +25,7 @@ FROM DUAL;
 spool &outputdir/opdb__sourceconn__&v_tag
 prompt PKEY|DBID|INSTANCE_NUMBER|HO|PROGRAM|MODULE|MACHINE|COMMAND_NAME|CNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsrcconn AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        has.dbid,
        has.instance_number,
        TO_CHAR(dhsnap.begin_interval_time, 'hh24') hour,
@@ -48,11 +44,7 @@ FROM &v_tblprefix._HIST_ACTIVE_SESS_HISTORY has
 WHERE  has.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
 AND has.dbid = &&v_dbid
 AND has.session_type = 'FOREGROUND'
-group by '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora',
+group by :v_pkey,
        TO_CHAR(dhsnap.begin_interval_time, 'hh24'),
        has.dbid,
        has.instance_number,
@@ -62,7 +54,7 @@ group by '&&v_host'
        scmd.command_name)
 SELECT pkey , dbid , instance_number , hour , program ,
        module , machine , command_name , cnt,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vsrcconn
 order by hour;
 spool off

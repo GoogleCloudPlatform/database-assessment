@@ -16,11 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__tableconstraints__&v_tag
 prompt PKEY|CON_ID|OWNER|TABLE_NAME|PK|UK|CK|RI|VWCK|VWRO|HASHEXPR|SUPLOG|TOTAL_CONS|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vnopk AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'              AS pkey,
+SELECT :v_pkey AS pkey,
        con_id,
        owner,
        table_name,
@@ -62,16 +58,12 @@ FROM   (SELECT &v_a_con_id AS con_id,
         WHERE a.owner NOT IN 
 @&EXTRACTSDIR/exclude_schemas.sql
        )
-GROUP  BY '&&v_host'
-          || '_'
-          || '&&v_dbname'
-          || '_'
-          || '&&v_hora',
+GROUP  BY :v_pkey,
           con_id,
           owner,
           table_name)
 SELECT pkey , con_id , owner ,table_name , pk , uk , ck ,
        ri , vwck , vwro , hashexpr , suplog , total_cons,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vnopk;
 spool off

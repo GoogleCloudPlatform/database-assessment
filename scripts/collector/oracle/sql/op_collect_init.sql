@@ -23,8 +23,8 @@ define version = '&1'
 define dtrange = &v_statsWindow
 define colspr = '|'
 
+-- Set the environment to a known state, overriding any custom configuration.
 @@op_set_sql_env.sql 
-
 set headsep off
 set trimspool on
 set lines 32000
@@ -48,14 +48,24 @@ set termout on
 whenever sqlerror exit failure
 whenever oserror continue
 
+variable v_pkey VARCHAR2(100);
 
+-- For the min and max snaps to collect
 variable minsnap NUMBER;
 variable minsnaptime VARCHAR2(20);
 variable maxsnap NUMBER;
 variable maxsnaptime VARCHAR2(20);
+
+-- To handle collection from within a Dataguard standby
 variable umfflag VARCHAR2(100);
+
+-- To handle column 'LOGGING' in 'DBA_PDBS'.  Depends on Oracle version
 variable pdb_logging_flag VARCHAR2(1);
+
+-- To handle column 'DEFAULT_VALUE' in 'V_$SYSTEM_PARAMETER' 
 variable dflt_value_flag  VARCHAR2(1);
+
+-- to handle column 'COMPRESS_FOR' in 'DBA_TABLES'. Depends on Oracle version
 variable b_compress_col VARCHAR2(20);
 
 variable b_lob_compression_col         VARCHAR2(30);
@@ -69,6 +79,10 @@ variable b_index_visibility            VARCHAR2(30);
 
 variable b_io_function_sql             VARCHAR2(20);
 
+variable v_dma_source_id               VARCHAR2(100);
+variable v_manual_unique_id            VARCHAR2(100);
+
+-- Session settings to support creating substitution variables for the scripts.
 column instnc new_value v_inst noprint
 column hostnc new_value v_host noprint
 column horanc new_value v_hora noprint
@@ -79,7 +93,7 @@ column min_snaptime new_value v_min_snaptime noprint
 column max_snapid new_value v_max_snapid noprint
 column max_snaptime new_value v_max_snaptime noprint
 column umf_test new_value v_umf_test noprint
-column p_dma_source_id new_value v_dma_source_id noprint
+--column p_dma_source_id new_value v_dma_source_id noprint
 column p_dbid new_value v_dbid noprint
 column p_tblprefix new_value v_tblprefix noprint
 column p_is_container new_value v_is_container noprint
@@ -99,6 +113,7 @@ column p_lob_subpart_dedup_col new_value v_lob_subpart_dedup_col noprint
 column p_index_visibility new_value v_index_visibility noprint
 column p_io_function_sql new_value v_io_function_sql noprint
 
+-- Define some session info for the extraction -- BEGIN
 SELECT host_name     hostnc,
        instance_name instnc
 FROM   v$instance
@@ -114,7 +129,15 @@ SELECT RTRIM(SUBSTR('&v_tag',INSTR('&v_tag','_',1,5)+1), '.csv') horanc from dua
 SELECT substr(replace(version,'.',''),0,3) dbversion
 FROM v$instance
 /
+BEGIN
+  :v_pkey := '&&v_host' || '_' || '&&v_dbname' || '_' || '&&v_hora';
+END;
+/
+  
+-- Define some session info for the extraction -- END
 
+
+-- Determine how we will transform the data_type column based on database version. --BEGIN
 COLUMN p_data_type_exp NEW_VALUE v_data_type_exp noprint
 COLUMN p_ora9ind NEW_VALUE v_ora9ind noprint
 SELECT CASE WHEN  '&v_dbversion' LIKE '9%' THEN 'data_type_col_9i.sql'
@@ -124,7 +147,10 @@ SELECT CASE WHEN  '&v_dbversion' LIKE '9%' THEN 'data_type_col_9i.sql'
             ELSE ''
        END AS p_ora9ind
 FROM dual;
+-- Determine how we will transform the data_type column based on database version. --END
 
+
+-- Determine how we will get certain databasae and Dat Guard parameters based on databasee version. --BEGIN
 COLUMN p_dg_valid_role         new_value v_dg_valid_role         noprint
 COLUMN p_dg_verify             new_value v_dg_verify             noprint
 COLUMN p_db_unique_name        new_value v_db_unique_name        noprint
@@ -144,20 +170,27 @@ SELECT
         'platform_name'  AS p_platform_name
 FROM DUAL
 WHERE '&v_dbversion' NOT LIKE '9%';
+-- Determine how we will get certain databasae and Dat Guard parameters based on databasee version. --END
 
+
+-- Define a source id that will be consistent regardless of which RAC instance we are connected to.  --BEGIN
 column vname new_value v_name noprint
 SELECT min(object_name) AS vname 
 FROM dba_objects 
 WHERE object_name IN ('V$INSTANCE', 'GV$INSTANCE');
 
-SELECT lower(i.host_name||'_'||&v_db_unique_name||'_'||d.dbid) AS p_dma_source_id
+BEGIN
+SELECT lower(i.host_name||'_'||&v_db_unique_name||'_'||d.dbid) INTO :v_dma_source_id 
 FROM ( 
 	SELECT version, host_name
 	FROM &&v_name 
-	WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v$database d
+	WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v$database d;
+END;
 /
+-- Define a source id that will be consistent regardless of which RAC instance we are connected to.  --END
 
 
+-- Determine if we are in a container database, and if it supports editioning.  --BEGIN
 var lv_tblprefix VARCHAR2(3);
 var lv_is_container NUMBER;
 var lv_editionable_col  VARCHAR2(20);
@@ -197,8 +230,10 @@ SELECT :lv_tblprefix AS p_tblprefix,
        :lv_db_container_col as p_db_container_col
 FROM DUAL;
 /
+-- Determine if we are in a container database, and if it supports editioning.  --END
 
-
+-- Determine if the database version supports the 'default_value' column in v$parameter --BEGIN
+-- and iff it supports the 'logging' column in dba_pbs. 
 DECLARE 
   cnt NUMBER;
 BEGIN
@@ -228,7 +263,10 @@ SELECT CASE WHEN :dflt_value_flag = 'N' THEN '''N/A''' ELSE 'DEFAULT_VALUE' END 
        CASE WHEN :pdb_logging_flag = 'N' THEN  '''N/A''' ELSE 'LOGGING' END AS p_pluggablelogging,
        CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN 'sqlcmd10g.sql' ELSE 'sqlcmd.sql' END AS p_sqlcmd
 FROM DUAL;
+-- Determine if the database version supports the 'default_value' column in v$parameter --END
 
+
+-- Determine if we can check for table compression.  BEGIN
 DECLARE 
   cnt NUMBER;
 BEGIN
@@ -243,8 +281,10 @@ END;
 /
 
 SELECT :b_compress_col AS p_compress_col FROM dual;
+-- Determine if we can check for table compression.  END
 
 
+-- Determine if we can collect IO stats based on requested performance stats source.   BEGIN
 DECLARE
 cnt NUMBER;
 BEGIN
@@ -261,8 +301,13 @@ END;
 /
 
 SELECT :b_io_function_sql AS p_io_function_sql FROM dual;
+-- Determine if we can collect IO stats based on requested performance stats source.   END
 
 
+-- Get the DBID - BEGIN
+-- Determine if we are running on a standby database and if so, check if it is recording AWR stats via DBMS_UMF.
+-- Fail if running on a standby without DBMS_UMF configured.
+-- Defines from where we will get the dbid for collection.
 set serveroutput on
 DECLARE cnt NUMBER;
 BEGIN
@@ -277,16 +322,20 @@ BEGIN
 END;
 /
 
+-- Use the results from above to set the variable we will use to get the dbid.
 SELECT
 :umfflag umf_test
 FROM dual
 /
 
-
+-- Finally get the dbid from the determined source.
 SELECT &v_umf_test p_dbid
 FROM   v$database
 /
+-- Get the DBID - END
 
+
+-- Determine if this version of the database supports LOB compression and set the substitution variables -- BEGIN
 DECLARE 
   cnt NUMBER;
 BEGIN
@@ -318,6 +367,10 @@ SELECT
 :b_lob_subpart_dedup_col       AS p_lob_subpart_dedup_col 
 FROM DUAL;
 
+-- Determine if this version of the database supports LOB compression and set the substitution variables -- END
+
+
+-- Determine if this version of the database supports invisible indexes -- BEGIN
 DECLARE
   cnt NUMBER;
 BEGIN
@@ -332,6 +385,11 @@ END;
 
 SELECT :b_index_visibility AS p_index_visibility FROM DUAL;
 
+-- Determine if this version of the database supports invisible indexes -- END
+
+
+-- This is where we determine which source (AWR, STATSPACK or NONE) we will use for performance metrics -- BEGiN
+-- and which snaps we will collect.
 variable sp VARCHAR2(100);
 variable v_info_prompt VARCHAR2(200);
 column sp_script new_value p_sp_script noprint
@@ -347,28 +405,39 @@ DECLARE
   table_does_not_exist EXCEPTION;
   PRAGMA EXCEPTION_INIT (table_does_not_exist, -00942);
 BEGIN 
+  -- Set default performance metrics to NONE.
   :sp  := 'prompt_nostatspack.sql';
+
+  -- Use AWR repository if requested.
   IF '&v_dodiagnostics' = 'usediagnostics' THEN 
      l_tab_name := 'DBA_HIST_SNAPSHOT'; 
      l_col_name := 'begin_interval_time';
+
+  -- If STATSPACK has been requested, check that it is installed and permissions granted.
   ELSE IF '&v_dodiagnostics' = 'nodiagnostics' THEN
          SELECT count(1) INTO cnt FROM all_tables WHERE owner ='PERFSTAT' AND table_name IN ('STATS$OSSTAT', 'STATS$OSSTATNAME', 'STATS$SNAPSHOT', 'STATS$SQL_SUMMARY', 'STATS$SYSSTAT', 'STATS$SYSTEM_EVENT', 'STATS$SYS_TIME_MODEL', 'STATS$TIME_MODEL_STATNAME');
-         IF cnt = 8 THEN 
+
+         -- If we have access to STATSPACK, use STATSPACK as the source of performance metrics
+ 	 IF cnt = 8 THEN 
            :sp := 'op_collect_statspack.sql';
            l_tab_name := 'STATS$SNAPSHOT'; 
            l_col_name := 'snap_time';
          END IF;
+       -- If instructed to not collect performance metrics, do not collect stats.
        ELSE IF  '&v_dodiagnostics' = 'nostatspack' THEN
-           :sp  := 'prompt_nostatspack.sql';
-         ELSE l_tab_name :=  'ERROR - Unexpected parameter: &v_dodiagnostics';
-         END IF;
+              :sp  := 'prompt_nostatspack.sql';
+            -- If we get here, then there was a problem.
+            ELSE l_tab_name :=  'ERROR - Unexpected parameter: &v_dodiagnostics';
+            END IF;
        END IF;
   END IF; 
+
   BEGIN
     IF l_tab_name = '---' THEN
         dbms_output.put_line('No performance data will be collected.');
-    ELSE	
-      BEGIN
+    ELSE
+      -- Verify there are metrics to collect.	
+      BEGIN 
         EXECUTE IMMEDIATE 'SELECT count(1) FROM ' || upper(l_tab_name) || ' WHERE rownum < 2' INTO cnt ;
         IF cnt = 0 THEN
             dbms_output.put_line('No data found in ' ||  upper(l_tab_name) || '.  No performance data will be collected.');
@@ -379,6 +448,7 @@ BEGIN
     END IF;
   END;
   IF (l_tab_name != '---' AND l_tab_name NOT LIKE 'ERROR%') THEN
+     -- Get the snapshot range for AWR stats.
      IF l_tab_name = 'DBA_HIST_SNAPSHOT' THEN
        THE_SQL := 'SELECT min(snap_id) , max(snap_id) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
        EXECUTE IMMEDIATE the_sql INTO  :minsnap, :maxsnap USING '&&v_dbid' ;
@@ -391,6 +461,7 @@ BEGIN
           :v_info_prompt := 'between snaps ' || :minsnap || ' and ' || :maxsnap;
        END IF;
      ELSE
+       -- Get the snapshot range for STATSPACE stats.
        THE_SQL := 'SELECT min(snap_time) , max(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
        EXECUTE IMMEDIATE the_sql INTO  :minsnaptime, :maxsnaptime USING '&&v_dbid' ;
        IF :minsnaptime IS NULL THEN
@@ -421,6 +492,11 @@ COLUMN max_snapid clear
 COLUMN min_snaptime clear
 COLUMN max_snaptime clear
 
+-- This is where we determine which source (AWR, STATSPACK or NONE) we will use for performance metrics -- END
+
+
+
+-- This is where we set the substitution variables for working within container databases. -- BEGIN
 column a_con_id new_value v_a_con_id noprint
 column b_con_id new_value v_b_con_id noprint
 column c_con_id new_value v_c_con_id noprint
@@ -436,7 +512,16 @@ SELECT CASE WHEN &v_is_container != 0 THEN 'a.con_id' ELSE '''N/A''' END as a_co
 FROM DUAL;
 
 column CON_ID &v_h_con_id
+-- This is where we set the substitution variables for working within container databases. -- END
 
+-- Set manual_unique_id 
+BEGIN
+  :v_manual_unique_id :=  chr(39) || '&v_manualUniqueId' || chr(39);
+END;
+/
+
+
+-- Session settings for output
 set numwidth 48
 column v_dma_source_id format a100
 column v_dma_manual_id format a100

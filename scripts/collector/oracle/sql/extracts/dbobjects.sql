@@ -38,11 +38,7 @@ vdbobjx AS (
 @&EXTRACTSDIR/exclude_schemas.sql
               ),
 vdbobj AS (
-        SELECT '&&v_host'
-               || '_'
-               || '&&v_dbname'
-               || '_'
-               || '&&v_hora' AS pkey,
+        SELECT :v_pkey AS pkey,
                i.con_id,
                i.owner,
                i.object_type,
@@ -60,7 +56,7 @@ SELECT pkey ,
        object_type , 
        editionable ,
        count  ,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdbobj a;
 spool off
 

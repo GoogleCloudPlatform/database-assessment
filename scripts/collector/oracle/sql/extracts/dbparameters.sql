@@ -18,11 +18,7 @@ spool &outputdir/opdb__dbparameters__&v_tag
 prompt PKEY|INST_ID|CON_ID|NAME|VALUE|DEFAULT_VALUE|ISDEFAULT|DMA_SOURCE_ID|DMA_MANUAL_ID
 
 WITH vparam AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'                                   AS pkey,
+SELECT :v_pkey AS pkey,
        inst_id,
        &v_a_con_id AS con_id,
        replace(name, chr(39), chr(34))   name,
@@ -32,7 +28,7 @@ SELECT '&&v_host'
 FROM   gv$system_parameter a
 ORDER  BY 2,3 )
 SELECT pkey , inst_id , con_id , name , value , default_value , isdefault,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vparam;
 spool off
 column default_value clear
