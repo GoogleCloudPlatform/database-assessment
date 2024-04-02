@@ -16,11 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__usrsegatt__&v_tag
 prompt PKEY|CON_ID|OWNER|SEGMENT_NAME|SEGMENT_TYPE|TABLESPACE_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vuseg AS (
- SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'                          AS pkey,
+ SELECT :v_pkey AS pkey,
         &v_a_con_id AS con_id,
         owner,
         segment_name,
@@ -32,6 +28,6 @@ WITH vuseg AS (
 @&EXTRACTSDIR/exclude_schemas.sql
 )
 SELECT pkey , con_id , owner , segment_name , segment_type , tablespace_name,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vuseg;
 spool off

@@ -17,11 +17,7 @@ column hour format a4
 spool &outputdir/opdb__iofunction__&v_tag
 
 WITH vrawiof AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        snap.begin_interval_time, snap.end_interval_time,
        TO_CHAR(snap.begin_interval_time, 'hh24') hour,
        iof.snap_id, iof.dbid, iof.instance_number, iof.function_id, iof.function_name,
@@ -188,7 +184,7 @@ SELECT pkey , dbid , instance_number , hour , function_name ,
        total_reads_req_P100 ,
        total_writes_mb_P100 ,
        total_write_req_P100,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM viof;
 spool off
 column hour clear

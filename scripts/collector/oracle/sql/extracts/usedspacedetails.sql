@@ -16,11 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__usedspacedetails__&v_tag
 prompt PKEY|CON_ID|OWNER|SEGMENT_TYPE|GB|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vused AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        &v_a_con_id AS con_id,
        owner,
        segment_type,
@@ -29,13 +25,9 @@ SELECT '&&v_host'
        WHERE  owner NOT IN (
 @&EXTRACTSDIR/exclude_schemas.sql
 )
-       GROUP  BY '&&v_host'
-              || '_'
-              || '&&v_dbname'
-              || '_'
-              || '&&v_hora',
+       GROUP  BY :v_pkey,
               &v_a_con_id , owner, segment_type )
 SELECT pkey , con_id , owner , segment_type , GB,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vused;
 spool off

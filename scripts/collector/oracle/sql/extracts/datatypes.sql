@@ -16,11 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__datatypes__&v_tag
 prompt PKEY|CON_ID|OWNER|DATA_TYPE|CNT|DATA_LENGTH|DATA_PRECISION|DATA_SCALE|AVG_COL_LEN|DISTINCT_TABLE_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdtype AS (
-SELECT /*+ USE_HASH(b a) NOPARALLEL */ '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT /*+ USE_HASH(b a) NOPARALLEL */ :v_pkey AS pkey,
        &v_a_con_id con_id,
        a.owner,
        data_type,
@@ -33,11 +29,7 @@ SELECT /*+ USE_HASH(b a) NOPARALLEL */ '&&v_host'
 FROM   &v_tblprefix._tab_columns a INNER JOIN &v_tblprefix._objects b ON &v_a_con_id = &v_b_con_id AND a.owner = b.owner AND a.table_name = b.object_name and b.object_type = 'TABLE'
 WHERE  a.owner NOT IN
 @&EXTRACTSDIR/exclude_schemas.sql
-GROUP  BY '&&v_host'
-          || '_'
-          || '&&v_dbname'
-          || '_'
-          || '&&v_hora',
+GROUP  BY :v_pkey,
           &v_a_con_id ,
           a.owner,
           data_type,
@@ -48,6 +40,6 @@ GROUP  BY '&&v_host'
 )
 SELECT pkey , con_id , owner , data_type , cnt,
        data_length, data_precision, data_scale, avg_col_len, distinct_table_count,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdtype;
 spool off

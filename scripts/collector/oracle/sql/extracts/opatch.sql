@@ -63,12 +63,8 @@ vopatch as (
         TABLE ( xmlsequence(extract(x.x, '/InventoryInstance/patches/*')) )              rws 
         order by 1
 )
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora'                   AS pkey,
+SELECT :v_pkey AS pkey,
        patch_id, unique_patch_id, patch_type, applied_date, patch_descr, bug_descr,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vopatch;
 spool off

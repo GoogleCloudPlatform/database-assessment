@@ -24,11 +24,7 @@ COLUMN COMPRESSION FORMAT A11
 spool &outputdir/opdb__indextypes__&v_tag
 prompt PKEY|CON_ID|OWNER|INDEX_TYPE|UNIQUENESS|COMPRESSION|PARTITIONED|TEMPORARY|SECONDARY|VISIBILITY|JOIN_INDEX|CUSTOM_INDEX_TYPE|CNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vidxtype AS (
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        &v_a_con_id AS con_id,
        a.owner,
        a.index_type,
@@ -44,11 +40,7 @@ SELECT '&&v_host'
 FROM   &v_tblprefix._indexes a
 WHERE  owner NOT IN
 @&EXTRACTSDIR/exclude_schemas.sql
-GROUP  BY '&&v_host'
-          || '_'
-          || '&&v_dbname'
-          || '_'
-          || '&&v_hora',
+GROUP  BY :v_pkey,
           &v_a_con_id ,
           a.owner,
           a.index_type,
@@ -74,7 +66,7 @@ SELECT pkey ,
        join_index,
        custom_index_type,
        cnt,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vidxtype;
 spool off
 COLUMN PARTITIONED CLEAR

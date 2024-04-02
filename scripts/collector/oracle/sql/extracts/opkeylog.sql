@@ -18,17 +18,13 @@ COLUMN INSTANCE_NAME FORMAT A20
 spool &outputdir/opdb__opkeylog__&v_tag
 prompt PKEY|OPSCRI|DB_|HOSTNAME|DB_NAME|INSTANCE_NAME|COLLECTION_T|DB_ID|C|DMA_SOURCE_ID|DMA_MANUAL_ID
 with vop as (
-select '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+select :v_pkey AS pkey,
 '&&version' opscriptversion, '&&v_dbversion' db_version, '&&v_host' hostname,
 '&&v_dbname' db_name, '&&v_inst' instance_name, '&&v_hora' collection_time, &&v_dbid db_id, null "CMNT"
 from dual)
 select pkey , opscriptversion , db_version , hostname
        , db_name , instance_name , collection_time , db_id , CMNT,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 from vop;
 spool off
 COLUMN DB_NAME CLEAR

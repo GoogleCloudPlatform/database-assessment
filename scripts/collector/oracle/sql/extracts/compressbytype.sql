@@ -16,11 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__compressbytype__&v_tag
 prompt PKEY|CON_ID|OWNER|BASIC|OLTP|QUERY_LOW|QUERY_HIGH|ARCHIVE_LOW|ARCHIVE_HIGH|TOTAL_GB|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vcompresstype AS (
-     SELECT '&&v_host'
-            || '_'
-            || '&&v_dbname'
-            || '_'
-            || '&&v_hora' AS pkey,
+     SELECT :v_pkey AS pkey,
 	        con_id,
             owner,
             TRUNC(SUM(CEIL(DECODE(compress_for, 'BASIC', gbytes, 'ENABLED',
@@ -93,7 +89,7 @@ WITH vcompresstype AS (
      )
 SELECT pkey , con_id , owner , basic , oltp , query_low ,
        query_high , archive_low , archive_high , total_gb,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vcompresstype
 ORDER BY total_gb DESC;
 spool off

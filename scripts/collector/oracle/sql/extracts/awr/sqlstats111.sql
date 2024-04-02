@@ -16,11 +16,7 @@ limitations under the License.
 spool &outputdir/opdb__sqlstats__&v_tag
 prompt PKEY|CON_ID|DBID|INSTANCE_NUMBER|FORCE_MATCHING_SIGNATURE|SQL_ID|TOTAL_EXECUTIONS|TOTAL_PX_SERVERS_EXECS|ELAPSED_TIME_TOTAL|DISK_READS_TOTAL|PHYSICAL_READ_BYTES_TOTAL|PHYSICAL_WRITE_BYTES_TOTAL|IO_OFFLOAD_ELIG_BYTES_TOTAL|IO_INTERCONNECT_BYTES_TOTAL|OPTIMIZED_PHYSICAL_READS_TOTAL|CELL_UNCOMPRESSED_BYTES_TOTAL|IO_OFFLOAD_RETURN_BYTES_TOTAL|DIRECT_WRITES_TOTAL|PERC_EXEC_FINISHED|AVG_ROWS|AVG_DISK_READS|AVG_BUFFER_GETS|AVG_CPU_TIME_US|AVG_ELAPSED_US|AVG_IOWAIT_US|AVG_CLWAIT_US|AVG_APWAIT_US|AVG_CCWAIT_US|AVG_PLSEXEC_US|AVG_JAVEXEC_US|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsqlstat AS(
-SELECT '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora' AS pkey,
+SELECT :v_pkey AS pkey,
        &v_a_con_id AS con_id,
        b.dbid,
        b.instance_number,
@@ -59,11 +55,7 @@ AND b.dbid = &&v_dbid
 -- AND &v_a_con_id = &v_b_con_id
 --and t.command_type <> 47
 -- and s.executions_total > 100
-GROUP BY '&&v_host'
-       || '_'
-       || '&&v_dbname'
-       || '_'
-       || '&&v_hora',
+GROUP BY :v_pkey,
        &v_a_con_id, b.dbid, b.instance_number, force_matching_signature
 ORDER BY elapsed_time_total DESC)
 SELECT pkey , con_id , dbid , instance_number , force_matching_signature , sql_id ,
@@ -73,7 +65,7 @@ SELECT pkey , con_id , dbid , instance_number , force_matching_signature , sql_i
        direct_writes_total ,
        perc_exec_finished , avg_rows , avg_disk_reads , avg_buffer_gets , avg_cpu_time_us , avg_elapsed_us , avg_iowait_us ,
        avg_clwait_us , avg_apwait_us , avg_ccwait_us , avg_plsexec_us , avg_javexec_us,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vsqlstat
 WHERE rownum < 300;
 spool off

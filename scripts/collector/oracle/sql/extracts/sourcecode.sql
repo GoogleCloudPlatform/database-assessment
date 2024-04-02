@@ -28,11 +28,7 @@ SELECT pkey,
        SUM(count_dbms_sql) count_dbms_sql,
        SUM(count_dbms_utl) sum_nr_lines_w_dbms_utl,
        SUM(count_total)    sum_count_total
-FROM   (SELECT '&&v_host'
-               || '_'
-               || '&&v_dbname'
-               || '_'
-               || '&&v_hora' AS pkey,
+FROM   (SELECT :v_pkey AS pkey,
                &v_a_con_id AS con_id,
                owner,
                name,
@@ -58,11 +54,7 @@ FROM   (SELECT '&&v_host'
         FROM   &v_tblprefix._source a
         WHERE  owner NOT IN
 @&EXTRACTSDIR/exclude_schemas.sql
-        GROUP  BY '&&v_host'
-                  || '_'
-                  || '&&v_dbname'
-                  || '_'
-                  || '&&v_hora',
+        GROUP  BY :v_pkey,
                   &v_a_con_id ,
                   owner,
                   name,
@@ -73,6 +65,6 @@ GROUP  BY pkey,
           TYPE)
 SELECT pkey , con_id , owner , type , sum_nr_lines , qt_objs ,
        sum_nr_lines_w_utl , sum_nr_lines_w_dbms , count_exec_im , count_dbms_sql , sum_nr_lines_w_dbms_utl , sum_count_total,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vsrc;
 spool off

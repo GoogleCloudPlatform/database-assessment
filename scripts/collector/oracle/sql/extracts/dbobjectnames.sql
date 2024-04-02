@@ -51,11 +51,7 @@ vsrc   AS (SELECT
 ),
 vdbobj AS (
         SELECT /*+ USE_HASH(i x s) */
-               '&&v_host'
-               || '_'
-               || '&&v_dbname'
-               || '_'
-               || '&&v_hora' AS pkey,
+               :v_pkey AS pkey,
                i.con_id,
                i.owner,
                chr(34) || i.object_name || chr(34) as object_name ,
@@ -77,7 +73,7 @@ SELECT pkey ,
        editionable ,
        lines,
        status,
-       '&v_dma_source_id' AS DMA_SOURCE_ID, chr(39) || '&v_manualUniqueId' || chr(39) AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdbobj a;
 spool off
 
