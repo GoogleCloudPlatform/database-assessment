@@ -58,6 +58,7 @@ BEGIN
       EXEC ('
          SELECT 
                ''' + @PKEY + ''' AS pkey
+               , db_name() as database_name
                , s.name AS schema_name
                , o.name AS table_name
                , t.name AS datatype
@@ -101,6 +102,7 @@ BEGIN
       EXEC ('
          SELECT 
                ''' + @PKEY + ''' AS pkey
+               , db_name() as database_name
                , s.name AS schema_name
                , o.name AS table_name
                , t.name AS datatype
@@ -142,6 +144,7 @@ BEGIN
       EXEC ('
          SELECT
                ''' + @PKEY + ''' AS pkey
+               , db_name() as database_name
                , s.name AS schema_name
                , o.name AS table_name
                , t.name AS datatype

@@ -38,7 +38,7 @@ BEGIN
     BEGIN TRY
         exec('
         SELECT DISTINCT
-            ''' + @PKEY + ''' AS pkey,
+            ''' + @PKEY + ''' AS PKEY,
             vs.volume_mount_point as volume_mount_point,
             vs.file_system_type as file_system_type,
             CASE WHEN LEN(vs.logical_volume_name) > 0
@@ -72,7 +72,7 @@ BEGIN
         ,sum(allocated_storage_in_megabytes/1024) available_size_gb
         FROM db_sizes)
         SELECT
-            ''' + @PKEY + ''' AS pkey,
+            ''' + @PKEY + ''' AS PKEY,
             ''CLOUD'' as volume_mount_point, 
             ''AZURE'' as file_system_type, 
             ''CLOUD'' as logical_volume_name, 
