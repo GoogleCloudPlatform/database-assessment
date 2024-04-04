@@ -63,7 +63,7 @@ Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
 
 $powerShellVersion = $PSVersionTable.PSVersion.Major
 $foldername = ""
-$errorCount = 0
+$totalErrorCount = 0
 
 if ($ignorePerfmon -eq "true") {
     Write-Host "#############################################################"
@@ -572,16 +572,23 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv) {
 WriteLog -logLocation $foldername\$logFile -logMessage "Checking for error messages within collection files..." -logOperation "BOTH"
 foreach ($file in Get-ChildItem -Path $foldername\*.csv, $foldername\*.log) {
     $inputFile = Split-Path -Leaf $file
+    $errorContentCount = 0
     [regex]$pattern = "(Msg(\s\d*)(.)(\n|\s)Level(\s\d*.)(\n|\s)State(\s\d*)(.)(\n|\s))"
     $content = Get-Content -Path $foldername\$inputFile | select-string -Pattern $pattern
-    WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "Checking for error messages within collection $inputFile ..." -logOperation "FILE"
-    if ($errorCount -gt ($errorCount + $content.length)) {
-        WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "Errors found within collection $inputFile ..." -logOperation "FILE"
+    if (![string]::IsNullOrEmpty($content)) {
+        $errorContentCount = 1
     }
-    $errorCount = $errorCount + $content.length
+    else {
+        $errorContentCount = 0
+    }
+    WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "Checking for error messages within collection $inputFile ..." -logOperation "FILE"
+    if ($errorContentCount -gt 0) {
+        WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "     Errors found within collection $inputFile ..." -logOperation "FILE"
+    }
+    $totalErrorCount = $totalErrorCount + $errorContentCount
 }
 
-if ($errorCount -gt 0) {
+if ($totalErrorCount -gt 0) {
     $zippedopfolder = $foldername + '_ERROR.zip'
 }
 else {
