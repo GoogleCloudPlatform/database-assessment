@@ -18,7 +18,11 @@ limitations under the License.
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
 DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256)
+DECLARE @HASDBACCESS AS TINYINT
+
 SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
+SELECT @HASDBACCESS = N'$(hasdbaccess)';
+
 IF @ASSESSMENT_DATABSE_NAME = 'all'
    SELECT @ASSESSMENT_DATABSE_NAME = '%'
 
@@ -27,3 +31,4 @@ FROM sys.databases
 WHERE name NOT IN ('master','model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin','SSISDB','DWDiagnostics','DWConfiguration','DWQueue', 'DQS_STAGING_DATA')
     AND name like @ASSESSMENT_DATABSE_NAME
     AND state = 0
+    AND HAS_DBACCESS(name) = @HASDBACCESS

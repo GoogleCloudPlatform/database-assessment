@@ -156,10 +156,11 @@ else {
     if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
         $inputServerName = $serverName
-        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -C -l 30 -W -m 1 -u -w 32768 -v database=$databaseNameFilter | findstr /v /c:"---"
-        $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
-        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter)
-        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
+        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v database=$databaseNameFilter | findstr /v /c:"---"
+        $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768)
+        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=1)
+        $dbNameNoAccessArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=0)
+        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768)
         
         if ([string]$database -ne "all") {
             $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter | findstr /v /c:"-"
@@ -174,10 +175,11 @@ else {
         $inputServerName = $serverName
         $serverName = "$serverName,$port"
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
-        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -C -l 30 -W -m 1 -u -w 32768 -v database=$databaseNameFilter | findstr /v /c:"---"
-        $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
-        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter)
-        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
+        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v database=$databaseNameFilter | findstr /v /c:"---"
+        $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768)
+        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=1)
+        $dbNameNoAccessArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=0)
+        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768)
 
         if ([string]$database -ne "all") {
             $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter | findstr /v /c:"-"
@@ -417,6 +419,14 @@ foreach ($directory in $outputFileArray) {
 WriteLog -logLocation $foldername\$logFile -logMessage "Executing Assessment on Server $serverName Against the Following Databases:" -logOperation "BOTH"
 foreach ($dbNameList in $dbNameArray) {
     WriteLog -logLocation $foldername\$logFile -logMessage "            $dbNameList" -logOperation "BOTH"
+}
+
+### Just write the names of the databases that the collector will skip due to permissions issues to the screen and the log file
+if ($dbNameNoAccessArray.Count -gt 0) {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Skipping Databases Due to Permissions Issues:" -logOperation "BOTH"
+    foreach ($dbNameNoAccessList in $dbNameNoAccessArray) {
+        WriteLog -logLocation $foldername\$logFile -logMessage "            $dbNameNoAccessList" -logOperation "BOTH"
+    }
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Installed Components..." -logOperation "BOTH"
