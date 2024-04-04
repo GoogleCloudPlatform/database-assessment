@@ -28,46 +28,18 @@ SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPRO
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
-IF OBJECT_ID('tempdb..#serverConfigurationParams') IS NOT NULL  
-    DROP TABLE #serverConfigurationParams;
-
-CREATE TABLE #serverConfigurationParams
-(
-    configuration_id nvarchar(255),
-    name nvarchar(255),
-    value nvarchar(255),
-    minimum nvarchar(255),
-    maximum nvarchar(255),
-    value_in_use nvarchar(255),
-    description nvarchar(255)
-);
-
 BEGIN
     exec ('
-    INSERT INTO #serverConfigurationParams
     SELECT
-        CONVERT(nvarchar(255),configuration_id), 
-        CONVERT(nvarchar(255),name),
-        CONVERT(nvarchar(255),value),
-        CONVERT(nvarchar(255),minimum),
-        CONVERT(nvarchar(255),maximum),
-        CONVERT(nvarchar(255),value_in_use), 
-        CONVERT(nvarchar(255),description)
+        ''' + @PKEY + ''' AS pkey,
+        CONVERT(nvarchar(255),configuration_id) as configuration_id, 
+        CONVERT(nvarchar(255),name) as name,
+        CONVERT(nvarchar(255),value) as value,
+        CONVERT(nvarchar(255),minimum) as minimum,
+        CONVERT(nvarchar(255),maximum) as maximum,
+        CONVERT(nvarchar(255),value_in_use) as value_in_use, 
+        CONVERT(nvarchar(255),description) as description,
+        ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
+        ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
     FROM sys.configurations');
 END
-
-SELECT
-    @PKEY as PKEY,
-    configuration_id,
-    name,
-    value,
-    minimum,
-    maximum,
-    value_in_use,
-    description,
-    @DMA_SOURCE_ID as dma_source_id,
-    @DMA_MANUAL_ID as dma_manual_id
-from #serverConfigurationParams;
-
-IF OBJECT_ID('tempdb..#serverConfigurationParams') IS NOT NULL  
-    DROP TABLE #serverConfigurationParams;

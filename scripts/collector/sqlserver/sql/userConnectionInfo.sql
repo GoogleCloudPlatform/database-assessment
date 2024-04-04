@@ -40,34 +40,6 @@ IF @ASSESSMENT_DATABSE_NAME = 'all'
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#connectionInfo') IS NOT NULL  
-   DROP TABLE #connectionInfo;
-
-CREATE TABLE #connectionInfo
-(
-    database_name nvarchar(255),
-    is_user_process nvarchar(255),
-    host_name nvarchar(255),
-    program_name nvarchar(255),
-    login_name nvarchar(255),
-    num_reads nvarchar(255),
-    num_writes nvarchar(255),
-    last_read nvarchar(255),
-    last_write nvarchar(255),
-    reads nvarchar(255),
-    logical_reads nvarchar(255),
-    writes nvarchar(255),
-    client_interface_name nvarchar(255),
-    nt_domain nvarchar(255),
-    nt_user_name nvarchar(255),
-    client_net_address nvarchar(255),
-    local_net_address nvarchar(255),
-    client_version nvarchar(255),
-    protocol_type nvarchar(255),
-    protocol_version nvarchar(255),
-    protocol_hex_version nvarchar(255)
-);
-
 BEGIN
     BEGIN
         SELECT @validDB = COUNT(1)
@@ -81,28 +53,30 @@ BEGIN
         IF @PRODUCT_VERSION >= 11 AND @validDB <> 0
         BEGIN
         exec ('
-            INSERT INTO #connectionInfo
             SELECT
-                DB_NAME() as database_name
-                ,sdes.is_user_process
-                ,sdes.host_name
-                ,sdes.program_name
-                ,sdes.login_name
-                ,sdec.num_reads
-                ,sdec.num_writes
+                ''' + @PKEY + ''' as pkey
+                ,DB_NAME() as database_name
+                ,sdes.is_user_process as is_user_process
+                ,sdes.host_name as host_name
+                ,sdes.program_name as program_name
+                ,sdes.login_name as login_name
+                ,sdec.num_reads as num_reads
+                ,sdec.num_writes as num_writes
                 ,FORMAT(sdec.last_read,''yyyy-MM-dd HH:mm:ss'') as last_read
                 ,FORMAT(sdec.last_write,''yyyy-MM-dd HH:mm:ss'') as last_write
-                ,sdes.reads
-                ,sdes.logical_reads
-                ,sdes.writes
-                ,sdes.client_interface_name
-                ,sdes.nt_domain
-                ,sdes.nt_user_name
-                ,sdec.client_net_address
-                ,sdec.local_net_address
-                ,sdes.client_version
-                ,sdec.protocol_type
-                ,sdec.protocol_version
+                ,sdes.reads as reads
+                ,sdes.logical_reads as logical_reads
+                ,sdes.writes as writes
+                ,sdes.client_interface_name as client_interface_name
+                ,sdes.nt_domain as nt_domain
+                ,sdes.nt_user_name as nt_user_name
+                ,sdec.client_net_address as client_net_address
+                ,sdec.local_net_address as local_net_address
+                , ''' + @DMA_SOURCE_ID + ''' as dma_source_id
+                , ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
+                ,sdes.client_version as client_version
+                ,sdec.protocol_type as protocol_type
+                ,sdec.protocol_version as protocol_version
                 ,sys.fn_varbintohexstr(sdec.protocol_version) as protocol_hex_version
             FROM sys.dm_exec_sessions AS sdes
             INNER JOIN sys.dm_exec_connections AS sdec
@@ -112,28 +86,30 @@ BEGIN
         IF @PRODUCT_VERSION < 11 AND @validDB <> 0
         BEGIN
         exec ('
-            INSERT INTO #connectionInfo
             SELECT
-                DB_NAME() as database_name
-                ,sdes.is_user_process
-                ,sdes.host_name
-                ,sdes.program_name
-                ,sdes.login_name
-                ,sdec.num_reads
-                ,sdec.num_writes
+                ''' + @PKEY + ''' as pkey
+                ,DB_NAME() as database_name
+                ,sdes.is_user_process as is_user_process
+                ,sdes.host_name as host_name
+                ,sdes.program_name as program_name
+                ,sdes.login_name as login_name
+                ,sdec.num_reads as num_reads
+                ,sdec.num_writes as num_writes
                 ,CONVERT(VARCHAR(256),sdec.last_read, 120) as last_read
                 ,CONVERT(VARCHAR(256),sdec.last_write,120) as last_write
-                ,sdes.reads
-                ,sdes.logical_reads
-                ,sdes.writes
-                ,sdes.client_interface_name
-                ,sdes.nt_domain
-                ,sdes.nt_user_name
-                ,sdec.client_net_address
-                ,sdec.local_net_address
-                ,sdes.client_version
-                ,sdec.protocol_type
-                ,sdec.protocol_version
+                ,sdes.reads as reads
+                ,sdes.logical_reads as logical_reads
+                ,sdes.writes as writes
+                ,sdes.client_interface_name as client_interface_name
+                ,sdes.nt_domain as nt_domain
+                ,sdes.nt_user_name as nt_user_name
+                ,sdec.client_net_address as client_net_address
+                ,sdec.local_net_address as local_net_address
+                , ''' + @DMA_SOURCE_ID + ''' as dma_source_id
+                , ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
+                ,sdes.client_version as client_version
+                ,sdec.protocol_type as protocol_type
+                ,sdec.protocol_version as protocol_version
                 ,sys.fn_varbintohexstr(sdec.protocol_version) as protocol_hex_version
             FROM sys.dm_exec_sessions AS sdes
             INNER JOIN sys.dm_exec_connections AS sdec
@@ -151,35 +127,4 @@ BEGIN
         SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
         SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
     END CATCH
-
 END
-
-SELECT
-    @PKEY as PKEY,
-    database_name,
-    is_user_process,
-    host_name,
-    program_name,
-    login_name,
-    num_reads,
-    num_writes,
-    last_read,
-    last_write,
-    reads,
-    logical_reads,
-    writes,
-    client_interface_name,
-    nt_domain,
-    nt_user_name,
-    client_net_address,
-    local_net_address,
-    @DMA_SOURCE_ID as dma_source_id,
-    @DMA_MANUAL_ID as dma_manual_id,
-    client_version,
-    protocol_type,
-    protocol_version,
-    protocol_hex_version
-from #connectionInfo a;
-
-IF OBJECT_ID('tempdb..#connectionInfo') IS NOT NULL
-    DROP TABLE #connectionInfo;

@@ -45,8 +45,7 @@ IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL
 
 CREATE TABLE #serverProperties
 (
-    property_name nvarchar(256)
-    ,
+    property_name nvarchar(256),
     property_value nvarchar(1024)
 );
 

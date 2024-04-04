@@ -33,46 +33,26 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#LinkedServersDetail') IS NOT NULL  
-   DROP TABLE #LinkedServersDetail;  
-
-CREATE TABLE #LinkedServersDetail
-(
-    name nvarchar(255),
-    product nvarchar(255),
-    provider nvarchar(255),
-    data_source nvarchar(4000),
-    location nvarchar(4000),
-    provider_string nvarchar(4000),
-    catalog nvarchar(255)
-)
-
-BEGIN TRY
-exec('   
-    INSERT INTO #LinkedServersDetail
-    select 
-        name, 
-        product,
-        provider,
-        data_source,
-        locaton,
-        provider_string,
-        catalog
-    from sys.servers
-    where is_linked = 1
-        and server_id <> 0');
-END TRY
-BEGIN CATCH
-	IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
-		WAITFOR DELAY '00:00:00'
-END CATCH
-
-SELECT 
-    @PKEY as PKEY, 
-    a.*,
-    @DMA_SOURCE_ID as DMA_SOURCE_ID,
-    @DMA_MANUAL_ID as dma_manual_id
-from #LinkedServersDetail a;
-
-IF OBJECT_ID('tempdb..#LinkedServersDetail') IS NOT NULL  
-   DROP TABLE #LinkedServersDetail;
+BEGIN
+    BEGIN TRY
+    exec('   
+        select
+            ''' + @PKEY + ''' AS pkey,
+            name as name, 
+            product as product,
+            provider as provider,
+            data_source as data_source,
+            location as location,
+            provider_string as provider_string,
+            catalog as catalog,
+            ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
+            ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
+        from sys.servers
+        where is_linked = 1
+            and server_id <> 0');
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            WAITFOR DELAY '00:00:00'
+    END CATCH
+END;

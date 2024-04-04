@@ -33,36 +33,24 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#gcpDMADiskVolumeInfo') IS NOT NULL  
-   DROP TABLE #gcpDMADiskVolumeInfo;
-
-CREATE TABLE #gcpDMADiskVolumeInfo
-(
-    volume_mount_point NVARCHAR(255),
-    file_system_type NVARCHAR(255),
-    logical_volume_name NVARCHAR(255),
-    total_size_gb NVARCHAR(255),
-    available_size_gb NVARCHAR(255),
-    space_free_pct NVARCHAR(255),
-    cluster_block_size NVARCHAR(255)
-)
-
 BEGIN
     IF @CLOUDTYPE = 'NONE'
     BEGIN TRY
         exec('
-        INSERT INTO #gcpDMADiskVolumeInfo
         SELECT DISTINCT
-            vs.volume_mount_point,
-            vs.file_system_type,
+            ''' + @PKEY + ''' AS pkey,
+            vs.volume_mount_point as volume_mount_point,
+            vs.file_system_type as file_system_type,
             CASE WHEN LEN(vs.logical_volume_name) > 0
             THEN vs.logical_volume_name
             ELSE ''''
-            END,
+            END as logical_volume_name,
             CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, vs.total_bytes / 1073741824.0),2)) AS total_size_gb,
             CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, vs.available_bytes / 1073741824.0),2)) AS available_size_gb,
             CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, vs.available_bytes) / CONVERT(FLOAT, vs.total_bytes),2)*100) AS space_free_pct,
-            '''' as cluster_block_size
+            '''' as cluster_block_size,
+            ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
+            ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
         FROM
             sys.master_files AS f WITH (
                 NOLOCK)
@@ -83,15 +71,17 @@ BEGIN
         sum_sizes as (SELECT sum(storage_in_megabytes/1024) total_size_gb
         ,sum(allocated_storage_in_megabytes/1024) available_size_gb
         FROM db_sizes)
-        INSERT INTO #gcpDMADiskVolumeInfo
-        SELECT 
+        SELECT
+            ''' + @PKEY + ''' AS pkey,
             ''CLOUD'' as volume_mount_point, 
             ''AZURE'' as file_system_type, 
             ''CLOUD'' as logical_volume_name, 
             CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, total_size_gb),2)) as total_size_gb, 
             CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, available_size_gb),2)) as available_size_gb, 
             CONVERT(NVARCHAR, ROUND((1 - (total_size_gb / available_size_gb)) * 100,2)) AS space_free_pct,
-            '''' as cluster_block_size
+            '''' as cluster_block_size,
+            ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
+            ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
         FROM sum_sizes');
     END TRY
     BEGIN CATCH
@@ -99,19 +89,3 @@ BEGIN
             WAITFOR DELAY '00:00:00'
     END CATCH
 END;
-
-SELECT
-    @PKEY as PKEY,
-    a.volume_mount_point,
-    a.file_system_type,
-    a.logical_volume_name,
-    ROUND(a.total_size_gb,2) as total_size_gb,
-    ROUND(a.available_size_gb,2) as available_size_gb,
-    ROUND(a.space_free_pct,2) as space_free_pct,
-    a.cluster_block_size,
-    @DMA_SOURCE_ID as dma_source_id,
-    @DMA_MANUAL_ID as dma_manual_id
-from #gcpDMADiskVolumeInfo a;
-
-IF OBJECT_ID('tempdb..#gcpDMADiskVolumeInfo') IS NOT NULL  
-   DROP TABLE #gcpDMADiskVolumeInfo;
