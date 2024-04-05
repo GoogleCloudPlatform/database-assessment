@@ -137,6 +137,31 @@ else {
     Write-Host ""
 }
 
+$sqlcmdVersion = Get-Command sqlcmd | Select-Object -ExpandProperty Version
+$requiredVersion = "12.0.6024.0"
+if ($sqlcmdVersion -lt $requiredVersion) {
+    Write-Host "#############################################################"
+    Write-Host "#                                                           #"
+    Write-Host "#       !!!! The installed version of SQL CMD is !!!!       #"
+    Write-Host "#              lower than the required version              #"
+    Write-Host "#                                                           #"
+    Write-Host "#          Supported Versions ODBC >= $requiredVersion      #"
+    Write-Host "#               Collection Errors may Occur                 #"
+    Write-Host "#                                                           #"
+    Write-Host "#                                                           #"
+    Write-Host "#############################################################"
+    Write-Host ""
+    Write-Host ""
+    Write-Host ""
+    $versionAck = Read-Host -Prompt "Acknowledge with a 'Y' to Continue"
+
+    if ($versionAck.ToUpper() -ne "Y") {
+        Write-Host "Did not Acknowldege SQL CMD Version Warning..."
+        Write-Host "Exiting Collector......."
+        Exit
+    }
+}
+
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
     Exit 1
@@ -287,35 +312,9 @@ foreach ($logFileName in $logFileArray) {
 WriteLog -logLocation $foldername\$logFile -logMessage "PS Version Table" -logOperation "FILE"
 $PSVersionTable | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
 
+WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "SQLCMD Version Table" -logOperation "FILE"
-$sqlcmdVersion = Get-Command sqlcmd | Select-Object -ExpandProperty Version
-$requiredVersion = "12.0.6024.0"
-if ($sqlcmdVersion -lt $requiredVersion) {
-    Write-Host "#############################################################"
-    Write-Host "#                                                           #"
-    Write-Host "#       !!!! The installed version of SQL CMD is !!!!       #"
-    Write-Host "#              lower than the required version              #"
-    Write-Host "#                                                           #"
-    Write-Host "#          Supported Versions ODBC >= $requiredVersion      #"
-    Write-Host "#               Collection Errors may Occur                 #"
-    Write-Host "#                                                           #"
-    Write-Host "#                                                           #"
-    Write-Host "#############################################################"
-    Write-Host ""
-    Write-Host ""
-    Write-Host ""
-    $versionAck = Read-Host -Prompt "Acknowledge with a 'Y' to Continue"
-
-    if ($versionAck.ToUpper() -ne "Y") {
-        Write-Host "Did not Acknowldege SQL CMD Version Warning..."
-        Write-Host "Exiting Collector......."
-        Exit
-    }
-    WriteLog -logLocation $foldername\$logFile -logMessage $sqlcmdVersion -logOperation "FILE"
-}
-else {
-    WriteLog -logLocation $foldername\$logFile -logMessage $sqlcmdVersion -logOperation "FILE"
-}
+WriteLog -logLocation $foldername\$logFile -logMessage $sqlcmdVersion -logOperation "FILE"
 
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "Output Encoding Table" -logOperation "FILE"
