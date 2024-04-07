@@ -37,9 +37,9 @@ function writeLog() {
 }
 
 # Output headers
-headers="PKEY|DMA_SOURCE_ID|DMA_MANUAL_ID|MACHINE_NAME|PHYSICAL_CPU_COUNT|LOGICAL_CPU_COUNT|TOTAL_OS_MEMORY_MB|TOTAL_SIZE_BYTES|USED_SIZE_BYTES"
+headers="PKEY|DMA_SOURCE_ID|DMA_MANUAL_ID|MACHINE_NAME|PHYSICAL_CPU_COUNT|LOGICAL_CPU_COUNT|TOTAL_OS_MEMORY_MB|TOTAL_SIZE_BYTES|USED_SIZE_BYTES|PRIMARY_MAC"
 # Output defaults. We do some wierd postprocessing that deletes some characters, if not for the quotation marks.
-defaults="\"\"|||$machine_name|||||\"\""
+defaults="\"\"|||$machine_name||||||\"\""
 echo "$headers" > "$outputPath"
 echo "$defaults" >> "$outputPath"
 
@@ -50,6 +50,14 @@ coreScript=$(cat <<'EOF'
     memoryMB=$(free -b | awk '/^Mem/{print ($2+0) / (1024*1024)}')
     totalSizeBytes=$(df --total / | awk '/total/{printf("%.0f\n", ($2+0) * 1024)}')
     usedSizeBytes=$(df --output=used -B1 / | awk 'NR==2{printf("%.0f\n", ($1+0))}')
+
+    while read -r iface; do
+        # Exclude virtual MAC addresses.
+        if [[ -d "/sys/class/net/$iface/device" && ! -d "/sys/class/net/$iface/device/virtual" ]]; then
+            primaryMac=$(ip link show "$iface" | grep -Po 'link/ether \K[^ ]+')
+            break
+        fi
+    done < <(ip link show | grep -Po '^[0-9]+:\s*\K[^:]+(?=:)') # Extracts the iface names from ip link show.
 EOF
 )
 
@@ -71,6 +79,7 @@ else
         echo "memoryMB=$memoryMB"
         echo "totalSizeBytes=$totalSizeBytes"
         echo "usedSizeBytes=$usedSizeBytes"
+        echo "primaryMac=$primaryMac"
 EOF
 )
     output=$(ssh "$userName@$machine_name" "${@:7}" "$coreScript; $setScript") || { echo "SSH to $machine_name failed"; exit 1; }
@@ -79,7 +88,7 @@ fi
 
 
 # Writing result to output
-csvData="\"$pkey\"|\"$dmaSourceId\"|\"$dmaManualId\"|\"$hostName\"|$physicalCpuCount|$logicalCpuCount|$memoryMB|$totalSizeBytes|$usedSizeBytes"
+csvData="\"$pkey\"|\"$dmaSourceId\"|\"$dmaManualId\"|\"$hostName\"|$physicalCpuCount|$logicalCpuCount|$memoryMB|$totalSizeBytes|$usedSizeBytes|$primaryMac"
 echo "$headers" > "$outputPath"
 echo "$csvData" >> "$outputPath"
 

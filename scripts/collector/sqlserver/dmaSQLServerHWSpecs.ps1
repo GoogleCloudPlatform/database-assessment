@@ -96,6 +96,7 @@ $csvData = [PSCustomObject]@{
 	"LogicalCpuCount"    = $null
 	"TotalOSMemoryBytes" = $null
 	"TotalOSMemoryMB"    = $null
+	"PrimaryMAC"         = $null
 }
 
 try {
@@ -112,6 +113,9 @@ try {
 
 	# Total memory in MB.
 	$csvData.TotalOSMemoryMB = [Math]::Floor([decimal]($csvData.TotalOSMemoryBytes / 1048576))
+
+	# Primary MAC Address
+	$csvData.PrimaryMAC = (Get-WmiObject Win32_NetworkAdapter @params | Where-Object {$_.PhysicalAdapter -eq $true} | Sort-Object -Property Index | Select-Object -First 1).MACAddress
 	
 	# Writing to csv.
 	$csvData | Export-Csv -Path $outputPath -Delimiter "|" -NoTypeInformation -Encoding UTF8
