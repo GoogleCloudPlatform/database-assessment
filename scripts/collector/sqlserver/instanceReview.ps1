@@ -63,7 +63,7 @@ Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
 
 $powerShellVersion = $PSVersionTable.PSVersion.Major
 $foldername = ""
-$errorCount = 0
+$totalErrorCount = 0
 
 if ($ignorePerfmon -eq "true") {
     Write-Host "#############################################################"
@@ -137,6 +137,31 @@ else {
     Write-Host ""
 }
 
+$sqlcmdVersion = Get-Command sqlcmd | Select-Object -ExpandProperty Version
+$requiredVersion = "12.0.6024.0"
+if ($sqlcmdVersion -lt $requiredVersion) {
+    Write-Host "#############################################################"
+    Write-Host "#                                                           #"
+    Write-Host "#       !!!! The installed version of SQL CMD is !!!!       #"
+    Write-Host "#              lower than the required version              #"
+    Write-Host "#                                                           #"
+    Write-Host "#          Supported Versions ODBC >= $requiredVersion      #"
+    Write-Host "#               Collection Errors may Occur                 #"
+    Write-Host "#                                                           #"
+    Write-Host "#                                                           #"
+    Write-Host "#############################################################"
+    Write-Host ""
+    Write-Host ""
+    Write-Host ""
+    $versionAck = Read-Host -Prompt "Acknowledge with a 'Y' to Continue"
+
+    if ($versionAck.ToUpper() -ne "Y") {
+        Write-Host "Did not Acknowldege SQL CMD Version Warning..."
+        Write-Host "Exiting Collector......."
+        Exit
+    }
+}
+
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
     Exit 1
@@ -156,10 +181,11 @@ else {
     if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
         $inputServerName = $serverName
-        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -C -l 30 -W -m 1 -u -w 32768 -v database=$databaseNameFilter | findstr /v /c:"---"
-        $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
-        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter)
-        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
+        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v database=$databaseNameFilter | findstr /v /c:"---"
+        $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768)
+        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=1)
+        $dbNameNoAccessArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=0)
+        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768)
         
         if ([string]$database -ne "all") {
             $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter | findstr /v /c:"-"
@@ -174,10 +200,11 @@ else {
         $inputServerName = $serverName
         $serverName = "$serverName,$port"
         WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
-        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -C -l 30 -W -m 1 -u -w 32768 -v database=$databaseNameFilter | findstr /v /c:"---"
-        $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
-        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter)
-        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -C -l 30 -W -m 1 -u -h-1 -w 32768)
+        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v database=$databaseNameFilter | findstr /v /c:"---"
+        $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768)
+        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=1)
+        $dbNameNoAccessArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=0)
+        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768)
 
         if ([string]$database -ne "all") {
             $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter | findstr /v /c:"-"
@@ -285,35 +312,9 @@ foreach ($logFileName in $logFileArray) {
 WriteLog -logLocation $foldername\$logFile -logMessage "PS Version Table" -logOperation "FILE"
 $PSVersionTable | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
 
+WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "SQLCMD Version Table" -logOperation "FILE"
-$sqlcmdVersion = Get-Command sqlcmd | Select-Object -ExpandProperty Version
-$requiredVersion = "12.0.6024.0"
-if ($sqlcmdVersion -lt $requiredVersion) {
-    Write-Host "#############################################################"
-    Write-Host "#                                                           #"
-    Write-Host "#       !!!! The installed version of SQL CMD is !!!!       #"
-    Write-Host "#              lower than the required version              #"
-    Write-Host "#                                                           #"
-    Write-Host "#          Supported Versions ODBC >= $requiredVersion      #"
-    Write-Host "#               Collection Errors may Occur                 #"
-    Write-Host "#                                                           #"
-    Write-Host "#                                                           #"
-    Write-Host "#############################################################"
-    Write-Host ""
-    Write-Host ""
-    Write-Host ""
-    $versionAck = Read-Host -Prompt "Acknowledge with a 'Y' to Continue"
-
-    if ($versionAck.ToUpper() -ne "Y") {
-        Write-Host "Did not Acknowldege SQL CMD Version Warning..."
-        Write-Host "Exiting Collector......."
-        Exit
-    }
-    WriteLog -logLocation $foldername\$logFile -logMessage $sqlcmdVersion -logOperation "FILE"
-}
-else {
-    WriteLog -logLocation $foldername\$logFile -logMessage $sqlcmdVersion -logOperation "FILE"
-}
+WriteLog -logLocation $foldername\$logFile -logMessage $sqlcmdVersion -logOperation "FILE"
 
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "Output Encoding Table" -logOperation "FILE"
@@ -417,6 +418,14 @@ foreach ($directory in $outputFileArray) {
 WriteLog -logLocation $foldername\$logFile -logMessage "Executing Assessment on Server $serverName Against the Following Databases:" -logOperation "BOTH"
 foreach ($dbNameList in $dbNameArray) {
     WriteLog -logLocation $foldername\$logFile -logMessage "            $dbNameList" -logOperation "BOTH"
+}
+
+### Just write the names of the databases that the collector will skip due to permissions issues to the screen and the log file
+if ($dbNameNoAccessArray.Count -gt 0) {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Skipping Databases Due to Permissions Issues:" -logOperation "BOTH"
+    foreach ($dbNameNoAccessList in $dbNameNoAccessArray) {
+        WriteLog -logLocation $foldername\$logFile -logMessage "            $dbNameNoAccessList" -logOperation "BOTH"
+    }
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Installed Components..." -logOperation "BOTH"
@@ -562,16 +571,23 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv) {
 WriteLog -logLocation $foldername\$logFile -logMessage "Checking for error messages within collection files..." -logOperation "BOTH"
 foreach ($file in Get-ChildItem -Path $foldername\*.csv, $foldername\*.log) {
     $inputFile = Split-Path -Leaf $file
+    $errorContentCount = 0
     [regex]$pattern = "(Msg(\s\d*)(.)(\n|\s)Level(\s\d*.)(\n|\s)State(\s\d*)(.)(\n|\s))"
     $content = Get-Content -Path $foldername\$inputFile | select-string -Pattern $pattern
-    WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "Checking for error messages within collection $inputFile ..." -logOperation "FILE"
-    if ($errorCount -gt ($errorCount + $content.length)) {
-        WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "Errors found within collection $inputFile ..." -logOperation "FILE"
+    if (![string]::IsNullOrEmpty($content)) {
+        $errorContentCount = 1
     }
-    $errorCount = $errorCount + $content.length
+    else {
+        $errorContentCount = 0
+    }
+    WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "Checking for error messages within collection $inputFile ..." -logOperation "FILE"
+    if ($errorContentCount -gt 0) {
+        WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "     Errors found within collection $inputFile ..." -logOperation "FILE"
+    }
+    $totalErrorCount = $totalErrorCount + $errorContentCount
 }
 
-if ($errorCount -gt 0) {
+if ($totalErrorCount -gt 0) {
     $zippedopfolder = $foldername + '_ERROR.zip'
 }
 else {

@@ -40,32 +40,6 @@ IF @ASSESSMENT_DATABSE_NAME = 'all'
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#indexList') IS NOT NULL  
-   DROP TABLE #indexList;
-
-CREATE TABLE #indexList
-(
-   database_name nvarchar(255),
-   schema_name nvarchar(255),
-   table_name nvarchar(255),
-   index_name nvarchar(255),
-   index_type nvarchar(255),
-   is_primary_key nvarchar(10),
-   is_unique nvarchar(10),
-   fill_factor nvarchar(10),
-   allow_page_locks nvarchar(10),
-   has_filter nvarchar(10),
-   data_compression nvarchar(10),
-   data_compression_desc nvarchar(255),
-   is_partitioned nvarchar(255),
-   count_key_ordinal nvarchar(10),
-   count_partition_ordinal nvarchar(10),
-   count_is_included_column nvarchar(10),
-   total_space_mb nvarchar(255),
-   is_computed_index nvarchar(10),
-   is_index_on_view nvarchar(10)
-);
-
 BEGIN
    BEGIN
       SELECT @validDB = COUNT(1)
@@ -97,33 +71,35 @@ BEGIN
                JOIN sys.tables t ON i.object_id = t.object_id AND t.is_ms_shipped = 0
                JOIN sys.schemas s ON s.schema_id = t.schema_id
             )
-            INSERT INTO #indexList
             SELECT
-               DB_NAME() as database_name
-               ,CASE 
-	            WHEN s.name IS NULL THEN v.schema_name
-		    ELSE s.name
-	        END as schema_name
-               ,CASE
+               ''' + @PKEY + ''' AS pkey,
+               DB_NAME() as database_name,
+               CASE 
+	               WHEN s.name IS NULL THEN v.schema_name
+		            ELSE s.name
+	            END as schema_name,
+               CASE
                   WHEN t.name IS NULL THEN v.name
                   ELSE t.name
-               END as table_name 
-               ,i.name as index_name
-               ,i.type_desc as index_type
-               ,i.is_primary_key
-               ,i.is_unique
-               ,i.fill_factor
-               ,i.allow_page_locks
-               ,i.has_filter
-               ,ISNULL (p.data_compression,0) as data_compression
-               ,ISNULL (p.data_compression_desc,''NONE'') as data_compression_desc
-               ,ISNULL (ps.name, ''Not Partitioned'') as partition_scheme
-               ,ISNULL (SUM(ic.key_ordinal),0) as count_key_ordinal
-               ,ISNULL (SUM(ic.partition_ordinal),0) as count_partition_ordinal
-               ,ISNULL (SUM(CONVERT(int,ic.is_included_column)),0) as count_is_included_column
-               ,ISNULL (CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)),0) as total_space_mb
-               ,ISNULL (icc.is_computed_index,0) as is_computed_index
-               ,CASE
+               END as table_name,
+               i.name as index_name,
+               i.type_desc as index_type,
+               i.is_primary_key,
+               i.is_unique,
+               i.fill_factor,
+               i.allow_page_locks,
+               i.has_filter,
+               ISNULL (p.data_compression,0) as data_compression,
+               ISNULL (p.data_compression_desc,''NONE'') as data_compression_desc,
+               ISNULL (ps.name, ''Not Partitioned'') as partition_scheme,
+               ISNULL (SUM(ic.key_ordinal),0) as count_key_ordinal,
+               ISNULL (SUM(ic.partition_ordinal),0) as count_partition_ordinal,
+               ISNULL (SUM(CONVERT(int,ic.is_included_column)),0) as count_is_included_column,
+               ISNULL (CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)),0) as total_space_mb,
+               ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
+               ''' + @DMA_MANUAL_ID + ''' as dma_manual_id,
+               ISNULL (icc.is_computed_index,0) as is_computed_index,
+               CASE
                   WHEN v.name IS NOT NULL THEN ''1''
                   ELSE ''0''
                END as is_index_on_view
@@ -140,7 +116,7 @@ BEGIN
                      and i.name = icc.index_name
                      and icc.table_name = t.name
                      and icc.schema_name = s.name)
-	    WHERE i.NAME is not NULL
+	         WHERE i.NAME is not NULL
             GROUP BY 
                 CASE 
 	                 WHEN s.name IS NULL THEN v.schema_name
@@ -165,42 +141,45 @@ BEGIN
                   WHEN v.name IS NOT NULL THEN ''1''
                   ELSE ''0''
                END
-       UNION
-       SELECT 
-          DB_NAME() as database_name,
-          s.name as schema_name,
-          t.name as table_name,
-          o.name as index_name,
-          ''FULLTEXT'' as index_type,
-          0 as is_primary_key,
-          0 as is_unique,
-          0 as fill_factor,
-          0 as allow_page_locks,
-          0 as has_filter,
-          p.data_compression,
-          p.data_compression_desc,
-          ISNULL (ps.name, ''Not Partitioned'') as partition_scheme,
-          0 as count_key_ordinal,
-          0 as count_partition_ordinal,
-          0 as count_is_included_column,
-          CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) as total_space_mb,
-          0 as is_computed_index,
-          0 as is_index_on_view
-       FROM sys.fulltext_indexes fi
-          JOIN sys.objects o on (o.object_id = fi.object_id)
-          JOIN sys.fulltext_index_columns ic ON fi.object_id = ic.object_id
-          LEFT JOIN sys.tables t ON fi.object_id = t.object_id AND t.is_ms_shipped = 0
-          LEFT JOIN sys_schemas s ON s.schema_id = t.schema_id
-          LEFT JOIN sys.partitions AS p ON p.object_id = fi.object_id
-          LEFT JOIN sys.allocation_units AS a ON a.container_id = p.partition_id
-          LEFT JOIN sys.partition_schemes ps ON fi.data_space_id = ps.data_space_id
-       GROUP BY 
-          s.name,
-          t.name,  
-          o.name,
-          p.data_compression,
-          p.data_compression_desc,
-          ISNULL (ps.name, ''Not Partitioned'')');
+            UNION
+            SELECT
+               ''' + @PKEY + ''' AS pkey,
+               DB_NAME() as database_name,
+               s.name as schema_name,
+               t.name as table_name,
+               o.name as index_name,
+               ''FULLTEXT'' as index_type,
+               0 as is_primary_key,
+               0 as is_unique,
+               0 as fill_factor,
+               0 as allow_page_locks,
+               0 as has_filter,
+               p.data_compression,
+               p.data_compression_desc,
+               ISNULL (ps.name, ''Not Partitioned'') as partition_scheme,
+               0 as count_key_ordinal,
+               0 as count_partition_ordinal,
+               0 as count_is_included_column,
+               CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) as total_space_mb,
+               ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
+               ''' + @DMA_MANUAL_ID + ''' as dma_manual_id,
+               0 as is_computed_index,
+               0 as is_index_on_view
+            FROM sys.fulltext_indexes fi
+               JOIN sys.objects o on (o.object_id = fi.object_id)
+               JOIN sys.fulltext_index_columns ic ON fi.object_id = ic.object_id
+               LEFT JOIN sys.tables t ON fi.object_id = t.object_id AND t.is_ms_shipped = 0
+               LEFT JOIN sys_schemas s ON s.schema_id = t.schema_id
+               LEFT JOIN sys.partitions AS p ON p.object_id = fi.object_id
+               LEFT JOIN sys.allocation_units AS a ON a.container_id = p.partition_id
+               LEFT JOIN sys.partition_schemes ps ON fi.data_space_id = ps.data_space_id
+            GROUP BY 
+               s.name,
+               t.name,  
+               o.name,
+               p.data_compression,
+               p.data_compression_desc,
+               ISNULL (ps.name, ''Not Partitioned'')');
    END;
    END TRY
    BEGIN CATCH
@@ -213,33 +192,4 @@ BEGIN
       SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
       SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
    END CATCH
-
 END
-
-SELECT
-   @PKEY as PKEY,
-   a.database_name,
-   a.schema_name,
-   a.table_name,
-   a.index_name,
-   a.index_type,
-   a.is_primary_key,
-   a.is_unique,
-   a.fill_factor,
-   a.allow_page_locks,
-   a.has_filter,
-   a.data_compression,
-   a.data_compression_desc,
-   a.is_partitioned,
-   a.count_key_ordinal,
-   a.count_partition_ordinal,
-   a.count_is_included_column,
-   a.total_space_mb,
-   @DMA_SOURCE_ID as dma_source_id,
-   @DMA_MANUAL_ID as dma_manual_id,
-   a.IS_COMPUTED_INDEX as is_computed_index,
-   a.IS_INDEX_ON_VIEW as is_index_on_view
-from #indexList a;
-
-IF OBJECT_ID('tempdb..#indexList') IS NOT NULL  
-   DROP TABLE #indexList;

@@ -40,21 +40,6 @@ IF @ASSESSMENT_DATABSE_NAME = 'all'
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#objectList') IS NOT NULL  
-   DROP TABLE #objectList;
-
-CREATE TABLE #objectList
-(
-    database_name nvarchar(255),
-    schema_name nvarchar(255),
-    object_name nvarchar(255),
-    object_type nvarchar(255),
-    object_type_desc nvarchar(255),
-    object_count nvarchar(255),
-    lines_of_code nvarchar(255),
-    associated_table_name nvarchar(255)
-);
-
 BEGIN
     BEGIN
         SELECT @validDB = COUNT(1)
@@ -68,23 +53,25 @@ BEGIN
         IF @validDB <> 0
         BEGIN
         exec ('
-        INSERT INTO #objectList
-        SELECT 
-            database_name,
-            schema_name,
+        SELECT
+            ''' + @PKEY + ''' as pkey,
+            database_name as database_name,
+            schema_name as schema_name,
             NameOfObject as object_name,
-            RTRIM(LTRIM(type)) as type,
-            type_desc,
-            count(*) AS object_count,
-            ISNULL(SUM(LinesOfCode),0) AS lines_of_code,
-            associated_table_name
+            RTRIM(LTRIM(type)) as object_type,
+            type_desc as object_type_desc,
+            count(*) as object_count,
+            ISNULL(SUM(lines_of_code),0) as lines_of_code,
+            associated_table_name as associated_table_name,
+            ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
+            ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
         FROM (
             SELECT
                 DB_NAME(DB_ID()) as database_name,
                 s.name as schema_name,
                 RTRIM(LTRIM(o.type)) as type, 
                 o.type_desc, 
-                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS LinesOfCode, 
+                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code, 
                 OBJECT_NAME(o.object_id) AS NameOfObject ,
                 NULL as associated_table_name
             FROM 
@@ -116,9 +103,9 @@ BEGIN
             SELECT
                 DB_NAME(DB_ID()) as database_name,
                 s.name as schema_name,
-                RTRIM(LTRIM(type)) as type,
-                type_desc,
-                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS LinesOfCode,
+                RTRIM(LTRIM(type)) as object_type,
+                type_desc as object_type_desc,
+                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 cc.name AS NameOfObject,
                 object_name(cc.parent_object_id) AS associated_table_name
             FROM 
@@ -132,7 +119,7 @@ BEGIN
                 s.name as schema_name,
                 RTRIM(LTRIM(type)) as type,
                 type_desc,
-                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS LinesOfCode,
+                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 fk.name AS NameOfObject ,
                 object_name(fk.parent_object_id) AS associated_table_name
             FROM 
@@ -146,7 +133,7 @@ BEGIN
                 s.name as schema_name,
                 RTRIM(LTRIM(type)) as type,
                 type_desc,
-                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS LinesOfCode,
+                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 dc.name AS NameOfObject ,
                 object_name(dc.parent_object_id) AS associated_table_name
             FROM 
@@ -160,7 +147,7 @@ BEGIN
                 s.name as schema_name,
                 RTRIM(LTRIM(type)) as type,
                 type_desc,
-                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS LinesOfCode,
+                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 kc.name AS NameOfObject,
                 object_name(kc.parent_object_id) AS associated_table_name
             FROM
@@ -174,7 +161,7 @@ BEGIN
                 s.name as schema_name,
                 RTRIM(LTRIM(t.type)) as type,
                 t.type_desc,
-                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS LinesOfCode,
+                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 t.name AS NameOfObject ,
                 object_name(t.parent_id) AS associated_table_name
             FROM 
@@ -189,7 +176,7 @@ BEGIN
                 s.name as schema_name,
                 RTRIM(LTRIM(type)) as type,
                 type_desc,
-                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS LinesOfCode,
+                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 v.name AS NameOfObject ,
                 NULL as associated_table_name
             FROM
@@ -203,7 +190,7 @@ BEGIN
                 s.name as schema_name,
                 ''TT'' as type,
                 ''TABLE_TYPES'',
-                0 AS LinesOfCode,
+                0 AS lines_of_code,
                 t.name AS NameOfObject ,
                 NULL as associated_table_name
             FROM
@@ -230,15 +217,4 @@ BEGIN
         SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
         SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
     END CATCH
-
-END
-
-SELECT
-    @PKEY as PKEY,
-    a.*,
-    @DMA_SOURCE_ID as dma_source_id,
-    @DMA_MANUAL_ID as dma_manual_id
-from #objectList a;
-
-IF OBJECT_ID('tempdb..#objectList') IS NOT NULL  
-   DROP TABLE #objectList;
+END;

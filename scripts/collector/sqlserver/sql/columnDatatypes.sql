@@ -40,27 +40,6 @@ SELECT @ASSESSMENT_DATABSE_NAME = '%';
 IF UPPER(@@VERSION) LIKE '%AZURE%'
    SELECT @CLOUDTYPE = 'AZURE';
 
-IF OBJECT_ID('tempdb..#columnDatatypes') IS NOT NULL 
-   DROP TABLE #COLUMNDATATYPES;
-
-CREATE TABLE #COLUMNDATATYPES
-(
-   DATABASE_NAME NVARCHAR(255) DEFAULT DB_NAME(),
-   SCHEMA_NAME NVARCHAR(255),
-   TABLE_NAME NVARCHAR(255),
-   DATATYPE NVARCHAR(255),
-   MAX_LENGTH NVARCHAR(255),
-   PRECISION NVARCHAR(255),
-   SCALE NVARCHAR(255),
-   IS_COMPUTED NVARCHAR(10),
-   IS_FILESTREAM NVARCHAR(10),
-   IS_MASKED NVARCHAR(10),
-   ENCRYPTION_TYPE NVARCHAR(10),
-   IS_SPARSE NVARCHAR(10),
-   RULE_OBJECT_ID NVARCHAR(255),
-   COLUMN_COUNT NVARCHAR(255)
-);
-
 BEGIN
    BEGIN
       SELECT
@@ -77,22 +56,10 @@ BEGIN
    IF @PRODUCT_VERSION > 12 AND @VALIDDB <> 0 AND @CLOUDTYPE = 'NONE'    
       BEGIN
       EXEC ('
-         INSERT INTO #columnDatatypes (
-            schema_name
-            ,table_name
-            ,datatype
-            ,max_length
-            ,precision
-            ,scale
-            ,is_computed
-            ,is_filestream
-            ,is_masked
-            ,encryption_type
-            ,is_sparse
-            ,rule_object_id
-            ,column_count 
-         )
-         SELECT s.name AS schema_name
+         SELECT 
+               ''' + @PKEY + ''' AS pkey
+               , db_name() as database_name
+               , s.name AS schema_name
                , o.name AS table_name
                , t.name AS datatype
                , c.max_length
@@ -105,6 +72,8 @@ BEGIN
                , c.is_sparse
                , c.rule_object_id
                , count(1) column_count
+               , ''' + @DMA_SOURCE_ID + ''' as dma_source_id
+               , ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
             FROM  sys.objects o 
             JOIN  sys.schemas s
                ON  s.schema_id = o.schema_id
@@ -131,22 +100,10 @@ BEGIN
    IF @PRODUCT_VERSION <= 12 AND @VALIDDB <> 0 AND @CLOUDTYPE = 'NONE'
       BEGIN
       EXEC ('
-         INSERT INTO #columnDatatypes (
-            schema_name
-            ,table_name
-            ,datatype
-            ,max_length
-            ,precision
-            ,scale
-            ,is_computed
-            ,is_filestream
-            ,is_masked
-            ,encryption_type
-            ,is_sparse
-            ,rule_object_id
-            ,column_count 
-         )
-         SELECT s.name AS schema_name
+         SELECT 
+               ''' + @PKEY + ''' AS pkey
+               , db_name() as database_name
+               , s.name AS schema_name
                , o.name AS table_name
                , t.name AS datatype
                , c.max_length
@@ -159,6 +116,8 @@ BEGIN
                , c.is_sparse
                , c.rule_object_id
                , count(1) column_count
+               , ''' + @DMA_SOURCE_ID + ''' as dma_source_id
+               , ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
             FROM  sys.objects o 
             JOIN  sys.schemas s
                ON  s.schema_id = o.schema_id
@@ -183,22 +142,10 @@ BEGIN
    IF @PRODUCT_VERSION >= 12 AND @VALIDDB <> 0 AND @CLOUDTYPE = 'AZURE'
       BEGIN
       EXEC ('
-         INSERT INTO #columnDatatypes (
-            schema_name
-            ,table_name
-            ,datatype
-            ,max_length
-            ,precision
-            ,scale
-            ,is_computed
-            ,is_filestream
-            ,is_masked
-            ,encryption_type
-            ,is_sparse
-            ,rule_object_id
-            ,column_count 
-         )
-         SELECT s.name AS schema_name
+         SELECT
+               ''' + @PKEY + ''' AS pkey
+               , db_name() as database_name
+               , s.name AS schema_name
                , o.name AS table_name
                , t.name AS datatype
                , c.max_length
@@ -211,6 +158,8 @@ BEGIN
                , c.is_sparse
                , c.rule_object_id
                , count(1) column_count
+               , ''' + @DMA_SOURCE_ID + ''' as dma_source_id
+               , ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
             FROM  sys.objects o 
             JOIN  sys.schemas s
                ON  s.schema_id = o.schema_id
@@ -245,13 +194,3 @@ BEGIN CATCH
       SUBSTRING(CONVERT(NVARCHAR, ERROR_MESSAGE()), 1, 512) AS ERROR_MESSAGE;
 END CATCH
 END;
-
-SELECT
-   @PKEY AS PKEY,
-   A.*,
-   @DMA_SOURCE_ID AS DMA_SOURCE_ID,
-   @DMA_MANUAL_ID AS DMA_MANUAL_ID
-FROM #COLUMNDATATYPES A;
-
-IF OBJECT_ID('tempdb..#columnDatatypes') IS NOT NULL 
-   DROP TABLE #COLUMNDATATYPES;
