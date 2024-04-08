@@ -294,10 +294,13 @@ echo "        --collectionUserName  Database user name"
 echo "        --collectionUserPass  Database password"
 echo "      }"
 echo "  Performance statistics source"
-echo "      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE"
-echo
+echo "      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.   When using STATSPACK, see note about --statsWindow parameter below."
+echo ""
 echo "  Performance statistics window"
 echo "      --statsWindow           Optional. Number of days of performance stats to collect.  Must be one of 7, 30.  Default is 30."
+echo "                              NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION."
+echo "                              IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8"
+echo "                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR."
 echo
 echo
 echo " Example:"
