@@ -100,8 +100,12 @@ for analysis by Database Migration Assessment.
              --collectionUserPass  Database password.
            }
        Performance statistics source
-           --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.
-   
+           --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.   When using STATSPACK, see note about --statsWindow parameter below.
+       Performance statistics window
+           --statsWindow           Optional. Number of days of performance stats to collect.  Must be one of 7, 30.  Default is 30.
+                                   NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION.
+                                   IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8
+                                   CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR.   
    
       Examples:
    
@@ -116,6 +120,12 @@ for analysis by Database Migration Assessment.
          or
           ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc STATSPACK
 
+
+        If Statspack has less than 30 days of data, limit collection to the last 7 days using the paramter --statsWindow:
+         
+          ./collect-data.sh --connectionStr MyUser/MyPassword@//dbhost.company.com:1521/MyDbName.company.com --statsSrc STATSPACK --statsWindow 7
+         or
+          ./collect-data.sh --collectionUserName MyUser --collectionUserPass MyPassword --hostName dbhost.company.com --port 1521 --databaseService MyDbName.company.com --statsSrc STATSPACK --statsWindow 7
 
 
         Collections can be run as SYS if needed by setting ORACLE_SID and running on the database host:

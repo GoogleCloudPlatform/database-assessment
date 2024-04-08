@@ -94,9 +94,12 @@ Launch the collection script: (Note that the parameter names have changed from e
        --collectionUserPass  Database password
     }
  Performance statistics source
-     --statsSrc              Required. Must be one of AWR, STATSPACK, NONE
+     --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.  When using STATSPACK, see note about --statsWindow parameter below.
  Performance statistics window
      --statsWindow           Optional. Number of days of performance stats to collect.  Must be one of 7, 30.  Default is 30.
+                             NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION.
+                             IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8
+                             CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR.
 
 
  NOTE: If using an Oracle auto-login wallet, specify the tns alias as the connection string:
