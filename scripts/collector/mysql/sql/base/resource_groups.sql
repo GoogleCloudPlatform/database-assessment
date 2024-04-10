@@ -12,6 +12,6 @@ from (
             rg.resource_group_enabled as resource_group_enabled,
             rg.resource_group_name as resource_group_name,
             rg.vcpu_ids as vcpu_ids,
-            rg.thread_priority as thread_priority,
-            from information_schema.resource_groups rg
+            rg.thread_priority as thread_priority
+        from information_schema.resource_groups rg
     ) src;
