@@ -194,6 +194,33 @@ UNION ALL
         from sys.resource_governor_configuration
         WHERE is_enabled = 1
     ) gov_enabled
+UNION ALL
+SELECT
+    'IpV4Address', registry_data.ip_address
+FROM (
+    SELECT
+        CONVERT(varchar(max), value_data) ip_address
+    FROM
+        sys.dm_server_registry
+    WHERE
+        value_name IN ('IpAddress')) registry_data
+WHERE
+    registry_data.ip_address LIKE '%.%.%.%'
+    AND registry_data.ip_address NOT LIKE '127.%.%.%'
+UNION ALL
+SELECT
+    TOP 1 'IpV6Address', registry_data.ip_address
+FROM (
+    SELECT
+        CONVERT(varchar(max), value_data) ip_address
+    FROM
+        sys.dm_server_registry
+    WHERE
+        value_name IN ('IpAddress')) registry_data
+WHERE
+    registry_data.ip_address NOT LIKE '%.%.%.%'
+    AND registry_data.ip_address NOT LIKE '127.%.%.%'
+    AND registry_data.ip_address NOT LIKE '::1%'
 ;
 WITH
     BUFFER_POOL_SIZE

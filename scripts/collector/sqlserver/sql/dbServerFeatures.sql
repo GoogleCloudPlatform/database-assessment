@@ -569,6 +569,8 @@ BEGIN
                         INNER JOIN sys.server_principals pr ON p.grantee_principal_id = pr.principal_id
                     WHERE
                         pr.name NOT LIKE ''NT SERVICE\%''
+                        AND name NOT LIKE ''##MS_%##''
+                        AND pr.is_fixed_role <> 1
                         AND p.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
                         ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
                         ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
@@ -586,6 +588,8 @@ BEGIN
                         INNER JOIN sys.server_principals pr ON dp.grantee_principal_id = pr.principal_id
                     WHERE
                         pr.name NOT LIKE ''NT SERVICE\%''
+                        AND name NOT LIKE ''##MS_%##''
+                        AND pr.is_fixed_role <> 1
                         AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
                         ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
                         ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
@@ -616,6 +620,8 @@ BEGIN
                                 INNER JOIN sys.database_principals pr ON dp.grantee_principal_id = pr.principal_id
                             WHERE
                                 pr.name NOT LIKE ''NT SERVICE\%''
+                                AND name NOT LIKE ''##MS_%##''
+                                AND pr.is_fixed_role <> 1
                                 AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
                                 ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
                                 ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
@@ -645,25 +651,6 @@ BEGIN
             END CATCH
     END CATCH
 END
-
---Memory Optimized OLTP Tables
-/* Select from tableList.sql 
-    Population will occur in the loader and will just check "is_memory_optimized" on sys.tables
-    1 - is_memory_optimized
-    0 - is not memory optimized
-*/
-
---Reporting Services
-/* Select from componentsInstalled.sql */
-
---Analysis Services
-/* Select from componentsInstalled.sql */
-
---BACPAC File Import Services
-/* Not determined yet */
-
---DATA QUALITY Services
-/* Not determined yet */
 
 --Service Broker tasks
 DECLARE @ServBrokerTasksUsed as INT, @IS_ServBrokerTasksUsed as NVARCHAR(4);
