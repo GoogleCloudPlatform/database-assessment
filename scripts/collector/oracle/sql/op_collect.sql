@@ -27,16 +27,6 @@ DEFINE EXTRACTSDIR=&SQLDIR/extracts
 DEFINE AWRDIR=&EXTRACTSDIR/awr
 DEFINE STATSPACKDIR=&EXTRACTSDIR/statspack
 DEFINE TERMOUTOFF=OFF
-prompt
-prompt ***********************************************************************************
-prompt
-prompt !!! ATTENTION !!!
-prompt
-@&SQLDIR/prompt_&v_dodiagnostics
-prompt
-prompt
-prompt ***********************************************************************************
-prompt
 
 prompt Initializing Database Migration Assessment Collector...
 prompt
@@ -94,6 +84,7 @@ set termout on
 prompt Step completed.
 prompt
 prompt Database Migration Assessment data successfully extracted.
+prompt &p_end_of_job_summary
 prompt
 exit
 

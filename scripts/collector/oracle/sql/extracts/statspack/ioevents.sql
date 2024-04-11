@@ -40,14 +40,17 @@ SELECT :v_pkey AS pkey,
                   sev.time_waited_micro, sev.time_waited_micro - LAG(sev.time_waited_micro)
                                                                       OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event ORDER BY sev.snap_id),0), 0) AS time_wa_us_delta_value
 FROM STATS$SYSTEM_EVENT sev
-     INNER JOIN stats$snapshot dhsnap
+     INNER JOIN (SELECT dbid, instance_number, snap_id, snap_time, startup_time, lag(startup_time) OVER(PARTITION BY dbid, instance_number ORDER BY snap_time) AS lag_startup_time
+	         FROM stats$snapshot
+ 	         WHERE snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
+	         AND dbid = &&v_dbid
+     ) dhsnap
      ON sev.snap_id = dhsnap.snap_id
      AND sev.instance_number = dhsnap.instance_number
      AND sev.dbid = dhsnap.dbid
      INNER JOIN v$event_name en ON en.name = sev.event
-WHERE  dhsnap.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-AND sev.dbid = &&v_dbid
-AND en.wait_class IN ('User I/O', 'System I/O', 'Commit')),
+     WHERE dhsnap.startup_time = dhsnap.lag_startup_time
+     AND en.wait_class IN ('User I/O', 'System I/O', 'Commit')),
 vpercev AS(
 SELECT pkey,
        dbid,

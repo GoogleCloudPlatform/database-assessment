@@ -238,6 +238,10 @@ fi
 
 if [ -f $OUTFILE ]
 then
+  if [ -f opdb__eoj__${V_FILE_TAG}.csv ]
+    then
+      cat opdb__eoj__${V_FILE_TAG}.csv
+  fi
   rm  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
 fi
 
@@ -360,7 +364,7 @@ statsWindow=30
  elif [[ "${statsSrc}" = "statspack" ]] ; then
           DIAGPACKACCESS="NoDiagnostics"
  else 
-	 echo No performance data will be collected.
+	 echo User requested no performance data collection.
          DIAGPACKACCESS="nostatspack"
  fi
 
@@ -403,6 +407,16 @@ statsWindow=30
 # MAIN
 #############################################################################
 
+extractorVersion="$(getVersion)"
+
+echo ""
+echo "==================================================================================="
+echo "Database Migration Assessment Database Assessment Collector Version ${OpVersion}"
+printExtractorVersion "${extractorVersion}"
+echo "==================================================================================="
+echo ""
+echo "Connecting to database..."
+
 connectString="${connStr}"
 sqlcmd_result=$(checkVersion "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | cut -d '~' -f 2)
 if [[ "${sqlcmd_result}" = "" ]];
@@ -414,14 +428,6 @@ fi
 retval=$?
 
 # DIAGPACKACCESS="$2"
-
-extractorVersion="$(getVersion)"
-
-echo ""
-echo "==================================================================================="
-echo "Database Migration Assessment Database Assessment Collector Version ${OpVersion}"
-printExtractorVersion "${extractorVersion}"
-echo "==================================================================================="
 
 if [ $retval -eq 0 ]; then
   if [ "$(echo ${sqlcmd_result} | $GREP -E '(ORA-|SP2-)')" != "" ]; then

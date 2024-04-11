@@ -181,12 +181,15 @@ s.executions,
       0) AS delta_java_exec_time
 From STATS$SQL_SUMMARY s 
      ) a,
-     STATS$SNAPSHOT b
+     (  SELECT dbid, instance_number, snap_id, startup_time, lag(startup_time) OVER (PARTITION BY dbid, instance_number ORDER  BY snap_time) AS lag_startup_time
+	FROM STATS$SNAPSHOT 
+	WHERE dbid = &&v_dbid
+	AND snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
+     ) b
 WHERE a.snap_id = b.snap_id
 AND a.instance_number = b.instance_number
 AND a.dbid = b.dbid
-AND b.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-AND b.dbid = &&v_dbid
+AND b.startup_time = b.lag_startup_time
 GROUP BY :v_pkey,
        b.dbid, b.instance_number, force_matching_signature
 ORDER BY elapsed_time_total DESC)

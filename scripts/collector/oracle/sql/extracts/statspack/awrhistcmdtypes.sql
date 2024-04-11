@@ -160,13 +160,17 @@ s.executions,
       0) AS delta_java_exec_time
 From STATS$SQL_SUMMARY s 
      ) ss
-    JOIN stats$snapshot sn
+    JOIN ( SELECT dbid, instance_number, snap_id, snap_time, startup_time, lag(startup_time) OVER (PARTITION BY dbid, instance_number ORDER BY snap_time) AS lag_startup_time 
+	   FROM stats$snapshot 
+	   WHERE snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
+	   AND dbid = &&v_dbid
+         ) sn
       ON     ss.dbid = sn.dbid
          AND ss.snap_id = sn.snap_id
          AND ss.instance_number = sn.instance_number
     LEFT OUTER join audit_actions aa
                  ON ss.command_type = aa.action
-WHERE sn.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
+    WHERE sn.startup_time = sn.lag_startup_time
 GROUP BY :v_pkey,
           'N/A' , TO_CHAR(sn.snap_time, 'hh24'),  ss.command_type, aa.name
 )

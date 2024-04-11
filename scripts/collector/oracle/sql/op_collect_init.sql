@@ -55,6 +55,7 @@ variable minsnap NUMBER;
 variable minsnaptime VARCHAR2(20);
 variable maxsnap NUMBER;
 variable maxsnaptime VARCHAR2(20);
+variable firstsnaptime VARCHAR2(20);
 
 -- To handle collection from within a Dataguard standby
 variable umfflag VARCHAR2(100);
@@ -81,6 +82,8 @@ variable b_io_function_sql             VARCHAR2(20);
 
 variable v_dma_source_id               VARCHAR2(100);
 variable v_manual_unique_id            VARCHAR2(100);
+variable v_end_of_job_summary          VARCHAR2(200);
+variable v_stats_source                VARCHAR2(200);
 
 -- Session settings to support creating substitution variables for the scripts.
 column instnc new_value v_inst noprint
@@ -112,6 +115,8 @@ column p_lob_part_dedup_col new_value v_lob_part_dedup_col noprint
 column p_lob_subpart_dedup_col new_value v_lob_subpart_dedup_col noprint
 column p_index_visibility new_value v_index_visibility noprint
 column p_io_function_sql new_value v_io_function_sql noprint
+column end_of_job_summary new_value p_end_of_job_summary noprint
+column stats_source new_value v_stats_source noprint
 
 -- Define some session info for the extraction -- BEGIN
 SELECT host_name     hostnc,
@@ -182,9 +187,9 @@ WHERE object_name IN ('V$INSTANCE', 'GV$INSTANCE');
 BEGIN
 SELECT lower(i.host_name||'_'||&v_db_unique_name||'_'||d.dbid) INTO :v_dma_source_id 
 FROM ( 
-	SELECT version, host_name
-	FROM &&v_name 
-	WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v$database d;
+     SELECT version, host_name
+     FROM &&v_name 
+     WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v$database d;
 END;
 /
 -- Define a source id that will be consistent regardless of which RAC instance we are connected to.  --END
@@ -329,7 +334,7 @@ FROM dual
 /
 
 -- Finally get the dbid from the determined source.
-SELECT &v_umf_test p_dbid
+SELECT TRIM(&v_umf_test) p_dbid
 FROM   v$database
 /
 -- Get the DBID - END
@@ -412,20 +417,23 @@ BEGIN
   IF '&v_dodiagnostics' = 'usediagnostics' THEN 
      l_tab_name := 'DBA_HIST_SNAPSHOT'; 
      l_col_name := 'begin_interval_time';
+     :v_stats_source := ' using AWR ';
 
   -- If STATSPACK has been requested, check that it is installed and permissions granted.
   ELSE IF '&v_dodiagnostics' = 'nodiagnostics' THEN
          SELECT count(1) INTO cnt FROM all_tables WHERE owner ='PERFSTAT' AND table_name IN ('STATS$OSSTAT', 'STATS$OSSTATNAME', 'STATS$SNAPSHOT', 'STATS$SQL_SUMMARY', 'STATS$SYSSTAT', 'STATS$SYSTEM_EVENT', 'STATS$SYS_TIME_MODEL', 'STATS$TIME_MODEL_STATNAME');
 
          -- If we have access to STATSPACK, use STATSPACK as the source of performance metrics
- 	 IF cnt = 8 THEN 
+       IF cnt = 8 THEN 
            :sp := 'op_collect_statspack.sql';
            l_tab_name := 'STATS$SNAPSHOT'; 
            l_col_name := 'snap_time';
+           :v_stats_source := ' using STATSPACK ';
          END IF;
        -- If instructed to not collect performance metrics, do not collect stats.
        ELSE IF  '&v_dodiagnostics' = 'nostatspack' THEN
               :sp  := 'prompt_nostatspack.sql';
+              :v_stats_source := ' without performance data';
             -- If we get here, then there was a problem.
             ELSE l_tab_name :=  'ERROR - Unexpected parameter: &v_dodiagnostics';
             END IF;
@@ -434,17 +442,18 @@ BEGIN
 
   BEGIN
     IF l_tab_name = '---' THEN
-        dbms_output.put_line('No performance data will be collected.');
+        dbms_output.put_line('No performance data will be collected.' || l_tab_name);
     ELSE
-      -- Verify there are metrics to collect.	
+      -- Verify there are metrics to collect.     
       BEGIN 
         EXECUTE IMMEDIATE 'SELECT count(1) FROM ' || upper(l_tab_name) || ' WHERE rownum < 2' INTO cnt ;
         IF cnt = 0 THEN
             dbms_output.put_line('No data found in ' ||  upper(l_tab_name) || '.  No performance data will be collected.');
+            :v_stats_source := ' without performance data';
         END IF;
         EXCEPTION WHEN table_does_not_exist THEN
           RAISE_APPLICATION_ERROR(-20002, 'This user does not have SELECT privileges on ' || upper(l_tab_name) || '.  Please ensure the grants_wrapper.sql script has been executed for this user.');
-      END;	
+      END;     
     END IF;
   END;
   IF (l_tab_name != '---' AND l_tab_name NOT LIKE 'ERROR%') THEN
@@ -457,11 +466,13 @@ BEGIN
           :minsnap := -1;
           :maxsnap := -1;
           :v_info_prompt := 'without performance data';
+          :v_stats_source := ' without performance data';
        ELSE
           :v_info_prompt := 'between snaps ' || :minsnap || ' and ' || :maxsnap;
+          :v_stats_source := :v_stats_source || 'between snaps ' || :minsnap || ' and ' || :maxsnap;
        END IF;
      ELSE
-       -- Get the snapshot range for STATSPACE stats.
+       -- Get the snapshot range for STATSPACK stats.
        THE_SQL := 'SELECT min(snap_time) , max(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
        EXECUTE IMMEDIATE the_sql INTO  :minsnaptime, :maxsnaptime USING '&&v_dbid' ;
        IF :minsnaptime IS NULL THEN
@@ -469,20 +480,60 @@ BEGIN
           :minsnaptime := sysdate;
           :maxsnaptime := sysdate;
           :v_info_prompt := 'without performance data';
-       ELSE
-          :v_info_prompt := 'between  ' || :minsnaptime || ' and ' || :maxsnaptime;
+          :v_stats_source := ' without performance data';
+       -- Check there is more than one snapshot
+       ELSE IF (:minsnaptime = :maxsnaptime) THEN
+                dbms_output.put_line('Warning: Only one snapshot found within the last &&dtrange days.  No performance data will be extracted.');
+                :minsnaptime := sysdate;
+                :maxsnaptime := sysdate;
+                :v_info_prompt := 'without performance data';
+                :v_stats_source := ' without performance data';
+            ELSE
+                -- Check that the snapshot window is greater than the collection window.
+                THE_SQL := 'SELECT min(snap_time) FROM ' || l_tab_name || ' WHERE dbid = :1 ';
+                EXECUTE IMMEDIATE THE_SQL INTO :firstsnaptime USING '&&v_dbid';
+                IF (:minsnaptime > :firstsnaptime) THEN
+                  :v_info_prompt := 'between times ' || :minsnaptime || ' and ' || :maxsnaptime;
+                  :v_stats_source := :v_stats_source || 'between times ' || :minsnaptime || ' and ' || :maxsnaptime;
+                ELSE
+                  -- If the very first snap available is within the collection range, use the next snap so we don't skew results.
+                  THE_SQL := 'SELECT min(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' > :2 AND dbid = :1 ';
+                  EXECUTE IMMEDIATE THE_SQL INTO :minsnaptime USING '&&v_dbid', :firstsnaptime;
+                  -- Ensure the 'next' snap is not the max snap
+                  IF (:minsnaptime = :maxsnaptime) THEN
+                      dbms_output.put_line('Warning: Insufficient snapshots found within the last &&dtrange days.  No performance data will be extracted.');
+                      :minsnaptime := sysdate;
+                      :maxsnaptime := sysdate;
+                      :v_info_prompt := 'without performance data';
+                      :v_stats_source := ' without performance data';
+                  ELSE
+                      :v_info_prompt := 'between times' || :minsnaptime || ' and ' || :maxsnaptime;
+                      :v_stats_source := 'between times' || :minsnaptime || ' and ' || :maxsnaptime;
+		      IF ( to_date(:maxsnaptime) - to_date(:minsnaptime) ) < 7 
+                         THEN 
+                            :v_info_prompt := :v_info_prompt || ' less than 7 days of data, performance metrics may be skewed.';
+                            :v_stats_source := :v_stats_source || ' less than 7 days of data, performance metrics may be skewed.';
+                      END IF;
+                  END IF;
+                END IF;
+            END IF;
        END IF;
      END IF;
   ELSE
      :v_info_prompt := 'without performance data';
+     :v_stats_source := ' without performance data';
   END IF;
+  :v_info_prompt := 'About to collect data for database &v_dbname &&v_dbid ' || :v_info_prompt ;
+  :v_end_of_job_summary := 'Collected data for database &v_dbname ID &&v_dbid ' || :v_stats_source ;
 END;
 /
 set termout off
-SELECT NVL(:minsnap, -1) min_snapid, NVL(:maxsnap, -1) max_snapid, NVL(:minsnaptime, SYSDATE) min_snaptime, NVL(:maxsnaptime, SYSDATE) max_snaptime,  :sp sp_script, :v_info_prompt info_prompt FROM dual;
+SELECT NVL(:minsnap, -1) min_snapid, NVL(:maxsnap, -1) max_snapid, NVL(:minsnaptime, SYSDATE) min_snaptime, NVL(:maxsnaptime, SYSDATE) max_snaptime,  
+       :sp sp_script, :v_info_prompt info_prompt, :v_end_of_job_summary end_of_job_summary
+FROM dual;
 
 set termout on
-PROMPT Collecting data for database &v_dbname '&&v_dbid' &p_info_prompt
+PROMPT &p_info_prompt
 PROMPT
 
 set termout &TERMOUTOFF

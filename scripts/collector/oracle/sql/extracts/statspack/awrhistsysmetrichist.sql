@@ -50,12 +50,15 @@ FROM   (
                         0), 
                  0) AS delta_value  
            FROM perfstat.stats$sysstat s ) hsm
-       INNER JOIN stats$snapshot dhsnap
+       INNER JOIN ( SELECT dbid, instance_number, snap_id, snap_time, startup_time, lag(startup_time) OVER (PARTITION BY dbid, instance_number ORDER BY snap_time) AS lag_startup_time
+	            FROM stats$snapshot
+		    WHERE snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
+		    AND dbid = &&v_dbid
+	          ) dhsnap
                ON hsm.snap_id = dhsnap.snap_id
                   AND hsm.instance_number = dhsnap.instance_number
                   AND hsm.dbid = dhsnap.dbid
-WHERE  dhsnap.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-AND hsm.dbid = &&v_dbid
+WHERE dhsnap.startup_time = dhsnap.lag_startup_time
 GROUP  BY :v_pkey,
           hsm.dbid,
           hsm.instance_number,

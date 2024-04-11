@@ -1,3 +1,6 @@
+set termout ON
+prompt Collecting performance data from AWR
+set termout OFF
 column t_sqlstats   new_value  v_sqlstats noprint
 
 SELECT  CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '&AWRDIR/sqlstats111.sql' ELSE '&AWRDIR/sqlstats.sql' END as t_sqlstats
