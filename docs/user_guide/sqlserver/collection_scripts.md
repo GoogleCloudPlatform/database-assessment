@@ -59,10 +59,15 @@ The collection script depends on the following executables to be available on th
 ```shell
 command prompt
 powershell (version 5 or greater)
-sqlcmd (ensure that it is in your $PATH)
+sqlcmd (version 12.0.6024.0 or greater)
 ```
 
 If needed sqlcmd can be downloaded from [here](https://learn.microsoft.com/en-us/sql/tools/sqlcmd/sqlcmd-utility?view=sql-server-ver16&tabs=odbc%2Cwindows#download-and-install-sqlcmd)
+
+!!! note
+
+    Ensure that the `ODBC` version of `sqlcmd` is used
+    Ensure that `sqlcmd` is also in your `$PATH` variable
 
 ---
 
@@ -236,14 +241,14 @@ To Execute the Collection:
           4. The manualUniqueId can be used to give the collection a unique identifier specified by the customer
 
 ##### CollectVMSpecs:
+
 To provide rightsizing information the script attempts to connect to the host VM using the current users credentials and collect hardware specs (number of CPUs/amount of memory).
 
 If the current user does not have sufficient permissions, it will skip this step. To manually input the correct credentials instead when this occurs, specify the `-collectVMSpecs` switch.
-  
+
 This is recommended if you plan to upload the results to the Migration Center.
 
         Example: runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string] -collectVMSpecs
-
 
 ---
 
