@@ -80,7 +80,11 @@ function checkTimestampFormat {
     $dateParts = $inputDateString -split " "
     if ($dateParts[0] -match '[0-9][0-9][.][0-9][0-9][.][0-9][0-9][0-9][0-9]') {
         $formattedTimestamp = $dateParts[0].replace(".", "/") + ' ' + $dateParts[1]
-    } else {
+    }
+    elseif ($dateParts[0] -match '[0-9][0-9][-][0-9][0-9][-][0-9][0-9][0-9][0-9]') {
+        $formattedTimestamp = $dateParts[0].replace("-", "/") + ' ' + $dateParts[1]
+    }
+    else {
         $formattedTimestamp = $inputDateString
     }
     return $formattedTimestamp
