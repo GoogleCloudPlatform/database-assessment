@@ -37,9 +37,9 @@ function writeLog() {
 }
 
 # Output headers
-headers="PKEY|DMA_SOURCE_ID|DMA_MANUAL_ID|MACHINE_NAME|PHYSICAL_CPU_COUNT|LOGICAL_CPU_COUNT|TOTAL_OS_MEMORY_MB|TOTAL_SIZE_BYTES|USED_SIZE_BYTES|PRIMARY_MAC"
+headers="PKEY|DMA_SOURCE_ID|DMA_MANUAL_ID|MACHINE_NAME|PHYSICAL_CPU_COUNT|LOGICAL_CPU_COUNT|TOTAL_OS_MEMORY_MB|TOTAL_SIZE_BYTES|USED_SIZE_BYTES|PRIMARY_MAC|IP_ADDRESSES"
 # Output defaults. We do some wierd postprocessing that deletes some characters, if not for the quotation marks.
-defaults="\"\"|||$machine_name||||||\"\""
+defaults="\"\"|||$machine_name|||||||\"\""
 echo "$headers" > "$outputPath"
 echo "$defaults" >> "$outputPath"
 
@@ -50,6 +50,7 @@ coreScript=$(cat <<'EOF'
     memoryMB=$(free -b | awk '/^Mem/{print ($2+0) / (1024*1024)}')
     totalSizeBytes=$(df --total / | awk '/total/{printf("%.0f\n", ($2+0) * 1024)}')
     usedSizeBytes=$(df --output=used -B1 / | awk 'NR==2{printf("%.0f\n", ($1+0))}')
+    ipAddresses=$(ip -4 addr show scope global | awk '/inet / {gsub(/\/.*$/, "", $2); print $2}' | tr '\n' ',')
 
     while read -r iface; do
         # Exclude virtual MAC addresses.
@@ -80,6 +81,7 @@ else
         echo "totalSizeBytes=$totalSizeBytes"
         echo "usedSizeBytes=$usedSizeBytes"
         echo "primaryMac=$primaryMac"
+        echo "ipAddresses=$ipAddresses"
 EOF
 )
     output=$(ssh "$userName@$machine_name" "${@:7}" "$coreScript; $setScript") || { echo "SSH to $machine_name failed"; exit 1; }
@@ -88,7 +90,7 @@ fi
 
 
 # Writing result to output
-csvData="\"$pkey\"|\"$dmaSourceId\"|\"$dmaManualId\"|\"$hostName\"|$physicalCpuCount|$logicalCpuCount|$memoryMB|$totalSizeBytes|$usedSizeBytes|$primaryMac"
+csvData="\"$pkey\"|\"$dmaSourceId\"|\"$dmaManualId\"|\"$hostName\"|$physicalCpuCount|$logicalCpuCount|$memoryMB|$totalSizeBytes|$usedSizeBytes|$primaryMac|$ipAddresses"
 echo "$headers" > "$outputPath"
 echo "$csvData" >> "$outputPath"
 

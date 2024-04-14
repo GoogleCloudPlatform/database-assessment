@@ -97,6 +97,7 @@ $csvData = [PSCustomObject]@{
 	"TotalOSMemoryBytes" = $null
 	"TotalOSMemoryMB"    = $null
 	"PrimaryMAC"         = $null
+	"IPAddresses"        = $null
 }
 
 try {
@@ -117,6 +118,9 @@ try {
 	# Primary MAC Address
 	$csvData.PrimaryMAC = (Get-WmiObject Win32_NetworkAdapter @params | Where-Object {$_.PhysicalAdapter -eq $true} | Sort-Object -Property Index | Select-Object -First 1).MACAddress
 	
+	# Comma seperated IP addresses
+	$csvData.IPAddresses = (Get-WmiObject Win32_NetworkAdapterConfiguration @params | Where-Object {$_.IPEnabled -eq $true}  | Select-Object -ExpandProperty IPAddress) -join ','
+
 	# Writing to csv.
 	$csvData | Export-Csv -Path $outputPath -Delimiter "|" -NoTypeInformation -Encoding UTF8
 	WriteLog -logLocation $logLocation -logMessage "Successfully fetched machine HW specs of $computerName to output:$outputPath" -logOperation "FILE"	
