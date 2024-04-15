@@ -90,7 +90,11 @@ build-collector: clean-collector      ## Build the collector SQL scripts.
 
 	@echo "=> Building Assessment Data Collection Scripts for MySQL version $(VERSION)..."
 	@mkdir -p $(BUILD_DIR)/collector/mysql/sql/
+	@mkdir -p $(BUILD_DIR)/collector/mysql/sql/5.7
+	@mkdir -p $(BUILD_DIR)/collector/mysql/sql/base
 	@cp scripts/collector/mysql/sql/*.sql $(BUILD_DIR)/collector/mysql/sql
+	@cp scripts/collector/mysql/sql/5.7/*.sql $(BUILD_DIR)/collector/mysql/sql/5.7
+	@cp scripts/collector/mysql/sql/base/*.sql $(BUILD_DIR)/collector/mysql/sql/base
 	@cp scripts/collector/mysql/collect-data.sh $(BUILD_DIR)/collector/mysql/
 	@cp -L scripts/collector/mysql/db-machine-specs.sh $(BUILD_DIR)/collector/mysql/
 	@cp scripts/collector/mysql/README.txt $(BUILD_DIR)/collector/mysql/
