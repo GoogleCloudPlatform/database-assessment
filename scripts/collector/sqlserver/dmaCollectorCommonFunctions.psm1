@@ -50,8 +50,13 @@ function createManifestFile {
         [Parameter(Mandatory = $true)][string]$manifestOutputFileName,
         [Parameter(Mandatory = $true)][string]$manifestedFileName
     )
-    $fileMD5Hash = (Get-FileHash -Algorithm MD5 -Path $manifestFileLocation\$manifestedFileName).Hash
-    Add-Content -Path $manifestFileLocation\$manifestOutputFileName -Value "mssql|$fileMD5Hash|$manifestedFileName"
+    if (Get-Module -Name Microsoft.PowerShell.Utility | ForEach-Object { $_.ExportedCommands.Values } |  Where-Object { $_.Name -match 'Get-FileHash' }) {
+        $fileMD5Hash = (Get-FileHash -Algorithm MD5 -Path $manifestFileLocation\$manifestedFileName).Hash
+        Add-Content -Path $manifestFileLocation\$manifestOutputFileName -Value '"mssql"|"' + $fileMD5Hash + '"|"' +$manifestedFileName + '"'
+    }
+    else {
+        Add-Content -Path $manifestFileLocation\$manifestOutputFileName -Value '"mssql"|"NoMD5HashAvailable"|"' + $manifestedFileName + '"'
+    }
 }
 
 function getCurrentTimestamp {
