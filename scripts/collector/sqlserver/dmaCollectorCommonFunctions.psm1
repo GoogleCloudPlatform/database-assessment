@@ -52,9 +52,11 @@ function createManifestFile {
     )
     if (Get-Module -Name Microsoft.PowerShell.Utility | ForEach-Object { $_.ExportedCommands.Values } |  Where-Object { $_.Name -match 'Get-FileHash' }) {
         $fileMD5Hash = (Get-FileHash -Algorithm MD5 -Path $manifestFileLocation\$manifestedFileName).Hash
-        Add-Content -Path $manifestFileLocation\$manifestOutputFileName -Value '"mssql"|"' + $fileMD5Hash + '"|"' +$manifestedFileName + '"'
+        $fileContent = '"mssql"|"' + $fileMD5Hash + '"|"' + $manifestedFileName + '"'
+        Add-Content -Path $manifestFileLocation\$manifestOutputFileName -Value $fileContent
     }
     else {
+        $fileContent = '"mssql"|"NoMD5HashAvailable"|"' + $manifestedFileName + '"'
         Add-Content -Path $manifestFileLocation\$manifestOutputFileName -Value '"mssql"|"NoMD5HashAvailable"|"' + $manifestedFileName + '"'
     }
 }
