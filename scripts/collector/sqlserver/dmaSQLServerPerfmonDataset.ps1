@@ -510,10 +510,10 @@ param(
 
 	if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv) {
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
-		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Moving perfmon datafiles to the $env:TEMP directory without header" -logOperation "BOTH"
 		$fileExists = $true
 		foreach($file in Get-ChildItem -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataset*.csv)
 		{
+			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Moving perfmon datafile: $file to the $env:TEMP directory without header" -logOperation "BOTH"
 			$tempFileName = Split-Path $file -leaf
 			Get-Content -Path $file | Select-Object -Skip 1 | Set-Content -Encoding utf8 -Path $env:TEMP\$tempFileName
 		}
