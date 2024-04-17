@@ -510,20 +510,26 @@ param(
 
 	if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv) {
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
-		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Moving perfmon datafiles to the $env:TEMP Directory Without Header" -logOperation "BOTH"
 		$fileExists = $true
 		foreach($file in Get-ChildItem -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataset*.csv)
 		{
+			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Moving perfmon datafile: $file to the $env:TEMP directory without header" -logOperation "BOTH"
 			$tempFileName = Split-Path $file -leaf
 			Get-Content -Path $file | Select-Object -Skip 1 | Set-Content -Encoding utf8 -Path $env:TEMP\$tempFileName
 		}
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Adding additional fields to perfmon files without header" -logOperation "BOTH"
 		foreach($file in Get-ChildItem -Path $env:TEMP\*$dataSet*.csv) {
 			$tempFileName = 'PKEY_' + (Split-Path $file -leaf)
 			Get-Content -Path $file | ForEach-Object {
-				$arr = $_.ToString() -split ','				
-				$left = $arr[0..($arr.Length-3)] -join ','
-				$right = $arr[($arr.Length-2)..($arr.Length-1)] -join ','					
-				'"' + $pkey + '",' + $left + ',"' + $dmaSourceId + '","' + $dmaManualId + '",' + $right
+				# Old way of splitting file
+				#$arr = $_.ToString() -split ','				
+				#$left = $arr[0..($arr.Length-3)] -join ','
+				#$right = $arr[($arr.Length-2)..($arr.Length-1)] -join ','					
+				#'"' + $pkey + '",' + $left + ',"' + $dmaSourceId + '","' + $dmaManualId + '",' + $right
+				#New file split method
+				$perfmonCsv = $_.ToString() -split ','
+				$perfmonFormattedDate = checkTimestampFormat($perfmonCsv[0])
+				'"' + $pkey + '"|' + $perfmonFormattedDate + '|' + $perfmonCsv[1] + '|' + $perfmonCsv[2] + '|' + $perfmonCsv[3] + '|' + $perfmonCsv[4] + '|' + $perfmonCsv[5] + '|' + $perfmonCsv[6] + '|' + $perfmonCsv[7] + '|' + $perfmonCsv[8] + '|' + $perfmonCsv[9] + '|' + $perfmonCsv[10] + '|' + $perfmonCsv[11] + '|' + $perfmonCsv[12] + '|' + $perfmonCsv[13] + '|' + $perfmonCsv[14] + '|' + $perfmonCsv[15] + '|' + $perfmonCsv[16] + '|' + $perfmonCsv[17] + '|' + $perfmonCsv[18] + '|' + $perfmonCsv[19] + '|' + $perfmonCsv[20] + '|' + $perfmonCsv[21] + '|' + $perfmonCsv[22] + '|' + $perfmonCsv[23] + '|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|' + $perfmonCsv[24] + '|' + $perfmonCsv[25]
 			} | Out-File -FilePath $env:TEMP\$tempFileName -Encoding utf8
 		}
 	} else {
@@ -534,24 +540,22 @@ param(
 	}
 
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Concatenating and adding header to perfmon files..." -logOperation "BOTH"
+	$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"|"DMA_SOURCE_ID"|"DMA_MANUAL_ID"|"NUMA_TOTAL_MEMORY_MB"|"NUMA_AVAILABLE_MEMORY_MB"'
 	if ($fileExists)  {
-
-		$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"|"DMA_SOURCE_ID"|"DMA_MANUAL_ID"|"NUMA_TOTAL_MEMORY_MB"|"NUMA_AVAILABLE_MEMORY_MB"'
 		Set-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
+		
 		((Get-Content -Path $env:TEMP\PKEY_*$dataSet*.csv -Raw ) -replace ',','|') | Add-Content -Encoding utf8 -Path $outputDir\$outputFileName
-	
-	}
-	else {
-
-		$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"|"DMA_SOURCE_ID"|"DMA_MANUAL_ID"|"NUMA_TOTAL_MEMORY_MB"|"NUMA_AVAILABLE_MEMORY_MB"'
+	} else {
 		Set-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
 
-		$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
+		#$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
+		$tempDate = checkTimestampFormat((Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"))
 		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|"0"|"0"'
 		Add-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
 
 		$futureDate = (Get-Date).AddMinutes(1)
-		$tempDate = $futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")
+		#$tempDate = $futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")
+		$tempDate = checkTimestampFormat(($futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")))
 		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|"0"|"0"'
 		Add-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
 
@@ -601,12 +605,14 @@ function CreateEmptyFile
 		$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"|"DMA_SOURCE_ID"|"DMA_MANUAL_ID"|"NUMA_TOTAL_MEMORY_MB"|"NUMA_AVAILABLE_MEMORY_MB"'
 		Set-Content $env:TEMP\emptyStrings.csv -Value $tempContent -Encoding utf8
 
-		$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
+		#$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
+		$tempDate = checkTimestampFormat((Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"))
 		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|"0"|"0"'
 		Add-Content $env:TEMP\emptyStrings.csv -Value $tempContent -Encoding utf8
 
 		$futureDate = (Get-Date).AddMinutes(1)
-		$tempDate = $futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")
+		#$tempDate = $futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")
+		$tempDate = checkTimestampFormat(($futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")))
 		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|"0"|"0"'
 		Add-Content $env:TEMP\emptyStrings.csv -Value $tempContent -Encoding utf8
 

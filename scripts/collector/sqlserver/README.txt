@@ -30,9 +30,14 @@ Operating System Versions:
     c) System Requirements
     ----------------------
     The collection script depends on the following executables to be available on the machine from which it is run.  The script is also expected to be run from a Windows machine:
-    command shell
-    powershell version 5 or greater
-    sqlcmd.exe
+    command shell (in administrator mode)
+    powershell (version 5 or greater)
+    sqlcmd.exe (version 12.0.6024.0 or greater)
+
+        Note:
+        ----------------------
+        Ensure that the "ODBC" version of "sqlcmd" is used
+        Ensure that "sqlcmd" is also in your "$PATH" variable
 
 2. Preparation
 --------------

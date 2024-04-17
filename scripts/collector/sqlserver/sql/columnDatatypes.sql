@@ -43,13 +43,13 @@ IF UPPER(@@VERSION) LIKE '%AZURE%'
 BEGIN
    BEGIN
       SELECT
-         @VALIDDB = COUNT(1)
+         @VALIDDB = count(1)
       FROM
-         SYS.DATABASES
+         sys.databases
       WHERE
-         NAME NOT IN ('master', 'model', 'msdb', 'tempdb', 'distribution', 'reportserver', 'reportservertempdb', 'resource', 'rdsadmin')
-         AND NAME LIKE @ASSESSMENT_DATABSE_NAME
-         AND STATE = 0
+         name NOT IN ('master', 'model', 'msdb', 'tempdb', 'distribution', 'reportserver', 'reportservertempdb', 'resource', 'rdsadmin')
+         AND name LIKE @ASSESSMENT_DATABSE_NAME
+         AND state = 0
    END
 
    BEGIN TRY 
