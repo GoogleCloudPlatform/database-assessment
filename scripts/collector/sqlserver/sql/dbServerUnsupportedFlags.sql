@@ -29,13 +29,13 @@ SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
 SELECT
-    @PKEY as PKEY,
-    lower(name) as flag_name,
-    value,
-    value_in_use,
-    SUBSTRING(description, 1, 256) AS description,
-    @DMA_SOURCE_ID as dma_source_id,
-    @DMA_MANUAL_ID as dma_manual_id
+    QUOTENAME(@PKEY,'"') as PKEY,
+    QUOTENAME(CONVERT(NVARCHAR,lower(name)),'"') as flag_name,
+    QUOTENAME(CONVERT(NVARCHAR,value),'"') as value,
+    QUOTENAME(CONVERT(NVARCHAR,value_in_use),'"') as value_in_use,
+    QUOTENAME(SUBSTRING(CONVERT(NVARCHAR,description), 1, 256),'"') AS description,
+    QUOTENAME(@DMA_SOURCE_ID,'"') as dma_source_id,
+    QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
 FROM
     sys.configurations
 WHERE

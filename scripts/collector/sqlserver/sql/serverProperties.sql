@@ -361,10 +361,11 @@ BEGIN
 END;
 
 SELECT
-    @PKEY as PKEY,
-    a.*,
-    @DMA_SOURCE_ID as dma_source_id,
-    @DMA_MANUAL_ID as dma_manual_id
+    QUOTENAME(@PKEY,'"')  as PKEY,
+    QUOTENAME(a.property_name,'"') as property_name ,
+    QUOTENAME(a.property_value,'"') as property_value,
+    QUOTENAME(@DMA_SOURCE_ID,'"') as dma_source_id,
+    QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
 FROM #serverProperties a;
 
 IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  

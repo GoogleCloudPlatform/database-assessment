@@ -72,36 +72,39 @@ BEGIN
                JOIN sys.schemas s ON s.schema_id = t.schema_id
             )
             SELECT
-               ''' + @PKEY + ''' AS pkey,
-               DB_NAME() as database_name,
+               ''"' + @PKEY + '"'' AS pkey,
+               QUOTENAME(DB_NAME(),''"'') as database_name,
                CASE 
-	               WHEN s.name IS NULL THEN v.schema_name
-		            ELSE s.name
+	               WHEN s.name IS NULL 
+                     THEN QUOTENAME(v.schema_name,''"'')
+		            ELSE QUOTENAME(s.name,''"'')
 	            END as schema_name,
                CASE
-                  WHEN t.name IS NULL THEN v.name
-                  ELSE t.name
+                  WHEN t.name IS NULL 
+                     THEN QUOTENAME(v.name,''"'')
+                  ELSE QUOTENAME(t.name,''"'')
                END as table_name,
-               i.name as index_name,
-               i.type_desc as index_type,
-               i.is_primary_key,
-               i.is_unique,
-               i.fill_factor,
-               i.allow_page_locks,
-               i.has_filter,
-               ISNULL (p.data_compression,0) as data_compression,
-               ISNULL (p.data_compression_desc,''NONE'') as data_compression_desc,
-               ISNULL (ps.name, ''Not Partitioned'') as partition_scheme,
-               ISNULL (SUM(ic.key_ordinal),0) as count_key_ordinal,
-               ISNULL (SUM(ic.partition_ordinal),0) as count_partition_ordinal,
-               ISNULL (SUM(CONVERT(int,ic.is_included_column)),0) as count_is_included_column,
-               ISNULL (CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)),0) as total_space_mb,
-               ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-               ''' + @DMA_MANUAL_ID + ''' as dma_manual_id,
-               ISNULL (icc.is_computed_index,0) as is_computed_index,
+               QUOTENAME(i.name,''"'') as index_name,
+               QUOTENAME(i.type_desc,''"'') as index_type,
+               QUOTENAME(i.is_primary_key,''"'') as is_primary_key,
+               QUOTENAME(i.is_unique,''"'') as is_unique,
+               QUOTENAME(i.fill_factor,''"'') as fille_factor,
+               QUOTENAME(i.allow_page_locks,''"'') as allow_page_locks,
+               QUOTENAME(i.has_filter,''"'') as has_filter,
+               QUOTENAME(ISNULL(p.data_compression,0),''"'') as data_compression,
+               QUOTENAME(ISNULL(p.data_compression_desc,''NONE''),''"'') as data_compression_desc,
+               QUOTENAME(ISNULL(ps.name, ''Not Partitioned''),''"'') as partition_scheme,
+               QUOTENAME(ISNULL(SUM(ic.key_ordinal),0),''"'') as count_key_ordinal,
+               QUOTENAME(ISNULL(SUM(ic.partition_ordinal),0),''"'') as count_partition_ordinal,
+               QUOTENAME(ISNULL(SUM(CONVERT(int,ic.is_included_column)),0),''"'') as count_is_included_column,
+               QUOTENAME(ISNULL(CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)),0),''"'') as total_space_mb,
+               ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
+               ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
+               QUOTENAME(ISNULL(icc.is_computed_index,0),''"'') as is_computed_index,
                CASE
-                  WHEN v.name IS NOT NULL THEN ''1''
-                  ELSE ''0''
+                  WHEN v.name IS NOT NULL 
+                     THEN ''"1"''
+                  ELSE ''"0"''
                END as is_index_on_view
             FROM sys.indexes i
             JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
@@ -118,13 +121,15 @@ BEGIN
                      and icc.schema_name = s.name)
 	         WHERE i.NAME is not NULL
             GROUP BY 
-                CASE 
-	                 WHEN s.name IS NULL THEN v.schema_name
-		              ELSE s.name
-	             END
+               CASE 
+	               WHEN s.name IS NULL 
+                     THEN QUOTENAME(v.schema_name,''"'')
+		            ELSE QUOTENAME(s.name,''"'')
+	            END 
                ,CASE
-                  WHEN t.name IS NULL THEN v.name
-                  ELSE t.name
+                  WHEN t.name IS NULL 
+                     THEN QUOTENAME(v.name,''"'')
+                  ELSE QUOTENAME(t.name,''"'')
                END    
                ,i.name  
                ,i.type_desc 
@@ -138,33 +143,34 @@ BEGIN
                ,ISNULL (ps.name, ''Not Partitioned'')
                ,ISNULL (icc.is_computed_index,0)
                ,CASE
-                  WHEN v.name IS NOT NULL THEN ''1''
-                  ELSE ''0''
+                  WHEN v.name IS NOT NULL 
+                     THEN ''"1"''
+                  ELSE ''"0"''
                END
             UNION
             SELECT
-               ''' + @PKEY + ''' AS pkey,
-               DB_NAME() as database_name,
-               s.name as schema_name,
-               t.name as table_name,
-               o.name as index_name,
-               ''FULLTEXT'' as index_type,
-               0 as is_primary_key,
-               0 as is_unique,
-               0 as fill_factor,
-               0 as allow_page_locks,
-               0 as has_filter,
-               p.data_compression,
-               p.data_compression_desc,
-               ISNULL (ps.name, ''Not Partitioned'') as partition_scheme,
-               0 as count_key_ordinal,
-               0 as count_partition_ordinal,
-               0 as count_is_included_column,
-               CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)) as total_space_mb,
-               ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-               ''' + @DMA_MANUAL_ID + ''' as dma_manual_id,
-               0 as is_computed_index,
-               0 as is_index_on_view
+               ''"' + @PKEY + '"'' AS pkey,
+               QUOTENAME(DB_NAME(),''"'') as database_name,
+               QUOTENAME(s.name,''"'') as schema_name,
+               QUOTENAME(t.name,''"'') as table_name,
+               QUOTENAME(o.name,''"'') as index_name,
+               ''"FULLTEXT"'' as index_type,
+               QUOTENAME(0,''"'') as is_primary_key,
+               QUOTENAME(0,''"'') as is_unique,
+               QUOTENAME(0,''"'') as fill_factor,
+               QUOTENAME(0,''"'') as allow_page_locks,
+               QUOTENAME(0,''"'') as has_filter,
+               QUOTENAME(p.data_compression,''"'') as data_compression,
+               QUOTENAME(p.data_compression_desc,''"'') as data_compression_desc,
+               QUOTENAME(ISNULL (ps.name, ''Not Partitioned''),''"'') as partition_scheme,
+               QUOTENAME(0,''"'') as count_key_ordinal,
+               QUOTENAME(0,''"'') as count_partition_ordinal,
+               QUOTENAME(0,''"'') as count_is_included_column,
+               QUOTENAME(CONVERT(nvarchar, ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)),''"'') as total_space_mb,
+               ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
+               ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
+               QUOTENAME(0,''"'') as is_computed_index,
+               QUOTENAME(0,''"'') as is_index_on_view
             FROM sys.fulltext_indexes fi
                JOIN sys.objects o on (o.object_id = fi.object_id)
                JOIN sys.fulltext_index_columns ic ON fi.object_id = ic.object_id
@@ -192,4 +198,4 @@ BEGIN
       SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
       SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
    END CATCH
-END
+END;

@@ -44,7 +44,7 @@ CREATE TABLE #FeaturesEnabledDbLevel
     feature_name NVARCHAR(40),
     is_enabled_or_used NVARCHAR(1),
     occurance_count INT
-)
+);
 
 --Security Policies
 BEGIN TRY
@@ -140,10 +140,13 @@ BEGIN
 END
 
 SELECT
-    @PKEY as PKEY,
-    f.*,
-    @DMA_SOURCE_ID as dma_source_id,
-    @DMA_MANUAL_ID as dma_manual_id
+    QUOTENAME(@PKEY,'"') as PKEY,
+    QUOTENAME(f.database_name,'"') as database_name,
+    QUOTENAME(f.feature_name,'"') as feature_name,
+    QUOTENAME(f.is_enabled_or_used,'"') as is_enabled_or_used,
+    QUOTENAME(f.occurance_count,'"') as occurance_count,
+    QUOTENAME(@DMA_SOURCE_ID,'"') as dma_source_id,
+    QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
 FROM #FeaturesEnabledDbLevel f;
 
 IF OBJECT_ID('tempdb..#FeaturesEnabledDbLevel') IS NOT NULL  
