@@ -39,10 +39,13 @@ CREATE TABLE #dbccTraceTable (
 INSERT INTO #dbccTraceTable exec('dbcc tracestatus()');
 
 SELECT 
-    @PKEY as PKEY,
-    a.*,
-    @DMA_SOURCE_ID as dma_source_id,
-    @DMA_MANUAL_ID as dma_manual_id
+    QUOTENAME(@PKEY,'"') as PKEY,
+    QUOTENAME(a.name,'"')as name,
+    QUOTENAME(a.status,'"')as status,
+    QUOTENAME(a.global,'"')as global,
+    QUOTENAME(a.session,'"')as session,
+    QUOTENAME(@DMA_SOURCE_ID,'"') as dma_source_id,
+    QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
 from #dbccTraceTable a;
 
 IF OBJECT_ID('tempdb..#dbccTraceTable') IS NOT NULL  
