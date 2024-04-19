@@ -137,7 +137,7 @@ BEGIN
         SELECT
             ''"' + @PKEY + '"'' AS pkey,
             QUOTENAME(CONVERT(VARCHAR(23),CONVERT(datetime2(3),DATEADD(ms, -1 * (@ticksNow - UT.EventStamp), GETDATE())),121),''"'') AS collection_time,
-            NULL AS available_mbytes,
+            ''""'' AS available_mbytes,
             CASE
                 WHEN DISK_num_of_reads = 0 THEN ''"0"''
                 ELSE QUOTENAME(CONVERT(NVARCHAR,(DISK_num_of_bytes_read / DISK_num_of_reads)),''"'')
@@ -167,8 +167,8 @@ BEGIN
                 ELSE QUOTENAME(CONVERT(NVARCHAR,UT.SystemIdle),''"'')
             END AS processor_idle_time_pct,
             QUOTENAME(CONVERT(NVARCHAR,UT.ProcessUtil),''"'') AS processor_total_time_pct,
-            QUOTENAME(NULL,''"'') AS processor_frequency,
-            QUOTENAME(NULL,''"'') AS processor_queue_length,
+            ''""'' AS processor_frequency,
+            ''""'' AS processor_queue_length,
             QUOTENAME((SELECT buffer_cache_hit_ratio FROM dmv_perfmon_counter_data),''"'') AS buffer_cache_hit_ratio,
             QUOTENAME((SELECT checkpoint_pages_sec FROM dmv_perfmon_counter_data),''"'') AS checkpoint_pages_sec,
             CASE

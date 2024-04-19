@@ -659,7 +659,7 @@ SELECT QUOTENAME(@PKEY,'"')             AS PKEY,
        QUOTENAME(servername,'"')        AS 'sql_instance_name',
        QUOTENAME(servicename,'"')       AS 'sql_server_services',
        QUOTENAME(servicestatus,'"')     AS 'current_service_status',
-       QUOTENAME(statusdatetime,'"')    AS 'status_date_time',
+       QUOTENAME(convert(varchar, statusdatetime, 121),'"')    AS 'status_date_time',
        QUOTENAME(@DMA_SOURCE_ID,'"')    AS 'dma_source_id',
        QUOTENAME(@DMA_MANUAL_ID,'"')    AS 'dma_manual_id'
 FROM   #servicesservicestatus

@@ -282,35 +282,60 @@ $logFile = 'opdb_mssql_collectorLog' + '__' + $dbversion + '_' + $op_version + '
 $sqlErrorLogFile = 'opdb_mssql_sqlErrorlog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
 
 $folderLength = ($PSScriptRoot + '\' + $foldername).Length
-if ($folderLength -le 260) {
+# Check to see if registry allows long paths > 260 chars
+$LongPathsEnabledValue = $(Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" | Select-Object -ExpandProperty "LongPathsEnabled")
+
+# Check only the folder length to see if it exceeds 260 Chars when LongPathsEnabled equals 0 (not enabled)
+if (($folderLength -le 260 -and $LongPathsEnabledValue -eq 0) -or ($folderLength -le 260 -and $LongPathsEnabledValue -eq 1) -or ($folderLength -ge 260 -and $LongPathsEnabledValue -eq 1)) {
     WriteLog -logMessage "Creating directory $PSScriptRoot\$foldername" -logOperation "MESSAGE"
     Write-Output " "
     $null = New-Item -Name $foldername -ItemType Directory
 }
 else {
-    WriteLog -logMessage "Folder length exceeds 260 characters.  Run collection tool from a path with less characters" -logOperation "MESSAGE"
-    WriteLog -logMessage "Folder being created is: $PSScriptRoot\$foldername" -logOperation "MESSAGE"
+    if ($folderLength -gt 260 -and $LongPathsEnabledValue -eq 0) {
+        WriteLog -logMessage "Folder length exceeds 260 characters.  Run collection tool from a path with less characters" -logOperation "MESSAGE"
+        WriteLog -logMessage "Folder being created is: $PSScriptRoot\$foldername" -logOperation "MESSAGE"
+        Write-Output " "
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Consider shortening foldername by reducing 'db-migration-assessment-collection-scripts-sqlserver' to 'google-dma'" -ForegroundColor red
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Or Consider setting registry value 'LongPathsEnabled' to '1'" -ForegroundColor red
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) See 'https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=powershell' for more information" -ForegroundColor red
+        Exit 1
+    }
+}
+
+# Complete test to ensure that the folder got created.  Fail with error message if it did not
+if (Test-Path -Path $PSScriptRoot\$foldername) {
+    WriteLog -logMessage "  Directory $PSScriptRoot\$foldername successfully created" -logOperation "MESSAGE"
     Write-Output " "
-    Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Consider shortening foldername by reducing 'db-migration-assessment-collection-scripts-sqlserver' to 'google-dma'" -ForegroundColor red
+} else {
+    Write-Host "Output folder $PSScriptRoot\$foldername was not created."  -ForegroundColor red
+    Write-Host "Exiting Script"  -ForegroundColor red
     Exit 1
 }
 
 $logFileArray = @($logFile, $sqlErrorLogFile)
 
+# Check all the log files to make sure they fit in the 260 char limit when LongPathsEnabled equals 0 (not enabled)
 WriteLog -logMessage "Checking directory path + log file name lengths for max length limitations..." -logOperation "MESSAGE"
 foreach ($logFileName in $logFileArray) {
     $folderLength = ($PSScriptRoot + '\' + $foldername + '\' + $logFileName).Length
-    if ($folderLength -gt 260) {
+    if ($folderLength -gt 260 -and $LongPathsEnabledValue -eq 0) {
         WriteLog -logMessage "Output file $PSScriptRoot\$foldername\$logFileName name exceeds 260 characters." -logOperation "MESSAGE"
         Write-Output " "
         Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Execute collection from a path with less than 260 characters." -ForegroundColor red
         Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Consider shortening foldername by reducing 'db-migration-assessment-collection-scripts-sqlserver' to 'google-dma'" -ForegroundColor red
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Or Consider setting registry value 'LongPathsEnabled' to '1'" -ForegroundColor red
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) See 'https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=powershell' for more information" -ForegroundColor red
         Exit 1
     }
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "PS Version Table" -logOperation "FILE"
 $PSVersionTable | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
+
+WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "Registry Value for Long Paths" -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnabled = $LongPathsEnabledValue" -logOperation "FILE"
 
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "SQLCMD Version Table" -logOperation "FILE"
@@ -401,15 +426,18 @@ $outputFileArray = @($compFileName,
     $tranLogBkupSizeByDayByHour,
     $databaseLevelBlockingFeatures)
 
+# Check individual folder + file names for max length
 WriteLog -logMessage "Checking directory path + output file name lengths for max length limitations..." -logOperation "MESSAGE"
 foreach ($directory in $outputFileArray) {
     $folderLength = ($PSScriptRoot + '\' + $foldername + '\' + $directory).Length
-    if ($folderLength -gt 260) {
+    if ($folderLength -gt 260 -and $LongPathsEnabledValue -eq 0) {
         WriteLog -logMessage "Output file $PSScriptRoot\$foldername\$directory name exceeds 260 characters." -logOperation "MESSAGE"
         Write-Output " "
         WriteLog -logMessage "Execute collection from a path with less than 260 characters." -logOperation "MESSAGE"
         Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Execute collection from a path with less than 260 characters." -ForegroundColor red
         Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Consider shortening foldername by reducing 'db-migration-assessment-collection-scripts-sqlserver' to 'google-dma'" -ForegroundColor red
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Or Consider setting registry value 'LongPathsEnabled' to '1'" -ForegroundColor red
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) See 'https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=powershell' for more information" -ForegroundColor red
         Exit 1
     }
 }
