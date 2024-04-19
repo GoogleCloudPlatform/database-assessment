@@ -282,8 +282,12 @@ $logFile = 'opdb_mssql_collectorLog' + '__' + $dbversion + '_' + $op_version + '
 $sqlErrorLogFile = 'opdb_mssql_sqlErrorlog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
 
 $folderLength = ($PSScriptRoot + '\' + $foldername).Length
-# Check to see if registry allows long paths > 260 chars
-$LongPathsEnabledValue = $(Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" | Select-Object -ExpandProperty "LongPathsEnabled")
+
+# Check to see if registry allows long paths > 260 chars only valid for certain operating systems
+$LongPathsEnabledValue = $(Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty "LongPathsEnabled")
+if ($null -eq $LongPathsEnabledValue) {
+    $LongPathsEnabledValue = 0
+}
 
 # Check only the folder length to see if it exceeds 260 Chars when LongPathsEnabled equals 0 (not enabled)
 if (($folderLength -le 260 -and $LongPathsEnabledValue -eq 0) -or ($folderLength -le 260 -and $LongPathsEnabledValue -eq 1) -or ($folderLength -ge 260 -and $LongPathsEnabledValue -eq 1)) {
