@@ -1,1 +1,1 @@
-select @@hostname;
+select @@hostname as server_hostname;
