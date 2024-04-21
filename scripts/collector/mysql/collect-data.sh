@@ -240,7 +240,7 @@ source ${f}
 exit
 EOF
 done
-for f in $(ls -1 sql/${SCRIPT_PATH}/*.sql | grep -v -e init.sql | grep -v -e _base_path_lookup.sql)
+for f in $(ls -1 sql/${SCRIPT_PATH}/*.sql | grep -v -E "init.sql|_base_path_lookup.sql|hostname.sql")
 do
   fname=$(echo ${f} | cut -d '/' -f 3 | cut -d '.' -f 1)
     ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >${OUTPUT_DIR}/opdb__mysql_${fname}__${V_TAG} 2>>${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log  <<EOF
@@ -250,13 +250,18 @@ SET @PKEY='${V_FILE_TAG}';
 source ${f}
 exit
 EOF
+
+serverHostname=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db 2>>${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log < sql/hostname.sql | tr -d '\r')
+serverIPs=$(getent hosts "$serverHostname" | awk '{print $1}' | tr '\n' ',')
+hostOut="output/opdb__mysql_db_host_${V_FILE_TAG}.csv"
+echo "HOSTNAME|IP_ADDRESSES" > "$hostOut"
+echo "\"$serverHostname\"|\"$serverIPs\"" >> "$hostOut"
 done
 
 specsOut="output/opdb__mysql_db_machine_specs_${V_FILE_TAG}.csv"
 host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
 ./db-machine-specs.sh "$host" "$vmUserName" "${V_FILE_TAG}" "${DMA_SOURCE_ID}" "${V_MANUAL_ID}" "${specsOut}" "${extraSSHArgs[@]}"
 }
-
 
 function executeOPPg {
 connectString="$1"
