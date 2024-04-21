@@ -54,17 +54,17 @@ BEGIN
         BEGIN
         exec ('
         SELECT
-            ''' + @PKEY + ''' as pkey,
-            database_name as database_name,
-            schema_name as schema_name,
-            NameOfObject as object_name,
-            RTRIM(LTRIM(type)) as object_type,
-            type_desc as object_type_desc,
-            count(*) as object_count,
-            ISNULL(SUM(lines_of_code),0) as lines_of_code,
-            associated_table_name as associated_table_name,
-            ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-            ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
+            ''"' + @PKEY + '"'' AS pkey,
+            QUOTENAME(database_name,''"'') as database_name,
+            QUOTENAME(schema_name,''"'') as schema_name,
+            QUOTENAME(NameOfObject,''"'') as object_name,
+            QUOTENAME(RTRIM(LTRIM(type)),''"'') as object_type,
+            QUOTENAME(type_desc,''"'') as object_type_desc,
+            QUOTENAME(count(*),''"'') as object_count,
+            QUOTENAME(ISNULL(SUM(lines_of_code),0),''"'') as lines_of_code,
+            QUOTENAME(associated_table_name,''"'') as associated_table_name,
+            ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
+            ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id
         FROM (
             SELECT
                 DB_NAME(DB_ID()) as database_name,
@@ -73,7 +73,7 @@ BEGIN
                 o.type_desc, 
                 ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code, 
                 OBJECT_NAME(o.object_id) AS NameOfObject ,
-                NULL as associated_table_name
+                ''""'' as associated_table_name
             FROM 
                 sys.objects o
                 JOIN sys.schemas s ON (s.schema_id = o.schema_id)
@@ -178,7 +178,7 @@ BEGIN
                 type_desc,
                 ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 v.name AS NameOfObject ,
-                NULL as associated_table_name
+                ''""'' as associated_table_name
             FROM
                 sys.views v
                 JOIN sys.schemas s ON (s.schema_id = v.schema_id)
@@ -192,7 +192,7 @@ BEGIN
                 ''TABLE_TYPES'',
                 0 AS lines_of_code,
                 t.name AS NameOfObject ,
-                NULL as associated_table_name
+                ''""'' as associated_table_name
             FROM
                 sys.types t
                 JOIN sys.schemas s ON (s.schema_id = t.schema_id)

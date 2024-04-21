@@ -38,19 +38,19 @@ BEGIN
     BEGIN TRY
         exec('
         SELECT DISTINCT
-            ''' + @PKEY + ''' AS PKEY,
-            vs.volume_mount_point as volume_mount_point,
-            vs.file_system_type as file_system_type,
+            ''"' + @PKEY + '"'' AS pkey,
+            QUOTENAME(vs.volume_mount_point,''"'') as volume_mount_point,
+            QUOTENAME(vs.file_system_type,''"'') as file_system_type,
             CASE WHEN LEN(vs.logical_volume_name) > 0
-            THEN vs.logical_volume_name
-            ELSE ''''
+                THEN QUOTENAME(vs.logical_volume_name,''"'')
+                ELSE ''""'')
             END as logical_volume_name,
-            CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, vs.total_bytes / 1073741824.0),2)) AS total_size_gb,
-            CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, vs.available_bytes / 1073741824.0),2)) AS available_size_gb,
-            CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, vs.available_bytes) / CONVERT(FLOAT, vs.total_bytes),2)*100) AS space_free_pct,
-            '''' as cluster_block_size,
-            ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-            ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
+            QUOTENAME(CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, vs.total_bytes / 1073741824.0),2)),''"'') AS total_size_gb,
+            QUOTENAME(CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, vs.available_bytes / 1073741824.0),2)),''"'') AS available_size_gb,
+            QUOTENAME(CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, vs.available_bytes) / CONVERT(FLOAT, vs.total_bytes),2)*100),''"'') AS space_free_pct,
+            ''""'' as cluster_block_size,
+            ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
+            ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id
         FROM
             sys.master_files AS f WITH (
                 NOLOCK)
@@ -72,16 +72,16 @@ BEGIN
         ,sum(allocated_storage_in_megabytes/1024) available_size_gb
         FROM db_sizes)
         SELECT
-            ''' + @PKEY + ''' AS PKEY,
-            ''CLOUD'' as volume_mount_point, 
-            ''AZURE'' as file_system_type, 
-            ''CLOUD'' as logical_volume_name, 
-            CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, total_size_gb),2)) as total_size_gb, 
-            CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, available_size_gb),2)) as available_size_gb, 
-            CONVERT(NVARCHAR, ROUND((1 - (total_size_gb / available_size_gb)) * 100,2)) AS space_free_pct,
-            '''' as cluster_block_size,
-            ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-            ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
+            ''"' + @PKEY + '"'' AS pkey,
+            ''"CLOUD"'' as volume_mount_point, 
+            ''"AZURE"'' as file_system_type, 
+            ''"CLOUD"'' as logical_volume_name, 
+            QUOTENAME(CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, total_size_gb),2)),''"'') as total_size_gb, 
+            QUOTENAME(CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, available_size_gb),2)),''"'') as available_size_gb, 
+            QUOTENAME(CONVERT(NVARCHAR, ROUND((1 - (total_size_gb / available_size_gb)) * 100,2)),''"'') as space_free_pct,
+            ''""'' as cluster_block_size,
+            ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
+            ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id
         FROM sum_sizes');
     END TRY
     BEGIN CATCH

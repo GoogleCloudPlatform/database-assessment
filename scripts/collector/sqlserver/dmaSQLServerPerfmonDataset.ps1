@@ -485,6 +485,38 @@ param(
 	}
 }
 function Yellow{    process { Write-Host $_ -ForegroundColor Yellow }}
+
+function StatusDMAPerfmonDataSet
+{
+param(
+    [string]$dataSet,
+	[string]$perfmonOutDir,
+	[string]$perfmonLogFile,
+	[string]$logFile
+    )
+
+	$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
+	$maxFileDate = $null
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Checking the status of the Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
+	$perfmonDataSetRunning = logman.exe query -n $dataSet
+	if ($perfmonDataSetRunning -like "*Status:               Running*") {
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " Perfmon counter 'Running'" -logOperation "BOTH"
+	} else {
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " Perfmon counter 'Stopped'" -logOperation "BOTH"
+	}
+
+	if (Test-Path -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataSet*.csv) {
+		foreach($file in Get-ChildItem -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataset*.csv)
+		{
+			$currentFileDate = (Get-Item $file).LastWriteTime
+			if ($currentFileDate -ge $maxFileDate) {
+				$maxFileDate = $currentFileDate
+			}
+		}
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " Max perfmon file date available: $maxFileDate" -logOperation "BOTH"
+	}
+}
 function CollectDMAPerfmonDataSet
 {
 param(
@@ -499,6 +531,7 @@ param(
 	
 	$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
 	$outputFileName = $perfmonOutFile
+	$maxFileDate = $null
 
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Collecting results from the Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
 
@@ -516,6 +549,10 @@ param(
 			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Moving perfmon datafile: $file to the $env:TEMP directory without header" -logOperation "BOTH"
 			$tempFileName = Split-Path $file -leaf
 			Get-Content -Path $file | Select-Object -Skip 1 | Set-Content -Encoding utf8 -Path $env:TEMP\$tempFileName
+			$currentFileDate = (Get-Item $file).LastWriteTime
+			if ($currentFileDate -ge $maxFileDate) {
+				$maxFileDate = $currentFileDate
+			}
 		}
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Adding additional fields to perfmon files without header" -logOperation "BOTH"
 		foreach($file in Get-ChildItem -Path $env:TEMP\*$dataSet*.csv) {
@@ -532,6 +569,9 @@ param(
 				'"' + $pkey + '"|' + $perfmonFormattedDate + '|' + $perfmonCsv[1] + '|' + $perfmonCsv[2] + '|' + $perfmonCsv[3] + '|' + $perfmonCsv[4] + '|' + $perfmonCsv[5] + '|' + $perfmonCsv[6] + '|' + $perfmonCsv[7] + '|' + $perfmonCsv[8] + '|' + $perfmonCsv[9] + '|' + $perfmonCsv[10] + '|' + $perfmonCsv[11] + '|' + $perfmonCsv[12] + '|' + $perfmonCsv[13] + '|' + $perfmonCsv[14] + '|' + $perfmonCsv[15] + '|' + $perfmonCsv[16] + '|' + $perfmonCsv[17] + '|' + $perfmonCsv[18] + '|' + $perfmonCsv[19] + '|' + $perfmonCsv[20] + '|' + $perfmonCsv[21] + '|' + $perfmonCsv[22] + '|' + $perfmonCsv[23] + '|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|' + $perfmonCsv[24] + '|' + $perfmonCsv[25]
 			} | Out-File -FilePath $env:TEMP\$tempFileName -Encoding utf8
 		}
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " Max perfmon file date available: $maxFileDate" -logOperation "BOTH"
+		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
 	} else {
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "No Perfmon Files exist in the $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet Directory. Continuing without Perfmon file." -logOperation "FILE"
@@ -571,8 +611,6 @@ param(
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Collecting current state of perfmon dataset: $dataset..." -logOperation "BOTH"
 	logman.exe query -n $dataset | out-string | Add-Content -Encoding utf8 -Path $outputDir\$perfmonLogFile
-
-
 }
 
 function CreateEmptyFile
@@ -657,6 +695,8 @@ if ($operation.ToLower() -eq "create") {
 	CollectDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $dmaManualId -logFile $perfmonLogFile
 } elseif ($operation.ToLower() -eq "createemptyfile") {
 	CreateEmptyFile -dataSet $datasetName -perfmonOutDir $perfmonOutDir -perfmonOutFile $perfmonOutFile -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $dmaManualId -logFile $perfmonLogFile
+} elseif ($operation.ToLower() -eq "status") {
+	StatusDMAPerfmonDataSet -dataSet $datasetName -perfmonOutDir $perfmonOutDir -logFile $perfmonLogFile
 } else {
 	Write-Output "Operation $operation specified is invalid"
 }

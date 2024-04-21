@@ -33,12 +33,12 @@ BEGIN
     BEGIN TRY
         exec ('
         SELECT
-            ''' + @PKEY + ''' AS pkey,
-            NodeName AS node_name, 
-            status, 
-            status_description,
-            ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-            ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
+            ''"' + @PKEY + '"'' AS pkey,
+            QUOTENAME(NodeName,''"'') AS node_name, 
+            QUOTENAME(status,''"'') AS status, 
+            QUOTENAME(status_description,''"'') status_description,
+            ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id,
+            ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id
         FROM sys.dm_os_cluster_nodes');
     END TRY
     BEGIN CATCH
@@ -50,12 +50,12 @@ BEGIN
     BEGIN TRY
         exec ('
         SELECT
-            ''' + @PKEY + ''' AS pkey,
-            NodeName AS node_name, 
-            NULL as status, 
-            NULL as status_description,
-            ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-            ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
+            ''"' + @PKEY + '"'' AS pkey,
+            QUOTENAME(NodeName,''"'') AS node_name, 
+            ''""'' as status, 
+            ''""'' as status_description,
+            ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id,
+            ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id
         FROM sys.dm_os_cluster_nodes');
     END TRY
     BEGIN CATCH

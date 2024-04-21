@@ -282,35 +282,64 @@ $logFile = 'opdb_mssql_collectorLog' + '__' + $dbversion + '_' + $op_version + '
 $sqlErrorLogFile = 'opdb_mssql_sqlErrorlog' + '__' + $dbversion + '_' + $op_version + '_' + $machinename + '_' + $dbname + '_' + $instancename + '_' + $current_ts + '.log'
 
 $folderLength = ($PSScriptRoot + '\' + $foldername).Length
-if ($folderLength -le 260) {
+
+# Check to see if registry allows long paths > 260 chars only valid for certain operating systems
+$LongPathsEnabledValue = $(Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty "LongPathsEnabled")
+if ($null -eq $LongPathsEnabledValue) {
+    $LongPathsEnabledValue = 0
+}
+
+# Check only the folder length to see if it exceeds 260 Chars when LongPathsEnabled equals 0 (not enabled)
+if (($folderLength -le 260 -and $LongPathsEnabledValue -eq 0) -or ($folderLength -le 260 -and $LongPathsEnabledValue -eq 1) -or ($folderLength -ge 260 -and $LongPathsEnabledValue -eq 1)) {
     WriteLog -logMessage "Creating directory $PSScriptRoot\$foldername" -logOperation "MESSAGE"
     Write-Output " "
     $null = New-Item -Name $foldername -ItemType Directory
 }
 else {
-    WriteLog -logMessage "Folder length exceeds 260 characters.  Run collection tool from a path with less characters" -logOperation "MESSAGE"
-    WriteLog -logMessage "Folder being created is: $PSScriptRoot\$foldername" -logOperation "MESSAGE"
+    if ($folderLength -gt 260 -and $LongPathsEnabledValue -eq 0) {
+        WriteLog -logMessage "Folder length exceeds 260 characters.  Run collection tool from a path with less characters" -logOperation "MESSAGE"
+        WriteLog -logMessage "Folder being created is: $PSScriptRoot\$foldername" -logOperation "MESSAGE"
+        Write-Output " "
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Consider shortening foldername by reducing 'db-migration-assessment-collection-scripts-sqlserver' to 'google-dma'" -ForegroundColor red
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Or Consider setting registry value 'LongPathsEnabled' to '1'" -ForegroundColor red
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) See 'https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=powershell' for more information" -ForegroundColor red
+        Exit 1
+    }
+}
+
+# Complete test to ensure that the folder got created.  Fail with error message if it did not
+if (Test-Path -Path $PSScriptRoot\$foldername) {
+    WriteLog -logMessage "  Directory $PSScriptRoot\$foldername successfully created" -logOperation "MESSAGE"
     Write-Output " "
-    Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Consider shortening foldername by reducing 'db-migration-assessment-collection-scripts-sqlserver' to 'google-dma'" -ForegroundColor red
+} else {
+    Write-Host "Output folder $PSScriptRoot\$foldername was not created."  -ForegroundColor red
+    Write-Host "Exiting Script"  -ForegroundColor red
     Exit 1
 }
 
 $logFileArray = @($logFile, $sqlErrorLogFile)
 
+# Check all the log files to make sure they fit in the 260 char limit when LongPathsEnabled equals 0 (not enabled)
 WriteLog -logMessage "Checking directory path + log file name lengths for max length limitations..." -logOperation "MESSAGE"
 foreach ($logFileName in $logFileArray) {
     $folderLength = ($PSScriptRoot + '\' + $foldername + '\' + $logFileName).Length
-    if ($folderLength -gt 260) {
+    if ($folderLength -gt 260 -and $LongPathsEnabledValue -eq 0) {
         WriteLog -logMessage "Output file $PSScriptRoot\$foldername\$logFileName name exceeds 260 characters." -logOperation "MESSAGE"
         Write-Output " "
         Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Execute collection from a path with less than 260 characters." -ForegroundColor red
         Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Consider shortening foldername by reducing 'db-migration-assessment-collection-scripts-sqlserver' to 'google-dma'" -ForegroundColor red
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Or Consider setting registry value 'LongPathsEnabled' to '1'" -ForegroundColor red
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) See 'https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=powershell' for more information" -ForegroundColor red
         Exit 1
     }
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "PS Version Table" -logOperation "FILE"
 $PSVersionTable | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
+
+WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "Registry Value for Long Paths" -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnabled = $LongPathsEnabledValue" -logOperation "FILE"
 
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "SQLCMD Version Table" -logOperation "FILE"
@@ -401,15 +430,18 @@ $outputFileArray = @($compFileName,
     $tranLogBkupSizeByDayByHour,
     $databaseLevelBlockingFeatures)
 
+# Check individual folder + file names for max length
 WriteLog -logMessage "Checking directory path + output file name lengths for max length limitations..." -logOperation "MESSAGE"
 foreach ($directory in $outputFileArray) {
     $folderLength = ($PSScriptRoot + '\' + $foldername + '\' + $directory).Length
-    if ($folderLength -gt 260) {
+    if ($folderLength -gt 260 -and $LongPathsEnabledValue -eq 0) {
         WriteLog -logMessage "Output file $PSScriptRoot\$foldername\$directory name exceeds 260 characters." -logOperation "MESSAGE"
         Write-Output " "
         WriteLog -logMessage "Execute collection from a path with less than 260 characters." -logOperation "MESSAGE"
         Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Execute collection from a path with less than 260 characters." -ForegroundColor red
         Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Consider shortening foldername by reducing 'db-migration-assessment-collection-scripts-sqlserver' to 'google-dma'" -ForegroundColor red
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) Or Consider setting registry value 'LongPathsEnabled' to '1'" -ForegroundColor red
+        Write-Host "$("[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)) See 'https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=powershell' for more information" -ForegroundColor red
         Exit 1
     }
 }
@@ -429,52 +461,63 @@ if ($dbNameNoAccessArray.Count -gt 0) {
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Installed Components..." -logOperation "BOTH"
-sqlcmd -S $serverName -i sql\componentsInstalled.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$compFileName
+Set-Content -Path $foldername\$compFileName -Encoding utf8 -Value '"PKEY"|"physical_server_name"|"sql_instance_name"|"sql_server_services"|"current_service_status"|"status_date_time"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\componentsInstalled.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$compFileName -Encoding utf8
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Properties..." -logOperation "BOTH"
-sqlcmd -S $serverName -i sql\serverProperties.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$srvFileName
+Set-Content -Path $foldername\$srvFileName -Encoding utf8 -Value '"PKEY"|"property_name"|"property_value"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\serverProperties.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$srvFileName -Encoding utf8
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server CloudSQL Unsupported Flag Info..." -logOperation "BOTH"
-sqlcmd -S $serverName -i sql\dbServerUnsupportedFlags.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$dbServerFlags
+Set-Content -Path $foldername\$dbServerFlags -Encoding utf8 -Value '"PKEY"|"flag_name"|"value"|"value_in_use"|"description"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\dbServerUnsupportedFlags.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbServerFlags -Encoding utf8
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Blocked Features in Use..." -logOperation "BOTH"
-sqlcmd -S $serverName -i sql\dbServerFeatures.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$blockingFeatures
+Set-Content -Path $foldername\$blockingFeatures -Encoding utf8 -Value '"PKEY"|"Features"|"Is_EnabledOrUsed"|"Count"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\dbServerFeatures.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$blockingFeatures -Encoding utf8
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Linked Server Info..." -logOperation "BOTH"
-sqlcmd -S $serverName -i sql\linkedServersDetail.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$linkedServers
+Set-Content -Path $foldername\$linkedServers -Encoding utf8 -Value '"pkey"|"name"|"product"|"provider"|"data_source"|"location"|"provider_string"|"catalog"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\linkedServersDetail.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$linkedServers -Encoding utf8
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Cluster Node Info..." -logOperation "BOTH"
-sqlcmd -S $serverName -i sql\dbClusterNodes.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$dbClusterNodes
+Set-Content -Path $foldername\$dbClusterNodes -Encoding utf8 -Value '"pkey"|"node_name"|"status"|"status_description"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\dbClusterNodes.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbClusterNodes -Encoding utf8
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server DBCC Trace Info..." -logOperation "BOTH"
-sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$dbccTraceFlg
+Set-Content -Path $foldername\$dbccTraceFlg -Encoding utf8 -Value '"PKEY"|"name"|"status"|"global"|"session"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbccTraceFlg -Encoding utf8
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Disk Volume Info..." -logOperation "BOTH"
-sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$diskVolumeInfo
+Set-Content -Path $foldername\$diskVolumeInfo -Encoding utf8 -Value '"PKEY"|"volume_mount_point"|"file_system_type"|"logical_volume_name"|"total_size_gb"|"available_size_gb"|"space_free_pct"|"cluster_block_size"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$diskVolumeInfo -Encoding utf8
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Configuration Info..." -logOperation "BOTH"
-sqlcmd -S $serverName -i sql\dbServerConfigurationSettings.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$dbServerConfig
+Set-Content -Path $foldername\$dbServerConfig -Encoding utf8 -Value '"pkey"|"configuration_id"|"name"|"value"|"minimum"|"maximum"|"value_in_use"|"description"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\dbServerConfigurationSettings.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbServerConfig -Encoding utf8
 
 if ($isCloudOrLinuxHost -eq "AZURE") {
     WriteLog -logLocation $foldername\$logFile -logMessage "Unavailable in AZURE.....Skipping SQL Server Transaction Log Backup Info..." -logOperation "BOTH"
-    Set-Content -Path $foldername\$tranLogBkupCountByDayByHour -Encoding utf8 -Value "PKEY|collection_date|day_of_month|total_logs_generated|h0_count|h1_count|h2_count|h3_count|h4_count|h5_count|h6_count|h7_count|h8_count|h9_count|h10_count|h11_count|h12_count|h13_count|h14_count|h15_count|h16_count|h17_count|h18_count|h19_count|h20_count|h21_count|h22_count|h23_count|avg_per_hour|dma_source_id|dma_manual_id"
-    Set-Content -Path $foldername\$tranLogBkupSizeByDayByHour -Encoding utf8 -Value "PKEY|collection_date|day_of_month|total_logs_generated_in_mb|h0_size_in_mb|h1_size_in_mb|h2_size_in_mb|h3_size_in_mb|h4_size_in_mb|h5_size_in_mb|h6_size_in_mb|h7_size_in_mb|h8_size_in_mb|h9_size_in_mb|h10_size_in_mb|h11_size_in_mb|h12_size_in_mb|h13_size_in_mb|h14_size_in_mb|h15_size_in_mb|h16_size_in_mb|h17_size_in_mb|h18_size_in_mb|h19_size_in_mb|h20_size_in_mb|h21_size_in_mb|h22_size_in_mb|h23_size_in_mb|avg_mb_per_hour|dma_source_id|dma_manual_id"
+    Set-Content -Path $foldername\$tranLogBkupCountByDayByHour -Encoding utf8 -Value '"PKEY"|"collection_date"|"day_of_month"|"total_logs_generated"|"h0_count"|"h1_count"|"h2_count"|"h3_count"|"h4_count"|"h5_count"|"h6_count"|"h7_count"|"h8_count"|"h9_count"|"h10_count"|"h11_count"|"h12_count"|"h13_count"|"h14_count"|"h15_count"|"h16_count"|"h17_count"|"h18_count"|"h19_count"|"h20_count"|"h21_count"|"h22_count"|"h23_count"|"avg_per_hour"|"dma_source_id"|"dma_manual_id"'
+    Set-Content -Path $foldername\$tranLogBkupSizeByDayByHour -Encoding utf8 -Value '"PKEY"|"collection_date"|"day_of_month"|"total_logs_generated_in_mb"|"h0_size_in_mb"|"h1_size_in_mb"|"h2_size_in_mb"|"h3_size_in_mb"|"h4_size_in_mb"|"h5_size_in_mb"|"h6_size_in_mb"|"h7_size_in_mb"|"h8_size_in_mb"|"h9_size_in_mb"|"h10_size_in_mb"|"h11_size_in_mb"|"h12_size_in_mb"|"h13_size_in_mb"|"h14_size_in_mb"|"h15_size_in_mb"|"h16_size_in_mb"|"h17_size_in_mb"|"h18_size_in_mb"|"h19_size_in_mb"|"h20_size_in_mb"|"h21_size_in_mb"|"h22_size_in_mb"|"h23_size_in_mb"|"avg_mb_per_hour"|"dma_source_id"|"dma_manual_id"'
 }
 else {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Transaction Log Backup Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\dbServerTranLogBackupCountByDayByHour.sql -d msdb -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$tranLogBkupCountByDayByHour
-    sqlcmd -S $serverName -i sql\dbServerTranLogBackupSizeByDayByHour.sql -d msdb -C -l 30 -W -m 1 -u -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" > $foldername\$tranLogBkupSizeByDayByHour    
+    Set-Content -Path $foldername\$tranLogBkupCountByDayByHour -Encoding utf8 -Value '"PKEY"|"collection_date"|"day_of_month"|"total_logs_generated"|"h0_count"|"h1_count"|"h2_count"|"h3_count"|"h4_count"|"h5_count"|"h6_count"|"h7_count"|"h8_count"|"h9_count"|"h10_count"|"h11_count"|"h12_count"|"h13_count"|"h14_count"|"h15_count"|"h16_count"|"h17_count"|"h18_count"|"h19_count"|"h20_count"|"h21_count"|"h22_count"|"h23_count"|"avg_per_hour"|"dma_source_id"|"dma_manual_id"'
+    Set-Content -Path $foldername\$tranLogBkupSizeByDayByHour -Encoding utf8 -Value '"PKEY"|"collection_date"|"day_of_month"|"total_logs_generated_in_mb"|"h0_size_in_mb"|"h1_size_in_mb"|"h2_size_in_mb"|"h3_size_in_mb"|"h4_size_in_mb"|"h5_size_in_mb"|"h6_size_in_mb"|"h7_size_in_mb"|"h8_size_in_mb"|"h9_size_in_mb"|"h10_size_in_mb"|"h11_size_in_mb"|"h12_size_in_mb"|"h13_size_in_mb"|"h14_size_in_mb"|"h15_size_in_mb"|"h16_size_in_mb"|"h17_size_in_mb"|"h18_size_in_mb"|"h19_size_in_mb"|"h20_size_in_mb"|"h21_size_in_mb"|"h22_size_in_mb"|"h23_size_in_mb"|"avg_mb_per_hour"|"dma_source_id"|"dma_manual_id"'
+    sqlcmd -S $serverName -i sql\dbServerTranLogBackupCountByDayByHour.sql -d msdb -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$tranLogBkupCountByDayByHour -Encoding utf8
+    sqlcmd -S $serverName -i sql\dbServerTranLogBackupSizeByDayByHour.sql -d msdb -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$tranLogBkupSizeByDayByHour -Encoding utf8
 }
 
 ### First establish headers for the collection files which could execute against multiple databases in the instance
-Set-Content -Path $foldername\$objectList -Encoding utf8 -Value "PKEY|database_name|schema_name|object_name|object_type|object_type_desc|object_count|lines_of_code|associated_table_name|dma_source_id|dma_manual_id"
-Set-Content -Path $foldername\$tableList -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|partition_count|is_memory_optimized|temporal_type|is_external|lock_escalation|is_tracked_by_cdc|text_in_row_limit|is_replicated|row_count|data_compression|total_space_mb|used_space_mb|unused_space_mb|dma_source_id|dma_manual_id|partition_type|is_temp_table"
-Set-Content -Path $foldername\$indexList -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|index_name|index_type|is_primary_key|is_unique|fill_factor|allow_page_locks|has_filter|data_compression|data_compression_desc|is_partitioned|count_key_ordinal|count_partition_ordinal|count_is_included_column|total_space_mb|dma_source_id|dma_manual_id|is_computed_index|is_index_on_view"
-Set-Content -Path $foldername\$columnDatatypes -Encoding utf8 -Value "PKEY|database_name|schema_name|table_name|datatype|max_length|precision|scale|is_computed|is_filestream|is_masked|encryption_type|is_sparse|rule_object_id|column_count|dma_source_id|dma_manual_id"
-Set-Content -Path $foldername\$userConnectionList -Encoding utf8 -Value "PKEY|database_name|is_user_process|host_name|program_name|login_name|num_reads|num_writes|last_read|last_write|reads|logical_reads|writes|client_interface_name|nt_domain|nt_user_name|client_net_address|local_net_address|dma_source_id|dma_manual_id|client_version|protocol_type|protocol_version|protocol_hex_version"
-Set-Content -Path $foldername\$dbsizes -Encoding utf8 -Value "PKEY|database_name|type_desc|current_size_mb|dma_source_id|dma_manual_id"
-Set-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8 -Value "PKEY|collection_time|available_mbytes|physicaldisk_avg_disk_bytes_read|physicaldisk_avg_disk_bytes_write|physicaldisk_avg_disk_bytes_read_sec|physicaldisk_avg_disk_bytes_write_sec|physicaldisk_disk_reads_sec|physicaldisk_disk_writes_sec|processor_idle_time_pct|processor_total_time_pct|processor_frequency|processor_queue_length|buffer_cache_hit_ratio|checkpoint_pages_sec|free_list_stalls_sec|page_life_expectancy|page_lookups_sec|page_reads_sec|page_writes_sec|user_connection_count|memory_grants_pending|target_server_memory_kb|total_server_memory_kb|batch_requests_sec|dma_source_id|dma_manual_id"
-Set-Content -Path $foldername\$databaseLevelBlockingFeatures -Encoding utf8 -Value "PKEY|database_name|feature_name|is_enabled_or_used|occurance_count|dma_source_id|dma_manual_id"
+Set-Content -Path $foldername\$objectList -Encoding utf8 -Value '"PKEY"|"database_name"|"schema_name"|"object_name"|"object_type"|"object_type_desc"|"object_count"|"lines_of_code"|"associated_table_name"|"dma_source_id"|"dma_manual_id"'
+Set-Content -Path $foldername\$tableList -Encoding utf8 -Value '"PKEY"|"database_name"|"schema_name"|"table_name"|"partition_count"|"is_memory_optimized"|"temporal_type"|"is_external"|"lock_escalation"|"is_tracked_by_cdc"|"text_in_row_limit"|"is_replicated"|"row_count"|"data_compression"|"total_space_mb"|"used_space_mb"|"unused_space_mb"|"dma_source_id"|"dma_manual_id"|"partition_type"|"is_temp_table"'
+Set-Content -Path $foldername\$indexList -Encoding utf8 -Value '"PKEY"|"database_name"|"schema_name"|"table_name"|"index_name"|"index_type"|"is_primary_key"|"is_unique"|"fill_factor"|"allow_page_locks"|"has_filter"|"data_compression"|"data_compression_desc"|"is_partitioned"|"count_key_ordinal"|"count_partition_ordinal"|"count_is_included_column"|"total_space_mb"|"dma_source_id"|"dma_manual_id"|"is_computed_index"|"is_index_on_view"'
+Set-Content -Path $foldername\$columnDatatypes -Encoding utf8 -Value '"PKEY"|"database_name"|"schema_name"|"table_name"|"datatype"|"max_length"|"precision"|"scale"|"is_computed"|"is_filestream"|"is_masked"|"encryption_type"|"is_sparse"|"rule_object_id"|"column_count"|"dma_source_id"|"dma_manual_id"'
+Set-Content -Path $foldername\$userConnectionList -Encoding utf8 -Value '"PKEY"|"database_name"|"is_user_process"|"host_name"|"program_name"|"login_name"|"num_reads"|"num_writes"|"last_read"|"last_write"|"reads"|"logical_reads"|"writes"|"client_interface_name"|"nt_domain"|"nt_user_name"|"client_net_address"|"local_net_address"|"dma_source_id"|"dma_manual_id"|"client_version"|"protocol_type"|"protocol_version"|"protocol_hex_version"'
+Set-Content -Path $foldername\$dbsizes -Encoding utf8 -Value '"PKEY"|"database_name"|"type_desc"|"current_size_mb"|"dma_source_id"|"dma_manual_id"'
+Set-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8 -Value '"PKEY"|"collection_time"|"available_mbytes"|"physicaldisk_avg_disk_bytes_read"|"physicaldisk_avg_disk_bytes_write"|"physicaldisk_avg_disk_bytes_read_sec"|"physicaldisk_avg_disk_bytes_write_sec"|"physicaldisk_disk_reads_sec"|"physicaldisk_disk_writes_sec"|"processor_idle_time_pct"|"processor_total_time_pct"|"processor_frequency"|"processor_queue_length"|"buffer_cache_hit_ratio"|"checkpoint_pages_sec"|"free_list_stalls_sec"|"page_life_expectancy"|"page_lookups_sec"|"page_reads_sec"|"page_writes_sec"|"user_connection_count"|"memory_grants_pending"|"target_server_memory_kb"|"total_server_memory_kb"|"batch_requests_sec"|"dma_source_id"|"dma_manual_id"'
+Set-Content -Path $foldername\$databaseLevelBlockingFeatures -Encoding utf8 -Value '"PKEY"|"database_name"|"feature_name"|"is_enabled_or_used"|"occurance_count"|"dma_source_id"|"dma_manual_id"'
 
 ### Iterate through collections that could execute against multiple databases in the instance
 foreach ($databaseName in $dbNameArray) {
