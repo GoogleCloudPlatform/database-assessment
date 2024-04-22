@@ -28,16 +28,16 @@ FROM
 WHERE
     TRIM(base_object_type) IN ( 'DATABASE', 'SCHEMA' )
     AND status = 'ENABLED'
-    AND ( owner, trigger_name ) NOT IN ( ( 'SYS', 'XDB_PI_TRIG' ), 
+    AND ( owner, trigger_name ) NOT IN ( ( 'SYS', 'XDB_PI_TRIG' ),
                                          ( 'SYS', 'DELETE_ENTRIES' ),
-                                         ( 'SYS', 'OJDS$ROLE_TRIGGER$' ), 
+                                         ( 'SYS', 'OJDS$ROLE_TRIGGER$' ),
                                          ( 'SYS', 'DBMS_SET_PDB' ),
-                                         ( 'MDSYS', 'SDO_TOPO_DROP_FTBL' ), 
-                                         ( 'MDSYS', 'SDO_GEOR_BDDL_TRIGGER' ), 
-                                         ( 'MDSYS', 'SDO_GEOR_ADDL_TRIGGER' ), 
-                                         ( 'MDSYS', 'SDO_NETWORK_DROP_USER' ), 
-                                         ( 'MDSYS', 'SDO_ST_SYN_CREATE' ), 
-                                         ( 'MDSYS', 'SDO_DROP_USER' ), 
+                                         ( 'MDSYS', 'SDO_TOPO_DROP_FTBL' ),
+                                         ( 'MDSYS', 'SDO_GEOR_BDDL_TRIGGER' ),
+                                         ( 'MDSYS', 'SDO_GEOR_ADDL_TRIGGER' ),
+                                         ( 'MDSYS', 'SDO_NETWORK_DROP_USER' ),
+                                         ( 'MDSYS', 'SDO_ST_SYN_CREATE' ),
+                                         ( 'MDSYS', 'SDO_DROP_USER' ),
                                          ( 'GSMADMIN_INTERNAL', 'GSMLOGOFF' ) ,
                                          ( 'SYSMAN', 'MGMT_STARTUP' ),
                                          ( 'SYS', 'AW_TRUNC_TRG' ),
@@ -52,7 +52,7 @@ GROUP BY
     base_object_type)
 SELECT :v_pkey AS pkey,
        con_id,
-       owner,                         
+       owner,
        trigger_type,
        triggering_event,
        base_object_type,

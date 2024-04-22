@@ -35,10 +35,10 @@ IF UPPER(@@VERSION) LIKE '%AZURE%'
 
 BEGIN
     BEGIN TRY
-    exec('   
+    exec('
         select
             ''"' + @PKEY + '"'' AS pkey,
-            QUOTENAME(name,''"'') as name, 
+            QUOTENAME(name,''"'') as name,
             QUOTENAME(product,''"'') as product,
             QUOTENAME(provider,''"'') as provider,
             QUOTENAME(data_source,''"'') as data_source,

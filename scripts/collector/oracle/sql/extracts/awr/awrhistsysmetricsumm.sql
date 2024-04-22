@@ -32,7 +32,7 @@ SELECT :v_pkey AS pkey,
        null                                  "PERC75",
        null                                  "PERC90",
        -- Handle cases where STANDARD_DEVIATION is displayed as NULL but when compared is > .9 repeating but less than 1.
-       -- Oberved in 11.2 and 19.3.  Seems to occur when MINVAL < AVERAGE = MAXVAL for 'User Limit %' and 'Session Limit %' metrics.  
+       -- Oberved in 11.2 and 19.3.  Seems to occur when MINVAL < AVERAGE = MAXVAL for 'User Limit %' and 'Session Limit %' metrics.
        -- In most such cases, STARNDARD_DEVIATION = 0, so that is what we will do here.
        hsm.AVERAGE+(2* CASE WHEN ( standard_deviation > (.999999999999999999999999999) AND standard_deviation < 1 )
                              AND ( MINVAL = 0 AND AVERAGE = MAXVAL )  then 0 else standard_deviation end ) "PERC95",

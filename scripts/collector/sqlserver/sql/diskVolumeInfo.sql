@@ -66,18 +66,18 @@ BEGIN
         WITH db_sizes as (SELECT MAX(start_time) max_collection_time
             , database_name, MAX(storage_in_megabytes) storage_in_megabytes
             , MAX(allocated_storage_in_megabytes) allocated_storage_in_megabytes
-        FROM sys.resource_stats 
+        FROM sys.resource_stats
         GROUP BY database_name),
         sum_sizes as (SELECT sum(storage_in_megabytes/1024) total_size_gb
         ,sum(allocated_storage_in_megabytes/1024) available_size_gb
         FROM db_sizes)
         SELECT
             ''"' + @PKEY + '"'' AS pkey,
-            ''"CLOUD"'' as volume_mount_point, 
-            ''"AZURE"'' as file_system_type, 
-            ''"CLOUD"'' as logical_volume_name, 
-            QUOTENAME(CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, total_size_gb),2)),''"'') as total_size_gb, 
-            QUOTENAME(CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, available_size_gb),2)),''"'') as available_size_gb, 
+            ''"CLOUD"'' as volume_mount_point,
+            ''"AZURE"'' as file_system_type,
+            ''"CLOUD"'' as logical_volume_name,
+            QUOTENAME(CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, total_size_gb),2)),''"'') as total_size_gb,
+            QUOTENAME(CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, available_size_gb),2)),''"'') as available_size_gb,
             QUOTENAME(CONVERT(NVARCHAR, ROUND((1 - (total_size_gb / available_size_gb)) * 100,2)),''"'') as space_free_pct,
             ''""'' as cluster_block_size,
             ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,

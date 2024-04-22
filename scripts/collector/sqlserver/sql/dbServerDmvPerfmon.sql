@@ -53,7 +53,7 @@ BEGIN
     FROM sys.dm_os_sys_info AS OSI;
 
     WITH util AS (
-        SELECT 
+        SELECT
             ''' + @PKEY + ''' AS PKEY,
             RBS.Rc.value(''(./Record/@id)[1]'', ''bigint'') AS RecordID,
             RBS.Rc.value(''(//SystemHealth/SystemIdle)[1]'', ''bigint'') AS SystemIdle, -- SystemIdle on Linux will be 0
@@ -90,9 +90,9 @@ BEGIN
     dmv_perfmon_counter_data as (
         SELECT
             CONVERT(NVARCHAR,(ROUND((CONVERT(FLOAT,[Buffer cache hit ratio]) * 1.0 / CONVERT(FLOAT,[Buffer cache hit ratio base])) * 100.0,0))) as buffer_cache_hit_ratio,
-            CONVERT(NVARCHAR,[Checkpoint pages/sec]) as checkpoint_pages_sec, 
-            CONVERT(NVARCHAR,[Free list stalls/sec]) as free_list_stalls_sec, 
-            CONVERT(NVARCHAR,[Page life expectancy]) as page_life_expectancy, 
+            CONVERT(NVARCHAR,[Checkpoint pages/sec]) as checkpoint_pages_sec,
+            CONVERT(NVARCHAR,[Free list stalls/sec]) as free_list_stalls_sec,
+            CONVERT(NVARCHAR,[Page life expectancy]) as page_life_expectancy,
             CONVERT(NVARCHAR,[Page lookups/sec]) as page_lookups_sec,
             CONVERT(NVARCHAR,[Page reads/sec]) as page_reads_sec,
             CONVERT(NVARCHAR,[Page writes/sec]) as page_writes_sec,
@@ -101,9 +101,9 @@ BEGIN
             CONVERT(NVARCHAR,[Target Server Memory (KB)]) as target_server_memory_kb,
             CONVERT(NVARCHAR,[Total Server Memory (KB)]) as total_server_memory_kb,
             CONVERT(NVARCHAR,[Batch Requests/sec]) as batch_requests_sec
-        FROM  
+        FROM
             (
-                SELECT counter_name, cntr_value 
+                SELECT counter_name, cntr_value
                 FROM sys.dm_os_performance_counters
                 WHERE
                     (object_name = ''SQLServer:Buffer Manager''
@@ -114,16 +114,16 @@ BEGIN
                     AND counter_name IN (''Memory Grants Pending'',''Target Server Memory (KB)'',''Total Server Memory (KB)''))
                         OR (object_name = ''SQLServer:SQL Statistics''
                     AND counter_name IN (''Batch Requests/sec''))
-            ) AS SourceTable  
-            PIVOT  
-            (  
-                AVG(cntr_value)  
+            ) AS SourceTable
+            PIVOT
+            (
+                AVG(cntr_value)
                 FOR counter_name IN (
                     [Buffer cache hit ratio],
                     [Buffer cache hit ratio base],
                     [Checkpoint pages/sec],
                     [Free list stalls/sec],
-                    [Page life expectancy], 
+                    [Page life expectancy],
                     [Page lookups/sec],
                     [Page reads/sec],
                     [Page writes/sec],
@@ -131,7 +131,7 @@ BEGIN
                     [Memory Grants Pending],
                     [Target Server Memory (KB)],
                     [Total Server Memory (KB)],
-                    [Batch Requests/sec])  
+                    [Batch Requests/sec])
             ) AS PivotTable
         )
         SELECT

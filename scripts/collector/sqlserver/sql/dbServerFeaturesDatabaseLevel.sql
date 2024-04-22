@@ -35,7 +35,7 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#FeaturesEnabledDbLevel') IS NOT NULL  
+IF OBJECT_ID('tempdb..#FeaturesEnabledDbLevel') IS NOT NULL
    DROP TABLE #FeaturesEnabledDbLevel;
 
 CREATE TABLE #FeaturesEnabledDbLevel
@@ -49,10 +49,10 @@ CREATE TABLE #FeaturesEnabledDbLevel
 --Security Policies
 BEGIN TRY
     exec('INSERT INTO #FeaturesEnabledDbLevel
-            SELECT 
+            SELECT
                 db_name(),
-                ''SP'', 
-                CASE 
+                ''SP'',
+                CASE
                     WHEN count(*) > 0 THEN ''1''
                     ELSE ''0''
                 END,
@@ -78,10 +78,10 @@ END CATCH
 --File Tables Detected
 BEGIN TRY
     exec('INSERT INTO #FeaturesEnabledDbLevel
-            SELECT 
+            SELECT
                 db_name(),
-                ''IsFileTablesEnabled'', 
-                CASE 
+                ''IsFileTablesEnabled'',
+                CASE
                     WHEN count(*) > 0 THEN ''1''
                     ELSE ''0''
                 END,
@@ -107,7 +107,7 @@ END CATCH
 /* Collect permissions which are unsupported in CloudSQL SQL Server */
 BEGIN
     BEGIN TRY
-            exec('INSERT INTO #FeaturesEnabledDbLevel 
+            exec('INSERT INTO #FeaturesEnabledDbLevel
                 SELECT
                     db_name(),
                     tmp.permission_name,
@@ -125,10 +125,10 @@ BEGIN
                         INNER JOIN sys.server_principals pr ON dp.grantee_principal_id = pr.principal_id
                     WHERE
                         pr.name NOT LIKE ''NT SERVICE\%''
-                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
-                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
-                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
-                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
+                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
+                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
+                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'',
+                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'',
                         ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')) tmp
                 GROUP BY
                     tmp.permission_name');
@@ -149,5 +149,5 @@ SELECT
     QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
 FROM #FeaturesEnabledDbLevel f;
 
-IF OBJECT_ID('tempdb..#FeaturesEnabledDbLevel') IS NOT NULL  
+IF OBJECT_ID('tempdb..#FeaturesEnabledDbLevel') IS NOT NULL
    DROP TABLE #FeaturesEnabledDbLevel;

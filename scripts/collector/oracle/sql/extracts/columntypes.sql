@@ -22,10 +22,10 @@ COLUMN TIMESTAMP_WITH_TIME_ZONE_COL_C HEADING TIMESTAMP_WITH_TIME_ZONE_COL_COUNT
 spool &outputdir/opdb__columntypes__&v_tag
 prompt PKEY|CON_ID|OWNER|TABLE_NAME|ANYDATA_COL_COUNT|BFILE_COL_COUNT|BINARY_DOUBLE_COL_COUNT|BINARY_FLOAT_COL_COUNT|BLOB_COL_COUNT|CFILE_COL_COUNT|CHAR_COL_COUNT|CLOB_COL_COUNT|DATE_COL_COUNT|FLOAT_COL_COUNT|INTERVAL_DAY_TO_SECOND_COL_COUNT|INTERVAL_YEAR_TO_MONTH_COL_COUNT|JSON_COL_COUNT|LONG_RAW_COL_COUNT|LONG_COL_COUNT|MLSLABEL_COL_COUNT|NCHAR_VARYING_COL_COUNT|NCHAR_COL_COUNT|NCLOB_COL_COUNT|NUMBER_COL_COUNT|NVARCHAR2_COL_COUNT|RAW_COL_COUNT|ROWID_COL_COUNT|SPATIAL_COL_COUNT|TIME_WITH_TIME_ZONE_COL_COUNT|TIME_COL_COUNT|TIMESTAMP_WITH_LOCAL_TIME_Z_COUNT|TIMESTAMP_WITH_TIME_ZONE_COL_COUNT|TIMESTAMP_COL_COUNT|UROWID_COL_COUNT|VARCHAR_COL_COUNT|VARCHAR2_COL_COUNT|XMLTYPE_COL_COUNT|UNDEFINED_COL_COUNT|USER_DEFINED_COL_COUNT|BYTES|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH coltypes AS (
-  SELECT 
+  SELECT
     to_char(con_id) as con_id,
-    owner, table_name, 
---    sum(col_count) AS col_count, 
+    owner, table_name,
+--    sum(col_count) AS col_count,
     SUM(CASE WHEN data_type = 'ANYDATA'                           THEN 1 ELSE 0 END) as "ANYDATA_COL_COUNT"                          ,
     SUM(CASE WHEN data_type = 'BFILE'                             THEN 1 ELSE 0 END) as "BFILE_COL_COUNT"                            ,
     SUM(CASE WHEN data_type = 'BINARY_DOUBLE'                     THEN 1 ELSE 0 END) as "BINARY_DOUBLE_COL_COUNT"                    ,
@@ -145,10 +145,10 @@ WITH coltypes AS (
         FROM
             &v_tblprefix._tab_columns a INNER JOIN &v_tblprefix._objects b ON &v_a_con_id = &v_b_con_id AND a.owner = b.owner AND a.table_name = b.object_name and b.object_type = 'TABLE'
         WHERE
-            a.owner NOT IN 
+            a.owner NOT IN
 @&EXTRACTSDIR/exclude_schemas.sql
-           ) 
-   GROUP BY 
+           )
+   GROUP BY
     con_id, owner, table_name
 )
 SELECT
@@ -193,7 +193,7 @@ SELECT
     c.USER_DEFINED_COL_COUNT                     ,
     0 as bytes                                   ,
     :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
-FROM  coltypes c 
+FROM  coltypes c
 ORDER BY 1,2,3,4
 ;
 

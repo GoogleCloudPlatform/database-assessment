@@ -18,7 +18,7 @@ spool &outputdir/opdb__opatch__&v_tag
 column c_patchinfo new_value p_patchinfo noprint
 
 variable v_patchinfo VARCHAR2(500);
-DECLARE 
+DECLARE
   cnt NUMBER;
 BEGIN
   SELECT count(1) INTO cnt FROM all_objects WHERE object_name = 'DBMS_QOPATCH';
@@ -40,7 +40,7 @@ BEGIN
 END;
 /
 
-SELECT :v_patchinfo 
+SELECT :v_patchinfo
  AS c_patchinfo FROM dual;
 
 
@@ -54,13 +54,13 @@ vopatch as (
     SELECT
         extractvalue(column_value, '/patch/patchID')               patch_id,
         extractvalue(column_value, '/patch/uniquePatchID')         unique_patch_id,
-        extractvalue(column_value, '/patch/patchDescription')      patch_descr,       
+        extractvalue(column_value, '/patch/patchDescription')      patch_descr,
         extractvalue(column_value, '/patch/patchType')             patch_type,
         extractvalue(column_value, '/patch/appliedDate')             applied_date,
         extractvalue(column_value, '/patch/bugs[1]/bug[1]/description[1]')      bug_descr
     FROM
         xml                                                             x,
-        TABLE ( xmlsequence(extract(x.x, '/InventoryInstance/patches/*')) )              rws 
+        TABLE ( xmlsequence(extract(x.x, '/InventoryInstance/patches/*')) )              rws
         order by 1
 )
 SELECT :v_pkey AS pkey,

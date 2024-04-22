@@ -74,13 +74,13 @@ BEGIN
             SELECT
                ''"' + @PKEY + '"'' AS pkey,
                QUOTENAME(DB_NAME(),''"'') as database_name,
-               CASE 
-	               WHEN s.name IS NULL 
+               CASE
+	               WHEN s.name IS NULL
                      THEN QUOTENAME(v.schema_name,''"'')
 		            ELSE QUOTENAME(s.name,''"'')
 	            END as schema_name,
                CASE
-                  WHEN t.name IS NULL 
+                  WHEN t.name IS NULL
                      THEN QUOTENAME(v.name,''"'')
                   ELSE QUOTENAME(t.name,''"'')
                END as table_name,
@@ -102,7 +102,7 @@ BEGIN
                ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
                QUOTENAME(ISNULL(icc.is_computed_index,0),''"'') as is_computed_index,
                CASE
-                  WHEN v.name IS NOT NULL 
+                  WHEN v.name IS NOT NULL
                      THEN ''"1"''
                   ELSE ''"0"''
                END as is_index_on_view
@@ -115,24 +115,24 @@ BEGIN
             LEFT JOIN sys.partitions AS p ON (p.object_id = i.object_id AND p.index_id = i.index_id)
             LEFT JOIN sys.allocation_units AS a ON (a.container_id = p.partition_id)
             LEFT JOIN sys.partition_schemes ps ON (i.data_space_id = ps.data_space_id)
-            LEFT JOIN index_computed_cols icc ON (i.object_id = icc.object_id 
+            LEFT JOIN index_computed_cols icc ON (i.object_id = icc.object_id
                      and i.name = icc.index_name
                      and icc.table_name = t.name
                      and icc.schema_name = s.name)
 	         WHERE i.NAME is not NULL
-            GROUP BY 
-               CASE 
-	               WHEN s.name IS NULL 
+            GROUP BY
+               CASE
+	               WHEN s.name IS NULL
                      THEN QUOTENAME(v.schema_name,''"'')
 		            ELSE QUOTENAME(s.name,''"'')
-	            END 
+	            END
                ,CASE
-                  WHEN t.name IS NULL 
+                  WHEN t.name IS NULL
                      THEN QUOTENAME(v.name,''"'')
                   ELSE QUOTENAME(t.name,''"'')
-               END    
-               ,i.name  
-               ,i.type_desc 
+               END
+               ,i.name
+               ,i.type_desc
                ,i.is_primary_key
                ,i.is_unique
                ,i.fill_factor
@@ -143,7 +143,7 @@ BEGIN
                ,ISNULL (ps.name, ''Not Partitioned'')
                ,ISNULL (icc.is_computed_index,0)
                ,CASE
-                  WHEN v.name IS NOT NULL 
+                  WHEN v.name IS NOT NULL
                      THEN ''"1"''
                   ELSE ''"0"''
                END
@@ -179,9 +179,9 @@ BEGIN
                LEFT JOIN sys.partitions AS p ON p.object_id = fi.object_id
                LEFT JOIN sys.allocation_units AS a ON a.container_id = p.partition_id
                LEFT JOIN sys.partition_schemes ps ON fi.data_space_id = ps.data_space_id
-            GROUP BY 
+            GROUP BY
                s.name,
-               t.name,  
+               t.name,
                o.name,
                p.data_compression,
                p.data_compression_desc,

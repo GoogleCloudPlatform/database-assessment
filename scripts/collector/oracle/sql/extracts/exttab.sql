@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 spool &outputdir/opdb__exttab__&v_tag
-prompt PKEY|CON_ID|OWNER|TABLE_NAME|TYP|TYPE_NAME|DEF|DEFAULT_DIRECTORY_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID 
+prompt PKEY|CON_ID|OWNER|TABLE_NAME|TYP|TYPE_NAME|DEF|DEFAULT_DIRECTORY_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vexttab AS (
 SELECT :v_pkey AS pkey,
        &v_a_con_id as con_id, owner, table_name, type_owner, type_name, default_directory_owner, default_directory_name

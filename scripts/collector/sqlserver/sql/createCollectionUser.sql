@@ -25,7 +25,7 @@ DECLARE @PRODUCT_VERSION AS INTEGER;
 DECLARE @CLOUDTYPE AS VARCHAR(256);
 
 
-DECLARE db_cursor CURSOR FOR 
+DECLARE db_cursor CURSOR FOR
 SELECT name
 FROM sys.databases
 WHERE name NOT IN ('model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
@@ -39,7 +39,7 @@ SELECT @CLOUDTYPE = 'NONE';
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF NOT EXISTS 
+IF NOT EXISTS
     (SELECT name
 FROM master.sys.server_principals
 WHERE name = @COLLECTION_USER)

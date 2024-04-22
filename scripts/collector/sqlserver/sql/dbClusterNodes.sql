@@ -34,8 +34,8 @@ BEGIN
         exec ('
         SELECT
             ''"' + @PKEY + '"'' AS pkey,
-            QUOTENAME(NodeName,''"'') AS node_name, 
-            QUOTENAME(status,''"'') AS status, 
+            QUOTENAME(NodeName,''"'') AS node_name,
+            QUOTENAME(status,''"'') AS status,
             QUOTENAME(status_description,''"'') status_description,
             ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id,
             ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id
@@ -51,8 +51,8 @@ BEGIN
         exec ('
         SELECT
             ''"' + @PKEY + '"'' AS pkey,
-            QUOTENAME(NodeName,''"'') AS node_name, 
-            ''""'' as status, 
+            QUOTENAME(NodeName,''"'') AS node_name,
+            ''""'' as status,
             ''""'' as status_description,
             ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id,
             ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id

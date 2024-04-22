@@ -23,7 +23,7 @@ WITH vawrsnap as (
 SELECT  :v_pkey AS pkey,
         dbid, instance_number, hour,
         min(snap_id) min_snap_id, max(snap_id) max_snap_id,
-        TO_CHAR(min(begin_interval_time), 'YYYY-MM-DD HH24:MI:SS') min_begin_interval_time, 
+        TO_CHAR(min(begin_interval_time), 'YYYY-MM-DD HH24:MI:SS') min_begin_interval_time,
         TO_CHAR(max(begin_interval_time), 'YYYY-MM-DD HH24:MI:SS') max_begin_interval_time,
         count(1) cnt,ROUND(SUM(snaps_diff_secs),0) sum_snaps_diff_secs,
         ROUND(avg(snaps_diff_secs),0) avg_snaps_diff_secs,
