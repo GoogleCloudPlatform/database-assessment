@@ -74,6 +74,6 @@ IF @PRODUCT_VERSION > 10
         AND a.backup_start_date < getdate()
     GROUP BY
         CONVERT(VARCHAR(19), a.backup_start_date, 101),
-        DATEPART (day, a.backup_start_date) 
+        DATEPART (day, a.backup_start_date)
     ORDER BY 1,2');
 END;

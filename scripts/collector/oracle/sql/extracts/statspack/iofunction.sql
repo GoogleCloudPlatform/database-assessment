@@ -191,4 +191,3 @@ SELECT pkey , dbid , instance_number , hour , function_name ,
 FROM viof;
 spool off
 column hour clear
-

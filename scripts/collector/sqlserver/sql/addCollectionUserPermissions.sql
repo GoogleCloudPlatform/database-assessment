@@ -22,7 +22,7 @@ DECLARE @dbname VARCHAR(50);
 DECLARE @COLLECTION_USER VARCHAR(256);
 DECLARE @PRODUCT_VERSION AS INTEGER
 
-DECLARE db_cursor CURSOR FOR 
+DECLARE db_cursor CURSOR FOR
 SELECT name
 FROM sys.databases
 WHERE name NOT IN ('model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
@@ -32,7 +32,7 @@ SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPRO
 SELECT @COLLECTION_USER = N'$(collectionUser)'
 
 BEGIN
-    IF EXISTS 
+    IF EXISTS
         (SELECT name
     FROM sys.server_principals
     WHERE name = @COLLECTION_USER)

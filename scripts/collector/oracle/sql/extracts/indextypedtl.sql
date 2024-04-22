@@ -22,7 +22,7 @@ COLUMN CUSTOM_INDEX_TYPE FORMAT A20
 COLUMN VISIBILITY FORMAT A20
 COLUMN COMPRESSION FORMAT A20
 spool &outputdir/opdb__indextypedtl__&v_tag
-prompt PKEY|CON_ID|OWNER|INDEX_TYPE|UNIQUENESS|COMPRESSION|PARTITIONED|TEMPORARY|SECONDARY|VISIBILITY|JOIN_INDEX|CUSTOM_INDEX_TYPE|TABLE_NAME|INDEX_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID 
+prompt PKEY|CON_ID|OWNER|INDEX_TYPE|UNIQUENESS|COMPRESSION|PARTITIONED|TEMPORARY|SECONDARY|VISIBILITY|JOIN_INDEX|CUSTOM_INDEX_TYPE|TABLE_NAME|INDEX_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vidxtype AS (
 SELECT :v_pkey AS pkey,
        &v_a_con_id AS con_id,
@@ -41,11 +41,11 @@ SELECT :v_pkey AS pkey,
 FROM   &v_tblprefix._indexes a
 WHERE  owner NOT IN
 @&EXTRACTSDIR/exclude_schemas.sql
-) 
-SELECT pkey , 
-       con_id , 
-       owner , 
-       index_type , 
+)
+SELECT pkey ,
+       con_id ,
+       owner ,
+       index_type ,
        uniqueness,
        compression,
        partitioned,

@@ -56,7 +56,7 @@ BEGIN
 	BEGIN
 		exec ('
 				WITH TableData AS (
-					SELECT 
+					SELECT
 						[schema_name]      = s.[name]
 						,[table_name]       = t.[name]
 						,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -100,7 +100,7 @@ BEGIN
 					LEFT JOIN sys.partition_functions pf WITH (NOLOCK) on (pf.function_id = ps.function_id)
 					WHERE t.is_ms_shipped = 0 -- Not a system table
 						AND i.type IN (0,1,5))
-					SELECT 
+					SELECT
 						''"' + @PKEY + '"'' AS pkey,
 						QUOTENAME(DB_NAME(), ''"'') as database_name,
 						QUOTENAME(schema_name, ''"'') as schema_name,
@@ -127,7 +127,7 @@ BEGIN
 	IF @PRODUCT_VERSION > 12 AND @validDB <> 0 AND @CLOUDTYPE = 'NONE' AND @CURRENT_DB_NAME = 'tempdb'
 	BEGIN
 		exec('WITH TableData AS (
-					SELECT 
+					SELECT
 						[schema_name]      = s.[name]
 						,[table_name]       = t.[name]
 						,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -171,7 +171,7 @@ BEGIN
 					LEFT JOIN sys.partition_functions pf WITH (NOLOCK) on (pf.function_id = ps.function_id)
 					WHERE t.is_ms_shipped = 0 -- Not a system table
 						AND i.type IN (0,1,5)
-						AND (t.name LIKE N''##%'' 
+						AND (t.name LIKE N''##%''
 							OR t.name like N''#%[_]%''
 							AND t.name not like N''#[0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z]''))
 					SELECT
@@ -202,7 +202,7 @@ BEGIN
 	BEGIN
 		exec ('
 			WITH TableData AS (
-				SELECT 
+				SELECT
 					[schema_name]      = s.[name]
 					,[table_name]       = t.[name]
 					,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -274,7 +274,7 @@ BEGIN
 	BEGIN
 		exec ('
 			WITH TableData AS (
-				SELECT 
+				SELECT
 					[schema_name]      = s.[name]
 					,[table_name]       = t.[name]
 					,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -318,7 +318,7 @@ BEGIN
 				LEFT JOIN sys.partition_functions pf WITH (NOLOCK) on (pf.function_id = ps.function_id)
 				WHERE t.is_ms_shipped = 0 -- Not a system table
 					AND i.type IN (0,1,5)
-					AND (t.name LIKE N''##%'' 
+					AND (t.name LIKE N''##%''
 							OR t.name like N''#%[_]%''
 							AND t.name not like N''#[0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z]''))
 				SELECT
@@ -349,7 +349,7 @@ BEGIN
     BEGIN
 		exec ('
 		WITH TableData AS (
-			SELECT 
+			SELECT
 				[schema_name]      = s.[name]
 				,[table_name]       = t.[name]
 				,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -421,7 +421,7 @@ BEGIN
 	BEGIN
 		exec ('
 		WITH TableData AS (
-			SELECT 
+			SELECT
 				[schema_name]      = s.[name]
 				,[table_name]       = t.[name]
 				,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore

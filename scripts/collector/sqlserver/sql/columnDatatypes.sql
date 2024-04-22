@@ -52,11 +52,11 @@ BEGIN
          AND state = 0
    END
 
-   BEGIN TRY 
-   IF @PRODUCT_VERSION > 12 AND @VALIDDB <> 0 AND @CLOUDTYPE = 'NONE'    
+   BEGIN TRY
+   IF @PRODUCT_VERSION > 12 AND @VALIDDB <> 0 AND @CLOUDTYPE = 'NONE'
       BEGIN
       EXEC ('
-         SELECT 
+         SELECT
                ''"' + @PKEY + '"'' AS pkey
                , QUOTENAME(db_name(),''"'') as database_name
                , QUOTENAME(s.name,''"'')  AS schema_name
@@ -74,14 +74,14 @@ BEGIN
                , QUOTENAME(count(1),''"'') AS column_count
                , ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id
                , ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id
-            FROM  sys.objects o 
+            FROM  sys.objects o
             JOIN  sys.schemas s
                ON  s.schema_id = o.schema_id
             JOIN  sys.columns c
             ON  o.object_id = c.object_id
             JOIN  sys.types t
             ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-         WHERE o.type_desc = ''USER_TABLE'' 
+         WHERE o.type_desc = ''USER_TABLE''
             -- AND t.system_type_id = t.user_type_id /* Removing to capture datatypes like hierarchyid */
          GROUP BY s.name
                , o.name
@@ -100,7 +100,7 @@ BEGIN
    IF @PRODUCT_VERSION <= 12 AND @VALIDDB <> 0 AND @CLOUDTYPE = 'NONE'
       BEGIN
       EXEC ('
-         SELECT 
+         SELECT
                ''"' + @PKEY + '"'' AS pkey
                , QUOTENAME(db_name(),''"'') AS database_name
                , QUOTENAME(s.name,''"'')  AS schema_name
@@ -118,14 +118,14 @@ BEGIN
                , QUOTENAME(count(1),''"'') AS column_count
                , ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id
                , ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id
-            FROM  sys.objects o 
+            FROM  sys.objects o
             JOIN  sys.schemas s
                ON  s.schema_id = o.schema_id
             JOIN  sys.columns c
             ON  o.object_id = c.object_id
             JOIN  sys.types t
             ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-         WHERE o.type_desc = ''USER_TABLE'' 
+         WHERE o.type_desc = ''USER_TABLE''
             -- AND t.system_type_id = t.user_type_id /* Removing to capture datatypes like hierarchyid */
          GROUP BY s.name
                , o.name
@@ -160,14 +160,14 @@ BEGIN
                , QUOTENAME(count(1),''"'') AS column_count
                , ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id
                , ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id
-            FROM  sys.objects o 
+            FROM  sys.objects o
             JOIN  sys.schemas s
                ON  s.schema_id = o.schema_id
             JOIN  sys.columns c
             ON  o.object_id = c.object_id
             JOIN  sys.types t
             ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-         WHERE o.type_desc = ''USER_TABLE'' 
+         WHERE o.type_desc = ''USER_TABLE''
             AND t.system_type_id = t.user_type_id
          GROUP BY s.name
                , o.name
@@ -183,7 +183,7 @@ BEGIN
                , c.rule_object_id');
    END;
 END TRY
-BEGIN CATCH 
+BEGIN CATCH
    SELECT
       HOST_NAME() AS HOST_NAME,
       DB_NAME() AS DATABASE_NAME,

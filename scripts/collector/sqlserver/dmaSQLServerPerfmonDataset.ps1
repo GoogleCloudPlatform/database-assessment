@@ -95,11 +95,11 @@ if ($namedInstanceName) {
 } else {
 	$perfmonLogFile = 'opdb__perfMonLog' + '__' + $operation + '_' + $machinename + '_MSSQLSERVER_' + $current_ts + '.log'
 	if (!$perfmonOutFile) {
-	    $perfmonOutFile = 'opdb__PerfMonData' + '_' + $machinename + '_MSSQLSERVER_' + $current_ts + '.csv'		
+	    $perfmonOutFile = 'opdb__PerfMonData' + '_' + $machinename + '_MSSQLSERVER_' + $current_ts + '.csv'
     }
 }
 
-function CreateDMAPerfmonDataSet 
+function CreateDMAPerfmonDataSet
 {
 param(
     [string]$instanceName,
@@ -236,7 +236,7 @@ $str = @'
 		</EventsFileName>
 	</DataManager>
 </DataCollectorSet>
-'@ 
+'@
 } else {
 $str = @'
 	<DataCollectorSet>
@@ -394,12 +394,12 @@ $str = @'
 			Remove-Item -Path $env:TEMP\DMA-SQLServerPerfmonDataSet.xml
 		}
 	}
-	
-	
+
+
 	$newXML = $str.Replace('$instance', $metricInstanceName).Replace('$dataset', $dataSet)
 	$newXML = $newXML.Replace('$perfmonDuration', $perfmonDuration).Replace('$perfmonSampleInterval', $perfmonSampleInterval)
 	$newXML = $newXML.Replace('$perfmonTotalDuration', $perfmonTotalDuration)
-	
+
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Writing XML File to be used for import to perfmon..." -logOperation "BOTH"
 	$newXML | Out-File -FilePath $xmlTempDir\DMA-SQLServerPerfmonDataSet.xml -encoding utf8
@@ -528,7 +528,7 @@ param(
 	[string]$dmaSourceId,
 	[string]$dmaManualId
 	)
-	
+
 	$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
 	$outputFileName = $perfmonOutFile
 	$maxFileDate = $null
@@ -559,9 +559,9 @@ param(
 			$tempFileName = 'PKEY_' + (Split-Path $file -leaf)
 			Get-Content -Path $file | ForEach-Object {
 				# Old way of splitting file
-				#$arr = $_.ToString() -split ','				
+				#$arr = $_.ToString() -split ','
 				#$left = $arr[0..($arr.Length-3)] -join ','
-				#$right = $arr[($arr.Length-2)..($arr.Length-1)] -join ','					
+				#$right = $arr[($arr.Length-2)..($arr.Length-1)] -join ','
 				#'"' + $pkey + '",' + $left + ',"' + $dmaSourceId + '","' + $dmaManualId + '",' + $right
 				#New file split method
 				$perfmonCsv = $_.ToString() -split ','
@@ -583,7 +583,7 @@ param(
 	$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"|"DMA_SOURCE_ID"|"DMA_MANUAL_ID"|"NUMA_TOTAL_MEMORY_MB"|"NUMA_AVAILABLE_MEMORY_MB"'
 	if ($fileExists)  {
 		Set-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
-		
+
 		((Get-Content -Path $env:TEMP\PKEY_*$dataSet*.csv -Raw ) -replace ',','|') | Add-Content -Encoding utf8 -Path $outputDir\$outputFileName
 	} else {
 		Set-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
@@ -599,7 +599,7 @@ param(
 		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|"0"|"0"'
 		Add-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
 
-	}	
+	}
 	if (Test-Path -Path $outputDir\$outputFileName) {
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Clean up Temp File area..." -logOperation "BOTH"
 		Remove-Item -Path $env:TEMP\*$dataSet*.csv
@@ -624,7 +624,7 @@ function CreateEmptyFile
 		[string]$dmaSourceId,
 		[string]$dmaManualId
 		)
-		
+
 		$outputDir = $PSScriptRoot + "\" + $perfmonOutDir
 		$outputFileName = $perfmonOutFile
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Creating an empty Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
@@ -633,7 +633,7 @@ function CreateEmptyFile
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
 		WriteLog -logLocation $foldername\$logFile -logMessage "DMA Manual Id: $dmaManualId " -logOperation "FILE"
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
-	
+
 		if (!(Test-Path -PathType container $outputDir)) {
 			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
 			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Creating Output Directory..." -logOperation "BOTH"
@@ -668,7 +668,7 @@ function CreateEmptyFile
 	}
 
 if (!$operation) {
-	$operation = read-host -Prompt "Enter an operation: create, stop, delete, collect, createemptyfile" 
+	$operation = read-host -Prompt "Enter an operation: create, stop, delete, collect, createemptyfile"
 }
 if ($namedInstanceName) {
 	$datasetName = "Google-DMA-SQLServerDataSet-$namedInstanceName"

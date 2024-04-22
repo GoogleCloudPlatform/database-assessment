@@ -29,7 +29,7 @@ for analysis by Database Migration Assessment.
     cat
     cut
     dirname
-    grep 
+    grep
     locale
     mkdir
     sed
@@ -47,7 +47,7 @@ for analysis by Database Migration Assessment.
 
     b) Ensure sqlplus is in the path.
 
-    c) If the extract will be run by a user that does not have SYSDBA privilege, connect to the database 
+    c) If the extract will be run by a user that does not have SYSDBA privilege, connect to the database
        as a user with SYSDBA privileges and create the user if needed.  If this is a multi-tenant database,
        create the user as a common user in the root container. The Dma_collector does not currently support
        running in individual pluggable databases.
@@ -62,9 +62,9 @@ for analysis by Database Migration Assessment.
            SQL> create user C##DMA_COLLECTOR identified by password;
            SQL> grant connect, create session to C##DMA_COLLECTOR;
 
-    d) Navigate to the sql/setup directory and execute grants_wrapper.sql as a user with SYSDBA privileges.  
-       You will be prompted for the name of a database user 
-       (Note that input is case-sensitive and must match the username created above) to be granted 
+    d) Navigate to the sql/setup directory and execute grants_wrapper.sql as a user with SYSDBA privileges.
+       You will be prompted for the name of a database user
+       (Note that input is case-sensitive and must match the username created above) to be granted
        privileges on the objects required for data collection.
        You will also be prompted whether or not to allow access to the AWR/ASH data.
 
@@ -88,7 +88,7 @@ for analysis by Database Migration Assessment.
     a) Execute collect-data.sh, passing the database connection string and indicator on whether to use AWR/ASH diagnostic data.
 
        Parameters:
-      
+
        Connection definition must one of:
            {
              --connectionStr       Oracle EasyConnect string formatted as {user}/{password}@//{db host}:{listener port}/{service name}.
@@ -105,15 +105,15 @@ for analysis by Database Migration Assessment.
            --statsWindow           Optional. Number of days of performance stats to collect.  Must be one of 7, 30.  Default is 30.
                                    NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION.
                                    IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8
-                                   CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR.   
-   
+                                   CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR.
+
       Examples:
-   
+
         To use the AWR/ASH data:
           ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR
          or
           ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR
-  
+
 
         To use the STATSPACK data:
           ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc STATSPACK
@@ -122,15 +122,15 @@ for analysis by Database Migration Assessment.
 
 
         If Statspack has less than 30 days of data, limit collection to the last 7 days using the paramter --statsWindow:
-         
+
           ./collect-data.sh --connectionStr MyUser/MyPassword@//dbhost.company.com:1521/MyDbName.company.com --statsSrc STATSPACK --statsWindow 7
          or
           ./collect-data.sh --collectionUserName MyUser --collectionUserPass MyPassword --hostName dbhost.company.com --port 1521 --databaseService MyDbName.company.com --statsSrc STATSPACK --statsWindow 7
 
 
         Collections can be run as SYS if needed by setting ORACLE_SID and running on the database host:
-        
-          ./collect-data.sh --connectionStr '/ as sysdba' --statsSrc AWR 
+
+          ./collect-data.sh --connectionStr '/ as sysdba' --statsSrc AWR
 
          or to avoid using the licensed Oracle Tuning and Diagnostics pack data:
 
@@ -139,14 +139,14 @@ for analysis by Database Migration Assessment.
 
         Notes:
             1) Google Database Migration Assessment Data Extractor extracts data for the entire database. In multitenant
-               CDB databases, you must connect to the container database.  Running this from within a 
+               CDB databases, you must connect to the container database.  Running this from within a
                pluggable database will not collect the proper data.
 
 
 4. Results
 ----------
 
-    An archive of the extracted results will be created in the directory collector/output. 
+    An archive of the extracted results will be created in the directory collector/output.
     The full path and file name will be displayed on completion.
 
 
@@ -165,4 +165,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-

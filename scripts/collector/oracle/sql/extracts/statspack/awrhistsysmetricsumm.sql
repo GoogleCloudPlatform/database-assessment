@@ -45,21 +45,21 @@ SELECT :v_pkey AS pkey,
        null                                  "PERC75",
        null                                  "PERC90",
        -- Handle cases where STANDARD_DEVIATION is displayed as NULL but when compared is > .9 repeating but less than 1.
-       -- Oberved in 11.2 and 19.3.  Seems to occur when MINVAL < AVERAGE = MAXVAL for 'User Limit %' and 'Session Limit %' metrics.  
+       -- Oberved in 11.2 and 19.3.  Seems to occur when MINVAL < AVERAGE = MAXVAL for 'User Limit %' and 'Session Limit %' metrics.
        -- In most such cases, STARNDARD_DEVIATION = 0, so that is what we will do here.
        --hsm.AVERAGE+(2* CASE WHEN ( standard_deviation > (.999999999999999999999999999) AND standard_deviation < 1 )
        --                      AND ( MINVAL = 0 AND AVERAGE = MAXVAL )  then 0 else standard_deviation end ) "PERC95",
        AVG(value) OVER (PARTITION BY hsm.dbid, hsm.instance_number,  TO_CHAR(dhsnap.snap_time, 'hh24')  , hsm.name) + (2 * STDDEV (value)  OVER (PARTITION BY hsm.dbid, hsm.instance_number,  TO_CHAR(dhsnap.snap_time, 'hh24')  , hsm.name)) AS "PERC95",
        NULL                                   "PERC100"
 FROM (
-      SELECT s.snap_id, s.dbid, s.instance_number, s.name, s.value, 
+      SELECT s.snap_id, s.dbid, s.instance_number, s.name, s.value,
              NVL(
                  DECODE(
                         GREATEST(value, NVL( LAG(value) OVER ( PARTITION BY s.dbid, s.instance_number, s.name ORDER BY s.snap_id), 0)),
-                        value, 
+                        value,
                         value - LAG(value) OVER ( PARTITION BY s.dbid, s.instance_number, s.name ORDER BY s.snap_id),
-                       0), 
-                0) AS delta_value  
+                       0),
+                0) AS delta_value
        FROM perfstat.stats$sysstat s )   hsm
        INNER JOIN stats$snapshot dhsnap
                ON hsm.snap_id = dhsnap.snap_id

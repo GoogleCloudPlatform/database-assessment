@@ -21,7 +21,7 @@ SET LANGUAGE us_english;
 DECLARE @dbname VARCHAR(50);
 DECLARE @COLLECTION_USER VARCHAR(256);
 
-DECLARE db_cursor CURSOR FOR 
+DECLARE db_cursor CURSOR FOR
 SELECT name
 FROM sys.databases
 WHERE name NOT IN ('model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
@@ -53,7 +53,7 @@ CLOSE db_cursor
 DEALLOCATE db_cursor
 
 use [master];
-IF EXISTS 
+IF EXISTS
     (SELECT name
 FROM master.sys.server_principals
 WHERE name = @COLLECTION_USER)

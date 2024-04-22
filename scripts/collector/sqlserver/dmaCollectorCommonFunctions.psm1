@@ -15,7 +15,7 @@
 .SYNOPSIS
     .
 .DESCRIPTION
-    Creates a user within the SQL Server Database using "Windows Authentication" with the necessary permissions 
+    Creates a user within the SQL Server Database using "Windows Authentication" with the necessary permissions
     needed to execute subsequent scripts to collect data from SQL Server and Perfmon to be uploaded to Google Database Migration Assistant for review.
 
 .NOTES
@@ -63,7 +63,7 @@ function createManifestFile {
 
 function getCurrentTimestamp {
     $currentTimestamp = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
-    return $currentTimestamp 
+    return $currentTimestamp
 }
 
 function checkStringForSpecialChars {

@@ -40,7 +40,7 @@ IF CHARINDEX('\', @@SERVERNAME)-1 = -1
 ELSE
   SELECT @MACHINENAME = UPPER(SUBSTRING(CONVERT(nvarchar, @@SERVERNAME),1,CHARINDEX('\', CONVERT(nvarchar, @@SERVERNAME))-1))
 
-IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  
+IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL
    DROP TABLE #serverProperties;
 
 CREATE TABLE #serverProperties
@@ -50,9 +50,9 @@ CREATE TABLE #serverProperties
 );
 
 /* need to record table permissions in order to determine if we can run certain serverprops queryies
-    as some tables are not available in managed instances 
+    as some tables are not available in managed instances
 */
-IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL  
+IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL
    DROP TABLE #myPerms;
 
 CREATE TABLE #myPerms
@@ -368,7 +368,7 @@ SELECT
     QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
 FROM #serverProperties a;
 
-IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  
+IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL
    DROP TABLE #serverProperties;
-IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL  
+IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL
    DROP TABLE #myPerms;

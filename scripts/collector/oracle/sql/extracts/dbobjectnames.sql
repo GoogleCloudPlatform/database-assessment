@@ -16,7 +16,7 @@ limitations under the License.
 COLUMN EDITIONABLE FORMAT A11
 spool &outputdir/opdb__dbobjectnames__&v_tag
 prompt PKEY|CON_ID|OWNER|OBJECT_NAME|OBJECT_TYPE|EDITIONABLE|LINES|STATUS|DMA_SOURCE_ID|DMA_MANUAL_ID
-WITH 
+WITH
 vdbobji AS (
         SELECT
                &v_a_con_id AS con_id,
@@ -33,12 +33,12 @@ vdbobji AS (
 vdbobjx AS (
         SELECT 'SYNONYM' as object_type, owner, synonym_name  ,  &v_b_con_id AS con_id, table_owner
         FROM &v_tblprefix._synonyms b
-        WHERE owner = 'PUBLIC' and 
-              table_owner in 
+        WHERE owner = 'PUBLIC' and
+              table_owner in
 @&EXTRACTSDIR/exclude_schemas.sql
               ),
-vsrc   AS (SELECT 
-                  &v_c_con_id AS con_id, 
+vsrc   AS (SELECT
+                  &v_c_con_id AS con_id,
                   owner,
                   name,
                   type,
@@ -65,15 +65,14 @@ vdbobj AS (
         WHERE NOT ( i.object_type = 'SYNONYM' AND i.owner ='PUBLIC' AND ( i.object_name LIKE '/%' OR x.table_owner IS NOT NULL OR x.table_owner ='SYS') )
         AND i.object_name NOT LIKE 'BIN$%'
 )
-SELECT pkey , 
-       con_id , 
-       owner , 
-       object_name, 
-       object_type , 
+SELECT pkey ,
+       con_id ,
+       owner ,
+       object_name,
+       object_type ,
        editionable ,
        lines,
        status,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdbobj a;
 spool off
-

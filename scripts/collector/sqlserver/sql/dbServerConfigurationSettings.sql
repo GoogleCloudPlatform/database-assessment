@@ -32,12 +32,12 @@ BEGIN
     exec ('
     SELECT
         ''"' + @PKEY + '"'' AS pkey,
-        QUOTENAME(CONVERT(nvarchar(255),configuration_id),''"'') as configuration_id, 
+        QUOTENAME(CONVERT(nvarchar(255),configuration_id),''"'') as configuration_id,
         QUOTENAME(CONVERT(nvarchar(255),name),''"'') as name,
         QUOTENAME(CONVERT(nvarchar(255),value),''"'') as value,
         QUOTENAME(CONVERT(nvarchar(255),minimum),''"'') as minimum,
         QUOTENAME(CONVERT(nvarchar(255),maximum),''"'') as maximum,
-        QUOTENAME(CONVERT(nvarchar(255),value_in_use),''"'') as value_in_use, 
+        QUOTENAME(CONVERT(nvarchar(255),value_in_use),''"'') as value_in_use,
         QUOTENAME(CONVERT(nvarchar(255),description),''"'') as description,
         ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
         ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id

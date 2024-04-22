@@ -96,4 +96,3 @@ prompt
 prompt Database Migration Assessment data successfully extracted.
 prompt
 exit
-

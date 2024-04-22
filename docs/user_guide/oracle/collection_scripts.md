@@ -53,7 +53,7 @@ sqlplus "sys/password@//hostname:port/dbservicename as sysdba"
 SQL> create user C##DMA_COLLECTOR identified by password;
 SQL> grant connect, create session to C##DMA_COLLECTOR;
 ```
-Navigate to the sql/setup directory and execute grants_wrapper.sql as a user with SYSDBA privileges. 
+Navigate to the sql/setup directory and execute grants_wrapper.sql as a user with SYSDBA privileges.
 You will be prompted for the name of a database user
 (Note that input is case-sensitive and must match the username created above) to be granted
 privileges on the objects required for data collection.
@@ -85,12 +85,12 @@ Launch the collection script: (Note that the parameter names have changed from e
 ```
  Connection definition must one of:
     {
-       --connectionStr       Oracle EasyConnect string formatted as {user}/{password}@//{db host}:{listener port}/{service name} 
+       --connectionStr       Oracle EasyConnect string formatted as {user}/{password}@//{db host}:{listener port}/{service name}
      or
        --hostName            Database server hostname
        --port                Listener port
        --databaseService     Database service name
-       --collectionUserName  Database username 
+       --collectionUserName  Database username
        --collectionUserPass  Database password
     }
  Performance statistics source
@@ -116,7 +116,7 @@ or
 ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR
 
 ex:
-  
+
 ./collect-data.sh --connectionStr MyUser/MyPassword@//dbhost.company.com:1521/MyDbName.company.com --statsSrc AWR
 or
 ./collect-data.sh --collectionUserName MyUser --collectionUserPass MyPassword --hostName dbhost.company.com --port 1521 --databaseService MyDbName.company.com --statsSrc AWR
@@ -131,7 +131,7 @@ or
 ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc STATSPACK
 
 ex:
-  
+
 ./collect-data.sh --connectionStr MyUser/MyPassword@//dbhost.company.com:1521/MyDbName.company.com --statsSrc STATSPACK
 or
 ./collect-data.sh --collectionUserName MyUser --collectionUserPass MyPassword --hostName dbhost.company.com --port 1521 --databaseService MyDbName.company.com --statsSrc STATSPACK
@@ -147,7 +147,7 @@ or
 Collections can be run as SYS if needed by setting ORACLE_SID and running on the database host:
 
 ```shell
-./collect-data.sh --connectionStr '/ as sysdba' --statsSrc AWR 
+./collect-data.sh --connectionStr '/ as sysdba' --statsSrc AWR
 ```
 
 OR

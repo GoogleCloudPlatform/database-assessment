@@ -16,11 +16,11 @@ limitations under the License.
 spool &outputdir/opdb__backups__&v_tag
 prompt PKEY|BACKUP_START_DATE|CON_ID|INPUT_TYPE|ELAPSED_SECONDS|MBYTES_IN|MBYTES_OUT|DMA_SOURCE_ID|DMA_MANUAL_ID
 SELECT :v_pkey AS pkey,
-       trunc(start_time) AS backup_start_date, 
-       &v_a_con_id AS con_id, 
-       input_type, 
-       round(sum(elapsed_seconds)) AS elapsed_seconds, 
-       round(sum(input_bytes)/1024/1024) AS mbytes_in, 
+       trunc(start_time) AS backup_start_date,
+       &v_a_con_id AS con_id,
+       input_type,
+       round(sum(elapsed_seconds)) AS elapsed_seconds,
+       round(sum(input_bytes)/1024/1024) AS mbytes_in,
        round(sum(output_bytes)/1024/1024) AS mbytes_out,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM v$rman_backup_job_details a

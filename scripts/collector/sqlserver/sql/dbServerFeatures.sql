@@ -35,7 +35,7 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
-IF OBJECT_ID('tempdb..#FeaturesEnabled') IS NOT NULL  
+IF OBJECT_ID('tempdb..#FeaturesEnabled') IS NOT NULL
    DROP TABLE #FeaturesEnabled;
 
 CREATE TABLE #FeaturesEnabled
@@ -45,7 +45,7 @@ CREATE TABLE #FeaturesEnabled
     Count INT
 );
 
-IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL  
+IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL
    DROP TABLE #myPerms;
 
 CREATE TABLE #myPerms
@@ -96,9 +96,9 @@ WHERE LOWER(entity_name) IN ('dbo.sysmail_profile','dbo.sysmail_profileaccount',
 IF @TABLE_PERMISSION_COUNT >= 4 AND @CLOUDTYPE = 'NONE'
 BEGIN
     exec('
-    INSERT INTO #FeaturesEnabled 
+    INSERT INTO #FeaturesEnabled
     SELECT
-        ''IsDbMailEnabled'', 
+        ''IsDbMailEnabled'',
         CONVERT(nvarchar, value_in_use),
         CASE WHEN value_in_use > 0 THEN 1
         ELSE 0
@@ -109,10 +109,10 @@ END
 ELSE
 BEGIN
     exec('
-    INSERT INTO #FeaturesEnabled 
+    INSERT INTO #FeaturesEnabled
     SELECT
-        ''IsDbMailEnabled'', 
-        ''0'', 
+        ''IsDbMailEnabled'',
+        ''0'',
         0
     FROM sys.configurations
     WHERE name = ''Database Mail XPs''');
@@ -121,9 +121,9 @@ END;
 --external scripts enabled
 BEGIN
     exec('
-    INSERT INTO #FeaturesEnabled 
+    INSERT INTO #FeaturesEnabled
     SELECT
-        ''IsExternalScriptsEnabled'', 
+        ''IsExternalScriptsEnabled'',
         CONVERT(nvarchar, value_in_use),
         CASE WHEN value_in_use > 0 THEN 1
         ELSE 0
@@ -138,10 +138,10 @@ BEGIN
         exec('
         WITH dqs_service as (
         select count(*) as dqs_count from syslogins where name like ''##MS_dqs%'')
-        INSERT INTO #FeaturesEnabled 
-            SELECT 
+        INSERT INTO #FeaturesEnabled
+            SELECT
                 ''DATA QUALITY SERVICES'' as Features,
-                CASE 
+                CASE
                     WHEN dqs_count > 0 THEN 1
                     ELSE 0
                 END AS Is_EnabledOrUsed,
@@ -152,10 +152,10 @@ BEGIN
         exec('
         WITH dqs_service as (
         select count(*) as dqs_count from sys.sql_logins where name like ''##MS_dqs%'')
-        INSERT INTO #FeaturesEnabled 
-            SELECT 
+        INSERT INTO #FeaturesEnabled
+            SELECT
                 ''DATA QUALITY SERVICES'' as Features,
-                CASE 
+                CASE
                     WHEN dqs_count > 0 THEN 1
                     ELSE 0
                 END AS Is_EnabledOrUsed,
@@ -181,7 +181,7 @@ BEGIN
             END,
             CASE WHEN sum(hasfs) > 0 THEN 1
             ELSE 0
-            END       
+            END
         FROM
             check_filestream
         /* SQL Server 2012 (11.x) above */');
@@ -210,14 +210,14 @@ END
 
 IF @CLOUDTYPE = 'AZURE'
 BEGIN
-    exec('INSERT INTO #FeaturesEnabled 
-            SELECT ''IsHybridBufferPoolEnabled'', 
+    exec('INSERT INTO #FeaturesEnabled
+            SELECT ''IsHybridBufferPoolEnabled'',
             CONVERT(nvarchar,is_enabled),
-            CASE 
+            CASE
                 WHEN is_configured > 0 THEN 1
                 ELSE 0
             END
-            from sys.server_memory_optimized_hybrid_buffer_pool_configuration 
+            from sys.server_memory_optimized_hybrid_buffer_pool_configuration
             /* SQL Server 2019 (15.x) and later versions */');
 END
 ELSE
@@ -228,8 +228,8 @@ BEGIN
         from sys.server_memory_optimized_hybrid_buffer_pool_configuration;
         IF @ROW_COUNT_VAR = 0
         BEGIN
-            exec('INSERT INTO #FeaturesEnabled 
-                    SELECT 
+            exec('INSERT INTO #FeaturesEnabled
+                    SELECT
                         ''IsHybridBufferPoolEnabled'',
                         ''0'',
                         0');
@@ -239,7 +239,7 @@ BEGIN
             exec('INSERT INTO #FeaturesEnabled
                 SELECT ''IsHybridBufferPoolEnabled'',
                 COALESCE(CONVERT(nvarchar,is_enabled), 0),
-                CASE 
+                CASE
                     WHEN is_enabled > 0 THEN 1
                 ELSE 0
                 END
@@ -249,9 +249,9 @@ BEGIN
     END;
     ELSE
     BEGIN
-        exec('INSERT INTO #FeaturesEnabled 
-            SELECT 
-            ''IsHybridBufferPoolEnabled'', 
+        exec('INSERT INTO #FeaturesEnabled
+            SELECT
+            ''IsHybridBufferPoolEnabled'',
             ''0'',
             0
             /* Earlier than SQL Server 2019 (15.x) versions */');
@@ -275,9 +275,9 @@ BEGIN
         FROM
             msdb..log_shipping_secondary_databases
     )
-    INSERT INTO #FeaturesEnabled 
+    INSERT INTO #FeaturesEnabled
 		SELECT
-        ''IsLogShippingEnabled'', 
+        ''IsLogShippingEnabled'',
         COALESCE(CONVERT(varchar,sum(log_shipping)),''0''),
         COALESCE(sum(log_shipping),0))
     FROM
@@ -294,7 +294,7 @@ FROM #myPerms
 WHERE LOWER(entity_name) in ('dbo.sysmaintplan_subplans','dbo.sysjobs') and UPPER(permission_name) = 'SELECT';
 IF @TABLE_PERMISSION_COUNT >= 2
 BEGIN
-    exec('INSERT INTO #FeaturesEnabled 
+    exec('INSERT INTO #FeaturesEnabled
         SELECT
         ''MaintenancePlansEnabled'',
         CASE WHEN COALESCE(count(*),0) > 0
@@ -320,10 +320,10 @@ END;
 --Polybase Enabled
 BEGIN
     exec('
-    INSERT INTO #FeaturesEnabled 
+    INSERT INTO #FeaturesEnabled
     SELECT
-        ''IsPolybaseEnabled'', 
-        CONVERT(nvarchar, value_in_use), 
+        ''IsPolybaseEnabled'',
+        CONVERT(nvarchar, value_in_use),
         CASE
             WHEN value_in_use > 0 THEN 1
             ELSE 0
@@ -334,11 +334,11 @@ END;
 
 --Resource Governor
 BEGIN
-    exec ('INSERT INTO #FeaturesEnabled 
-    SELECT 
-        ''IsResourceGovernorEnabled'', 
+    exec ('INSERT INTO #FeaturesEnabled
+    SELECT
+        ''IsResourceGovernorEnabled'',
         CONVERT(nvarchar, is_enabled),
-        CASE 
+        CASE
             WHEN is_enabled > 0 THEN 1
             ELSE 0
         END
@@ -348,11 +348,11 @@ END;
 --Stretch Database
 IF @CLOUDTYPE = 'AZURE'
 BEGIN
-    exec('INSERT INTO #FeaturesEnabled 
-            SELECT 
+    exec('INSERT INTO #FeaturesEnabled
+            SELECT
                 ''IsStretchDatabaseEnabled'',
                 CONVERT(nvarchar, count(*)),
-                CONVERT(int, count(*)) 
+                CONVERT(int, count(*))
             FROM sys.remote_data_archive_databases');
 END
 
@@ -360,11 +360,11 @@ IF @CLOUDTYPE = 'NONE'
 BEGIN
     IF @PRODUCT_VERSION >= 13 AND @PRODUCT_VERSION <= 16
     BEGIN
-        exec('INSERT INTO #FeaturesEnabled 
-                SELECT 
+        exec('INSERT INTO #FeaturesEnabled
+                SELECT
                     ''IsStretchDatabaseEnabled'',
                     CONVERT(nvarchar, count(*)),
-                    CONVERT(int, count(*)) 
+                    CONVERT(int, count(*))
                 FROM sys.remote_data_archive_databases /* SQL Server 2016 (13.x) and Up to 2022 */');
     END
     ELSE
@@ -375,23 +375,23 @@ END
 
 --TDE in Use
 BEGIN
-    exec('INSERT INTO #FeaturesEnabled 
+    exec('INSERT INTO #FeaturesEnabled
             SELECT
                 ''IsTDEInUse'',
                 CONVERT(nvarchar, count(*)),
                 CONVERT(int, count(*))
-            FROM sys.databases 
+            FROM sys.databases
             WHERE is_encrypted <> 0');
 END
 
 --TempDB Metadata Memory Optimized
 BEGIN
     exec('
-    INSERT INTO #FeaturesEnabled 
+    INSERT INTO #FeaturesEnabled
     SELECT
-        ''IsTempDbMetadataMemoryOptimized'', 
-        CONVERT(nvarchar, value_in_use), 
-        CASE 
+        ''IsTempDbMetadataMemoryOptimized'',
+        CONVERT(nvarchar, value_in_use),
+        CASE
             WHEN value_in_use > 0 THEN 1
             ELSE 0
         END
@@ -445,7 +445,7 @@ END;
 --Server level triggers
 BEGIN
     BEGIN TRY
-        exec('INSERT INTO #FeaturesEnabled 
+        exec('INSERT INTO #FeaturesEnabled
                 SELECT
                     ''ServerLevelTriggers'',
                     CASE
@@ -458,21 +458,21 @@ BEGIN
     END TRY
     BEGIN CATCH
         IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
-            exec('INSERT INTO #FeaturesEnabled 
-                    SELECT 
-                        ''ServerLevelTriggers'', 
-                        ''0'', 
+            exec('INSERT INTO #FeaturesEnabled
+                    SELECT
+                        ''ServerLevelTriggers'',
+                        ''0'',
                         0 ');
     END CATCH
 END;
 
---OPENROWSET 
+--OPENROWSET
 BEGIN
     exec('
-    INSERT INTO #FeaturesEnabled 
+    INSERT INTO #FeaturesEnabled
     SELECT
-        ''OPENROWSET'', 
-        CONVERT(nvarchar, value_in_use) , 
+        ''OPENROWSET'',
+        CONVERT(nvarchar, value_in_use) ,
         CASE
             WHEN value_in_use > 0 THEN 1
             ELSE 0
@@ -484,10 +484,10 @@ END;
 --ad hoc distributed queries / distributed transaction coordinator DTC
 BEGIN
     exec('
-    INSERT INTO #FeaturesEnabled 
+    INSERT INTO #FeaturesEnabled
     SELECT
-        ''ad hoc distributed queries'', 
-        CONVERT(nvarchar, value_in_use) , 
+        ''ad hoc distributed queries'',
+        CONVERT(nvarchar, value_in_use) ,
         CASE
             WHEN value_in_use > 0 THEN 1
             ELSE 0
@@ -511,9 +511,9 @@ WHERE permission_name like '%ADMINISTER BULK OPERATIONS%';
 -- CountServiceBrokerEndpoints
 BEGIN TRY
     exec('INSERT INTO #FeaturesEnabled
-            SELECT 
+            SELECT
                 ''CountServiceBrokerEndpoints'',
-                CASE 
+                CASE
                     WHEN count(*) > 0 THEN ''1''
                     ELSE ''0''
                 END,
@@ -528,9 +528,9 @@ END CATCH
 -- CountTSQLEndpoints
 BEGIN TRY
     exec('INSERT INTO #FeaturesEnabled
-            SELECT 
-                ''CountTSQLEndpoints'', 
-                CASE 
+            SELECT
+                ''CountTSQLEndpoints'',
+                CASE
                     WHEN count(*) > 0 THEN ''1''
                     ELSE ''0''
                 END,
@@ -552,7 +552,7 @@ END CATCH
 /* Collect permissions which are unsupported in CloudSQL SQL Server */
 BEGIN
     BEGIN TRY
-            exec('INSERT INTO #FeaturesEnabled 
+            exec('INSERT INTO #FeaturesEnabled
                 SELECT
                     tmp.permission_name,
 					CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
@@ -571,10 +571,10 @@ BEGIN
                         pr.name NOT LIKE ''NT SERVICE\%''
                         AND name NOT LIKE ''##MS_%##''
                         AND pr.is_fixed_role <> 1
-                        AND p.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
-                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
-                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
-                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
+                        AND p.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
+                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
+                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'',
+                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'',
                         ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')
 					UNION ALL
                     SELECT
@@ -590,12 +590,12 @@ BEGIN
                         pr.name NOT LIKE ''NT SERVICE\%''
                         AND name NOT LIKE ''##MS_%##''
                         AND pr.is_fixed_role <> 1
-                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
-                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
-                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
-                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
-                        ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')     
-                        
+                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
+                        ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
+                        ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'',
+                        ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'',
+                        ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')
+
                     ) tmp
                 GROUP BY
                     tmp.permission_name');
@@ -603,7 +603,7 @@ BEGIN
     BEGIN CATCH
         IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
             BEGIN TRY
-                    exec('INSERT INTO #FeaturesEnabled 
+                    exec('INSERT INTO #FeaturesEnabled
                         SELECT
                             tmp.permission_name,
                             CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
@@ -622,10 +622,10 @@ BEGIN
                                 pr.name NOT LIKE ''NT SERVICE\%''
                                 AND name NOT LIKE ''##MS_%##''
                                 AND pr.is_fixed_role <> 1
-                                AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'', 
-                                ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'', 
-                                ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'', 
-                                ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'', 
+                                AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
+                                ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
+                                ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'',
+                                ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'',
                                 ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')) tmp
                         GROUP BY
                             tmp.permission_name');
@@ -686,7 +686,7 @@ END
 --CLR Enabled
 BEGIN
     exec('INSERT INTO #FeaturesEnabled
-        SELECT ''IsCLREnabled'', 
+        SELECT ''IsCLREnabled'',
         CONVERT(nvarchar, value_in_use),
         CONVERT(int, value_in_use)
         FROM sys.configurations
@@ -704,10 +704,10 @@ END
 ELSE
 BEGIN
     exec('INSERT INTO #FeaturesEnabled
-    SELECT ''IsLinkedServersUsed'', 
-            count(*), 
-            count(*) 
-    FROM sys.servers 
+    SELECT ''IsLinkedServersUsed'',
+            count(*),
+            count(*)
+    FROM sys.servers
     WHERE is_linked = 1');
 END
 
@@ -727,8 +727,8 @@ END CATCH
 /* Certain clouds do not allow access to certain tables so we need to catch the table does not exist error and default the setting */
 BEGIN
     BEGIN TRY
-            exec('INSERT INTO #FeaturesEnabled SELECT ''IsBufferPoolExtensionEnabled'', 
-                  CASE 
+            exec('INSERT INTO #FeaturesEnabled SELECT ''IsBufferPoolExtensionEnabled'',
+                  CASE
                     WHEN state = 0 THEN ''0''
                     WHEN state = 1 THEN ''0''
                     WHEN state = 2 THEN ''1''
@@ -737,7 +737,7 @@ BEGIN
                     WHEN state = 5 THEN ''1''
                     ELSE ''0''
                   END,
-                  CASE WHEN state > 0 THEN 1 ELSE 0 END 
+                  CASE WHEN state > 0 THEN 1 ELSE 0 END
                   FROM sys.dm_os_buffer_pool_extension_configuration /* SQL Server 2014 (13.x) above */');
     END TRY
     BEGIN CATCH
@@ -755,8 +755,8 @@ SELECT
     QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
 FROM #FeaturesEnabled f;
 
-IF OBJECT_ID('tempdb..#FeaturesEnabled') IS NOT NULL  
+IF OBJECT_ID('tempdb..#FeaturesEnabled') IS NOT NULL
    DROP TABLE #FeaturesEnabled;
 
-IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL  
+IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL
    DROP TABLE #myPerms;
