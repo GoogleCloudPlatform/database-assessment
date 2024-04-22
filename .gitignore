@@ -121,6 +121,9 @@ ENV/
 # mkdocs documentation
 /site
 
+# pyre
+.pyre/
+
 # mypy
 .mypy_cache/
 .dmypy.json
@@ -139,6 +142,9 @@ src/dma/_version.py
 
 .ruff_cache
 
+# osx
+.ds_store
+.DS_Store
 
 # App specifics
 invoke.yml
@@ -166,7 +172,12 @@ scripts/collector/oracle/privs.sql
 scripts/collector/oracle/VERSION.txt
 scripts/collector/sqlserver/output/
 scripts/collector/oracle/login.sql
-
+db.sqlite3
+db.sqlite3-journal
+local.db
+duckdb.db
+duck.db
+local.duckdb
 node_modules
 
 src/dma/static
