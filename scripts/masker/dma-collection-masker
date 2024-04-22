@@ -567,7 +567,10 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
         collection_file (Path): the current collection file to mask
         identity_map (Dict[str, str]): The key/replacement key dictionary.
     """
-    with collection_file.open(mode="r", encoding="utf-8") as f, NamedTemporaryFile(mode="w", delete=False) as t:
+    with (
+        collection_file.open(mode="r", encoding="utf-8") as f,
+        NamedTemporaryFile(mode="w", delete=False, encoding="utf-8") as t,
+    ):
         data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
         temp_file = csv.writer(t, delimiter="|", quotechar='"')
         collection_metadata = _metadata_from_filename(collection_file)
