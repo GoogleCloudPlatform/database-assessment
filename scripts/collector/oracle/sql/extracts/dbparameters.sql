@@ -32,4 +32,3 @@ SELECT pkey , inst_id , con_id , name , value , default_value , isdefault,
 FROM vparam;
 spool off
 column default_value clear
-

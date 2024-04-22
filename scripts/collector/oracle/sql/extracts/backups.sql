@@ -20,7 +20,7 @@ SELECT :v_pkey AS pkey,
        &v_a_con_id AS con_id, 
        input_type, 
        round(sum(elapsed_seconds)) AS elapsed_seconds, 
-       round(sum(input_bytes)/1024/1024) AS mbytes_in, 
+       round(sum(input_bytes)/1024/1024) AS mbytes_in,
        round(sum(output_bytes)/1024/1024) AS mbytes_out,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM v$rman_backup_job_details a

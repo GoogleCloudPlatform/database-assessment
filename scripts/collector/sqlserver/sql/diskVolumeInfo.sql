@@ -33,6 +33,7 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
+
 BEGIN
     IF @CLOUDTYPE = 'NONE'
     BEGIN TRY
@@ -66,7 +67,7 @@ BEGIN
         WITH db_sizes as (SELECT MAX(start_time) max_collection_time
             , database_name, MAX(storage_in_megabytes) storage_in_megabytes
             , MAX(allocated_storage_in_megabytes) allocated_storage_in_megabytes
-        FROM sys.resource_stats 
+        FROM sys.resource_stats
         GROUP BY database_name),
         sum_sizes as (SELECT sum(storage_in_megabytes/1024) total_size_gb
         ,sum(allocated_storage_in_megabytes/1024) available_size_gb

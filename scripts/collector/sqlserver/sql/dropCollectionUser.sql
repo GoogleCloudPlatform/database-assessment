@@ -1,41 +1,44 @@
 /*
-Copyright 2023 Google LLC
+ Copyright 2023 Google LLC
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
 
-    https://www.apache.org/licenses/LICENSE-2.0
+ https://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
 
-*/
+ */
+set NOCOUNT on;
 
-SET NOCOUNT ON;
-SET LANGUAGE us_english;
+set LANGUAGE us_english;
 
-DECLARE @dbname VARCHAR(50);
-DECLARE @COLLECTION_USER VARCHAR(256);
+declare @dbname VARCHAR(50);
 
-DECLARE db_cursor CURSOR FOR 
-SELECT name
-FROM sys.databases
-WHERE name NOT IN ('model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-    AND state = 0;
+declare @COLLECTION_USER VARCHAR(256);
 
-SELECT @COLLECTION_USER = N'$(collectionUser)'
+declare db_cursor CURSOR for
+select name
+from sys.databases
+where name not in (
+        'model',
+        'msdb',
+        'distribution',
+        'reportserver',
+        'reportservertempdb',
+        'resource',
+        'rdsadmin'
+    )
+    and state = 0;
 
-OPEN db_cursor
-FETCH NEXT FROM db_cursor INTO @dbname
-
-WHILE @@FETCH_STATUS = 0
-BEGIN
-    BEGIN
-        exec ('
+select @COLLECTION_USER = N'$(collectionUser)' open db_cursor fetch NEXT
+from db_cursor into @dbname WHILE @@FETCH_STATUS = 0 begin begin exec (
+        '
         use [' + @dbname + '];
         IF EXISTS (SELECT [name]
            FROM [sys].[database_principals]
@@ -43,20 +46,22 @@ BEGIN
            BEGIN
              DROP USER [' + @COLLECTION_USER + '];
            END;
-        ');
-    END;
+        '
+    );
 
-    FETCH NEXT FROM db_cursor INTO @dbname;
-END;
+end;
 
-CLOSE db_cursor
-DEALLOCATE db_cursor
+fetch NEXT
+from db_cursor into @dbname;
 
-use [master];
-IF EXISTS 
-    (SELECT name
-FROM master.sys.server_principals
-WHERE name = @COLLECTION_USER)
-	BEGIN
-    exec ('DROP LOGIN [' + @COLLECTION_USER + ']');
-END;
+end;
+
+CLOSE db_cursor DEALLOCATE db_cursor use [master];
+
+if exists (
+    select name
+    from master.sys.server_principals
+    where name = @COLLECTION_USER
+) begin exec ('DROP LOGIN [' + @COLLECTION_USER + ']');
+
+end;

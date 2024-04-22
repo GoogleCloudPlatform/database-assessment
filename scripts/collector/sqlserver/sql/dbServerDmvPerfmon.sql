@@ -1,45 +1,29 @@
 /*
-Copyright 2023 Google LLC
+ Copyright 2023 Google LLC
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
 
-    https://www.apache.org/licenses/LICENSE-2.0
+ https://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
 
-*/
+ */
+set NOCOUNT on;
 
-SET NOCOUNT ON;
-SET LANGUAGE us_english;
-SET QUOTED_IDENTIFIER ON;
-SET NUMERIC_ROUNDABORT OFF;
-SET ANSI_NULLS ON;
-SET ANSI_PADDING ON;
-SET ANSI_WARNINGS ON;
-SET ARITHABORT ON;
-SET CONCAT_NULL_YIELDS_NULL ON;
-SET QUOTED_IDENTIFIER ON;
+set LANGUAGE us_english;
 
-DECLARE @PKEY AS VARCHAR(256)
-DECLARE @PRODUCT_VERSION AS INTEGER
-DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256)
-DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
-DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
+set QUOTED_IDENTIFIER on;
 
-SELECT @PKEY = N'$(pkey)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
-SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
-SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
-SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
+set NUMERIC_ROUNDABORT OFF;
 
-IF @ASSESSMENT_DATABSE_NAME = 'all'
-   SELECT @ASSESSMENT_DATABSE_NAME = '%'
+set ANSI_NULLS on;
+
 
 BEGIN
     BEGIN TRY

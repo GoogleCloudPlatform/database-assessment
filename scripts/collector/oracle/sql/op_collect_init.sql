@@ -24,7 +24,7 @@ define dtrange = &v_statsWindow
 define colspr = '|'
 
 -- Set the environment to a known state, overriding any custom configuration.
-@@op_set_sql_env.sql 
+@@op_set_sql_env.sql
 set headsep off
 set trimspool on
 set lines 32000
@@ -37,7 +37,7 @@ set scan on
 set pause off
 set wrap on
 set echo off
-set appinfo 'DB MIGRATION ASSESSMENT' 
+set appinfo 'DB MIGRATION ASSESSMENT'
 set colsep '|'
 set timing off
 set time off
@@ -155,12 +155,12 @@ COLUMN p_dg_valid_role         new_value v_dg_valid_role         noprint
 COLUMN p_dg_verify             new_value v_dg_verify             noprint
 COLUMN p_db_unique_name        new_value v_db_unique_name        noprint
 COLUMN p_platform_name         new_value v_platform_name         noprint
-SELECT 
-        '''N/A''' AS p_dg_valid_role, 
+SELECT
+        '''N/A''' AS p_dg_valid_role,
         '''N/A''' AS p_dg_verify,
         'name'    AS p_db_unique_name,
         '''N/A''' AS p_platform_name
-FROM DUAL 
+FROM DUAL
 WHERE '&v_dbversion' LIKE '9%'
 UNION
 SELECT
@@ -175,8 +175,8 @@ WHERE '&v_dbversion' NOT LIKE '9%';
 
 -- Define a source id that will be consistent regardless of which RAC instance we are connected to.  --BEGIN
 column vname new_value v_name noprint
-SELECT min(object_name) AS vname 
-FROM dba_objects 
+SELECT min(object_name) AS vname
+FROM dba_objects
 WHERE object_name IN ('V$INSTANCE', 'GV$INSTANCE');
 
 BEGIN
@@ -197,7 +197,7 @@ var lv_editionable_col  VARCHAR2(20);
 var lv_do_pluggable     VARCHAR2(40);
 var lv_db_container_col VARCHAR2(30);
 
-DECLARE 
+DECLARE
   cnt NUMBER;
 BEGIN
   :lv_tblprefix := 'dba';
@@ -205,11 +205,11 @@ BEGIN
   :lv_editionable_col := '''N/A''';
   :lv_do_pluggable := 'op_collect_nopluggable_info.sql';
   :lv_db_container_col := '''N/A''';
-  
+
   SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner ='SYS' AND table_name = 'V_$DATABASE' AND column_name = 'CDB';
-  IF cnt > 0 THEN 
+  IF cnt > 0 THEN
     EXECUTE IMMEDIATE 'SELECT count(1) FROM v$database WHERE cdb = ''YES'' ' INTO cnt;
-    IF cnt > 0 THEN 
+    IF cnt > 0 THEN
       :lv_tblprefix := 'cdb' ;
       :lv_is_container := 1;
       :lv_do_pluggable := 'op_collect_pluggable_info.sql';
@@ -222,7 +222,7 @@ BEGIN
   END IF;
 END;
 /
-  
+
 SELECT :lv_tblprefix AS p_tblprefix,
        :lv_is_container AS p_is_container,
        :lv_editionable_col AS p_editionable_col,
@@ -250,7 +250,7 @@ BEGIN
       :pdb_logging_flag := 'N';
     ELSE
       :pdb_logging_flag := 'Y';
-    END IF; 
+    END IF;
   ELSE IF  '&v_dbversion'  LIKE '11%' OR  '&v_dbversion'  LIKE '10%'  OR  '&v_dbversion'  LIKE '9%'  THEN
           :dflt_value_flag := 'N';
           :pdb_logging_flag := 'N';
@@ -294,7 +294,7 @@ BEGIN
     SELECT count(1) FROM dba_tables WHERE (table_name ='STATS$IOSTAT_FUNCTION_NAME' AND '&v_dodiagnostics' = 'nodiagnostics' AND OWNER ='PERFSTAT')
   );
   IF (cnt > 0 ) THEN :b_io_function_sql := 'iofunction.sql';
-  ELSE 
+  ELSE
     :b_io_function_sql := 'noop.sql';
   END IF;
 END;
@@ -342,8 +342,8 @@ BEGIN
   SELECT count(1) INTO cnt FROM dba_tab_columns WHERE table_name = 'DBA_LOBS' AND column_name = 'COMPRESSION';
   IF cnt = 1 THEN
     :b_lob_compression_col         := 'l.compression';
-    :b_lob_part_compression_col    := 'lp.compression'; 
-    :b_lob_subpart_compression_col := 'lsp.compression'; 
+    :b_lob_part_compression_col    := 'lp.compression';
+    :b_lob_subpart_compression_col := 'lsp.compression';
     :b_lob_dedup_col               := 'l.deduplication';
     :b_lob_part_dedup_col          := 'lp.deduplication';
     :b_lob_subpart_dedup_col       := 'lsp.deduplication';
@@ -358,13 +358,13 @@ BEGIN
 END;
 /
 
-SELECT 
+SELECT
 :b_lob_compression_col         AS p_lob_compression_col ,
 :b_lob_part_compression_col    AS p_lob_part_compression_col ,
 :b_lob_subpart_compression_col AS p_lob_subpart_compression_col ,
 :b_lob_dedup_col               AS p_lob_dedup_col ,
 :b_lob_part_dedup_col          AS p_lob_part_dedup_col ,
-:b_lob_subpart_dedup_col       AS p_lob_subpart_dedup_col 
+:b_lob_subpart_dedup_col       AS p_lob_subpart_dedup_col
 FROM DUAL;
 
 -- Determine if this version of the database supports LOB compression and set the substitution variables -- END
@@ -375,7 +375,7 @@ DECLARE
   cnt NUMBER;
 BEGIN
   SELECT count(1) INTO cnt FROM dba_tab_columns WHERE table_name = 'DBA_INDEXES' AND column_name = 'VISIBILITY';
-  IF cnt = 1 THEN 
+  IF cnt = 1 THEN
     :b_index_visibility := 'VISIBILITY';
   ELSE
     :b_index_visibility := '''N/A''';
@@ -404,6 +404,7 @@ DECLARE
   the_sql VARCHAR2(1000) := '---';
   table_does_not_exist EXCEPTION;
   PRAGMA EXCEPTION_INIT (table_does_not_exist, -00942);
+
 BEGIN 
   -- Set default performance metrics to NONE.
   :sp  := 'prompt_nostatspack.sql';
@@ -416,11 +417,10 @@ BEGIN
   -- If STATSPACK has been requested, check that it is installed and permissions granted.
   ELSE IF '&v_dodiagnostics' = 'nodiagnostics' THEN
          SELECT count(1) INTO cnt FROM all_tables WHERE owner ='PERFSTAT' AND table_name IN ('STATS$OSSTAT', 'STATS$OSSTATNAME', 'STATS$SNAPSHOT', 'STATS$SQL_SUMMARY', 'STATS$SYSSTAT', 'STATS$SYSTEM_EVENT', 'STATS$SYS_TIME_MODEL', 'STATS$TIME_MODEL_STATNAME');
-
          -- If we have access to STATSPACK, use STATSPACK as the source of performance metrics
  	 IF cnt = 8 THEN 
            :sp := 'op_collect_statspack.sql';
-           l_tab_name := 'STATS$SNAPSHOT'; 
+           l_tab_name := 'STATS$SNAPSHOT';
            l_col_name := 'snap_time';
          END IF;
        -- If instructed to not collect performance metrics, do not collect stats.
@@ -431,11 +431,11 @@ BEGIN
             END IF;
        END IF;
   END IF; 
-
   BEGIN
     IF l_tab_name = '---' THEN
         dbms_output.put_line('No performance data will be collected.');
     ELSE
+
       -- Verify there are metrics to collect.	
       BEGIN 
         EXECUTE IMMEDIATE 'SELECT count(1) FROM ' || upper(l_tab_name) || ' WHERE rownum < 2' INTO cnt ;
@@ -444,7 +444,7 @@ BEGIN
         END IF;
         EXCEPTION WHEN table_does_not_exist THEN
           RAISE_APPLICATION_ERROR(-20002, 'This user does not have SELECT privileges on ' || upper(l_tab_name) || '.  Please ensure the grants_wrapper.sql script has been executed for this user.');
-      END;	
+      END;
     END IF;
   END;
   IF (l_tab_name != '---' AND l_tab_name NOT LIKE 'ERROR%') THEN
@@ -527,4 +527,3 @@ column v_dma_source_id format a100
 column v_dma_manual_id format a100
 column dma_source_id format a100
 column dma_manual_id format a100
-

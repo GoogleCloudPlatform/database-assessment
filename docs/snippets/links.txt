@@ -1,0 +1,15 @@
+<!--- Add here generic links that can be used in every md doc -->
+[MIT]: https://spdx.org/licenses/MIT.html
+[git]: https://git-scm.com/
+[black]: https://pypi.org/project/black/
+[pre-commit]: https://pre-commit.com/
+[PyPI]: https://pypi.org/
+[repository]: https://github.com/cofin/dma
+[issue tracker]: https://github.com/cofin/dma/issues
+[mkdocs]: https://www.mkdocs.org/
+[hatch]: https://hatch.pypa.io/
+[virtualenv]: https://virtualenv.pypa.io/en/stable/
+[pyenv]: https://github.com/pyenv/pyenv
+[conda]: https://conda.io/
+[Jupyter Lab]: https://jupyter.org/
+[Markdown]: https://daringfireball.net/projects/markdown/

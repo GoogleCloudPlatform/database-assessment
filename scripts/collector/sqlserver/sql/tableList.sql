@@ -1,62 +1,86 @@
 /*
-Copyright 2023 Google LLC
+ Copyright 2023 Google LLC
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
 
-    https://www.apache.org/licenses/LICENSE-2.0
+ https://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
 
-*/
+ */
+set NOCOUNT on;
 
-SET NOCOUNT ON;
-SET LANGUAGE us_english;
+set LANGUAGE us_english;
 
-DECLARE @PKEY AS VARCHAR(256);
-DECLARE @CLOUDTYPE AS VARCHAR(256);
-DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256);
-DECLARE @PRODUCT_VERSION AS INTEGER;
-DECLARE @validDB AS INTEGER;
-DECLARE @DMA_SOURCE_ID AS VARCHAR(256);
-DECLARE @DMA_MANUAL_ID AS VARCHAR(256);
-DECLARE @CURRENT_DB_NAME AS VARCHAR(256);
+declare @PKEY as VARCHAR(256);
 
-SELECT @PKEY = N'$(pkey)';
-SELECT @CLOUDTYPE = 'NONE'
-SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
-SELECT @validDB = 0;
-SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
-SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
-SELECT @CURRENT_DB_NAME = db_name();
+declare @CLOUDTYPE as VARCHAR(256);
 
-IF @ASSESSMENT_DATABSE_NAME = 'all'
-   SELECT @ASSESSMENT_DATABSE_NAME = '%'
+declare @ASSESSMENT_DATABASE_NAME as VARCHAR(256);
 
-IF UPPER(@@VERSION) LIKE '%AZURE%'
-	SELECT @CLOUDTYPE = 'AZURE'
+declare @PRODUCT_VERSION as INTEGER;
 
-BEGIN
-	BEGIN
-		SELECT @validDB = COUNT(1)
-		FROM sys.databases
-		WHERE name NOT IN ('master','model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-			AND name like @ASSESSMENT_DATABSE_NAME
-			AND state = 0
-	END;
+declare @validDB as INTEGER;
 
-	BEGIN TRY
-	IF @PRODUCT_VERSION > 12 AND @validDB <> 0 AND @CLOUDTYPE = 'NONE' AND @CURRENT_DB_NAME <> 'tempdb'
-	BEGIN
-		exec ('
+declare @DMA_SOURCE_ID as VARCHAR(256);
+
+declare @DMA_MANUAL_ID as VARCHAR(256);
+
+declare @CURRENT_DB_NAME as VARCHAR(256);
+
+select @PKEY = N'$(pkey)';
+
+select @CLOUDTYPE = 'NONE'
+select @ASSESSMENT_DATABASE_NAME = N'$(database)';
+
+select @PRODUCT_VERSION = convert(
+		INTEGER,
+		PARSENAME(
+			convert(nvarchar, SERVERPROPERTY('productversion')),
+			4
+		)
+	);
+
+select @validDB = 0;
+
+select @DMA_SOURCE_ID = N'$(dmaSourceId)';
+
+select @DMA_MANUAL_ID = N'$(dmaManualId)';
+
+select @CURRENT_DB_NAME = db_name();
+
+if @ASSESSMENT_DATABASE_NAME = 'all'
+select @ASSESSMENT_DATABASE_NAME = '%' if UPPER(@@VERSION) like '%AZURE%'
+select @CLOUDTYPE = 'AZURE' begin begin
+select @validDB = count(1)
+from sys.databases
+where name not in (
+		'master',
+		'model',
+		'msdb',
+		'distribution',
+		'reportserver',
+		'reportservertempdb',
+		'resource',
+		'rdsadmin'
+	)
+	and name like @ASSESSMENT_DATABASE_NAME
+	and state = 0
+end;
+
+begin TRY if @PRODUCT_VERSION > 12
+and @validDB <> 0
+and @CLOUDTYPE = 'NONE'
+and @CURRENT_DB_NAME <> 'tempdb' begin exec (
+	'
 				WITH TableData AS (
-					SELECT 
+					SELECT
 						[schema_name]      = s.[name]
 						,[table_name]       = t.[name]
 						,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -171,7 +195,7 @@ BEGIN
 					LEFT JOIN sys.partition_functions pf WITH (NOLOCK) on (pf.function_id = ps.function_id)
 					WHERE t.is_ms_shipped = 0 -- Not a system table
 						AND i.type IN (0,1,5)
-						AND (t.name LIKE N''##%'' 
+						AND (t.name LIKE N''##%''
 							OR t.name like N''#%[_]%''
 							AND t.name not like N''#[0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z]''))
 					SELECT
@@ -202,7 +226,7 @@ BEGIN
 	BEGIN
 		exec ('
 			WITH TableData AS (
-				SELECT 
+				SELECT
 					[schema_name]      = s.[name]
 					,[table_name]       = t.[name]
 					,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -274,7 +298,7 @@ BEGIN
 	BEGIN
 		exec ('
 			WITH TableData AS (
-				SELECT 
+				SELECT
 					[schema_name]      = s.[name]
 					,[table_name]       = t.[name]
 					,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -318,7 +342,7 @@ BEGIN
 				LEFT JOIN sys.partition_functions pf WITH (NOLOCK) on (pf.function_id = ps.function_id)
 				WHERE t.is_ms_shipped = 0 -- Not a system table
 					AND i.type IN (0,1,5)
-					AND (t.name LIKE N''##%'' 
+					AND (t.name LIKE N''##%''
 							OR t.name like N''#%[_]%''
 							AND t.name not like N''#[0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z]''))
 				SELECT
@@ -349,7 +373,7 @@ BEGIN
     BEGIN
 		exec ('
 		WITH TableData AS (
-			SELECT 
+			SELECT
 				[schema_name]      = s.[name]
 				,[table_name]       = t.[name]
 				,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -421,7 +445,7 @@ BEGIN
 	BEGIN
 		exec ('
 		WITH TableData AS (
-			SELECT 
+			SELECT
 				[schema_name]      = s.[name]
 				,[table_name]       = t.[name]
 				,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -501,4 +525,16 @@ BEGIN
 		SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
 	END CATCH
 
-END;
+end;
+
+end TRY begin CATCH
+select host_name() as host_name,
+	db_name() as database_name,
+	'tableList' as module_name,
+	SUBSTRING(convert(nvarchar, ERROR_NUMBER()), 1, 254) as error_number,
+	SUBSTRING(convert(nvarchar, ERROR_SEVERITY()), 1, 254) as error_severity,
+	SUBSTRING(convert(nvarchar, ERROR_STATE()), 1, 254) as error_state,
+	SUBSTRING(convert(nvarchar, ERROR_MESSAGE()), 1, 512) as error_message;
+
+end CATCH
+end;

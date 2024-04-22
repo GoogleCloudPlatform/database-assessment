@@ -41,14 +41,14 @@ SELECT :v_pkey AS pkey,
        ROUND(PERCENTILE_CONT(0)
          within GROUP (ORDER BY hsm.delta_value DESC)) AS "PERC100"
 FROM   (
-        SELECT s.snap_id, s.dbid, s.instance_number, s.name, s.value, 
+        SELECT s.snap_id, s.dbid, s.instance_number, s.name, s.value,
                NVL(
                    DECODE(
                          GREATEST(value, NVL( LAG(value) OVER ( PARTITION BY s.dbid, s.instance_number, s.name ORDER BY s.snap_id), 0)),
-                         value, 
+                         value,
                          value - LAG(value) OVER ( PARTITION BY s.dbid, s.instance_number, s.name ORDER BY s.snap_id),
-                        0), 
-                 0) AS delta_value  
+                        0),
+                 0) AS delta_value
            FROM perfstat.stats$sysstat s ) hsm
        INNER JOIN stats$snapshot dhsnap
                ON hsm.snap_id = dhsnap.snap_id
@@ -60,7 +60,7 @@ GROUP  BY :v_pkey,
           hsm.dbid,
           hsm.instance_number,
           TO_CHAR(dhsnap.snap_time, 'hh24'),
-          hsm.name 
+          hsm.name
 ORDER  BY hsm.dbid,
           hsm.instance_number,
           hsm.name,

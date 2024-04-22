@@ -1,53 +1,45 @@
 /*
-Copyright 2023 Google LLC
+ Copyright 2023 Google LLC
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
 
-    https://www.apache.org/licenses/LICENSE-2.0
+ https://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
 
-*/
+ */
+set NOCOUNT on;
 
-SET NOCOUNT ON;
-SET LANGUAGE us_english;
+set LANGUAGE us_english;
 
-DECLARE @PKEY AS VARCHAR(256)
-DECLARE @CLOUDTYPE AS VARCHAR(256)
-DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256)
-DECLARE @PRODUCT_VERSION AS INTEGER
-DECLARE @validDB AS INTEGER
-DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
-DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
+declare @PKEY as VARCHAR(256)
+declare @CLOUDTYPE as VARCHAR(256)
+declare @ASSESSMENT_DATABASE_NAME as VARCHAR(256)
+declare @PRODUCT_VERSION as INTEGER
+declare @validDB as INTEGER
+declare @DMA_SOURCE_ID as VARCHAR(256)
+declare @DMA_MANUAL_ID as VARCHAR(256)
+select @PKEY = N'$(pkey)';
 
-SELECT @PKEY = N'$(pkey)';
-SELECT @CLOUDTYPE = 'NONE';
-SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
-SELECT @validDB = 0;
-SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
-SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
+select @CLOUDTYPE = 'NONE';
 
-IF @ASSESSMENT_DATABSE_NAME = 'all'
-   SELECT @ASSESSMENT_DATABSE_NAME = '%'
+select @ASSESSMENT_DATABASE_NAME = N'$(database)';
 
-IF UPPER(@@VERSION) LIKE '%AZURE%'
-	SELECT @CLOUDTYPE = 'AZURE'
+select @PRODUCT_VERSION = convert(
+        INTEGER,
+        PARSENAME(
+            convert(nvarchar, SERVERPROPERTY('productversion')),
+            4
+        )
+    );
 
-BEGIN
-    BEGIN
-        SELECT @validDB = COUNT(1)
-        FROM sys.databases
-        WHERE name NOT IN ('master','model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-            AND name like @ASSESSMENT_DATABSE_NAME
-            AND state = 0
-    END
+select @validDB = 0;
 
     BEGIN TRY
         IF @validDB <> 0

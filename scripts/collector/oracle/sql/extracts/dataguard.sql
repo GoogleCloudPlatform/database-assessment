@@ -37,12 +37,12 @@ SELECT  :v_pkey AS pkey,
         REPLACE(destination ,'|', ' ')destination, 
         status, 
         REPLACE(target  ,'|', ' ')target, 
-        schedule, 
+        schedule,
         register,
-        REPLACE(alternate  ,'|', ' ')alternate, 
-        transmit_mode, 
-        affirm, 
-        &v_dg_valid_role AS valid_role, 
+        REPLACE(alternate  ,'|', ' ')alternate,
+        transmit_mode,
+        affirm,
+        &v_dg_valid_role AS valid_role,
         &v_dg_verify     AS verify,
         'N/A' as log_archive_config
 FROM gv$archive_dest a
@@ -67,4 +67,3 @@ COLUMN AFFIRM CLEAR
 COLUMN VALID_ROLE CLEAR
 COLUMN VERIFY CLEAR
 COLUMN LOG_ARCHIVE_CONFIG CLEAR
-

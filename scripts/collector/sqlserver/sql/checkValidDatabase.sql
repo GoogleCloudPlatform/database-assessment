@@ -1,29 +1,40 @@
 /*
-Copyright 2023 Google LLC
+ Copyright 2023 Google LLC
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
 
-    https://www.apache.org/licenses/LICENSE-2.0
+ https://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
 
-*/
+ */
+set NOCOUNT on;
 
-SET NOCOUNT ON;
-SET LANGUAGE us_english;
-DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256)
-SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
-IF @ASSESSMENT_DATABSE_NAME = 'all'
-   SELECT @ASSESSMENT_DATABSE_NAME = '%'
+set LANGUAGE us_english;
 
-SELECT count(1)
-FROM sys.databases 
-WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-AND name like @ASSESSMENT_DATABSE_NAME
-AND state = 0
+declare @ASSESSMENT_DATABASE_NAME as VARCHAR(256)
+select @ASSESSMENT_DATABASE_NAME = N'$(database)';
+
+if @ASSESSMENT_DATABASE_NAME = 'all'
+select @ASSESSMENT_DATABASE_NAME = '%'
+select count(1)
+from sys.databases
+where name not in (
+        'master',
+        'model',
+        'msdb',
+        'tempdb',
+        'distribution',
+        'reportserver',
+        'reportservertempdb',
+        'resource',
+        'rdsadmin'
+    )
+    and name like @ASSESSMENT_DATABASE_NAME
+    and state = 0

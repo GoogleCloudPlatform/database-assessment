@@ -115,7 +115,7 @@ BEGIN
             LEFT JOIN sys.partitions AS p ON (p.object_id = i.object_id AND p.index_id = i.index_id)
             LEFT JOIN sys.allocation_units AS a ON (a.container_id = p.partition_id)
             LEFT JOIN sys.partition_schemes ps ON (i.data_space_id = ps.data_space_id)
-            LEFT JOIN index_computed_cols icc ON (i.object_id = icc.object_id 
+            LEFT JOIN index_computed_cols icc ON (i.object_id = icc.object_id
                      and i.name = icc.index_name
                      and icc.table_name = t.name
                      and icc.schema_name = s.name)

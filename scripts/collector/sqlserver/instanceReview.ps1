@@ -29,18 +29,18 @@
 .PARAMETER collectionUserPass
     Collection username password (required)
 .PARAMETER ignorePerfmon
-    Signals if the perfmon collection should be skipped (default:false) 
+    Signals if the perfmon collection should be skipped (default:false)
 .PARAMETER manualUniqueId
     Tag that can be supplied by the customer to make a collection unique.  Maps to the internal variable dmaManualId (optional)
 .PARAMETER collectVMSpecs
     Whether to explicitly request credentials to collect data from the VM hosting the DB if the current users credentials are not sufficient.
-    Note the script will attempt to collect VM specs using the current users regardless. (default:false) 
+    Note the script will attempt to collect VM specs using the current users regardless. (default:false)
 .PARAMETER useWindowsAuthentication
-    Specifies if the loging to the database will utilize the current Windows Authenticated User or the supplied username / password for SQL Authentication (default:false) 
+    Specifies if the loging to the database will utilize the current Windows Authenticated User or the supplied username / password for SQL Authentication (default:false)
 .EXAMPLE
     To use a specific username / password combination for a named instance:
         instanceReview.ps1 -serverName [server name / ip address]\[instance name] -collectionUserName [collection username] -collectionUserPass [collection username password] -ignorePerfmon [true/false] -dmaManualId [string]
-    
+
     To use a specific username / password combination for a default instance:
         instanceReview.ps1 -serverName [server name / ip address] -collectionUserName [collection username] -collectionUserPass [collection username password] -ignorePerfmon [true/false] -dmaManualId [string]
 
@@ -104,7 +104,7 @@ if ((([string]::IsNullorEmpty($collectionUserPass)) -or ([string]$collectionUser
         Write-Host "#   Executing Collection with Windows Authenticated User    #"
         Write-Host "#                                                           #"
         Write-Host "#############################################################"
-        Write-Host ""   
+        Write-Host ""
     }
 }
 elseif ($useWindowsAuthentication) {
@@ -124,7 +124,7 @@ elseif (-not ([string]::IsNullOrEmpty($collectionUserPass))) {
     Write-Host "#                                                           #"
     Write-Host "#     Executing Collection with SQL Authenticated User      #"
     Write-Host "#                                                           #"
-    Write-Host "#############################################################"   
+    Write-Host "#############################################################"
     Write-Host ""
 }
 else {
@@ -192,7 +192,7 @@ else {
             if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
-                Exit 1                
+                Exit 1
             }
         }
     }
@@ -211,7 +211,7 @@ else {
             if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
                 Write-Output " "
                 Write-Output "SQL Server Database $database not valid.  Exiting Script...."
-                Exit 1                
+                Exit 1
             }
         }
     }
@@ -364,7 +364,7 @@ WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 
 WriteLog -logLocation $foldername\$logFile -logMessage "SQL Server Version: $dbversion " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
- 
+
 WriteLog -logLocation $foldername\$logFile -logMessage "Execution Variables List" -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "serverName = $inputServerName " -logOperation "FILE"

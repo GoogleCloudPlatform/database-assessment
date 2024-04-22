@@ -1,44 +1,31 @@
 /*
-Copyright 2023 Google LLC
+ Copyright 2023 Google LLC
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
 
-    https://www.apache.org/licenses/LICENSE-2.0
+ https://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
 
-*/
+ */
+set NOCOUNT on;
 
-SET NOCOUNT ON;
-SET LANGUAGE us_english;
+set LANGUAGE us_english;
 
-DECLARE @PKEY AS VARCHAR(256);
-DECLARE @CLOUDTYPE AS VARCHAR(256);
-DECLARE @ASSESSMENT_DATABSE_NAME AS VARCHAR(256);
-DECLARE @PRODUCT_VERSION AS INTEGER;
-DECLARE @VALIDDB AS INTEGER;
-DECLARE @DMA_SOURCE_ID AS VARCHAR(256);
-DECLARE @DMA_MANUAL_ID AS VARCHAR(256);
+declare @PKEY as VARCHAR(256);
 
-SELECT @PKEY = N'$(pkey)';
-SELECT @CLOUDTYPE = 'NONE'
-SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR, SERVERPROPERTY('productversion')), 4));
-SELECT @VALIDDB = 0;
-SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
-SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
+declare @CLOUDTYPE as VARCHAR(256);
 
-IF @ASSESSMENT_DATABSE_NAME = 'all'
-SELECT @ASSESSMENT_DATABSE_NAME = '%';
+declare @ASSESSMENT_DATABASE_NAME as VARCHAR(256);
 
-IF UPPER(@@VERSION) LIKE '%AZURE%'
-   SELECT @CLOUDTYPE = 'AZURE';
+declare @PRODUCT_VERSION as INTEGER;
+
 
 BEGIN
    BEGIN
@@ -81,7 +68,7 @@ BEGIN
             ON  o.object_id = c.object_id
             JOIN  sys.types t
             ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-         WHERE o.type_desc = ''USER_TABLE'' 
+         WHERE o.type_desc = ''USER_TABLE''
             -- AND t.system_type_id = t.user_type_id /* Removing to capture datatypes like hierarchyid */
          GROUP BY s.name
                , o.name
@@ -94,8 +81,11 @@ BEGIN
                , c.is_masked
                , c.encryption_type
                , c.is_sparse
-               , c.rule_object_id');
-   END;
+               , c.rule_object_id'
+);
+
+end;
+
 
    IF @PRODUCT_VERSION <= 12 AND @VALIDDB <> 0 AND @CLOUDTYPE = 'NONE'
       BEGIN
@@ -125,7 +115,7 @@ BEGIN
             ON  o.object_id = c.object_id
             JOIN  sys.types t
             ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-         WHERE o.type_desc = ''USER_TABLE'' 
+         WHERE o.type_desc = ''USER_TABLE''
             -- AND t.system_type_id = t.user_type_id /* Removing to capture datatypes like hierarchyid */
          GROUP BY s.name
                , o.name
@@ -136,8 +126,11 @@ BEGIN
                , c.is_computed
                , c.is_filestream
                , c.is_sparse
-               , c.rule_object_id');
-   END;
+               , c.rule_object_id'
+);
+
+end;
+
 
    IF @PRODUCT_VERSION >= 12 AND @VALIDDB <> 0 AND @CLOUDTYPE = 'AZURE'
       BEGIN
@@ -167,7 +160,7 @@ BEGIN
             ON  o.object_id = c.object_id
             JOIN  sys.types t
             ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-         WHERE o.type_desc = ''USER_TABLE'' 
+         WHERE o.type_desc = ''USER_TABLE''
             AND t.system_type_id = t.user_type_id
          GROUP BY s.name
                , o.name

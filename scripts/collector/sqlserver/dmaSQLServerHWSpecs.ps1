@@ -74,13 +74,13 @@ $params = @{
 if ($requestCreds) {
 	try {
 		Get-WmiObject Win32_Processor -ComputerName $computerName > $null
-	} 
+	}
 	catch {
 		if ($_.Exception.GetType().FullName -eq "System.UnauthorizedAccessException") {
 			$params.Credential = $host.ui.PromptForCredential(
-				"Credentials for $computerName", 
-				"Please provide Windows credentials (not SQL Server credentials) for ${computerName}:", 
-				"", 
+				"Credentials for $computerName",
+				"Please provide Windows credentials (not SQL Server credentials) for ${computerName}:",
+				"",
 				"")
 		}
 	}
@@ -108,7 +108,7 @@ try {
 
 	# Logical cores count.
 	$csvData.LogicalCpuCount = (Get-WmiObject Win32_Processor @params | Measure-Object -Property NumberOfLogicalProcessors -Sum).Sum
-	
+
 	# Total memory in bytes.
 	$csvData.TotalOSMemoryBytes = (Get-WmiObject Win32_PhysicalMemory @params | Measure-Object -Property Capacity -Sum).Sum
 
@@ -123,10 +123,10 @@ try {
 
 	# Writing to csv.
 	$csvData | Export-Csv -Path $outputPath -Delimiter "|" -NoTypeInformation -Encoding UTF8
-	WriteLog -logLocation $logLocation -logMessage "Successfully fetched machine HW specs of $computerName to output:$outputPath" -logOperation "FILE"	
+	WriteLog -logLocation $logLocation -logMessage "Successfully fetched machine HW specs of $computerName to output:$outputPath" -logOperation "FILE"
 }
 catch {
-	WriteLog -logLocation $logLocation -logMessage "ERROR - Failed fetching machine HW specs of $computerName" -logOperation "BOTH"	
+	WriteLog -logLocation $logLocation -logMessage "ERROR - Failed fetching machine HW specs of $computerName" -logOperation "BOTH"
 	# Write at least MachineName to CSV.
 	$csvData | Export-Csv -Path $outputPath -Delimiter "|" -NoTypeInformation -Encoding UTF8
 }

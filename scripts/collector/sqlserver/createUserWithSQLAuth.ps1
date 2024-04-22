@@ -15,7 +15,7 @@
 .SYNOPSIS
     .
 .DESCRIPTION
-    Creates a user within the SQL Server Database using "Windows Authentication" with the necessary permissions 
+    Creates a user within the SQL Server Database using "Windows Authentication" with the necessary permissions
     needed to execute subsequent scripts to collect data from SQL Server and Perfmon to be uploaded to Google Database Migration Assistant for review.
 
     If user and password are supplied, that will be used to execute the script.  Otherwise default credentials hardcoded in the script will be used
@@ -34,9 +34,9 @@
 .EXAMPLE
     To use a specific username / password combination:
         C:\createuserwithsqluser.ps1 -serverName [server name / ip address]\[instance name] -user [superuser] -pass [superuser password] -collectionUserName [collection username] -collectionUserPass [collection username password]
-    
+
     or
-    
+
     To use default credentials:
         C:\createuserwithsqluser.ps1 -serverName [server name / ip address]\[instance name] -user [superuser] -pass [superuser password]
 .NOTES
@@ -91,7 +91,7 @@ $isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
 if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
     WriteLog -logMessage "Creating collection user in $serverName" -logOperation "MESSAGE"
     sqlcmd -S $serverName -i sql\createCollectionUser.sql -d master -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
-    
+
     ### If Azure, need to get a list of databases from master and log in to each individually to create the user
     if ($isCloudOrLinuxHost -eq "AZURE") {
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database="all")
@@ -108,7 +108,7 @@ else {
     $serverName = "$serverName,$port"
     WriteLog -logMessage "Creating collection user in $serverName, using PORT $port" -logOperation "MESSAGE"
     sqlcmd -S $serverName -i sql\createCollectionUser.sql -d master -U $user -P $pass -C -l 30 -m 1 -v collectionUser=$collectionUserName collectionPass=$collectionUserPass
-    
+
     ### If Azure, need to get a list of databases from master and log in to each individually to create the user
     if ($isCloudOrLinuxHost -eq "AZURE") {
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database="all")
