@@ -14,7 +14,6 @@ concurrency:
 env:
   PYTHONUNBUFFERED: "1"
   FORCE_COLOR: "1"
-  SKIP_DOCKER_COMPOSE: "1"
 
 jobs:
   build-collection-scripts:
