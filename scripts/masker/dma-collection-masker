@@ -382,7 +382,7 @@ def run_masker(input_dir: Optional[Path] = None, output_path: Optional[Path] = N
                     continue
                 collection_files = _find_files_referenced_by_rule(rule, work_dir)
                 if collection_files:
-                    for collection_file in collection_files:
+                    for collection_file in collection_files:  # type: ignore[attr-defined]
                         identity_map = _generate_identity_map_from_rule(rule, collection_file, identity_map)
                         _apply_identity_map_to_file(rule, collection_file, identity_map)
             logger.info("Completed work on %s", collection.stem)
@@ -417,7 +417,7 @@ def _metadata_from_filename(collection_file: Path) -> FileMetadata:
     """
     try:
         meta_values = collection_file.stem.split("__", maxsplit=2)[-1].split("_")[1:6]
-        meta_values[0] = parse_version(meta_values[0])
+        meta_values[0] = parse_version(meta_values[0])  # type: ignore[call-overload]
         meta_values.append("_".join(meta_values[1:3] + [meta_values[4]]))  # pkey
         meta_values.append("_".join(meta_values[1:5]))  # collection_key
         metadata = FileMetadata(*meta_values)
@@ -508,7 +508,7 @@ def _find_files_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> Opt
         msg = f"Found too many files when searching for {rule.table_name}.  Found {matched_file}"
         raise ApplicationError(msg)
     if matched_file and len(matched_file) != 0:
-        return matched_file
+        return matched_file  # type: ignore[return-value]
     return None
 
 
@@ -567,10 +567,7 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
         collection_file (Path): the current collection file to mask
         identity_map (Dict[str, str]): The key/replacement key dictionary.
     """
-    with (
-        collection_file.open(mode="r", encoding="utf-8") as f,
-        NamedTemporaryFile(mode="w", delete=False, encoding="utf-8") as t,
-    ):
+    with collection_file.open(mode="r", encoding="utf-8") as f, NamedTemporaryFile(mode="w", delete=False) as t:
         data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
         temp_file = csv.writer(t, delimiter="|", quotechar='"')
         collection_metadata = _metadata_from_filename(collection_file)
