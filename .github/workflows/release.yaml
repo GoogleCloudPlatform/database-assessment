@@ -42,6 +42,7 @@ jobs:
             name: artifacts
             path: dist/*.zip
             if-no-files-found: error
+            overwrite: true
 
   pure-python-wheel-and-sdist:
     name: Build a pure Python wheel and source distribution
@@ -64,6 +65,7 @@ jobs:
         name: artifacts
         path: dist/*
         if-no-files-found: error
+        overwrite: true
 
   build-binaries:
     name: Build binary application for ${{ matrix.job.target }} (${{ matrix.job.os }})
@@ -150,6 +152,7 @@ jobs:
         name: binaries
         path: dist/app/*
         if-no-files-found: error
+        overwrite: true
 
   publish:
     name: Publish release
@@ -164,6 +167,7 @@ jobs:
       with:
         name: artifacts
         path: dist
+        merge-multiple: true
 
     # - name: Push build artifacts to PyPI
     #   uses: pypa/gh-action-pypi-publish@v1.6.4
@@ -176,11 +180,13 @@ jobs:
       with:
         name: binaries
         path: bin
+        merge-multiple: true
 
     - name: Add collection scripts to current release
       uses: softprops/action-gh-release@v2
       with:
         files: dist/*.zip
+        merge-multiple: true
 
     - name: Add binary assets to current release
       uses: softprops/action-gh-release@v2
