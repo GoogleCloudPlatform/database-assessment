@@ -37,7 +37,7 @@ jobs:
           python-version: "3.12"
       - name: Building & Package Collector
         run: make clean && make build-collector
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
             name: artifacts
             path: dist/*.zip
@@ -59,7 +59,7 @@ jobs:
     - name: Build
       run: python -m build
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: artifacts
         path: dist/*
@@ -145,7 +145,7 @@ jobs:
     - name: Build
       run: hatch -v build --target app
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: binaries
         path: dist/app/*
