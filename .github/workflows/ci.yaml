@@ -24,7 +24,7 @@ jobs:
       - name: Building Collection scripts
         run: make build-collector
   test-linux:
-    name: "Test Linux - (${{ matrix.python-version }}"
+    name: "Test Linux - Python ${{ matrix.python-version }}"
     strategy:
       fail-fast: true
       matrix:
@@ -35,7 +35,7 @@ jobs:
       coverage: ${{ matrix.python-version == '3.12' && matrix.os == 'Linux' }}
       python-version: ${{ matrix.python-version }}
   test-windows:
-    name: "Test Windows - (${{ matrix.python-version }}"
+    name: "Test Windows - Python ${{ matrix.python-version }}"
     strategy:
       fail-fast: true
       matrix:
@@ -46,7 +46,7 @@ jobs:
       coverage: ${{ matrix.python-version == '3.12' && matrix.os == 'Linux'  }}
       python-version: ${{ matrix.python-version }}
   test-osx:
-    name: "Test OSX - (${{ matrix.python-version }}"
+    name: "Test OSX - Python ${{ matrix.python-version }}"
     strategy:
       fail-fast: true
       matrix:

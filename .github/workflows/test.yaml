@@ -19,6 +19,7 @@ on:
         default: 60
 jobs:
   test:
+    name: Unit and Integration Tests
     runs-on: ${{ inputs.os }}
     timeout-minutes: ${{ inputs.timeout }}
     steps:
