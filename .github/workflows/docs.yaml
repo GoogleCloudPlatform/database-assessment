@@ -2,7 +2,7 @@ name: docs
 on:
   workflow_run:
     workflows: ["ci"]
-    branches: ["main","5.0.0"]
+    branches: ["main"]
     types:
       - completed
 env:
