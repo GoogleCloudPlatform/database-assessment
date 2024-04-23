@@ -39,8 +39,8 @@ jobs:
         run: make clean && make build-collector
       - uses: actions/upload-artifact@v4
         with:
-            name: artifacts
-            path: dist/*.zip
+            name: collections
+            path: dist/*
             if-no-files-found: error
             overwrite: true
 
@@ -104,7 +104,7 @@ jobs:
       PYAPP_REPO: pyapp
       PYAPP_VERSION: v0.16.0
       PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server,remote
-
+      PYAPP_DISTRIBUTION_EMBED: "1"
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -119,6 +119,9 @@ jobs:
 
     - name: Install Hatch
       run: pip install -U hatch hatch-pip-compile
+
+    - name: Build Wheel
+      run: hatch build
 
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
@@ -144,13 +147,13 @@ jobs:
         cargo -V
         hatch --version
 
-    - name: Build
-      run: hatch -v build --target app
+    - name: Build Binary
+      run: current_version=$(hatch version) && PYAPP_PROJECT_PATH="$(ls ${PWD}/dist/dma-${current_version}-py3-none-any.whl)" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch build -t app
 
     - uses: actions/upload-artifact@v4
       with:
         name: binaries
-        path: dist/app/*
+        path: dist/*
         if-no-files-found: error
         overwrite: true
 
@@ -163,6 +166,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: collections
+        path: dist
+        merge-multiple: true
+
     - uses: actions/download-artifact@v4
       with:
         name: artifacts
@@ -179,16 +188,18 @@ jobs:
     - uses: actions/download-artifact@v4
       with:
         name: binaries
-        path: bin
+        path: dist
         merge-multiple: true
 
     - name: Add collection scripts to current release
       uses: softprops/action-gh-release@v2
       with:
-        files: dist/*.zip
+        name: binaries
+        path: dist
         merge-multiple: true
 
     - name: Add binary assets to current release
       uses: softprops/action-gh-release@v2
       with:
-        files: bin/*
+        files: dist/*
+        merge-multiple: true
