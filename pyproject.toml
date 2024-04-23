@@ -153,6 +153,9 @@ python = "3.12"
 requires = ["hatch-pip-compile"]
 type = "pip-compile"
 
+[tool.hatch.envs.default.env-vars]
+USE_LEGACY_DOCKER_COMPOSE = "True"
+
 [tool.hatch.envs.default.scripts]
 upgrade-all = "PIP_COMPILE_UPGRADE=1 hatch env run --env {env_name} -- python --version"
 upgrade-pkg = "PIP_COMPILE_UPGRADE='{args}' hatch env run --env {env_name} -- python --version"
@@ -476,6 +479,8 @@ filterwarnings = [
     "ignore::DeprecationWarning:xdist.*",
 ]
 markers = [
+    "integration: Integration Tests",
+    "unit: Unit Tests",
     "mysql: MySQL Tests",
     "postgres: Postgres Tests",
     "oracle: Oracle Tests",
