@@ -1,0 +1,67 @@
+name: Test
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        required: true
+        type: string
+      coverage:
+        required: false
+        type: boolean
+        default: false
+      os:
+        required: false
+        type: string
+        default: "ubuntu-latest"
+      timeout:
+        required: false
+        type: number
+        default: 60
+jobs:
+  test:
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: ${{ inputs.timeout }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - if: ${{ inputs.os == 'Linux' }}
+        name:  Install Microsoft ODBC Drivers & Free additional space
+        run: |
+          sudo ACCEPT_EULA=Y apt-get install msodbcsql18 -y || true
+          sudo docker rmi $(docker image ls -aq) >/dev/null 2>&1 || true
+          sudo rm -rf \
+          /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+          /usr/local/share/powershell /usr/share/swift /usr/local/.ghcup \
+          /usr/lib/jvm || true
+          sudo apt-get autoremove -y \
+          && sudo apt-get clean -y \
+          && sudo rm -rf /root/.cache \
+          && sudo rm -rf /var/apt/lists/* \
+          && sudo rm -rf /var/cache/apt/* \
+          && sudo apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
+
+      - name: Set up Python ${{ inputs.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Install Hatch
+        run: pip install --upgrade hatch hatch-pip-compile
+
+      - if: ${{ inputs.coverage }}
+        name: Lint
+        run: hatch run lint:check
+
+      - if: ${{ inputs.coverage }}
+        name: Run tests with coverage tracking
+        run: hatch run +py=${{ inputs.python-version }} test:cov
+
+      - if: ${{ !inputs.coverage }}
+        name: Run tests without tracking coverage
+        run: hatch run +py=${{ inputs.python-version }} test:no-cov
+
+      - if: ${{ inputs.coverage }}
+        uses: actions/upload-artifact@v4
+        with:
+            name: coverage-xml
+            path: coverage.xml

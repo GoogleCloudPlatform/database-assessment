@@ -23,61 +23,39 @@ jobs:
       - uses: actions/checkout@v4
       - name: Building Collection scripts
         run: make build-collector
-
-  run:
-    name: Python ${{ matrix.python-version }} on ${{ startsWith(matrix.os, 'macos-') && 'macOS' || startsWith(matrix.os, 'windows-') && 'Windows' || 'Linux' }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+  test-linux:
+    name: "Test Linux - (${{ matrix.python-version }}"
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ['3.9', '3.10', '3.11', '3.12']
-
-    steps:
-    - uses: actions/checkout@v4
-
-    - if: runner.os == 'Linux'
-      name:  Install Microsoft ODBC Drivers & Free additional space
-      run: |
-          sudo ACCEPT_EULA=Y apt-get install msodbcsql18 -y || true
-          sudo docker rmi $(docker image ls -aq) >/dev/null 2>&1 || true
-          sudo rm -rf \
-          /usr/share/dotnet /usr/local/lib/android /opt/ghc \
-          /usr/local/share/powershell /usr/share/swift /usr/local/.ghcup \
-          /usr/lib/jvm || true
-          sudo apt-get autoremove -y \
-          && sudo apt-get clean -y \
-          && sudo rm -rf /root/.cache \
-          && sudo rm -rf /var/apt/lists/* \
-          && sudo rm -rf /var/cache/apt/* \
-          && sudo apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
-
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install Hatch
-      run: pip install --upgrade hatch hatch-pip-compile
-
-    - if: matrix.python-version == '3.12' && runner.os == 'Linux'
-      name: Lint
-      run: hatch run lint:check
-
-    - if: matrix.python-version == '3.12' && runner.os == 'Linux'
-      name: Run tests with coverage tracking
-      run: hatch run +py=${{ matrix.python-version }} test:cov
-
-    - if: matrix.python-version != '3.12' || runner.os != 'Linux'
-      name: Run tests without tracking coverage
-      run: hatch run +py=${{ matrix.python-version }} test:no-cov
-
-    - if: matrix.python-version == '3.12' && runner.os == 'Linux'
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-xml
-        path: coverage.xml
+        os: [ubuntu-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    uses: ./.github/workflows/test.yaml
+    with:
+      coverage: ${{ matrix.python-version == '3.12' && matrix.os == 'Linux' }}
+      python-version: ${{ matrix.python-version }}
+  test-windows:
+    name: "Test Windows - (${{ matrix.python-version }}"
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [  windows-latest ]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    uses: ./.github/workflows/test.yaml
+    with:
+      coverage: ${{ matrix.python-version == '3.12' && matrix.os == 'Linux'  }}
+      python-version: ${{ matrix.python-version }}
+  test-osx:
+    name: "Test OSX - (${{ matrix.python-version }}"
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ macos-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+    uses: ./.github/workflows/test.yaml
+    with:
+      coverage: ${{ matrix.python-version == '3.12' && matrix.os == 'Linux' }}
+      python-version: ${{ matrix.python-version }}
 
   run-container-matrix:
     name: Container matrix on Linux
