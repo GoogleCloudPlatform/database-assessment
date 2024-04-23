@@ -146,6 +146,7 @@ jobs:
         hatch --version
 
     - name: Build Binary
+      working-directory: /home/runner/work/database-assessment/database-assessment/
       run: |-
         current_version=$(hatch version)
         hatch build
