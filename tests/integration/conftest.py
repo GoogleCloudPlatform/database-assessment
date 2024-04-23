@@ -4,5 +4,5 @@ import pytest
 
 pytestmark = [
     pytest.mark.anyio,
-    pytest.mark.integrations,
+    pytest.mark.integration,
 ]
