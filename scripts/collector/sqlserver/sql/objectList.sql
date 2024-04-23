@@ -73,7 +73,7 @@ BEGIN
                 o.type_desc,
                 ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 OBJECT_NAME(o.object_id) AS NameOfObject ,
-                ''""'' as associated_table_name
+                '''' as associated_table_name
             FROM
                 sys.objects o
                 JOIN sys.schemas s ON (s.schema_id = o.schema_id)
@@ -178,7 +178,7 @@ BEGIN
                 type_desc,
                 ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 v.name AS NameOfObject ,
-                ''""'' as associated_table_name
+                '''' as associated_table_name
             FROM
                 sys.views v
                 JOIN sys.schemas s ON (s.schema_id = v.schema_id)
@@ -192,7 +192,7 @@ BEGIN
                 ''TABLE_TYPES'',
                 0 AS lines_of_code,
                 t.name AS NameOfObject ,
-                ''""'' as associated_table_name
+                '''' as associated_table_name
             FROM
                 sys.types t
                 JOIN sys.schemas s ON (s.schema_id = t.schema_id)
