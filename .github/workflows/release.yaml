@@ -146,12 +146,16 @@ jobs:
         hatch --version
 
     - name: Build Binary
-      run: hatch build && current_version=$(hatch version) && PYAPP_PROJECT_PATH="$(ls ${PWD}/dist/dma-${current_version}-py3-none-any.whl)" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch build -t app
+      run: |-
+        current_version=$(hatch version)
+        hatch build
+        PYAPP_UV_ENABLED="1" PYAPP_PROJECT_PATH="$(ls ${PWD}/dist/dma-${current_version}-py3-none-any.whl)" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch build -t app
 
-    - uses: actions/upload-artifact@v4
+    - name: Upload built binary package
+      uses: actions/upload-artifact@v4
       with:
         name: binaries
-        path: dist/*
+        path: dist/app/*
         if-no-files-found: error
         overwrite: true
 
@@ -189,14 +193,7 @@ jobs:
         path: dist
         merge-multiple: true
 
-    - name: Add collection scripts to current release
-      uses: softprops/action-gh-release@v2
-      with:
-        name: binaries
-        path: dist
-        merge-multiple: true
-
-    - name: Add binary assets to current release
+    - name: Add assets to current release
       uses: softprops/action-gh-release@v2
       with:
         files: dist/*
