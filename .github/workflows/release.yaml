@@ -173,7 +173,7 @@ jobs:
     - name: Upload built binary package
       uses: actions/upload-artifact@v4
       with:
-        name: binaries-{{matrix.os.target}}
+        name: binaries-${{matrix.os.target}}
         path: dist/app/*
         if-no-files-found: error
 
