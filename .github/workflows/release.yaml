@@ -152,14 +152,13 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        name: artifacts
-        path: dist
         merge-multiple: true
 
     - name: Build Binary
+      working-directory: ${{ github.workspace }}
       run: |-
         current_version=$(hatch version)
-        PYAPP_PROJECT_PATH="$(ls ${PWD}/dist/dma-${current_version}-py3-none-any.whl)" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch -v build -t app
+        PYAPP_PROJECT_PATH="dma-${current_version}-py3-none-any.whl" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch -v build -t app
 
     - name: Upload built binary package
       uses: actions/upload-artifact@v4
@@ -180,15 +179,9 @@ jobs:
     steps:
     - uses: actions/download-artifact@v4
       with:
-        name: collections
         path: dist
         merge-multiple: true
 
-    - uses: actions/download-artifact@v4
-      with:
-        name: artifacts
-        path: dist
-        merge-multiple: true
 
     # - name: Push build artifacts to PyPI
     #   uses: pypa/gh-action-pypi-publish@v1.6.4
@@ -196,12 +189,6 @@ jobs:
     #     skip_existing: true
     #     user: __token__
     #     password: ${{ secrets.PYPI_API_TOKEN }}
-
-    - uses: actions/download-artifact@v4
-      with:
-        name: binaries
-        path: dist
-        merge-multiple: true
 
     - name: Add assets to current release
       uses: softprops/action-gh-release@v2
