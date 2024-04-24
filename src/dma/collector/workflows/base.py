@@ -34,4 +34,5 @@ class BaseWorkflow:
         """
         for table_name, table_data in data.items():
             if len(table_data) > 0:
-                self.local_db.register(table_name, pl.from_dicts(table_data, infer_schema_length=10000))
+                self.local_db.register(f"obj_{table_name}", pl.from_dicts(table_data, infer_schema_length=10000))
+                self.local_db.execute(f"create or replace table {table_name} as select * from obj_{table_name}")  # noqa: S608

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from sys import version_info
 from typing import TYPE_CHECKING, Literal
 
@@ -11,8 +12,6 @@ from dma.lib.db.base import get_engine
 from dma.lib.db.local import get_duckdb_connection
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from rich.console import Console
 
 
@@ -38,9 +37,9 @@ async def readiness_check(
     with get_duckdb_connection(working_path) as local_db:
         async with AsyncSession(async_engine) as db_session:
             collection_manager = await anext(provide_collection_query_manager(db_session))
-            pipeline_manager = next(provide_canonical_queries(local_db))
+            canonical_query_manager = next(provide_canonical_queries(local_db=local_db, working_path=Path("tmp/")))
             readiness_check = ReadinessCheck(
-                local_db=local_db, canonical_query_manager=pipeline_manager, db_type=db_type, console=console
+                local_db=local_db, canonical_query_manager=canonical_query_manager, db_type=db_type, console=console
             )
             # collect data
 
@@ -49,9 +48,8 @@ async def readiness_check(
             # import data locally
             readiness_check.import_to_table(collection)
             readiness_check.import_to_table(extended_collection)
-
-            # transform data
             await readiness_check.process_collection()
+
             # print summary
             readiness_check.print_summary()
         await async_engine.dispose()

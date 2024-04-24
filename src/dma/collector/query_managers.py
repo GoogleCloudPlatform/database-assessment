@@ -51,24 +51,18 @@ class CanonicalQueryManager(QueryManager):
 
     async def execute_assessment_queries(
         self,
-        pkey: str = "test",
-        dma_source_id: str = "testing",
-        dma_manual_id: str | None = None,
         *args: Any,
         **kwargs: Any,
-    ) -> dict[str, Any]:
+    ) -> None:
         """Execute pre-processing queries."""
         console.print(Padding("ASSESSMENT QUERIES", 1, style="bold", expand=True), width=80)
         with console.status("[bold green]Executing queries...[/]") as status:
-            results: dict[str, Any] = {}
             for script in self.available_queries("assessment"):
                 status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                script_result = self.select(script, PKEY=pkey, DMA_SOURCE_ID=dma_source_id, DMA_MANUAL_ID=dma_manual_id)
-                results[script] = script_result
+                await self.insert_update_delete(script)
                 status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
             if not self.available_queries("assessment"):
                 console.print(" [dim grey]:heavy_check_mark: No assessment queries for this database type[/]")
-            return results
 
 
 class CollectionQueryManager(QueryManager):
