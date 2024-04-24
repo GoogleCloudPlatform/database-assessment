@@ -79,16 +79,16 @@ jobs:
         job:
         # Linux
         - target: x86_64-unknown-linux-gnu
-          os: ubuntu-22.04
+          os: ubuntu-latest
           cross: true
         - target: x86_64-unknown-linux-musl
-          os: ubuntu-22.04
+          os: ubuntu-latest
           cross: true
         - target: aarch64-unknown-linux-gnu
-          os: ubuntu-22.04
+          os: ubuntu-latest
           cross: true
         - target: i686-unknown-linux-gnu
-          os: ubuntu-22.04
+          os: ubuntu-latest
           cross: true
         # Windows
         - target: x86_64-pc-windows-msvc
@@ -130,6 +130,7 @@ jobs:
       run: pip install -U hatch hatch-pip-compile
 
     - name: Install Rust toolchain
+      if: ${{ !matrix.job.cross }}
       uses: dtolnay/rust-toolchain@stable
       with:
         targets: ${{ matrix.job.target }}
@@ -156,15 +157,18 @@ jobs:
     - uses: actions/download-artifact@v4
       with:
         name: wheels
-        path: ${{ github.workspace }}
-        pattern: "*.whl"
+        path: ${{ github.workspace }}/dist
         merge-multiple: true
+
+    - name: Install musl-tools on Linux
+      run: sudo apt-get update --yes && sudo apt-get install --yes musl-tools
+      if: contains(matrix.job.os, 'ubuntu') && !matrix.job.cross
 
     - name: Build Binary
       working-directory: ${{ github.workspace }}
       run: |-
         current_version=$(hatch version)
-        PYAPP_PROJECT_PATH="${{ github.workspace }}/dma-${current_version}-py3-none-any.whl" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch -v build -t app
+        PYAPP_PROJECT_PATH="${{ github.workspace }}/dist/dma-${current_version}-py3-none-any.whl" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch -v build -t app
 
     - name: Upload built binary package
       uses: actions/upload-artifact@v4
