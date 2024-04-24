@@ -155,7 +155,7 @@ jobs:
       run: |-
         hatch build
         current_version=$(hatch version)
-        PYAPP_PROJECT_PATH="$(ls ${PWD}/dist/dma-${current_version}-py3-none-any.whl)" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch -v build -t app
+        PYAPP_PROJECT_PATH="dist/dma-${current_version}-py3-none-any.whl" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch -v build -t app
 
     - name: Upload built binary package
       uses: actions/upload-artifact@v4
