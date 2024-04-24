@@ -134,7 +134,9 @@ sources = ["src"]
 exclude = ["/.github", "/docs"]
 
 [tool.hatch.build.targets.app]
+pyapp-version = "0.18.0"
 python = "3.12"
+
 
 #####################
 # Environment Setup #
