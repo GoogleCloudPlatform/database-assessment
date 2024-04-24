@@ -108,7 +108,7 @@ jobs:
       PYAPP_UV_ENABLED: "1"
     steps:
     - name: Checkout code
-      uses: actions/checkout@
+      uses: actions/checkout@v3
       with:
         # Fetch all tags
         fetch-depth: 0
