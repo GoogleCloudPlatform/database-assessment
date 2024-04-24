@@ -189,6 +189,7 @@ jobs:
     - uses: actions/download-artifact@v4
       with:
         path: dist
+        merge-multiple: true
 
     # - name: Push build artifacts to PyPI
     #   uses: pypa/gh-action-pypi-publish@v1.6.4
@@ -196,15 +197,7 @@ jobs:
     #     skip_existing: true
     #     user: __token__
     #     password: ${{ secrets.PYPI_API_TOKEN }}
-    - name: Add collections to release
+    - name: Add assets to release
       uses: softprops/action-gh-release@v2
       with:
-        files: dist/collections/*.zip
-    - name: Add Python Packages to release
-      uses: softprops/action-gh-release@v2
-      with:
-        files: dist/wheels/*
-    - name: Add Binaries to release
-      uses: softprops/action-gh-release@v2
-      with:
-        files: dist/binaries-*/*
+        files: dist/*
