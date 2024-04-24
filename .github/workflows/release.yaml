@@ -70,6 +70,9 @@ jobs:
   build-binaries:
     name: Build binary application for ${{ matrix.job.target }} (${{ matrix.job.os }})
     runs-on: ${{ matrix.job.os }}
+    needs:
+        - collection-scripts
+        - pure-python-wheel-and-sdist
     strategy:
       fail-fast: false
       matrix:
