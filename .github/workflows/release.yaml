@@ -100,12 +100,15 @@ jobs:
 
     env:
       CARGO: cargo
+      CARGO_HOME: "."
       CARGO_BUILD_TARGET: ${{ matrix.job.target }}
       PYAPP_REPO: pyapp
       PYAPP_VERSION: v0.18.0
       PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server,remote
       PYAPP_DISTRIBUTION_EMBED: "1"
       PYAPP_UV_ENABLED: "1"
+      HATCH_BUILD_LOCATION: dist
+      HATCH_BUILD_CLEAN: "true"
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
@@ -123,7 +126,6 @@ jobs:
 
     - name: Install Hatch
       run: pip install -U hatch hatch-pip-compile
-
 
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
@@ -154,7 +156,7 @@ jobs:
       run: |-
         hatch build
         current_version=$(hatch version)
-        PYAPP_PROJECT_PATH="$(ls ${PWD}/dist/dma-${current_version}-py3-none-any.whl)" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch build -t app
+        PYAPP_PROJECT_PATH="$(ls ${PWD}/dist/dma-${current_version}-py3-none-any.whl)" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch -v build -t app
 
     - name: Upload built binary package
       uses: actions/upload-artifact@v4
