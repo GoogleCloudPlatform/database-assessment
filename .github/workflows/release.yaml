@@ -80,16 +80,16 @@ jobs:
         # Linux
         - target: x86_64-unknown-linux-gnu
           os: ubuntu-latest
-          cross: true
+          cross: false
         - target: x86_64-unknown-linux-musl
           os: ubuntu-latest
-          cross: true
+          cross: false
         - target: aarch64-unknown-linux-gnu
           os: ubuntu-latest
-          cross: true
+          cross: false
         - target: i686-unknown-linux-gnu
           os: ubuntu-latest
-          cross: true
+          cross: false
         # Windows
         - target: x86_64-pc-windows-msvc
           os: windows-2022
@@ -103,7 +103,6 @@ jobs:
 
     env:
       CARGO: cargo
-      CARGO_HOME: "."
       CARGO_BUILD_TARGET: ${{ matrix.job.target }}
       PYAPP_REPO: pyapp
       PYAPP_VERSION: v0.18.0
@@ -117,6 +116,10 @@ jobs:
       with:
         # Fetch all tags
         fetch-depth: 0
+
+    - name: Install musl-tools on Linux
+      run: sudo apt-get update --yes && sudo apt-get install --yes musl-tools
+      if: ${{ inputs.os == 'Linux' && !matrix.job.cross }}
 
     - name: Clone PyApp
       run: git clone --depth 1 --branch $PYAPP_VERSION https://github.com/ofek/pyapp $PYAPP_REPO
@@ -160,9 +163,6 @@ jobs:
         path: ${{ github.workspace }}/dist
         merge-multiple: true
 
-    - name: Install musl-tools on Linux
-      run: sudo apt-get update --yes && sudo apt-get install --yes musl-tools
-      if: contains(matrix.job.os, 'ubuntu') && !matrix.job.cross
 
     - name: Build Binary
       working-directory: ${{ github.workspace }}
