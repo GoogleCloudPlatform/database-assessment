@@ -102,12 +102,16 @@ jobs:
       CARGO: cargo
       CARGO_BUILD_TARGET: ${{ matrix.job.target }}
       PYAPP_REPO: pyapp
-      PYAPP_VERSION: v0.16.0
+      PYAPP_VERSION: v0.18.0
       PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server,remote
       PYAPP_DISTRIBUTION_EMBED: "1"
+      PYAPP_UV_ENABLED: "1"
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@
+      with:
+        # Fetch all tags
+        fetch-depth: 0
 
     - name: Clone PyApp
       run: git clone --depth 1 --branch $PYAPP_VERSION https://github.com/ofek/pyapp $PYAPP_REPO
@@ -150,7 +154,6 @@ jobs:
       run: |-
         hatch build
         current_version=$(hatch version)
-
         PYAPP_PROJECT_PATH="$(ls ${PWD}/dist/dma-${current_version}-py3-none-any.whl)" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch build -t app
 
     - name: Upload built binary package

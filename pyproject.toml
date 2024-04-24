@@ -133,7 +133,7 @@ sources = ["src"]
 [tool.hatch.build.targets.sdist]
 exclude = ["/.github", "/docs"]
 
-[tool.hatch.build.targets.app]
+[tool.hatch.build.targets.binary]
 pyapp-version = "0.18.0"
 python = "3.12"
 
