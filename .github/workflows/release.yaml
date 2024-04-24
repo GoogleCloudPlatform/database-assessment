@@ -119,7 +119,7 @@ jobs:
 
     - name: Install musl-tools on Linux
       run: sudo apt-get install --yes musl musl-dev musl-tools
-      if: ${{ inputs.os == 'Linux' }}
+      if: ${{ matrix.job.os == 'Linux' }}
 
     - name: Clone PyApp
       run: git clone --depth 1 --branch $PYAPP_VERSION https://github.com/ofek/pyapp $PYAPP_REPO
@@ -173,7 +173,7 @@ jobs:
     - name: Upload built binary package
       uses: actions/upload-artifact@v4
       with:
-        name: binaries
+        name: binaries-{{matrix.os.target}}
         path: dist/app/*
         if-no-files-found: error
 
