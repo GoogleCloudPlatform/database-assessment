@@ -84,12 +84,12 @@ jobs:
         - target: x86_64-unknown-linux-musl
           os: ubuntu-latest
           cross: false
-        - target: aarch64-unknown-linux-gnu
-          os: ubuntu-latest
-          cross: false
-        - target: i686-unknown-linux-gnu
-          os: ubuntu-latest
-          cross: false
+        # - target: aarch64-unknown-linux-gnu
+        #   os: ubuntu-latest
+        #   cross: false
+        # - target: i686-unknown-linux-gnu
+        #   os: ubuntu-latest
+        #   cross: false
         # Windows
         - target: x86_64-pc-windows-msvc
           os: windows-2022
@@ -118,8 +118,7 @@ jobs:
         fetch-depth: 0
 
     - name: Install musl-tools on Linux
-      run: sudo apt-get update --yes && sudo apt-get install --yes musl-tools
-      if: ${{ inputs.os == 'Linux' && !matrix.job.cross }}
+      run: sudo apt-get install --yes musl musl-dev musl-tools
 
     - name: Clone PyApp
       run: git clone --depth 1 --branch $PYAPP_VERSION https://github.com/ofek/pyapp $PYAPP_REPO
