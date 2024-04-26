@@ -197,7 +197,15 @@ jobs:
     #     skip_existing: true
     #     user: __token__
     #     password: ${{ secrets.PYPI_API_TOKEN }}
-    - name: Add assets to release
+    - name: Add collection archives to release
       uses: softprops/action-gh-release@v2
       with:
-        files: dist/*
+        files: dist/collectors/*.zip
+    - name: Add wheels to release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: dist/wheels/*
+    - name: Add binaries to release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: dist/binaries-*/*
