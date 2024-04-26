@@ -50,7 +50,9 @@ SELECT :v_pkey AS pkey,
        --hsm.AVERAGE+(2* CASE WHEN ( standard_deviation > (.999999999999999999999999999) AND standard_deviation < 1 )
        --                      AND ( MINVAL = 0 AND AVERAGE = MAXVAL )  then 0 else standard_deviation end ) "PERC95",
        AVG(value) OVER (PARTITION BY hsm.dbid, hsm.instance_number,  TO_CHAR(dhsnap.snap_time, 'hh24')  , hsm.name) + (2 * STDDEV (value)  OVER (PARTITION BY hsm.dbid, hsm.instance_number,  TO_CHAR(dhsnap.snap_time, 'hh24')  , hsm.name)) AS "PERC95",
-       NULL                                   "PERC100"
+       NULL                                   "PERC100",
+       startup_time,
+       lag_startup_time
 FROM (
       SELECT s.snap_id, s.dbid, s.instance_number, s.name, s.value, 
              NVL(
@@ -70,7 +72,6 @@ FROM (
                ON hsm.snap_id = dhsnap.snap_id
                   AND hsm.instance_number = dhsnap.instance_number
                   AND hsm.dbid = dhsnap.dbid
-	WHERE dhsnap.startup_time = dhsnap.lag_startup_time
      ),
 vsysmetricsummperhour as (
     SELECT pkey,
@@ -96,6 +97,7 @@ vsysmetricsummperhour as (
        ROUND(PERCENTILE_CONT(0)
          within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC100"
     FROM vsysmetricsumm hsm
+    WHERE startup_time = lag_startup_time
     GROUP  BY pkey,
             hsm.dbid,
             hsm.instance_number,

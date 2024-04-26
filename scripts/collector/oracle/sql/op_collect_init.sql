@@ -37,6 +37,7 @@ set scan on
 set pause off
 set wrap on
 set echo off
+set echo on
 set appinfo 'DB MIGRATION ASSESSMENT' 
 set colsep '|'
 set timing off
@@ -422,7 +423,6 @@ BEGIN
   -- If STATSPACK has been requested, check that it is installed and permissions granted.
   ELSE IF '&v_dodiagnostics' = 'nodiagnostics' THEN
          SELECT count(1) INTO cnt FROM all_tables WHERE owner ='PERFSTAT' AND table_name IN ('STATS$OSSTAT', 'STATS$OSSTATNAME', 'STATS$SNAPSHOT', 'STATS$SQL_SUMMARY', 'STATS$SYSSTAT', 'STATS$SYSTEM_EVENT', 'STATS$SYS_TIME_MODEL', 'STATS$TIME_MODEL_STATNAME');
-
          -- If we have access to STATSPACK, use STATSPACK as the source of performance metrics
        IF cnt = 8 THEN 
            :sp := 'op_collect_statspack.sql';
@@ -439,7 +439,6 @@ BEGIN
             END IF;
        END IF;
   END IF; 
-
   BEGIN
     IF l_tab_name = '---' THEN
         dbms_output.put_line('No performance data will be collected.' || l_tab_name);
@@ -472,6 +471,7 @@ BEGIN
           :v_stats_source := :v_stats_source || 'between snaps ' || :minsnap || ' and ' || :maxsnap;
        END IF;
      ELSE
+
        -- Get the snapshot range for STATSPACK stats.
        THE_SQL := 'SELECT min(snap_time) , max(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
        EXECUTE IMMEDIATE the_sql INTO  :minsnaptime, :maxsnaptime USING '&&v_dbid' ;
@@ -497,8 +497,8 @@ BEGIN
                   :v_stats_source := :v_stats_source || 'between times ' || :minsnaptime || ' and ' || :maxsnaptime;
                 ELSE
                   -- If the very first snap available is within the collection range, use the next snap so we don't skew results.
-                  THE_SQL := 'SELECT min(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' > :2 AND dbid = :1 ';
-                  EXECUTE IMMEDIATE THE_SQL INTO :minsnaptime USING '&&v_dbid', :firstsnaptime;
+                  THE_SQL := 'SELECT min(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' > to_date(''' || :firstsnaptime || ''', ''YYYY-MM-DD HH24:MI:SS'') AND dbid = &&v_dbid ';
+                  EXECUTE IMMEDIATE THE_SQL INTO :minsnaptime ;
                   -- Ensure the 'next' snap is not the max snap
                   IF (:minsnaptime = :maxsnaptime) THEN
                       dbms_output.put_line('Warning: Insufficient snapshots found within the last &&dtrange days.  No performance data will be extracted.');
@@ -507,8 +507,8 @@ BEGIN
                       :v_info_prompt := 'without performance data';
                       :v_stats_source := ' without performance data';
                   ELSE
-                      :v_info_prompt := 'between times' || :minsnaptime || ' and ' || :maxsnaptime;
-                      :v_stats_source := 'between times' || :minsnaptime || ' and ' || :maxsnaptime;
+                      :v_info_prompt := 'between times ' || :minsnaptime || ' and ' || :maxsnaptime;
+                      :v_stats_source := 'between times ' || :minsnaptime || ' and ' || :maxsnaptime;
 		      IF ( to_date(:maxsnaptime) - to_date(:minsnaptime) ) < 7 
                          THEN 
                             :v_info_prompt := :v_info_prompt || ' less than 7 days of data, performance metrics may be skewed.';

@@ -56,7 +56,9 @@ SELECT
                                                                                      over (
                                                                                        PARTITION BY s.dbid, s.instance_number, n.stat_name
                                                                                        ORDER BY s.snap_id),
-                                                                    0), 0) AS value
+                                                                    0), 0) AS value,
+       startup_time,
+       lag_startup_time
 FROM   ( SELECT dbid, instance_number, snap_id, snap_time, startup_time, lag(startup_time) OVER (PARTITION BY dbid, instance_number ORDER BY snap_time) AS lag_startup_time
  	 FROM STATS$SNAPSHOT
 	 WHERE snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
@@ -68,8 +70,8 @@ WHERE  s.snap_id = g.snap_id
        AND s.instance_number = g.instance_number
        AND s.dbid = g.dbid
        AND g.stat_id = n.stat_id
-       AND s.startup_time = s.lag_startup_time
 )
+WHERE startup_time = lag_startup_time
 GROUP BY
       :v_pkey,
       dbid,

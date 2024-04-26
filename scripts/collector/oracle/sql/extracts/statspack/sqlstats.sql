@@ -28,8 +28,8 @@ prompt PKEY|CON_ID|DBID|INSTANCE_NUMBER|FORCE_MATCHING_SIGNATURE|SQL_ID|TOTAL_EX
 WITH vsqlstat AS(
 SELECT :v_pkey AS pkey,
        'N/A' AS con_id,
-       b.dbid,
-       b.instance_number,
+       dbid,
+       instance_number,
        to_char(force_matching_signature) force_matching_signature,
        min(sql_id) sql_id,
        ROUND(sum(executions)) total_executions,
@@ -57,6 +57,7 @@ SELECT :v_pkey AS pkey,
        trunc(decode(sum(executions), 0, 0, sum(plsql_exec_time)/sum(executions))) avg_plsexec_us,
        trunc(decode(sum(executions), 0, 0, sum(java_exec_time)/sum(executions))) avg_javexec_us
 FROM 
+( SELECT a.*, b.startup_time, b.lag_startup_time FROM 
 (
 select snap_id, dbid, instance_number, text_subset, old_hash_value, command_type, force_matching_signature, sql_id,
 s.executions, 
@@ -188,10 +189,10 @@ From STATS$SQL_SUMMARY s
      ) b
 WHERE a.snap_id = b.snap_id
 AND a.instance_number = b.instance_number
-AND a.dbid = b.dbid
-AND b.startup_time = b.lag_startup_time
+AND a.dbid = b.dbid)
+WHERE startup_time = lag_startup_time
 GROUP BY :v_pkey,
-       b.dbid, b.instance_number, force_matching_signature
+       dbid, instance_number, force_matching_signature
 ORDER BY elapsed_time_total DESC)
 SELECT pkey , con_id AS sp_con_id , dbid , instance_number , force_matching_signature , sql_id ,
        total_executions , total_px_servers_execs , elapsed_time_total , disk_reads_total ,

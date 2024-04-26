@@ -61,7 +61,9 @@ SELECT :v_pkey AS pkey,
        NVL(DECODE(GREATEST(iof.wait_time, NVL(LAG(iof.wait_time)
                                               OVER (PARTITION BY iof.dbid, iof.instance_number, fn.function_name ORDER BY iof.snap_id), 0)),
                   iof.wait_time, iof.wait_time - LAG(iof.wait_time)
-                                                 OVER (PARTITION BY iof.dbid, iof.instance_number, fn.function_name ORDER BY iof.snap_id),0), 0) AS tot_watime_delta_value
+                                                 OVER (PARTITION BY iof.dbid, iof.instance_number, fn.function_name ORDER BY iof.snap_id),0), 0) AS tot_watime_delta_value,
+       startup_time,
+       lag_startup_time
 FROM STATS$IOSTAT_FUNCTION iof
      INNER JOIN ( SELECT dbid, instance_number, snap_time, snap_id, startup_time, lag(startup_time) OVER (PARTITION BY dbid, instance_number ORDER BY snap_time) AS lag_startup_time
                   FROM STATS$SNAPSHOT
@@ -121,6 +123,7 @@ SELECT pkey,
        PERCENTILE_CONT(0.00)
          within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P100
 FROM vrawiof
+WHERE startup_time = lag_startup_time
 GROUP BY pkey,
          dbid,
          instance_number,
