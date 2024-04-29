@@ -144,10 +144,6 @@ jobs:
       with:
         target: ${{ matrix.job.target}}
 
-    # - name: Configure cross compiling
-    #   if: matrix.job.cross
-    #   run: echo "CARGO=cross" >> $GITHUB_ENV
-
     - name: Show toolchain information
       run: |-
         rustup toolchain list
