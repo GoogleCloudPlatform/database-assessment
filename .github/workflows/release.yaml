@@ -142,7 +142,7 @@ jobs:
       if: matrix.job.cross
       uses: taiki-e/setup-cross-toolchain-action@v1
       with:
-        tool: ${{ matrix.job.target}}
+        target: ${{ matrix.job.target}}
 
     - name: Configure cross compiling
       if: matrix.job.cross
