@@ -80,16 +80,16 @@ jobs:
         # Linux
         - target: x86_64-unknown-linux-gnu
           os: ubuntu-latest
-          cross: false
-        # - target: x86_64-unknown-linux-musl
-        #   os: ubuntu-latest
-        #   cross: false
-        # - target: aarch64-unknown-linux-gnu
-        #   os: ubuntu-latest
-        #   cross: false
-        # - target: i686-unknown-linux-gnu
-        #   os: ubuntu-latest
-        #   cross: false
+          cross: true
+        - target: x86_64-unknown-linux-musl
+          os: ubuntu-latest
+          cross: true
+        - target: aarch64-unknown-linux-gnu
+          os: ubuntu-latest
+          cross: true
+        - target: i686-unknown-linux-gnu
+          os: ubuntu-latest
+          cross: true
         # Windows
         - target: x86_64-pc-windows-msvc
           os: windows-2022
@@ -119,7 +119,7 @@ jobs:
 
     - name: Install musl-tools on Linux
       run: sudo apt-get install --yes musl musl-dev musl-tools
-      if: ${{ matrix.job.os == 'Linux' }}
+      if: ${{ matrix.job.os == 'ubuntu-latest' }}
 
     - name: Clone PyApp
       run: git clone --depth 1 --branch $PYAPP_VERSION https://github.com/ofek/pyapp $PYAPP_REPO
@@ -138,11 +138,11 @@ jobs:
       with:
         targets: ${{ matrix.job.target }}
 
-    - name: Set up cross compiling
+    - name: Set up cross compiling tools
       if: matrix.job.cross
-      uses: taiki-e/install-action@v2
+      uses: taiki-e/setup-cross-toolchain-action@v1
       with:
-        tool: cross
+        tool: ${{ matrix.job.target}}
 
     - name: Configure cross compiling
       if: matrix.job.cross
