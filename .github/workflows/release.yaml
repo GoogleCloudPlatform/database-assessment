@@ -106,6 +106,8 @@ jobs:
       CARGO_BUILD_TARGET: ${{ matrix.job.target }}
       PYAPP_REPO: pyapp
       PYAPP_VERSION: v0.19.0
+      PYAPP_PYTHON_VERSION: "3.12"
+      PYAPP_DISTRIBUTION_VARIANT: "v1"
       PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server,remote
       PYAPP_DISTRIBUTION_EMBED: "1"
       PYAPP_UV_ENABLED: "1"
