@@ -81,31 +81,40 @@ jobs:
         - target: x86_64-unknown-linux-gnu
           os: ubuntu-latest
           cross: true
-        - target: x86_64-unknown-linux-musl
-          os: ubuntu-latest
-          cross: true
+          release_suffix: x86_64-linux
+        # - target: x86_64-unknown-linux-musl
+        #   os: ubuntu-latest
+        #   cross: true
         - target: aarch64-unknown-linux-gnu
           os: ubuntu-latest
           cross: true
+          release_suffix: aarch64-linux
         - target: i686-unknown-linux-gnu
           os: ubuntu-latest
           cross: true
+          release_suffix: i686-linux
         # Windows
         - target: x86_64-pc-windows-msvc
           os: windows-2022
+          release_suffix: x86_64-windows
         - target: i686-pc-windows-msvc
           os: windows-2022
+          release_suffix: i686-windows
         # macOS
         - target: aarch64-apple-darwin
           os: macos-12
+          release_suffix: aarch64-osx
         - target: x86_64-apple-darwin
           os: macos-12
+          release_suffix: x86_64-osx
 
     env:
       CARGO: cargo
       CARGO_BUILD_TARGET: ${{ matrix.job.target }}
       PYAPP_REPO: pyapp
       PYAPP_VERSION: v0.19.0
+      PYAPP_PYTHON_VERSION: "3.12"
+      PYAPP_DISTRIBUTION_VARIANT: v1
       PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server,remote
       PYAPP_DISTRIBUTION_EMBED: "1"
       PYAPP_UV_ENABLED: "1"
@@ -159,17 +168,21 @@ jobs:
         path: ${{ github.workspace }}/dist
         merge-multiple: true
 
-
     - name: Build Binary
       working-directory: ${{ github.workspace }}
       run: |-
         current_version=$(hatch version)
-        PYAPP_UV_ENABLED="1" PYAPP_PROJECT_PATH="${{ github.workspace }}/dist/dma-${current_version}-py3-none-any.whl" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch -v build -t app
+        PYAPP_PYTHON_VERSION="3.12" PYAPP_DISTRIBUTION_VARIANT="v1" PYAPP_DISTRIBUTION_EMBED="1" PYAPP_FULL_ISOLATION="1" PYAPP_UV_ENABLED="1" PYAPP_PROJECT_PATH="${{ github.workspace }}/dist/dma-${current_version}-py3-none-any.whl" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" hatch -v build -t app
+
+    - name: Rename
+      working-directory: ${{ github.workspace }}
+      run: |-
+        mv dist/app/dma* dist/app/dma-${{ matrix.job.release_suffix }}
 
     - name: Upload built binary package
       uses: actions/upload-artifact@v4
       with:
-        name: binaries-${{ env.CARGO_BUILD_TARGET }}
+        name: binaries-${{ matrix.job.release_suffix }}
         path: dist/app/*
         if-no-files-found: error
 
@@ -193,6 +206,7 @@ jobs:
     #     skip_existing: true
     #     user: __token__
     #     password: ${{ secrets.PYPI_API_TOKEN }}
+
     - name: Add assets to release
       uses: softprops/action-gh-release@v2
       with:
