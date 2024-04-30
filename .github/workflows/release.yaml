@@ -172,7 +172,7 @@ jobs:
       working-directory: ${{ github.workspace }}
       run: |-
         current_version=$(hatch version)
-        PYAPP_PYTHON_VERSION="3.12" PYAPP_DISTRIBUTION_VARIANT="v1" PYAPP_DISTRIBUTION_EMBED="1" PYAPP_FULL_ISOLATION="1" PYAPP_UV_ENABLED="1" PYAPP_PROJECT_PATH="${{ github.workspace }}/dist/dma-${current_version}-py3-none-any.whl" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" hatch -v build -t app
+        PYAPP_PYTHON_VERSION="3.11" PYAPP_DISTRIBUTION_EMBED="1" PYAPP_FULL_ISOLATION="1" PYAPP_UV_ENABLED="1" PYAPP_PROJECT_PATH="${{ github.workspace }}/dist/dma-${current_version}-py3-none-any.whl" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" hatch -v build -t app
 
     - name: Rename
       working-directory: ${{ github.workspace }}
