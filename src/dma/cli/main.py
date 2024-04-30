@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-from rich import prompt
+from rich import box, prompt
 from rich.table import Table
 
+from dma.__about__ import __version__ as current_version
 from dma.cli._utils import RICH_CLICK_INSTALLED, console
 
 if TYPE_CHECKING or not RICH_CLICK_INSTALLED:  # pragma: no cover
@@ -26,7 +27,11 @@ else:  # pragma: no cover
     click.rich_click.GROUP_ARGUMENTS_OPTIONS = True
     click.rich_click.STYLE_ERRORS_SUGGESTION = "magenta italic"
     click.rich_click.ERRORS_SUGGESTION = ""
-    click.rich_click.ERRORS_EPILOGUE = ""
+    click.rich_click.ERRORS_EPILOGUE = """
+
+    For additional support, refer to the [documentation](https://googlecloudplatform.github.io/database-assessment/) or [Github Source](https://github.com/GoogleCloudPlatform/database-assessment)
+
+    """
     click.rich_click.MAX_WIDTH = 80
     click.rich_click.SHOW_METAVARS_COLUMN = True
     click.rich_click.APPEND_METAVARS_HELP = True
@@ -42,9 +47,9 @@ def app(ctx: Context) -> None:
 
 
 @app.command(
-    name="collect-data",
+    name="collect",
     no_args_is_help=True,
-    short_help="Collect data from a source database..",
+    short_help="Collect data from a source database.",
 )
 @click.option(
     "--no-prompt",
@@ -60,7 +65,7 @@ def app(ctx: Context) -> None:
     "-db",
     help="The type of the database to connect to",
     default=None,
-    type=click.STRING,
+    type=click.Choice({"mysql", "postgres"}),
     required=False,
     show_default=False,
 )
@@ -129,11 +134,7 @@ def collect_data(
     collection_identifier: str | None = None,
 ) -> None:
     """Process a collection of advisor extracts."""
-
-    table = Table(show_header=False)
-    table.add_column("title", style="cyan", width=80)
-    table.add_row("Google Database Migration Assessment")
-    console.print(table)
+    print_app_info()
     console.rule("Starting data collection process", align="left")
 
     if hostname is None:
@@ -151,109 +152,17 @@ def collect_data(
     if not no_prompt:
         input_confirmed = prompt.Confirm.ask("Are you ready to start the assessment?")
     if input_confirmed:
-        console.rule("[bold]PLACEHOLDER[/] Scripts will exeutue here", align="left")
+        console.rule("[bold]PLACEHOLDER[/] Scripts will execute here", align="left")
     else:
         console.rule("Skipping execution until input is confirmed", align="left")
 
 
-@app.command(
-    name="readiness-check",
-    no_args_is_help=True,
-    short_help="Execute the DMS migration readiness checklist.",
-)
-@click.option(
-    "--no-prompt",
-    help="Do not prompt for confirmation before executing check.",
-    type=bool,
-    default=False,
-    required=False,
-    show_default=True,
-    is_flag=True,
-)
-@click.option(
-    "--db-type",
-    "-db",
-    help="The type of the database to connect to",
-    default=None,
-    type=click.STRING,
-    required=False,
-    show_default=False,
-)
-@click.option(
-    "--username",
-    "-u",
-    help="The database user to connect as.",
-    default=None,
-    type=click.STRING,
-    required=False,
-    show_default=False,
-)
-@click.option(
-    "--password",
-    "-pw",
-    help="The database user password.",
-    default=None,
-    type=click.STRING,
-    required=False,
-    show_default=False,
-)
-@click.option(
-    "--hostname",
-    "-h",
-    help="The hostname of the database server",
-    default=None,
-    type=click.STRING,
-    required=False,
-    show_default=False,
-)
-@click.option(
-    "--port",
-    "-p",
-    help="The port of the database server",
-    default=None,
-    type=click.INT,
-    required=False,
-    show_default=False,
-)
-@click.option(
-    "--database",
-    "-d",
-    help="The name of the database to connect to.",
-    default=None,
-    type=click.STRING,
-    required=False,
-    show_default=False,
-)
-def readiness_check(
-    no_prompt: bool,
-    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
-    username: str | None = None,
-    password: str | None = None,
-    hostname: str | None = None,
-    port: int | None = None,
-    database: str | None = None,
-) -> None:
-    """Process a collection of advisor extracts."""
-    table = Table(show_header=False)
-    table.add_column("title", style="cyan", width=80)
-    table.add_row("Google Database Migration Assessment")
-    console.print(table)
-    console.rule("Starting readiness check process", align="left")
-    if hostname is None:
-        hostname = prompt.Prompt.ask("Please enter a hostname for the database")
-    if port is None:
-        port = prompt.IntPrompt.ask("Please enter a port for the database")
-    if database is None:
-        database = prompt.Prompt.ask("Please enter a database name")
-    if username is None:
-        username = prompt.Prompt.ask("Please enter a username")
-    if password is None:
-        password = prompt.Prompt.ask("Please enter a password", password=True)
-    if no_prompt:
-        input_confirmed = True
-    if not no_prompt:
-        input_confirmed = prompt.Confirm.ask("Are you ready to start the assessment?")
-    if input_confirmed:
-        console.rule("[bold]PLACEHOLDER[/] Scripts will exeutue here", align="left")
-    else:
-        console.rule("Skipping execution until input is confirmed", align="left")
+def print_app_info() -> None:
+    table = Table(show_header=False, show_lines=False, box=box.SIMPLE_HEAD, show_edge=True)
+    table.add_column("title", style="cyan", width=60)
+    table.add_column("value", style="cyan", width=20)
+    table.add_row(
+        "[bold green]Google Database Migration Assessment[/]", f"[cyan]version {current_version}[/]", end_section=True
+    )
+    console.print(table, width=80)
+    console.rule("Starting data collection process", align="left")
