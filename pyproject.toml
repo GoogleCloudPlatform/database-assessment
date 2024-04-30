@@ -68,6 +68,7 @@ docs = [
     "mkdocstrings[python]",
     "mkdocs-redirects>=1.2",
     "mkdocs-glightbox>=0.3.0",
+    "mkdocs-material",
     "mike>=2.0.0",
     # Extensions
     "pymdown-extensions>=10.5",
