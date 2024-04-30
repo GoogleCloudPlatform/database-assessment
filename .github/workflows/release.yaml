@@ -107,7 +107,7 @@ jobs:
       PYAPP_REPO: pyapp
       PYAPP_VERSION: v0.19.0
       PYAPP_PYTHON_VERSION: "3.12"
-      PYAPP_DISTRIBUTION_VARIANT: "v1"
+      PYAPP_DISTRIBUTION_VARIANT: v1
       PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server,remote
       PYAPP_DISTRIBUTION_EMBED: "1"
       PYAPP_UV_ENABLED: "1"
@@ -166,7 +166,7 @@ jobs:
       working-directory: ${{ github.workspace }}
       run: |-
         current_version=$(hatch version)
-        PYAPP_UV_ENABLED="1" PYAPP_PROJECT_PATH="${{ github.workspace }}/dist/dma-${current_version}-py3-none-any.whl" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch -v build -t app
+        PYAPP_PYTHON_VERSION="3.12" PYAPP_DISTRIBUTION_VARIANT="v1" PYAPP_DISTRIBUTION_EMBED="1" PYAPP_FULL_ISOLATION="1" PYAPP_UV_ENABLED="1" PYAPP_PROJECT_PATH="${{ github.workspace }}/dist/dma-${current_version}-py3-none-any.whl" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" hatch -v build -t app
 
     - name: Upload built binary package
       uses: actions/upload-artifact@v4
