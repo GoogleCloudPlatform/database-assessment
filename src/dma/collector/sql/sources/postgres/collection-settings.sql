@@ -1,3 +1,4 @@
+-- name: collection-postgres-settings
 with src as (
     select s.category as setting_category,
         s.name as setting_name,
@@ -19,21 +20,21 @@ with src as (
         end as is_default
     from pg_settings s
 )
-select chr(34) || :PKEY || chr(34) as pkey,
-    chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
-    chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
-    chr(34) || REPLACE(src.setting_category, chr(34), chr(39)) || chr(34) as setting_category,
-    chr(34) || REPLACE(src.setting_name, chr(34), chr(39)) || chr(34) as setting_name,
-    chr(34) || REPLACE(src.setting_value, chr(34), chr(39)) || chr(34) as setting_value,
+select :PKEY as pkey,
+    :DMA_SOURCE_ID as dma_source_id,
+    :DMA_MANUAL_ID as dma_manual_id,
+    replace(src.setting_category, chr(34), chr(39)) as setting_category,
+    replace(src.setting_name, chr(34), chr(39)) as setting_name,
+    replace(src.setting_value, chr(34), chr(39)) as setting_value,
     src.setting_unit,
     src.context,
     src.variable_type,
     src.setting_source,
     src.min_value,
     src.max_value,
-    chr(34) || REPLACE(src.enum_values::text, chr(34), chr(39)) || chr(34) as enum_values,
-    chr(34) || REPLACE(src.boot_value::text, chr(34), chr(39)) || chr(34) as boot_value,
-    chr(34) || REPLACE(src.reset_value::text, chr(34), chr(39)) || chr(34) as reset_value,
+    replace(src.enum_values::text, chr(34), chr(39)) as enum_values,
+    replace(src.boot_value::text, chr(34), chr(39)) as boot_value,
+    replace(src.reset_value::text, chr(34), chr(39)) as reset_value,
     src.source_file,
     src.pending_restart,
     src.is_default

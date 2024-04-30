@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, Literal
 import polars as pl
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from duckdb import DuckDBPyConnection
     from rich.console import Console
 
@@ -27,6 +29,9 @@ class BaseWorkflow:
         self.db_type = db_type
         self.canonical_query_manager = canonical_query_manager
 
+    async def execute(self) -> None:
+        """Execute Workflow"""
+
     def import_to_table(self, data: dict[str, list[dict]]) -> None:
         """Load a dictionary of result sets into duckdb.
 
@@ -34,5 +39,11 @@ class BaseWorkflow:
         """
         for table_name, table_data in data.items():
             if len(table_data) > 0:
-                self.local_db.register(f"obj_{table_name}", pl.from_dicts(table_data, infer_schema_length=10000))
+                self.local_db.register(
+                    f"obj_{table_name}", pl.from_dicts(table_data, strict=False, infer_schema_length=10000)
+                )
                 self.local_db.execute(f"create or replace table {table_name} as select * from obj_{table_name}")  # noqa: S608
+
+    def dump_database(self, export_path: Path, delimiter: str = "|") -> None:
+        """Export the entire database with DDLs and data as CSV"""
+        self.local_db.execute(f"export database '{export_path!s}' (format csv, delimiter '{delimiter}')")

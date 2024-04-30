@@ -1,7 +1,8 @@
-select concat(char(34), @PKEY, char(34)) as pkey,
-    concat(char(34), @DMA_SOURCE_ID, char(34)) as dma_source_id,
-    concat(char(34), @DMA_MANUAL_ID, char(34)) as dma_manual_id,
-    concat(char(34), user_host, char(34)) as user_host,
+-- name: collection-mysql-users
+select @PKEY as pkey,
+    @DMA_SOURCE_ID as dma_source_id,
+    @DMA_MANUAL_ID as dma_manual_id,
+    user_host as user_host,
     user_count as user_count
 from (
         select u.host as user_host,

@@ -1,10 +1,11 @@
-select concat(char(34), @PKEY, char(34)) as pkey,
-    concat(char(34), @DMA_SOURCE_ID, char(34)) as dma_source_id,
-    concat(char(34), @DMA_MANUAL_ID, char(34)) as dma_manual_id,
-    concat(char(34), src.table_catalog, char(34)) as table_catalog,
-    concat(char(34), src.table_schema, char(34)) as table_schema,
-    concat(char(34), src.table_name, char(34)) as table_name,
-    concat(char(34), src.data_type, char(34)) as data_type,
+-- name: collection-mysql-data-types
+select @PKEY as pkey,
+    @DMA_SOURCE_ID as dma_source_id,
+    @DMA_MANUAL_ID as dma_manual_id,
+    src.table_catalog as table_catalog,
+    src.table_schema as table_schema,
+    src.table_name as table_name,
+    src.data_type as data_type,
     src.data_type_count as data_type_count
 from (
         select i.table_catalog as table_catalog,

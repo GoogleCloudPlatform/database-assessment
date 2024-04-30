@@ -1,13 +1,26 @@
-select concat(char(34), @PKEY, char(34)) as pkey,
-    concat(char(34), @DMA_SOURCE_ID, char(34)) as dma_source_id,
-    concat(char(34), @DMA_MANUAL_ID, char(34)) as dma_manual_id,
-    concat(char(34), src.object_catalog, char(34)) as object_catalog,
-    concat(char(34), src.object_schema, char(34)) as object_schema,
-    concat(char(34), src.object_category, char(34)) as object_category,
-    concat(char(34), src.object_type, char(34)) as object_type,
-    concat(char(34), src.object_owner_schema, char(34)) as object_owner_schema,
-    concat(char(34), src.object_owner, char(34)) as object_owner,
-    concat(char(34), src.object_name, char(34)) as object_name
+-- name: collection-mysql-schema-objects
+select @PKEY as pkey,
+    @DMA_SOURCE_ID as dma_source_id,
+    @DMA_MANUAL_ID as dma_manual_id,
+    src.object_catalog as object_catalog,
+    src.object_schema,
+    char(34)
+) as object_schema,
+src.object_category,
+char(34)
+) as object_category,
+src.object_type,
+char(34)
+) as object_type,
+src.object_owner_schema,
+char(34)
+) as object_owner_schema,
+src.object_owner,
+char(34)
+) as object_owner,
+src.object_name,
+char(34)
+) as object_name
 from (
         select i.CONSTRAINT_CATALOG as object_catalog,
             i.CONSTRAINT_SCHEMA as object_schema,

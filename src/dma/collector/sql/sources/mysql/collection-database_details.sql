@@ -1,9 +1,10 @@
+-- name: collection-mysql-database-details
 select
     /*+ MAX_EXECUTION_TIME(5000) */
-    concat(char(34), @PKEY, char(34)) as pkey,
-    concat(char(34), @DMA_SOURCE_ID, char(34)) as dma_source_id,
-    concat(char(34), @DMA_MANUAL_ID, char(34)) as dma_manual_id,
-    concat(char(34), src.table_schema, char(34)) as table_schema,
+    @PKEY as pkey,
+    @DMA_SOURCE_ID as dma_source_id,
+    @DMA_MANUAL_ID as dma_manual_id,
+    src.table_schema as table_schema,
     src.total_table_count as total_table_count,
     src.innodb_table_count as innodb_table_count,
     src.non_innodb_table_count as non_innodb_table_count,

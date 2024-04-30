@@ -23,7 +23,12 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def provide_collection_query_manager(db_session: AsyncSession) -> AsyncIterator[CollectionQueryManager]:
+async def provide_collection_query_manager(
+    db_session: AsyncSession,
+    execution_id: str | None = None,
+    source_id: str | None = None,
+    manual_id: str | None = None,
+) -> AsyncIterator[CollectionQueryManager]:
     """Provide collection query manager.
 
     Uses SQLAlchemy Connection management to establish and retrieve a valid database session.
@@ -40,14 +45,32 @@ async def provide_collection_query_manager(db_session: AsyncSession) -> AsyncIte
     rdbms_type = dialect.name
     if rdbms_type == "postgresql":
         query_manager: CollectionQueryManager = PostgresCollectionQueryManager(
-            connection=raw_connection.driver_connection
+            connection=raw_connection.driver_connection,
+            manual_id=manual_id,
+            source_id=source_id,
+            execution_id=execution_id,
         )
     elif rdbms_type == "mysql":
-        query_manager = MySQLCollectionQueryManager(connection=raw_connection.driver_connection)
+        query_manager = MySQLCollectionQueryManager(
+            connection=raw_connection.driver_connection,
+            manual_id=manual_id,
+            source_id=source_id,
+            execution_id=execution_id,
+        )
     elif rdbms_type == "oracle":
-        query_manager = OracleCollectionQueryManager(connection=raw_connection.driver_connection)
+        query_manager = OracleCollectionQueryManager(
+            connection=raw_connection.driver_connection,
+            manual_id=manual_id,
+            source_id=source_id,
+            execution_id=execution_id,
+        )
     elif rdbms_type == "mssql":
-        query_manager = SQLServerCollectionQueryManager(connection=raw_connection.driver_connection)
+        query_manager = SQLServerCollectionQueryManager(
+            connection=raw_connection.driver_connection,
+            manual_id=manual_id,
+            source_id=source_id,
+            execution_id=execution_id,
+        )
     else:
         msg = "Unable to identify driver adapter from dialect."
         raise ApplicationError(msg)

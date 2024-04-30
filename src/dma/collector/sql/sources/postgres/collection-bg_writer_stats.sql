@@ -1,3 +1,4 @@
+-- name: collection-postgres-bg-writer-stats
 with src as (
     select w.checkpoints_timed,
         w.checkpoints_req as checkpoints_requested,
@@ -12,9 +13,9 @@ with src as (
         w.stats_reset
     from pg_stat_bgwriter w
 )
-select chr(34) || :PKEY || chr(34) as pkey,
-    chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
-    chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
+select :PKEY as pkey,
+    :DMA_SOURCE_ID as dma_source_id,
+    :DMA_MANUAL_ID as dma_manual_id,
     src.checkpoints_timed,
     src.checkpoints_requested,
     src.checkpoint_write_time,
