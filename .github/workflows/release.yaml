@@ -40,7 +40,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
             name: collections
-            path: dist/*
+            path: dist/*.zip
             if-no-files-found: error
             overwrite: true
 
@@ -49,20 +49,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         # Fetch all tags
         fetch-depth: 0
 
-    - name: Install build dependencies
-      run: python -m pip install --upgrade build wheel setuptools cython mypy
+    - name: Install Hatch
+      run: pip install --upgrade hatch hatch-pip-compile
 
     - name: Build
-      run: python -m build
+      run: hatch build
 
     - uses: actions/upload-artifact@v4
       with:
-        name: artifacts
+        name: wheels
         path: dist/*
         if-no-files-found: error
         overwrite: true
@@ -70,22 +70,25 @@ jobs:
   build-binaries:
     name: Build binary application for ${{ matrix.job.target }} (${{ matrix.job.os }})
     runs-on: ${{ matrix.job.os }}
+    needs:
+        - collection-scripts
+        - pure-python-wheel-and-sdist
     strategy:
       fail-fast: false
       matrix:
         job:
         # Linux
         - target: x86_64-unknown-linux-gnu
-          os: ubuntu-22.04
+          os: ubuntu-latest
           cross: true
         - target: x86_64-unknown-linux-musl
-          os: ubuntu-22.04
+          os: ubuntu-latest
           cross: true
         - target: aarch64-unknown-linux-gnu
-          os: ubuntu-22.04
+          os: ubuntu-latest
           cross: true
         - target: i686-unknown-linux-gnu
-          os: ubuntu-22.04
+          os: ubuntu-latest
           cross: true
         # Windows
         - target: x86_64-pc-windows-msvc
@@ -102,12 +105,21 @@ jobs:
       CARGO: cargo
       CARGO_BUILD_TARGET: ${{ matrix.job.target }}
       PYAPP_REPO: pyapp
-      PYAPP_VERSION: v0.16.0
+      PYAPP_VERSION: v0.19.0
       PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server,remote
       PYAPP_DISTRIBUTION_EMBED: "1"
+      PYAPP_UV_ENABLED: "1"
+      HATCH_BUILD_LOCATION: dist
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
+      with:
+        # Fetch all tags
+        fetch-depth: 0
+
+    - name: Install musl-tools on Linux
+      run: sudo apt-get install --yes musl musl-dev musl-tools
+      if: ${{ matrix.job.os == 'ubuntu-latest' }}
 
     - name: Clone PyApp
       run: git clone --depth 1 --branch $PYAPP_VERSION https://github.com/ofek/pyapp $PYAPP_REPO
@@ -120,23 +132,17 @@ jobs:
     - name: Install Hatch
       run: pip install -U hatch hatch-pip-compile
 
-    - name: Build Wheel
-      run: hatch build
-
     - name: Install Rust toolchain
+      if: ${{ !matrix.job.cross }}
       uses: dtolnay/rust-toolchain@stable
       with:
         targets: ${{ matrix.job.target }}
 
-    - name: Set up cross compiling
+    - name: Set up cross compiling tools
       if: matrix.job.cross
-      uses: taiki-e/install-action@v2
+      uses: taiki-e/setup-cross-toolchain-action@v1
       with:
-        tool: cross
-
-    - name: Configure cross compiling
-      if: matrix.job.cross
-      run: echo "CARGO=cross" >> $GITHUB_ENV
+        target: ${{ matrix.job.target}}
 
     - name: Show toolchain information
       run: |-
@@ -147,15 +153,25 @@ jobs:
         cargo -V
         hatch --version
 
-    - name: Build Binary
-      run: current_version=$(hatch version) && PYAPP_PROJECT_PATH="$(ls ${PWD}/dist/dma-${current_version}-py3-none-any.whl)" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch build -t app
-
-    - uses: actions/upload-artifact@v4
+    - uses: actions/download-artifact@v4
       with:
-        name: binaries
-        path: dist/*
+        name: wheels
+        path: ${{ github.workspace }}/dist
+        merge-multiple: true
+
+
+    - name: Build Binary
+      working-directory: ${{ github.workspace }}
+      run: |-
+        current_version=$(hatch version)
+        PYAPP_UV_ENABLED="1" PYAPP_PROJECT_PATH="${{ github.workspace }}/dist/dma-${current_version}-py3-none-any.whl" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" PYAPP_DISTRIBUTION_EMBED="1" hatch -v build -t app
+
+    - name: Upload built binary package
+      uses: actions/upload-artifact@v4
+      with:
+        name: binaries-${{ env.CARGO_BUILD_TARGET }}
+        path: dist/app/*
         if-no-files-found: error
-        overwrite: true
 
   publish:
     name: Publish release
@@ -168,13 +184,6 @@ jobs:
     steps:
     - uses: actions/download-artifact@v4
       with:
-        name: collections
-        path: dist
-        merge-multiple: true
-
-    - uses: actions/download-artifact@v4
-      with:
-        name: artifacts
         path: dist
         merge-multiple: true
 
@@ -184,22 +193,7 @@ jobs:
     #     skip_existing: true
     #     user: __token__
     #     password: ${{ secrets.PYPI_API_TOKEN }}
-
-    - uses: actions/download-artifact@v4
-      with:
-        name: binaries
-        path: dist
-        merge-multiple: true
-
-    - name: Add collection scripts to current release
-      uses: softprops/action-gh-release@v2
-      with:
-        name: binaries
-        path: dist
-        merge-multiple: true
-
-    - name: Add binary assets to current release
+    - name: Add assets to release
       uses: softprops/action-gh-release@v2
       with:
         files: dist/*
-        merge-multiple: true
