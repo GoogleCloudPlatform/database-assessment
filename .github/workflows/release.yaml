@@ -168,7 +168,6 @@ jobs:
         path: ${{ github.workspace }}/dist
         merge-multiple: true
 
-
     - name: Build Binary
       working-directory: ${{ github.workspace }}
       run: |-
@@ -183,7 +182,7 @@ jobs:
     - name: Upload built binary package
       uses: actions/upload-artifact@v4
       with:
-        name: binaries-${{ env.CARGO_BUILD_TARGET }}
+        name: binaries-${{ matrix.job.release_suffix }}
         path: dist/app/*
         if-no-files-found: error
 
@@ -207,6 +206,7 @@ jobs:
     #     skip_existing: true
     #     user: __token__
     #     password: ${{ secrets.PYPI_API_TOKEN }}
+
     - name: Add assets to release
       uses: softprops/action-gh-release@v2
       with:
