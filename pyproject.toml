@@ -134,8 +134,8 @@ sources = ["src"]
 [tool.hatch.build.targets.sdist]
 exclude = ["/.github", "/docs"]
 
-[tool.hatch.build.targets.app]
-python = "3.12"
+# [tool.hatch.build.targets.app]
+# python = "3.12"
 
 #####################
 # Environment Setup #
