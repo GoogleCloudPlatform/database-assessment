@@ -45,6 +45,17 @@ class CanonicalQueryManager(QueryManager):
         self.manual_id = manual_id
         super().__init__(connection, queries)
 
+    async def execute_ddl_scripts(self, *args: Any, **kwargs: Any) -> None:
+        """Execute pre-processing queries."""
+        console.print(Padding("DATAMODEL", 1, style="bold", expand=True), width=80)
+        with console.status("[bold green]Creating tables...[/]") as status:
+            for script in self.available_queries("ddl"):
+                status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
+                await self.execute(script)
+                status.console.print(rf" [green]:heavy_check_mark:[/] Created [bold magenta]`{script}`[/]")
+            if not self.available_queries("ddl"):
+                console.print(" [dim grey]:heavy_check_mark: No DDL scripts to load[/]")
+
     async def execute_transformation_queries(self, *args: Any, **kwargs: Any) -> None:
         """Execute pre-processing queries."""
         console.print(Padding("TRANSFORMATION QUERIES", 1, style="bold", expand=True), width=80)
@@ -243,6 +254,31 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             "collection_postgres_schema_objects",
             "collection_postgres_settings",
             "collection_postgres_source_details",
+        }
+
+    def get_collection_filenames(self) -> dict[str, str]:
+        if self.db_version is None:
+            msg = "Database Version was not set.  Ensure the initialization step complete successfully."
+            raise ApplicationError(msg)
+        major_version = int(self.db_version[:2])
+        version_prefix = "base" if major_version > 13 else "13" if major_version == 13 else "12"
+        return {
+            f"collection_postgres_{version_prefix}_table_details": "collection_postgres_table_details",
+            f"collection_postgres_{version_prefix}_database_details": "collection_postgres_database_details",
+            f"collection_postgres_{version_prefix}_replication_slots": "collection_postgres_replication_slots",
+            "collection_postgres_applications": "collection_postgres_applications",
+            "collection_postgres_aws_extension_dependency": "collection_postgres_aws_extension_dependency",
+            "collection_postgres_aws_oracle_exists": "collection_postgres_aws_oracle_exists",
+            "collection_postgres_bg_writer_stats": "collection_postgres_bg_writer_stats",
+            "collection_postgres_calculated_metrics": "collection_postgres_calculated_metrics",
+            "collection_postgres_data_types": "collection_postgres_data_types",
+            "collection_postgres_extensions": "collection_postgres_extensions",
+            "collection_postgres_index_details": "collection_postgres_index_details",
+            "collection_postgres_replication_stats": "collection_postgres_replication_stats",
+            "collection_postgres_schema_details": "collection_postgres_schema_details",
+            "collection_postgres_schema_objects": "collection_postgres_schema_objects",
+            "collection_postgres_settings": "collection_postgres_settings",
+            "collection_postgres_source_details": "collection_postgres_source_details",
         }
 
 

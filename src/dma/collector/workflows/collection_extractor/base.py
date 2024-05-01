@@ -29,6 +29,7 @@ class CollectionExtractor(BaseWorkflow):
         super().__init__(local_db, canonical_query_manager, db_type, console)
 
     async def execute(self) -> None:
+        await super().execute()
         await self.extract_collection()
         await self.process_collection()
         self.print_summary()
