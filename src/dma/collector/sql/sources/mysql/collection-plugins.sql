@@ -3,36 +3,16 @@ select @PKEY as pkey,
     @DMA_SOURCE_ID as dma_source_id,
     @DMA_MANUAL_ID as dma_manual_id,
     src.plugin_name as plugin_name,
-    src.plugin_version,
-    char(34)
-) as plugin_version,
-src.plugin_status,
-char(34)
-) as plugin_status,
-src.plugin_type,
-char(34)
-) as plugin_type,
-src.plugin_type_version,
-char(34)
-) as plugin_type_version,
-src.plugin_library,
-char(34)
-) as plugin_library,
-src.plugin_library_version,
-char(34)
-) as plugin_library_version,
-src.plugin_author,
-char(34)
-) as plugin_author,
-src.plugin_description,
-char(34)
-) as plugin_description,
-src.plugin_license,
-char(34)
-) as plugin_license,
-src.load_option,
-char(34)
-) as load_option
+    src.plugin_version as plugin_version,
+    src.plugin_status as plugin_status,
+    src.plugin_type as plugin_type,
+    src.plugin_type_version as plugin_type_version,
+    src.plugin_library as plugin_library,
+    src.plugin_library_version as plugin_library_version,
+    src.plugin_author as plugin_author,
+    src.plugin_description as plugin_description,
+    src.plugin_license as plugin_license,
+    src.load_option as load_option
 from (
         select plugin_name as plugin_name,
             plugin_version as plugin_version,

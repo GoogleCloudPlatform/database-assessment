@@ -5,37 +5,21 @@ select
     @DMA_SOURCE_ID as dma_source_id,
     @DMA_MANUAL_ID as dma_manual_id,
     table_schema as table_schema,
-    table_name,
-    char(34)
-) as table_name,
-table_engine,
-char(34)
-) as table_engine,
-table_rows as table_rows,
-data_length as data_length,
-index_length as index_length,
-is_compressed,
-char(34)
-) as is_compressed,
-is_partitioned,
-char(34)
-) as is_partitioned,
-partition_count as partition_count,
-index_count as index_count,
-fulltext_index_count as fulltext_index_count,
-is_encrypted,
-char(34)
-) as is_encrypted,
-spatial_index_count as spatial_index_count,
-has_primary_key,
-char(34)
-) as has_primary_key,
-row_format,
-char(34)
-) as row_format,
-table_type,
-char(34)
-) as table_type
+    table_name as table_name,
+    table_engine as table_engine,
+    table_rows as table_rows,
+    data_length as data_length,
+    index_length as index_length,
+    is_compressed as is_compressed,
+    is_partitioned as is_partitioned,
+    partition_count as partition_count,
+    index_count as index_count,
+    fulltext_index_count as fulltext_index_count,
+    is_encrypted as is_encrypted,
+    spatial_index_count as spatial_index_count,
+    has_primary_key as has_primary_key,
+    row_format as row_format,
+    table_type as table_type
 from (
         select t.table_schema as table_schema,
             t.table_name as table_name,

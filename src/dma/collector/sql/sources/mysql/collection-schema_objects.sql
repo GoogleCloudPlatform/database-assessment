@@ -3,24 +3,12 @@ select @PKEY as pkey,
     @DMA_SOURCE_ID as dma_source_id,
     @DMA_MANUAL_ID as dma_manual_id,
     src.object_catalog as object_catalog,
-    src.object_schema,
-    char(34)
-) as object_schema,
-src.object_category,
-char(34)
-) as object_category,
-src.object_type,
-char(34)
-) as object_type,
-src.object_owner_schema,
-char(34)
-) as object_owner_schema,
-src.object_owner,
-char(34)
-) as object_owner,
-src.object_name,
-char(34)
-) as object_name
+    src.object_schema as object_schema,
+    src.object_category as object_category,
+    src.object_type as object_type,
+    src.object_owner_schema as object_owner_schema,
+    src.object_owner as object_owner,
+    src.object_name as object_name
 from (
         select i.CONSTRAINT_CATALOG as object_catalog,
             i.CONSTRAINT_SCHEMA as object_schema,

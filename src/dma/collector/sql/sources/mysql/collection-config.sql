@@ -3,12 +3,8 @@ select distinct @PKEY as pkey,
     @DMA_SOURCE_ID as dma_source_id,
     @DMA_MANUAL_ID as dma_manual_id,
     src.variable_category as variable_category,
-    src.variable_name,
-    char(34)
-) as variable_name,
-src.variable_value,
-char(34)
-) as variable_value
+    src.variable_name as variable_name,
+    src.variable_value as variable_value
 from (
         select 'ALL_VARIABLES' as variable_category,
             variable_name,
