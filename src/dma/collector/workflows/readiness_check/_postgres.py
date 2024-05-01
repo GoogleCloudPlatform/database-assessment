@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
     from dma.collector.query_managers import CanonicalQueryManager
 
-dbTypeMap = {
+db_type_map = {
 	9.4: "POSTGRES_9_4",
 	9.5: "POSTGRES_9_5",
 	9.6: "POSTGRES_9_6",
