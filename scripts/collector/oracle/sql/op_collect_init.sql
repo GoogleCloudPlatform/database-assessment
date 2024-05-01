@@ -482,14 +482,14 @@ BEGIN
           EXECUTE IMMEDIATE the_sql INTO  :minsnaptime, :maxsnaptime USING NVL('&&v_statsDBID', '&&v_dbid') ;
        END IF;
        IF :minsnaptime IS NULL THEN
-          dbms_output.put_line('Warning: No snapshots found within the last &&dtrange days.  No performance data will be extracted.');
+          dbms_output.put_line('Warning: No snapshots found within the requested &&dtrange days.  No performance data will be extracted.');
           :minsnaptime := sysdate;
           :maxsnaptime := sysdate;
           :v_info_prompt := 'without performance data';
           :v_stats_source := ' without performance data';
        -- Check there is more than one snapshot
        ELSE IF (:minsnaptime = :maxsnaptime) THEN
-                dbms_output.put_line('Warning: Only one snapshot found within the last &&dtrange days.  No performance data will be extracted.');
+                dbms_output.put_line('Warning: Only one snapshot found within the requested &&dtrange days.  No performance data will be extracted.');
                 :minsnaptime := sysdate;
                 :maxsnaptime := sysdate;
                 :v_info_prompt := 'without performance data';
@@ -508,7 +508,7 @@ BEGIN
                   EXECUTE IMMEDIATE THE_SQL INTO :minsnaptime ;
                   -- Ensure the 'next' snap is not the max snap
                   IF (:minsnaptime = :maxsnaptime) THEN
-                      dbms_output.put_line('Warning: Insufficient snapshots found within the last &&dtrange days.  No performance data will be extracted.');
+                      dbms_output.put_line('Warning: Insufficient snapshots found within the requested &&dtrange days.  No performance data will be extracted.');
                       :minsnaptime := sysdate;
                       :maxsnaptime := sysdate;
                       :v_info_prompt := 'without performance data';
