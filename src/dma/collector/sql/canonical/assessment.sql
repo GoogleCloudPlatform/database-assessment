@@ -1,4 +1,4 @@
--- name: no-assessment-alloydb-01-assessment-pglogical-extension-check!
+-- name: assessment-alloydb-01-assessment-pglogical-extension-check!
 insert into alloydb_readiness_check_summary (severity, info)
 select 'ERROR',
     'pglogical extension not installed on the database'
@@ -7,16 +7,6 @@ where (
         from collection_postgres_extensions
         where extension_name = 'pglogical'
     );
-
--- name: assessment-alloydb-01-assessment-pglogical-extension-check!
-insert into alloydb_readiness_check_summary (severity, info)
-select 'ERROR',
-    'This is just a test'
-from (
-        select count(*) test_count
-        from alloydb_readiness_check_summary
-    ) a
-where a.test_count = 0;
 
 -- name: no-assessment-alloydb-01-table_count!
 insert into alloydb_readiness_check_summary (severity, info)

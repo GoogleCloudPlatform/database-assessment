@@ -627,8 +627,11 @@ extension_summary as (
     from pg_extension e
 ),
 calculated_metrics as (
-    select 'VERSION' as metric_name,
+    select 'VERSION_NUM' as metric_name,
         current_setting('server_version_num') as metric_value
+    union
+    select 'VERSION' as metric_name,
+        current_setting('server_version') as metric_value
     union
     select 'UNSUPPORTED_EXTENSION_COUNT' as metric_name,
         cast(es.unsupported_extension_count as varchar) as metric_value

@@ -7,6 +7,7 @@ from rich.table import Table
 from dma.collector.workflows.base import BaseWorkflow
 from dma.collector.workflows.readiness_check._mysql import print_summary_mysql
 from dma.collector.workflows.readiness_check._postgres import print_summary_postgres
+from dma.collector.workflows.readiness_check._postgres import execute_postgres_assessment
 
 if TYPE_CHECKING:
     from duckdb import DuckDBPyConnection
@@ -28,6 +29,8 @@ class ReadinessCheck(BaseWorkflow):
     async def process_collection(self) -> None:
         await self.canonical_query_manager.execute_transformation_queries()
         await self.canonical_query_manager.execute_assessment_queries()
+        if self.db_type == "postgres":
+            execute_postgres_assessment(console=self.console, local_db=self.local_db, manager=self.canonical_query_manager)
 
     def print_summary(self) -> None:
         """Print Summary of the Migration Readiness Assessment."""
