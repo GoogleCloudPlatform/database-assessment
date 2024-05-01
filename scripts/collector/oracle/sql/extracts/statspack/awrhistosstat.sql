@@ -68,7 +68,7 @@ WITH v_osstat_all
                          inner join STATS$OSSTATNAME osname
                          ON s.osstat_id = osname.osstat_id
                     WHERE snap.snap_time BETWEEN  '&&v_min_snaptime' AND '&&v_max_snaptime'
-                    AND s.dbid = '&&v_dbid') os
+                    AND s.dbid = '&&v_statsDBID') os
               WHERE startup_time = lag_startup_time) ,
 vossummary AS (
 SELECT :v_pkey AS pkey,

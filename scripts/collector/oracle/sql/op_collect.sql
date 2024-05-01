@@ -21,7 +21,9 @@ DEFINE v_dodiagnostics=&3
 DEFINE v_tag=&4
 DEFINE outputdir=&5
 DEFINE v_manualUniqueId=&6
-DEFINE v_statsWindow=&7
+DEFINE v_statsWindow="&7"
+DEFINE v_statsStartDate="&8"
+DEFINE v_statsDBIDRequested="&9"
 
 DEFINE EXTRACTSDIR=&SQLDIR/extracts
 DEFINE AWRDIR=&EXTRACTSDIR/awr

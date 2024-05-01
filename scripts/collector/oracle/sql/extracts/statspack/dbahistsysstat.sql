@@ -61,7 +61,7 @@ SELECT
 FROM   ( SELECT dbid, instance_number, snap_id, snap_time, startup_time, lag(startup_time) OVER (PARTITION BY dbid, instance_number ORDER BY snap_time) AS lag_startup_time
  	 FROM STATS$SNAPSHOT
 	 WHERE snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-	 AND dbid = '&&v_dbid'
+	 AND dbid = '&&v_statsDBID'
        ) s,
        STATS$SYSSTAT g
 WHERE  s.snap_id = g.snap_id

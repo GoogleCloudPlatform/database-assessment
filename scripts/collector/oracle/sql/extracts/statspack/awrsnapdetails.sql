@@ -58,7 +58,7 @@ FROM (
                        LAG(s.startup_time,1) OVER (partition by dbid, instance_number ORDER BY snap_time) as lag_startup_time
 		FROM   STATS$SNAPSHOT s
 		WHERE  s.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-		AND dbid = &&v_dbid
+		AND dbid = &&v_statsDBID
 		order by s.snap_id )
         WHERE startup_time = lag_startup_time -- Skip the first snap after a restart
         )

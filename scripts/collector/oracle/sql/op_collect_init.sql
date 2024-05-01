@@ -99,6 +99,7 @@ column max_snaptime new_value v_max_snaptime noprint
 column umf_test new_value v_umf_test noprint
 --column p_dma_source_id new_value v_dma_source_id noprint
 column p_dbid new_value v_dbid noprint
+column p_statsdbid new_value v_statsdbid noprint
 column p_tblprefix new_value v_tblprefix noprint
 column p_is_container new_value v_is_container noprint
 column p_dbparam_dflt_col new_value v_dbparam_dflt_col noprint
@@ -294,10 +295,10 @@ SELECT :b_compress_col AS p_compress_col FROM dual;
 DECLARE
 cnt NUMBER;
 BEGIN
-  SELECT SUM(cnt) INTO cnt FROM (
-    SELECT count(1) FROM dba_views WHERE (view_name = 'DBA_HIST_IOSTAT_FUNCTION' AND '&v_dodiagnostics' = 'usediagnostics')
+  SELECT SUM(tabcnt) INTO cnt FROM (
+    SELECT count(1) AS tabcnt FROM dba_views WHERE (view_name = 'DBA_HIST_IOSTAT_FUNCTION' AND '&v_dodiagnostics' = 'usediagnostics')
     UNION
-    SELECT count(1) FROM dba_tables WHERE (table_name ='STATS$IOSTAT_FUNCTION_NAME' AND '&v_dodiagnostics' = 'nodiagnostics' AND OWNER ='PERFSTAT')
+    SELECT count(1) AS tabcnt FROM dba_tables WHERE (table_name ='STATS$IOSTAT_FUNCTION_NAME' AND '&v_dodiagnostics' = 'nodiagnostics' AND OWNER ='PERFSTAT')
   );
   IF (cnt > 0 ) THEN :b_io_function_sql := 'iofunction.sql';
   ELSE 
@@ -335,7 +336,7 @@ FROM dual
 /
 
 -- Finally get the dbid from the determined source.
-SELECT TRIM(&v_umf_test) p_dbid
+SELECT TRIM(&v_umf_test) p_dbid , NVL('&&v_statsDBIDRequested', TRIM(&v_umf_test)) p_statsDBID
 FROM   v$database
 /
 -- Get the DBID - END
@@ -445,7 +446,7 @@ BEGIN
     ELSE
       -- Verify there are metrics to collect.     
       BEGIN 
-        EXECUTE IMMEDIATE 'SELECT count(1) FROM ' || upper(l_tab_name) || ' WHERE rownum < 2' INTO cnt ;
+        EXECUTE IMMEDIATE 'SELECT count(1) FROM ' || upper(l_tab_name) || ' WHERE rownum < 2 AND dbid = &&v_statsDBID' INTO cnt ;
         IF cnt = 0 THEN
             dbms_output.put_line('No data found in ' ||  upper(l_tab_name) || '.  No performance data will be collected.');
             :v_stats_source := ' without performance data';
@@ -472,9 +473,14 @@ BEGIN
        END IF;
      ELSE
 
-       -- Get the snapshot range for STATSPACK stats.
-       THE_SQL := 'SELECT min(snap_time) , max(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
-       EXECUTE IMMEDIATE the_sql INTO  :minsnaptime, :maxsnaptime USING '&&v_dbid' ;
+       -- Get the snapshot range for STATSPACK stats.    
+       IF (length('&&v_statsStartDate') > 0 ) THEN -- IF user has specified a start date for the collection
+          THE_SQL := 'SELECT min(snap_time) , max(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' BETWEEN to_date(:1, ''YYYYMMDD'') AND  (to_date(:2, ''YYYYMMDD'') + &&dtrange ) AND dbid = :3 ';
+          EXECUTE IMMEDIATE the_sql INTO  :minsnaptime, :maxsnaptime USING '&&v_statsStartDate','&&v_statsStartDate', NVL('&&v_statsDBID', '&&v_dbid')  ;
+       ELSE -- Otherwise default to the last dtrange days
+          THE_SQL := 'SELECT min(snap_time) , max(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate - &&dtrange ) AND dbid = :1 ';
+          EXECUTE IMMEDIATE the_sql INTO  :minsnaptime, :maxsnaptime USING NVL('&&v_statsDBID', '&&v_dbid') ;
+       END IF;
        IF :minsnaptime IS NULL THEN
           dbms_output.put_line('Warning: No snapshots found within the last &&dtrange days.  No performance data will be extracted.');
           :minsnaptime := sysdate;
@@ -497,7 +503,8 @@ BEGIN
                   :v_stats_source := :v_stats_source || 'between times ' || :minsnaptime || ' and ' || :maxsnaptime;
                 ELSE
                   -- If the very first snap available is within the collection range, use the next snap so we don't skew results.
-                  THE_SQL := 'SELECT min(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' > to_date(''' || :firstsnaptime || ''', ''YYYY-MM-DD HH24:MI:SS'') AND dbid = &&v_dbid ';
+                  THE_SQL := 'SELECT min(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' > to_date(''' || :firstsnaptime || ''', ''YYYY-MM-DD HH24:MI:SS'') AND dbid = NVL(&&v_statsDBID, &&v_dbid) ';
+
                   EXECUTE IMMEDIATE THE_SQL INTO :minsnaptime ;
                   -- Ensure the 'next' snap is not the max snap
                   IF (:minsnaptime = :maxsnaptime) THEN
@@ -523,8 +530,8 @@ BEGIN
      :v_info_prompt := 'without performance data';
      :v_stats_source := ' without performance data';
   END IF;
-  :v_info_prompt := 'About to collect data for database &v_dbname &&v_dbid ' || :v_info_prompt ;
-  :v_end_of_job_summary := 'Collected data for database &v_dbname ID &&v_dbid ' || :v_stats_source ;
+  :v_info_prompt := 'About to collect data for database &v_dbname ID &&v_dbid with stats id &&v_statsDBID ' || :v_info_prompt ;
+  :v_end_of_job_summary := 'Collected data for database &v_dbname ID &&v_dbid with stats id &&v_statsDBID ' || :v_stats_source ;
 END;
 /
 set termout off

@@ -67,7 +67,7 @@ SELECT :v_pkey AS pkey,
 FROM STATS$IOSTAT_FUNCTION iof
      INNER JOIN ( SELECT dbid, instance_number, snap_time, snap_id, startup_time, lag(startup_time) OVER (PARTITION BY dbid, instance_number ORDER BY snap_time) AS lag_startup_time
                   FROM STATS$SNAPSHOT
-		  WHERE dbid = &&v_dbid
+		  WHERE dbid = &&v_statsDBID
 		  AND snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
                 ) snap
      ON iof.snap_id = snap.snap_id

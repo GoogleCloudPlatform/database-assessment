@@ -165,7 +165,7 @@ From STATS$SQL_SUMMARY s
     JOIN ( SELECT dbid, instance_number, snap_id, snap_time, startup_time, lag(startup_time) OVER (PARTITION BY dbid, instance_number ORDER BY snap_time) AS lag_startup_time 
 	   FROM stats$snapshot 
 	   WHERE snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-	   AND dbid = &&v_dbid
+	   AND dbid = &&v_statsDBID
          ) sn
       ON     ss.dbid = sn.dbid
          AND ss.snap_id = sn.snap_id
