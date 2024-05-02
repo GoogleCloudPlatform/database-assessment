@@ -1,6 +1,6 @@
 -- name: assessment-alloydb-01-assessment-pglogical-extension-check!
-insert into alloydb_readiness_check_summary (severity, info)
-select 'ERROR',
+insert into alloydb_readiness_check_summary (severity, assessment_type, info)
+select 'ERROR', 'NO_PGLOGICAL_INSTALLED',
     'pglogical extension not installed on the database'
 where (
         select count(*) = 0

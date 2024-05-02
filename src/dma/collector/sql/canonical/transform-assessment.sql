@@ -8,5 +8,6 @@ create or replace table database_summary(
 -- name: transformation-01-readiness-check-ddl!
 create or replace table alloydb_readiness_check_summary(
         severity ENUM ('INFO', 'WARNING', 'ERROR'),
+        assessment_type varchar,
         info varchar
     );

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import re
 import string
 from typing import TYPE_CHECKING
 
@@ -24,26 +26,67 @@ db_type_map = {
 	15:  "POSTGRES_15",
 }
 
+rds_minor_version_support_map = {
+	9.6: 10,
+	10:  5,
+	11:  1,
+	12:  2,
+}
+
+# Matches version numbers of both old (Eg: 9.6.2) and new formats (Eg: 10.2).
+version_regex = re.compile(r'(?P<version>\d+\.\d+(\.\d+)?).*')
+
+def get_db_minor_version(db_version: string) -> int:
+    version_match = version_regex.match(db_version)
+    if not version_match:
+        return -1
+    version = version_match.group('version')
+    split = version.split('.')
+    if db_version.startswith('9'):
+        if len(split) > 2:
+            return int(split[2])
+    elif len(split) > 1:
+        return int(split[1])
+    return -1
+
 def get_db_major_version(db_version: string) -> float:
     index = db_version.find("beta")
     if index != -1:
-        db_version = db_version[:index] + ".0"
+        db_version = db_version[:index] + '.0'
     
-    split = db_version.split(".")
-    if db_version.startswith("9"):
+    split = db_version.split('.')
+    if db_version.startswith('9'):
         db_version = '.'.join(split[:2])
     else:
         db_version = '.'.join(split[:1])
     return float(db_version)
 
+def rds_min_version_check_fail(version, major_version: string) -> bool:
+    minor_version = get_db_minor_version(version)
+    if minor_version == -1:
+        logging.error("couldn't parse the version %s to fetch the minor version number", version)
+        return False
+    supported_min_version = rds_minor_version_support_map.get(major_version)
+    if supported_min_version and minor_version < supported_min_version:
+        return True
+    return False
+
 def version_check(console: Console,
     db: duckdb.DuckDBPyConnection,
     manager: CanonicalQueryManager) -> None:
     queries = manager.queries
-    version = queries.get_pg_version(db)
-    major = get_db_major_version(version[0])
-    if major < 9.4:
-        queries.insert_readiness_check(db, severity="ERROR", info="Replication from postgres source database server < version 9.4 to AlloyDB is not supported")
+    version = queries.get_pg_version(db)[0]
+    major = get_db_major_version(version)
+    is_rds = queries.is_source_rds(db)[0]
+    min_major_version = 9.4
+    if is_rds:
+        min_major_version = 9.6
+        if rds_min_version_check_fail(version, major):
+            queries.insert_readiness_check(db, severity="ERROR", assessment_type="INCOMPATIBLE_DATABASE_VERSION", info=f"Source RDS database server has unsupported minor version: ({version})")
+
+    if major not in db_type_map or major < min_major_version:
+        queries.insert_readiness_check(db, severity="ERROR", assessment_type="INCOMPATIBLE_DATABASE_VERSION", info=f"Replication from source database server ({version}) is not supported")
+
 
 def execute_postgres_assessment(console: Console,
     local_db: duckdb.DuckDBPyConnection,
@@ -85,12 +128,13 @@ def print_database_details(
 
     alloydb_readiness_check_summary = local_db.sql(
         """
-            select severity, info
+            select severity, assessment_type, info
             from alloydb_readiness_check_summary
         """,
     ).fetchall()
     count_table = Table(show_edge=False, width=80)
     count_table.add_column("Severity", justify="right", style="green")
+    count_table.add_column("Assessment Type", justify="right", style="green")
     count_table.add_column("Info", justify="right", style="green")
 
     for row in alloydb_readiness_check_summary:

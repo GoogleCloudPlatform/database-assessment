@@ -738,6 +738,7 @@ with src as (
     select e.oid as extension_id,
         e.extname as extension_name,
         a.rolname as extension_owner,
+        a.rolsuper as is_super_user,
         n.nspname as extension_schema,
         e.extrelocatable as is_relocatable,
         e.extversion as extension_version
@@ -751,6 +752,7 @@ select :PKEY as pkey,
     src.extension_id,
     src.extension_name,
     src.extension_owner,
+    src.is_super_user,
     src.extension_schema,
     src.is_relocatable,
     src.extension_version
