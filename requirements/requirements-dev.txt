@@ -645,7 +645,7 @@ tornado==6.4
     #   jupyter-server
     #   jupyterlab
     #   terminado
-tqdm==4.66.2
+tqdm==4.66.3
     # via shandy-sqlfmt
 traitlets==5.14.3
     # via
