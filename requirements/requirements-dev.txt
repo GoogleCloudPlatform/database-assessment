@@ -300,7 +300,7 @@ kiwisolver==1.4.5
 linkchecker==10.4.0
 linkify-it-py==2.0.3
     # via markdown-it-py
-litestar==2.8.2
+litestar==2.8.3
     # via litestar-granian
 litestar-granian==0.2.6
 markdown==3.6
