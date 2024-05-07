@@ -33,4 +33,4 @@ ELSE
   SELECT @MACHINE_NAME = UPPER(SUBSTRING(CONVERT(nvarchar, @@SERVERNAME),1,CHARINDEX('\', CONVERT(nvarchar, @@SERVERNAME))-1))
 SELECT @MACHINE_NAME + '_' + replace(service_broker_guid,'-','') + '_' + COALESCE(CONVERT(nvarchar, SERVERPROPERTY('InstanceName')), 'MSSQLSERVER')
 FROM sys.databases
-WHERE name = @DBNAME; 
+WHERE name = @DBNAME;

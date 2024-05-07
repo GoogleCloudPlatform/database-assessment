@@ -65,7 +65,7 @@ SELECT
 FROM &v_tblprefix._tables a
 WHERE a.owner NOT IN (
 @&EXTRACTSDIR/exclude_schemas.sql
-       )  
+       )
 UNION ALL
 SELECT
     &v_b_con_id AS con_id,
@@ -82,7 +82,7 @@ SELECT
 FROM &v_xml_select b
 WHERE b.owner NOT IN (
 @&EXTRACTSDIR/exclude_schemas.sql
-       )  
+       )
 UNION ALL
 SELECT
     &v_c_con_id AS con_id,
@@ -104,7 +104,7 @@ SELECT
 FROM &v_tblprefix._object_tables c
 WHERE c.owner NOT IN (
 @&EXTRACTSDIR/exclude_schemas.sql
-       )  
+       )
 ),
 subpartinfo AS (
 SELECT &v_d_con_id AS con_id,
@@ -114,7 +114,7 @@ SELECT &v_d_con_id AS con_id,
 FROM &v_tblprefix._tab_subpartitions d
 WHERE d.table_owner NOT IN (
 @&EXTRACTSDIR/exclude_schemas.sql
-       )  
+       )
 GROUP BY &v_d_con_id,
        d.table_owner,
        d.table_name
@@ -142,7 +142,7 @@ LEFT OUTER JOIN &v_tblprefix._part_tables p
                AND a.table_name = p.table_name
                AND a.con_id = &v_p_con_id
 LEFT OUTER JOIN subpartinfo sp
-              ON sp.table_owner = p.owner 
+              ON sp.table_owner = p.owner
                AND sp.table_name = p.table_name
                AND sp.con_id = &v_p_con_id
 ;

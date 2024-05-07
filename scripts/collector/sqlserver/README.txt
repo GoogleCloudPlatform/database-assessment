@@ -30,18 +30,23 @@ Operating System Versions:
     c) System Requirements
     ----------------------
     The collection script depends on the following executables to be available on the machine from which it is run.  The script is also expected to be run from a Windows machine:
-    command shell
-    powershell version 5 or greater
-    sqlcmd.exe
+    command shell (in administrator mode)
+    powershell (version 5 or greater)
+    sqlcmd.exe (version 12.0.6024.0 or greater)
+
+        Note:
+        ----------------------
+        Ensure that the "ODBC" version of "sqlcmd" is used
+        Ensure that "sqlcmd" is also in your "$PATH" variable
 
 2. Preparation
 --------------
 
     a) Unzip the install archive.
 
-    b) As of the current release, the collection scripts require a user with the SYSADMIN privilege.  
+    b) As of the current release, the collection scripts require a user with the SYSADMIN privilege.
         An existing user may be used or one can be created using the scripts as shown below:
-  
+
         In the master database:
             GRANT VIEW SERVER STATE TO [username];
             GRANT SELECT ALL USER SECURABLES TO [username];
@@ -63,7 +68,7 @@ Operating System Versions:
         In each user database:
             CREATE USER [username] FOR LOGIN [username];
             GRANT VIEW DATABASE STATE TO [username];
-        
+
     c) User creation using provided scripts (optional):
         In this example the collection user will use SQL Authentication:
             - createUserForAssessmentWithSQLAuth.bat
@@ -137,7 +142,7 @@ Operating System Versions:
             \NUMA Node Memory(_Total)\Available MBytes
 
     a) From a command prompt session in "Administrator Mode" on the server you would like to collect data on, execute the following command:
-   
+
             manageSQLServerPerfmonDataset.bat
             The following parameters can be specified:
                 - -operation **Required (create, start, stop, delete, collect, createemptyfile, help)
@@ -178,7 +183,7 @@ Operating System Versions:
 
         For a Named Instance (single database):
             .\runAssessment.bat -serverName [servername\instanceName] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password] -manualUniqueId [string]
-        
+
                 Example (default port): runAssessment.bat -serverName MS-SERVER1/SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
                 Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
 
@@ -222,7 +227,7 @@ Operating System Versions:
     - The full path and file name will be displayed on completion.
     - Return the listed file to Google for processing
 
-!!! IMPORTANT Do not modify the name or the contents of the zip file without consultation from Google.  
+!!! IMPORTANT Do not modify the name or the contents of the zip file without consultation from Google.
 
 5. License
 ------------

@@ -40,7 +40,7 @@
 \i sql/:VPGVERSION/replication_slots.sql
 \o
 
-\o output/opdb__pg_replication_stats_:VTAG.csv 
+\o output/opdb__pg_replication_stats_:VTAG.csv
 \i sql/replication_stats.sql
 \o
 

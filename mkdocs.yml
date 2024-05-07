@@ -20,9 +20,9 @@ nav:
       - Data Collection: user_guide/sqlserver/collection_scripts.md
       - Database User Scripts: user_guide/sqlserver/db_user_create.md
   - Postgres Data Collection:
-      - Data Collection: user_guide/postgres/collection_scripts.md 
+      - Data Collection: user_guide/postgres/collection_scripts.md
   - MySQL Data Collection:
-      - Data Collection: user_guide/mysql/collection_scripts.md 
+      - Data Collection: user_guide/mysql/collection_scripts.md
   - Developers:
       - Developer Setup: developer_guide/developer_setup.md
       - Commands: developer_guide/commands.md

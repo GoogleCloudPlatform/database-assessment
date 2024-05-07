@@ -40,7 +40,7 @@ IF CHARINDEX('\', @@SERVERNAME)-1 = -1
 ELSE
   SELECT @MACHINENAME = UPPER(SUBSTRING(CONVERT(nvarchar, @@SERVERNAME),1,CHARINDEX('\', CONVERT(nvarchar, @@SERVERNAME))-1))
 
-IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  
+IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL
    DROP TABLE #serverProperties;
 
 CREATE TABLE #serverProperties
@@ -50,9 +50,9 @@ CREATE TABLE #serverProperties
 );
 
 /* need to record table permissions in order to determine if we can run certain serverprops queryies
-    as some tables are not available in managed instances 
+    as some tables are not available in managed instances
 */
-IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL  
+IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL
    DROP TABLE #myPerms;
 
 CREATE TABLE #myPerms
@@ -194,6 +194,33 @@ UNION ALL
         from sys.resource_governor_configuration
         WHERE is_enabled = 1
     ) gov_enabled
+UNION ALL
+SELECT
+    'IpV4Address', registry_data.ip_address
+FROM (
+    SELECT
+        CONVERT(varchar(max), value_data) ip_address
+    FROM
+        sys.dm_server_registry
+    WHERE
+        value_name IN ('IpAddress')) registry_data
+WHERE
+    registry_data.ip_address LIKE '%.%.%.%'
+    AND registry_data.ip_address NOT LIKE '127.%.%.%'
+UNION ALL
+SELECT
+    TOP 1 'IpV6Address', registry_data.ip_address
+FROM (
+    SELECT
+        CONVERT(varchar(max), value_data) ip_address
+    FROM
+        sys.dm_server_registry
+    WHERE
+        value_name IN ('IpAddress')) registry_data
+WHERE
+    registry_data.ip_address NOT LIKE '%.%.%.%'
+    AND registry_data.ip_address NOT LIKE '127.%.%.%'
+    AND registry_data.ip_address NOT LIKE '::1%'
 ;
 WITH
     BUFFER_POOL_SIZE
@@ -334,13 +361,14 @@ BEGIN
 END;
 
 SELECT
-    @PKEY as PKEY,
-    a.*,
-    @DMA_SOURCE_ID as dma_source_id,
-    @DMA_MANUAL_ID as dma_manual_id
+    QUOTENAME(@PKEY,'"')  as PKEY,
+    QUOTENAME(a.property_name,'"') as property_name ,
+    QUOTENAME(a.property_value,'"') as property_value,
+    QUOTENAME(@DMA_SOURCE_ID,'"') as dma_source_id,
+    QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
 FROM #serverProperties a;
 
-IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL  
+IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL
    DROP TABLE #serverProperties;
-IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL  
+IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL
    DROP TABLE #myPerms;

@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.33" 
+OpVersion="4.3.34"
 dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
@@ -223,7 +223,7 @@ do
  if [ -f "$MD5SUM" ] ; then
    MD5=$(${MD5SUM} $file | cut -d ' ' -f ${MD5COL})
  else MD5="N/A"
- fi   
+ fi
  echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
 done
 
@@ -261,7 +261,7 @@ function getVersion  {
   echo "$githash"
 }
 
-function printExtractorVersion  
+function printExtractorVersion
 {
 if [ "$1" == "NONE" ];
 then
@@ -283,7 +283,7 @@ fi
 }
 
 
-function printUsage 
+function printUsage
 {
 echo " Usage:"
 echo "  Parameters"
@@ -335,7 +335,7 @@ statsDBID=""
  then
   echo "Invalid number of parameters "
   printUsage
-  exit 
+  exit
  fi
 
  while (( "$#" )); do
@@ -377,7 +377,7 @@ statsDBID=""
  elif [[ "${statsSrc}" = "statspack" ]] ; then
           DIAGPACKACCESS="NoDiagnostics"
  else 
-	 echo User requested no performance data collection.
+         echo User requested no performance data collection.
          DIAGPACKACCESS="nostatspack"
  fi
 
@@ -388,7 +388,7 @@ statsDBID=""
 #        statsWindow=30
 # fi
 
- if [[ "${connStr}" == "" ]] ; then 
+ if [[ "${connStr}" == "" ]] ; then
 	 if [[ "${hostName}" != "" && "${port}" != "" && "${databaseService}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
 		 connStr="${collectionUserName}/${collectionUserPass}@//${hostName}:${port}/${databaseService}"
 		 echo Got Connection ${connStr}
@@ -409,7 +409,7 @@ statsDBID=""
 #
 #if [[  $# -ne 2  || (  "$2" != "UseDiagnostics" && "$2" != "NoDiagnostics" ) ]]
 # then
-#  echo 
+#  echo
 #  echo "You must indicate whether or not to use the Diagnostics Pack views."
 #  echo "If this database is licensed to use the Diagnostics pack:"
 #  echo "  $0 $1 UseDiagnostics"
@@ -462,7 +462,7 @@ if [ $retval -eq 0 ]; then
       then
        echo "Oracle 9 support is experimental."
        DIAGPACKACCESS="NoDiagnostics"
-      fi  
+      fi
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
     executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS} "${manualUniqueId}" "$statsWindow" "$statsStartDate" "$statsDBID"

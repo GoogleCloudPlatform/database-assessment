@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2022 Google LLC 
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.33"
+OpVersion="4.3.34"
 dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
@@ -83,7 +83,7 @@ function checkPlatform {
     then
       SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
       SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
-      
+
       if [ "${1}" == "oracle" ]
         then
            SQLCMD=${SQLCMD}.exe
@@ -124,7 +124,7 @@ SELECT current_setting('server_version_num');
 EOF
 )
 retcd=$?
-    if [[ $retcd -ne 0 ]] 
+    if [[ $retcd -ne 0 ]]
     then
 	    echo "Error connecting to the target database ${connectString} ."
 	    echo "Connection attempt returned : ${dbVersion}"
@@ -154,7 +154,7 @@ SELECT version();
 EOF
 )
 retcd=$?
-    if [[ $retcd -ne 0 ]] 
+    if [[ $retcd -ne 0 ]]
     then
 	    echo "Error connecting to the target database ${connectString} ."
 	    echo "Connection attempt returned : ${dbVersion}"
@@ -227,24 +227,41 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
 fi
 
 export DMA_SOURCE_ID=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db 2>>${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log < sql/init.sql | tr -d '\r')
+export SCRIPT_PATH=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db 2>>${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log < sql/_base_path_lookup.sql | tr -d '\r')
 
-for f in $(ls -1 sql/*.sql | grep -v -e init.sql)
+for f in $(ls -1 sql/*.sql | grep -v -e init.sql | grep -v -e _base_path_lookup.sql)
 do
   fname=$(echo ${f} | cut -d '/' -f 2 | cut -d '.' -f 1)
     ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >${OUTPUT_DIR}/opdb__mysql_${fname}__${V_TAG} 2>>${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log  <<EOF
-SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}' ; 
+SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}' ;
 SET @DMA_MANUAL_ID='${V_MANUAL_ID}' ;
 SET @PKEY='${V_FILE_TAG}';
 source ${f}
 exit
 EOF
 done
+for f in $(ls -1 sql/${SCRIPT_PATH}/*.sql | grep -v -E "init.sql|_base_path_lookup.sql|hostname.sql")
+do
+  fname=$(echo ${f} | cut -d '/' -f 3 | cut -d '.' -f 1)
+    ${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --table  ${db} >${OUTPUT_DIR}/opdb__mysql_${fname}__${V_TAG} 2>>${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log  <<EOF
+SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}' ;
+SET @DMA_MANUAL_ID='${V_MANUAL_ID}' ;
+SET @PKEY='${V_FILE_TAG}';
+source ${f}
+exit
+EOF
+
+serverHostname=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db 2>>${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log < sql/hostname.sql | tr -d '\r')
+serverIPs=$(getent hosts "$serverHostname" | awk '{print $1}' | tr '\n' ',')
+hostOut="output/opdb__mysql_db_host_${V_FILE_TAG}.csv"
+echo "HOSTNAME|IP_ADDRESSES" > "$hostOut"
+echo "\"$serverHostname\"|\"$serverIPs\"" >> "$hostOut"
+done
 
 specsOut="output/opdb__mysql_db_machine_specs_${V_FILE_TAG}.csv"
 host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
 ./db-machine-specs.sh "$host" "$vmUserName" "${V_FILE_TAG}" "${DMA_SOURCE_ID}" "${V_MANUAL_ID}" "${specsOut}" "${extraSSHArgs[@]}"
 }
-
 
 function executeOPPg {
 connectString="$1"
@@ -283,7 +300,7 @@ fi
 
 # Only run once per VM, instead of once per DB.
 specsOut="output/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv"
-if [[ -z "$specsPath" ]] ; then 
+if [[ -z "$specsPath" ]] ; then
       host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
       ./db-machine-specs.sh "$host" "$vmUserName" "${V_FILE_TAG}" "${DMA_SOURCE_ID}" "${V_MANUAL_ID}" "${specsOut}" "${extraSSHArgs[@]}"
 else
@@ -316,7 +333,7 @@ EOF
 	exit
 else
 # If given a database name, create a collection for that one database.
-export PGPASSWORD="$pass"  
+export PGPASSWORD="$pass"
 ${SQLCMD} -X --user=${user} -d "${db}" -h ${host} -w -p ${port}  --no-align --echo-errors 2>output/opdb__stderr_${V_FILE_TAG}.log <<EOF
 \set VTAG ${V_FILE_TAG}
 \set PKEY '\'${V_FILE_TAG}\''
@@ -532,7 +549,7 @@ specsPath=""
  then
   echo "Invalid number of parameters.  Each parameter must specify a value. "
   printUsage
-  exit 
+  exit
  fi
 
  while (( "$#" )); do
@@ -561,7 +578,7 @@ specsPath=""
 
 DIAGPACKACCESS="mysql"
 
- if [[ "${connStr}" == "" ]] ; then 
+ if [[ "${connStr}" == "" ]] ; then
 	 if [[ "${hostName}" != "" && "${port}" != "" && "${databaseService}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
 		 connStr="${collectionUserName}/${collectionUserPass}@//${hostName}:${port}/${databaseService}"
 	 else
@@ -571,7 +588,7 @@ DIAGPACKACCESS="mysql"
 	 fi
  fi
 
- 
+
  if [[ "${manualUniqueId}" != "" && "${manualUniqueId}" != "NA" ]] ; then
 	 manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
  else manualUniqueId='NA'
@@ -663,7 +680,7 @@ else if [ "${dbmajor}" == "09" ]
       then
        echo "Oracle 9 support is experimental."
        DIAGPACKACCESS="NoDiagnostics"
-      fi  
+      fi
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
 

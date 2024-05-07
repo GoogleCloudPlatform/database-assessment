@@ -10,10 +10,10 @@ with src as (
         s.xmin,
         s.catalog_xmin,
         s.restart_lsn,
-        s.confirmed_flush_lsn
---        s.wal_status,
---        s.safe_wal_size --,
---        s.two_phase
+        s.confirmed_flush_lsn --,
+        --        s.wal_status,
+        --        s.safe_wal_size --,
+        --        s.two_phase
     from pg_replication_slots s
 )
 select chr(34) || :PKEY || chr(34) as pkey,

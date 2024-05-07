@@ -53,10 +53,12 @@ BEGIN
         IF @validDB <> 0
         BEGIN
         SELECT
-            @PKEY as PKEY,
-            sizing.*,
-            @DMA_SOURCE_ID as dma_source_id,
-            @DMA_MANUAL_ID as dma_manual_id
+            QUOTENAME(@PKEY,'"') as PKEY,
+            QUOTENAME(CONVERT(NVARCHAR,sizing.database_name),'"') as database_name,
+            QUOTENAME(CONVERT(NVARCHAR,sizing.type_desc),'"') as type_desc,
+            QUOTENAME(CONVERT(NVARCHAR,sizing.current_size_mb),'"') as current_size_mb,
+            QUOTENAME(@DMA_SOURCE_ID,'"') as dma_source_id,
+            QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
         FROM(
             SELECT
                 db_name() AS database_name,
@@ -82,10 +84,10 @@ BEGIN
         SELECT
         host_name() as host_name,
         db_name() as database_name,
-        'columnDatatypes' as module_name,
+        'dbSizes' as module_name,
         SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
         SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
         SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
         SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message
     END CATCH
-END
+END;

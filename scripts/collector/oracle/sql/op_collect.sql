@@ -89,4 +89,3 @@ prompt Database Migration Assessment data successfully extracted.
 prompt &p_end_of_job_summary
 prompt
 exit
-

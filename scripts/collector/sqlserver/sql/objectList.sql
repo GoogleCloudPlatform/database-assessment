@@ -54,34 +54,34 @@ BEGIN
         BEGIN
         exec ('
         SELECT
-            ''' + @PKEY + ''' as pkey,
-            database_name as database_name,
-            schema_name as schema_name,
-            NameOfObject as object_name,
-            RTRIM(LTRIM(type)) as object_type,
-            type_desc as object_type_desc,
-            count(*) as object_count,
-            ISNULL(SUM(lines_of_code),0) as lines_of_code,
-            associated_table_name as associated_table_name,
-            ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-            ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
+            ''"' + @PKEY + '"'' AS pkey,
+            QUOTENAME(database_name,''"'') as database_name,
+            QUOTENAME(schema_name,''"'') as schema_name,
+            QUOTENAME(NameOfObject,''"'') as object_name,
+            QUOTENAME(RTRIM(LTRIM(type)),''"'') as object_type,
+            QUOTENAME(type_desc,''"'') as object_type_desc,
+            QUOTENAME(count(*),''"'') as object_count,
+            QUOTENAME(ISNULL(SUM(lines_of_code),0),''"'') as lines_of_code,
+            QUOTENAME(associated_table_name,''"'') as associated_table_name,
+            ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
+            ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id
         FROM (
             SELECT
                 DB_NAME(DB_ID()) as database_name,
                 s.name as schema_name,
-                RTRIM(LTRIM(o.type)) as type, 
-                o.type_desc, 
-                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code, 
+                RTRIM(LTRIM(o.type)) as type,
+                o.type_desc,
+                ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 OBJECT_NAME(o.object_id) AS NameOfObject ,
-                NULL as associated_table_name
-            FROM 
+                '''' as associated_table_name
+            FROM
                 sys.objects o
                 JOIN sys.schemas s ON (s.schema_id = o.schema_id)
                 LEFT OUTER JOIN sys.all_sql_modules a ON (a.OBJECT_ID = o.object_id)
-            WHERE 
+            WHERE
                 o.type NOT IN (
                     ''S'' --SYSTEM_TABLE
-                    , 
+                    ,
                     ''IT'' --INTERNAL_TABLE
                     ,
                     ''F'' --FOREIGN KEY
@@ -97,7 +97,7 @@ BEGIN
                     ''TR'' --TRIGGER
                     ,
                     ''V'' --VIEW
-                    ) 
+                    )
                 AND OBJECTPROPERTY(o.object_id, ''IsMSShipped'') = 0
             UNION
             SELECT
@@ -108,13 +108,13 @@ BEGIN
                 ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 cc.name AS NameOfObject,
                 object_name(cc.parent_object_id) AS associated_table_name
-            FROM 
+            FROM
                 sys.check_constraints cc
                 JOIN sys.schemas s ON (s.schema_id = cc.schema_id)
                 LEFT OUTER JOIN sys.all_sql_modules a ON (a.OBJECT_ID = cc.object_id)
             WHERE cc.is_ms_shipped = 0
             UNION
-            SELECT 
+            SELECT
                 DB_NAME(DB_ID()) as database_name,
                 s.name as schema_name,
                 RTRIM(LTRIM(type)) as type,
@@ -122,13 +122,13 @@ BEGIN
                 ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 fk.name AS NameOfObject ,
                 object_name(fk.parent_object_id) AS associated_table_name
-            FROM 
+            FROM
                 sys.foreign_keys fk
                 JOIN sys.schemas s ON (s.schema_id = fk.schema_id)
                 LEFT OUTER JOIN sys.all_sql_modules a ON (a.OBJECT_ID = fk.object_id)
             WHERE fk.is_ms_shipped = 0
             UNION
-            SELECT 
+            SELECT
                 DB_NAME(DB_ID()) as database_name,
                 s.name as schema_name,
                 RTRIM(LTRIM(type)) as type,
@@ -136,7 +136,7 @@ BEGIN
                 ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 dc.name AS NameOfObject ,
                 object_name(dc.parent_object_id) AS associated_table_name
-            FROM 
+            FROM
                 sys.default_constraints dc
                 JOIN sys.schemas s ON (s.schema_id = dc.schema_id)
                 LEFT OUTER JOIN sys.all_sql_modules a ON (a.OBJECT_ID = dc.object_id)
@@ -156,7 +156,7 @@ BEGIN
                 LEFT OUTER JOIN sys.all_sql_modules a ON (a.OBJECT_ID = kc.object_id)
             WHERE kc.is_ms_shipped = 0
             UNION
-            SELECT 
+            SELECT
                 DB_NAME(DB_ID()) as database_name,
                 s.name as schema_name,
                 RTRIM(LTRIM(t.type)) as type,
@@ -164,45 +164,45 @@ BEGIN
                 ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 t.name AS NameOfObject ,
                 object_name(t.parent_id) AS associated_table_name
-            FROM 
+            FROM
                 sys.triggers t
                 JOIN sys.tables tbl ON (tbl.object_id = t.parent_id)
                 LEFT OUTER JOIN sys.schemas s ON (s.schema_id = tbl.schema_id)
                 LEFT OUTER JOIN sys.all_sql_modules a ON (a.OBJECT_ID = t.object_id)
             WHERE t.is_ms_shipped = 0
             UNION
-            SELECT 
+            SELECT
                 DB_NAME(DB_ID()) as database_name,
                 s.name as schema_name,
                 RTRIM(LTRIM(type)) as type,
                 type_desc,
                 ISNULL(LEN(a.definition)- LEN(REPLACE(a.definition, CHAR(10), '''')),0) AS lines_of_code,
                 v.name AS NameOfObject ,
-                NULL as associated_table_name
+                '''' as associated_table_name
             FROM
                 sys.views v
                 JOIN sys.schemas s ON (s.schema_id = v.schema_id)
                 LEFT OUTER JOIN sys.all_sql_modules a ON (a.OBJECT_ID = v.object_id)
             WHERE v.is_ms_shipped = 0
             UNION
-            SELECT 
+            SELECT
                 DB_NAME(DB_ID()) as database_name,
                 s.name as schema_name,
                 ''TT'' as type,
                 ''TABLE_TYPES'',
                 0 AS lines_of_code,
                 t.name AS NameOfObject ,
-                NULL as associated_table_name
+                '''' as associated_table_name
             FROM
                 sys.types t
                 JOIN sys.schemas s ON (s.schema_id = t.schema_id)
             WHERE t.system_type_id <> t.user_type_id and t.is_user_defined = 1 and t.is_table_type = 1
-        ) SubQuery 
-        GROUP BY 
+        ) SubQuery
+        GROUP BY
             database_name,
             schema_name,
             NameOfObject,
-            type, 
+            type,
             type_desc,
             associated_table_name');
     END;

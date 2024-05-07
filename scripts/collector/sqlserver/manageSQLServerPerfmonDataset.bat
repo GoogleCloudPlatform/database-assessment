@@ -1,5 +1,5 @@
 :: Copyright 2023 Google LLC
-:: 
+::
 :: Licensed under the Apache License, Version 2.0 (the "License");
 :: you may not use this file except in compliance with the License.
 :: You may obtain a copy of the License at
@@ -33,7 +33,7 @@ if [%1]==[] (
     goto helpOperation
 )
 
-:loop 
+:loop
 if /i "%1" == "-operation" set "perfmonOperation=%2"
 if /i "%1" == "-instanceType" set "instance=%2"
 if /i "%1" == "-namedInstanceName" set "namedInstanceName=%2"
@@ -71,7 +71,7 @@ if %isValidPerfmonOperation%==false (
 )
 
 rem check passed options for instanceType
-(for %%a in (%validInstances%) do (    
+(for %%a in (%validInstances%) do (
     ::echo %%a
     if %instance%==%%a (
         :: echo "Operation match %%a"

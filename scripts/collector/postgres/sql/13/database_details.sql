@@ -28,12 +28,12 @@ db_size as (
         s.checksum_last_failure as last_checksum_failure,
         s.blk_read_time as block_read_time_ms,
         s.blk_write_time as block_write_time_ms,
---        s.session_time as session_time_ms,
---        s.active_time as active_time_ms,
---        s.idle_in_transaction_time as idle_in_transaction_time_ms,
---        s.sessions as sessions_count,
---        s.sessions_fatal as fatal_sessions_count,
---        s.sessions_killed as killed_sessions_count,
+        --        s.session_time as session_time_ms,
+        --        s.active_time as active_time_ms,
+        --        s.idle_in_transaction_time as idle_in_transaction_time_ms,
+        --        s.sessions as sessions_count,
+        --        s.sessions_fatal as fatal_sessions_count,
+        --        s.sessions_killed as killed_sessions_count,
         s.stats_reset statistics_last_reset_on
     from pg_stat_database s
 ),
@@ -62,17 +62,17 @@ src as (
         db_size.last_checksum_failure,
         db_size.block_read_time_ms,
         db_size.block_write_time_ms,
---        db_size.session_time_ms,
---        db_size.active_time_ms,
---        db_size.idle_in_transaction_time_ms,
---        db_size.sessions_count,
---        db_size.fatal_sessions_count,
---        db_size.killed_sessions_count,
+        --        db_size.session_time_ms,
+        --        db_size.active_time_ms,
+        --        db_size.idle_in_transaction_time_ms,
+        --        db_size.sessions_count,
+        --        db_size.fatal_sessions_count,
+        --        db_size.killed_sessions_count,
         db_size.statistics_last_reset_on
     from db
         join db_size on (db.database_oid = db_size.database_oid)
 )
-select  chr(34) || :PKEY || chr(34) as pkey,
+select chr(34) || :PKEY || chr(34) as pkey,
     chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
     chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
     src.database_oid,
@@ -107,5 +107,12 @@ select  chr(34) || :PKEY || chr(34) as pkey,
     ' ' as sessions_count,
     ' ' as fatal_sessions_count,
     ' ' as killed_sessions_count,
-    coalesce(to_char(statistics_last_reset_on, 'YYYY-MM-DD HH24:MI:SS'), '1970-01-01 00:00:00') as statistics_last_reset_on
+    coalesce(
+        to_char(
+            statistics_last_reset_on,
+            'YYYY-MM-DD HH24:MI:SS'
+        ),
+        '1970-01-01 00:00:00'
+    ) as statistics_last_reset_on,
+    inet_server_addr() as inet_server_addr
 from src;

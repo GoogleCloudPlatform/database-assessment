@@ -26,7 +26,7 @@ SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
 /* need to record table permissions in order to determine if we can run certain server level queryies
-    as some tables are not available in managed instances 
+    as some tables are not available in managed instances
 */
 IF Object_id('tempdb..#myPerms') IS NOT NULL
   DROP TABLE #myperms;
@@ -74,7 +74,7 @@ CREATE TABLE #servicesservicestatus /*Create temp tables*/
     statusdatetime    DATETIME DEFAULT (Getdate()),
     physicalsrvername NVARCHAR(128)
 )
-CREATE TABLE #tempLanguageServices 
+CREATE TABLE #tempLanguageServices
 (
     servicestatus NVARCHAR(256)
 );
@@ -654,14 +654,14 @@ BEGIN CATCH
 		VALUES (@PhysicalSrvName,@TrueSrvName,'IsMachineLearningAndREnabled','NOT INSTALLED');
 END CATCH;
 /* -------------------------------------------------------------------------------------------------------------*/
-SELECT @PKEY             AS PKEY,
-       physicalsrvername AS 'physical_server_name',
-       servername        AS 'sql_instance_name',
-       servicename       AS 'sql_server_services',
-       servicestatus     AS 'current_service_status',
-       statusdatetime    AS 'status_date_time',
-       @DMA_SOURCE_ID    AS 'dma_source_id',
-       @DMA_MANUAL_ID    AS 'dma_manual_id'
+SELECT QUOTENAME(@PKEY,'"')             AS PKEY,
+       QUOTENAME(physicalsrvername,'"') AS 'physical_server_name',
+       QUOTENAME(servername,'"')        AS 'sql_instance_name',
+       QUOTENAME(servicename,'"')       AS 'sql_server_services',
+       QUOTENAME(servicestatus,'"')     AS 'current_service_status',
+       QUOTENAME(convert(varchar, statusdatetime, 121),'"')    AS 'status_date_time',
+       QUOTENAME(@DMA_SOURCE_ID,'"')    AS 'dma_source_id',
+       QUOTENAME(@DMA_MANUAL_ID,'"')    AS 'dma_manual_id'
 FROM   #servicesservicestatus
 
 /* -------------------------------------------------------------------------------------------------------------*/

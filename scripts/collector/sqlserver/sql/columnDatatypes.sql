@@ -43,45 +43,45 @@ IF UPPER(@@VERSION) LIKE '%AZURE%'
 BEGIN
    BEGIN
       SELECT
-         @VALIDDB = COUNT(1)
+         @VALIDDB = count(1)
       FROM
-         SYS.DATABASES
+         sys.databases
       WHERE
-         NAME NOT IN ('master', 'model', 'msdb', 'tempdb', 'distribution', 'reportserver', 'reportservertempdb', 'resource', 'rdsadmin')
-         AND NAME LIKE @ASSESSMENT_DATABSE_NAME
-         AND STATE = 0
+         name NOT IN ('master', 'model', 'msdb', 'tempdb', 'distribution', 'reportserver', 'reportservertempdb', 'resource', 'rdsadmin')
+         AND name LIKE @ASSESSMENT_DATABSE_NAME
+         AND state = 0
    END
 
-   BEGIN TRY 
-   IF @PRODUCT_VERSION > 12 AND @VALIDDB <> 0 AND @CLOUDTYPE = 'NONE'    
+   BEGIN TRY
+   IF @PRODUCT_VERSION > 12 AND @VALIDDB <> 0 AND @CLOUDTYPE = 'NONE'
       BEGIN
       EXEC ('
-         SELECT 
-               ''' + @PKEY + ''' AS pkey
-               , db_name() as database_name
-               , s.name AS schema_name
-               , o.name AS table_name
-               , t.name AS datatype
-               , c.max_length
-               , c.precision
-               , c.scale
-               , c.is_computed
-               , c.is_filestream
-               , c.is_masked
-               , ISNULL(c.encryption_type,0) AS encryption_type
-               , c.is_sparse
-               , c.rule_object_id
-               , count(1) column_count
-               , ''' + @DMA_SOURCE_ID + ''' as dma_source_id
-               , ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
-            FROM  sys.objects o 
+         SELECT
+               ''"' + @PKEY + '"'' AS pkey
+               , QUOTENAME(db_name(),''"'') as database_name
+               , QUOTENAME(s.name,''"'')  AS schema_name
+               , QUOTENAME(o.name,''"'')  AS table_name
+               , QUOTENAME(t.name,''"'')  AS datatype
+               , QUOTENAME(c.max_length,''"'') AS max_length
+               , QUOTENAME(c.precision,''"'') AS precision
+               , QUOTENAME(c.scale,''"'') AS scale
+               , QUOTENAME(c.is_computed,''"'') AS is_computed
+               , QUOTENAME(c.is_filestream,''"'') AS is_filestream
+               , QUOTENAME(c.is_masked,''"'') AS is_masked
+               , QUOTENAME(ISNULL(c.encryption_type,0),''"'')  AS encryption_type
+               , QUOTENAME(c.is_sparse,''"'') AS is_sparse
+               , QUOTENAME(c.rule_object_id,''"'') AS rule_object_id
+               , QUOTENAME(count(1),''"'') AS column_count
+               , ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id
+               , ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id
+            FROM  sys.objects o
             JOIN  sys.schemas s
                ON  s.schema_id = o.schema_id
             JOIN  sys.columns c
             ON  o.object_id = c.object_id
             JOIN  sys.types t
             ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-         WHERE o.type_desc = ''USER_TABLE'' 
+         WHERE o.type_desc = ''USER_TABLE''
             -- AND t.system_type_id = t.user_type_id /* Removing to capture datatypes like hierarchyid */
          GROUP BY s.name
                , o.name
@@ -100,32 +100,32 @@ BEGIN
    IF @PRODUCT_VERSION <= 12 AND @VALIDDB <> 0 AND @CLOUDTYPE = 'NONE'
       BEGIN
       EXEC ('
-         SELECT 
-               ''' + @PKEY + ''' AS pkey
-               , db_name() as database_name
-               , s.name AS schema_name
-               , o.name AS table_name
-               , t.name AS datatype
-               , c.max_length
-               , c.precision
-               , c.scale
-               , c.is_computed
-               , c.is_filestream
-               , 0 as is_masked
-               , 0 AS encryption_type
-               , c.is_sparse
-               , c.rule_object_id
-               , count(1) column_count
-               , ''' + @DMA_SOURCE_ID + ''' as dma_source_id
-               , ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
-            FROM  sys.objects o 
+         SELECT
+               ''"' + @PKEY + '"'' AS pkey
+               , QUOTENAME(db_name(),''"'') AS database_name
+               , QUOTENAME(s.name,''"'')  AS schema_name
+               , QUOTENAME(o.name,''"'')  AS table_name
+               , QUOTENAME(t.name,''"'')  AS datatype
+               , QUOTENAME(c.max_length,''"'') AS max_length
+               , QUOTENAME(c.precision,''"'') AS precision
+               , QUOTENAME(c.scale,''"'') AS scale
+               , QUOTENAME(c.is_computed,''"'') AS is_computed
+               , QUOTENAME(c.is_filestream,''"'') AS is_filestream
+               , QUOTENAME(0 as is_masked,''"'') AS is_masked
+               , QUOTENAME(0 AS encryption_type,''"'') AS encryption_type
+               , QUOTENAME(c.is_sparse,''"'') AS is_sparse
+               , QUOTENAME(c.rule_object_id,''"'') AS rule_object_id
+               , QUOTENAME(count(1),''"'') AS column_count
+               , ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id
+               , ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id
+            FROM  sys.objects o
             JOIN  sys.schemas s
                ON  s.schema_id = o.schema_id
             JOIN  sys.columns c
             ON  o.object_id = c.object_id
             JOIN  sys.types t
             ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-         WHERE o.type_desc = ''USER_TABLE'' 
+         WHERE o.type_desc = ''USER_TABLE''
             -- AND t.system_type_id = t.user_type_id /* Removing to capture datatypes like hierarchyid */
          GROUP BY s.name
                , o.name
@@ -143,31 +143,31 @@ BEGIN
       BEGIN
       EXEC ('
          SELECT
-               ''' + @PKEY + ''' AS pkey
-               , db_name() as database_name
-               , s.name AS schema_name
-               , o.name AS table_name
-               , t.name AS datatype
-               , c.max_length
-               , c.precision
-               , c.scale
-               , c.is_computed
-               , c.is_filestream
-               , c.is_masked
-               , ISNULL(c.encryption_type,0) AS encryption_type
-               , c.is_sparse
-               , c.rule_object_id
-               , count(1) column_count
-               , ''' + @DMA_SOURCE_ID + ''' as dma_source_id
-               , ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
-            FROM  sys.objects o 
+               ''"' + @PKEY + '"'' AS pkey
+               , QUOTENAME(db_name(),''"'') AS database_name
+               , QUOTENAME(s.name,''"'') AS schema_name
+               , QUOTENAME(o.name,''"'')  AS table_name
+               , QUOTENAME(t.name,''"'')  AS datatype
+               , QUOTENAME(c.max_length,''"'') AS max_length
+               , QUOTENAME(c.precision,''"'') AS precision
+               , QUOTENAME(c.scale,''"'') AS scale
+               , QUOTENAME(c.is_computed,''"'') AS is_computed
+               , QUOTENAME(c.is_filestream,''"'') AS is_filestream
+               , QUOTENAME(c.is_masked,''"'') AS is_masked
+               , QUOTENAME(ISNULL(c.encryption_type,0),''"'') AS encryption_type
+               , QUOTENAME(c.is_sparse,''"'') AS is_sparse
+               , QUOTENAME(c.rule_object_id,''"'') AS rule_object_id
+               , QUOTENAME(count(1),''"'') AS column_count
+               , ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id
+               , ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id
+            FROM  sys.objects o
             JOIN  sys.schemas s
                ON  s.schema_id = o.schema_id
             JOIN  sys.columns c
             ON  o.object_id = c.object_id
             JOIN  sys.types t
             ON  t.system_type_id = c.system_type_id AND t.user_type_id = c.user_type_id
-         WHERE o.type_desc = ''USER_TABLE'' 
+         WHERE o.type_desc = ''USER_TABLE''
             AND t.system_type_id = t.user_type_id
          GROUP BY s.name
                , o.name
@@ -183,7 +183,7 @@ BEGIN
                , c.rule_object_id');
    END;
 END TRY
-BEGIN CATCH 
+BEGIN CATCH
    SELECT
       HOST_NAME() AS HOST_NAME,
       DB_NAME() AS DATABASE_NAME,

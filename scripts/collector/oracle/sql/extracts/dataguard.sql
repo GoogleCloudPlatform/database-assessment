@@ -31,18 +31,18 @@ spool &outputdir/opdb__dataguard__&v_tag
 prompt PKEY|CON_ID|INST_ID|LOG_ARCHIVE_CONFIG|DEST_ID|DEST_NAME|DESTINATION|STATUS|TARGET|SCHEDULE|REGISTER|ALTERNATE|TRANSMIT_MODE|AFFIRM|VALID_ROLE|VERIFY|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vodg AS (
 SELECT  :v_pkey AS pkey,
-        &v_a_con_id as con_id, inst_id, 
-        dest_id, 
-        dest_name, 
-        REPLACE(destination ,'|', ' ')destination, 
-        status, 
-        REPLACE(target  ,'|', ' ')target, 
-        schedule, 
+        &v_a_con_id as con_id, inst_id,
+        dest_id,
+        dest_name,
+        REPLACE(destination ,'|', ' ')destination,
+        status,
+        REPLACE(target  ,'|', ' ')target,
+        schedule,
         register,
-        REPLACE(alternate  ,'|', ' ')alternate, 
-        transmit_mode, 
-        affirm, 
-        &v_dg_valid_role AS valid_role, 
+        REPLACE(alternate  ,'|', ' ')alternate,
+        transmit_mode,
+        affirm,
+        &v_dg_valid_role AS valid_role,
         &v_dg_verify     AS verify,
         'N/A' as log_archive_config
 FROM gv$archive_dest a
@@ -67,4 +67,3 @@ COLUMN AFFIRM CLEAR
 COLUMN VALID_ROLE CLEAR
 COLUMN VERIFY CLEAR
 COLUMN LOG_ARCHIVE_CONFIG CLEAR
-

@@ -47,75 +47,76 @@ BEGIN
         WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
             AND name like @ASSESSMENT_DATABSE_NAME
             AND state = 0
-    END
-
+    END;
     BEGIN TRY
         IF @PRODUCT_VERSION >= 11 AND @validDB <> 0
         BEGIN
-        exec ('
-            SELECT
-                ''' + @PKEY + ''' as pkey
-                ,DB_NAME() as database_name
-                ,sdes.is_user_process as is_user_process
-                ,sdes.host_name as host_name
-                ,sdes.program_name as program_name
-                ,sdes.login_name as login_name
-                ,sdec.num_reads as num_reads
-                ,sdec.num_writes as num_writes
-                ,FORMAT(sdec.last_read,''yyyy-MM-dd HH:mm:ss'') as last_read
-                ,FORMAT(sdec.last_write,''yyyy-MM-dd HH:mm:ss'') as last_write
-                ,sdes.reads as reads
-                ,sdes.logical_reads as logical_reads
-                ,sdes.writes as writes
-                ,sdes.client_interface_name as client_interface_name
-                ,sdes.nt_domain as nt_domain
-                ,sdes.nt_user_name as nt_user_name
-                ,sdec.client_net_address as client_net_address
-                ,sdec.local_net_address as local_net_address
-                , ''' + @DMA_SOURCE_ID + ''' as dma_source_id
-                , ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
-                ,sdes.client_version as client_version
-                ,sdec.protocol_type as protocol_type
-                ,sdec.protocol_version as protocol_version
-                ,sys.fn_varbintohexstr(sdec.protocol_version) as protocol_hex_version
-            FROM sys.dm_exec_sessions AS sdes
-            INNER JOIN sys.dm_exec_connections AS sdec
-                    ON sdec.session_id = sdes.session_id
-            WHERE sdes.session_id <> @@SPID');
-    END
+            exec ('
+                SELECT
+                    ''"' + @PKEY + '"'' AS pkey
+                    ,QUOTENAME(CONVERT(NVARCHAR, DB_NAME()), ''"'') as database_name
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.is_user_process), ''"'') as is_user_process
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.host_name), ''"'') as host_name
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.program_name), ''"'') as program_name
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.login_name), ''"'') as login_name
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdec.num_reads), ''"'') as num_reads
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdec.num_writes), ''"'') as num_writes
+                    ,QUOTENAME(CONVERT(NVARCHAR, FORMAT(sdec.last_read,''yyyy-MM-dd HH:mm:ss'')), ''"'') as last_read
+                    ,QUOTENAME(CONVERT(NVARCHAR, FORMAT(sdec.last_write,''yyyy-MM-dd HH:mm:ss'')), ''"'') as last_write
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.reads), ''"'') as reads
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.logical_reads), ''"'') as logical_reads
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.writes), ''"'') as writes
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.client_interface_name), ''"'') as client_interface_name
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.nt_domain), ''"'') as nt_domain
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.nt_user_name), ''"'') as nt_user_name
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdec.client_net_address), ''"'') as client_net_address
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdec.local_net_address), ''"'') as local_net_address
+                    , ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id
+        		    , ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.client_version), ''"'') as client_version
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdec.protocol_type), ''"'') as protocol_type
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdec.protocol_version), ''"'') as protocol_version
+                    ,QUOTENAME(CONVERT(NVARCHAR, sys.fn_varbintohexstr(sdec.protocol_version)), ''"'') as protocol_hex_version
+                FROM sys.dm_exec_sessions AS sdes
+                INNER JOIN sys.dm_exec_connections AS sdec
+                        ON sdec.session_id = sdes.session_id
+                WHERE sdes.session_id <> @@SPID
+            ');
+        END;
         IF @PRODUCT_VERSION < 11 AND @validDB <> 0
         BEGIN
-        exec ('
-            SELECT
-                ''' + @PKEY + ''' as pkey
-                ,DB_NAME() as database_name
-                ,sdes.is_user_process as is_user_process
-                ,sdes.host_name as host_name
-                ,sdes.program_name as program_name
-                ,sdes.login_name as login_name
-                ,sdec.num_reads as num_reads
-                ,sdec.num_writes as num_writes
-                ,CONVERT(VARCHAR(256),sdec.last_read, 120) as last_read
-                ,CONVERT(VARCHAR(256),sdec.last_write,120) as last_write
-                ,sdes.reads as reads
-                ,sdes.logical_reads as logical_reads
-                ,sdes.writes as writes
-                ,sdes.client_interface_name as client_interface_name
-                ,sdes.nt_domain as nt_domain
-                ,sdes.nt_user_name as nt_user_name
-                ,sdec.client_net_address as client_net_address
-                ,sdec.local_net_address as local_net_address
-                , ''' + @DMA_SOURCE_ID + ''' as dma_source_id
-                , ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
-                ,sdes.client_version as client_version
-                ,sdec.protocol_type as protocol_type
-                ,sdec.protocol_version as protocol_version
-                ,sys.fn_varbintohexstr(sdec.protocol_version) as protocol_hex_version
-            FROM sys.dm_exec_sessions AS sdes
-            INNER JOIN sys.dm_exec_connections AS sdec
-                    ON sdec.session_id = sdes.session_id
-            WHERE sdes.session_id <> @@SPID');
-    END
+            exec ('
+                SELECT
+                    ''"' + @PKEY + '"'' AS pkey
+                    ,QUOTENAME(CONVERT(NVARCHAR, DB_NAME()), ''"'') as database_name
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.is_user_process), ''"'') as is_user_process
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.host_name), ''"'') as host_name
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.program_name), ''"'') as program_name
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.login_name), ''"'') as login_name
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdec.num_reads), ''"'') as num_reads
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdec.num_writes), ''"'') as num_writes
+                    ,QUOTENAME(CONVERT(VARCHAR(256), sdec.last_read, 120), ''"'') as last_read
+                    ,QUOTENAME(CONVERT(VARCHAR(256), sdec.last_write,120), ''"'') as last_write
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.reads), ''"'') as reads
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.logical_reads), ''"'') as logical_reads
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.writes), ''"'') as writes
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.client_interface_name), ''"'') as client_interface_name
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.nt_domain), ''"'') as nt_domain
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.nt_user_name), ''"'') as nt_user_name
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdec.client_net_address), ''"'') as client_net_address
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdec.local_net_address), ''"'') as local_net_address
+                    , ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id
+        		    , ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdes.client_version), ''"'') as client_version
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdec.protocol_type), ''"'') as protocol_type
+                    ,QUOTENAME(CONVERT(NVARCHAR, sdec.protocol_version), ''"'') as protocol_version
+                    ,QUOTENAME(CONVERT(NVARCHAR, sys.fn_varbintohexstr(sdec.protocol_version)), ''"'') as protocol_hex_version
+                FROM sys.dm_exec_sessions AS sdes
+                INNER JOIN sys.dm_exec_connections AS sdec
+                        ON sdec.session_id = sdes.session_id
+                WHERE sdes.session_id <> @@SPID
+            ');
+        END;
     END TRY
     BEGIN CATCH
         SELECT
@@ -127,4 +128,4 @@ BEGIN
         SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
         SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
     END CATCH
-END
+END;

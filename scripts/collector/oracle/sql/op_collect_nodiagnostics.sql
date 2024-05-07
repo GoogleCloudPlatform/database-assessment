@@ -18,4 +18,3 @@ PROMPT Collecting performance data from STATSPACK
 set termout &TERMOUTOFF
 
 @&SQLDIR/&p_sp_script
-

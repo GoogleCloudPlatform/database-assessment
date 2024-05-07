@@ -56,7 +56,7 @@ BEGIN
 	BEGIN
 		exec ('
 				WITH TableData AS (
-					SELECT 
+					SELECT
 						[schema_name]      = s.[name]
 						,[table_name]       = t.[name]
 						,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -100,34 +100,34 @@ BEGIN
 					LEFT JOIN sys.partition_functions pf WITH (NOLOCK) on (pf.function_id = ps.function_id)
 					WHERE t.is_ms_shipped = 0 -- Not a system table
 						AND i.type IN (0,1,5))
-					SELECT 
-						''' + @PKEY + ''' AS PKEY,
-						DB_NAME() as database_name,
-						schema_name,
-						table_name,
-						partition_count,
-						is_memory_optimized,
-						temporal_type,
-						is_external,
-						lock_escalation,
-						is_tracked_by_cdc,
-						text_in_row_limit,
-						is_replicated,
-						row_count,
-						data_compression,
-						total_space_mb,
-						used_space_mb,
-						unused_space_mb,
-						''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-						''' + @DMA_MANUAL_ID + ''' as dma_manual_id,
-						partition_type,
-						is_temp_table
+					SELECT
+						''"' + @PKEY + '"'' AS pkey,
+						QUOTENAME(DB_NAME(), ''"'') as database_name,
+						QUOTENAME(schema_name, ''"'') as schema_name,
+						QUOTENAME(table_name, ''"'') as table_name,
+						QUOTENAME(partition_count, ''"'') as partition_count,
+						QUOTENAME(is_memory_optimized, ''"'') as is_memory_optimized,
+						QUOTENAME(temporal_type, ''"'') as temporal_type,
+						QUOTENAME(is_external, ''"'') as is_external,
+						QUOTENAME(lock_escalation, ''"'') as lock_escalation,
+						QUOTENAME(is_tracked_by_cdc, ''"'') as is_tracked_by_cdc,
+						QUOTENAME(text_in_row_limit, ''"'') as text_in_row_limit,
+						QUOTENAME(is_replicated, ''"'') as is_replicated,
+						QUOTENAME(row_count, ''"'') as row_count,
+						QUOTENAME(data_compression, ''"'') as data_compression,
+						QUOTENAME(total_space_mb, ''"'') as total_space_mb,
+						QUOTENAME(used_space_mb, ''"'') as used_space_mb,
+						QUOTENAME(unused_space_mb, ''"'') as unused_space_mb,
+						''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
+        				''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
+						QUOTENAME(partition_type, ''"'') as partition_type,
+						QUOTENAME(is_temp_table, ''"'') as is_temp_table
 					FROM TableData');
 	END;
 	IF @PRODUCT_VERSION > 12 AND @validDB <> 0 AND @CLOUDTYPE = 'NONE' AND @CURRENT_DB_NAME = 'tempdb'
 	BEGIN
 		exec('WITH TableData AS (
-					SELECT 
+					SELECT
 						[schema_name]      = s.[name]
 						,[table_name]       = t.[name]
 						,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -171,38 +171,38 @@ BEGIN
 					LEFT JOIN sys.partition_functions pf WITH (NOLOCK) on (pf.function_id = ps.function_id)
 					WHERE t.is_ms_shipped = 0 -- Not a system table
 						AND i.type IN (0,1,5)
-						AND (t.name LIKE N''##%'' 
+						AND (t.name LIKE N''##%''
 							OR t.name like N''#%[_]%''
 							AND t.name not like N''#[0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z]''))
 					SELECT
-						''' + @PKEY + ''' AS PKEY,
-						DB_NAME() as database_name,
-						schema_name,
-						table_name,
-						partition_count,
-						is_memory_optimized,
-						temporal_type,
-						is_external,
-						lock_escalation,
-						is_tracked_by_cdc,
-						text_in_row_limit,
-						is_replicated,
-						row_count,
-						data_compression,
-						total_space_mb,
-						used_space_mb,
-						unused_space_mb,
-						''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-						''' + @DMA_MANUAL_ID + ''' as dma_manual_id,
-						partition_type,
-						is_temp_table
+						''"' + @PKEY + '"'' AS pkey,
+						QUOTENAME(DB_NAME(), ''"'') as database_name,
+						QUOTENAME(schema_name, ''"'') as schema_name,
+						QUOTENAME(table_name, ''"'') as table_name,
+						QUOTENAME(partition_count, ''"'') as partition_count,
+						QUOTENAME(is_memory_optimized, ''"'') as is_memory_optimized,
+						QUOTENAME(temporal_type, ''"'') as temporal_type,
+						QUOTENAME(is_external, ''"'') as is_external,
+						QUOTENAME(lock_escalation, ''"'') as lock_escalation,
+						QUOTENAME(is_tracked_by_cdc, ''"'') as is_tracked_by_cdc,
+						QUOTENAME(text_in_row_limit, ''"'') as text_in_row_limit,
+						QUOTENAME(is_replicated, ''"'') as is_replicated,
+						QUOTENAME(row_count, ''"'') as row_count,
+						QUOTENAME(data_compression, ''"'') as data_compression,
+						QUOTENAME(total_space_mb, ''"'') as total_space_mb,
+						QUOTENAME(used_space_mb, ''"'') as used_space_mb,
+						QUOTENAME(unused_space_mb, ''"'') as unused_space_mb,
+						''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
+        				''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
+						QUOTENAME(partition_type, ''"'') as partition_type,
+						QUOTENAME(is_temp_table, ''"'') as is_temp_table
 					FROM TableData');
 	END;
 	IF @PRODUCT_VERSION <= 12 AND @validDB <> 0 AND @CLOUDTYPE = 'NONE' AND @CURRENT_DB_NAME <> 'tempdb'
 	BEGIN
 		exec ('
 			WITH TableData AS (
-				SELECT 
+				SELECT
 					[schema_name]      = s.[name]
 					,[table_name]       = t.[name]
 					,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -247,34 +247,34 @@ BEGIN
 				WHERE t.is_ms_shipped = 0 -- Not a system table
 					AND i.type IN (0,1,5))
 				SELECT
-					''' + @PKEY + ''' AS PKEY,
-					DB_NAME() as database_name,
-					schema_name,
-					table_name,
-					partition_count,
-					is_memory_optimized,
-					temporal_type,
-					is_external,
-					lock_escalation,
-					is_tracked_by_cdc,
-					text_in_row_limit,
-					is_replicated,
-					row_count,
-					data_compression,
-					total_space_mb,
-					used_space_mb,
-					unused_space_mb,
-					''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-					''' + @DMA_MANUAL_ID + ''' as dma_manual_id,
-					partition_type,
-					is_temp_table
+					''"' + @PKEY + '"'' AS pkey,
+					QUOTENAME(DB_NAME(), ''"'') as database_name,
+					QUOTENAME(schema_name, ''"'') as schema_name,
+					QUOTENAME(table_name, ''"'') as table_name,
+					QUOTENAME(partition_count, ''"'') as partition_count,
+					QUOTENAME(is_memory_optimized, ''"'') as is_memory_optimized,
+					QUOTENAME(temporal_type, ''"'') as temporal_type,
+					QUOTENAME(is_external, ''"'') as is_external,
+					QUOTENAME(lock_escalation, ''"'') as lock_escalation,
+					QUOTENAME(is_tracked_by_cdc, ''"'') as is_tracked_by_cdc,
+					QUOTENAME(text_in_row_limit, ''"'') as text_in_row_limit,
+					QUOTENAME(is_replicated, ''"'') as is_replicated,
+					QUOTENAME(row_count, ''"'') as row_count,
+					QUOTENAME(data_compression, ''"'') as data_compression,
+					QUOTENAME(total_space_mb, ''"'') as total_space_mb,
+					QUOTENAME(used_space_mb, ''"'') as used_space_mb,
+					QUOTENAME(unused_space_mb, ''"'') as unused_space_mb,
+					''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
+        			''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
+					QUOTENAME(partition_type, ''"'') as partition_type,
+					QUOTENAME(is_temp_table, ''"'') as is_temp_table
 				FROM TableData');
 	END;
 	IF @PRODUCT_VERSION <= 12 AND @validDB <> 0 AND @CLOUDTYPE = 'NONE' AND @CURRENT_DB_NAME = 'tempdb'
 	BEGIN
 		exec ('
 			WITH TableData AS (
-				SELECT 
+				SELECT
 					[schema_name]      = s.[name]
 					,[table_name]       = t.[name]
 					,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -318,38 +318,38 @@ BEGIN
 				LEFT JOIN sys.partition_functions pf WITH (NOLOCK) on (pf.function_id = ps.function_id)
 				WHERE t.is_ms_shipped = 0 -- Not a system table
 					AND i.type IN (0,1,5)
-					AND (t.name LIKE N''##%'' 
+					AND (t.name LIKE N''##%''
 							OR t.name like N''#%[_]%''
 							AND t.name not like N''#[0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z]''))
 				SELECT
-					''' + @PKEY + ''' AS PKEY,
-					DB_NAME() as database_name,
-					schema_name,
-					table_name,
-					partition_count,
-					is_memory_optimized,
-					temporal_type,
-					is_external,
-					lock_escalation,
-					is_tracked_by_cdc,
-					text_in_row_limit,
-					is_replicated,
-					row_count,
-					data_compression,
-					total_space_mb,
-					used_space_mb,
-					unused_space_mb,
-					''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-					''' + @DMA_MANUAL_ID + ''' as dma_manual_id,
-					partition_type,
-					is_temp_table
+					''"' + @PKEY + '"'' AS pkey,
+					QUOTENAME(DB_NAME(), ''"'') as database_name,
+					QUOTENAME(schema_name, ''"'') as schema_name,
+					QUOTENAME(table_name, ''"'') as table_name,
+					QUOTENAME(partition_count, ''"'') as partition_count,
+					QUOTENAME(is_memory_optimized, ''"'') as is_memory_optimized,
+					QUOTENAME(temporal_type, ''"'') as temporal_type,
+					QUOTENAME(is_external, ''"'') as is_external,
+					QUOTENAME(lock_escalation, ''"'') as lock_escalation,
+					QUOTENAME(is_tracked_by_cdc, ''"'') as is_tracked_by_cdc,
+					QUOTENAME(text_in_row_limit, ''"'') as text_in_row_limit,
+					QUOTENAME(is_replicated, ''"'') as is_replicated,
+					QUOTENAME(row_count, ''"'') as row_count,
+					QUOTENAME(data_compression, ''"'') as data_compression,
+					QUOTENAME(total_space_mb, ''"'') as total_space_mb,
+					QUOTENAME(used_space_mb, ''"'') as used_space_mb,
+					QUOTENAME(unused_space_mb, ''"'') as unused_space_mb,
+					''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
+        			''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
+					QUOTENAME(partition_type, ''"'') as partition_type,
+					QUOTENAME(is_temp_table, ''"'') as is_temp_table
 				FROM TableData');
 	END;
 	IF @PRODUCT_VERSION >= 12 AND @validDB <> 0 AND @CLOUDTYPE = 'AZURE' AND @CURRENT_DB_NAME <> 'tempdb'
     BEGIN
 		exec ('
 		WITH TableData AS (
-			SELECT 
+			SELECT
 				[schema_name]      = s.[name]
 				,[table_name]       = t.[name]
 				,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -394,34 +394,34 @@ BEGIN
 			WHERE t.is_ms_shipped = 0 -- Not a system table
 				AND i.type IN (0,1,5))
 			SELECT
-				''' + @PKEY + ''' AS PKEY,
-				DB_NAME() as database_name,
-				schema_name,
-				table_name,
-				partition_count,
-				is_memory_optimized,
-				temporal_type,
-				is_external,
-				lock_escalation,
-				is_tracked_by_cdc,
-				text_in_row_limit,
-				is_replicated,
-				row_count,
-				data_compression,
-				total_space_mb,
-				used_space_mb,
-				unused_space_mb,
-				''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-				''' + @DMA_MANUAL_ID + ''' as dma_manual_id,
-				partition_type,
-				is_temp_table
+				''"' + @PKEY + '"'' AS pkey,
+				QUOTENAME(DB_NAME(), ''"'') as database_name,
+				QUOTENAME(schema_name, ''"'') as schema_name,
+				QUOTENAME(table_name, ''"'') as table_name,
+				QUOTENAME(partition_count, ''"'') as partition_count,
+				QUOTENAME(is_memory_optimized, ''"'') as is_memory_optimized,
+				QUOTENAME(temporal_type, ''"'') as temporal_type,
+				QUOTENAME(is_external, ''"'') as is_external,
+				QUOTENAME(lock_escalation, ''"'') as lock_escalation,
+				QUOTENAME(is_tracked_by_cdc, ''"'') as is_tracked_by_cdc,
+				QUOTENAME(text_in_row_limit, ''"'') as text_in_row_limit,
+				QUOTENAME(is_replicated, ''"'') as is_replicated,
+				QUOTENAME(row_count, ''"'') as row_count,
+				QUOTENAME(data_compression, ''"'') as data_compression,
+				QUOTENAME(total_space_mb, ''"'') as total_space_mb,
+				QUOTENAME(used_space_mb, ''"'') as used_space_mb,
+				QUOTENAME(unused_space_mb, ''"'') as unused_space_mb,
+				''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
+        		''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
+				QUOTENAME(partition_type, ''"'') as partition_type,
+				QUOTENAME(is_temp_table, ''"'') as is_temp_table
 			FROM TableData');
 	END;
 	IF @PRODUCT_VERSION >= 12 AND @validDB <> 0 AND @CLOUDTYPE = 'AZURE' AND @CURRENT_DB_NAME = 'tempdb'
 	BEGIN
 		exec ('
 		WITH TableData AS (
-			SELECT 
+			SELECT
 				[schema_name]      = s.[name]
 				,[table_name]       = t.[name]
 				,[index_name]       = CASE WHEN i.[type] in (0,1,5) THEN null    ELSE i.[name] END -- 0=Heap; 1=Clustered; 5=Clustered Columnstore
@@ -466,27 +466,27 @@ BEGIN
 			WHERE t.is_ms_shipped = 0 -- Not a system table
 				AND i.type IN (0,1,5))
 			SELECT
-				''' + @PKEY + ''' AS PKEY,
-				DB_NAME() as database_name,
-				schema_name,
-				table_name,
-				partition_count,
-				is_memory_optimized,
-				temporal_type,
-				is_external,
-				lock_escalation,
-				is_tracked_by_cdc,
-				text_in_row_limit,
-				is_replicated,
-				row_count,
-				data_compression,
-				total_space_mb,
-				used_space_mb,
-				unused_space_mb,
-				''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-				''' + @DMA_MANUAL_ID + ''' as dma_manual_id,
-				partition_type,
-				is_temp_table
+				''"' + @PKEY + '"'' AS pkey,
+				QUOTENAME(DB_NAME(), ''"'') as database_name,
+				QUOTENAME(schema_name, ''"'') as schema_name,
+				QUOTENAME(table_name, ''"'') as table_name,
+				QUOTENAME(partition_count, ''"'') as partition_count,
+				QUOTENAME(is_memory_optimized, ''"'') as is_memory_optimized,
+				QUOTENAME(temporal_type, ''"'') as temporal_type,
+				QUOTENAME(is_external, ''"'') as is_external,
+				QUOTENAME(lock_escalation, ''"'') as lock_escalation,
+				QUOTENAME(is_tracked_by_cdc, ''"'') as is_tracked_by_cdc,
+				QUOTENAME(text_in_row_limit, ''"'') as text_in_row_limit,
+				QUOTENAME(is_replicated, ''"'') as is_replicated,
+				QUOTENAME(row_count, ''"'') as row_count,
+				QUOTENAME(data_compression, ''"'') as data_compression,
+				QUOTENAME(total_space_mb, ''"'') as total_space_mb,
+				QUOTENAME(used_space_mb, ''"'') as used_space_mb,
+				QUOTENAME(unused_space_mb, ''"'') as unused_space_mb,
+				''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
+        		''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
+				QUOTENAME(partition_type, ''"'') as partition_type,
+				QUOTENAME(is_temp_table, ''"'') as is_temp_table
 			FROM TableData');
 	END;
 	END TRY

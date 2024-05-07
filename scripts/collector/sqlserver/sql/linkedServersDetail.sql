@@ -35,18 +35,18 @@ IF UPPER(@@VERSION) LIKE '%AZURE%'
 
 BEGIN
     BEGIN TRY
-    exec('   
+    exec('
         select
-            ''' + @PKEY + ''' AS pkey,
-            name as name, 
-            product as product,
-            provider as provider,
-            data_source as data_source,
-            location as location,
-            provider_string as provider_string,
-            catalog as catalog,
-            ''' + @DMA_SOURCE_ID + ''' as dma_source_id,
-            ''' + @DMA_MANUAL_ID + ''' as dma_manual_id
+            ''"' + @PKEY + '"'' AS pkey,
+            QUOTENAME(name,''"'') as name,
+            QUOTENAME(product,''"'') as product,
+            QUOTENAME(provider,''"'') as provider,
+            QUOTENAME(data_source,''"'') as data_source,
+            QUOTENAME(location,''"'') as location,
+            QUOTENAME(provider_string,''"'') as provider_string,
+            QUOTENAME(catalog,''"'') as catalog,
+            ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
+            ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id
         from sys.servers
         where is_linked = 1
             and server_id <> 0');

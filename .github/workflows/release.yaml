@@ -1,36 +1,212 @@
 name: release
+
 on:
+#   push:
+#     tags:
+#     - v*
+#     branches:
+#     - master
+#   pull_request:
+#     branches:
+#     - master
   release:
     types:
       - created
+concurrency:
+  group: build-${{ github.head_ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  STABLE_PYTHON_VERSION: "3.11"
+
 jobs:
-  build:
+  collection-scripts:
+    name: Package collections scripts for release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+            # Fetch all tags
+            fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Building & Package Collector
+        run: make clean && make build-collector
+      - uses: actions/upload-artifact@v4
+        with:
+            name: collections
+            path: dist/*.zip
+            if-no-files-found: error
+            overwrite: true
+
+  pure-python-wheel-and-sdist:
+    name: Build a pure Python wheel and source distribution
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Building & Package Collector
-        run: make build
-      - uses: shogo82148/actions-upload-release-asset@v1
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: scripts/dma-collection-masker
-      - uses: shogo82148/actions-upload-release-asset@v1
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: dist/db-migration-assessment-collection-scripts-oracle.zip
-      - uses: shogo82148/actions-upload-release-asset@v1
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: dist/db-migration-assessment-collection-scripts-sqlserver.zip
-      - uses: shogo82148/actions-upload-release-asset@v1
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: dist/db-migration-assessment-collection-scripts-mysql.zip
-      - uses: shogo82148/actions-upload-release-asset@v1
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: dist/db-migration-assessment-collection-scripts-postgres.zip
+    - uses: actions/checkout@v4
+      with:
+        # Fetch all tags
+        fetch-depth: 0
+
+    - name: Install Hatch
+      run: pip install --upgrade hatch hatch-pip-compile
+
+    - name: Build
+      run: hatch build
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: wheels
+        path: dist/*
+        if-no-files-found: error
+        overwrite: true
+
+  build-binaries:
+    name: Build binary application for ${{ matrix.job.target }} (${{ matrix.job.os }})
+    runs-on: ${{ matrix.job.os }}
+    needs:
+        - collection-scripts
+        - pure-python-wheel-and-sdist
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+        # Linux
+        - target: x86_64-unknown-linux-gnu
+          os: ubuntu-latest
+          cross: true
+          release_suffix: x86_64-linux
+        # - target: x86_64-unknown-linux-musl
+        #   os: ubuntu-latest
+        #   cross: true
+        - target: aarch64-unknown-linux-gnu
+          os: ubuntu-latest
+          cross: true
+          release_suffix: aarch64-linux
+        - target: i686-unknown-linux-gnu
+          os: ubuntu-latest
+          cross: true
+          release_suffix: i686-linux
+        # Windows
+        - target: x86_64-pc-windows-msvc
+          os: windows-2022
+          release_suffix: x86_64-windows
+        - target: i686-pc-windows-msvc
+          os: windows-2022
+          release_suffix: i686-windows
+        # macOS
+        - target: aarch64-apple-darwin
+          os: macos-12
+          release_suffix: aarch64-osx
+        - target: x86_64-apple-darwin
+          os: macos-12
+          release_suffix: x86_64-osx
+
+    env:
+      CARGO: cargo
+      CARGO_BUILD_TARGET: ${{ matrix.job.target }}
+      PYAPP_REPO: pyapp
+      PYAPP_VERSION: v0.19.0
+      PYAPP_PYTHON_VERSION: "3.11"
+      PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server,remote
+      PYAPP_DISTRIBUTION_EMBED: "1"
+      PYAPP_UV_ENABLED: "1"
+      HATCH_BUILD_LOCATION: dist
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        # Fetch all tags
+        fetch-depth: 0
+
+    - name: Install musl-tools on Linux
+      run: sudo apt-get install --yes musl musl-dev musl-tools
+      if: ${{ matrix.job.os == 'ubuntu-latest' }}
+
+    - name: Clone PyApp
+      run: git clone --depth 1 --branch $PYAPP_VERSION https://github.com/ofek/pyapp $PYAPP_REPO
+
+    - name: Set up Python ${{ env.STABLE_PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.STABLE_PYTHON_VERSION }}
+
+    - name: Install Hatch
+      run: pip install -U hatch hatch-pip-compile
+
+    - name: Install Rust toolchain
+      if: ${{ !matrix.job.cross }}
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.job.target }}
+
+    - name: Set up cross compiling tools
+      if: matrix.job.cross
+      uses: taiki-e/setup-cross-toolchain-action@v1
+      with:
+        target: ${{ matrix.job.target}}
+
+    - name: Show toolchain information
+      run: |-
+        rustup toolchain list
+        rustup default
+        rustup -V
+        rustc -V
+        cargo -V
+        hatch --version
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: wheels
+        path: ${{ github.workspace }}/dist
+        merge-multiple: true
+
+    - name: Build Binary
+      working-directory: ${{ github.workspace }}
+      run: |-
+        current_version=$(hatch version)
+        PYAPP_PYTHON_VERSION="3.11" PYAPP_DISTRIBUTION_EMBED="1" PYAPP_FULL_ISOLATION="1" PYAPP_UV_ENABLED="1" PYAPP_PROJECT_PATH="${{ github.workspace }}/dist/dma-${current_version}-py3-none-any.whl" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" hatch -v build -t app
+
+    - name: Rename
+      working-directory: ${{ github.workspace }}
+      run: |-
+        mv dist/app/dma* dist/app/dma-${{ matrix.job.release_suffix }}
+
+    - name: Upload built binary package
+      uses: actions/upload-artifact@v4
+      with:
+        name: binaries-${{ matrix.job.release_suffix }}
+        path: dist/app/*
+        if-no-files-found: error
+
+  publish:
+    name: Publish release
+    needs:
+    - collection-scripts
+    - pure-python-wheel-and-sdist
+    - build-binaries
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        path: dist
+        merge-multiple: true
+
+    # - name: Push build artifacts to PyPI
+    #   uses: pypa/gh-action-pypi-publish@v1.6.4
+    #   with:
+    #     skip_existing: true
+    #     user: __token__
+    #     password: ${{ secrets.PYPI_API_TOKEN }}
+
+    - name: Add assets to release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: dist/*

@@ -18,4 +18,3 @@ FROM DUAL;
 @&AWRDIR/&v_io_function_sql
 @&AWRDIR/sourceconn.sql
 @&v_sqlstats
-
