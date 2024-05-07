@@ -8,6 +8,18 @@ where (
         where extension_name = 'pglogical'
     );
 
+-- name: assessment-wal-level-check!
+INSERT INTO alloydb_readiness_check_summary (severity, assessment_type, info)
+SELECT 'ERROR', 'INVALID_WAL_LEVEL', CONCAT('wal_level should be set to "logical" instead of "', c.setting_value, '"')
+FROM collection_postgres_settings c
+where c.setting_name='wal_level' AND c.setting_value!='logical';
+
+-- name: assessment-rds-logical-replication-check!
+INSERT INTO alloydb_readiness_check_summary (severity, assessment_type, info)
+SELECT 'ERROR', 'INVALID_RDS_LOGICAL_REPLICATION', CONCAT('rds.logical_replication should be set to "on" instead of "', c.setting_value, '"')
+FROM collection_postgres_settings c
+where c.setting_name='rds.logical_replication' AND c.setting_value!='on';
+
 -- name: no-assessment-alloydb-01-table_count!
 insert into alloydb_readiness_check_summary (severity, info)
 select 'ERROR',
