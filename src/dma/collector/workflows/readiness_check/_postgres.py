@@ -8,11 +8,14 @@ from typing import TYPE_CHECKING
 import duckdb
 from rich.table import Table
 
+from dma.collector.workflows.readiness_check import alloydb_supported_collations
+
 if TYPE_CHECKING:
     import duckdb
     from rich.console import Console
 
     from dma.collector.query_managers import CanonicalQueryManager
+    from aiosql.queries import Queries
 
 db_type_map = {
 	9.4: "POSTGRES_9_4",
@@ -73,8 +76,7 @@ def rds_min_version_check_fail(version, major_version: string) -> bool:
 
 def version_check(console: Console,
     db: duckdb.DuckDBPyConnection,
-    manager: CanonicalQueryManager) -> None:
-    queries = manager.queries
+    queries: Queries) -> None:
     version = queries.get_pg_version(db)[0]
     major = get_db_major_version(version)
     is_rds = queries.is_source_rds(db)[0]
@@ -87,12 +89,19 @@ def version_check(console: Console,
     if major not in db_type_map or major < min_major_version:
         queries.insert_readiness_check(db, severity="ERROR", assessment_type="INCOMPATIBLE_DATABASE_VERSION", info=f"Replication from source database server ({version}) is not supported")
 
+def collation_check(console: Console,
+    db: duckdb.DuckDBPyConnection,
+    queries: Queries) -> None:
+    place_holder = ','.join('?' for c in alloydb_supported_collations.supported_collations)
+    query = queries.verify_collation_support.sql % place_holder
+    db.execute(query, alloydb_supported_collations.supported_collations)
 
 def execute_postgres_assessment(console: Console,
     local_db: duckdb.DuckDBPyConnection,
     manager: CanonicalQueryManager) -> None:
     """Execute postgress assessments"""
-    version_check(console, local_db, manager)
+    version_check(console, local_db, manager.queries)
+    collation_check(console, local_db, manager.queries)
 
 def print_summary_postgres(
     console: Console,

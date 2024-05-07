@@ -1212,3 +1212,15 @@ select :PKEY as pkey,
     src.procedure_language,
     src.system_object
 from src;
+
+-- name: collection-postgres-used-collations
+with src as (
+    SELECT distinct(datcollate) as collation
+    FROM pg_catalog.pg_database 
+    WHERE datname NOT IN ('template0', 'template1', 'rdsadmin', 'cloudsqladmin', 'alloydbadmin', 'alloydbmetadata', 'azure_maintenance', 'azure_sys') AND NOT datistemplate
+)
+select :PKEY as pkey,
+    :DMA_SOURCE_ID as dma_source_id,
+    :DMA_MANUAL_ID as dma_manual_id,
+    src.collation as collation
+from src;
