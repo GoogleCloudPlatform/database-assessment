@@ -1,6 +1,6 @@
 import rich_click as click
 from rich.traceback import install as rich_click_traceback_install
-from rich_click.cli import patch as rich_click_patch
+from rich_click.patch import patch as rich_click_patch
 
 rich_click_traceback_install(suppress=["click", "rich_click", "rich"])
 rich_click_patch()
@@ -13,9 +13,7 @@ click.rich_click.GROUP_ARGUMENTS_OPTIONS = True
 click.rich_click.STYLE_ERRORS_SUGGESTION = "magenta italic"
 click.rich_click.ERRORS_SUGGESTION = ""
 click.rich_click.ERRORS_EPILOGUE = """
-
 For additional support, refer to the documentation at https://googlecloudplatform.github.io/database-assessment/
-
 """
 click.rich_click.MAX_WIDTH = 80
 click.rich_click.SHOW_METAVARS_COLUMN = True

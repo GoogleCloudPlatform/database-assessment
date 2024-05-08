@@ -169,7 +169,7 @@ async def _collect_data(
 ) -> None:
     async_engine = get_engine(db_type, username, password, hostname, port, database)
     working_path = working_path or Path("tmp/")
-    execution_id = f"{db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime("%y%m%d%H%M%S")}"
+    execution_id = f"{db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
     with get_duckdb_connection(working_path) as local_db:
         async with AsyncSession(async_engine) as db_session:
             collection_manager = await anext(
