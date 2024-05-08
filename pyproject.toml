@@ -13,7 +13,7 @@ requires-python = ">=3.9,<3.13"
 version = "4.3.34"
 
 # keywords for easier look-up on PyPI
-authors = [{ name = "Cody Fincher", email = "cody.fincher@gmail.com" }]
+authors = [{ name = "Cody Fincher", email = "codyfincher@google.com" }]
 keywords = [
     "database",
     "migration",
@@ -26,6 +26,10 @@ keywords = [
     "litestar",
     "dma",
     "granian",
+    "gcp",
+    "google",
+    "alloydb",
+    "mariadb",
 ]
 # options under https://pypi.org/classifiers/
 classifiers = [ # ToDo: Modify according to your needs!
@@ -95,7 +99,7 @@ mysql = ["asyncmy>=0.2.9"]
 oracle = ["oracledb"]
 postgres = ["asyncpg>=0.29.0"]
 remote = ["pyinfra"]
-server = ["litestar[structlog,jinja]>=2.8.3", "litestar-granian>=0.3.0"]
+server = ["litestar[structlog,jinja]>=2.7.0", "litestar-granian>=0.2.3"]
 testing = [
     "nodeenv",
     # required test dependencies
