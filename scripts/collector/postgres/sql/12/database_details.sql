@@ -5,8 +5,8 @@ with db as (
         db.datconnlimit as max_connection_limit,
         db.datistemplate as is_template_database,
         pg_encoding_to_char(db.encoding) as character_set_encoding,
-        pg_database_size(db.datname) as total_disk_size_bytes,
-        from pg_database db
+        pg_database_size(db.datname) as total_disk_size_bytes
+    from pg_database db
 ),
 db_size as (
     select s.datid as database_oid,
