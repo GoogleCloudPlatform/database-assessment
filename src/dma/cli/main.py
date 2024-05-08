@@ -15,7 +15,7 @@ from dma.__about__ import __version__ as current_version
 from dma.cli._utils import console
 from dma.collector.dependencies import provide_canonical_queries, provide_collection_query_manager
 from dma.collector.workflows.collection_extractor.base import CollectionExtractor
-from dma.collector.workflows.readiness_assessment.base import ReadinessCheck
+from dma.collector.workflows.readiness_check.base import ReadinessCheck
 from dma.lib.db.base import get_engine
 from dma.lib.db.local import get_duckdb_connection
 
