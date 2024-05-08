@@ -2,13 +2,26 @@
   "version": "0.2.0",
   "configurations": [
 
+    {
+      "name": "Postgres - Data Collection",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "dma",
+      "args": ["collect","--db-type","postgres","--hostname","localhost","--no-prompt","--port","5427","--database","postgres","--username","postgres","--password","super-secret"]
+  },
       {
           "name": "Postgres - Readiness Assessment",
           "type": "debugpy",
           "request": "launch",
           "module": "dma",
           "args": ["readiness-check","--db-type","postgres","--hostname","localhost","--no-prompt","--port","5427","--database","postgres","--username","postgres","--password","super-secret"]
-      },        {
+      },  {
+        "name": "MySQL - Data Collection",
+        "type": "debugpy",
+        "request": "launch",
+        "module": "dma",
+        "args": ["collect","--db-type","mysql","--hostname","localhost","--no-prompt","--port","3360","--database","db","--username","root","--password","super-secret"]
+    },      {
         "name": "MySQL - Readiness Assessment",
         "type": "debugpy",
         "request": "launch",

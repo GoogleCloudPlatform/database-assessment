@@ -1,36 +1,29 @@
 from __future__ import annotations
 
+import asyncio
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
+import click
+from click import group, pass_context
 from rich import prompt
 from rich.table import Table
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from dma.cli._utils import RICH_CLICK_INSTALLED, console
+from dma.__about__ import __version__ as current_version
+from dma.cli._utils import console
+from dma.collector.dependencies import provide_canonical_queries, provide_collection_query_manager
+from dma.collector.workflows.collection_extractor.base import CollectionExtractor
+from dma.collector.workflows.readiness_assessment.base import ReadinessCheck
+from dma.lib.db.base import get_engine
+from dma.lib.db.local import get_duckdb_connection
 
-if TYPE_CHECKING or not RICH_CLICK_INSTALLED:  # pragma: no cover
-    import click
-    from click import Context, group, pass_context
-else:  # pragma: no cover
-    import rich_click as click
-    from rich.traceback import install as rich_click_traceback_install
-    from rich_click import Context, group, pass_context
-    from rich_click.cli import patch as rich_click_patch
+if TYPE_CHECKING:
+    from rich.console import Console
 
-    rich_click_traceback_install(suppress=["click", "rich_click", "rich"])
-    rich_click_patch()
-    click.rich_click.USE_RICH_MARKUP = True
-    click.rich_click.USE_MARKDOWN = True
-    click.rich_click.SHOW_ARGUMENTS = True
-    click.rich_click.GROUP_ARGUMENTS_OPTIONS = True
-    click.rich_click.SHOW_ARGUMENTS = True
-    click.rich_click.GROUP_ARGUMENTS_OPTIONS = True
-    click.rich_click.STYLE_ERRORS_SUGGESTION = "magenta italic"
-    click.rich_click.ERRORS_SUGGESTION = ""
-    click.rich_click.ERRORS_EPILOGUE = ""
-    click.rich_click.MAX_WIDTH = 80
-    click.rich_click.SHOW_METAVARS_COLUMN = True
-    click.rich_click.APPEND_METAVARS_HELP = True
-
+if TYPE_CHECKING:
+    from click import Context
 
 __all__ = ("app",)
 
@@ -42,9 +35,9 @@ def app(ctx: Context) -> None:
 
 
 @app.command(
-    name="collect-data",
+    name="collect",
     no_args_is_help=True,
-    short_help="Collect data from a source database..",
+    short_help="Collect data from a source database.",
 )
 @click.option(
     "--no-prompt",
@@ -60,7 +53,7 @@ def app(ctx: Context) -> None:
     "-db",
     help="The type of the database to connect to",
     default=None,
-    type=click.STRING,
+    type=click.Choice({"mysql", "postgres", "oracle", "mssql"}),
     required=False,
     show_default=False,
 )
@@ -129,11 +122,7 @@ def collect_data(
     collection_identifier: str | None = None,
 ) -> None:
     """Process a collection of advisor extracts."""
-
-    table = Table(show_header=False)
-    table.add_column("title", style="cyan", width=80)
-    table.add_row("Google Database Migration Assessment")
-    console.print(table)
+    print_app_info()
     console.rule("Starting data collection process", align="left")
 
     if hostname is None:
@@ -151,15 +140,60 @@ def collect_data(
     if not no_prompt:
         input_confirmed = prompt.Confirm.ask("Are you ready to start the assessment?")
     if input_confirmed:
-        console.rule("[bold]PLACEHOLDER[/] Scripts will exeutue here", align="left")
+        asyncio.run(
+            _collect_data(
+                console=console,
+                db_type=db_type,
+                username=username,
+                password=password,
+                hostname=hostname,
+                port=port,
+                database=database,
+                collection_identifier=collection_identifier,
+            )
+        )
     else:
         console.rule("Skipping execution until input is confirmed", align="left")
+
+
+async def _collect_data(
+    console: Console,
+    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    username: str,
+    password: str,
+    hostname: str,
+    port: int,
+    database: str,
+    collection_identifier: str | None,
+    working_path: Path | None = None,
+) -> None:
+    async_engine = get_engine(db_type, username, password, hostname, port, database)
+    working_path = working_path or Path("tmp/")
+    execution_id = f"{db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
+    with get_duckdb_connection(working_path) as local_db:
+        async with AsyncSession(async_engine) as db_session:
+            collection_manager = await anext(
+                provide_collection_query_manager(
+                    db_session=db_session, execution_id=execution_id, manual_id=collection_identifier
+                )
+            )
+            canonical_query_manager = next(provide_canonical_queries(local_db=local_db, working_path=working_path))
+            collection_extractor = CollectionExtractor(
+                local_db=local_db,
+                canonical_query_manager=canonical_query_manager,
+                collection_query_manager=collection_manager,
+                db_type=db_type,
+                console=console,
+            )
+            await collection_extractor.execute()
+            collection_extractor.dump_database(working_path)
+        await async_engine.dispose()
 
 
 @app.command(
     name="readiness-check",
     no_args_is_help=True,
-    short_help="Execute the DMS migration readiness checklist.",
+    short_help="Quickly check the compatibility of your database with CloudSQL and AlloyDB.",
 )
 @click.option(
     "--no-prompt",
@@ -175,7 +209,7 @@ def collect_data(
     "-db",
     help="The type of the database to connect to",
     default=None,
-    type=click.STRING,
+    type=click.Choice({"mysql", "postgres", "oracle", "mssql"}),
     required=False,
     show_default=False,
 )
@@ -224,7 +258,16 @@ def collect_data(
     required=False,
     show_default=False,
 )
-def readiness_check(
+@click.option(
+    "--collection-identifier",
+    "-id",
+    help="An optional identifier used to tag the collection.  If one is not provided, the identifier will be generated from the database configuration.",
+    default=None,
+    type=click.STRING,
+    required=False,
+    show_default=False,
+)
+def readiness_assessment(
     no_prompt: bool,
     db_type: Literal["mysql", "postgres", "mssql", "oracle"],
     username: str | None = None,
@@ -232,13 +275,12 @@ def readiness_check(
     hostname: str | None = None,
     port: int | None = None,
     database: str | None = None,
+    collection_identifier: str | None = None,
 ) -> None:
     """Process a collection of advisor extracts."""
-    table = Table(show_header=False)
-    table.add_column("title", style="cyan", width=80)
-    table.add_row("Google Database Migration Assessment")
-    console.print(table)
-    console.rule("Starting readiness check process", align="left")
+    print_app_info()
+    console.rule("Starting data collection process", align="left")
+
     if hostname is None:
         hostname = prompt.Prompt.ask("Please enter a hostname for the database")
     if port is None:
@@ -254,6 +296,59 @@ def readiness_check(
     if not no_prompt:
         input_confirmed = prompt.Confirm.ask("Are you ready to start the assessment?")
     if input_confirmed:
-        console.rule("[bold]PLACEHOLDER[/] Scripts will exeutue here", align="left")
+        asyncio.run(
+            _readiness_check(
+                console=console,
+                db_type=db_type,
+                username=username,
+                password=password,
+                hostname=hostname,
+                port=port,
+                database=database,
+                collection_identifier=collection_identifier,
+            )
+        )
     else:
         console.rule("Skipping execution until input is confirmed", align="left")
+
+
+async def _readiness_check(
+    console: Console,
+    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    username: str,
+    password: str,
+    hostname: str,
+    port: int,
+    database: str,
+    collection_identifier: str | None,
+    working_path: Path | None = None,
+) -> None:
+    async_engine = get_engine(db_type, username, password, hostname, port, database)
+    working_path = working_path or Path("tmp/")
+    execution_id = f"{db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
+    with get_duckdb_connection(working_path) as local_db:
+        async with AsyncSession(async_engine) as db_session:
+            collection_manager = await anext(
+                provide_collection_query_manager(
+                    db_session=db_session, execution_id=execution_id, manual_id=collection_identifier
+                )
+            )
+            canonical_query_manager = next(provide_canonical_queries(local_db=local_db, working_path=working_path))
+            workflow = ReadinessCheck(
+                local_db=local_db,
+                canonical_query_manager=canonical_query_manager,
+                collection_query_manager=collection_manager,
+                db_type=db_type,
+                console=console,
+            )
+            await workflow.execute()
+        await async_engine.dispose()
+
+
+def print_app_info() -> None:
+    table = Table(show_header=False)
+    table.add_column("title", style="cyan", width=80)
+    table.add_row(
+        f"[bold green]Google Database Migration Assessment[/]                [cyan]version {current_version}[/]"
+    )
+    console.print(table, width=80)
