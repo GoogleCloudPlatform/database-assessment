@@ -2,6 +2,7 @@
 with db as (
     select db.oid as database_oid,
         db.datname as database_name,
+        db.datcollate as database_collation,
         db.datconnlimit as max_connection_limit,
         db.datistemplate as is_template_database,
         pg_encoding_to_char(db.encoding) as character_set_encoding,
@@ -41,6 +42,7 @@ db_size as (
 src as (
     select db.database_oid,
         db.database_name,
+        db.database_collation,
         db.max_connection_limit,
         db.is_template_database,
         db.character_set_encoding,
@@ -115,13 +117,15 @@ select :PKEY as pkey,
         ),
         '1970-01-01 00:00:00'
     ) as statistics_last_reset_on,
-    inet_server_addr()::varchar as inet_server_addr
+    inet_server_addr()::varchar as inet_server_addr,
+    src.database_collation
 from src;
 
 -- name: collection-postgres-13-database-details
 with db as (
     select db.oid as database_oid,
         db.datname as database_name,
+        db.datcollate as database_collation,
         db.datconnlimit as max_connection_limit,
         db.datistemplate as is_template_database,
         pg_encoding_to_char(db.encoding) as character_set_encoding,
@@ -161,6 +165,7 @@ db_size as (
 src as (
     select db.database_oid,
         db.database_name,
+        db.database_collation,
         db.max_connection_limit,
         db.is_template_database,
         db.character_set_encoding,
@@ -235,13 +240,15 @@ select :PKEY as pkey,
         ),
         '1970-01-01 00:00:00'
     ) as statistics_last_reset_on,
-    inet_server_addr()::varchar as inet_server_addr
+    inet_server_addr()::varchar as inet_server_addr,
+    src.database_collation
 from src;
 
 -- name: collection-postgres-12-database-details
 with db as (
     select db.oid as database_oid,
         db.datname as database_name,
+        db.datcollate as database_collation,
         db.datconnlimit as max_connection_limit,
         db.datistemplate as is_template_database,
         pg_encoding_to_char(db.encoding) as character_set_encoding,
@@ -281,6 +288,7 @@ db_size as (
 src as (
     select db.database_oid,
         db.database_name,
+        db.database_collation,
         db.max_connection_limit,
         db.is_template_database,
         db.character_set_encoding,
@@ -355,5 +363,6 @@ select :PKEY as pkey,
         ),
         '1970-01-01 00:00:00'
     ) as statistics_last_reset_on,
-    inet_server_addr()::varchar as inet_server_addr
+    inet_server_addr()::varchar as inet_server_addr,
+    src.database_collation
 from src;
