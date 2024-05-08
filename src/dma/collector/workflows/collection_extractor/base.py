@@ -45,7 +45,7 @@ class CollectionExtractor(BaseWorkflow):
         """Print Summary of the Migration Readiness Assessment."""
         table = Table(show_header=False)
         table.add_column("title", style="cyan", width=80)
-        table.add_row("Migration Readiness Report")
+        table.add_row("Collection Summary")
         self.console.print(table)
         if self.db_type == "postgres":
             print_summary_postgres(console=self.console, local_db=self.local_db, manager=self.canonical_query_manager)
