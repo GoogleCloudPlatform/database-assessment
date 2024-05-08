@@ -22,5 +22,5 @@ select :PKEY as pkey,
     src.is_relocatable,
     src.extension_version,
     src.database_name,
-    src.is_super_user,
-    from src;
+    src.is_super_user
+from src;

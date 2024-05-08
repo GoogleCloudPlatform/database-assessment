@@ -21,5 +21,5 @@ select chr(34) || :PKEY || chr(34) as pkey,
     src.is_relocatable,
     src.extension_version,
     chr(34) || src.database_name || chr(34) as database_name,
-    src.is_super_user,
-    from src;
+    src.is_super_user
+from src;
