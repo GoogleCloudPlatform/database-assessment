@@ -4,7 +4,7 @@ services:
   postgres15:
     image: postgres:latest
     ports:
-      - "5423:5432" # use a non-standard port here
+      - "5427:5432" # use a non-standard port here
     environment:
       POSTGRES_PASSWORD: super-secret
   mysql8:
