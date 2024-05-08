@@ -2,6 +2,7 @@ with src as (
     select e.oid as extension_id,
         e.extname as extension_name,
         a.rolname as extension_owner,
+        a.rolsuper as is_super_user,
         n.nspname as extension_schema,
         e.extrelocatable as is_relocatable,
         e.extversion as extension_version,
@@ -19,5 +20,6 @@ select chr(34) || :PKEY || chr(34) as pkey,
     src.extension_schema,
     src.is_relocatable,
     src.extension_version,
-    chr(34) || src.database_name || chr(34) as database_name
+    chr(34) || src.database_name || chr(34) as database_name,
+    src.is_super_user
 from src;
