@@ -1,11 +1,12 @@
 with db as (
     select db.oid as database_oid,
         db.datname as database_name,
+        db.datcollate as database_collation,
         db.datconnlimit as max_connection_limit,
         db.datistemplate as is_template_database,
         pg_encoding_to_char(db.encoding) as character_set_encoding,
-        pg_database_size(db.datname) as total_disk_size_bytes
-    from pg_database db
+        pg_database_size(db.datname) as total_disk_size_bytes,
+        from pg_database db
 ),
 db_size as (
     select s.datid as database_oid,
@@ -40,6 +41,7 @@ db_size as (
 src as (
     select db.database_oid,
         db.database_name,
+        db.database_collation,
         db.max_connection_limit,
         db.is_template_database,
         db.character_set_encoding,
@@ -114,5 +116,6 @@ select chr(34) || :PKEY || chr(34) as pkey,
         ),
         '1970-01-01 00:00:00'
     ) as statistics_last_reset_on,
-    inet_server_addr() as inet_server_addr
+    inet_server_addr() as inet_server_addr,
+    src.database_collation
 from src;
