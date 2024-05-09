@@ -27,7 +27,6 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 SQLCMD=mysql
 OUTPUT_DIR=${SCRIPT_DIR}/output; export OUTPUT_DIR
 SQLOUTPUT_DIR=${OUTPUT_DIR}; export SQLOUTPUT_DIR
-ORACLE_PATH=${SCRIPT_DIR}; export ORACLE_PATH
 TMP_DIR=${SCRIPT_DIR}/tmp
 LOG_DIR=${SCRIPT_DIR}/log
 SQL_DIR=${SCRIPT_DIR}/sql
@@ -442,7 +441,7 @@ checkPlatform $DBTYPE
         then
         echo " "
 	      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-        echo "Unable to connect to the target Postgres database using ${connectString}.  Please verify the connection information and target database status."
+        echo "Unable to connect to the target MySQL database using ${connectString}.  Please verify the connection information and target database status."
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         exit 255
       else
@@ -468,15 +467,6 @@ if [ $retval -eq 0 ]; then
   else
     echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
     dbmajor=$((echo ${sqlcmd_result} | cut -d '|' -f1)  |cut -d '.' -f 1)
-    if [ "${dbmajor}" == "10" ]
-    then
-       echo "Oracle 10 support is experimental."
-    else if [ "${dbmajor}" == "09" ]
-      then
-       echo "Oracle 9 support is experimental."
-       DIAGPACKACCESS="NoDiagnostics"
-      fi
-    fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
 
     if [ "$DBTYPE" == "mysql" ]; then
