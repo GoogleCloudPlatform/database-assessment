@@ -13,7 +13,7 @@
 # limitations under the License.
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import aiosql
 from rich.padding import Padding
@@ -133,11 +133,19 @@ class CollectionQueryManager(QueryManager):
             self.db_version = db_version
         if execution_id is None or source_id is None or db_version is None:
             init_results = await self.execute_init_queries()
-            self.source_id = source_id if source_id is not None else init_results.get("init_get_source_id", None)
-            self.execution_id = (
-                execution_id if execution_id is not None else init_results.get("init_get_execution_id", None)
+            self.source_id = (
+                source_id if source_id is not None else cast("str | None", init_results.get("init_get_source_id", None))
             )
-            self.db_version = db_version if db_version is not None else init_results.get("init_get_db_version", None)
+            self.execution_id = (
+                execution_id
+                if execution_id is not None
+                else cast("str | None", init_results.get("init_get_execution_id", None))
+            )
+            self.db_version = (
+                db_version
+                if db_version is not None
+                else cast("str | None", init_results.get("init_get_db_version", None))
+            )
         if self.source_id is None or self.execution_id is None or self.db_version is None:
             msg = "Failed to set execution identifiers for collection."
             raise ApplicationError(msg)
@@ -263,22 +271,22 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
         major_version = int(self.db_version[:2])
         version_prefix = "base" if major_version > 13 else "13" if major_version == 13 else "12"
         return {
-            f"collection_postgres_{version_prefix}_table_details": "collection_postgres_table_details",
-            f"collection_postgres_{version_prefix}_database_details": "collection_postgres_database_details",
-            f"collection_postgres_{version_prefix}_replication_slots": "collection_postgres_replication_slots",
-            "collection_postgres_applications": "collection_postgres_applications",
-            "collection_postgres_aws_extension_dependency": "collection_postgres_aws_extension_dependency",
-            "collection_postgres_aws_oracle_exists": "collection_postgres_aws_oracle_exists",
-            "collection_postgres_bg_writer_stats": "collection_postgres_bg_writer_stats",
-            "collection_postgres_calculated_metrics": "collection_postgres_calculated_metrics",
-            "collection_postgres_data_types": "collection_postgres_data_types",
-            "collection_postgres_extensions": "collection_postgres_extensions",
-            "collection_postgres_index_details": "collection_postgres_index_details",
-            "collection_postgres_replication_stats": "collection_postgres_replication_stats",
-            "collection_postgres_schema_details": "collection_postgres_schema_details",
-            "collection_postgres_schema_objects": "collection_postgres_schema_objects",
-            "collection_postgres_settings": "collection_postgres_settings",
-            "collection_postgres_source_details": "collection_postgres_source_details",
+            f"collection_postgres_{version_prefix}_table_details": "postgres_table_details",
+            f"collection_postgres_{version_prefix}_database_details": "postgres_database_details",
+            f"collection_postgres_{version_prefix}_replication_slots": "postgres_replication_slots",
+            "collection_postgres_applications": "postgres_applications",
+            "collection_postgres_aws_extension_dependency": "postgres_aws_extension_dependency",
+            "collection_postgres_aws_oracle_exists": "postgres_aws_oracle_exists",
+            "collection_postgres_bg_writer_stats": "postgres_bg_writer_stats",
+            "collection_postgres_calculated_metrics": "postgres_calculated_metrics",
+            "collection_postgres_data_types": "postgres_data_types",
+            "collection_postgres_extensions": "postgres_extensions",
+            "collection_postgres_index_details": "postgres_index_details",
+            "collection_postgres_replication_stats": "postgres_replication_stats",
+            "collection_postgres_schema_details": "postgres_schema_details",
+            "collection_postgres_schema_objects": "postgres_schema_objects",
+            "collection_postgres_settings": "postgres_settings",
+            "collection_postgres_source_details": "postgres_source_details",
         }
 
 
