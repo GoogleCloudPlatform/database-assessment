@@ -2,6 +2,25 @@ from __future__ import annotations
 
 from typing import Final
 
+RDS_MINOR_VERSION_SUPPORT_MAP: Final[dict[float, int]] = {
+    9.6: 10,
+    10: 5,
+    11: 1,
+    12: 2,
+}
+DB_TYPE_MAP: Final[dict[float, str]] = {
+    9.4: "POSTGRES_9_4",
+    9.5: "POSTGRES_9_5",
+    9.6: "POSTGRES_9_6",
+    10: "POSTGRES_10",
+    11: "POSTGRES_11",
+    12: "POSTGRES_12",
+    13: "POSTGRES_13",
+    14: "POSTGRES_14",
+    15: "POSTGRES_15",
+    16: "POSTGRES_16",
+}
+
 ALLOYDB_SUPPORTED_EXTENSIONS: Final[set[str]] = set()
 CLOUDSQL_SUPPORTED_EXTENSIONS: Final[set[str]] = set()
 ALLOYDB_SUPPORTED_COLLATIONS: Final[set[str]] = {
