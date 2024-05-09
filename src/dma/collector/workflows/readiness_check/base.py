@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, cast
 
 from rich.table import Table
 
@@ -31,10 +31,11 @@ class ReadinessCheck(CollectionExtractor):
         """Execute postgres assessments"""
         if self.db_type == "postgres":
             execute_postgres_readiness_check(
+                readiness_check=self,
                 console=self.console,
                 local_db=self.local_db,
                 manager=self.canonical_query_manager,
-                db_version=self.collection_query_manager.db_version,
+                db_version=cast("str", self.collection_query_manager.db_version),
             )
         else:
             msg = f"{self.db_type} is not implemented."
@@ -48,18 +49,6 @@ class ReadinessCheck(CollectionExtractor):
     async def process_collection(self) -> None:
         await super().process_collection()
         await self.canonical_query_manager.execute_assessment_queries()
-
-    def save_rule_result(
-        self,
-        migration_target: Literal["cloudsql", "alloydb", "bms", "spanner", "bigquery"],
-        rule_code: str,
-        severity: Literal["error", "warning", "info", "pass"],
-        message: str,
-    ) -> None:
-        self.local_db.execute(
-            "insert into readiness_check_summary(migration_target, rule_code, severity, message) values (?,?,?,?)",
-            [migration_target, rule_code, severity, message],
-        )
 
     def print_summary(self) -> None:
         """Print Summary of the Migration Readiness Assessment."""
