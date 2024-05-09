@@ -47,7 +47,7 @@ class CanonicalQueryManager(QueryManager):
 
     async def execute_ddl_scripts(self, *args: Any, **kwargs: Any) -> None:
         """Execute pre-processing queries."""
-        console.print(Padding("DATAMODEL", 1, style="bold", expand=True), width=80)
+        console.print(Padding("CANONICAL DATA MODEL", 1, style="bold", expand=True), width=80)
         with console.status("[bold green]Creating tables...[/]") as status:
             for script in self.available_queries("ddl"):
                 status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")

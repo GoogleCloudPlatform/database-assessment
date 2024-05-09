@@ -435,6 +435,7 @@ ban-relative-imports = "all"
     "T201",
     "S404",
     "PLR6301",
+    "PLC2701",
     "FA102",
 ]
 # temp
