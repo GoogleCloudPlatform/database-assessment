@@ -1224,3 +1224,26 @@ select :PKEY as pkey,
     :DMA_MANUAL_ID as dma_manual_id,
     src.collation as collation
 from src;
+
+-- name: collection-postgres-all-databases
+with src as (
+    SELECT datname
+    FROM pg_catalog.pg_database 
+    WHERE datname NOT IN ('template0', 'template1', 'rdsadmin', 'cloudsqladmin', 'alloydbadmin', 'alloydbmetadata', 'azure_maintenance', 'azure_sys') AND NOT datistemplate
+)
+select :PKEY as pkey,
+    :DMA_SOURCE_ID as dma_source_id,
+    :DMA_MANUAL_ID as dma_manual_id,
+    src.datname as database_name
+from src;
+
+-- name: collection-used-replication-slots
+with src as (
+    SELECT COUNT(*) as used_replication_slots
+    FROM pg_catalog.pg_replication_slots
+)
+select :PKEY as pkey,
+    :DMA_SOURCE_ID as dma_source_id,
+    :DMA_MANUAL_ID as dma_manual_id,
+    src.used_replication_slots as used_replication_slots
+from src;

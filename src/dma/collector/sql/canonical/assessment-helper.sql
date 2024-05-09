@@ -20,3 +20,25 @@ SELECT 'ERROR', 'UNSUPPORTED_DATABASE_LOCALE',
     CONCAT('Unsupported collation: ', c.collation, ' is not supported on this instance')
 FROM collection_postgres_used_collations c
 where c.collation NOT IN (%s);
+
+-- name: get-db-count^
+SELECT count(*) as db_count
+FROM collection_postgres_all_databases
+
+-- name: get-replication-slot-count^
+SELECT c.setting_value
+FROM collection_postgres_settings c
+where c.setting_name='max_replication_slots';
+
+-- name: get-used-replication-slot-count^
+SELECT used_replication_slots FROM collection_used_replication_slots;
+
+-- name: get-max-wal-senders^
+SELECT c.setting_value
+FROM collection_postgres_settings c
+where c.setting_name='max_wal_senders';
+
+-- name: get-max-worker-processes^
+SELECT c.setting_value
+FROM collection_postgres_settings c
+where c.setting_name='max_worker_processes';
