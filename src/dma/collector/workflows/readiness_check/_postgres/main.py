@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal, TypeAlias
+from typing import TYPE_CHECKING
 
 from rich.table import Table
 
@@ -26,12 +26,12 @@ from dma.lib.exceptions import ApplicationError
 if TYPE_CHECKING:
     from rich.console import Console
 
-PostgresDbVariants: TypeAlias = Literal["CLOUDSQL", "ALLOYDB"]
+    from dma.types import PostgresVariants
 
 
 @dataclass
 class PostgresReadinessCheckTargetConfig(ReadinessCheckTargetConfig):
-    db_variant: PostgresDbVariants
+    db_variant: PostgresVariants
     supported_collations: set[str]
     supported_extensions: set[str]
     supported_fdws: set[str]
@@ -78,6 +78,11 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         """Execute postgres checks"""
         self._check_collation()
         self._check_version()
+        self._check_extensions()
+        self._check_fdw()
+        self._check_pglogical_installed()
+        self._check_rds_logical_replication()
+        self._check_wal_level()
 
     def _check_collation(self) -> None:
         rule_code = "COLLATION"
@@ -223,7 +228,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         if self.db_version is None:
             msg = "Database version was not set."
             raise ApplicationError(msg)
-        result = self.local_db.sql("select distinct database_collation from collection_postgres_extensions").fetchmany()
+        result = self.local_db.sql("select distinct extension_name from collection_postgres_extensions").fetchmany()
         extensions = {row[0] for row in result}
         for c in self.rule_config:
             unsupported_extensions = extensions.difference(c.supported_extensions)
@@ -234,7 +239,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     "ERROR",
                     f"Unsupported extensions: {unsupported_extension} is not supported on this instance",
                 )
-            if len(unsupported_extension) == 0:
+            if len(unsupported_extensions) == 0:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
@@ -243,11 +248,16 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 )
 
     def _check_fdw(self) -> None:
-        rule_code = "FDW"
+        rule_code = "FDWS"
         if self.db_version is None:
             msg = "Database version was not set."
             raise ApplicationError(msg)
-        result = self.local_db.sql("select distinct database_collation from collection_postgres_extensions").fetchmany()
+        result = self.local_db.sql("""
+            select foreign_data_wrapper_name as fdw_name, count(distinct table_schema || table_name) as table_count
+            from collection_postgres_table_details
+            where foreign_data_wrapper_name is not null
+            group by foreign_data_wrapper_name
+        """).fetchmany()
         fdws = {row[0] for row in result}
         fdw_table_count = {row[1] for row in result}
         for c in self.rule_config:
