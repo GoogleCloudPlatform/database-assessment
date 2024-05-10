@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from rich.console import Console
 from rich.table import Table
@@ -14,11 +14,19 @@ if TYPE_CHECKING:
     from rich.console import Console
 
     from dma.collector.query_managers import CanonicalQueryManager, CollectionQueryManager
+    from dma.types import (
+        MSSQLVariants,
+        MySQLVariants,
+        OracleVariants,
+        PostgresVariants,
+        SeverityLevels,
+        SupportedSources,
+    )
 
 
 @dataclass
 class ReadinessCheckTargetConfig:
-    db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"]
+    db_type: SupportedSources
     minimum_supported_major_version: float
     maximum_supported_major_version: float | None
 
@@ -29,7 +37,7 @@ class ReadinessCheck(CollectionExtractor):
         local_db: DuckDBPyConnection,
         canonical_query_manager: CanonicalQueryManager,
         collection_query_manager: CollectionQueryManager,
-        db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
+        db_type: SupportedSources,
         console: Console,
     ) -> None:
         self.executor: ReadinessCheckExecutor | None = None
@@ -94,9 +102,9 @@ class ReadinessCheckExecutor:
 
     def save_rule_result(
         self,
-        migration_target: Literal["CLOUDSQL", "ALLOYDB"],
+        migration_target: PostgresVariants | MySQLVariants | OracleVariants | MSSQLVariants,
         rule_code: str,
-        severity: Literal["ERROR", "WARNING", "INFO", "PASS"],
+        severity: SeverityLevels,
         info: str,
     ) -> None:
         self.local_db.execute(

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from rich.table import Table
 
@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from rich.console import Console
 
     from dma.collector.query_managers import CanonicalQueryManager, CollectionQueryManager
+    from dma.types import SupportedSources
 
 
 class CollectionExtractor(BaseWorkflow):
@@ -20,7 +21,7 @@ class CollectionExtractor(BaseWorkflow):
         local_db: DuckDBPyConnection,
         canonical_query_manager: CanonicalQueryManager,
         collection_query_manager: CollectionQueryManager,
-        db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
+        db_type: SupportedSources,
         console: Console,
     ) -> None:
         self.collection_query_manager = collection_query_manager

@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, TypeAlias
 
 from rich.table import Table
 
 from dma.collector.workflows.readiness_check._postgres.constants import (
     ALLOYDB_SUPPORTED_COLLATIONS,
+    ALLOYDB_SUPPORTED_EXTENSIONS,
+    ALLOYDB_SUPPORTED_FDWS,
     CLOUDSQL_SUPPORTED_COLLATIONS,
+    CLOUDSQL_SUPPORTED_EXTENSIONS,
+    CLOUDSQL_SUPPORTED_FDWS,
     DB_TYPE_MAP,
     RDS_MINOR_VERSION_SUPPORT_MAP,
 )
@@ -22,12 +26,15 @@ from dma.lib.exceptions import ApplicationError
 if TYPE_CHECKING:
     from rich.console import Console
 
+PostgresDbVariants: TypeAlias = Literal["CLOUDSQL", "ALLOYDB"]
+
 
 @dataclass
 class PostgresReadinessCheckTargetConfig(ReadinessCheckTargetConfig):
-    db_variant: Literal["CLOUDSQL", "ALLOYDB"]
+    db_variant: PostgresDbVariants
     supported_collations: set[str]
     supported_extensions: set[str]
+    supported_fdws: set[str]
     minimum_supported_rds_major_version: float
     db_version_map: dict[float, str] = field(default_factory=lambda: DB_TYPE_MAP)
     rds_minor_version_support_map: dict[float, int] = field(default_factory=lambda: RDS_MINOR_VERSION_SUPPORT_MAP)
@@ -41,7 +48,8 @@ POSTGRES_RULE_CONFIGURATIONS: list[PostgresReadinessCheckTargetConfig] = [
         minimum_supported_rds_major_version=9.6,
         maximum_supported_major_version=15,
         supported_collations=ALLOYDB_SUPPORTED_COLLATIONS,
-        supported_extensions=set(),
+        supported_extensions=ALLOYDB_SUPPORTED_EXTENSIONS,
+        supported_fdws=ALLOYDB_SUPPORTED_FDWS,
     ),
     PostgresReadinessCheckTargetConfig(
         db_type="POSTGRES",
@@ -50,7 +58,8 @@ POSTGRES_RULE_CONFIGURATIONS: list[PostgresReadinessCheckTargetConfig] = [
         minimum_supported_rds_major_version=9.6,
         maximum_supported_major_version=15,
         supported_collations=CLOUDSQL_SUPPORTED_COLLATIONS,
-        supported_extensions=set(),
+        supported_extensions=CLOUDSQL_SUPPORTED_EXTENSIONS,
+        supported_fdws=CLOUDSQL_SUPPORTED_FDWS,
     ),
 ]
 
@@ -67,10 +76,10 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def execute(self) -> None:
         """Execute postgres checks"""
-        self._collation_check()
-        self._version_check()
+        self._check_collation()
+        self._check_version()
 
-    def _collation_check(self) -> None:
+    def _check_collation(self) -> None:
         rule_code = "COLLATION"
         result = self.local_db.sql(
             "select distinct database_collation from collection_postgres_database_details"
@@ -93,7 +102,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     "All utilized collations are supported.",
                 )
 
-    def _version_check(self) -> None:
+    def _check_version(self) -> None:
         rule_code = "DATABASE_VERSION"
         if self.db_version is None:
             msg = "Database version was not set."
@@ -134,6 +143,128 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     rule_code,
                     "PASS",
                     f"Version {self.db_version} is supported.  Please ensure that you selected a version that meets or exceeds version {detected_major_version!s}.",
+                )
+
+    def _check_pglogical_installed(self) -> None:
+        rule_code = "PGLOGICAL_INSTALLED"
+        if self.db_version is None:
+            msg = "Database version was not set."
+            raise ApplicationError(msg)
+        result = self.local_db.sql(
+            "select count(*) from collection_postgres_extensions where extension_name = 'pglogical'"
+        ).fetchone()
+        is_installed = result[0] > 0 if result is not None else False
+        for c in self.rule_config:
+            if is_installed:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "ERROR",
+                    "The `pglogical` extension is not installed on the database.",
+                )
+            else:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "PASS",
+                    "`pglogical` is installed on the database`",
+                )
+
+    def _check_wal_level(self) -> None:
+        rule_code = "WAL_LEVEL"
+        if self.db_version is None:
+            msg = "Database version was not set."
+            raise ApplicationError(msg)
+        wal_level = self._is_rds()
+        for c in self.rule_config:
+            if wal_level != "logical":
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "ERROR",
+                    f'The `wal_level` settings should be set to "logical" instead of "{wal_level}".',
+                )
+            else:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "PASS",
+                    "`pglogical` is installed on the database`",
+                )
+
+    def _check_rds_logical_replication(self) -> None:
+        rule_code = "RDS_LOGICAL_REPLICATION"
+        if self.db_version is None:
+            msg = "Database version was not set."
+            raise ApplicationError(msg)
+        detected_major_version = get_db_major_version(self.db_version)
+        detected_minor_version = get_db_minor_version(self.db_version)
+        is_rds = self._is_rds()
+        if is_rds:
+            for c in self.rule_config:
+                supported_minor_version = c.rds_minor_version_support_map.get(detected_major_version)
+                if supported_minor_version and detected_minor_version < supported_minor_version:
+                    self.save_rule_result(
+                        c.db_variant,
+                        rule_code,
+                        "ERROR",
+                        f'`rds.logical_replication` should be set to "on"` instead of ({detected_minor_version})',
+                    )
+                else:
+                    self.save_rule_result(
+                        c.db_variant,
+                        rule_code,
+                        "PASS",
+                        '`rds.logical_replication` was correctly set to "on"`',
+                    )
+
+    def _check_extensions(self) -> None:
+        rule_code = "EXTENSIONS"
+        if self.db_version is None:
+            msg = "Database version was not set."
+            raise ApplicationError(msg)
+        result = self.local_db.sql("select distinct database_collation from collection_postgres_extensions").fetchmany()
+        extensions = {row[0] for row in result}
+        for c in self.rule_config:
+            unsupported_extensions = extensions.difference(c.supported_extensions)
+            for unsupported_extension in unsupported_extensions:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "ERROR",
+                    f"Unsupported extensions: {unsupported_extension} is not supported on this instance",
+                )
+            if len(unsupported_extension) == 0:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "PASS",
+                    "All utilized collations are supported.",
+                )
+
+    def _check_fdw(self) -> None:
+        rule_code = "FDW"
+        if self.db_version is None:
+            msg = "Database version was not set."
+            raise ApplicationError(msg)
+        result = self.local_db.sql("select distinct database_collation from collection_postgres_extensions").fetchmany()
+        fdws = {row[0] for row in result}
+        fdw_table_count = {row[1] for row in result}
+        for c in self.rule_config:
+            unsupported_fdws = fdws.difference(c.supported_fdws)
+            for unsupported_fdw, table_count in zip(unsupported_fdws, fdw_table_count):
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "ERROR",
+                    f'Unsupported FDW: detected {table_count} "{unsupported_fdw}" foreign tables.',
+                )
+            if len(unsupported_fdws) == 0:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "PASS",
+                    "All utilized foreign data wrappers are supported.",
                 )
 
     def print_summary(self) -> None:

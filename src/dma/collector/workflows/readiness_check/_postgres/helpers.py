@@ -2,20 +2,6 @@ from __future__ import annotations
 
 import re
 
-db_type_map = {
-    9.4: "POSTGRES_9_4",
-    9.5: "POSTGRES_9_5",
-    9.6: "POSTGRES_9_6",
-    10: "POSTGRES_10",
-    11: "POSTGRES_11",
-    12: "POSTGRES_12",
-    13: "POSTGRES_13",
-    14: "POSTGRES_14",
-    15: "POSTGRES_15",
-    16: "POSTGRES_16",
-}
-
-
 # Matches version numbers of both old (Eg: 9.6.2) and new formats (Eg: 10.2).
 pg_version_regex = re.compile(r"(?P<version>\d+\.\d+(\.\d+)?).*")
 
