@@ -30,7 +30,7 @@ DECLARE @CURRENT_DB_NAME AS VARCHAR(256);
 SELECT @PKEY = N'$(pkey)';
 SELECT @CLOUDTYPE = 'NONE'
 SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR(255), SERVERPROPERTY('productversion')), 4));
 SELECT @validDB = 0;
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
@@ -77,9 +77,9 @@ BEGIN
 														WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 														)
 											END
-						,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
-						,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
-						,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+						,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+						,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
+						,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 						,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 						,[is_temp_table] = ''0''
 					FROM sys.schemas s WITH (NOLOCK)
@@ -148,9 +148,9 @@ BEGIN
 														WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 														)
 											END
-						,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
-						,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
-						,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+						,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+						,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
+						,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 						,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 						,[is_temp_table] = ''1''
 					FROM sys.schemas s WITH (NOLOCK)
@@ -223,9 +223,9 @@ BEGIN
 													WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 													)
 										END
-					,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
-					,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
-					,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+					,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+					,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
+					,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 					,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 					,[is_temp_table] = ''0''
 				FROM sys.schemas s WITH (NOLOCK)
@@ -295,9 +295,9 @@ BEGIN
 													WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 													)
 										END
-					,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
-					,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
-					,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+					,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+					,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
+					,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 					,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 					,[is_temp_table] = ''1''
 				FROM sys.schemas s WITH (NOLOCK)
@@ -370,9 +370,9 @@ BEGIN
 												WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 												)
 									END
-				,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
-				,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
-				,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+				,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+				,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
+				,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 				,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 				,[is_temp_table] = ''0''
 			FROM sys.schemas s WITH (NOLOCK)
@@ -442,9 +442,9 @@ BEGIN
 												WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 												)
 									END
-				,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
-				,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
-				,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+				,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+				,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
+				,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 				,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 				,[is_temp_table] = ''1''
 			FROM sys.schemas s WITH (NOLOCK)
@@ -495,10 +495,10 @@ BEGIN
 		host_name() as host_name,
 		db_name() as database_name,
 		'tableList' as module_name,
-		SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
-		SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
-		SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
-		SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
+		SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
+		SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
+		SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
+		SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
 	END CATCH
 
 END;

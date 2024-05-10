@@ -29,7 +29,7 @@ DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 SELECT @PKEY = N'$(pkey)';
 SELECT @CLOUDTYPE = 'NONE'
 SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR(255), SERVERPROPERTY('productversion')), 4));
 SELECT @validDB = 0
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
@@ -212,9 +212,9 @@ BEGIN
         host_name() as host_name,
         db_name() as database_name,
         'objectList' as module_name,
-        SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
-        SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
-        SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
-        SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
+        SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
+        SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
+        SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
+        SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
     END CATCH
 END;

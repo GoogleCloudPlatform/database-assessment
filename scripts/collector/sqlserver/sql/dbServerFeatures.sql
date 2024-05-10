@@ -28,7 +28,7 @@ DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
 SELECT @PKEY = N'$(pkey)';
 SELECT @CLOUDTYPE = 'NONE';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR(255), SERVERPROPERTY('productversion')), 4));
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
@@ -99,7 +99,7 @@ BEGIN
     INSERT INTO #FeaturesEnabled
     SELECT
         ''IsDbMailEnabled'',
-        CONVERT(nvarchar, value_in_use),
+        CONVERT(NVARCHAR(255), value_in_use),
         CASE WHEN value_in_use > 0 THEN 1
         ELSE 0
         END
@@ -124,7 +124,7 @@ BEGIN
     INSERT INTO #FeaturesEnabled
     SELECT
         ''IsExternalScriptsEnabled'',
-        CONVERT(nvarchar, value_in_use),
+        CONVERT(NVARCHAR(255), value_in_use),
         CASE WHEN value_in_use > 0 THEN 1
         ELSE 0
         END
@@ -212,7 +212,7 @@ IF @CLOUDTYPE = 'AZURE'
 BEGIN
     exec('INSERT INTO #FeaturesEnabled
             SELECT ''IsHybridBufferPoolEnabled'',
-            CONVERT(nvarchar,is_enabled),
+            CONVERT(NVARCHAR(255),is_enabled),
             CASE
                 WHEN is_configured > 0 THEN 1
                 ELSE 0
@@ -238,7 +238,7 @@ BEGIN
         BEGIN
             exec('INSERT INTO #FeaturesEnabled
                 SELECT ''IsHybridBufferPoolEnabled'',
-                COALESCE(CONVERT(nvarchar,is_enabled), 0),
+                COALESCE(CONVERT(NVARCHAR(255),is_enabled), 0),
                 CASE
                     WHEN is_enabled > 0 THEN 1
                 ELSE 0
@@ -323,7 +323,7 @@ BEGIN
     INSERT INTO #FeaturesEnabled
     SELECT
         ''IsPolybaseEnabled'',
-        CONVERT(nvarchar, value_in_use),
+        CONVERT(NVARCHAR(255), value_in_use),
         CASE
             WHEN value_in_use > 0 THEN 1
             ELSE 0
@@ -337,7 +337,7 @@ BEGIN
     exec ('INSERT INTO #FeaturesEnabled
     SELECT
         ''IsResourceGovernorEnabled'',
-        CONVERT(nvarchar, is_enabled),
+        CONVERT(NVARCHAR(255), is_enabled),
         CASE
             WHEN is_enabled > 0 THEN 1
             ELSE 0
@@ -351,7 +351,7 @@ BEGIN
     exec('INSERT INTO #FeaturesEnabled
             SELECT
                 ''IsStretchDatabaseEnabled'',
-                CONVERT(nvarchar, count(*)),
+                CONVERT(NVARCHAR(255), count(*)),
                 CONVERT(int, count(*))
             FROM sys.remote_data_archive_databases');
 END
@@ -363,7 +363,7 @@ BEGIN
         exec('INSERT INTO #FeaturesEnabled
                 SELECT
                     ''IsStretchDatabaseEnabled'',
-                    CONVERT(nvarchar, count(*)),
+                    CONVERT(NVARCHAR(255), count(*)),
                     CONVERT(int, count(*))
                 FROM sys.remote_data_archive_databases /* SQL Server 2016 (13.x) and Up to 2022 */');
     END
@@ -378,7 +378,7 @@ BEGIN
     exec('INSERT INTO #FeaturesEnabled
             SELECT
                 ''IsTDEInUse'',
-                CONVERT(nvarchar, count(*)),
+                CONVERT(NVARCHAR(255), count(*)),
                 CONVERT(int, count(*))
             FROM sys.databases
             WHERE is_encrypted <> 0');
@@ -390,7 +390,7 @@ BEGIN
     INSERT INTO #FeaturesEnabled
     SELECT
         ''IsTempDbMetadataMemoryOptimized'',
-        CONVERT(nvarchar, value_in_use),
+        CONVERT(NVARCHAR(255), value_in_use),
         CASE
             WHEN value_in_use > 0 THEN 1
             ELSE 0
@@ -472,7 +472,7 @@ BEGIN
     INSERT INTO #FeaturesEnabled
     SELECT
         ''OPENROWSET'',
-        CONVERT(nvarchar, value_in_use) ,
+        CONVERT(NVARCHAR(255), value_in_use) ,
         CASE
             WHEN value_in_use > 0 THEN 1
             ELSE 0
@@ -487,7 +487,7 @@ BEGIN
     INSERT INTO #FeaturesEnabled
     SELECT
         ''ad hoc distributed queries'',
-        CONVERT(nvarchar, value_in_use) ,
+        CONVERT(NVARCHAR(255), value_in_use) ,
         CASE
             WHEN value_in_use > 0 THEN 1
             ELSE 0
@@ -687,7 +687,7 @@ END
 BEGIN
     exec('INSERT INTO #FeaturesEnabled
         SELECT ''IsCLREnabled'',
-        CONVERT(nvarchar, value_in_use),
+        CONVERT(NVARCHAR(255), value_in_use),
         CONVERT(int, value_in_use)
         FROM sys.configurations
         WHERE name = ''clr enabled''');

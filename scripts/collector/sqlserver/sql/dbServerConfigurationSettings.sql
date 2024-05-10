@@ -24,7 +24,7 @@ DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
 DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
 SELECT @PKEY = N'$(pkey)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR(255), SERVERPROPERTY('productversion')), 4));
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
@@ -32,13 +32,13 @@ BEGIN
     exec ('
     SELECT
         ''"' + @PKEY + '"'' AS pkey,
-        QUOTENAME(CONVERT(nvarchar(255),configuration_id),''"'') as configuration_id,
-        QUOTENAME(CONVERT(nvarchar(255),name),''"'') as name,
-        QUOTENAME(CONVERT(nvarchar(255),value),''"'') as value,
-        QUOTENAME(CONVERT(nvarchar(255),minimum),''"'') as minimum,
-        QUOTENAME(CONVERT(nvarchar(255),maximum),''"'') as maximum,
-        QUOTENAME(CONVERT(nvarchar(255),value_in_use),''"'') as value_in_use,
-        QUOTENAME(CONVERT(nvarchar(255),description),''"'') as description,
+        QUOTENAME(CONVERT(NVARCHAR(255),configuration_id),''"'') as configuration_id,
+        QUOTENAME(CONVERT(NVARCHAR(255),name),''"'') as name,
+        QUOTENAME(CONVERT(NVARCHAR(255),value),''"'') as value,
+        QUOTENAME(CONVERT(NVARCHAR(255),minimum),''"'') as minimum,
+        QUOTENAME(CONVERT(NVARCHAR(255),maximum),''"'') as maximum,
+        QUOTENAME(CONVERT(NVARCHAR(255),value_in_use),''"'') as value_in_use,
+        QUOTENAME(CONVERT(NVARCHAR(255),description),''"'') as description,
         ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
         ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id
     FROM sys.configurations');

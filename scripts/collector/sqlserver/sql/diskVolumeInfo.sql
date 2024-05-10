@@ -26,7 +26,7 @@ DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
 SELECT @PKEY = N'$(pkey)';
 SELECT @CLOUDTYPE = 'NONE';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR(255), SERVERPROPERTY('productversion')), 4));
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
@@ -45,9 +45,9 @@ BEGIN
                 THEN QUOTENAME(vs.logical_volume_name,''"'')
                 ELSE ''""'')
             END as logical_volume_name,
-            QUOTENAME(CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, vs.total_bytes / 1073741824.0),2)),''"'') AS total_size_gb,
-            QUOTENAME(CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, vs.available_bytes / 1073741824.0),2)),''"'') AS available_size_gb,
-            QUOTENAME(CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, vs.available_bytes) / CONVERT(FLOAT, vs.total_bytes),2)*100),''"'') AS space_free_pct,
+            QUOTENAME(CONVERT(NVARCHAR(255), ROUND(CONVERT(FLOAT, vs.total_bytes / 1073741824.0),2)),''"'') AS total_size_gb,
+            QUOTENAME(CONVERT(NVARCHAR(255), ROUND(CONVERT(FLOAT, vs.available_bytes / 1073741824.0),2)),''"'') AS available_size_gb,
+            QUOTENAME(CONVERT(NVARCHAR(255), ROUND(CONVERT(FLOAT, vs.available_bytes) / CONVERT(FLOAT, vs.total_bytes),2)*100),''"'') AS space_free_pct,
             ''""'' as cluster_block_size,
             ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
             ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id
@@ -76,9 +76,9 @@ BEGIN
             ''"CLOUD"'' as volume_mount_point,
             ''"AZURE"'' as file_system_type,
             ''"CLOUD"'' as logical_volume_name,
-            QUOTENAME(CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, total_size_gb),2)),''"'') as total_size_gb,
-            QUOTENAME(CONVERT(NVARCHAR, ROUND(CONVERT(FLOAT, available_size_gb),2)),''"'') as available_size_gb,
-            QUOTENAME(CONVERT(NVARCHAR, ROUND((1 - (total_size_gb / available_size_gb)) * 100,2)),''"'') as space_free_pct,
+            QUOTENAME(CONVERT(NVARCHAR(255), ROUND(CONVERT(FLOAT, total_size_gb),2)),''"'') as total_size_gb,
+            QUOTENAME(CONVERT(NVARCHAR(255), ROUND(CONVERT(FLOAT, available_size_gb),2)),''"'') as available_size_gb,
+            QUOTENAME(CONVERT(NVARCHAR(255), ROUND((1 - (total_size_gb / available_size_gb)) * 100,2)),''"'') as space_free_pct,
             ''""'' as cluster_block_size,
             ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
             ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id

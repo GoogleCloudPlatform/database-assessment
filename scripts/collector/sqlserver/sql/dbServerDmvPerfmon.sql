@@ -33,7 +33,7 @@ DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
 DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
 SELECT @PKEY = N'$(pkey)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR(255), SERVERPROPERTY('productversion')), 4));
 SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
@@ -89,18 +89,18 @@ BEGIN
     ),
     dmv_perfmon_counter_data as (
         SELECT
-            CONVERT(NVARCHAR,(ROUND((CONVERT(FLOAT,[Buffer cache hit ratio]) * 1.0 / CONVERT(FLOAT,[Buffer cache hit ratio base])) * 100.0,0))) as buffer_cache_hit_ratio,
-            CONVERT(NVARCHAR,[Checkpoint pages/sec]) as checkpoint_pages_sec,
-            CONVERT(NVARCHAR,[Free list stalls/sec]) as free_list_stalls_sec,
-            CONVERT(NVARCHAR,[Page life expectancy]) as page_life_expectancy,
-            CONVERT(NVARCHAR,[Page lookups/sec]) as page_lookups_sec,
-            CONVERT(NVARCHAR,[Page reads/sec]) as page_reads_sec,
-            CONVERT(NVARCHAR,[Page writes/sec]) as page_writes_sec,
-            CONVERT(NVARCHAR,[User Connections]) as user_connections,
-            CONVERT(NVARCHAR,[Memory Grants Pending]) as memory_grants_pending,
-            CONVERT(NVARCHAR,[Target Server Memory (KB)]) as target_server_memory_kb,
-            CONVERT(NVARCHAR,[Total Server Memory (KB)]) as total_server_memory_kb,
-            CONVERT(NVARCHAR,[Batch Requests/sec]) as batch_requests_sec
+            CONVERT(NVARCHAR(255),(ROUND((CONVERT(FLOAT,[Buffer cache hit ratio]) * 1.0 / CONVERT(FLOAT,[Buffer cache hit ratio base])) * 100.0,0))) as buffer_cache_hit_ratio,
+            CONVERT(NVARCHAR(255),[Checkpoint pages/sec]) as checkpoint_pages_sec,
+            CONVERT(NVARCHAR(255),[Free list stalls/sec]) as free_list_stalls_sec,
+            CONVERT(NVARCHAR(255),[Page life expectancy]) as page_life_expectancy,
+            CONVERT(NVARCHAR(255),[Page lookups/sec]) as page_lookups_sec,
+            CONVERT(NVARCHAR(255),[Page reads/sec]) as page_reads_sec,
+            CONVERT(NVARCHAR(255),[Page writes/sec]) as page_writes_sec,
+            CONVERT(NVARCHAR(255),[User Connections]) as user_connections,
+            CONVERT(NVARCHAR(255),[Memory Grants Pending]) as memory_grants_pending,
+            CONVERT(NVARCHAR(255),[Target Server Memory (KB)]) as target_server_memory_kb,
+            CONVERT(NVARCHAR(255),[Total Server Memory (KB)]) as total_server_memory_kb,
+            CONVERT(NVARCHAR(255),[Batch Requests/sec]) as batch_requests_sec
         FROM
             (
                 SELECT counter_name, cntr_value
@@ -140,40 +140,40 @@ BEGIN
             ''""'' AS available_mbytes,
             CASE
                 WHEN DISK_num_of_reads = 0 THEN ''"0"''
-                ELSE QUOTENAME(CONVERT(NVARCHAR,(DISK_num_of_bytes_read / DISK_num_of_reads)),''"'')
+                ELSE QUOTENAME(CONVERT(NVARCHAR(255),(DISK_num_of_bytes_read / DISK_num_of_reads)),''"'')
             END AS physicaldisk_avg_disk_bytes_read,
             CASE
                 WHEN SI.DISK_io_stall_write_ms = 0 THEN ''"0"''
-                ELSE QUOTENAME(CONVERT(NVARCHAR,(SI.DISK_num_of_bytes_written / SI.DISK_num_of_writes)),''"'')
+                ELSE QUOTENAME(CONVERT(NVARCHAR(255),(SI.DISK_num_of_bytes_written / SI.DISK_num_of_writes)),''"'')
             END AS physicaldisk_avg_disk_bytes_write,
             CASE
                 WHEN SI.DISK_num_of_reads = 0 THEN ''"0"''
-                ELSE QUOTENAME(CONVERT(NVARCHAR,(SI.DISK_io_stall_read_ms / SI.DISK_num_of_reads)),''"'')
+                ELSE QUOTENAME(CONVERT(NVARCHAR(255),(SI.DISK_io_stall_read_ms / SI.DISK_num_of_reads)),''"'')
             END AS physicaldisk_avg_disk_bytes_read_sec,
             CASE
                 WHEN SI.DISK_io_stall_write_ms = 0 THEN ''"0"''
-                ELSE QUOTENAME(CONVERT(NVARCHAR,(SI.DISK_io_stall_write_ms / SI.DISK_num_of_writes)),''"'')
+                ELSE QUOTENAME(CONVERT(NVARCHAR(255),(SI.DISK_io_stall_write_ms / SI.DISK_num_of_writes)),''"'')
             END AS physicaldisk_avg_disk_bytes_write_sec,
             CASE
                 WHEN (SI.DISK_num_of_reads = 0) THEN ''"0"''
-                ELSE QUOTENAME(CONVERT(NVARCHAR,((SI.DISK_num_of_reads /(SI.sample_ms / 1000)))),''"'')
+                ELSE QUOTENAME(CONVERT(NVARCHAR(255),((SI.DISK_num_of_reads /(SI.sample_ms / 1000)))),''"'')
             END AS physicaldisk_disk_reads_sec,
             CASE
                 WHEN (SI.DISK_num_of_writes = 0) THEN ''"0"''
-                ELSE QUOTENAME(CONVERT(NVARCHAR,((SI.DISK_num_of_writes /(SI.sample_ms / 1000)))),''"'')
+                ELSE QUOTENAME(CONVERT(NVARCHAR(255),((SI.DISK_num_of_writes /(SI.sample_ms / 1000)))),''"'')
             END AS physicaldisk_disk_writes_sec,
             CASE
-                WHEN UT.SystemIdle = 0 THEN QUOTENAME(CONVERT(NVARCHAR,(100 - UT.ProcessUtil)),''"'')
-                ELSE QUOTENAME(CONVERT(NVARCHAR,UT.SystemIdle),''"'')
+                WHEN UT.SystemIdle = 0 THEN QUOTENAME(CONVERT(NVARCHAR(255),(100 - UT.ProcessUtil)),''"'')
+                ELSE QUOTENAME(CONVERT(NVARCHAR(255),UT.SystemIdle),''"'')
             END AS processor_idle_time_pct,
-            QUOTENAME(CONVERT(NVARCHAR,UT.ProcessUtil),''"'') AS processor_total_time_pct,
+            QUOTENAME(CONVERT(NVARCHAR(255),UT.ProcessUtil),''"'') AS processor_total_time_pct,
             ''""'' AS processor_frequency,
             ''""'' AS processor_queue_length,
             QUOTENAME((SELECT buffer_cache_hit_ratio FROM dmv_perfmon_counter_data),''"'') AS buffer_cache_hit_ratio,
             QUOTENAME((SELECT checkpoint_pages_sec FROM dmv_perfmon_counter_data),''"'') AS checkpoint_pages_sec,
             CASE
                 WHEN (SI.DISK_num_of_reads = 0 AND SI.DISK_num_of_writes = 0) THEN ''"0"''
-                ELSE QUOTENAME(CONVERT(NVARCHAR,(SI.io_stall /(SI.DISK_num_of_reads + SI.DISK_num_of_writes))),''"'')
+                ELSE QUOTENAME(CONVERT(NVARCHAR(255),(SI.io_stall /(SI.DISK_num_of_reads + SI.DISK_num_of_writes))),''"'')
             END AS free_list_stalls_sec,
             QUOTENAME((SELECT page_life_expectancy FROM dmv_perfmon_counter_data),''"'') AS page_life_expectancy,
             QUOTENAME((SELECT page_lookups_sec FROM dmv_perfmon_counter_data),''"'') AS page_lookups_sec,
@@ -201,9 +201,9 @@ BEGIN CATCH
             host_name() as host_name,
             db_name() as database_name,
             'dmvPerfmon' as module_name,
-            SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
-            SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
-            SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
+            SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
+            SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
+            SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
             ERROR_MESSAGE() as error_message;
     END
 END CATCH

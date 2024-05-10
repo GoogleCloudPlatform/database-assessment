@@ -24,16 +24,16 @@ DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
 DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
 SELECT @PKEY = N'$(pkey)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR(255), SERVERPROPERTY('productversion')), 4));
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
 SELECT
     QUOTENAME(@PKEY,'"') as PKEY,
-    QUOTENAME(CONVERT(NVARCHAR,lower(name)),'"') as flag_name,
-    QUOTENAME(CONVERT(NVARCHAR,value),'"') as value,
-    QUOTENAME(CONVERT(NVARCHAR,value_in_use),'"') as value_in_use,
-    QUOTENAME(SUBSTRING(CONVERT(NVARCHAR,description), 1, 256),'"') AS description,
+    QUOTENAME(CONVERT(NVARCHAR(255),lower(name)),'"') as flag_name,
+    QUOTENAME(CONVERT(NVARCHAR(255),value),'"') as value,
+    QUOTENAME(CONVERT(NVARCHAR(255),value_in_use),'"') as value_in_use,
+    QUOTENAME(SUBSTRING(CONVERT(NVARCHAR(255),description), 1, 256),'"') AS description,
     QUOTENAME(@DMA_SOURCE_ID,'"') as dma_source_id,
     QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
 FROM

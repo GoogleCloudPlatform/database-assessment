@@ -40,10 +40,10 @@ INSERT INTO #dbccTraceTable exec('dbcc tracestatus()');
 
 SELECT
     QUOTENAME(@PKEY,'"') as PKEY,
-    QUOTENAME(CONVERT(NVARCHAR,a.name),'"') as name,
-    QUOTENAME(CONVERT(NVARCHAR,a.status),'"') as status,
-    QUOTENAME(CONVERT(NVARCHAR,a.global),'"') as global,
-    QUOTENAME(CONVERT(NVARCHAR,a.session),'"') as session,
+    QUOTENAME(CONVERT(NVARCHAR(255),a.name),'"') as name,
+    QUOTENAME(CONVERT(NVARCHAR(255),a.status),'"') as status,
+    QUOTENAME(CONVERT(NVARCHAR(255),a.global),'"') as global,
+    QUOTENAME(CONVERT(NVARCHAR(255),a.session),'"') as session,
     QUOTENAME(@DMA_SOURCE_ID,'"') as dma_source_id,
     QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
 from #dbccTraceTable a;
