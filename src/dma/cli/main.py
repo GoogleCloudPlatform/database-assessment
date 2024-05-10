@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Literal
 import click
 from click import group, pass_context
 from rich import prompt
+from rich.padding import Padding
 from rich.table import Table
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -342,6 +343,8 @@ async def _readiness_check(
                 console=console,
             )
             await workflow.execute()
+            console.print(Padding("", 1, expand=True))
+            console.rule("Processing collected data.", align="left")
             workflow.print_summary()
         await async_engine.dispose()
 

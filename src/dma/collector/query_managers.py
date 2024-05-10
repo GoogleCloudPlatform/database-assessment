@@ -57,32 +57,6 @@ class CanonicalQueryManager(QueryManager):
             if not self.available_queries("ddl"):
                 console.print(" [dim grey]:heavy_check_mark: No DDL scripts to load[/]")
 
-    async def execute_transformation_queries(self, *args: Any, **kwargs: Any) -> None:
-        """Execute pre-processing queries."""
-        console.print(Padding("TRANSFORMATION QUERIES", 1, style="bold", expand=True), width=80)
-        with console.status("[bold green]Executing queries...[/]") as status:
-            for script in self.available_queries("transformation"):
-                status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                await self.execute(script)
-                status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
-            if not self.available_queries("transformation"):
-                console.print(" [dim grey]:heavy_check_mark: No transformation queries for this database type[/]")
-
-    async def execute_assessment_queries(
-        self,
-        *args: Any,
-        **kwargs: Any,
-    ) -> None:
-        """Execute pre-processing queries."""
-        console.print(Padding("ASSESSMENT QUERIES", 1, style="bold", expand=True), width=80)
-        with console.status("[bold green]Executing queries...[/]") as status:
-            for script in self.available_queries("assessment"):
-                status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                await self.insert_update_delete(script)
-                status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
-            if not self.available_queries("assessment"):
-                console.print(" [dim grey]:heavy_check_mark: No assessment queries for this database type[/]")
-
 
 class CollectionQueryManager(QueryManager):
     """Collection Query Manager"""
@@ -132,7 +106,7 @@ class CollectionQueryManager(QueryManager):
             self.manual_id = manual_id
         if db_version is not None:
             self.db_version = db_version
-        if execution_id is None or source_id is None or db_version is None:
+        if self.execution_id is None or self.source_id is None or self.db_version is None:
             init_results = await self.execute_init_queries()
             self.source_id = (
                 source_id if source_id is not None else cast("str | None", init_results.get("init_get_source_id", None))

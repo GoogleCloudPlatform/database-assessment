@@ -36,7 +36,7 @@ class CollectionExtractor(BaseWorkflow):
         self.import_to_table(collection)
 
     async def process_collection(self) -> None:
-        await self.canonical_query_manager.execute_transformation_queries()
+        """Process Collections"""
 
     def print_summary(self) -> None:
         """Print Summary of the Migration Readiness Assessment."""

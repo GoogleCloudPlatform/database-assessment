@@ -58,12 +58,8 @@ class ReadinessCheck(CollectionExtractor):
 
     async def extract_collection(self) -> None:
         await super().extract_collection()
-        extended_collection = await self.collection_query_manager.execute_collection_queries()
+        extended_collection = await self.collection_query_manager.execute_extended_collection_queries()
         self.import_to_table(extended_collection)
-
-    async def process_collection(self) -> None:
-        await super().process_collection()
-        await self.canonical_query_manager.execute_assessment_queries()
 
     def print_summary(self) -> None:
         """Print Summary of the Migration Readiness Assessment."""
