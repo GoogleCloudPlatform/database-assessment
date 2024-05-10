@@ -1,4 +1,4 @@
--- name: transformation-01-readiness-check-ddl!
+-- name: ddl-01-readiness-check-ddl!
 create or replace table database_summary(
     collection_key varchar,
     database_name varchar,
@@ -7,7 +7,6 @@ create or replace table database_summary(
   );
 
 create or replace table readiness_check_summary(
-    collection_key varchar,
     migration_target ENUM (
       'CLOUDSQL',
       'ALLOYDB',
@@ -16,6 +15,6 @@ create or replace table readiness_check_summary(
       'BIGQUERY'
     ),
     severity ENUM ('INFO', 'WARNING', 'ERROR', 'PASS'),
-    assessment_type varchar,
+    rule_code varchar,
     info varchar
   );

@@ -143,7 +143,7 @@ def collect_data(
         asyncio.run(
             _collect_data(
                 console=console,
-                db_type=db_type,
+                db_type=db_type.upper(),  # type: ignore[arg-type]
                 username=username,
                 password=password,
                 hostname=hostname,
@@ -158,7 +158,7 @@ def collect_data(
 
 async def _collect_data(
     console: Console,
-    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
     username: str,
     password: str,
     hostname: str,
@@ -299,7 +299,7 @@ def readiness_assessment(
         asyncio.run(
             _readiness_check(
                 console=console,
-                db_type=db_type,
+                db_type=db_type.upper(),  # type: ignore[arg-type]
                 username=username,
                 password=password,
                 hostname=hostname,
@@ -314,7 +314,7 @@ def readiness_assessment(
 
 async def _readiness_check(
     console: Console,
-    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
     username: str,
     password: str,
     hostname: str,
@@ -342,6 +342,7 @@ async def _readiness_check(
                 console=console,
             )
             await workflow.execute()
+            workflow.print_summary()
         await async_engine.dispose()
 
 

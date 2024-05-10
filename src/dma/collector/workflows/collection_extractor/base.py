@@ -5,8 +5,6 @@ from typing import TYPE_CHECKING, Literal
 from rich.table import Table
 
 from dma.collector.workflows.base import BaseWorkflow
-from dma.collector.workflows.collection_extractor._mysql import print_summary_mysql
-from dma.collector.workflows.collection_extractor._postgres import print_summary_postgres
 from dma.lib.exceptions import ApplicationError
 
 if TYPE_CHECKING:
@@ -22,7 +20,7 @@ class CollectionExtractor(BaseWorkflow):
         local_db: DuckDBPyConnection,
         canonical_query_manager: CanonicalQueryManager,
         collection_query_manager: CollectionQueryManager,
-        db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+        db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
         console: Console,
     ) -> None:
         self.collection_query_manager = collection_query_manager
@@ -32,7 +30,6 @@ class CollectionExtractor(BaseWorkflow):
         await super().execute()
         await self.extract_collection()
         await self.process_collection()
-        self.print_summary()
 
     async def extract_collection(self) -> None:
         collection = await self.collection_query_manager.execute_collection_queries()
@@ -47,9 +44,13 @@ class CollectionExtractor(BaseWorkflow):
         table.add_column("title", style="cyan", width=80)
         table.add_row("Collection Summary")
         self.console.print(table)
-        if self.db_type == "postgres":
+        if self.db_type == "POSTGRES":
+            from dma.collector.workflows.collection_extractor._postgres import print_summary_postgres  # noqa: PLC0415
+
             print_summary_postgres(console=self.console, local_db=self.local_db, manager=self.canonical_query_manager)
-        elif self.db_type == "mysql":
+        elif self.db_type == "MYSQL":
+            from dma.collector.workflows.collection_extractor._mysql import print_summary_mysql  # noqa: PLC0415
+
             print_summary_mysql(console=self.console, local_db=self.local_db, manager=self.canonical_query_manager)
         else:
             msg = f"{self.db_type} is not implemented."

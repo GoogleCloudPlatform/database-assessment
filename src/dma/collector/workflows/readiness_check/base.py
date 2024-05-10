@@ -7,7 +7,6 @@ from rich.console import Console
 from rich.table import Table
 
 from dma.collector.workflows.collection_extractor.base import CollectionExtractor
-from dma.collector.workflows.readiness_check._postgres.main import PostgresReadinessCheckExecutor
 from dma.lib.exceptions import ApplicationError
 
 if TYPE_CHECKING:
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
 
 @dataclass
 class ReadinessCheckTargetConfig:
-    db_type: Literal["postgres", "mysql", "oracle"]
+    db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"]
     minimum_supported_major_version: float
     maximum_supported_major_version: float | None
 
@@ -30,7 +29,7 @@ class ReadinessCheck(CollectionExtractor):
         local_db: DuckDBPyConnection,
         canonical_query_manager: CanonicalQueryManager,
         collection_query_manager: CollectionQueryManager,
-        db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+        db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
         console: Console,
     ) -> None:
         self.executor: ReadinessCheckExecutor | None = None
@@ -38,14 +37,16 @@ class ReadinessCheck(CollectionExtractor):
 
     async def execute(self) -> None:
         await super().execute()
-        await self.extract_collection()
-        await self.process_collection()
         self.execute_readiness_check()
-        self.print_summary()
 
     def execute_readiness_check(self) -> None:
         """Execute postgres assessments"""
-        if self.db_type == "postgres":
+        if self.db_type == "POSTGRES":
+            # lazy loaded to help with circular import issues
+            from dma.collector.workflows.readiness_check._postgres.main import (  # noqa: PLC0415
+                PostgresReadinessCheckExecutor,
+            )
+
             self.executor = PostgresReadinessCheckExecutor(
                 readiness_check=self,
                 console=self.console,
@@ -71,7 +72,7 @@ class ReadinessCheck(CollectionExtractor):
         table.add_row("Migration Readiness Report")
         self.console.print(table)
         if self.executor:
-            self.print_summary()
+            self.executor.print_summary()
         else:
             msg = f"{self.db_type} is not implemented."
             raise ApplicationError(msg)
@@ -83,7 +84,7 @@ class ReadinessCheckExecutor:
         self.readiness_check = readiness_check
         self.local_db = readiness_check.local_db
         self.canonical_query_manager = readiness_check.canonical_query_manager
-        self.db_version = readiness_check.db_type
+        self.db_version = readiness_check.collection_query_manager.db_version
 
     def execute(self) -> None:  # noqa: PLR6301
         """Execute checks"""
@@ -97,12 +98,12 @@ class ReadinessCheckExecutor:
 
     def save_rule_result(
         self,
-        migration_target: Literal["cloudsql", "alloydb"],
+        migration_target: Literal["CLOUDSQL", "ALLOYDB"],
         rule_code: str,
-        severity: Literal["error", "warning", "info", "pass"],
-        message: str,
+        severity: Literal["ERROR", "WARNING", "INFO", "PASS"],
+        info: str,
     ) -> None:
         self.local_db.execute(
-            "insert into readiness_check_summary(migration_target, rule_code, severity, message) values (?,?,?,?)",
-            [migration_target, rule_code, severity, message],
+            "insert into readiness_check_summary(migration_target, rule_code, severity, info) values (?,?,?,?)",
+            [migration_target, rule_code, severity, info],
         )

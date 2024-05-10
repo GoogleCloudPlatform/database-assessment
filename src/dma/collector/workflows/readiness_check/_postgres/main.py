@@ -17,6 +17,7 @@ from dma.collector.workflows.readiness_check.base import (
     ReadinessCheckExecutor,
     ReadinessCheckTargetConfig,
 )
+from dma.lib.exceptions import ApplicationError
 
 if TYPE_CHECKING:
     from rich.console import Console
@@ -24,18 +25,18 @@ if TYPE_CHECKING:
 
 @dataclass
 class PostgresReadinessCheckTargetConfig(ReadinessCheckTargetConfig):
-    db_variant: Literal["cloudsql", "alloydb"]
+    db_variant: Literal["CLOUDSQL", "ALLOYDB"]
     supported_collations: set[str]
     supported_extensions: set[str]
     minimum_supported_rds_major_version: float
-    db_type_map: dict[float, str] = field(default=DB_TYPE_MAP)
-    rds_minor_version_support_map: dict[float, int] = field(default=RDS_MINOR_VERSION_SUPPORT_MAP)
+    db_version_map: dict[float, str] = field(default_factory=lambda: DB_TYPE_MAP)
+    rds_minor_version_support_map: dict[float, int] = field(default_factory=lambda: RDS_MINOR_VERSION_SUPPORT_MAP)
 
 
 POSTGRES_RULE_CONFIGURATIONS: list[PostgresReadinessCheckTargetConfig] = [
     PostgresReadinessCheckTargetConfig(
-        db_type="postgres",
-        db_variant="alloydb",
+        db_type="POSTGRES",
+        db_variant="ALLOYDB",
         minimum_supported_major_version=9.4,
         minimum_supported_rds_major_version=9.6,
         maximum_supported_major_version=15,
@@ -43,8 +44,8 @@ POSTGRES_RULE_CONFIGURATIONS: list[PostgresReadinessCheckTargetConfig] = [
         supported_extensions=set(),
     ),
     PostgresReadinessCheckTargetConfig(
-        db_type="postgres",
-        db_variant="cloudsql",
+        db_type="POSTGRES",
+        db_variant="CLOUDSQL",
         minimum_supported_major_version=9.4,
         minimum_supported_rds_major_version=9.6,
         maximum_supported_major_version=15,
@@ -70,7 +71,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         self._version_check()
 
     def _collation_check(self) -> None:
-        rule_code = "UNSUPPORTED_COLLATION"
+        rule_code = "COLLATION"
         result = self.local_db.sql(
             "select distinct database_collation from collection_postgres_database_details"
         ).fetchmany()
@@ -81,19 +82,22 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "error",
+                    "ERROR",
                     f"Unsupported collation: {unsupported_collation} is not supported on this instance",
                 )
             if len(unsupported_collations) == 0:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "pass",
+                    "PASS",
                     "All utilized collations are supported.",
                 )
 
     def _version_check(self) -> None:
-        rule_code = "INCOMPATIBLE_DATABASE_VERSION"
+        rule_code = "DATABASE_VERSION"
+        if self.db_version is None:
+            msg = "Database version was not set."
+            raise ApplicationError(msg)
         detected_major_version = get_db_major_version(self.db_version)
         detected_minor_version = get_db_minor_version(self.db_version)
         is_rds = self._is_rds()
@@ -104,72 +108,77 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     self.save_rule_result(
                         c.db_variant,
                         rule_code,
-                        "error",
+                        "ERROR",
                         f"Source RDS database server has unsupported minor version: ({detected_minor_version})",
                     )
                 else:
                     self.save_rule_result(
                         c.db_variant,
                         rule_code,
-                        "pass",
+                        "PASS",
                         f"Version {self.db_version} is supported.  Please ensure that you selected a version that meets or exceeds version {detected_major_version!s}.",
                     )
             elif (
-                detected_major_version not in c.db_type_map
+                detected_major_version not in c.db_version_map
                 or detected_major_version < c.minimum_supported_major_version
             ):
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "error",
+                    "ERROR",
                     f"Replication from source database server ({self.db_version}) is not supported",
                 )
             else:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "pass",
+                    "PASS",
                     f"Version {self.db_version} is supported.  Please ensure that you selected a version that meets or exceeds version {detected_major_version!s}.",
                 )
 
     def print_summary(self) -> None:
         """Print Summary of the Migration Readiness Assessment."""
-        self._print_database_details()
+        # self._print_database_details()  # noqa: ERA001
         self._print_readiness_check_summary()
 
     def _print_database_details(
         self,
     ) -> None:
         """Print Summary of the Migration Readiness Assessment."""
-        calculated_metrics = self.local_db.sql(
+        results = self.local_db.sql(
             """
                 select metric_category, metric_name, metric_value
                 from collection_postgres_calculated_metrics
             """,
         ).fetchall()
-        count_table = Table(show_edge=False, width=80)
+        count_table = Table(min_width=80)
         count_table.add_column("Variable Category", justify="right", style="green")
         count_table.add_column("Variable", justify="right", style="green")
         count_table.add_column("Value", justify="right", style="green")
-        for row in calculated_metrics:
+        for row in results:
             count_table.add_row(*[str(col) for col in row])
         self.console.print(count_table)
 
     def _print_readiness_check_summary(self) -> None:
         """Print Summary of the Migration Readiness Assessment."""
-        calculated_metrics = self.local_db.sql(
+        results = self.local_db.sql(
             """
-                select severity, assessment_type, info
-                from alloydb_readiness_check_summary
+                select severity, rule_code, info
+                from readiness_check_summary
+                where migration_target = 'ALLOYDB'
             """,
         ).fetchall()
-        count_table = Table(show_edge=False, width=80)
-        count_table.add_column("Severity", justify="right", style="green")
-        count_table.add_column("Rule Type", justify="right", style="green")
-        count_table.add_column("Info", justify="right", style="green")
+        count_table = Table(min_width=80)
+        count_table.add_column("Severity", justify="right")
+        count_table.add_column("Rule Code", justify="left")
+        count_table.add_column("Info", justify="left")
 
-        for row in calculated_metrics:
-            count_table.add_row(*[str(col) for col in row])
+        for row in results:
+            count_table.add_row(
+                f"[bold green]{row[0]}[/]" if row[0] == "PASS" else f"[bold red]{row[0]}[/]",
+                f"[bold]{row[1]}[/]",
+                row[2],
+            )
         self.console.print(count_table)
 
     # helper methods

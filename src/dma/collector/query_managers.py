@@ -19,6 +19,7 @@ import aiosql
 from rich.padding import Padding
 
 from dma.cli._utils import console
+from dma.collector.workflows.readiness_check._postgres.helpers import get_db_major_version
 from dma.lib.db.query_manager import QueryManager
 from dma.lib.exceptions import ApplicationError
 from dma.utils import module_to_os_path
@@ -243,7 +244,7 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
         if self.db_version is None:
             msg = "Database Version was not set.  Ensure the initialization step complete successfully."
             raise ApplicationError(msg)
-        major_version = int(self.db_version[:2])
+        major_version = get_db_major_version(self.db_version)
         version_prefix = "base" if major_version > 13 else "13" if major_version == 13 else "12"
         return {
             f"collection_postgres_{version_prefix}_table_details",
@@ -268,7 +269,7 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
         if self.db_version is None:
             msg = "Database Version was not set.  Ensure the initialization step complete successfully."
             raise ApplicationError(msg)
-        major_version = int(self.db_version[:2])
+        major_version = get_db_major_version(self.db_version)
         version_prefix = "base" if major_version > 13 else "13" if major_version == 13 else "12"
         return {
             f"collection_postgres_{version_prefix}_table_details": "postgres_table_details",
