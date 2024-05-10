@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from typing import cast
 
 # Matches version numbers of both old (Eg: 9.6.2) and new formats (Eg: 10.2).
 pg_version_regex = re.compile(r"(?P<version>\d+\.\d+(\.\d+)?).*")
@@ -27,4 +28,8 @@ def get_db_major_version(db_version: str) -> float:
 
     split = db_version.split(".")
     db_version = ".".join(split[:2]) if db_version.startswith("9") else ".".join(split[:1])
-    return float(db_version)
+    try:
+        val = float(db_version)
+    except ValueError:
+        val = cast("float", -1)
+    return val
