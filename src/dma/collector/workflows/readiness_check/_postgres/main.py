@@ -76,13 +76,13 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def execute(self) -> None:
         """Execute postgres checks"""
-        self._check_collation()
         self._check_version()
-        self._check_extensions()
-        self._check_fdw()
+        self._check_collation()
         self._check_pglogical_installed()
         self._check_rds_logical_replication()
         self._check_wal_level()
+        self._check_extensions()
+        self._check_fdw()
 
     def _check_collation(self) -> None:
         rule_code = "COLLATION"
@@ -172,7 +172,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     c.db_variant,
                     rule_code,
                     "PASS",
-                    "`pglogical` is installed on the database`",
+                    "`pglogical` is installed on the database",
                 )
 
     def _check_wal_level(self) -> None:
@@ -302,25 +302,34 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _print_readiness_check_summary(self) -> None:
         """Print Summary of the Migration Readiness Assessment."""
-        results = self.local_db.sql(
-            """
-                select severity, rule_code, info
-                from readiness_check_summary
-                where migration_target = 'ALLOYDB'
-            """,
-        ).fetchall()
-        count_table = Table(min_width=80)
-        count_table.add_column("Severity", justify="right")
-        count_table.add_column("Rule Code", justify="left")
-        count_table.add_column("Info", justify="left")
+        db_variants: set[PostgresVariants] = {"ALLOYDB", "CLOUDSQL"}
 
-        for row in results:
-            count_table.add_row(
-                f"[bold green]{row[0]}[/]" if row[0] == "PASS" else f"[bold red]{row[0]}[/]",
-                f"[bold]{row[1]}[/]",
-                row[2],
+        def table_for_target(migration_target: PostgresVariants) -> None:
+            results = self.local_db.execute(
+                """
+                    select severity, rule_code, info
+                    from readiness_check_summary
+                    where migration_target = ?
+                """,
+                [migration_target],
+            ).fetchall()
+            count_table = Table(
+                min_width=80, title=f"{migration_target} Compatibility", leading=5, title_justify="left"
             )
-        self.console.print(count_table)
+            count_table.add_column("Severity", justify="right")
+            count_table.add_column("Rule Code", justify="left")
+            count_table.add_column("Info", justify="left")
+
+            for row in results:
+                count_table.add_row(
+                    f"[bold green]{row[0]}[/]" if row[0] == "PASS" else f"[bold red]{row[0]}[/]",
+                    f"[bold]{row[1]}[/]",
+                    row[2],
+                )
+            self.console.print(count_table)
+
+        for v in db_variants:
+            table_for_target(v)
 
     # helper methods
     def _is_rds(self) -> bool:
