@@ -38,6 +38,7 @@ class PostgresReadinessCheckTargetConfig(ReadinessCheckTargetConfig):
     minimum_supported_rds_major_version: float
     db_version_map: dict[float, str] = field(default_factory=lambda: DB_TYPE_MAP)
     rds_minor_version_support_map: dict[float, int] = field(default_factory=lambda: RDS_MINOR_VERSION_SUPPORT_MAP)
+    extra_replication_subscriptions_required: int = 10
 
 
 POSTGRES_RULE_CONFIGURATIONS: list[PostgresReadinessCheckTargetConfig] = [
@@ -50,6 +51,7 @@ POSTGRES_RULE_CONFIGURATIONS: list[PostgresReadinessCheckTargetConfig] = [
         supported_collations=ALLOYDB_SUPPORTED_COLLATIONS,
         supported_extensions=ALLOYDB_SUPPORTED_EXTENSIONS,
         supported_fdws=ALLOYDB_SUPPORTED_FDWS,
+        extra_replication_subscriptions_required=10,
     ),
     PostgresReadinessCheckTargetConfig(
         db_type="POSTGRES",
@@ -60,6 +62,7 @@ POSTGRES_RULE_CONFIGURATIONS: list[PostgresReadinessCheckTargetConfig] = [
         supported_collations=CLOUDSQL_SUPPORTED_COLLATIONS,
         supported_extensions=CLOUDSQL_SUPPORTED_EXTENSIONS,
         supported_fdws=CLOUDSQL_SUPPORTED_FDWS,
+        extra_replication_subscriptions_required=10,
     ),
 ]
 
@@ -81,6 +84,9 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         self._check_pglogical_installed()
         self._check_rds_logical_replication()
         self._check_wal_level()
+        self._check_max_replication_slots()
+        self._check_max_wal_senders_replication_slots()
+        self._check_max_worker_processes()
         self._check_extensions()
         self._check_fdw()
 
@@ -180,7 +186,13 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         if self.db_version is None:
             msg = "Database version was not set."
             raise ApplicationError(msg)
-        wal_level = self._is_rds()
+        result = self.local_db.sql("""
+            select c.setting_value as wal_level
+            from collection_postgres_settings c
+            where c.setting_name='wal_level'
+            and c.setting_value!='logical';
+        """).fetchone()
+        wal_level = result[0] if result is not None else "unset"
         for c in self.rule_config:
             if wal_level != "logical":
                 self.save_rule_result(
@@ -194,7 +206,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     c.db_variant,
                     rule_code,
                     "PASS",
-                    "`pglogical` is installed on the database`",
+                    '`wal_level` is correctly set to "logical".`',
                 )
 
     def _check_rds_logical_replication(self) -> None:
@@ -222,6 +234,174 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                         "PASS",
                         '`rds.logical_replication` was correctly set to "on"`',
                     )
+
+    def _check_max_replication_slots(self) -> None:
+        rule_code = "MAX_REPLICATION_SLOTS"
+        url_link = "Refer https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
+
+        if self.db_version is None:
+            msg = "Database version was not set."
+            raise ApplicationError(msg)
+        db_count_result = self.local_db.sql(
+            "select count(*) from extended_collection_postgres_all_databases"
+        ).fetchone()
+        db_count = int(db_count_result[0]) if db_count_result is not None else 0
+        total_replication_slots_result = self.local_db.sql("""
+            select c.setting_value as max_replication_slots
+            from collection_postgres_settings c
+            where c.setting_name='max_replication_slots';
+        """).fetchone()
+        total_replication_slots = (
+            int(total_replication_slots_result[0]) if total_replication_slots_result is not None else 0
+        )
+        used_replication_slots_result = self.local_db.sql(
+            "select count(*) from collection_postgres_replication_slots"
+        ).fetchone()
+        used_replication_slots = (
+            int(used_replication_slots_result[0]) if used_replication_slots_result is not None else 0
+        )
+        required_replication_slots = db_count + used_replication_slots
+        for c in self.rule_config:
+            max_required_replication_slots = required_replication_slots + c.extra_replication_subscriptions_required
+            if total_replication_slots < required_replication_slots:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "ERROR",
+                    f"Insufficient `max_replication_slots`: {total_replication_slots}, should be set to at leat {required_replication_slots}. Up to {c.extra_replication_subscriptions_required} additional subscriptions might be required depending on the parallelism level set for migration. {url_link}",
+                )
+            elif total_replication_slots < max_required_replication_slots:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "WARNING",
+                    f"`max_replication_slots` current value: {total_replication_slots}, this might need to be increased to {max_required_replication_slots} depending on the parallelism level set for migration. {url_link}",
+                )
+            else:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "PASS",
+                    f"`max_replication_slots` current value: {total_replication_slots}, this meets or exceeds the maximum required value of {max_required_replication_slots}",
+                )
+
+    def _check_max_wal_senders(self) -> None:
+        rule_code = "MAX_WAL_SENDERS"
+        url_link = "Refer https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
+
+        if self.db_version is None:
+            msg = "Database version was not set."
+            raise ApplicationError(msg)
+        db_count_result = self.local_db.sql(
+            "select count(*) from extended_collection_postgres_all_databases"
+        ).fetchone()
+        db_count = int(db_count_result[0]) if db_count_result is not None else 0
+        wal_senders_result = self.local_db.sql("""
+            select c.setting_value as max_wal_senders
+            from collection_postgres_settings c
+            where c.setting_name='max_wal_senders';
+        """).fetchone()
+        wal_senders = int(wal_senders_result[0]) if wal_senders_result is not None else 0
+        for c in self.rule_config:
+            max_required_subscriptions = db_count + c.extra_replication_subscriptions_required
+            if wal_senders < db_count:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "ERROR",
+                    f"Insufficient `max_wal_senders`: {wal_senders}, should be set to at leat {db_count}. Up to {c.extra_replication_subscriptions_required} additional subscriptions might be required depending on the parallelism level set for migration. {url_link}",
+                )
+            elif wal_senders < max_required_subscriptions:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "WARNING",
+                    f"`max_wal_senders` current value: {wal_senders}, this might need to be increased to {max_required_subscriptions} depending on the parallelism level set for migration. {url_link}",
+                )
+            else:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "PASS",
+                    f"`max_wal_senders` current value: {wal_senders}, this meets or exceeds the maximum required value of {max_required_subscriptions}",
+                )
+
+    def _check_max_wal_senders_replication_slots(self) -> None:
+        rule_code = "WAL_SENDERS_REPLICATION_SLOTS"
+
+        if self.db_version is None:
+            msg = "Database version was not set."
+            raise ApplicationError(msg)
+        wal_senders_result = self.local_db.sql("""
+            select c.setting_value as max_wal_senders
+            from collection_postgres_settings c
+            where c.setting_name='max_wal_senders';
+        """).fetchone()
+        wal_senders = int(wal_senders_result[0]) if wal_senders_result is not None else 0
+        total_replication_slots_result = self.local_db.sql("""
+            select c.setting_value as max_replication_slots
+            from collection_postgres_settings c
+            where c.setting_name='max_replication_slots';
+        """).fetchone()
+        total_replication_slots = (
+            int(total_replication_slots_result[0]) if total_replication_slots_result is not None else 0
+        )
+        for c in self.rule_config:
+            if wal_senders < total_replication_slots:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "ERROR",
+                    f"Insufficient `max_wal_senders`: {wal_senders}, should be set to at least the same as `max_replication_slots`: {total_replication_slots}.",
+                )
+            else:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "PASS",
+                    f"`max_wal_senders` current value: {wal_senders}, this meets or exceeds the `max_replication_slots` value of {total_replication_slots}",
+                )
+
+    def _check_max_worker_processes(self) -> None:
+        rule_code = "MAX_WORKER_PROCESES"
+        url_link = "Refer https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
+
+        if self.db_version is None:
+            msg = "Database version was not set."
+            raise ApplicationError(msg)
+        db_count_result = self.local_db.sql(
+            "select count(*) from extended_collection_postgres_all_databases"
+        ).fetchone()
+        db_count = int(db_count_result[0]) if db_count_result is not None else 0
+        max_worker_processes_result = self.local_db.sql("""
+            select c.setting_value as max_worker_processes
+            from collection_postgres_settings c
+            where c.setting_name='max_worker_processes';
+        """).fetchone()
+        max_worker_processes = int(max_worker_processes_result[0]) if max_worker_processes_result is not None else 0
+        for c in self.rule_config:
+            max_required_subscriptions = db_count + c.extra_replication_subscriptions_required
+            if max_worker_processes < db_count:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "ERROR",
+                    f"Insufficient `max_worker_processes`: {max_worker_processes}, should be set to at leat {db_count}. Up to {c.extra_replication_subscriptions_required} additional subscriptions might be required depending on the parallelism level set for migration. {url_link}",
+                )
+            elif max_worker_processes < max_required_subscriptions:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "WARNING",
+                    f"`max_worker_processes` current value: {max_worker_processes}, this might need to be increased to {max_required_subscriptions} depending on the parallelism level set for migration. {url_link}",
+                )
+            else:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "PASS",
+                    f"`max_worker_processes` current value: {max_worker_processes}, this meets or exceeds the maximum required value of {max_required_subscriptions}",
+                )
 
     def _check_extensions(self) -> None:
         rule_code = "EXTENSIONS"
@@ -259,7 +439,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             group by foreign_data_wrapper_name
         """).fetchmany()
         fdws = {row[0] for row in result}
-        fdw_table_count = {row[1] for row in result}
+        fdw_table_count = {int(row[1]) for row in result}
         for c in self.rule_config:
             unsupported_fdws = fdws.difference(c.supported_fdws)
             for unsupported_fdw, table_count in zip(unsupported_fdws, fdw_table_count):
@@ -322,7 +502,11 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
             for row in results:
                 count_table.add_row(
-                    f"[bold green]{row[0]}[/]" if row[0] == "PASS" else f"[bold red]{row[0]}[/]",
+                    f"[bold green]{row[0]}[/]"
+                    if row[0] == "PASS"
+                    else f"[bold yellow]{row[0]}[/]"
+                    if row[0] == "WARNING"
+                    else f"[bold red]{row[0]}[/]",
                     f"[bold]{row[1]}[/]",
                     row[2],
                 )

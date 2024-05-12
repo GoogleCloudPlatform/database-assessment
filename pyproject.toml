@@ -147,6 +147,7 @@ exclude = ["/.github", "/docs"]
 
 # Default environment with production dependencies
 [tool.hatch.envs.default]
+installer = "uv"
 lock-filename = "requirements/requirements.txt"
 pip-compile-constraint = "default"
 pip-compile-hashes = false

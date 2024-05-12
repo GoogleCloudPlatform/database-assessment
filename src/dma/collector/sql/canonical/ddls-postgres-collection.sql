@@ -775,3 +775,10 @@ select pkey,
   toast_index_read,
   database_name
 from collection_postgres_12_table_details;
+
+create or replace table extended_collection_postgres_all_databases(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    database_name VARCHAR
+  );
