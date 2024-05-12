@@ -178,7 +178,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     c.db_variant,
                     rule_code,
                     "PASS",
-                    "`pglogical` is installed on the database",
+                    "`pglogical` is installed on the database.",
                 )
 
     def _check_wal_level(self) -> None:
@@ -206,7 +206,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     c.db_variant,
                     rule_code,
                     "PASS",
-                    '`wal_level` is correctly set to "logical".`',
+                    '`wal_level` is correctly set to "logical".',
                 )
 
     def _check_rds_logical_replication(self) -> None:
@@ -214,25 +214,30 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         if self.db_version is None:
             msg = "Database version was not set."
             raise ApplicationError(msg)
-        detected_major_version = get_db_major_version(self.db_version)
-        detected_minor_version = get_db_minor_version(self.db_version)
         is_rds = self._is_rds()
+        rds_logical_replication_result = self.local_db.sql("""
+            select c.setting_value
+            from collection_postgres_settings c
+            where c.setting_name='rds.logical_replication';
+        """).fetchone()
+        rds_logical_replication = (
+            rds_logical_replication_result[0] if rds_logical_replication_result is not None else "unset"
+        )
         if is_rds:
             for c in self.rule_config:
-                supported_minor_version = c.rds_minor_version_support_map.get(detected_major_version)
-                if supported_minor_version and detected_minor_version < supported_minor_version:
+                if rds_logical_replication != "logical":
                     self.save_rule_result(
                         c.db_variant,
                         rule_code,
                         "ERROR",
-                        f'`rds.logical_replication` should be set to "on"` instead of ({detected_minor_version})',
+                        f'`rds.logical_replication` should be set to "on" instead of ({rds_logical_replication})',
                     )
                 else:
                     self.save_rule_result(
                         c.db_variant,
                         rule_code,
                         "PASS",
-                        '`rds.logical_replication` was correctly set to "on"`',
+                        '`rds.logical_replication` was correctly set to "on"',
                     )
 
     def _check_max_replication_slots(self) -> None:
@@ -424,7 +429,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     c.db_variant,
                     rule_code,
                     "PASS",
-                    "All utilized collations are supported.",
+                    "All utilized extensions are supported.",
                 )
 
     def _check_fdw(self) -> None:
