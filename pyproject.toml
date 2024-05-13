@@ -95,7 +95,7 @@ mysql = ["asyncmy>=0.2.9"]
 oracle = ["oracledb"]
 postgres = ["asyncpg>=0.29.0"]
 remote = ["pyinfra"]
-server = ["litestar[structlog,jinja]>=2.7.0", "litestar-granian>=0.2.3"]
+server = ["litestar[structlog,jinja]>=2.8.3", "litestar-granian>=0.3.0"]
 testing = [
     "nodeenv",
     # required test dependencies
