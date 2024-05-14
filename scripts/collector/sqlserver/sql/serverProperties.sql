@@ -288,14 +288,25 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''TotalLockedPageAllocInMB'', CONVERT(varchar, (locked_page_allocations_kb/1024)) FROM sys.dm_os_process_memory')
     exec('INSERT INTO #serverProperties SELECT ''TotalUserVirtualMemoryInMB'', CONVERT(varchar, (total_virtual_address_space_kb/1024)) FROM sys.dm_os_process_memory')
     exec('INSERT INTO #serverProperties SELECT ''MaxConfiguredSQLServerMemoryMB'', CASE WHEN value = maximum THEN ''0'' ELSE CONVERT(varchar, (value)) END from sys.configurations where name = ''max server memory (MB)''')
-    exec('INSERT INTO #serverProperties SELECT ''IpV4Address'', registry_data.ip_address
-        FROM (SELECT CONVERT(varchar(max), value_data) ip_address FROM sys.dm_server_registry WHERE value_name IN (''IpAddress'')) registry_data
-            WHERE registry_data.ip_address LIKE ''%.%.%.%'' AND registry_data.ip_address NOT LIKE ''127.%.%.%''')
-    exec('INSERT INTO #serverProperties SELECT TOP 1 ''IpV6Address'', registry_data.ip_address
-        FROM (SELECT CONVERT(varchar(max), value_data) ip_address FROM sys.dm_server_registry WHERE value_name IN (''IpAddress'')) registry_data
-            WHERE registry_data.ip_address NOT LIKE ''%.%.%.%''
-                AND registry_data.ip_address NOT LIKE ''127.%.%.%''
-                AND registry_data.ip_address NOT LIKE ''::1%''')
+    BEGIN TRY
+        exec('INSERT INTO #serverProperties SELECT TOP 1 ''IpV4Address'', CONVERT(varchar(max), value_data) 
+            FROM sys.dm_server_registry WHERE value_name IN (''IpAddress'')
+            AND CONVERT(varchar(max), value_data) LIKE ''%.%.%.%'' AND CONVERT(varchar(max), value_data) NOT LIKE ''127.%.%.%''
+            AND CONVERT(varchar(max), value_data) NOT LIKE ''%::%''')
+    END TRY
+    BEGIN CATCH
+        exec('INSERT INTO #serverProperties SELECT ''IpV4Address'', ''UNDETERMINED''')
+    END CATCH
+    BEGIN TRY
+        exec('INSERT INTO #serverProperties SELECT TOP 1 ''IpV6Address'', CONVERT(varchar(max), value_data)
+            FROM sys.dm_server_registry WHERE value_name IN (''IpAddress'')
+            AND CONVERT(varchar(max), value_data) NOT LIKE ''%.%.%.%''
+            AND CONVERT(varchar(max), value_data) NOT LIKE ''127.%.%.%''
+            AND CONVERT(varchar(max), value_data) NOT LIKE ''::1%''')
+    END TRY
+    BEGIN CATCH
+        exec('INSERT INTO #serverProperties SELECT ''IpV6Address'', ''UNDETERMINED''')
+    END CATCH
     IF @PRODUCT_VERSION >= 14
     BEGIN
         exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', SUBSTRING(CONVERT(NVARCHAR(255),host_platform),1,1024) FROM sys.dm_os_host_info /* SQL Server 2017 (14.x) and later */');
