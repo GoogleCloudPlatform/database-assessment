@@ -225,7 +225,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         )
         if is_rds:
             for c in self.rule_config:
-                if rds_logical_replication != "logical":
+                if rds_logical_replication != "on":
                     self.save_rule_result(
                         c.db_variant,
                         rule_code,
@@ -314,7 +314,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     c.db_variant,
                     rule_code,
                     "ERROR",
-                    f"Insufficient `max_wal_senders`: {wal_senders}, should be set to at leat {db_count}. Up to {c.extra_replication_subscriptions_required} additional subscriptions might be required depending on the parallelism level set for migration. {url_link}",
+                    f"Insufficient `max_wal_senders`: {wal_senders}, should be set to at least {db_count}. Up to {c.extra_replication_subscriptions_required} additional `wal_senders` might be required depending on the parallelism level set for migration. {url_link}",
                 )
             elif wal_senders < max_required_subscriptions:
                 self.save_rule_result(
@@ -368,7 +368,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 )
 
     def _check_max_worker_processes(self) -> None:
-        rule_code = "MAX_WORKER_PROCESES"
+        rule_code = "MAX_WORKER_PROCESSES"
         url_link = "Refer https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
 
         if self.db_version is None:
@@ -391,7 +391,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     c.db_variant,
                     rule_code,
                     "ERROR",
-                    f"Insufficient `max_worker_processes`: {max_worker_processes}, should be set to at leat {db_count}. Up to {c.extra_replication_subscriptions_required} additional subscriptions might be required depending on the parallelism level set for migration. {url_link}",
+                    f"Insufficient `max_worker_processes`: {max_worker_processes}, should be set to at least {db_count}. Up to {c.extra_replication_subscriptions_required} additional `worker_processes` might be required depending on the parallelism level set for migration. {url_link}",
                 )
             elif max_worker_processes < max_required_subscriptions:
                 self.save_rule_result(
