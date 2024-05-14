@@ -111,8 +111,8 @@ BEGIN
                , QUOTENAME(c.scale,''"'') AS scale
                , QUOTENAME(c.is_computed,''"'') AS is_computed
                , QUOTENAME(c.is_filestream,''"'') AS is_filestream
-               , QUOTENAME(0 as is_masked,''"'') AS is_masked
-               , QUOTENAME(0 AS encryption_type,''"'') AS encryption_type
+               , QUOTENAME(0,''"'') AS is_masked
+               , QUOTENAME(0,''"'') AS encryption_type
                , QUOTENAME(c.is_sparse,''"'') AS is_sparse
                , QUOTENAME(c.rule_object_id,''"'') AS rule_object_id
                , QUOTENAME(count(1),''"'') AS column_count
