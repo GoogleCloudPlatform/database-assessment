@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Literal
 import click
 from click import group, pass_context
 from rich import prompt
+from rich.padding import Padding
 from rich.table import Table
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +16,7 @@ from dma.__about__ import __version__ as current_version
 from dma.cli._utils import console
 from dma.collector.dependencies import provide_canonical_queries, provide_collection_query_manager
 from dma.collector.workflows.collection_extractor.base import CollectionExtractor
-from dma.collector.workflows.readiness_assessment.base import ReadinessCheck
+from dma.collector.workflows.readiness_check.base import ReadinessCheck
 from dma.lib.db.base import get_engine
 from dma.lib.db.local import get_duckdb_connection
 
@@ -143,7 +144,7 @@ def collect_data(
         asyncio.run(
             _collect_data(
                 console=console,
-                db_type=db_type,
+                db_type=db_type.upper(),  # type: ignore[arg-type]
                 username=username,
                 password=password,
                 hostname=hostname,
@@ -158,7 +159,7 @@ def collect_data(
 
 async def _collect_data(
     console: Console,
-    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
     username: str,
     password: str,
     hostname: str,
@@ -299,7 +300,7 @@ def readiness_assessment(
         asyncio.run(
             _readiness_check(
                 console=console,
-                db_type=db_type,
+                db_type=db_type.upper(),  # type: ignore[arg-type]
                 username=username,
                 password=password,
                 hostname=hostname,
@@ -314,7 +315,7 @@ def readiness_assessment(
 
 async def _readiness_check(
     console: Console,
-    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
     username: str,
     password: str,
     hostname: str,
@@ -342,6 +343,9 @@ async def _readiness_check(
                 console=console,
             )
             await workflow.execute()
+            console.print(Padding("", 1, expand=True))
+            console.rule("Processing collected data.", align="left")
+            workflow.print_summary()
         await async_engine.dispose()
 
 

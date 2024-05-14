@@ -20,7 +20,7 @@ class BaseWorkflow:
         self,
         local_db: DuckDBPyConnection,
         canonical_query_manager: CanonicalQueryManager,
-        db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+        db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
         console: Console,
     ) -> None:
         """Initialize a workflow on a local duckdb instance."""
