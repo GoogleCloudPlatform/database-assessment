@@ -21,7 +21,6 @@ from dma.collector.workflows.readiness_check.base import (
     ReadinessCheckExecutor,
     ReadinessCheckTargetConfig,
 )
-from dma.lib.exceptions import ApplicationError
 
 if TYPE_CHECKING:
     from rich.console import Console
@@ -68,6 +67,8 @@ POSTGRES_RULE_CONFIGURATIONS: list[PostgresReadinessCheckTargetConfig] = [
 
 
 class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
+    db_version: str
+
     def __init__(
         self,
         console: Console,
@@ -115,9 +116,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_version(self) -> None:
         rule_code = "DATABASE_VERSION"
-        if self.db_version is None:
-            msg = "Database version was not set."
-            raise ApplicationError(msg)
+
         detected_major_version = get_db_major_version(self.db_version)
         detected_minor_version = get_db_minor_version(self.db_version)
         is_rds = self._is_rds()
@@ -158,9 +157,6 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_pglogical_installed(self) -> None:
         rule_code = "PGLOGICAL_INSTALLED"
-        if self.db_version is None:
-            msg = "Database version was not set."
-            raise ApplicationError(msg)
         result = self.local_db.sql(
             "select count(*) from collection_postgres_extensions where extension_name = 'pglogical'"
         ).fetchone()
@@ -183,9 +179,6 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_wal_level(self) -> None:
         rule_code = "WAL_LEVEL"
-        if self.db_version is None:
-            msg = "Database version was not set."
-            raise ApplicationError(msg)
         result = self.local_db.sql("""
             select c.setting_value as wal_level
             from collection_postgres_settings c
@@ -211,9 +204,6 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_rds_logical_replication(self) -> None:
         rule_code = "RDS_LOGICAL_REPLICATION"
-        if self.db_version is None:
-            msg = "Database version was not set."
-            raise ApplicationError(msg)
         is_rds = self._is_rds()
         rds_logical_replication_result = self.local_db.sql("""
             select c.setting_value
@@ -243,10 +233,6 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
     def _check_max_replication_slots(self) -> None:
         rule_code = "MAX_REPLICATION_SLOTS"
         url_link = "Refer https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
-
-        if self.db_version is None:
-            msg = "Database version was not set."
-            raise ApplicationError(msg)
         db_count_result = self.local_db.sql(
             "select count(*) from extended_collection_postgres_all_databases"
         ).fetchone()
@@ -293,10 +279,6 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
     def _check_max_wal_senders(self) -> None:
         rule_code = "MAX_WAL_SENDERS"
         url_link = "Refer https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
-
-        if self.db_version is None:
-            msg = "Database version was not set."
-            raise ApplicationError(msg)
         db_count_result = self.local_db.sql(
             "select count(*) from extended_collection_postgres_all_databases"
         ).fetchone()
@@ -333,10 +315,6 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_max_wal_senders_replication_slots(self) -> None:
         rule_code = "WAL_SENDERS_REPLICATION_SLOTS"
-
-        if self.db_version is None:
-            msg = "Database version was not set."
-            raise ApplicationError(msg)
         wal_senders_result = self.local_db.sql("""
             select c.setting_value as max_wal_senders
             from collection_postgres_settings c
@@ -370,10 +348,6 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
     def _check_max_worker_processes(self) -> None:
         rule_code = "MAX_WORKER_PROCESSES"
         url_link = "Refer https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
-
-        if self.db_version is None:
-            msg = "Database version was not set."
-            raise ApplicationError(msg)
         db_count_result = self.local_db.sql(
             "select count(*) from extended_collection_postgres_all_databases"
         ).fetchone()
@@ -410,9 +384,6 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_extensions(self) -> None:
         rule_code = "EXTENSIONS"
-        if self.db_version is None:
-            msg = "Database version was not set."
-            raise ApplicationError(msg)
         result = self.local_db.sql("select distinct extension_name from collection_postgres_extensions").fetchmany()
         extensions = {row[0] for row in result}
         for c in self.rule_config:
@@ -434,9 +405,6 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_fdw(self) -> None:
         rule_code = "FDWS"
-        if self.db_version is None:
-            msg = "Database version was not set."
-            raise ApplicationError(msg)
         result = self.local_db.sql("""
             select foreign_data_wrapper_name as fdw_name, count(distinct table_schema || table_name) as table_count
             from collection_postgres_table_details
