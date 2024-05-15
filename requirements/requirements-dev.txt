@@ -49,8 +49,8 @@
 # - oracledb
 # - asyncpg>=0.29.0
 # - pyinfra
-# - litestar-granian>=0.3.0
-# - litestar[jinja,structlog]>=2.8.3
+# - litestar-granian>=0.2.3
+# - litestar[jinja,structlog]>=2.7.0
 # - anyio
 # - coverage[toml]>=6.2
 # - cython
@@ -177,7 +177,7 @@ execnet==2.1.1
     # via pytest-xdist
 executing==2.0.1
     # via stack-data
-faker==25.0.1
+faker==25.1.0
     # via polyfactory
 fastjsonschema==2.19.1
     # via nbformat

@@ -7,14 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 
 def get_engine(
-    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
     username: str,
     password: str,
     hostname: str,
     port: int,
     database: str,
 ) -> AsyncEngine:
-    if db_type == "postgres":
+    if db_type == "POSTGRES":
         return create_async_engine(
             URL(
                 drivername="postgresql+asyncpg",
@@ -26,7 +26,7 @@ def get_engine(
                 query={},  # type: ignore[arg-type]
             ),
         )
-    if db_type == "mysql":
+    if db_type == "MYSQL":
         return create_async_engine(
             URL(
                 drivername="mysql+asyncmy",
@@ -38,7 +38,7 @@ def get_engine(
                 query={},  # type: ignore[arg-type]
             ),
         )
-    if db_type == "mssql":
+    if db_type == "MSSQL":
         return create_async_engine(
             URL(
                 drivername="mssql+aioodbc",
@@ -58,7 +58,7 @@ def get_engine(
                 },  # type: ignore[arg-type]
             ),
         )
-    if db_type == "oracle":
+    if db_type == "ORACLE":
         return create_async_engine(
             "oracle+oracledb://:@",
             thick_mode=False,
