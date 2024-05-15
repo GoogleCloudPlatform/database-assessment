@@ -106,8 +106,8 @@ BEGIN
                , ''"'' + CONVERT(NVARCHAR(MAX), s.name) + ''"''  AS schema_name
                , ''"'' + CONVERT(NVARCHAR(MAX), o.name) + ''"'' AS table_name
                , ''"'' + CONVERT(NVARCHAR(MAX), t.name) + ''"'' AS datatype
-               , ''"'' + CONVERT(NVARCHAR(MAX), c.max_length + ''"''AS max_length
-               , ''"'' + CONVERT(NVARCHAR(MAX), c.precision + ''"''AS precision
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.max_length) + ''"'' AS max_length
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.precision) + ''"'' AS precision
                , ''"'' + CONVERT(NVARCHAR(MAX), c.scale) + ''"'' AS scale
                , ''"'' + CONVERT(NVARCHAR(MAX), c.is_computed) + ''"'' AS is_computed
                , ''"'' + CONVERT(NVARCHAR(MAX), c.is_filestream) + ''"'' AS is_filestream

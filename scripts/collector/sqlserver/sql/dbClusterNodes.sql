@@ -51,7 +51,7 @@ BEGIN
         exec ('
         SELECT
             ''"' + @PKEY + '"'' AS pkey,
-            ''"'' CONVERT(NVARCHAR(MAX), NodeName) + ''"'' AS node_name,
+            ''"'' + CONVERT(NVARCHAR(MAX), NodeName) + ''"'' AS node_name,
             ''""'' as status,
             ''""'' as status_description,
             ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id,
