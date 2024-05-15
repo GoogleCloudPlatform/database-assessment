@@ -28,7 +28,7 @@ DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
 SELECT @PKEY = N'$(pkey)';
 SELECT @CLOUDTYPE = 'NONE';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR(255), SERVERPROPERTY('productversion')), 4));
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
@@ -140,13 +140,13 @@ BEGIN
 END
 
 SELECT
-    QUOTENAME(@PKEY,'"') as PKEY,
-    QUOTENAME(f.database_name,'"') as database_name,
-    QUOTENAME(f.feature_name,'"') as feature_name,
-    QUOTENAME(f.is_enabled_or_used,'"') as is_enabled_or_used,
-    QUOTENAME(f.occurance_count,'"') as occurance_count,
-    QUOTENAME(@DMA_SOURCE_ID,'"') as dma_source_id,
-    QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
+    '"' + @PKEY + '"' as PKEY,
+    '"' + CONVERT(NVARCHAR(MAX), f.database_name) + '"' as database_name,
+    '"' + CONVERT(NVARCHAR(MAX), f.feature_name) + '"' as feature_name,
+    '"' + CONVERT(NVARCHAR(MAX), f.is_enabled_or_used) + '"' as is_enabled_or_used,
+    '"' + CONVERT(NVARCHAR(MAX), f.occurance_count) + '"' as occurance_count,
+    '"' + @DMA_SOURCE_ID + '"' as dma_source_id,
+    '"' + @DMA_MANUAL_ID + '"' as dma_manual_id
 FROM #FeaturesEnabledDbLevel f;
 
 IF OBJECT_ID('tempdb..#FeaturesEnabledDbLevel') IS NOT NULL
