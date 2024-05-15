@@ -89,17 +89,17 @@ jobs:
           os: ubuntu-latest
           cross: true
           release_suffix: aarch64-linux
-        - target: i686-unknown-linux-gnu
-          os: ubuntu-latest
-          cross: true
-          release_suffix: i686-linux
+        # - target: i686-unknown-linux-gnu
+        #   os: ubuntu-latest
+        #   cross: true
+        #   release_suffix: i686-linux
         # Windows
         - target: x86_64-pc-windows-msvc
           os: windows-2022
           release_suffix: x86_64-windows
-        - target: i686-pc-windows-msvc
-          os: windows-2022
-          release_suffix: i686-windows
+        # - target: i686-pc-windows-msvc
+        #   os: windows-2022
+        #   release_suffix: i686-windows
         # macOS
         - target: aarch64-apple-darwin
           os: macos-12
@@ -176,13 +176,13 @@ jobs:
     - name: Rename
       working-directory: ${{ github.workspace }}
       run: |-
-        mv dist/app/dma* dist/app/dma-${{ matrix.job.release_suffix }}
+        mv dist/binary/dma* dist/binary/dma-${{ matrix.job.release_suffix }}
 
     - name: Upload built binary package
       uses: actions/upload-artifact@v4
       with:
         name: binaries-${{ matrix.job.release_suffix }}
-        path: dist/app/*
+        path: dist/binary/*
         if-no-files-found: error
 
   publish:
