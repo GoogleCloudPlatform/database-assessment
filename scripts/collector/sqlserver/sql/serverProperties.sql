@@ -289,20 +289,27 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''TotalUserVirtualMemoryInMB'', CONVERT(varchar, (total_virtual_address_space_kb/1024)) FROM sys.dm_os_process_memory')
     exec('INSERT INTO #serverProperties SELECT ''MaxConfiguredSQLServerMemoryMB'', CASE WHEN value = maximum THEN ''0'' ELSE CONVERT(varchar, (value)) END from sys.configurations where name = ''max server memory (MB)''')
     BEGIN TRY
-        exec('INSERT INTO #serverProperties SELECT TOP 1 ''IpV4Address'', CONVERT(varchar(max), value_data) 
-            FROM sys.dm_server_registry WHERE value_name IN (''IpAddress'')
-            AND CONVERT(varchar(max), value_data) LIKE ''%.%.%.%'' AND CONVERT(varchar(max), value_data) NOT LIKE ''127.%.%.%''
-            AND CONVERT(varchar(max), value_data) NOT LIKE ''%::%''')
+        exec('WITH ip_address AS (
+				SELECT TOP 1 ''IpV4Address'' value_name, CONVERT(varchar(max), value_data) value_data
+				FROM sys.dm_server_registry WHERE value_name IN (''IpAddress'')
+				AND CONVERT(varchar, value_data) LIKE ''%.%.%.%''
+				AND CONVERT(varchar, value_data) NOT LIKE ''127.%.%.%''
+				AND CONVERT(varchar, value_data) NOT LIKE ''%::%'')
+				INSERT INTO #serverProperties
+				select value_name, REPLACE(value_data COLLATE SQL_Latin1_General_CP1_CI_AS, CHAR(0) ,'''') from ip_address');
     END TRY
     BEGIN CATCH
         exec('INSERT INTO #serverProperties SELECT ''IpV4Address'', ''UNDETERMINED''')
     END CATCH
     BEGIN TRY
-        exec('INSERT INTO #serverProperties SELECT TOP 1 ''IpV6Address'', CONVERT(varchar(max), value_data)
-            FROM sys.dm_server_registry WHERE value_name IN (''IpAddress'')
-            AND CONVERT(varchar(max), value_data) NOT LIKE ''%.%.%.%''
-            AND CONVERT(varchar(max), value_data) NOT LIKE ''127.%.%.%''
-            AND CONVERT(varchar(max), value_data) NOT LIKE ''::1%''')
+        exec('WITH ip_address AS (
+                SELECT TOP 1 ''IpV6Address'' value_name, CONVERT(varchar(max), value_data) value_data
+                FROM sys.dm_server_registry WHERE value_name IN (''IpAddress'')
+                AND CONVERT(varchar, value_data) NOT LIKE ''%.%.%.%''
+                AND CONVERT(varchar, value_data) NOT LIKE ''127.%.%.%''
+                AND CONVERT(varchar, value_data) NOT LIKE ''::1%'')
+                INSERT INTO #serverProperties
+				select value_name, REPLACE(value_data COLLATE SQL_Latin1_General_CP1_CI_AS, CHAR(0) ,'''') from ip_address');
     END TRY
     BEGIN CATCH
         exec('INSERT INTO #serverProperties SELECT ''IpV6Address'', ''UNDETERMINED''')
@@ -356,7 +363,7 @@ END;
 SELECT
     '"' + @PKEY + '"'  as PKEY,
     '"' + a.property_name + '"' as property_name ,
-    '"' + a.property_value + '"' as property_value,
+    '"' + CONVERT(NVARCHAR(MAX), a.property_value) + '"' as property_value,
     '"' + @DMA_SOURCE_ID + '"' as dma_source_id,
     '"' + @DMA_MANUAL_ID + '"' as dma_manual_id
 FROM #serverProperties a;
