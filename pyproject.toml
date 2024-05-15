@@ -125,7 +125,7 @@ dma = "dma.cli.main:app"
 
 [build-system]
 build-backend = "hatchling.build"
-requires = ["hatchling", "hatch-pip-compile", "nodeenv"]
+requires = ["hatchling", "nodeenv"]
 
 [tool.hatch.metadata]
 # direct dependency references, e.g `pip @ git+https://github.com/pypa/pip.git@master`
@@ -148,14 +148,6 @@ exclude = ["/.github", "/docs"]
 # Default environment with production dependencies
 [tool.hatch.envs.default]
 installer = "uv"
-lock-filename = "requirements/requirements.txt"
-pip-compile-constraint = "default"
-pip-compile-hashes = false
-pip-compile-installer = "uv"
-pip-compile-resolver = "uv"
-python = "3.12"
-requires = ["hatch-pip-compile"]
-type = "pip-compile"
 
 [tool.hatch.envs.default.env-vars]
 USE_LEGACY_DOCKER_COMPOSE = "True"
@@ -214,10 +206,9 @@ extra-dependencies = [
 features = ["server", "remote", "oracle", "mysql", "mssql", "postgres", "testing", "docs", "linting"]
 lock-filename = "requirements/requirements-dev.txt"
 path = ".venv/"
-pip-compile-constraint = "default"
 python = "3.12"
 template = "test"
-type = "pip-compile"
+type = "virtual"
 
 [tool.hatch.envs.local.scripts]
 start-infra = "docker-compose -f tests/docker-compose.yml up --force-recreate -d"
