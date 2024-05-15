@@ -95,6 +95,7 @@ if ! [ -x "$(command -v ${SQLPLUS})" ]; then
 fi
 
 ${SQLPLUS} -s /nolog << EOF
+SET DEFINE OFF
 connect ${connectString}
 @${SQL_DIR}/op_set_sql_env.sql
 set pagesize 0 lines 400 feedback off verify off heading off echo off timing off time off
@@ -121,6 +122,7 @@ fi
 
 
 ${SQLPLUS} -s /nolog << EOF
+SET DEFINE OFF
 connect ${connectString}
 @${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${SQLOUTPUT_DIR} "${manualUniqueId}" ${statsWindow}
 exit;
