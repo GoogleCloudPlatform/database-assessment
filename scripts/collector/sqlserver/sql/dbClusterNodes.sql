@@ -34,9 +34,9 @@ BEGIN
         exec ('
         SELECT
             ''"' + @PKEY + '"'' AS pkey,
-            QUOTENAME(NodeName,''"'') AS node_name,
-            QUOTENAME(status,''"'') AS status,
-            QUOTENAME(status_description,''"'') status_description,
+            ''"'' + CONVERT(NVARCHAR(MAX), NodeName) + ''"'' AS node_name,
+            ''"'' + CONVERT(NVARCHAR(MAX), status) + ''"'' AS status,
+            ''"'' + CONVERT(NVARCHAR(MAX), status_description) + ''"'' status_description,
             ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id,
             ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id
         FROM sys.dm_os_cluster_nodes');
@@ -51,7 +51,7 @@ BEGIN
         exec ('
         SELECT
             ''"' + @PKEY + '"'' AS pkey,
-            QUOTENAME(NodeName,''"'') AS node_name,
+            ''"'' CONVERT(NVARCHAR(MAX), NodeName) + ''"'' AS node_name,
             ''""'' as status,
             ''""'' as status_description,
             ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id,

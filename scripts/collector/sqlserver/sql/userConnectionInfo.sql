@@ -54,29 +54,29 @@ BEGIN
             exec ('
                 SELECT
                     ''"' + @PKEY + '"'' AS pkey
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), DB_NAME()), ''"'') as database_name
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.is_user_process), ''"'') as is_user_process
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.host_name), ''"'') as host_name
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.program_name), ''"'') as program_name
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.login_name), ''"'') as login_name
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdec.num_reads), ''"'') as num_reads
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdec.num_writes), ''"'') as num_writes
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), FORMAT(sdec.last_read,''yyyy-MM-dd HH:mm:ss'')), ''"'') as last_read
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), FORMAT(sdec.last_write,''yyyy-MM-dd HH:mm:ss'')), ''"'') as last_write
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.reads), ''"'') as reads
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.logical_reads), ''"'') as logical_reads
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.writes), ''"'') as writes
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.client_interface_name), ''"'') as client_interface_name
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.nt_domain), ''"'') as nt_domain
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.nt_user_name), ''"'') as nt_user_name
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdec.client_net_address), ''"'') as client_net_address
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdec.local_net_address), ''"'') as local_net_address
+                    , ''"'' + CONVERT(NVARCHAR(255), DB_NAME()) + ''"'' as database_name
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.is_user_process) + ''"'' as is_user_process
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.host_name) + ''"'' as host_name
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.program_name) + ''"'' as program_name
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.login_name) + ''"'' as login_name
+                    , ''"'' + CONVERT(NVARCHAR(255), sdec.num_reads) + ''"'' as num_reads
+                    , ''"'' + CONVERT(NVARCHAR(255), sdec.num_writes) + ''"'' as num_writes
+                    , ''"'' + CONVERT(NVARCHAR(255), FORMAT(sdec.last_read,''yyyy-MM-dd HH:mm:ss'')) + ''"'' as last_read
+                    , ''"'' + CONVERT(NVARCHAR(255), FORMAT(sdec.last_write,''yyyy-MM-dd HH:mm:ss'')) + ''"'' as last_write
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.reads) + ''"'' as reads
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.logical_reads) + ''"'' as logical_reads
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.writes) + ''"'' as writes
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.client_interface_name) + ''"'' as client_interface_name
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.nt_domain) + ''"'' as nt_domain
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.nt_user_name) + ''"'' as nt_user_name
+                    , ''"'' + CONVERT(NVARCHAR(255), sdec.client_net_address) + ''"'' as client_net_address
+                    , ''"'' + CONVERT(NVARCHAR(255), sdec.local_net_address) + ''"'' as local_net_address
                     , ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id
         		    , ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.client_version), ''"'') as client_version
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdec.protocol_type), ''"'') as protocol_type
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdec.protocol_version), ''"'') as protocol_version
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sys.fn_varbintohexstr(sdec.protocol_version)), ''"'') as protocol_hex_version
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.client_version) + ''"'' as client_version
+                    , ''"'' + CONVERT(NVARCHAR(255), sdec.protocol_type) + ''"'' as protocol_type
+                    , ''"'' + CONVERT(NVARCHAR(255), sdec.protocol_version) + ''"'' as protocol_version
+                    , ''"'' + CONVERT(NVARCHAR(255), sys.fn_varbintohexstr(sdec.protocol_version)) + ''"'' as protocol_hex_version
                 FROM sys.dm_exec_sessions AS sdes
                 INNER JOIN sys.dm_exec_connections AS sdec
                         ON sdec.session_id = sdes.session_id
@@ -88,29 +88,29 @@ BEGIN
             exec ('
                 SELECT
                     ''"' + @PKEY + '"'' AS pkey
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), DB_NAME()), ''"'') as database_name
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.is_user_process), ''"'') as is_user_process
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.host_name), ''"'') as host_name
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.program_name), ''"'') as program_name
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.login_name), ''"'') as login_name
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdec.num_reads), ''"'') as num_reads
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdec.num_writes), ''"'') as num_writes
-                    ,QUOTENAME(CONVERT(VARCHAR(256), sdec.last_read, 120), ''"'') as last_read
-                    ,QUOTENAME(CONVERT(VARCHAR(256), sdec.last_write,120), ''"'') as last_write
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.reads), ''"'') as reads
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.logical_reads), ''"'') as logical_reads
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.writes), ''"'') as writes
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.client_interface_name), ''"'') as client_interface_name
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.nt_domain), ''"'') as nt_domain
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.nt_user_name), ''"'') as nt_user_name
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdec.client_net_address), ''"'') as client_net_address
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdec.local_net_address), ''"'') as local_net_address
+                    , ''"'' + CONVERT(NVARCHAR(255), DB_NAME()) + ''"'' as database_name
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.is_user_process) + ''"'' as is_user_process
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.host_name) + ''"'' as host_name
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.program_name) + ''"'' as program_name
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.login_name) + ''"'' as login_name
+                    , ''"'' + CONVERT(NVARCHAR(255), sdec.num_reads) + ''"'' as num_reads
+                    , ''"'' + CONVERT(NVARCHAR(255), sdec.num_writes) + ''"'' as num_writes
+                    , ''"'' + CONVERT(VARCHAR(256), sdec.last_read, 120) + ''"'' as last_read
+                    , ''"'' + CONVERT(VARCHAR(256), sdec.last_write,120) + ''"'' as last_write
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.reads) + ''"'' as reads
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.logical_reads) + ''"'' as logical_reads
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.writes) + ''"'' as writes
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.client_interface_name) + ''"'' as client_interface_name
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.nt_domain) + ''"'' as nt_domain
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.nt_user_name) + ''"'' as nt_user_name
+                    , ''"'' + CONVERT(NVARCHAR(255), sdec.client_net_address) + ''"'' as client_net_address
+                    , ''"'' + CONVERT(NVARCHAR(255), sdec.local_net_address) + ''"'' as local_net_address
                     , ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id
         		    , ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdes.client_version), ''"'') as client_version
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdec.protocol_type), ''"'') as protocol_type
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sdec.protocol_version), ''"'') as protocol_version
-                    ,QUOTENAME(CONVERT(NVARCHAR(255), sys.fn_varbintohexstr(sdec.protocol_version)), ''"'') as protocol_hex_version
+                    , ''"'' + CONVERT(NVARCHAR(255), sdes.client_version) + ''"'' as client_version
+                    , ''"'' + CONVERT(NVARCHAR(255), sdec.protocol_type) + ''"'' as protocol_type
+                    , ''"'' + CONVERT(NVARCHAR(255), sdec.protocol_version) + ''"'' as protocol_version
+                    , ''"'' + CONVERT(NVARCHAR(255), sys.fn_varbintohexstr(sdec.protocol_version)) + ''"'' as protocol_hex_version
                 FROM sys.dm_exec_sessions AS sdes
                 INNER JOIN sys.dm_exec_connections AS sdec
                         ON sdec.session_id = sdes.session_id

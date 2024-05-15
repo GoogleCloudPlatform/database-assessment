@@ -73,34 +73,34 @@ BEGIN
             )
             SELECT
                ''"' + @PKEY + '"'' AS pkey,
-               QUOTENAME(DB_NAME(),''"'') as database_name,
+               ''"'' + CONVERT(NVARCHAR(MAX), DB_NAME()) + ''"'' as database_name,
                CASE
 	               WHEN s.name IS NULL
-                     THEN QUOTENAME(v.schema_name,''"'')
-		            ELSE QUOTENAME(s.name,''"'')
+                     THEN ''"'' + CONVERT(NVARCHAR(MAX), v.schema_name) + ''"''
+		            ELSE ''"'' + CONVERT(NVARCHAR(MAX), s.name) + ''"''
 	            END as schema_name,
                CASE
                   WHEN t.name IS NULL
-                     THEN QUOTENAME(v.name,''"'')
-                  ELSE QUOTENAME(t.name,''"'')
+                     THEN ''"'' + CONVERT(NVARCHAR(MAX), v.name) + ''"''
+                  ELSE ''"'' + CONVERT(NVARCHAR(MAX), t.name) + ''"''
                END as table_name,
-               QUOTENAME(i.name,''"'') as index_name,
-               QUOTENAME(i.type_desc,''"'') as index_type,
-               QUOTENAME(i.is_primary_key,''"'') as is_primary_key,
-               QUOTENAME(i.is_unique,''"'') as is_unique,
-               QUOTENAME(i.fill_factor,''"'') as fille_factor,
-               QUOTENAME(i.allow_page_locks,''"'') as allow_page_locks,
-               QUOTENAME(i.has_filter,''"'') as has_filter,
-               QUOTENAME(ISNULL(p.data_compression,0),''"'') as data_compression,
-               QUOTENAME(ISNULL(p.data_compression_desc,''NONE''),''"'') as data_compression_desc,
-               QUOTENAME(ISNULL(ps.name, ''Not Partitioned''),''"'') as partition_scheme,
-               QUOTENAME(ISNULL(SUM(ic.key_ordinal),0),''"'') as count_key_ordinal,
-               QUOTENAME(ISNULL(SUM(ic.partition_ordinal),0),''"'') as count_partition_ordinal,
-               QUOTENAME(ISNULL(SUM(CONVERT(int,ic.is_included_column)),0),''"'') as count_is_included_column,
-               QUOTENAME(ISNULL(CONVERT(NVARCHAR(255), ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)),0),''"'') as total_space_mb,
+               ''"'' + CONVERT(NVARCHAR(MAX), i.name) + ''"'' as index_name,
+               ''"'' + CONVERT(NVARCHAR(MAX), i.type_desc) + ''"'' as index_type,
+               ''"'' + CONVERT(NVARCHAR(MAX), i.is_primary_key) + ''"'' as is_primary_key,
+               ''"'' + CONVERT(NVARCHAR(MAX), i.is_unique) + ''"'' as is_unique,
+               ''"'' + CONVERT(NVARCHAR(MAX), i.fill_factor) + ''"'' as fille_factor,
+               ''"'' + CONVERT(NVARCHAR(MAX), i.allow_page_locks) + ''"'' as allow_page_locks,
+               ''"'' + CONVERT(NVARCHAR(MAX), i.has_filter) + ''"'' as has_filter,
+               ''"'' + CONVERT(NVARCHAR(MAX), ISNULL(p.data_compression,0)) + ''"'' as data_compression,
+               ''"'' + CONVERT(NVARCHAR(MAX), ISNULL(p.data_compression_desc,''NONE'')) + ''"'' as data_compression_desc,
+               ''"'' + CONVERT(NVARCHAR(MAX), ISNULL(ps.name, ''Not Partitioned'')) + ''"'' as partition_scheme,
+               ''"'' + CONVERT(NVARCHAR(MAX), ISNULL(SUM(ic.key_ordinal),0)) + ''"'' as count_key_ordinal,
+               ''"'' + CONVERT(NVARCHAR(MAX), ISNULL(SUM(ic.partition_ordinal),0)) + ''"'' as count_partition_ordinal,
+               ''"'' + CONVERT(NVARCHAR(MAX), ISNULL(SUM(CONVERT(int,ic.is_included_column)),0)) + ''"'' as count_is_included_column,
+               ''"'' + CONVERT(NVARCHAR(MAX), ISNULL(CONVERT(NVARCHAR(255), ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)),0)) + ''"'' as total_space_mb,
                ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
                ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
-               QUOTENAME(ISNULL(icc.is_computed_index,0),''"'') as is_computed_index,
+               ''"'' + CONVERT(NVARCHAR(MAX), ISNULL(icc.is_computed_index,0)) + ''"'' as is_computed_index,
                CASE
                   WHEN v.name IS NOT NULL
                      THEN ''"1"''
@@ -123,13 +123,13 @@ BEGIN
             GROUP BY
                CASE
 	               WHEN s.name IS NULL
-                     THEN QUOTENAME(v.schema_name,''"'')
-		            ELSE QUOTENAME(s.name,''"'')
+                     THEN ''"'' + CONVERT(NVARCHAR(MAX), v.schema_name) + ''"''
+		            ELSE ''"'' + CONVERT(NVARCHAR(MAX), s.name) + ''"''
 	            END
                ,CASE
                   WHEN t.name IS NULL
-                     THEN QUOTENAME(v.name,''"'')
-                  ELSE QUOTENAME(t.name,''"'')
+                     THEN ''"'' + CONVERT(NVARCHAR(MAX), v.name) + ''"''
+                  ELSE ''"'' + CONVERT(NVARCHAR(MAX), t.name) + ''"''
                END
                ,i.name
                ,i.type_desc
@@ -150,27 +150,27 @@ BEGIN
             UNION
             SELECT
                ''"' + @PKEY + '"'' AS pkey,
-               QUOTENAME(DB_NAME(),''"'') as database_name,
-               QUOTENAME(s.name,''"'') as schema_name,
-               QUOTENAME(t.name,''"'') as table_name,
-               QUOTENAME(o.name,''"'') as index_name,
+               ''"'' + CONVERT(NVARCHAR(MAX), DB_NAME()) + ''"'' as database_name,
+               ''"'' + CONVERT(NVARCHAR(MAX), s.name) + ''"'' as schema_name,
+               ''"'' + CONVERT(NVARCHAR(MAX), t.name) + ''"'' as table_name,
+               ''"'' + CONVERT(NVARCHAR(MAX), o.name) + ''"'' as index_name,
                ''"FULLTEXT"'' as index_type,
-               QUOTENAME(0,''"'') as is_primary_key,
-               QUOTENAME(0,''"'') as is_unique,
-               QUOTENAME(0,''"'') as fill_factor,
-               QUOTENAME(0,''"'') as allow_page_locks,
-               QUOTENAME(0,''"'') as has_filter,
-               QUOTENAME(p.data_compression,''"'') as data_compression,
-               QUOTENAME(p.data_compression_desc,''"'') as data_compression_desc,
-               QUOTENAME(ISNULL (ps.name, ''Not Partitioned''),''"'') as partition_scheme,
-               QUOTENAME(0,''"'') as count_key_ordinal,
-               QUOTENAME(0,''"'') as count_partition_ordinal,
-               QUOTENAME(0,''"'') as count_is_included_column,
-               QUOTENAME(CONVERT(NVARCHAR(255), ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2)),''"'') as total_space_mb,
+               ''"'' + CONVERT(NVARCHAR(MAX), 0) + ''"'' as is_primary_key,
+               ''"'' + CONVERT(NVARCHAR(MAX), 0) + ''"'' as is_unique,
+               ''"'' + CONVERT(NVARCHAR(MAX), 0) + ''"'' as fill_factor,
+               ''"'' + CONVERT(NVARCHAR(MAX), 0) + ''"'' as allow_page_locks,
+               ''"'' + CONVERT(NVARCHAR(MAX), 0) + ''"'' as has_filter,
+               ''"'' + CONVERT(NVARCHAR(MAX), p.data_compression) + ''"'' as data_compression,
+               ''"'' + CONVERT(NVARCHAR(MAX), p.data_compression_desc) + ''"'' as data_compression_desc,
+               ''"'' + CONVERT(NVARCHAR(MAX), ISNULL (ps.name, ''Not Partitioned'')) + ''"'' as partition_scheme,
+               ''"'' + CONVERT(NVARCHAR(MAX), 0) + ''"'' as count_key_ordinal,
+               ''"'' + CONVERT(NVARCHAR(MAX), 0) + ''"'' as count_partition_ordinal,
+               ''"'' + CONVERT(NVARCHAR(MAX), 0) + ''"'' as count_is_included_column,
+               ''"'' + CONVERT(NVARCHAR(MAX), CONVERT(NVARCHAR(255), ROUND(((SUM(a.total_pages) * 8) / 1024.00), 2))) + ''"'' as total_space_mb,
                ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
                ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
-               QUOTENAME(0,''"'') as is_computed_index,
-               QUOTENAME(0,''"'') as is_index_on_view
+               ''"'' + CONVERT(NVARCHAR(MAX), 0) + ''"'' as is_computed_index,
+               ''"'' + CONVERT(NVARCHAR(MAX), 0) + ''"'' as is_index_on_view
             FROM sys.fulltext_indexes fi
                JOIN sys.objects o on (o.object_id = fi.object_id)
                JOIN sys.fulltext_index_columns ic ON fi.object_id = ic.object_id

@@ -53,12 +53,12 @@ BEGIN
         IF @validDB <> 0
         BEGIN
         SELECT
-            QUOTENAME(@PKEY,'"') as PKEY,
-            QUOTENAME(CONVERT(NVARCHAR(255),sizing.database_name),'"') as database_name,
-            QUOTENAME(CONVERT(NVARCHAR(255),sizing.type_desc),'"') as type_desc,
-            QUOTENAME(CONVERT(NVARCHAR(255),sizing.current_size_mb),'"') as current_size_mb,
-            QUOTENAME(@DMA_SOURCE_ID,'"') as dma_source_id,
-            QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
+            '"' + @PKEY + '"' as PKEY,
+            '"' + CONVERT(NVARCHAR(255),sizing.database_name) + '"' as database_name,
+            '"' + CONVERT(NVARCHAR(255),sizing.type_desc) + '"' as type_desc,
+            '"' + CONVERT(NVARCHAR(255),sizing.current_size_mb) + '"' as current_size_mb,
+            '"' + @DMA_SOURCE_ID + '"' as dma_source_id,
+            '"' + @DMA_MANUAL_ID + '"' as dma_manual_id
         FROM(
             SELECT
                 db_name() AS database_name,

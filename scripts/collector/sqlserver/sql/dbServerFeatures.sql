@@ -747,12 +747,12 @@ BEGIN
 END
 
 SELECT
-    QUOTENAME(@PKEY,'"') as PKEY,
-    QUOTENAME(f.Features,'"') as Features,
-    QUOTENAME(f.Is_EnabledOrUsed,'"') as Is_EnabledOrUsed,
-    QUOTENAME(f.Count,'"') as Count ,
-    QUOTENAME(@DMA_SOURCE_ID,'"') as dma_source_id,
-    QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
+    '"' + @PKEY + '"' as PKEY,
+    '"' + CONVERT(NVARCHAR(MAX), f.Features) + '"' as Features,
+    '"' + CONVERT(NVARCHAR(MAX), f.Is_EnabledOrUsed) + '"' as Is_EnabledOrUsed,
+    '"' + CONVERT(NVARCHAR(MAX), f.Count) + '"' as Count ,
+    '"' + @DMA_SOURCE_ID + '"' as dma_source_id,
+    '"' + @DMA_MANUAL_ID + '"' as dma_manual_id
 FROM #FeaturesEnabled f;
 
 IF OBJECT_ID('tempdb..#FeaturesEnabled') IS NOT NULL

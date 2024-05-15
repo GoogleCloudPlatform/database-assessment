@@ -45,7 +45,7 @@ IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL
 
 CREATE TABLE #serverProperties
 (
-    property_name nvarchar(256),
+    property_name nvarchar(255),
     property_value nvarchar(1024)
 );
 
@@ -130,7 +130,7 @@ UNION ALL
 UNION ALL
     SELECT 'MachineName', @MACHINENAME
 UNION ALL
-    SELECT 'NumLicenses', CONVERT(NVARCHAR(255), SERVERPROPERTY('NumLicenses'))
+    SELECT 'NumLicenses', CASE WHEN SERVERPROPERTY('LicenseType') = 'DISABLED' THEN 'DISABLED' ELSE CONVERT(NVARCHAR(255), SERVERPROPERTY('NumLicenses')) END
 UNION ALL
     SELECT 'ProcessID', CONVERT(NVARCHAR(255), SERVERPROPERTY('ProcessID'))
 UNION ALL
@@ -354,11 +354,11 @@ BEGIN
 END;
 
 SELECT
-    QUOTENAME(@PKEY,'"')  as PKEY,
-    QUOTENAME(a.property_name,'"') as property_name ,
-    QUOTENAME(a.property_value,'"') as property_value,
-    QUOTENAME(@DMA_SOURCE_ID,'"') as dma_source_id,
-    QUOTENAME(@DMA_MANUAL_ID,'"') as dma_manual_id
+    '"' + @PKEY + '"'  as PKEY,
+    '"' + a.property_name + '"' as property_name ,
+    '"' + a.property_value + '"' as property_value,
+    '"' + @DMA_SOURCE_ID + '"' as dma_source_id,
+    '"' + @DMA_MANUAL_ID + '"' as dma_manual_id
 FROM #serverProperties a;
 
 IF OBJECT_ID('tempdb..#serverProperties') IS NOT NULL

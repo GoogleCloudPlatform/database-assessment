@@ -32,13 +32,13 @@ BEGIN
     exec ('
     SELECT
         ''"' + @PKEY + '"'' AS pkey,
-        QUOTENAME(CONVERT(NVARCHAR(255),configuration_id),''"'') as configuration_id,
-        QUOTENAME(CONVERT(NVARCHAR(255),name),''"'') as name,
-        QUOTENAME(CONVERT(NVARCHAR(255),value),''"'') as value,
-        QUOTENAME(CONVERT(NVARCHAR(255),minimum),''"'') as minimum,
-        QUOTENAME(CONVERT(NVARCHAR(255),maximum),''"'') as maximum,
-        QUOTENAME(CONVERT(NVARCHAR(255),value_in_use),''"'') as value_in_use,
-        QUOTENAME(CONVERT(NVARCHAR(255),description),''"'') as description,
+        ''"'' + CONVERT(NVARCHAR(MAX),configuration_id) + ''"'' as configuration_id,
+        ''"'' + CONVERT(NVARCHAR(MAX),name) + ''"'' as name,
+        ''"'' + CONVERT(NVARCHAR(MAX),value) + ''"'' as value,
+        ''"'' + CONVERT(NVARCHAR(MAX),minimum) + ''"'' as minimum,
+        ''"'' + CONVERT(NVARCHAR(MAX),maximum) + ''"'' as maximum,
+        ''"'' + CONVERT(NVARCHAR(MAX),value_in_use) + ''"'' as value_in_use,
+        ''"'' + CONVERT(NVARCHAR(MAX),description) + ''"'' as description,
         ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
         ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id
     FROM sys.configurations');

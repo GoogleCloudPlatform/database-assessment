@@ -38,13 +38,13 @@ BEGIN
     exec('
         select
             ''"' + @PKEY + '"'' AS pkey,
-            QUOTENAME(name,''"'') as name,
-            QUOTENAME(product,''"'') as product,
-            QUOTENAME(provider,''"'') as provider,
-            QUOTENAME(data_source,''"'') as data_source,
-            QUOTENAME(location,''"'') as location,
-            QUOTENAME(provider_string,''"'') as provider_string,
-            QUOTENAME(catalog,''"'') as catalog,
+            ''"'' + CONVERT(NVARCHAR(MAX), name) + ''"'' as name,
+            ''"'' + CONVERT(NVARCHAR(MAX), product) + ''"'' as product,
+            ''"'' + CONVERT(NVARCHAR(MAX), provider) + ''"'' as provider,
+            ''"'' + CONVERT(NVARCHAR(MAX), data_source) + ''"'' as data_source,
+            ''"'' + CONVERT(NVARCHAR(MAX), location) + ''"'' as location,
+            ''"'' + CONVERT(NVARCHAR(MAX), provider_string) + ''"'' as provider_string,
+            ''"'' + CONVERT(NVARCHAR(MAX), catalog) + ''"'' as catalog,
             ''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
             ''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id
         from sys.servers
