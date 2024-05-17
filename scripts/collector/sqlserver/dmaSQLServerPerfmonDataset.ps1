@@ -202,6 +202,10 @@ function CreateDMAPerfmonDataSet {
 		<Counter>\$instance:SQL Statistics\Batch Requests/sec</Counter>
 		<Counter>\NUMA Node Memory(_Total)\Total MBytes</Counter>
 		<Counter>\NUMA Node Memory(_Total)\Available MBytes</Counter>
+		<Counter>\Process(_Total)\IO Read Operations/sec</Counter>
+		<Counter>\Process(_Total)\IO Write Operations/sec</Counter>
+		<Counter>\Process(_Total)\IO Read Bytes/sec</Counter>
+		<Counter>\Process(_Total)\IO Write Bytes/sec</Counter>
 		<CounterDisplayName>\Memory\Available MBytes</CounterDisplayName>
 		<CounterDisplayName>\PhysicalDisk(_Total)\Avg. Disk Bytes/Read</CounterDisplayName>
 		<CounterDisplayName>\PhysicalDisk(_Total)\Avg. Disk Bytes/Write</CounterDisplayName>
@@ -227,6 +231,10 @@ function CreateDMAPerfmonDataSet {
 		<CounterDisplayName>\$instance:SQL Statistics\Batch Requests/sec</CounterDisplayName>
 		<CounterDisplayName>\NUMA Node Memory(_Total)\Total MBytes</CounterDisplayName>
 		<CounterDisplayName>\NUMA Node Memory(_Total)\Available MBytes</CounterDisplayName>
+		<CounterDisplayName>\IO Read Operations/sec</CounterDisplayName>
+		<CounterDisplayName>\IO Write Operations/sec</CounterDisplayName>
+		<CounterDisplayName>\IO Read Bytes/sec</CounterDisplayName>
+		<CounterDisplayName>\IO Write Bytes/sec</CounterDisplayName>
 	</PerformanceCounterDataCollector>
 	<DataManager>
 		<Enabled>0</Enabled>
@@ -322,6 +330,10 @@ function CreateDMAPerfmonDataSet {
 		<Counter>\SQLServer:SQL Statistics\Batch Requests/sec</Counter>
 		<Counter>\NUMA Node Memory(_Total)\Total MBytes</Counter>
 		<Counter>\NUMA Node Memory(_Total)\Available MBytes</Counter>
+		<Counter>\Process(_Total)\IO Read Operations/sec</Counter>
+		<Counter>\Process(_Total)\IO Write Operations/sec</Counter>
+		<Counter>\Process(_Total)\IO Read Bytes/sec</Counter>
+		<Counter>\Process(_Total)\IO Write Bytes/sec</Counter>
 		<CounterDisplayName>\Memory\Available MBytes</CounterDisplayName>
 		<CounterDisplayName>\PhysicalDisk(_Total)\Avg. Disk Bytes/Read</CounterDisplayName>
 		<CounterDisplayName>\PhysicalDisk(_Total)\Avg. Disk Bytes/Write</CounterDisplayName>
@@ -347,6 +359,10 @@ function CreateDMAPerfmonDataSet {
 		<CounterDisplayName>\SQLServer:SQL Statistics\Batch Requests/sec</CounterDisplayName>
 		<CounterDisplayName>\NUMA Node Memory(_Total)\Total MBytes</CounterDisplayName>
 		<CounterDisplayName>\NUMA Node Memory(_Total)\Available MBytes</CounterDisplayName>
+		<CounterDisplayName>\IO Read Operations/sec</CounterDisplayName>
+		<CounterDisplayName>\IO Write Operations/sec</CounterDisplayName>
+		<CounterDisplayName>\IO Read Bytes/sec</CounterDisplayName>
+		<CounterDisplayName>\IO Write Bytes/sec</CounterDisplayName>
 	</PerformanceCounterDataCollector>
 	<DataManager>
 		<Enabled>0</Enabled>
@@ -583,7 +599,7 @@ function CollectDMAPerfmonDataSet {
 	}
 
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Concatenating and adding header to perfmon files..." -logOperation "BOTH"
-	$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"|"DMA_SOURCE_ID"|"DMA_MANUAL_ID"|"NUMA_TOTAL_MEMORY_MB"|"NUMA_AVAILABLE_MEMORY_MB"'
+	$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"|"DMA_SOURCE_ID"|"DMA_MANUAL_ID"|"NUMA_TOTAL_MEMORY_MB"|"NUMA_AVAILABLE_MEMORY_MB"|"PROCESS_IO_READ_OPERATIONS_SEC"|"PROCESS_IO_WRITE_OPERATIONS_SEC"|"PROCESS_IO_READ_BYTES_SEC"|"PROCESS_IO_WRITE_BYTES_SEC"'
 	if ($fileExists) {
 		Set-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
 
@@ -594,13 +610,13 @@ function CollectDMAPerfmonDataSet {
 
 		#$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
 		$tempDate = checkTimestampFormat((Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"))
-		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|"0"|"0"'
+		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|"0"|"0"|"0"|"0"|"0"|"0"'
 		Add-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
 
 		$futureDate = (Get-Date).AddMinutes(1)
 		#$tempDate = $futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")
 		$tempDate = checkTimestampFormat(($futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")))
-		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|"0"|"0"'
+		$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|"0"|"0"|"0"|"0"|"0"|"0"'
 		Add-Content -Path $outputDir\$outputFileName -Value $tempContent -Encoding utf8
 
 	}
@@ -643,18 +659,18 @@ function CreateEmptyFile {
 		$null = New-Item -ItemType Directory -Path $outputDir
 	}
 
-	$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"|"DMA_SOURCE_ID"|"DMA_MANUAL_ID"|"NUMA_TOTAL_MEMORY_MB"|"NUMA_AVAILABLE_MEMORY_MB"'
+	$tempContent = '"PKEY"|"COLLECTION_TIME"|"AVAILABLE_MBYTES"|"PHYSICALDISK_AVG_DISK_BYTES_READ"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE"|"PHYSICALDISK_AVG_DISK_BYTES_READ_SEC"|"PHYSICALDISK_AVG_DISK_BYTES_WRITE_SEC"|"PHYSICALDISK_DISK_READS_SEC"|"PHYSICALDISK_DISK_WRITES_SEC"|"PROCESSOR_IDLE_TIME_PCT"|"PROCESSOR_TOTAL_TIME_PCT"|"PROCESSOR_FREQUENCY"|"PROCESSOR_QUEUE_LENGTH"|"BUFFER_CACHE_HIT_RATIO"|"CHECKPOINT_PAGES_SEC"|"FREE_LIST_STALLS_SEC"|"PAGE_LIFE_EXPECTANCY"|"PAGE_LOOKUPS_SEC"|"PAGE_READS_SEC"|"PAGE_WRITES_SEC"|"USER_CONNECTION_COUNT"|"MEMORY_GRANTS_PENDING"|"TARGET_SERVER_MEMORY_KB"|"TOTAL_SERVER_MEMORY_KB"|"BATCH_REQUESTS_SEC"|"DMA_SOURCE_ID"|"DMA_MANUAL_ID"|"NUMA_TOTAL_MEMORY_MB"|"NUMA_AVAILABLE_MEMORY_MB"|"PROCESS_IO_READ_OPERATIONS_SEC"|"PROCESS_IO_WRITE_OPERATIONS_SEC"|"PROCESS_IO_READ_BYTES_SEC"|"PROCESS_IO_WRITE_BYTES_SEC"'
 	Set-Content $env:TEMP\emptyStrings.csv -Value $tempContent -Encoding utf8
 
 	#$tempDate = Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"
 	$tempDate = checkTimestampFormat((Get-Date -Format "MM/dd/yyyy HH:mm:ss.fff"))
-	$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|"0"|"0"'
+	$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|"0"|"0"|"0"|"0"|"0"|"0"'
 	Add-Content $env:TEMP\emptyStrings.csv -Value $tempContent -Encoding utf8
 
 	$futureDate = (Get-Date).AddMinutes(1)
 	#$tempDate = $futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")
 	$tempDate = checkTimestampFormat(($futureDate.ToString("MM/dd/yyyy HH:mm:ss.fff")))
-	$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|"0"|"0"'
+	$tempContent = '"' + $pkey + '"|"' + $tempDate + '"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"0"|"' + $dmaSourceId + '"|"' + $dmaManualId + '"|"0"|"0"|"0"|"0"|"0"|"0"'
 	Add-Content $env:TEMP\emptyStrings.csv -Value $tempContent -Encoding utf8
 
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Concatenating and adding header to perfmon files to $outputFileName ..." -logOperation "BOTH"
