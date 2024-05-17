@@ -114,32 +114,57 @@ Operating System Versions:
     If perfmon is not gathered, skip to step (b).
 
     Perfmon Counters gahtered:
-
+    
             \Memory\Available MBytes
+                total amount of available memory on the system
             \PhysicalDisk(_Total)\Avg. Disk Bytes/Read
+                shows the average size of read operations on a volume in bytes
             \PhysicalDisk(_Total)\Avg. Disk Bytes/Write
+                shows the average size of write operations on a volume in bytes
             \PhysicalDisk(_Total)\Avg. Disk sec/Read
+                displays the average time in seconds it takes to read data from a disk
             \PhysicalDisk(_Total)\Avg. Disk sec/Write
+                displays the average time in seconds it takes to write data to a disk
             \PhysicalDisk(_Total)\Disk Reads/sec
+                displays the read IOPS from a file per second (if file is in file cache this counter is not incremented)
             \PhysicalDisk(_Total)\Disk Writes/sec
+                displays the write IOPS to a file per second (if file is in file cache this counter is not incremented)
             \Processor(_Total)\% Idle Time
+                the percentage of time a processor spends on idle threads
             \Processor(_Total)\% Processor Time
+                displays the percentage of time a processor spends executing non-idle threads
             \Processor Information(_Total)\Processor Frequency
+                processor frequency
             \System\Processor Queue Length
+                number of threads that are ready to execute but waiting for a core to become available
             \SQLServer:Buffer Manager\Buffer cache hit ratio
+                this ratio is a measure of the percentage of pages that were found in memory (SQL buffer pool) without having to be read from disk.
             \SQLServer:Buffer Manager\Checkpoint pages/sec
+                the number of dirty pages that are moved from the SQL buffer pool to disk during a checkpoint.
             \SQLServer:Buffer Manager\Free list stalls/sec
+                how many requests per second are waiting for a free page (values above 2 means server needs more memory)
             \SQLServer:Buffer Manager\Page life expectancy
+                indicates the memory pressure in allocated memory to the SQL Server instance
             \SQLServer:Buffer Manager\Page lookups/sec
+                number of requests to find a page in the buffer pool
             \SQLServer:Buffer Manager\Page reads/sec
+                rate at which the disk is read to resolve page faults (pages read into memory)
             \SQLServer:Buffer Manager\Page writes/sec
+                rate at which page data is written to the disk to open up space in physical memory
             \SQLServer:General Statistics\User Connections
+                number of current connections to SQL Server.
             \SQLServer:Memory Manager\Memory Grants Pending
+                total number of SQL Server processes that are waiting for workspace memory to be granted (Should nearly always be zero)
             \SQLServer:Memory Manager\Target Server Memory (KB)
+                the amount of memory that SQL Server can potentially consume
             \SQLServer:Memory Manager\Total Server Memory (KB)
+                the amount of memory the server has committed using the memory manager
             \SQLServer:SQL Statistics\Batch Requests/sec
+                number of T-SQL commands that are being received by the server per second
             \NUMA Node Memory(_Total)\Total MBytes
+                represents the total amount of physical memory associated with a NUMA node in megabytes
             \NUMA Node Memory(_Total)\Available MBytes
+                represents the free amount of physical memory associated with a NUMA node in megabytes
 
     a) From a command prompt session in "Administrator Mode" on the server you would like to collect data on, execute the following command:
 
