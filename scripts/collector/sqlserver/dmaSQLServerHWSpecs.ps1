@@ -66,6 +66,8 @@ param (
 	)][switch]$requestCreds
 )
 
+$ErrorActionPreference = 'Stop'
+
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
 
 $params = @{
@@ -126,7 +128,7 @@ try {
 	WriteLog -logLocation $logLocation -logMessage "Successfully fetched machine HW specs of $computerName to output:$outputPath" -logOperation "FILE"
 }
 catch {
-	WriteLog -logLocation $logLocation -logMessage "ERROR - Failed fetching machine HW specs of $computerName" -logOperation "BOTH"
+	WriteLog -logLocation $logLocation -logMessage "ERROR - Failed fetching machine HW specs of ${computerName}: $_" -logOperation "BOTH"
 	# Write at least MachineName to CSV.
 	$csvData | Export-Csv -Path $outputPath -Delimiter "|" -NoTypeInformation -Encoding UTF8
 }
