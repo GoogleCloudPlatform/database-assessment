@@ -82,7 +82,7 @@ BEGIN
                 SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
                 SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
                 SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
-                SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;		
+                SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
             END CATCH
             IF @PRODUCT_VERSION > 15
             BEGIN TRY

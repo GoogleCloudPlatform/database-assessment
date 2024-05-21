@@ -114,7 +114,7 @@ Operating System Versions:
     If perfmon is not gathered, skip to step (b).
 
     Perfmon Counters gahtered:
-    
+
             \Memory\Available MBytes
                 total amount of available memory on the system
             \PhysicalDisk(_Total)\Avg. Disk Bytes/Read
