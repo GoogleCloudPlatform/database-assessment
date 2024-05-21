@@ -20,56 +20,123 @@ SET LANGUAGE us_english;
 
 DECLARE @dbname VARCHAR(50);
 DECLARE @COLLECTION_USER VARCHAR(256);
-DECLARE @PRODUCT_VERSION AS INTEGER
+DECLARE @PRODUCT_VERSION AS INTEGER;
+DECLARE @CLOUDTYPE AS VARCHAR(256);
 
 DECLARE db_cursor CURSOR FOR
 SELECT name
 FROM sys.databases
-WHERE name NOT IN ('model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
+WHERE name NOT IN ('model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
     AND state = 0;
 
 SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR(255), SERVERPROPERTY('productversion')), 4));
 SELECT @COLLECTION_USER = N'$(collectionUser)'
+SELECT @CLOUDTYPE = 'NONE';
+
+IF UPPER(@@VERSION) LIKE '%AZURE%'
+	SELECT @CLOUDTYPE = 'AZURE'
 
 BEGIN
-    IF EXISTS
-        (SELECT name
-    FROM sys.server_principals
-    WHERE name = @COLLECTION_USER)
-    BEGIN
-        exec('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
-        exec('GRANT SELECT ALL USER SECURABLES TO [' + @COLLECTION_USER + ']');
-        exec('GRANT VIEW ANY DATABASE TO [' + @COLLECTION_USER + ']');
-        exec('GRANT VIEW ANY DEFINITION TO [' + @COLLECTION_USER + ']');
-        exec('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
-        IF @PRODUCT_VERSION > 15
-            BEGIN
-            exec('GRANT VIEW SERVER PERFORMANCE STATE TO [' + @COLLECTION_USER + ']');
-            exec('GRANT VIEW SERVER SECURITY STATE TO [' + @COLLECTION_USER + ']');
-            exec('GRANT VIEW ANY PERFORMANCE DEFINITION TO [' + @COLLECTION_USER + ']');
-            exec('GRANT VIEW ANY SECURITY DEFINITION TO [' + @COLLECTION_USER + ']');
-        END;
-    END;
+    IF EXISTS (SELECT name FROM sys.server_principals WHERE name = @COLLECTION_USER)
+        IF @CLOUDTYPE = 'AZURE'
+        BEGIN TRY
+            exec ('ALTER SERVER ROLE ##MS_DefinitionReader## ADD MEMBER [' + @COLLECTION_USER + ']');
+            exec ('ALTER SERVER ROLE ##MS_SecurityDefinitionReader## ADD MEMBER [' + @COLLECTION_USER + ']');
+            exec ('ALTER SERVER ROLE ##MS_ServerStateReader## ADD MEMBER [' + @COLLECTION_USER + ']');
+        END TRY
+        BEGIN CATCH
+            SELECT
+            host_name() as host_name,
+            db_name() as database_name,
+            'Execute Grant in master DB' as module_name,
+            SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
+            SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
+            SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
+            SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
+        END CATCH
+        IF @CLOUDTYPE <> 'AZURE'
+            BEGIN TRY
+            exec ('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
+            exec ('GRANT VIEW ANY DATABASE TO [' + @COLLECTION_USER + ']');
+            exec ('GRANT VIEW ANY DEFINITION TO [' + @COLLECTION_USER + ']');
+            END TRY
+            BEGIN CATCH
+                SELECT
+                host_name() as host_name,
+                db_name() as database_name,
+                'Execute Grant in master DB' as module_name,
+                SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
+                SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
+                SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
+                SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
+            END CATCH
+            IF @PRODUCT_VERSION > 11
+            BEGIN TRY
+                exec ('GRANT SELECT ALL USER SECURABLES TO [' + @COLLECTION_USER + ']');
+            END TRY
+            BEGIN CATCH
+                SELECT
+                host_name() as host_name,
+                db_name() as database_name,
+                'Execute Grant in master DB' as module_name,
+                SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
+                SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
+                SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
+                SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;		
+            END CATCH
+            IF @PRODUCT_VERSION > 15
+            BEGIN TRY
+                exec('GRANT VIEW SERVER PERFORMANCE STATE TO [' + @COLLECTION_USER + ']');
+                exec('GRANT VIEW SERVER SECURITY STATE TO [' + @COLLECTION_USER + ']');
+                exec('GRANT VIEW ANY PERFORMANCE DEFINITION TO [' + @COLLECTION_USER + ']');
+                exec('GRANT VIEW ANY SECURITY DEFINITION TO [' + @COLLECTION_USER + ']');
+            END TRY
+            BEGIN CATCH
+                SELECT
+                host_name() as host_name,
+                db_name() as database_name,
+                'Execute Grant in master DB' as module_name,
+                SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
+                SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
+                SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
+                SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
+            END CATCH
 END;
 
-OPEN db_cursor
-FETCH NEXT FROM db_cursor INTO @dbname
+IF @CLOUDTYPE <> 'AZURE'
+    OPEN db_cursor
+    FETCH NEXT FROM db_cursor INTO @dbname
 
-WHILE @@FETCH_STATUS = 0
-BEGIN
-    BEGIN
+    WHILE @@FETCH_STATUS = 0
+	BEGIN
+		BEGIN TRY
         exec ('
-        use [' + @dbname + '];
-        IF EXISTS (SELECT [name]
-           FROM [sys].[database_principals]
-           WHERE [type] = N''S'' AND [name] = N''' + @COLLECTION_USER + ''')
-           BEGIN
-             GRANT VIEW DATABASE STATE TO [' + @COLLECTION_USER + '];
-           END');
-    END;
+            use [' + @dbname + '];
+            IF NOT EXISTS (SELECT [name]
+            FROM [sys].[database_principals]
+            WHERE [type] = N''S'' AND [name] = N''' + @COLLECTION_USER + ''')
+            BEGIN
+                CREATE USER [' + @COLLECTION_USER + '] FOR LOGIN  [' + @COLLECTION_USER + '];
+            END;
+			GRANT VIEW DATABASE STATE TO  [' + @COLLECTION_USER + '];');
+		FETCH NEXT FROM db_cursor INTO @dbname;
+		END TRY
+		BEGIN CATCH
+			SELECT
+			host_name() as host_name,
+			@dbname as used_db_name,
+			db_name() as current_database_name,
+			'Execute Grant in individual DB' as module_name,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
+		END CATCH
+	END;
+	CLOSE db_cursor
+	DEALLOCATE db_cursor
 
-    FETCH NEXT FROM db_cursor INTO @dbname;
+IF @CLOUDTYPE = 'AZURE'
+BEGIN
+    exec ('CREATE USER [' + @COLLECTION_USER + '] FROM LOGIN [' + @COLLECTION_USER + '] WITH DEFAULT_SCHEMA=dbo');
 END;
-
-CLOSE db_cursor
-DEALLOCATE db_cursor
