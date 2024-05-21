@@ -30,7 +30,7 @@ DECLARE @CURRENT_DB_NAME AS VARCHAR(256);
 SELECT @PKEY = N'$(pkey)';
 SELECT @CLOUDTYPE = 'NONE'
 SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR(255), SERVERPROPERTY('productversion')), 4));
 SELECT @validDB = 0;
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
@@ -77,9 +77,9 @@ BEGIN
 														WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 														)
 											END
-						,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
-						,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
-						,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+						,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+						,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
+						,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 						,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 						,[is_temp_table] = ''0''
 					FROM sys.schemas s WITH (NOLOCK)
@@ -102,26 +102,26 @@ BEGIN
 						AND i.type IN (0,1,5))
 					SELECT
 						''"' + @PKEY + '"'' AS pkey,
-						QUOTENAME(DB_NAME(), ''"'') as database_name,
-						QUOTENAME(schema_name, ''"'') as schema_name,
-						QUOTENAME(table_name, ''"'') as table_name,
-						QUOTENAME(partition_count, ''"'') as partition_count,
-						QUOTENAME(is_memory_optimized, ''"'') as is_memory_optimized,
-						QUOTENAME(temporal_type, ''"'') as temporal_type,
-						QUOTENAME(is_external, ''"'') as is_external,
-						QUOTENAME(lock_escalation, ''"'') as lock_escalation,
-						QUOTENAME(is_tracked_by_cdc, ''"'') as is_tracked_by_cdc,
-						QUOTENAME(text_in_row_limit, ''"'') as text_in_row_limit,
-						QUOTENAME(is_replicated, ''"'') as is_replicated,
-						QUOTENAME(row_count, ''"'') as row_count,
-						QUOTENAME(data_compression, ''"'') as data_compression,
-						QUOTENAME(total_space_mb, ''"'') as total_space_mb,
-						QUOTENAME(used_space_mb, ''"'') as used_space_mb,
-						QUOTENAME(unused_space_mb, ''"'') as unused_space_mb,
+						''"'' + CONVERT(NVARCHAR(MAX), DB_NAME()) + ''"'' as database_name,
+						''"'' + CONVERT(NVARCHAR(MAX), schema_name) + ''"'' as schema_name,
+						''"'' + CONVERT(NVARCHAR(MAX), table_name) + ''"'' as table_name,
+						''"'' + CONVERT(NVARCHAR(MAX), partition_count) + ''"'' as partition_count,
+						''"'' + CONVERT(NVARCHAR(MAX), is_memory_optimized) + ''"'' as is_memory_optimized,
+						''"'' + CONVERT(NVARCHAR(MAX), temporal_type) + ''"'' as temporal_type,
+						''"'' + CONVERT(NVARCHAR(MAX), is_external) + ''"'' as is_external,
+						''"'' + CONVERT(NVARCHAR(MAX), lock_escalation) + ''"'' as lock_escalation,
+						''"'' + CONVERT(NVARCHAR(MAX), is_tracked_by_cdc) + ''"'' as is_tracked_by_cdc,
+						''"'' + CONVERT(NVARCHAR(MAX), text_in_row_limit) + ''"'' as text_in_row_limit,
+						''"'' + CONVERT(NVARCHAR(MAX), is_replicated) + ''"'' as is_replicated,
+						''"'' + CONVERT(NVARCHAR(MAX), row_count) + ''"'' as row_count,
+						''"'' + CONVERT(NVARCHAR(MAX), data_compression) + ''"'' as data_compression,
+						''"'' + CONVERT(NVARCHAR(MAX), total_space_mb) + ''"'' as total_space_mb,
+						''"'' + CONVERT(NVARCHAR(MAX), used_space_mb) + ''"'' as used_space_mb,
+						''"'' + CONVERT(NVARCHAR(MAX), unused_space_mb) + ''"'' as unused_space_mb,
 						''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
         				''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
-						QUOTENAME(partition_type, ''"'') as partition_type,
-						QUOTENAME(is_temp_table, ''"'') as is_temp_table
+						''"'' + CONVERT(NVARCHAR(MAX), partition_type) + ''"'' as partition_type,
+						''"'' + CONVERT(NVARCHAR(MAX), is_temp_table) + ''"'' as is_temp_table
 					FROM TableData');
 	END;
 	IF @PRODUCT_VERSION > 12 AND @validDB <> 0 AND @CLOUDTYPE = 'NONE' AND @CURRENT_DB_NAME = 'tempdb'
@@ -148,9 +148,9 @@ BEGIN
 														WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 														)
 											END
-						,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
-						,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
-						,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+						,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+						,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
+						,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 						,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 						,[is_temp_table] = ''1''
 					FROM sys.schemas s WITH (NOLOCK)
@@ -176,26 +176,26 @@ BEGIN
 							AND t.name not like N''#[0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z]''))
 					SELECT
 						''"' + @PKEY + '"'' AS pkey,
-						QUOTENAME(DB_NAME(), ''"'') as database_name,
-						QUOTENAME(schema_name, ''"'') as schema_name,
-						QUOTENAME(table_name, ''"'') as table_name,
-						QUOTENAME(partition_count, ''"'') as partition_count,
-						QUOTENAME(is_memory_optimized, ''"'') as is_memory_optimized,
-						QUOTENAME(temporal_type, ''"'') as temporal_type,
-						QUOTENAME(is_external, ''"'') as is_external,
-						QUOTENAME(lock_escalation, ''"'') as lock_escalation,
-						QUOTENAME(is_tracked_by_cdc, ''"'') as is_tracked_by_cdc,
-						QUOTENAME(text_in_row_limit, ''"'') as text_in_row_limit,
-						QUOTENAME(is_replicated, ''"'') as is_replicated,
-						QUOTENAME(row_count, ''"'') as row_count,
-						QUOTENAME(data_compression, ''"'') as data_compression,
-						QUOTENAME(total_space_mb, ''"'') as total_space_mb,
-						QUOTENAME(used_space_mb, ''"'') as used_space_mb,
-						QUOTENAME(unused_space_mb, ''"'') as unused_space_mb,
+						''"'' + CONVERT(NVARCHAR(MAX), DB_NAME()) + ''"'' as database_name,
+						''"'' + CONVERT(NVARCHAR(MAX), schema_name) + ''"'' as schema_name,
+						''"'' + CONVERT(NVARCHAR(MAX), table_name) + ''"'' as table_name,
+						''"'' + CONVERT(NVARCHAR(MAX), partition_count) + ''"'' as partition_count,
+						''"'' + CONVERT(NVARCHAR(MAX), is_memory_optimized) + ''"'' as is_memory_optimized,
+						''"'' + CONVERT(NVARCHAR(MAX), temporal_type) + ''"'' as temporal_type,
+						''"'' + CONVERT(NVARCHAR(MAX), is_external) + ''"'' as is_external,
+						''"'' + CONVERT(NVARCHAR(MAX), lock_escalation) + ''"'' as lock_escalation,
+						''"'' + CONVERT(NVARCHAR(MAX), is_tracked_by_cdc) + ''"'' as is_tracked_by_cdc,
+						''"'' + CONVERT(NVARCHAR(MAX), text_in_row_limit) + ''"'' as text_in_row_limit,
+						''"'' + CONVERT(NVARCHAR(MAX), is_replicated) + ''"'' as is_replicated,
+						''"'' + CONVERT(NVARCHAR(MAX), row_count) + ''"'' as row_count,
+						''"'' + CONVERT(NVARCHAR(MAX), data_compression) + ''"'' as data_compression,
+						''"'' + CONVERT(NVARCHAR(MAX), total_space_mb) + ''"'' as total_space_mb,
+						''"'' + CONVERT(NVARCHAR(MAX), used_space_mb) + ''"'' as used_space_mb,
+						''"'' + CONVERT(NVARCHAR(MAX), unused_space_mb) + ''"'' as unused_space_mb,
 						''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
         				''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
-						QUOTENAME(partition_type, ''"'') as partition_type,
-						QUOTENAME(is_temp_table, ''"'') as is_temp_table
+						''"'' + CONVERT(NVARCHAR(MAX), partition_type) + ''"'' as partition_type,
+						''"'' + CONVERT(NVARCHAR(MAX), is_temp_table) + ''"'' as is_temp_table
 					FROM TableData');
 	END;
 	IF @PRODUCT_VERSION <= 12 AND @validDB <> 0 AND @CLOUDTYPE = 'NONE' AND @CURRENT_DB_NAME <> 'tempdb'
@@ -223,9 +223,9 @@ BEGIN
 													WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 													)
 										END
-					,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
-					,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
-					,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+					,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+					,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
+					,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 					,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 					,[is_temp_table] = ''0''
 				FROM sys.schemas s WITH (NOLOCK)
@@ -248,26 +248,26 @@ BEGIN
 					AND i.type IN (0,1,5))
 				SELECT
 					''"' + @PKEY + '"'' AS pkey,
-					QUOTENAME(DB_NAME(), ''"'') as database_name,
-					QUOTENAME(schema_name, ''"'') as schema_name,
-					QUOTENAME(table_name, ''"'') as table_name,
-					QUOTENAME(partition_count, ''"'') as partition_count,
-					QUOTENAME(is_memory_optimized, ''"'') as is_memory_optimized,
-					QUOTENAME(temporal_type, ''"'') as temporal_type,
-					QUOTENAME(is_external, ''"'') as is_external,
-					QUOTENAME(lock_escalation, ''"'') as lock_escalation,
-					QUOTENAME(is_tracked_by_cdc, ''"'') as is_tracked_by_cdc,
-					QUOTENAME(text_in_row_limit, ''"'') as text_in_row_limit,
-					QUOTENAME(is_replicated, ''"'') as is_replicated,
-					QUOTENAME(row_count, ''"'') as row_count,
-					QUOTENAME(data_compression, ''"'') as data_compression,
-					QUOTENAME(total_space_mb, ''"'') as total_space_mb,
-					QUOTENAME(used_space_mb, ''"'') as used_space_mb,
-					QUOTENAME(unused_space_mb, ''"'') as unused_space_mb,
+					''"'' + CONVERT(NVARCHAR(MAX), DB_NAME()) + ''"'' as database_name,
+					''"'' + CONVERT(NVARCHAR(MAX), schema_name) + ''"'' as schema_name,
+					''"'' + CONVERT(NVARCHAR(MAX), table_name) + ''"'' as table_name,
+					''"'' + CONVERT(NVARCHAR(MAX), partition_count) + ''"'' as partition_count,
+					''"'' + CONVERT(NVARCHAR(MAX), is_memory_optimized) + ''"'' as is_memory_optimized,
+					''"'' + CONVERT(NVARCHAR(MAX), temporal_type) + ''"'' as temporal_type,
+					''"'' + CONVERT(NVARCHAR(MAX), is_external) + ''"'' as is_external,
+					''"'' + CONVERT(NVARCHAR(MAX), lock_escalation) + ''"'' as lock_escalation,
+					''"'' + CONVERT(NVARCHAR(MAX), is_tracked_by_cdc) + ''"'' as is_tracked_by_cdc,
+					''"'' + CONVERT(NVARCHAR(MAX), text_in_row_limit) + ''"'' as text_in_row_limit,
+					''"'' + CONVERT(NVARCHAR(MAX), is_replicated) + ''"'' as is_replicated,
+					''"'' + CONVERT(NVARCHAR(MAX), row_count) + ''"'' as row_count,
+					''"'' + CONVERT(NVARCHAR(MAX), data_compression) + ''"'' as data_compression,
+					''"'' + CONVERT(NVARCHAR(MAX), total_space_mb) + ''"'' as total_space_mb,
+					''"'' + CONVERT(NVARCHAR(MAX), used_space_mb) + ''"'' as used_space_mb,
+					''"'' + CONVERT(NVARCHAR(MAX), unused_space_mb) + ''"'' as unused_space_mb,
 					''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
         			''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
-					QUOTENAME(partition_type, ''"'') as partition_type,
-					QUOTENAME(is_temp_table, ''"'') as is_temp_table
+					''"'' + CONVERT(NVARCHAR(MAX), partition_type) + ''"'' as partition_type,
+					''"'' + CONVERT(NVARCHAR(MAX), is_temp_table) + ''"'' as is_temp_table
 				FROM TableData');
 	END;
 	IF @PRODUCT_VERSION <= 12 AND @validDB <> 0 AND @CLOUDTYPE = 'NONE' AND @CURRENT_DB_NAME = 'tempdb'
@@ -295,9 +295,9 @@ BEGIN
 													WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 													)
 										END
-					,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
-					,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
-					,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+					,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+					,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
+					,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 					,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 					,[is_temp_table] = ''1''
 				FROM sys.schemas s WITH (NOLOCK)
@@ -323,26 +323,26 @@ BEGIN
 							AND t.name not like N''#[0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z][0-9A-Z]''))
 				SELECT
 					''"' + @PKEY + '"'' AS pkey,
-					QUOTENAME(DB_NAME(), ''"'') as database_name,
-					QUOTENAME(schema_name, ''"'') as schema_name,
-					QUOTENAME(table_name, ''"'') as table_name,
-					QUOTENAME(partition_count, ''"'') as partition_count,
-					QUOTENAME(is_memory_optimized, ''"'') as is_memory_optimized,
-					QUOTENAME(temporal_type, ''"'') as temporal_type,
-					QUOTENAME(is_external, ''"'') as is_external,
-					QUOTENAME(lock_escalation, ''"'') as lock_escalation,
-					QUOTENAME(is_tracked_by_cdc, ''"'') as is_tracked_by_cdc,
-					QUOTENAME(text_in_row_limit, ''"'') as text_in_row_limit,
-					QUOTENAME(is_replicated, ''"'') as is_replicated,
-					QUOTENAME(row_count, ''"'') as row_count,
-					QUOTENAME(data_compression, ''"'') as data_compression,
-					QUOTENAME(total_space_mb, ''"'') as total_space_mb,
-					QUOTENAME(used_space_mb, ''"'') as used_space_mb,
-					QUOTENAME(unused_space_mb, ''"'') as unused_space_mb,
+					''"'' + CONVERT(NVARCHAR(MAX), DB_NAME()) + ''"'' as database_name,
+					''"'' + CONVERT(NVARCHAR(MAX), schema_name) + ''"'' as schema_name,
+					''"'' + CONVERT(NVARCHAR(MAX), table_name) + ''"'' as table_name,
+					''"'' + CONVERT(NVARCHAR(MAX), partition_count) + ''"'' as partition_count,
+					''"'' + CONVERT(NVARCHAR(MAX), is_memory_optimized) + ''"'' as is_memory_optimized,
+					''"'' + CONVERT(NVARCHAR(MAX), temporal_type) + ''"'' as temporal_type,
+					''"'' + CONVERT(NVARCHAR(MAX), is_external) + ''"'' as is_external,
+					''"'' + CONVERT(NVARCHAR(MAX), lock_escalation) + ''"'' as lock_escalation,
+					''"'' + CONVERT(NVARCHAR(MAX), is_tracked_by_cdc) + ''"'' as is_tracked_by_cdc,
+					''"'' + CONVERT(NVARCHAR(MAX), text_in_row_limit) + ''"'' as text_in_row_limit,
+					''"'' + CONVERT(NVARCHAR(MAX), is_replicated) + ''"'' as is_replicated,
+					''"'' + CONVERT(NVARCHAR(MAX), row_count) + ''"'' as row_count,
+					''"'' + CONVERT(NVARCHAR(MAX), data_compression) + ''"'' as data_compression,
+					''"'' + CONVERT(NVARCHAR(MAX), total_space_mb) + ''"'' as total_space_mb,
+					''"'' + CONVERT(NVARCHAR(MAX), used_space_mb) + ''"'' as used_space_mb,
+					''"'' + CONVERT(NVARCHAR(MAX), unused_space_mb) + ''"'' as unused_space_mb,
 					''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
         			''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
-					QUOTENAME(partition_type, ''"'') as partition_type,
-					QUOTENAME(is_temp_table, ''"'') as is_temp_table
+					''"'' + CONVERT(NVARCHAR(MAX), partition_type) + ''"'' as partition_type,
+					''"'' + CONVERT(NVARCHAR(MAX), is_temp_table) + ''"'' as is_temp_table
 				FROM TableData');
 	END;
 	IF @PRODUCT_VERSION >= 12 AND @validDB <> 0 AND @CLOUDTYPE = 'AZURE' AND @CURRENT_DB_NAME <> 'tempdb'
@@ -370,9 +370,9 @@ BEGIN
 												WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 												)
 									END
-				,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
-				,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
-				,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+				,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+				,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
+				,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 				,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 				,[is_temp_table] = ''0''
 			FROM sys.schemas s WITH (NOLOCK)
@@ -395,26 +395,26 @@ BEGIN
 				AND i.type IN (0,1,5))
 			SELECT
 				''"' + @PKEY + '"'' AS pkey,
-				QUOTENAME(DB_NAME(), ''"'') as database_name,
-				QUOTENAME(schema_name, ''"'') as schema_name,
-				QUOTENAME(table_name, ''"'') as table_name,
-				QUOTENAME(partition_count, ''"'') as partition_count,
-				QUOTENAME(is_memory_optimized, ''"'') as is_memory_optimized,
-				QUOTENAME(temporal_type, ''"'') as temporal_type,
-				QUOTENAME(is_external, ''"'') as is_external,
-				QUOTENAME(lock_escalation, ''"'') as lock_escalation,
-				QUOTENAME(is_tracked_by_cdc, ''"'') as is_tracked_by_cdc,
-				QUOTENAME(text_in_row_limit, ''"'') as text_in_row_limit,
-				QUOTENAME(is_replicated, ''"'') as is_replicated,
-				QUOTENAME(row_count, ''"'') as row_count,
-				QUOTENAME(data_compression, ''"'') as data_compression,
-				QUOTENAME(total_space_mb, ''"'') as total_space_mb,
-				QUOTENAME(used_space_mb, ''"'') as used_space_mb,
-				QUOTENAME(unused_space_mb, ''"'') as unused_space_mb,
+				''"'' + CONVERT(NVARCHAR(MAX), DB_NAME()) + ''"'' as database_name,
+				''"'' + CONVERT(NVARCHAR(MAX), schema_name) + ''"'' as schema_name,
+				''"'' + CONVERT(NVARCHAR(MAX), table_name) + ''"'' as table_name,
+				''"'' + CONVERT(NVARCHAR(MAX), partition_count) + ''"'' as partition_count,
+				''"'' + CONVERT(NVARCHAR(MAX), is_memory_optimized) + ''"'' as is_memory_optimized,
+				''"'' + CONVERT(NVARCHAR(MAX), temporal_type) + ''"'' as temporal_type,
+				''"'' + CONVERT(NVARCHAR(MAX), is_external) + ''"'' as is_external,
+				''"'' + CONVERT(NVARCHAR(MAX), lock_escalation) + ''"'' as lock_escalation,
+				''"'' + CONVERT(NVARCHAR(MAX), is_tracked_by_cdc) + ''"'' as is_tracked_by_cdc,
+				''"'' + CONVERT(NVARCHAR(MAX), text_in_row_limit) + ''"'' as text_in_row_limit,
+				''"'' + CONVERT(NVARCHAR(MAX), is_replicated) + ''"'' as is_replicated,
+				''"'' + CONVERT(NVARCHAR(MAX), row_count) + ''"'' as row_count,
+				''"'' + CONVERT(NVARCHAR(MAX), data_compression) + ''"'' as data_compression,
+				''"'' + CONVERT(NVARCHAR(MAX), total_space_mb) + ''"'' as total_space_mb,
+				''"'' + CONVERT(NVARCHAR(MAX), used_space_mb) + ''"'' as used_space_mb,
+				''"'' + CONVERT(NVARCHAR(MAX), unused_space_mb) + ''"'' as unused_space_mb,
 				''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
         		''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
-				QUOTENAME(partition_type, ''"'') as partition_type,
-				QUOTENAME(is_temp_table, ''"'') as is_temp_table
+				''"'' + CONVERT(NVARCHAR(MAX), partition_type) + ''"'' as partition_type,
+				''"'' + CONVERT(NVARCHAR(MAX), is_temp_table) + ''"'' as is_temp_table
 			FROM TableData');
 	END;
 	IF @PRODUCT_VERSION >= 12 AND @validDB <> 0 AND @CLOUDTYPE = 'AZURE' AND @CURRENT_DB_NAME = 'tempdb'
@@ -442,9 +442,9 @@ BEGIN
 												WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 												)
 									END
-				,[total_space_mb]   = convert(nvarchar,(round(( au.total_pages                  * (8/1024.00)), 2)))
-				,[used_space_mb]    = convert(nvarchar,(round(( au.used_pages                   * (8/1024.00)), 2)))
-				,[unused_space_mb]  = convert(nvarchar,(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
+				,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+				,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
+				,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 				,[partition_type] = ISNULL(pf.type_desc,''NONE'')
 				,[is_temp_table] = ''1''
 			FROM sys.schemas s WITH (NOLOCK)
@@ -467,26 +467,26 @@ BEGIN
 				AND i.type IN (0,1,5))
 			SELECT
 				''"' + @PKEY + '"'' AS pkey,
-				QUOTENAME(DB_NAME(), ''"'') as database_name,
-				QUOTENAME(schema_name, ''"'') as schema_name,
-				QUOTENAME(table_name, ''"'') as table_name,
-				QUOTENAME(partition_count, ''"'') as partition_count,
-				QUOTENAME(is_memory_optimized, ''"'') as is_memory_optimized,
-				QUOTENAME(temporal_type, ''"'') as temporal_type,
-				QUOTENAME(is_external, ''"'') as is_external,
-				QUOTENAME(lock_escalation, ''"'') as lock_escalation,
-				QUOTENAME(is_tracked_by_cdc, ''"'') as is_tracked_by_cdc,
-				QUOTENAME(text_in_row_limit, ''"'') as text_in_row_limit,
-				QUOTENAME(is_replicated, ''"'') as is_replicated,
-				QUOTENAME(row_count, ''"'') as row_count,
-				QUOTENAME(data_compression, ''"'') as data_compression,
-				QUOTENAME(total_space_mb, ''"'') as total_space_mb,
-				QUOTENAME(used_space_mb, ''"'') as used_space_mb,
-				QUOTENAME(unused_space_mb, ''"'') as unused_space_mb,
+				''"'' + CONVERT(NVARCHAR(MAX), DB_NAME()) + ''"'' as database_name,
+				''"'' + CONVERT(NVARCHAR(MAX), schema_name) + ''"'' as schema_name,
+				''"'' + CONVERT(NVARCHAR(MAX), table_name) + ''"'' as table_name,
+				''"'' + CONVERT(NVARCHAR(MAX), partition_count) + ''"'' as partition_count,
+				''"'' + CONVERT(NVARCHAR(MAX), is_memory_optimized) + ''"'' as is_memory_optimized,
+				''"'' + CONVERT(NVARCHAR(MAX), temporal_type) + ''"'' as temporal_type,
+				''"'' + CONVERT(NVARCHAR(MAX), is_external) + ''"'' as is_external,
+				''"'' + CONVERT(NVARCHAR(MAX), lock_escalation) + ''"'' as lock_escalation,
+				''"'' + CONVERT(NVARCHAR(MAX), is_tracked_by_cdc) + ''"'' as is_tracked_by_cdc,
+				''"'' + CONVERT(NVARCHAR(MAX), text_in_row_limit) + ''"'' as text_in_row_limit,
+				''"'' + CONVERT(NVARCHAR(MAX), is_replicated) + ''"'' as is_replicated,
+				''"'' + CONVERT(NVARCHAR(MAX), row_count) + ''"'' as row_count,
+				''"'' + CONVERT(NVARCHAR(MAX), data_compression) + ''"'' as data_compression,
+				''"'' + CONVERT(NVARCHAR(MAX), total_space_mb) + ''"'' as total_space_mb,
+				''"'' + CONVERT(NVARCHAR(MAX), used_space_mb) + ''"'' as used_space_mb,
+				''"'' + CONVERT(NVARCHAR(MAX), unused_space_mb) + ''"'' as unused_space_mb,
 				''"' + @DMA_SOURCE_ID + '"'' as dma_source_id,
         		''"' + @DMA_MANUAL_ID + '"'' as dma_manual_id,
-				QUOTENAME(partition_type, ''"'') as partition_type,
-				QUOTENAME(is_temp_table, ''"'') as is_temp_table
+				''"'' + CONVERT(NVARCHAR(MAX), partition_type) + ''"'' as partition_type,
+				''"'' + CONVERT(NVARCHAR(MAX), is_temp_table) + ''"'' as is_temp_table
 			FROM TableData');
 	END;
 	END TRY
@@ -495,10 +495,10 @@ BEGIN
 		host_name() as host_name,
 		db_name() as database_name,
 		'tableList' as module_name,
-		SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
-		SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
-		SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
-		SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message;
+		SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
+		SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
+		SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
+		SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
 	END CATCH
 
 END;
