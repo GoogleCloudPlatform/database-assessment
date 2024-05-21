@@ -24,7 +24,7 @@ DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
 DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 
 SELECT @PKEY = N'$(pkey)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(nvarchar, SERVERPROPERTY('productversion')), 4));
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR(255), SERVERPROPERTY('productversion')), 4));
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
@@ -34,9 +34,9 @@ BEGIN
         exec ('
         SELECT
             ''"' + @PKEY + '"'' AS pkey,
-            QUOTENAME(NodeName,''"'') AS node_name,
-            QUOTENAME(status,''"'') AS status,
-            QUOTENAME(status_description,''"'') status_description,
+            ''"'' + CONVERT(NVARCHAR(MAX), NodeName) + ''"'' AS node_name,
+            ''"'' + CONVERT(NVARCHAR(MAX), status) + ''"'' AS status,
+            ''"'' + CONVERT(NVARCHAR(MAX), status_description) + ''"'' status_description,
             ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id,
             ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id
         FROM sys.dm_os_cluster_nodes');
@@ -51,7 +51,7 @@ BEGIN
         exec ('
         SELECT
             ''"' + @PKEY + '"'' AS pkey,
-            QUOTENAME(NodeName,''"'') AS node_name,
+            ''"'' + CONVERT(NVARCHAR(MAX), NodeName) + ''"'' AS node_name,
             ''""'' as status,
             ''""'' as status_description,
             ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id,
@@ -66,9 +66,9 @@ BEGIN
         host_name() as host_name,
         db_name() as database_name,
         'columnDatatypes' as module_name,
-        SUBSTRING(CONVERT(nvarchar,ERROR_NUMBER()),1,254) as error_number,
-        SUBSTRING(CONVERT(nvarchar,ERROR_SEVERITY()),1,254) as error_severity,
-        SUBSTRING(CONVERT(nvarchar,ERROR_STATE()),1,254) as error_state,
-        SUBSTRING(CONVERT(nvarchar,ERROR_MESSAGE()),1,512) as error_message
+        SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
+        SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
+        SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
+        SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message
     END CATCH
 END;
