@@ -1,4 +1,25 @@
-with all_tables as (
+with all_types as (	
+  select pt.oid as object_id,
+    'TYPE' as object_category,
+    case 
+      when pt.typtype = 'b' then 'BASE TYPE'
+      when pt.typtype = 'c' THEN 'COMPOSITE TYPE'
+      when pt.typtype = 'd' THEN 'DOMAIN'
+      when pt.typtype = 'e' THEN 'ENUM'
+      when pt.typtype = 'p' THEN 'PSEUDO-TYPE'
+      when pt.typtype = 'r' THEN 'RANGE TYPE'
+      else 'UNKNOWN DOMAIN'
+    end as object_type,
+    ns.nspname as object_schema,
+    pt.typname as object_name,
+    pg_get_userbyid(pt.typowner) as object_owner
+  from pg_catalog.pg_type pt
+    join pg_catalog.pg_namespace ns ON ns.oid = pt.typnamespace 
+  where ns.nspname <> all (array ['pg_catalog', 'information_schema'])
+    and ns.nspname !~ '^pg_toast'
+    and not (pt.typname like '\_%' escape '\')
+),
+all_tables as (
   select distinct c.oid as object_id,
     'TABLE' as object_category,
     case
@@ -128,6 +149,14 @@ all_procedures as (
     and ns.nspname !~ '^pg_toast'
 ),
 src as (
+  select a.object_owner,
+    a.object_category,
+    a.object_type,
+    a.object_schema,
+    a.object_name,
+    a.object_id
+  from all_domains a
+  union all
   select a.object_owner,
     a.object_category,
     a.object_type,
