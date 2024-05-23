@@ -1,4 +1,4 @@
--- name: ddl-mysql-01-collection-scripts!
+-- name: ddl-collection-scripts-02!
 create or replace table collection_mysql_config (
     pkey varchar,
     dma_source_id varchar,
@@ -135,7 +135,9 @@ create or replace table collection_mysql_plugins (
     load_option varchar
   );
 
-create or replace table collection_mysql_process_list (
+drop view if exists collection_mysql_process_list;
+
+create or replace table collection_mysql_base_process_list (
     pkey varchar,
     dma_source_id varchar,
     dma_manual_id varchar,
@@ -146,6 +148,41 @@ create or replace table collection_mysql_process_list (
     process_time numeric,
     process_state varchar
   );
+
+create or replace table collection_mysql_5_process_list (
+    pkey varchar,
+    dma_source_id varchar,
+    dma_manual_id varchar,
+    process_id numeric,
+    process_host varchar,
+    process_db varchar,
+    process_command varchar,
+    process_time numeric,
+    process_state varchar
+  );
+
+create or replace view collection_mysql_process_list as
+select pkey,
+  dma_source_id,
+  dma_manual_id,
+  process_id,
+  process_host,
+  process_db,
+  process_command,
+  process_time,
+  process_state
+from collection_mysql_base_process_list
+union all
+select pkey,
+  dma_source_id,
+  dma_manual_id,
+  process_id,
+  process_host,
+  process_db,
+  process_command,
+  process_time,
+  process_state
+from collection_mysql_5_process_list;
 
 create or replace table collection_mysql_schema_details (
     pkey varchar,
@@ -180,4 +217,26 @@ create or replace table collection_mysql_schema_objects (
     object_owner_schema varchar,
     object_owner varchar,
     object_name varchar
+  );
+
+create or replace table collection_mysql_table_details (
+    pkey varchar,
+    dma_source_id varchar,
+    dma_manual_id varchar,
+    table_schema varchar,
+    table_name varchar,
+    table_engine varchar,
+    table_rows numeric,
+    data_length numeric,
+    index_length numeric,
+    is_compressed numeric,
+    is_partitioned numeric,
+    partition_count numeric,
+    index_count numeric,
+    fulltext_index_count numeric,
+    is_encrypted numeric,
+    spatial_index_count numeric,
+    has_primary_key numeric,
+    row_format varchar,
+    table_type varchar
   );
