@@ -45,9 +45,8 @@ class BaseWorkflow:
                     f"obj_{table_name}", pl.from_dicts(table_data, strict=False, infer_schema_length=10000)
                 )
                 self.local_db.execute(
-                    f"create or replace table {table_name} as select {', '.join(column_name for column_name in column_names)} from obj_{table_name}"  # noqa: S608
+                    f"insert into {table_name}({', '.join(column_name for column_name in column_names)}) select {', '.join(column_name for column_name in column_names)} from obj_{table_name}"  # noqa: S608
                 )
-                # self.local_db.execute( f"insert into {table_name}({', '.join(column_name for column_name in column_names)}) select {', '.join(column_name for column_name in column_names)} from obj_{table_name}")  # noqa: ERA001
 
                 self.local_db.execute(f"drop view obj_{table_name}")
 
