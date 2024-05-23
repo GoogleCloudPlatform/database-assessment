@@ -178,7 +178,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 )
         return is_installed
 
-    def _check_pglogical_privileges(self) -> list:
+    def _check_pglogical_privileges(self) -> list[str]:
         result = self.local_db.sql("""
             select has_schema_usage_privilege, has_tables_select_privilege, has_local_node_select_privilege, has_node_select_privilege,
             has_node_interface_select_privilege from collection_postgres_pglogical_privileges
