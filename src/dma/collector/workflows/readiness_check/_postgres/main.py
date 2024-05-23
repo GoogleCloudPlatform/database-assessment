@@ -177,17 +177,16 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     "`pglogical` is installed on the database.",
                 )
         return is_installed
-    
+
     def _check_pglogical_privileges(self) -> list:
         result = self.local_db.sql("""
             select has_schema_usage_privilege, has_tables_select_privilege, has_local_node_select_privilege, has_node_select_privilege,
             has_node_interface_select_privilege from collection_postgres_pglogical_privileges
         """).fetchone()
         errors = []
-        if result == None:
+        if result is None:
             errors.append("Empty result reading pglogical schema privileges for the user")
         else:
-            privileges = ["has_schema_usage_privilege", ""]
             if not result[0]:
                 errors.append("user doesn't have USAGE privilege on schema pglogical")
             if not result[1]:
@@ -201,31 +200,26 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         return errors
 
     def check_user_obj_privileges(self) -> list:
+        errors: list = []
         rows = self.local_db.sql("""
             select namespace_name from collection_postgres_user_schemas_without_privilege
         """).fetchall()
+        errors.extend(f"user doesn't have USAGE privilege on schema {row[0]}" for row in rows)
 
-        errors = []
-        for row in rows:
-            errors.append(f"user doesn't have USAGE privilege on schema {row[0]}")
-    
         rows = self.local_db.sql("""
             select schema_name, table_name from collection_postgres_user_tables_without_privilege
         """).fetchall()
-        for row in rows:
-            errors.append(f"user doesn't have SELECT privilege on table {row[0]}.{row[1]}")
+        errors.extend(f"user doesn't have SELECT privilege on table {row[0]}.{row[1]}" for row in rows)
 
         rows = self.local_db.sql("""
             select schema_name, view_name from collection_postgres_user_views_without_privilege
         """).fetchall()
-        for row in rows:
-            errors.append(f"user doesn't have SELECT privilege on view {row[0]}.{row[1]}")
+        errors.extend(f"user doesn't have SELECT privilege on view {row[0]}.{row[1]}" for row in rows)
 
         rows = self.local_db.sql("""
             select namespace_name, rel_name from collection_postgres_user_sequences_without_privilege
         """).fetchall()
-        for row in rows:
-            errors.append(f"user doesn't have SELECT privilege on sequence {row[0]}.{row[1]}")
+        errors.extend(f"user doesn't have SELECT privilege on sequence {row[0]}.{row[1]}" for row in rows)
         return errors
 
     def _check_privileges(self, is_pglogical_installed: bool) -> None:
@@ -234,24 +228,19 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
         if is_pglogical_installed:
             errors = self._check_pglogical_privileges()
-        
+
         errors.extend(self.check_user_obj_privileges())
         all_errors = "\n".join(errors)
         for c in self.rule_config:
             if len(errors) > 0:
-                self.save_rule_result(
-                    c.db_variant,
-                    rule_code,
-                    "ERROR",
-                    all_errors)
+                self.save_rule_result(c.db_variant, rule_code, "ERROR", all_errors)
             else:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
                     "PASS",
-                    'User has all privileges required for migration',
+                    "User has all privileges required for migration",
                 )
-        return
 
     def _check_wal_level(self) -> None:
         rule_code = "WAL_LEVEL"

@@ -1,7 +1,7 @@
 -- name: collection-postgres-pglogical-privileges
 with src as
 (
-    SELECT 
+    SELECT
         pg_catalog.has_schema_privilege('pglogical', 'USAGE') as has_schema_usage_privilege,
         pg_catalog.has_table_privilege('"pglogical"."tables"', 'SELECT') as has_tables_select_privilege,
         pg_catalog.has_table_privilege('"pglogical"."local_node"', 'SELECT') as has_local_node_select_privilege,
@@ -23,10 +23,10 @@ from src;
 -- name: collection-postgres-user-schemas-without-privilege
 with src as
 (
-    SELECT nspname 
-	FROM pg_catalog.pg_namespace 
+    SELECT nspname
+	FROM pg_catalog.pg_namespace
 	WHERE nspname not in ('information_schema', 'pglogical','pglogical_origin')
-	AND nspname not like 'pg\_%%' 
+	AND nspname not like 'pg\_%%'
 	AND pg_catalog.has_schema_privilege(nspname, 'USAGE') = 'f'
 )
 select :PKEY as pkey,
@@ -39,11 +39,11 @@ from src;
 -- name: collection-postgres-user-tables-without-privilege
 with src as
 (
-    SELECT schemaname, tablename 
-    FROM pg_catalog.pg_tables 
-    WHERE 
-        schemaname not in ('information_schema', 'pglogical', 'pglogical_origin') 
-        AND schemaname not like 'pg\_%%' 
+    SELECT schemaname, tablename
+    FROM pg_catalog.pg_tables
+    WHERE
+        schemaname not in ('information_schema', 'pglogical', 'pglogical_origin')
+        AND schemaname not like 'pg\_%%'
         AND pg_catalog.has_table_privilege(quote_ident(schemaname) || '.' || quote_ident(tablename), 'SELECT') = 'f'
 )
 select :PKEY as pkey,
@@ -58,11 +58,11 @@ from src;
 -- name: collection-postgres-user-views-without-privilege
 with src as
 (
-    SELECT schemaname, viewname 
-	FROM pg_catalog.pg_views 
+    SELECT schemaname, viewname
+	FROM pg_catalog.pg_views
 	WHERE
-        schemaname not in ('information_schema', 'pglogical', 'pglogical_origin') 
-	    AND schemaname not like 'pg\_%%' 
+        schemaname not in ('information_schema', 'pglogical', 'pglogical_origin')
+	    AND schemaname not like 'pg\_%%'
 	    AND pg_catalog.has_table_privilege(quote_ident(schemaname) || '.' || quote_ident(viewname), 'SELECT') = 'f'
 )
 select :PKEY as pkey,
@@ -74,15 +74,15 @@ select :PKEY as pkey,
 from src;
 
 -- name: collection-postgres-user-sequences-without-privilege
-with src as 
+with src as
 (
-    SELECT n.nspname as nspname, relname 
-	FROM pg_catalog.pg_class c 
-	LEFT JOIN pg_catalog.pg_namespace n 
-	ON n.oid = c.relnamespace 
-	WHERE c.relkind='S' 
-	    AND n.nspname != 'pglogical' 
-	    AND n.nspname != 'pglogical_origin' 
+    SELECT n.nspname as nspname, relname
+	FROM pg_catalog.pg_class c
+	LEFT JOIN pg_catalog.pg_namespace n
+	ON n.oid = c.relnamespace
+	WHERE c.relkind='S'
+	    AND n.nspname != 'pglogical'
+	    AND n.nspname != 'pglogical_origin'
 	    AND n.nspname not like 'pg\_%%' AND pg_catalog.has_sequence_privilege(quote_ident(n.nspname) || '.' || quote_ident(relname), 'SELECT') = 'f'
 )
 select :PKEY as pkey,
