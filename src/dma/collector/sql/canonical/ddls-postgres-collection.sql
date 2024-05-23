@@ -782,3 +782,50 @@ create or replace table extended_collection_postgres_all_databases(
     dma_manual_id VARCHAR,
     database_name VARCHAR
   );
+
+create or replace table collection_postgres_pglogical_privileges(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    has_schema_usage_privilege BOOLEAN,
+    has_tables_select_privilege BOOLEAN,
+    has_local_node_select_privilege BOOLEAN,
+    has_node_select_privilege BOOLEAN,
+    has_node_interface_select_privilege BOOLEAN,
+    database_name VARCHAR
+);
+
+create or replace table collection_postgres_user_schemas_without_privilege(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    namespace_name VARCHAR,
+    database_name VARCHAR
+);
+
+create or replace table collection_postgres_user_tables_without_privilege(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    schema_name VARCHAR,
+    table_name VARCHAR,
+    database_name VARCHAR
+);
+
+create or replace table collection_postgres_user_views_without_privilege(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    schema_name VARCHAR,
+    view_name VARCHAR,
+    database_name VARCHAR
+);
+
+create or replace table collection_postgres_user_sequences_without_privilege(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    namespace_name VARCHAR,
+    rel_name VARCHAR,
+    database_name VARCHAR
+);
