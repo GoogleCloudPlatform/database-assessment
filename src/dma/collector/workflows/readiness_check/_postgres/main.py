@@ -199,7 +199,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 errors.append("user doesn't have SELECT privilege on table pglogical.node_interface")
         return errors
 
-    def check_user_obj_privileges(self) -> list:
+    def check_user_obj_privileges(self) -> list[str]:
         errors: list = []
         rows = self.local_db.sql("""
             select namespace_name from collection_postgres_user_schemas_without_privilege
