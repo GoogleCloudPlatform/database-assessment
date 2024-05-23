@@ -60,6 +60,17 @@ class ReadinessCheck(CollectionExtractor):
                 console=self.console,
             )
             self.executor.execute()
+        elif self.db_type == "MYSQL":
+            # lazy loaded to help with circular import issues
+            from dma.collector.workflows.readiness_check._mysql.main import (  # noqa: PLC0415
+                MySQLReadinessCheckExecutor,
+            )
+
+            self.executor = MySQLReadinessCheckExecutor(
+                readiness_check=self,
+                console=self.console,
+            )
+            self.executor.execute()
         else:
             msg = f"{self.db_type} is not implemented."
             raise ApplicationError(msg)

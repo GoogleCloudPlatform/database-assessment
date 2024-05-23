@@ -284,7 +284,7 @@ class MySQLCollectionQueryManager(CollectionQueryManager):
         if self.db_version is None:
             msg = "Database Version was not set.  Ensure the initialization step complete successfully."
             raise ApplicationError(msg)
-        major_version = int(self.db_version[:2])
+        major_version = int(self.db_version[:1])
         version_prefix = "base" if major_version > 5.8 else "5.6"
         return {
             f"collection_mysql_{version_prefix}_resource_groups",

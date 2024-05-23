@@ -42,6 +42,8 @@ class AsyncMYAdapter:
         async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
             await cur.execute(sql)
             result = await cur.fetchone()
+        if isinstance(result, dict):
+            return result[next(iter(result))] if result else None
         return result[0] if result else None
 
     @asynccontextmanager
