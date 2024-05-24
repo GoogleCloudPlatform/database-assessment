@@ -21,10 +21,8 @@ from dma.lib.db.base import get_engine
 from dma.lib.db.local import get_duckdb_connection
 
 if TYPE_CHECKING:
-    from rich.console import Console
-
-if TYPE_CHECKING:
     from click import Context
+    from rich.console import Console
 
 __all__ = ("app",)
 
