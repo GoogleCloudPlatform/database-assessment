@@ -107,23 +107,25 @@ for analysis by Database Migration Assessment.
                                    IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8
                                    CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR.
 
+      Note: If the password has special characters that may be interpreted by the shell, use the --connectionStr option and enclose the entire connection string in single quotes.
+
       Examples:
 
         To use the AWR/ASH data:
-          ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR
+          ./collect-data.sh --connectionStr '{user}/{password}@//{db host}:{listener port}/{service name}' --statsSrc AWR
          or
           ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR
 
 
         To use the STATSPACK data:
-          ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc STATSPACK
+          ./collect-data.sh --connectionStr '{user}/{password}@//{db host}:{listener port}/{service name}' --statsSrc STATSPACK
          or
           ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc STATSPACK
 
 
         If Statspack has less than 30 days of data, limit collection to the last 7 days using the paramter --statsWindow:
 
-          ./collect-data.sh --connectionStr MyUser/MyPassword@//dbhost.company.com:1521/MyDbName.company.com --statsSrc STATSPACK --statsWindow 7
+          ./collect-data.sh --connectionStr 'MyUser/MyPassword@//dbhost.company.com:1521/MyDbName.company.com' --statsSrc STATSPACK --statsWindow 7
          or
           ./collect-data.sh --collectionUserName MyUser --collectionUserPass MyPassword --hostName dbhost.company.com --port 1521 --databaseService MyDbName.company.com --statsSrc STATSPACK --statsWindow 7
 
