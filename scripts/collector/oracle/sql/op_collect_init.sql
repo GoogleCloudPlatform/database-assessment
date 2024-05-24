@@ -527,3 +527,4 @@ column v_dma_source_id format a100
 column v_dma_manual_id format a100
 column dma_source_id format a100
 column dma_manual_id format a100
+column pkey format a100
