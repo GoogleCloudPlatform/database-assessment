@@ -1,4 +1,4 @@
--- name: ddl-postgres-01-collection-scripts!
+-- name: ddl-collection-scripts-01!
 create or replace table collection_postgres_12_database_details(
     pkey VARCHAR,
     dma_source_id VARCHAR,

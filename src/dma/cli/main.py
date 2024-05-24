@@ -344,6 +344,7 @@ async def _readiness_check(
             console.print(Padding("", 1, expand=True))
             console.rule("Processing collected data.", align="left")
             workflow.print_summary()
+            workflow.dump_database(working_path)
         await async_engine.dispose()
 
 

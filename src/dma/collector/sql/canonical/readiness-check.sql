@@ -1,4 +1,4 @@
--- name: ddl-01-readiness-check-ddl!
+-- name: ddl-readiness-check-01-ddl!
 create or replace table database_summary(
     collection_key varchar,
     database_name varchar,

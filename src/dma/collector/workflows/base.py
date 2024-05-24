@@ -47,8 +47,10 @@ class BaseWorkflow:
                 self.local_db.execute(
                     f"insert into {table_name}({', '.join(column_name for column_name in column_names)}) select {', '.join(column_name for column_name in column_names)} from obj_{table_name}"  # noqa: S608
                 )
+
                 self.local_db.execute(f"drop view obj_{table_name}")
 
     def dump_database(self, export_path: Path, delimiter: str = "|") -> None:
         """Export the entire database with DDLs and data as CSV"""
         self.local_db.execute(f"export database '{export_path!s}' (format csv, delimiter '{delimiter}')")
+        self.console.print(f"Database exported to '{export_path!s}'")
