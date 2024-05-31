@@ -1,3 +1,18 @@
+/*
+ Copyright 2024 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
 -- name: ddl-collection-scripts-01!
 create or replace table collection_postgres_12_database_details(
     pkey VARCHAR,
@@ -793,7 +808,7 @@ create or replace table collection_postgres_pglogical_privileges(
     has_node_select_privilege BOOLEAN,
     has_node_interface_select_privilege BOOLEAN,
     database_name VARCHAR
-);
+  );
 
 create or replace table collection_postgres_user_schemas_without_privilege(
     pkey VARCHAR,
@@ -801,7 +816,7 @@ create or replace table collection_postgres_user_schemas_without_privilege(
     dma_manual_id VARCHAR,
     namespace_name VARCHAR,
     database_name VARCHAR
-);
+  );
 
 create or replace table collection_postgres_user_tables_without_privilege(
     pkey VARCHAR,
@@ -810,7 +825,7 @@ create or replace table collection_postgres_user_tables_without_privilege(
     schema_name VARCHAR,
     table_name VARCHAR,
     database_name VARCHAR
-);
+  );
 
 create or replace table collection_postgres_user_views_without_privilege(
     pkey VARCHAR,
@@ -819,7 +834,7 @@ create or replace table collection_postgres_user_views_without_privilege(
     schema_name VARCHAR,
     view_name VARCHAR,
     database_name VARCHAR
-);
+  );
 
 create or replace table collection_postgres_user_sequences_without_privilege(
     pkey VARCHAR,
@@ -828,4 +843,18 @@ create or replace table collection_postgres_user_sequences_without_privilege(
     namespace_name VARCHAR,
     rel_name VARCHAR,
     database_name VARCHAR
-);
+  );
+
+create or replace table collection_postgres_db_machine_specs(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    machine_name VARCHAR,
+    physical_cpu_count NUMERIC,
+    logical_cpu_count NUMERIC,
+    total_os_memory_mb NUMERIC,
+    total_size_bytes NUMERIC,
+    used_size_bytes NUMERIC,
+    primary_mac VARCHAR,
+    ip_addresses VARCHAR
+  );

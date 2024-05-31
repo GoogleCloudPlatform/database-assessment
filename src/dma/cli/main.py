@@ -1,3 +1,16 @@
+# Copyright 2024 Google LLC
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     https://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import annotations
 
 import asyncio
@@ -123,7 +136,6 @@ def collect_data(
     """Process a collection of advisor extracts."""
     print_app_info()
     console.rule("Starting data collection process", align="left")
-
     if hostname is None:
         hostname = prompt.Prompt.ask("Please enter a hostname for the database")
     if port is None:
@@ -134,10 +146,7 @@ def collect_data(
         username = prompt.Prompt.ask("Please enter a username")
     if password is None:
         password = prompt.Prompt.ask("Please enter a password", password=True)
-    if no_prompt:
-        input_confirmed = True
-    if not no_prompt:
-        input_confirmed = prompt.Confirm.ask("Are you ready to start the assessment?")
+    input_confirmed = True if no_prompt else prompt.Confirm.ask("Are you ready to start the assessment?")
     if input_confirmed:
         asyncio.run(
             _collect_data(
@@ -279,7 +288,6 @@ def readiness_assessment(
     """Process a collection of advisor extracts."""
     print_app_info()
     console.rule("Starting data collection process", align="left")
-
     if hostname is None:
         hostname = prompt.Prompt.ask("Please enter a hostname for the database")
     if port is None:
@@ -290,10 +298,7 @@ def readiness_assessment(
         username = prompt.Prompt.ask("Please enter a username")
     if password is None:
         password = prompt.Prompt.ask("Please enter a password", password=True)
-    if no_prompt:
-        input_confirmed = True
-    if not no_prompt:
-        input_confirmed = prompt.Confirm.ask("Are you ready to start the assessment?")
+    input_confirmed = True if no_prompt else prompt.Confirm.ask("Are you ready to start the assessment?")
     if input_confirmed:
         asyncio.run(
             _readiness_check(
