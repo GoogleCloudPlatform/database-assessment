@@ -14,7 +14,7 @@ version = "4.3.36"
 authors = [
     { name = "Cody Fincher", email = "codyfincher@google.com" },
     { name = "Warren Puziewicz", email = "wpuziewicz@google.com" },
-    { name = "Steve Senior", email = "stevesenior@google.com>" },
+    { name = "Steve Senior", email = "stevesenior@google.com" },
     { name = "Shane Borden", email = "shaneborden@google.com" },
     { name = "Eri Santos", email = "erisantos@google.com" },
 ]
@@ -38,7 +38,7 @@ keywords = [
 maintainers = [
     { name = "Cody Fincher", email = "codyfincher@google.com" },
     { name = "Warren Puziewicz", email = "wpuziewicz@google.com" },
-    { name = "Steve Senior", email = "stevesenior@google.com>" },
+    { name = "Steve Senior", email = "stevesenior@google.com" },
     { name = "Shane Borden", email = "shaneborden@google.com" },
 ]
 # options under https://pypi.org/classifiers/
