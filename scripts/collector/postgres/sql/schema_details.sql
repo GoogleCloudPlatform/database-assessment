@@ -1,3 +1,18 @@
+/*
+ Copyright 2024 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
 with all_schemas as (
   select n.oid as object_id,
     n.nspname as object_schema,
@@ -55,7 +70,7 @@ select chr(34) || :PKEY || chr(34) as pkey,
   src.table_count,
   src.view_count,
   src.function_count,
-  COALESCE(src.table_data_size_bytes,0) as table_data_size_bytes,
-  COALESCE(src.total_table_size_bytes,0) as total_table_size_bytes,
+  COALESCE(src.table_data_size_bytes, 0) as table_data_size_bytes,
+  COALESCE(src.total_table_size_bytes, 0) as total_table_size_bytes,
   chr(34) || current_database() || chr(34) as database_name
 from src;

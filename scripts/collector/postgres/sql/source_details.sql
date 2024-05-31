@@ -1,3 +1,18 @@
+/*
+ Copyright 2024 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
 with src as (
   select p.oid as object_id,
     n.nspname as schema_name,
@@ -32,12 +47,12 @@ select chr(34) || :PKEY || chr(34) as pkey,
   chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
   chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
   src.object_id,
-  chr(34) || REPLACE (src.schema_name, chr(34), chr(39)) || chr(34) as schema_name,
+  chr(34) || replace (src.schema_name, chr(34), chr(39)) || chr(34) as schema_name,
   src.object_type,
-  chr(34) || REPLACE (src.object_name, chr(34), chr(39)) || chr(34) as object_name,
-  chr(34) || REPLACE (src.result_data_types, chr(34), chr(39)) || chr(34) as result_data_types,
-  chr(34) || REPLACE (src.argument_data_types, chr(34), chr(39)) || chr(34) as argument_data_types,
-  chr(34) || REPLACE (src.object_owner, chr(34), chr(39)) || chr(34) as object_owner,
+  chr(34) || replace (src.object_name, chr(34), chr(39)) || chr(34) as object_name,
+  chr(34) || replace (src.result_data_types, chr(34), chr(39)) || chr(34) as result_data_types,
+  chr(34) || replace (src.argument_data_types, chr(34), chr(39)) || chr(34) as argument_data_types,
+  chr(34) || replace (src.object_owner, chr(34), chr(39)) || chr(34) as object_owner,
   src.number_of_chars,
   src.number_of_lines,
   src.object_security,
