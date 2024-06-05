@@ -1,19 +1,23 @@
-
-
 ####################
 # Project Metadata #
 ####################
 
 [project]
 description = "Database Migration Assessment"
-license = { text = "MIT" }
+license = { text = "Apache-2.0" }
 name = "dma"
 readme = "README.md"
 requires-python = ">=3.9,<3.13"
 version = "4.3.36"
 
 # keywords for easier look-up on PyPI
-authors = [{ name = "Cody Fincher", email = "codyfincher@google.com" }]
+authors = [
+    { name = "Cody Fincher", email = "codyfincher@google.com" },
+    { name = "Warren Puziewicz", email = "wpuziewicz@google.com" },
+    { name = "Steve Senior", email = "stevesenior@google.com" },
+    { name = "Shane Borden", email = "shaneborden@google.com" },
+    { name = "Eri Santos", email = "erisantos@google.com" },
+]
 keywords = [
     "database",
     "migration",
@@ -30,6 +34,12 @@ keywords = [
     "google",
     "alloydb",
     "mariadb",
+]
+maintainers = [
+    { name = "Cody Fincher", email = "codyfincher@google.com" },
+    { name = "Warren Puziewicz", email = "wpuziewicz@google.com" },
+    { name = "Steve Senior", email = "stevesenior@google.com" },
+    { name = "Shane Borden", email = "shaneborden@google.com" },
 ]
 # options under https://pypi.org/classifiers/
 classifiers = [ # ToDo: Modify according to your needs!
@@ -57,9 +67,9 @@ dependencies = [
 
 [project.urls]
 # important URLs for this project
-Documentation = "https://github.com/cofin/goa"
-Source = "https://github.com/cofin/goa"
-# Tracker = "https://github.com/cofin/goa/issues"
+Documentation = "https://googlecloudplatform.github.io/database-assessment/"
+Issues = "https://github.com/GoogleCloudPlatform/database-assessment/issues"
+Source = "https://github.com/GoogleCloudPlatform/database-assessment"
 
 [project.optional-dependencies]
 docs = [
@@ -98,7 +108,6 @@ mssql = ["aioodbc"]
 mysql = ["asyncmy>=0.2.9"]
 oracle = ["oracledb"]
 postgres = ["asyncpg>=0.29.0"]
-remote = ["pyinfra"]
 server = ["litestar[structlog,jinja]>=2.7.0", "litestar-granian>=0.2.3"]
 testing = [
     "nodeenv",
@@ -158,7 +167,7 @@ upgrade-pkg = "PIP_COMPILE_UPGRADE='{args}' hatch env run --env {env_name} -- py
 
 # Test environment with test-only dependencies
 [tool.hatch.envs.test]
-features = ["server", "remote", "oracle", "mysql", "mssql", "postgres", "testing"]
+features = ["server", "oracle", "mysql", "mssql", "postgres", "testing"]
 template = "default"
 type = "virtual"
 
@@ -174,7 +183,7 @@ no-cov = "cov --no-cov {args}"
 
 # Docs environment
 [tool.hatch.envs.docs]
-features = ["server", "remote", "oracle", "mysql", "mssql", "postgres", "testing", "docs"]
+features = ["server", "oracle", "mysql", "mssql", "postgres", "testing", "docs"]
 template = "default"
 type = "virtual"
 
@@ -203,7 +212,7 @@ extra-dependencies = [
     "pandas",
 
 ]
-features = ["server", "remote", "oracle", "mysql", "mssql", "postgres", "testing", "docs", "linting"]
+features = ["server", "oracle", "mysql", "mssql", "postgres", "testing", "docs", "linting"]
 lock-filename = "requirements/requirements-dev.txt"
 path = ".venv/"
 python = "3.12"
@@ -217,7 +226,7 @@ stop-infra = "docker-compose -f tests/docker-compose.yml down --remove-orphans -
 
 # Lint environment
 [tool.hatch.envs.lint]
-features = ["server", "remote", "oracle", "mysql", "mssql", "postgres", "testing", "docs", "linting"]
+features = ["server", "oracle", "mysql", "mssql", "postgres", "testing", "docs", "linting"]
 python = "3.12"
 type = "virtual"
 

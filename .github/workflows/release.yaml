@@ -112,12 +112,13 @@ jobs:
       CARGO: cargo
       CARGO_BUILD_TARGET: ${{ matrix.job.target }}
       PYAPP_REPO: pyapp
-      PYAPP_VERSION: v0.21.1
+      PYAPP_VERSION: v0.22.0
       PYAPP_PYTHON_VERSION: "3.12"
-      PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server,remote
+      PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server
       PYAPP_DISTRIBUTION_EMBED: "1"
       PYAPP_UV_ENABLED: "1"
       HATCH_BUILD_LOCATION: dist
+      PYAPP_FULL_ISOLATION: "1"
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
