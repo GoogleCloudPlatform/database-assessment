@@ -1,5 +1,5 @@
 /*
-Copyright 2023 Google LLC
+Copyright 2024 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -58,23 +58,27 @@ BEGIN
             '"' + CONVERT(NVARCHAR(255),sizing.type_desc) + '"' as type_desc,
             '"' + CONVERT(NVARCHAR(255),sizing.current_size_mb) + '"' as current_size_mb,
             '"' + @DMA_SOURCE_ID + '"' as dma_source_id,
-            '"' + @DMA_MANUAL_ID + '"' as dma_manual_id
+            '"' + @DMA_MANUAL_ID + '"' as dma_manual_id,
+			'"' + CONVERT(NVARCHAR(255),sizing.recovery_model_desc) + '"' as recovery_model_desc
         FROM(
             SELECT
                 db_name() AS database_name,
                 type_desc,
-                SUM(size/128.0) AS current_size_mb
+                SUM(size/128.0) AS current_size_mb,
+				d.recovery_model_desc AS recovery_model_desc
             FROM sys.database_files sm
+			CROSS JOIN sys.databases d
             WHERE db_name() NOT IN ('master', 'model', 'msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-                AND type IN (0,1)
+			    AND d.name = db_name()
+                AND sm.type IN (0,1)
                 AND EXISTS (SELECT 1
                 FROM sys.databases sd
-                WHERE state = 0
+                WHERE sd.state = 0
                     AND sd.name NOT IN ('master','model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
                     AND sd.name like @ASSESSMENT_DATABSE_NAME
                     AND sd.state = 0
                     AND sd.name =db_name())
-            GROUP BY type_desc) sizing
+            GROUP BY sm.type_desc, d.recovery_model_desc) sizing
     END
     END TRY
     BEGIN CATCH
