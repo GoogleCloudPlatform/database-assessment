@@ -13,7 +13,9 @@
 # limitations under the License.
 from __future__ import annotations
 
-from typing import Literal, TypeAlias
+from typing import Literal
+
+from typing_extensions import TypeAlias
 
 SupportedSources: TypeAlias = Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"]
 PostgresVariants: TypeAlias = Literal["CLOUDSQL", "ALLOYDB"]
