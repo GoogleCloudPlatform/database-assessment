@@ -6,7 +6,7 @@ for analysis by Database Migration Assessment.
 These scripts have been tested with the following platforms:
     SQL Server Versions:
 
-        SQL Server 2008R2 SP2 through SQL Server 2022
+        SQL Server 2008 (SP4-GDR) (KB5020863) - 10.0.6814.4 (X64) through SQL Server 2022
         AZURE SQL Database
 
 Operating System Versions:
@@ -32,7 +32,7 @@ Operating System Versions:
     The collection script depends on the following executables to be available on the machine from which it is run.  The script is also expected to be run from a Windows machine:
     command shell (in administrator mode)
     powershell (version 5 or greater)
-    sqlcmd.exe (version 12.0.6024.0 or greater)
+    sqlcmd.exe (version 11.0.7512.11 or greater)
 
         Note:
         ----------------------
@@ -264,7 +264,7 @@ Operating System Versions:
 
 5. License
 ------------
-Copyright 2023 Google LLC
+Copyright 2024 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
