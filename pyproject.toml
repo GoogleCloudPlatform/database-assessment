@@ -53,7 +53,7 @@ classifiers = [ # ToDo: Modify according to your needs!
 ]
 # direct dependencies of this package, installed when users `pip install dma` later.
 dependencies = [
-    "duckdb>=0.9.2",
+    "duckdb>=1.0.0",
     "polars[pyarrow]>=0.20.0",
     "aiosql>=9.4",
     "click>=8.1.7",
@@ -255,8 +255,18 @@ ignore-words-list = "alog"
 skip = 'pdm.lock, package-lock.json'
 
 [tool.pyright]
-exclude = ["scripts", "docs"]
+autoSearchPaths = false
+exclude = ["docs/**/*.py", "tests/**/*.py", "scripts/**/*.py"]
+extraPaths = []                                                # Include paths from PYTHONPATH env var and .env definition
 include = ["src/dma", "tests"]
+pythonVersion = "3.9"
+reportMissingImports = "information"
+reportMissingTypeStubs = "information"
+reportUnknownMemberType = "none"
+reportUnnecessaryTypeIgnoreComments = true
+root = ['src']
+typeCheckingMode = "standard"
+useLibraryCodeForTypes = true
 
 [tool.mypy]
 disallow_untyped_defs = false
