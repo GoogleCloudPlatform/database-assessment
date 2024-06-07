@@ -138,7 +138,7 @@ else {
 }
 
 $sqlcmdVersion = Get-Command sqlcmd | Select-Object -ExpandProperty Version
-$requiredVersion = "12.0.6024.0"
+$requiredVersion = "11.0.7512.0"
 if ($sqlcmdVersion -lt $requiredVersion) {
     Write-Host "#############################################################"
     Write-Host "#                                                           #"
