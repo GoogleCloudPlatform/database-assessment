@@ -14,7 +14,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from rich.table import Table
 
@@ -70,7 +70,7 @@ POSTGRES_RULE_CONFIGURATIONS: list[PostgresReadinessCheckTargetConfig] = [
         db_variant="CLOUDSQL",
         minimum_supported_major_version=9.4,
         minimum_supported_rds_major_version=9.6,
-        maximum_supported_major_version=15,
+        maximum_supported_major_version=16,
         supported_collations=CLOUDSQL_SUPPORTED_COLLATIONS,
         supported_extensions=CLOUDSQL_SUPPORTED_EXTENSIONS,
         supported_fdws=CLOUDSQL_SUPPORTED_FDWS,
@@ -196,7 +196,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             select has_schema_usage_privilege, has_tables_select_privilege, has_local_node_select_privilege, has_node_select_privilege,
             has_node_interface_select_privilege from collection_postgres_pglogical_privileges
         """).fetchone()
-        errors = []
+        errors: list[str] = []
         if result is None:
             errors.append("Empty result reading pglogical schema privileges for the user")
         else:
@@ -213,7 +213,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         return errors
 
     def check_user_obj_privileges(self) -> list[str]:
-        errors: list = []
+        errors: list[str] = []
         rows = self.local_db.sql("""
             select namespace_name from collection_postgres_user_schemas_without_privilege
         """).fetchall()
@@ -237,7 +237,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_privileges(self, is_pglogical_installed: bool) -> None:
         rule_code = "PRIVILEGES"
-        errors = []
+        errors: list[str] = []
 
         if is_pglogical_installed:
             errors = self._check_pglogical_privileges()
@@ -263,7 +263,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             where c.setting_name='wal_level'
             and c.setting_value!='logical';
         """).fetchone()
-        wal_level = result[0] if result is not None else "unset"
+        wal_level = cast("str", result[0] if result is not None else "unset")
         for c in self.rule_config:
             if wal_level != "logical":
                 self.save_rule_result(
@@ -310,7 +310,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_max_replication_slots(self) -> None:
         rule_code = "MAX_REPLICATION_SLOTS"
-        url_link = "Refer https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
+        url_link = "Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
         db_count_result = self.local_db.sql(
             "select count(*) from extended_collection_postgres_all_databases"
         ).fetchone()
@@ -337,7 +337,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     c.db_variant,
                     rule_code,
                     "ERROR",
-                    f"Insufficient `max_replication_slots`: {total_replication_slots}, should be set to at leat {required_replication_slots}. Up to {c.extra_replication_subscriptions_required} additional subscriptions might be required depending on the parallelism level set for migration. {url_link}",
+                    f"Insufficient `max_replication_slots`: {total_replication_slots}, should be set to at least {required_replication_slots}. Up to {c.extra_replication_subscriptions_required} additional subscriptions might be required depending on the parallelism level set for migration. {url_link}",
                 )
             elif total_replication_slots < max_required_replication_slots:
                 self.save_rule_result(
@@ -356,7 +356,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_max_wal_senders(self) -> None:
         rule_code = "MAX_WAL_SENDERS"
-        url_link = "Refer https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
+        url_link = "Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
         db_count_result = self.local_db.sql(
             "select count(*) from extended_collection_postgres_all_databases"
         ).fetchone()
@@ -425,7 +425,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_max_worker_processes(self) -> None:
         rule_code = "MAX_WORKER_PROCESSES"
-        url_link = "Refer https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
+        url_link = "Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
         db_count_result = self.local_db.sql(
             "select count(*) from extended_collection_postgres_all_databases"
         ).fetchone()
@@ -488,7 +488,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             from collection_postgres_table_details
             where foreign_data_wrapper_name is not null
             group by foreign_data_wrapper_name
-        """).fetchmany()
+        """).fetchall()
         fdws = {row[0] for row in result}
         fdw_table_count = {int(row[1]) for row in result}
         for c in self.rule_config:
@@ -518,10 +518,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
     ) -> None:
         """Print Summary of the Migration Readiness Assessment."""
         results = self.local_db.sql(
-            """
-                select metric_category, metric_name, metric_value
-                from collection_postgres_calculated_metrics
-            """,
+            """select metric_category, metric_name, metric_value from collection_postgres_calculated_metrics""",
         ).fetchall()
         count_table = Table(min_width=80)
         count_table.add_column("Variable Category", justify="right", style="green")
@@ -538,10 +535,8 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         def table_for_target(migration_target: PostgresVariants) -> None:
             results = self.local_db.execute(
                 """
-                    select severity, rule_code, info
-                    from readiness_check_summary
-                    where migration_target = ?
-                """,
+                select severity, rule_code, info from readiness_check_summary where migration_target = ?
+            """,
                 [migration_target],
             ).fetchall()
             count_table = Table(

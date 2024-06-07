@@ -146,8 +146,8 @@
       }
   },
   "python.analysis.fixAll": [
-      "source.unusedImports",
-      "source.convertImportFormat"
+    "source.unusedImports",
+    "source.convertImportFormat"
   ],
   "sqltools.disableReleaseNotifications": true,
   "sqltools.disableNodeDetectNotifications": true,
@@ -177,5 +177,15 @@
       "tag:yaml.org,2002:python/name:material.extensions.emoji.to_svg",
       "tag:yaml.org,2002:python/name:material.extensions.emoji.twemoji",
       "tag:yaml.org,2002:python/name:pymdownx.superfences.fence_code_format"
-  ]
+],
+"python.analysis.typeCheckingMode": "standard",
+"python.analysis.inlayHints.callArgumentNames": "partial",
+"notebook.defaultFormatter": "charliermarsh.ruff",
+"editor.defaultFormatter": "charliermarsh.ruff",
+"editor.defaultFoldingRangeProvider": "charliermarsh.ruff",
+"python.languageServer": "Pylance",
+"python.analysis.experimentalserver": true,
+"python.analysis.diagnosticSeverityOverrides": {
+    "reportUnknownMemberType": "none"
+}
 }
