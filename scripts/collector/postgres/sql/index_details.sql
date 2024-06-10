@@ -1,3 +1,18 @@
+/*
+ Copyright 2024 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+ https://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ */
 with src as (
   select i.indexrelid as object_id,
     sut.relname as table_name,
@@ -34,10 +49,10 @@ select chr(34) || :PKEY || chr(34) as pkey,
   chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
   chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
   src.object_id,
-  chr(34) || REPLACE(src.table_name, chr(34), chr(30)) || chr(34) as table_name,
-  chr(34) || REPLACE(src.table_owner, chr(34), chr(30)) || chr(34) as table_owner,
-  chr(34) || REPLACE(src.index_name, chr(34), chr(30)) || chr(34) as index_name,
-  chr(34) || REPLACE(src.index_owner, chr(34), chr(30)) || chr(34) as index_owner,
+  chr(34) || replace(src.table_name, chr(34), chr(30)) || chr(34) as table_name,
+  chr(34) || replace(src.table_owner, chr(34), chr(30)) || chr(34) as table_owner,
+  chr(34) || replace(src.index_name, chr(34), chr(30)) || chr(34) as index_name,
+  chr(34) || replace(src.index_owner, chr(34), chr(30)) || chr(34) as index_owner,
   src.table_object_id,
   src.indexed_column_count,
   src.indexed_keyed_column_count,

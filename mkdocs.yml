@@ -8,6 +8,10 @@ theme:
 plugins:
   - search
   - mkdocstrings
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
 
 nav:
   - Home: index.md

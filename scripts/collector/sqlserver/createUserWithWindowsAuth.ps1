@@ -65,10 +65,10 @@ if ([string]::IsNullorEmpty($collectionUserName)) {
     Exit 1
 }
 
-$validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -d master -U $user -P $pass -C -l 30 -W -m 1 -u -h-1 -w 32768)
+$validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768)
 $splitValidInstanceVerisionCheckObj = $validSQLInstanceVersionCheckArray[0].Split('')
 $validSQLInstanceVersionCheckValues = $splitValidInstanceVerisionCheckObj | ForEach-Object { if ($_.Trim() -ne '') { $_ } }
-# $isValidSQLInstanceVersion = $validSQLInstanceVersionCheckValues[0]
+
 $isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
 
 if ($isCloudOrLinuxHost -eq "AZURE") {

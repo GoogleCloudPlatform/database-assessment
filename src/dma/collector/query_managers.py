@@ -1,11 +1,11 @@
-# Copyright 2022 Google LLC
-#
+# Copyright 2024 Google LLC
+
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-#
+
 #     https://www.apache.org/licenses/LICENSE-2.0
-#
+
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -13,12 +13,13 @@
 # limitations under the License.
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import aiosql
 from rich.padding import Padding
 
 from dma.cli._utils import console
+from dma.collector.workflows.readiness_check._postgres.helpers import get_db_major_version
 from dma.lib.db.query_manager import QueryManager
 from dma.lib.exceptions import ApplicationError
 from dma.utils import module_to_os_path
@@ -47,7 +48,7 @@ class CanonicalQueryManager(QueryManager):
 
     async def execute_ddl_scripts(self, *args: Any, **kwargs: Any) -> None:
         """Execute pre-processing queries."""
-        console.print(Padding("DATAMODEL", 1, style="bold", expand=True), width=80)
+        console.print(Padding("CANONICAL DATA MODEL", 1, style="bold", expand=True), width=80)
         with console.status("[bold green]Creating tables...[/]") as status:
             for script in self.available_queries("ddl"):
                 status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
@@ -55,32 +56,6 @@ class CanonicalQueryManager(QueryManager):
                 status.console.print(rf" [green]:heavy_check_mark:[/] Created [bold magenta]`{script}`[/]")
             if not self.available_queries("ddl"):
                 console.print(" [dim grey]:heavy_check_mark: No DDL scripts to load[/]")
-
-    async def execute_transformation_queries(self, *args: Any, **kwargs: Any) -> None:
-        """Execute pre-processing queries."""
-        console.print(Padding("TRANSFORMATION QUERIES", 1, style="bold", expand=True), width=80)
-        with console.status("[bold green]Executing queries...[/]") as status:
-            for script in self.available_queries("transformation"):
-                status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                await self.execute(script)
-                status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
-            if not self.available_queries("transformation"):
-                console.print(" [dim grey]:heavy_check_mark: No transformation queries for this database type[/]")
-
-    async def execute_assessment_queries(
-        self,
-        *args: Any,
-        **kwargs: Any,
-    ) -> None:
-        """Execute pre-processing queries."""
-        console.print(Padding("ASSESSMENT QUERIES", 1, style="bold", expand=True), width=80)
-        with console.status("[bold green]Executing queries...[/]") as status:
-            for script in self.available_queries("assessment"):
-                status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                await self.insert_update_delete(script)
-                status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
-            if not self.available_queries("assessment"):
-                console.print(" [dim grey]:heavy_check_mark: No assessment queries for this database type[/]")
 
 
 class CollectionQueryManager(QueryManager):
@@ -131,13 +106,21 @@ class CollectionQueryManager(QueryManager):
             self.manual_id = manual_id
         if db_version is not None:
             self.db_version = db_version
-        if execution_id is None or source_id is None or db_version is None:
+        if self.execution_id is None or self.source_id is None or self.db_version is None:
             init_results = await self.execute_init_queries()
-            self.source_id = source_id if source_id is not None else init_results.get("init_get_source_id", None)
-            self.execution_id = (
-                execution_id if execution_id is not None else init_results.get("init_get_execution_id", None)
+            self.source_id = (
+                source_id if source_id is not None else cast("str | None", init_results.get("init_get_source_id", None))
             )
-            self.db_version = db_version if db_version is not None else init_results.get("init_get_db_version", None)
+            self.execution_id = (
+                execution_id
+                if execution_id is not None
+                else cast("str | None", init_results.get("init_get_execution_id", None))
+            )
+            self.db_version = (
+                db_version
+                if db_version is not None
+                else cast("str | None", init_results.get("init_get_db_version", None))
+            )
         if self.source_id is None or self.execution_id is None or self.db_version is None:
             msg = "Failed to set execution identifiers for collection."
             raise ApplicationError(msg)
@@ -235,7 +218,7 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
         if self.db_version is None:
             msg = "Database Version was not set.  Ensure the initialization step complete successfully."
             raise ApplicationError(msg)
-        major_version = int(self.db_version[:2])
+        major_version = get_db_major_version(self.db_version)
         version_prefix = "base" if major_version > 13 else "13" if major_version == 13 else "12"
         return {
             f"collection_postgres_{version_prefix}_table_details",
@@ -254,31 +237,36 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             "collection_postgres_schema_objects",
             "collection_postgres_settings",
             "collection_postgres_source_details",
+            "collection_postgres_pglogical_privileges",
+            "collection_postgres_user_schemas_without_privilege",
+            "collection_postgres_user_tables_without_privilege",
+            "collection_postgres_user_views_without_privilege",
+            "collection_postgres_user_sequences_without_privilege",
         }
 
     def get_collection_filenames(self) -> dict[str, str]:
         if self.db_version is None:
             msg = "Database Version was not set.  Ensure the initialization step complete successfully."
             raise ApplicationError(msg)
-        major_version = int(self.db_version[:2])
+        major_version = get_db_major_version(self.db_version)
         version_prefix = "base" if major_version > 13 else "13" if major_version == 13 else "12"
         return {
-            f"collection_postgres_{version_prefix}_table_details": "collection_postgres_table_details",
-            f"collection_postgres_{version_prefix}_database_details": "collection_postgres_database_details",
-            f"collection_postgres_{version_prefix}_replication_slots": "collection_postgres_replication_slots",
-            "collection_postgres_applications": "collection_postgres_applications",
-            "collection_postgres_aws_extension_dependency": "collection_postgres_aws_extension_dependency",
-            "collection_postgres_aws_oracle_exists": "collection_postgres_aws_oracle_exists",
-            "collection_postgres_bg_writer_stats": "collection_postgres_bg_writer_stats",
-            "collection_postgres_calculated_metrics": "collection_postgres_calculated_metrics",
-            "collection_postgres_data_types": "collection_postgres_data_types",
-            "collection_postgres_extensions": "collection_postgres_extensions",
-            "collection_postgres_index_details": "collection_postgres_index_details",
-            "collection_postgres_replication_stats": "collection_postgres_replication_stats",
-            "collection_postgres_schema_details": "collection_postgres_schema_details",
-            "collection_postgres_schema_objects": "collection_postgres_schema_objects",
-            "collection_postgres_settings": "collection_postgres_settings",
-            "collection_postgres_source_details": "collection_postgres_source_details",
+            f"collection_postgres_{version_prefix}_table_details": "postgres_table_details",
+            f"collection_postgres_{version_prefix}_database_details": "postgres_database_details",
+            f"collection_postgres_{version_prefix}_replication_slots": "postgres_replication_slots",
+            "collection_postgres_applications": "postgres_applications",
+            "collection_postgres_aws_extension_dependency": "postgres_aws_extension_dependency",
+            "collection_postgres_aws_oracle_exists": "postgres_aws_oracle_exists",
+            "collection_postgres_bg_writer_stats": "postgres_bg_writer_stats",
+            "collection_postgres_calculated_metrics": "postgres_calculated_metrics",
+            "collection_postgres_data_types": "postgres_data_types",
+            "collection_postgres_extensions": "postgres_extensions",
+            "collection_postgres_index_details": "postgres_index_details",
+            "collection_postgres_replication_stats": "postgres_replication_stats",
+            "collection_postgres_schema_details": "postgres_schema_details",
+            "collection_postgres_schema_objects": "postgres_schema_objects",
+            "collection_postgres_settings": "postgres_settings",
+            "collection_postgres_source_details": "postgres_source_details",
         }
 
 
@@ -301,19 +289,38 @@ class MySQLCollectionQueryManager(CollectionQueryManager):
         if self.db_version is None:
             msg = "Database Version was not set.  Ensure the initialization step complete successfully."
             raise ApplicationError(msg)
-        major_version = int(self.db_version[:2])
-        version_prefix = "base" if major_version > 5.8 else "5.6"
+        major_version = int(self.db_version[:1])
+        version_prefix = "base" if major_version > 5.8 else "5"
         return {
             f"collection_mysql_{version_prefix}_resource_groups",
+            f"collection_mysql_{version_prefix}_process_list",
             "collection_mysql_config",
             "collection_mysql_data_types",
             "collection_mysql_database_details",
             "collection_mysql_engines",
             "collection_mysql_plugins",
-            "collection_mysql_process_list",
             "collection_mysql_schema_objects",
             "collection_mysql_table_details",
             "collection_mysql_users",
+        }
+
+    def get_collection_filenames(self) -> dict[str, str]:
+        if self.db_version is None:
+            msg = "Database Version was not set.  Ensure the initialization step complete successfully."
+            raise ApplicationError(msg)
+        major_version = int(self.db_version[:1])
+        version_prefix = "base" if major_version > 5.8 else "5"
+        return {
+            f"collection_mysql_{version_prefix}_resource_groups": "mysql_resource_groups",
+            f"collection_mysql_{version_prefix}_process_list": "mysql_process_list",
+            "collection_mysql_config": "mysql_config",
+            "collection_mysql_data_types": "mysql_data_types",
+            "collection_mysql_database_details": "mysql_database_details",
+            "collection_mysql_engines": "mysql_engines",
+            "collection_mysql_plugins": "mysql_plugins",
+            "collection_mysql_schema_objects": "mysql_schema_objects",
+            "collection_mysql_table_details": "mysql_table_details",
+            "collection_mysql_users": "mysql_users",
         }
 
 

@@ -138,7 +138,7 @@ else {
 }
 
 $sqlcmdVersion = Get-Command sqlcmd | Select-Object -ExpandProperty Version
-$requiredVersion = "12.0.6024.0"
+$requiredVersion = "11.0.7512.0"
 if ($sqlcmdVersion -lt $requiredVersion) {
     Write-Host "#############################################################"
     Write-Host "#                                                           #"
@@ -245,7 +245,7 @@ $validSQLInstanceVersionCheckValues = $splitValidInstanceVerisionCheckObj | ForE
 $isValidSQLInstanceVersion = $validSQLInstanceVersionCheckValues[0]
 $isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
 
-$op_version = "4.3.34"
+$op_version = "4.3.36"
 
 if ([string]($isValidSQLInstanceVersion) -eq "N") {
     Write-Host "#############################################################"
@@ -311,7 +311,8 @@ else {
 if (Test-Path -Path $PSScriptRoot\$foldername) {
     WriteLog -logMessage "  Directory $PSScriptRoot\$foldername successfully created" -logOperation "MESSAGE"
     Write-Output " "
-} else {
+}
+else {
     Write-Host "Output folder $PSScriptRoot\$foldername was not created."  -ForegroundColor red
     Write-Host "Exiting Script"  -ForegroundColor red
     Exit 1
@@ -497,7 +498,7 @@ Set-Content -Path $foldername\$dbServerConfig -Encoding utf8 -Value '"pkey"|"con
 sqlcmd -S $serverName -i sql\dbServerConfigurationSettings.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$dbServerConfig -Encoding utf8
 
 if ($isCloudOrLinuxHost -eq "AZURE") {
-    WriteLog -logLocation $foldername\$logFile -logMessage "Unavailable in AZURE.....Skipping SQL Server Transaction Log Backup Info..." -logOperation "BOTH"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Skipping SQL Server Transaction Log Backup Info...Unavailable in AZURE SQL Managed Instance." -logOperation "BOTH"
     Set-Content -Path $foldername\$tranLogBkupCountByDayByHour -Encoding utf8 -Value '"PKEY"|"collection_date"|"day_of_month"|"total_logs_generated"|"h0_count"|"h1_count"|"h2_count"|"h3_count"|"h4_count"|"h5_count"|"h6_count"|"h7_count"|"h8_count"|"h9_count"|"h10_count"|"h11_count"|"h12_count"|"h13_count"|"h14_count"|"h15_count"|"h16_count"|"h17_count"|"h18_count"|"h19_count"|"h20_count"|"h21_count"|"h22_count"|"h23_count"|"avg_per_hour"|"dma_source_id"|"dma_manual_id"'
     Set-Content -Path $foldername\$tranLogBkupSizeByDayByHour -Encoding utf8 -Value '"PKEY"|"collection_date"|"day_of_month"|"total_logs_generated_in_mb"|"h0_size_in_mb"|"h1_size_in_mb"|"h2_size_in_mb"|"h3_size_in_mb"|"h4_size_in_mb"|"h5_size_in_mb"|"h6_size_in_mb"|"h7_size_in_mb"|"h8_size_in_mb"|"h9_size_in_mb"|"h10_size_in_mb"|"h11_size_in_mb"|"h12_size_in_mb"|"h13_size_in_mb"|"h14_size_in_mb"|"h15_size_in_mb"|"h16_size_in_mb"|"h17_size_in_mb"|"h18_size_in_mb"|"h19_size_in_mb"|"h20_size_in_mb"|"h21_size_in_mb"|"h22_size_in_mb"|"h23_size_in_mb"|"avg_mb_per_hour"|"dma_source_id"|"dma_manual_id"'
 }
@@ -515,7 +516,7 @@ Set-Content -Path $foldername\$tableList -Encoding utf8 -Value '"PKEY"|"database
 Set-Content -Path $foldername\$indexList -Encoding utf8 -Value '"PKEY"|"database_name"|"schema_name"|"table_name"|"index_name"|"index_type"|"is_primary_key"|"is_unique"|"fill_factor"|"allow_page_locks"|"has_filter"|"data_compression"|"data_compression_desc"|"is_partitioned"|"count_key_ordinal"|"count_partition_ordinal"|"count_is_included_column"|"total_space_mb"|"dma_source_id"|"dma_manual_id"|"is_computed_index"|"is_index_on_view"'
 Set-Content -Path $foldername\$columnDatatypes -Encoding utf8 -Value '"PKEY"|"database_name"|"schema_name"|"table_name"|"datatype"|"max_length"|"precision"|"scale"|"is_computed"|"is_filestream"|"is_masked"|"encryption_type"|"is_sparse"|"rule_object_id"|"column_count"|"dma_source_id"|"dma_manual_id"'
 Set-Content -Path $foldername\$userConnectionList -Encoding utf8 -Value '"PKEY"|"database_name"|"is_user_process"|"host_name"|"program_name"|"login_name"|"num_reads"|"num_writes"|"last_read"|"last_write"|"reads"|"logical_reads"|"writes"|"client_interface_name"|"nt_domain"|"nt_user_name"|"client_net_address"|"local_net_address"|"dma_source_id"|"dma_manual_id"|"client_version"|"protocol_type"|"protocol_version"|"protocol_hex_version"'
-Set-Content -Path $foldername\$dbsizes -Encoding utf8 -Value '"PKEY"|"database_name"|"type_desc"|"current_size_mb"|"dma_source_id"|"dma_manual_id"'
+Set-Content -Path $foldername\$dbsizes -Encoding utf8 -Value '"PKEY"|"database_name"|"type_desc"|"current_size_mb"|"dma_source_id"|"dma_manual_id"|"recovery_model_desc"'
 Set-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8 -Value '"PKEY"|"collection_time"|"available_mbytes"|"physicaldisk_avg_disk_bytes_read"|"physicaldisk_avg_disk_bytes_write"|"physicaldisk_avg_disk_bytes_read_sec"|"physicaldisk_avg_disk_bytes_write_sec"|"physicaldisk_disk_reads_sec"|"physicaldisk_disk_writes_sec"|"processor_idle_time_pct"|"processor_total_time_pct"|"processor_frequency"|"processor_queue_length"|"buffer_cache_hit_ratio"|"checkpoint_pages_sec"|"free_list_stalls_sec"|"page_life_expectancy"|"page_lookups_sec"|"page_reads_sec"|"page_writes_sec"|"user_connection_count"|"memory_grants_pending"|"target_server_memory_kb"|"total_server_memory_kb"|"batch_requests_sec"|"dma_source_id"|"dma_manual_id"'
 Set-Content -Path $foldername\$databaseLevelBlockingFeatures -Encoding utf8 -Value '"PKEY"|"database_name"|"feature_name"|"is_enabled_or_used"|"occurance_count"|"dma_source_id"|"dma_manual_id"'
 
@@ -550,9 +551,13 @@ foreach ($databaseName in $dbNameArray) {
 }
 
 ### Need to execute certain files against tempdb to gather temp table information
-WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Temp Table Info..." -logOperation "BOTH"
-sqlcmd -S $serverName -i sql\tableList.sql -d tempdb -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$tableList -Encoding utf8
-
+if ($isCloudOrLinuxHost -eq "AZURE") {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Skipping SQL Server Temp Table Info...Unavailable in AZURE SQL Managed Instance." -logOperation "BOTH"
+}
+else {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Temp Table Info..." -logOperation "BOTH"
+    sqlcmd -S $serverName -i sql\tableList.sql -d tempdb -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" | findstr /v /c:"---" | Add-Content -Path $foldername\$tableList -Encoding utf8
+}
 # Pull perfmon file if we are running from same server.  Generate empty file if running on remote server
 # Capability does not exist yet to run against remote computer
 
@@ -583,11 +588,11 @@ else {
 
 <# Getting HW Specs. #>
 if ($isCloudOrLinuxHost -eq "AZURE") {
-    WriteLog -logLocation $foldername\$logFile -logMessage "Unavailable in AZURE... Skipping SQL Server HW Shape Info for Machine $machinename ..." -logOperation "BOTH"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Skipping SQL Server HW Shape Info for Machine $machinename ...Unavailable in AZURE SQL Managed Instance." -logOperation "BOTH"
     Set-Content -Path $foldername\$computerSpecsFile -Encoding utf8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"MachineName"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
 }
 elseif ($isCloudOrLinuxHost -eq "LINUX") {
-    WriteLog -logLocation $foldername\$logFile -logMessage "Unavailable for Linux Host... Skipping SQL Server HW Shape Info for Machine $machinename ..." -logOperation "BOTH"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Skipping SQL Server HW Shape Info for Machine $machinename ...Unavailable for Linux Host." -logOperation "BOTH"
     Set-Content -Path $foldername\$computerSpecsFile -Encoding utf8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"MachineName"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
 }
 else {

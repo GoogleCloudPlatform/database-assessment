@@ -29,7 +29,7 @@ DECLARE @DMA_MANUAL_ID AS VARCHAR(256);
 SELECT @PKEY = N'$(pkey)';
 SELECT @CLOUDTYPE = 'NONE'
 SELECT @ASSESSMENT_DATABSE_NAME = N'$(database)';
-SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR, SERVERPROPERTY('productversion')), 4));
+SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR(255), SERVERPROPERTY('productversion')), 4));
 SELECT @VALIDDB = 0;
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
@@ -58,20 +58,20 @@ BEGIN
       EXEC ('
          SELECT
                ''"' + @PKEY + '"'' AS pkey
-               , QUOTENAME(db_name(),''"'') as database_name
-               , QUOTENAME(s.name,''"'')  AS schema_name
-               , QUOTENAME(o.name,''"'')  AS table_name
-               , QUOTENAME(t.name,''"'')  AS datatype
-               , QUOTENAME(c.max_length,''"'') AS max_length
-               , QUOTENAME(c.precision,''"'') AS precision
-               , QUOTENAME(c.scale,''"'') AS scale
-               , QUOTENAME(c.is_computed,''"'') AS is_computed
-               , QUOTENAME(c.is_filestream,''"'') AS is_filestream
-               , QUOTENAME(c.is_masked,''"'') AS is_masked
-               , QUOTENAME(ISNULL(c.encryption_type,0),''"'')  AS encryption_type
-               , QUOTENAME(c.is_sparse,''"'') AS is_sparse
-               , QUOTENAME(c.rule_object_id,''"'') AS rule_object_id
-               , QUOTENAME(count(1),''"'') AS column_count
+               , ''"'' + CONVERT(NVARCHAR(MAX), db_name()) + ''"'' as database_name
+               , ''"'' + CONVERT(NVARCHAR(MAX), s.name) + ''"''  AS schema_name
+               , ''"'' + CONVERT(NVARCHAR(MAX), o.name) + ''"''  AS table_name
+               , ''"'' + CONVERT(NVARCHAR(MAX), t.name) + ''"''  AS datatype
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.max_length) + ''"'' AS max_length
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.precision) + ''"'' AS precision
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.scale) + ''"'' AS scale
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.is_computed) + ''"'' AS is_computed
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.is_filestream) + ''"'' AS is_filestream
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.is_masked) + ''"'' AS is_masked
+               , ''"'' + CONVERT(NVARCHAR(MAX), ISNULL(c.encryption_type,0)) + ''"''  AS encryption_type
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.is_sparse) + ''"'' AS is_sparse
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.rule_object_id) + ''"'' AS rule_object_id
+               , ''"'' + CONVERT(NVARCHAR(MAX), count(1)) + ''"'' AS column_count
                , ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id
                , ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id
             FROM  sys.objects o
@@ -102,20 +102,20 @@ BEGIN
       EXEC ('
          SELECT
                ''"' + @PKEY + '"'' AS pkey
-               , QUOTENAME(db_name(),''"'') AS database_name
-               , QUOTENAME(s.name,''"'')  AS schema_name
-               , QUOTENAME(o.name,''"'')  AS table_name
-               , QUOTENAME(t.name,''"'')  AS datatype
-               , QUOTENAME(c.max_length,''"'') AS max_length
-               , QUOTENAME(c.precision,''"'') AS precision
-               , QUOTENAME(c.scale,''"'') AS scale
-               , QUOTENAME(c.is_computed,''"'') AS is_computed
-               , QUOTENAME(c.is_filestream,''"'') AS is_filestream
-               , QUOTENAME(0 as is_masked,''"'') AS is_masked
-               , QUOTENAME(0 AS encryption_type,''"'') AS encryption_type
-               , QUOTENAME(c.is_sparse,''"'') AS is_sparse
-               , QUOTENAME(c.rule_object_id,''"'') AS rule_object_id
-               , QUOTENAME(count(1),''"'') AS column_count
+               , ''"'' + CONVERT(NVARCHAR(MAX), db_name()) + ''"'' AS database_name
+               , ''"'' + CONVERT(NVARCHAR(MAX), s.name) + ''"''  AS schema_name
+               , ''"'' + CONVERT(NVARCHAR(MAX), o.name) + ''"'' AS table_name
+               , ''"'' + CONVERT(NVARCHAR(MAX), t.name) + ''"'' AS datatype
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.max_length) + ''"'' AS max_length
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.precision) + ''"'' AS precision
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.scale) + ''"'' AS scale
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.is_computed) + ''"'' AS is_computed
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.is_filestream) + ''"'' AS is_filestream
+               , ''"'' + CONVERT(NVARCHAR(MAX), 0) + ''"'' AS is_masked
+               , ''"'' + CONVERT(NVARCHAR(MAX), 0) + ''"'' AS encryption_type
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.is_sparse) + ''"'' AS is_sparse
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.rule_object_id) + ''"'' AS rule_object_id
+               , ''"'' + CONVERT(NVARCHAR(MAX), count(1)) + ''"'' AS column_count
                , ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id
                , ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id
             FROM  sys.objects o
@@ -144,20 +144,20 @@ BEGIN
       EXEC ('
          SELECT
                ''"' + @PKEY + '"'' AS pkey
-               , QUOTENAME(db_name(),''"'') AS database_name
-               , QUOTENAME(s.name,''"'') AS schema_name
-               , QUOTENAME(o.name,''"'')  AS table_name
-               , QUOTENAME(t.name,''"'')  AS datatype
-               , QUOTENAME(c.max_length,''"'') AS max_length
-               , QUOTENAME(c.precision,''"'') AS precision
-               , QUOTENAME(c.scale,''"'') AS scale
-               , QUOTENAME(c.is_computed,''"'') AS is_computed
-               , QUOTENAME(c.is_filestream,''"'') AS is_filestream
-               , QUOTENAME(c.is_masked,''"'') AS is_masked
-               , QUOTENAME(ISNULL(c.encryption_type,0),''"'') AS encryption_type
-               , QUOTENAME(c.is_sparse,''"'') AS is_sparse
-               , QUOTENAME(c.rule_object_id,''"'') AS rule_object_id
-               , QUOTENAME(count(1),''"'') AS column_count
+               , ''"'' + CONVERT(NVARCHAR(MAX), db_name()) + ''"'' AS database_name
+               , ''"'' + CONVERT(NVARCHAR(MAX), s.name) + ''"'' AS schema_name
+               , ''"'' + CONVERT(NVARCHAR(MAX), o.name) + ''"''  AS table_name
+               , ''"'' + CONVERT(NVARCHAR(MAX), t.name) + ''"''  AS datatype
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.max_length) + ''"'' AS max_length
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.precision) + ''"'' AS precision
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.scale) + ''"'' AS scale
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.is_computed) + ''"'' AS is_computed
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.is_filestream) + ''"'' AS is_filestream
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.is_masked) + ''"'' AS is_masked
+               , ''"'' + CONVERT(NVARCHAR(MAX), ISNULL(c.encryption_type,0)) + ''"'' AS encryption_type
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.is_sparse) + ''"'' AS is_sparse
+               , ''"'' + CONVERT(NVARCHAR(MAX), c.rule_object_id) + ''"'' AS rule_object_id
+               , ''"'' + CONVERT(NVARCHAR(MAX), count(1)) + ''"'' AS column_count
                , ''"' + @DMA_SOURCE_ID + '"'' AS dma_source_id
                , ''"' + @DMA_MANUAL_ID + '"'' AS dma_manual_id
             FROM  sys.objects o
@@ -188,9 +188,9 @@ BEGIN CATCH
       HOST_NAME() AS HOST_NAME,
       DB_NAME() AS DATABASE_NAME,
       'columnDatatypes' AS MODULE_NAME,
-      SUBSTRING(CONVERT(NVARCHAR, ERROR_NUMBER()), 1, 254) AS ERROR_NUMBER,
-      SUBSTRING(CONVERT(NVARCHAR, ERROR_SEVERITY()), 1, 254) AS ERROR_SEVERITY,
-      SUBSTRING(CONVERT(NVARCHAR, ERROR_STATE()), 1, 254) AS ERROR_STATE,
-      SUBSTRING(CONVERT(NVARCHAR, ERROR_MESSAGE()), 1, 512) AS ERROR_MESSAGE;
+      SUBSTRING(CONVERT(NVARCHAR(255), ERROR_NUMBER()), 1, 254) AS ERROR_NUMBER,
+      SUBSTRING(CONVERT(NVARCHAR(255), ERROR_SEVERITY()), 1, 254) AS ERROR_SEVERITY,
+      SUBSTRING(CONVERT(NVARCHAR(255), ERROR_STATE()), 1, 254) AS ERROR_STATE,
+      SUBSTRING(CONVERT(NVARCHAR(255), ERROR_MESSAGE()), 1, 512) AS ERROR_MESSAGE;
 END CATCH
 END;
