@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Copyright 2022 Google LLC
+# Copyright 2024 Google LLC
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
+# Licensed under the Apache License, Version 2.0 (the "License").
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.34"
+OpVersion="4.3.36"
 dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
@@ -95,6 +95,7 @@ if ! [ -x "$(command -v ${SQLPLUS})" ]; then
 fi
 
 ${SQLPLUS} -s /nolog << EOF
+SET DEFINE OFF
 connect ${connectString}
 @${SQL_DIR}/op_set_sql_env.sql
 set pagesize 0 lines 400 feedback off verify off heading off echo off timing off time off
@@ -121,6 +122,7 @@ fi
 
 
 ${SQLPLUS} -s /nolog << EOF
+SET DEFINE OFF
 connect ${connectString}
 @${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${SQLOUTPUT_DIR} "${manualUniqueId}" ${statsWindow}
 exit;

@@ -179,6 +179,7 @@ duckdb.db
 duck.db
 local.duckdb
 node_modules
+opdb__*
 
 src/dma/static
 src/dma/templates/*

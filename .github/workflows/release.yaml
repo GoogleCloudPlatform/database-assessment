@@ -1,3 +1,16 @@
+# Copyright 2024 Google LLC
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     https://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 name: release
 
 on:
@@ -89,17 +102,17 @@ jobs:
           os: ubuntu-latest
           cross: true
           release_suffix: aarch64-linux
-        - target: i686-unknown-linux-gnu
-          os: ubuntu-latest
-          cross: true
-          release_suffix: i686-linux
+        # - target: i686-unknown-linux-gnu
+        #   os: ubuntu-latest
+        #   cross: true
+        #   release_suffix: i686-linux
         # Windows
         - target: x86_64-pc-windows-msvc
           os: windows-2022
           release_suffix: x86_64-windows
-        - target: i686-pc-windows-msvc
-          os: windows-2022
-          release_suffix: i686-windows
+        # - target: i686-pc-windows-msvc
+        #   os: windows-2022
+        #   release_suffix: i686-windows
         # macOS
         - target: aarch64-apple-darwin
           os: macos-12
@@ -112,12 +125,13 @@ jobs:
       CARGO: cargo
       CARGO_BUILD_TARGET: ${{ matrix.job.target }}
       PYAPP_REPO: pyapp
-      PYAPP_VERSION: v0.19.0
-      PYAPP_PYTHON_VERSION: "3.11"
-      PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server,remote
+      PYAPP_VERSION: v0.22.0
+      PYAPP_PYTHON_VERSION: "3.12"
+      PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server
       PYAPP_DISTRIBUTION_EMBED: "1"
       PYAPP_UV_ENABLED: "1"
       HATCH_BUILD_LOCATION: dist
+      PYAPP_FULL_ISOLATION: "1"
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -171,18 +185,18 @@ jobs:
       working-directory: ${{ github.workspace }}
       run: |-
         current_version=$(hatch version)
-        PYAPP_PYTHON_VERSION="3.11" PYAPP_DISTRIBUTION_EMBED="1" PYAPP_FULL_ISOLATION="1" PYAPP_UV_ENABLED="1" PYAPP_PROJECT_PATH="${{ github.workspace }}/dist/dma-${current_version}-py3-none-any.whl" PYAPP_PROJECT_FEATURES="oracle,postgres,mssql,mysql,server,remote" hatch -v build -t app
+        PYAPP_PROJECT_PATH="${{ github.workspace }}/dist/dma-${current_version}-py3-none-any.whl" hatch -v build -t binary
 
     - name: Rename
       working-directory: ${{ github.workspace }}
       run: |-
-        mv dist/app/dma* dist/app/dma-${{ matrix.job.release_suffix }}
+        mv dist/binary/dma* dist/binary/dma-${{ matrix.job.release_suffix }}
 
     - name: Upload built binary package
       uses: actions/upload-artifact@v4
       with:
         name: binaries-${{ matrix.job.release_suffix }}
-        path: dist/app/*
+        path: dist/binary/*
         if-no-files-found: error
 
   publish:

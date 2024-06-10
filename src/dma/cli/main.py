@@ -1,3 +1,16 @@
+# Copyright 2024 Google LLC
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     https://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import annotations
 
 import asyncio
@@ -8,6 +21,7 @@ from typing import TYPE_CHECKING, Literal
 import click
 from click import group, pass_context
 from rich import prompt
+from rich.padding import Padding
 from rich.table import Table
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,15 +29,13 @@ from dma.__about__ import __version__ as current_version
 from dma.cli._utils import console
 from dma.collector.dependencies import provide_canonical_queries, provide_collection_query_manager
 from dma.collector.workflows.collection_extractor.base import CollectionExtractor
-from dma.collector.workflows.readiness_assessment.base import ReadinessCheck
+from dma.collector.workflows.readiness_check.base import ReadinessCheck
 from dma.lib.db.base import get_engine
 from dma.lib.db.local import get_duckdb_connection
 
 if TYPE_CHECKING:
-    from rich.console import Console
-
-if TYPE_CHECKING:
     from click import Context
+    from rich.console import Console
 
 __all__ = ("app",)
 
@@ -124,7 +136,6 @@ def collect_data(
     """Process a collection of advisor extracts."""
     print_app_info()
     console.rule("Starting data collection process", align="left")
-
     if hostname is None:
         hostname = prompt.Prompt.ask("Please enter a hostname for the database")
     if port is None:
@@ -135,15 +146,12 @@ def collect_data(
         username = prompt.Prompt.ask("Please enter a username")
     if password is None:
         password = prompt.Prompt.ask("Please enter a password", password=True)
-    if no_prompt:
-        input_confirmed = True
-    if not no_prompt:
-        input_confirmed = prompt.Confirm.ask("Are you ready to start the assessment?")
+    input_confirmed = True if no_prompt else prompt.Confirm.ask("Are you ready to start the assessment?")
     if input_confirmed:
         asyncio.run(
             _collect_data(
                 console=console,
-                db_type=db_type,
+                db_type=db_type.upper(),  # type: ignore[arg-type]
                 username=username,
                 password=password,
                 hostname=hostname,
@@ -158,7 +166,7 @@ def collect_data(
 
 async def _collect_data(
     console: Console,
-    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
     username: str,
     password: str,
     hostname: str,
@@ -280,7 +288,6 @@ def readiness_assessment(
     """Process a collection of advisor extracts."""
     print_app_info()
     console.rule("Starting data collection process", align="left")
-
     if hostname is None:
         hostname = prompt.Prompt.ask("Please enter a hostname for the database")
     if port is None:
@@ -291,15 +298,12 @@ def readiness_assessment(
         username = prompt.Prompt.ask("Please enter a username")
     if password is None:
         password = prompt.Prompt.ask("Please enter a password", password=True)
-    if no_prompt:
-        input_confirmed = True
-    if not no_prompt:
-        input_confirmed = prompt.Confirm.ask("Are you ready to start the assessment?")
+    input_confirmed = True if no_prompt else prompt.Confirm.ask("Are you ready to start the assessment?")
     if input_confirmed:
         asyncio.run(
             _readiness_check(
                 console=console,
-                db_type=db_type,
+                db_type=db_type.upper(),  # type: ignore[arg-type]
                 username=username,
                 password=password,
                 hostname=hostname,
@@ -314,7 +318,7 @@ def readiness_assessment(
 
 async def _readiness_check(
     console: Console,
-    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
     username: str,
     password: str,
     hostname: str,
@@ -342,6 +346,10 @@ async def _readiness_check(
                 console=console,
             )
             await workflow.execute()
+            console.print(Padding("", 1, expand=True))
+            console.rule("Processing collected data.", align="left")
+            workflow.print_summary()
+            workflow.dump_database(working_path)
         await async_engine.dispose()
 
 

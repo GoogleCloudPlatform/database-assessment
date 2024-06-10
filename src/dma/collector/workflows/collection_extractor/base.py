@@ -1,12 +1,23 @@
+# Copyright 2024 Google LLC
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     https://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from rich.table import Table
 
 from dma.collector.workflows.base import BaseWorkflow
-from dma.collector.workflows.collection_extractor._mysql import print_summary_mysql
-from dma.collector.workflows.collection_extractor._postgres import print_summary_postgres
 from dma.lib.exceptions import ApplicationError
 
 if TYPE_CHECKING:
@@ -14,6 +25,7 @@ if TYPE_CHECKING:
     from rich.console import Console
 
     from dma.collector.query_managers import CanonicalQueryManager, CollectionQueryManager
+    from dma.types import SupportedSources
 
 
 class CollectionExtractor(BaseWorkflow):
@@ -22,7 +34,7 @@ class CollectionExtractor(BaseWorkflow):
         local_db: DuckDBPyConnection,
         canonical_query_manager: CanonicalQueryManager,
         collection_query_manager: CollectionQueryManager,
-        db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+        db_type: SupportedSources,
         console: Console,
     ) -> None:
         self.collection_query_manager = collection_query_manager
@@ -32,14 +44,13 @@ class CollectionExtractor(BaseWorkflow):
         await super().execute()
         await self.extract_collection()
         await self.process_collection()
-        self.print_summary()
 
     async def extract_collection(self) -> None:
         collection = await self.collection_query_manager.execute_collection_queries()
         self.import_to_table(collection)
 
     async def process_collection(self) -> None:
-        await self.canonical_query_manager.execute_transformation_queries()
+        """Process Collections"""
 
     def print_summary(self) -> None:
         """Print Summary of the Migration Readiness Assessment."""
@@ -47,9 +58,13 @@ class CollectionExtractor(BaseWorkflow):
         table.add_column("title", style="cyan", width=80)
         table.add_row("Collection Summary")
         self.console.print(table)
-        if self.db_type == "postgres":
+        if self.db_type == "POSTGRES":
+            from dma.collector.workflows.collection_extractor._postgres import print_summary_postgres  # noqa: PLC0415
+
             print_summary_postgres(console=self.console, local_db=self.local_db, manager=self.canonical_query_manager)
-        elif self.db_type == "mysql":
+        elif self.db_type == "MYSQL":
+            from dma.collector.workflows.collection_extractor._mysql import print_summary_mysql  # noqa: PLC0415
+
             print_summary_mysql(console=self.console, local_db=self.local_db, manager=self.canonical_query_manager)
         else:
             msg = f"{self.db_type} is not implemented."

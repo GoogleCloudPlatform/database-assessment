@@ -28,14 +28,14 @@ IF @ASSESSMENT_DATABSE_NAME = 'all'
 IF CHARINDEX('\', @@SERVERNAME)-1 = -1
   SELECT @MACHINE_NAME = UPPER(@@SERVERNAME)
 ELSE
-  SELECT @MACHINE_NAME = UPPER(SUBSTRING(CONVERT(nvarchar, @@SERVERNAME),1,CHARINDEX('\', CONVERT(nvarchar, @@SERVERNAME))-1))
+  SELECT @MACHINE_NAME = UPPER(SUBSTRING(CONVERT(NVARCHAR(255), @@SERVERNAME),1,CHARINDEX('\', CONVERT(NVARCHAR(255), @@SERVERNAME))-1))
 
 BEGIN
 	exec('
 	SELECT CAST(SERVERPROPERTY(''ProductVersion'') AS VARCHAR(15)) AS Version,
 	''' + @MACHINE_NAME + ''' as machinename,
 	''' + @ASSESSMENT_DATABSE_NAME + ''' as databasename,
-	COALESCE(CONVERT(nvarchar, SERVERPROPERTY(''InstanceName'')), ''MSSQLSERVER'') as instancename,
+	COALESCE(CONVERT(NVARCHAR(255), SERVERPROPERTY(''InstanceName'')), ''MSSQLSERVER'') as instancename,
 	replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''') as current_ts,
-	''' + @MACHINE_NAME + ''' + ''_'' + ''' + @ASSESSMENT_DATABSE_NAME + ''' + ''_'' +  COALESCE(CONVERT(nvarchar, SERVERPROPERTY(''InstanceName'')), ''MSSQLSERVER'') + ''_'' + replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''') as pkey');
+	''' + @MACHINE_NAME + ''' + ''_'' + ''' + @ASSESSMENT_DATABSE_NAME + ''' + ''_'' +  COALESCE(CONVERT(NVARCHAR(255), SERVERPROPERTY(''InstanceName'')), ''MSSQLSERVER'') + ''_'' + replace(convert(varchar, getdate(),1),''/'','''') + replace(convert(varchar, getdate(),108),'':'','''') as pkey');
 END

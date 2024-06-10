@@ -1,3 +1,16 @@
+# Copyright 2024 Google LLC
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     https://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
@@ -20,7 +33,7 @@ class BaseWorkflow:
         self,
         local_db: DuckDBPyConnection,
         canonical_query_manager: CanonicalQueryManager,
-        db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+        db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
         console: Console,
     ) -> None:
         """Initialize a workflow on a local duckdb instance."""
@@ -47,8 +60,10 @@ class BaseWorkflow:
                 self.local_db.execute(
                     f"insert into {table_name}({', '.join(column_name for column_name in column_names)}) select {', '.join(column_name for column_name in column_names)} from obj_{table_name}"  # noqa: S608
                 )
+
                 self.local_db.execute(f"drop view obj_{table_name}")
 
     def dump_database(self, export_path: Path, delimiter: str = "|") -> None:
         """Export the entire database with DDLs and data as CSV"""
         self.local_db.execute(f"export database '{export_path!s}' (format csv, delimiter '{delimiter}')")
+        self.console.print(f"Database exported to '{export_path!s}'")

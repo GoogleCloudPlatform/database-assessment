@@ -111,7 +111,7 @@ build-collector: 										## Build the collector SQL scripts.
 	@cp scripts/collector/oracle/sql/extracts/statspack/*.sql $(BUILD_DIR)/collector/oracle/sql/extracts/statspack
 	@cp scripts/collector/oracle/collect-data.sh $(BUILD_DIR)/collector/oracle/
 	@cp scripts/collector/oracle/README.txt $(BUILD_DIR)/collector/oracle/
-	@cp  LICENSE.txt $(BUILD_DIR)/collector/oracle
+	@cp  LICENSE $(BUILD_DIR)/collector/oracle
 	echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/oracle/VERSION.txt
 
 	@echo "=> Building Assessment Data Collection Scripts for Microsoft SQL Server version $(VERSION)..."
@@ -121,7 +121,7 @@ build-collector: 										## Build the collector SQL scripts.
 	@cp scripts/collector/sqlserver/*.ps1 $(BUILD_DIR)/collector/sqlserver/
 	@cp scripts/collector/sqlserver/*.psm1 $(BUILD_DIR)/collector/sqlserver/
 	@cp scripts/collector/sqlserver/README.txt $(BUILD_DIR)/collector/sqlserver/
-	@cp  LICENSE.txt $(BUILD_DIR)/collector/sqlserver
+	@cp  LICENSE $(BUILD_DIR)/collector/sqlserver
 	@echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/sqlserver/VERSION.txt
 
 	@echo "=> Building Assessment Data Collection Scripts for MySQL version $(VERSION)..."
@@ -134,7 +134,7 @@ build-collector: 										## Build the collector SQL scripts.
 	@cp scripts/collector/mysql/collect-data.sh $(BUILD_DIR)/collector/mysql/
 	@cp -L scripts/collector/mysql/db-machine-specs.sh $(BUILD_DIR)/collector/mysql/
 	@cp scripts/collector/mysql/README.txt $(BUILD_DIR)/collector/mysql/
-	@cp  LICENSE.txt $(BUILD_DIR)/collector/mysql
+	@cp  LICENSE $(BUILD_DIR)/collector/mysql
 	@echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/mysql/VERSION.txt
 
 	@echo "=> Building Assessment Data Collection Scripts for Postgresql version $(VERSION)..."
@@ -149,7 +149,7 @@ build-collector: 										## Build the collector SQL scripts.
 	@cp scripts/collector/postgres/collect-data.sh $(BUILD_DIR)/collector/postgres/
 	@cp scripts/collector/postgres/db-machine-specs.sh $(BUILD_DIR)/collector/postgres/
 	@cp scripts/collector/postgres/README.txt $(BUILD_DIR)/collector/postgres/
-	@cp  LICENSE.txt $(BUILD_DIR)/collector/postgres
+	@cp  LICENSE $(BUILD_DIR)/collector/postgres
 	@echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/postgres/VERSION.txt
 
 	@make package-collector
