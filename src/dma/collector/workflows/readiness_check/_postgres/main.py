@@ -192,10 +192,9 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         return is_installed
 
     def _check_pglogical_privileges(self) -> list[str]:
-        result = self.local_db.sql("""
-            select has_schema_usage_privilege, has_tables_select_privilege, has_local_node_select_privilege, has_node_select_privilege,
-            has_node_interface_select_privilege from collection_postgres_pglogical_privileges
-        """).fetchone()
+        result = self.local_db.sql(
+            "select has_schema_usage_privilege, has_tables_select_privilege, has_local_node_select_privilege, has_node_select_privilege, has_node_interface_select_privilege from collection_postgres_pglogical_privileges"
+        ).fetchone()
         errors: list[str] = []
         if result is None:
             errors.append("Empty result reading pglogical schema privileges for the user")
@@ -214,24 +213,24 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def check_user_obj_privileges(self) -> list[str]:
         errors: list[str] = []
-        rows = self.local_db.sql("""
-            select namespace_name from collection_postgres_user_schemas_without_privilege
-        """).fetchall()
+        rows = self.local_db.sql(
+            "select namespace_name from collection_postgres_user_schemas_without_privilege"
+        ).fetchall()
         errors.extend(f"user doesn't have USAGE privilege on schema {row[0]}" for row in rows)
 
-        rows = self.local_db.sql("""
-            select schema_name, table_name from collection_postgres_user_tables_without_privilege
-        """).fetchall()
+        rows = self.local_db.sql(
+            "select schema_name, table_name from collection_postgres_user_tables_without_privilege"
+        ).fetchall()
         errors.extend(f"user doesn't have SELECT privilege on table {row[0]}.{row[1]}" for row in rows)
 
-        rows = self.local_db.sql("""
-            select schema_name, view_name from collection_postgres_user_views_without_privilege
-        """).fetchall()
+        rows = self.local_db.sql(
+            "select schema_name, view_name from collection_postgres_user_views_without_privilege"
+        ).fetchall()
         errors.extend(f"user doesn't have SELECT privilege on view {row[0]}.{row[1]}" for row in rows)
 
-        rows = self.local_db.sql("""
-            select namespace_name, rel_name from collection_postgres_user_sequences_without_privilege
-        """).fetchall()
+        rows = self.local_db.sql(
+            "select namespace_name, rel_name from collection_postgres_user_sequences_without_privilege"
+        ).fetchall()
         errors.extend(f"user doesn't have SELECT privilege on sequence {row[0]}.{row[1]}" for row in rows)
         return errors
 
@@ -257,12 +256,9 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_wal_level(self) -> None:
         rule_code = "WAL_LEVEL"
-        result = self.local_db.sql("""
-            select c.setting_value as wal_level
-            from collection_postgres_settings c
-            where c.setting_name='wal_level'
-            and c.setting_value!='logical';
-        """).fetchone()
+        result = self.local_db.sql(
+            "select c.setting_value as wal_level from collection_postgres_settings c where c.setting_name='wal_level' and c.setting_value!='logical';"
+        ).fetchone()
         wal_level = cast("str", result[0] if result is not None else "unset")
         for c in self.rule_config:
             if wal_level != "logical":
@@ -283,11 +279,9 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
     def _check_rds_logical_replication(self) -> None:
         rule_code = "RDS_LOGICAL_REPLICATION"
         is_rds = self._is_rds()
-        rds_logical_replication_result = self.local_db.sql("""
-            select c.setting_value
-            from collection_postgres_settings c
-            where c.setting_name='rds.logical_replication';
-        """).fetchone()
+        rds_logical_replication_result = self.local_db.sql(
+            "select c.setting_value from collection_postgres_settings c where c.setting_name='rds.logical_replication';"
+        ).fetchone()
         rds_logical_replication = (
             rds_logical_replication_result[0] if rds_logical_replication_result is not None else "unset"
         )
@@ -315,11 +309,9 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             "select count(*) from extended_collection_postgres_all_databases"
         ).fetchone()
         db_count = int(db_count_result[0]) if db_count_result is not None else 0
-        total_replication_slots_result = self.local_db.sql("""
-            select c.setting_value as max_replication_slots
-            from collection_postgres_settings c
-            where c.setting_name='max_replication_slots';
-        """).fetchone()
+        total_replication_slots_result = self.local_db.sql(
+            "select c.setting_value as max_replication_slots from collection_postgres_settings c where c.setting_name='max_replication_slots';"
+        ).fetchone()
         total_replication_slots = (
             int(total_replication_slots_result[0]) if total_replication_slots_result is not None else 0
         )
@@ -361,11 +353,9 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             "select count(*) from extended_collection_postgres_all_databases"
         ).fetchone()
         db_count = int(db_count_result[0]) if db_count_result is not None else 0
-        wal_senders_result = self.local_db.sql("""
-            select c.setting_value as max_wal_senders
-            from collection_postgres_settings c
-            where c.setting_name='max_wal_senders';
-        """).fetchone()
+        wal_senders_result = self.local_db.sql(
+            "select c.setting_value as max_wal_senders from collection_postgres_settings c where c.setting_name='max_wal_senders';"
+        ).fetchone()
         wal_senders = int(wal_senders_result[0]) if wal_senders_result is not None else 0
         for c in self.rule_config:
             max_required_subscriptions = db_count + c.extra_replication_subscriptions_required
@@ -393,17 +383,13 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_max_wal_senders_replication_slots(self) -> None:
         rule_code = "WAL_SENDERS_REPLICATION_SLOTS"
-        wal_senders_result = self.local_db.sql("""
-            select c.setting_value as max_wal_senders
-            from collection_postgres_settings c
-            where c.setting_name='max_wal_senders';
-        """).fetchone()
+        wal_senders_result = self.local_db.sql(
+            "select c.setting_value as max_wal_senders from collection_postgres_settings c where c.setting_name='max_wal_senders';"
+        ).fetchone()
         wal_senders = int(wal_senders_result[0]) if wal_senders_result is not None else 0
-        total_replication_slots_result = self.local_db.sql("""
-            select c.setting_value as max_replication_slots
-            from collection_postgres_settings c
-            where c.setting_name='max_replication_slots';
-        """).fetchone()
+        total_replication_slots_result = self.local_db.sql(
+            "select c.setting_value as max_replication_slots from collection_postgres_settings c where c.setting_name='max_replication_slots';"
+        ).fetchone()
         total_replication_slots = (
             int(total_replication_slots_result[0]) if total_replication_slots_result is not None else 0
         )
@@ -430,11 +416,9 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             "select count(*) from extended_collection_postgres_all_databases"
         ).fetchone()
         db_count = int(db_count_result[0]) if db_count_result is not None else 0
-        max_worker_processes_result = self.local_db.sql("""
-            select c.setting_value as max_worker_processes
-            from collection_postgres_settings c
-            where c.setting_name='max_worker_processes';
-        """).fetchone()
+        max_worker_processes_result = self.local_db.sql(
+            "select c.setting_value as max_worker_processes from collection_postgres_settings c where c.setting_name='max_worker_processes';"
+        ).fetchone()
         max_worker_processes = int(max_worker_processes_result[0]) if max_worker_processes_result is not None else 0
         for c in self.rule_config:
             max_required_subscriptions = db_count + c.extra_replication_subscriptions_required
@@ -483,12 +467,9 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_fdw(self) -> None:
         rule_code = "FDWS"
-        result = self.local_db.sql("""
-            select foreign_data_wrapper_name as fdw_name, count(distinct table_schema || table_name) as table_count
-            from collection_postgres_table_details
-            where foreign_data_wrapper_name is not null
-            group by foreign_data_wrapper_name
-        """).fetchall()
+        result = self.local_db.sql(
+            "select foreign_data_wrapper_name as fdw_name, count(distinct table_schema || table_name) as table_count from collection_postgres_table_details where foreign_data_wrapper_name is not null group by foreign_data_wrapper_name"
+        ).fetchall()
         fdws = {row[0] for row in result}
         fdw_table_count = {int(row[1]) for row in result}
         for c in self.rule_config:
@@ -518,7 +499,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
     ) -> None:
         """Print Summary of the Migration Readiness Assessment."""
         results = self.local_db.sql(
-            """select metric_category, metric_name, metric_value from collection_postgres_calculated_metrics""",
+            "select metric_category, metric_name, metric_value from collection_postgres_calculated_metrics",
         ).fetchall()
         count_table = Table(min_width=80)
         count_table.add_column("Variable Category", justify="right", style="green")
@@ -534,9 +515,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
         def table_for_target(migration_target: PostgresVariants) -> None:
             results = self.local_db.execute(
-                """
-                select severity, rule_code, info from readiness_check_summary where migration_target = ?
-            """,
+                "select severity, rule_code, info from readiness_check_summary where migration_target = ?",
                 [migration_target],
             ).fetchall()
             count_table = Table(
@@ -563,8 +542,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     # helper methods
     def _is_rds(self) -> bool:
-        result = self.local_db.sql("""
-            select case when a.cnt > 0 then true else false end as is_rds
-            from (select count() as cnt from collection_postgres_extensions where extension_owner='rdsadmin' AND is_super_user) a
-        """).fetchone()
+        result = self.local_db.sql(
+            "select case when a.cnt > 0 then true else false end as is_rds from (select count() as cnt from collection_postgres_extensions where extension_owner='rdsadmin' AND is_super_user) a"
+        ).fetchone()
         return bool(result[0] > 0) if result is not None else False
