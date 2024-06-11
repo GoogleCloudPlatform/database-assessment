@@ -22,6 +22,7 @@ with db as (
     pg_encoding_to_char(db.encoding) as character_set_encoding,
     pg_database_size(db.datname) as total_disk_size_bytes
   from pg_database db
+  where datname = current_database()
 ),
 db_size as (
   select s.datid as database_oid,
