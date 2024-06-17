@@ -1,5 +1,5 @@
 /*
-Copyright 2023 Google LLC
+Copyright 2024 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -168,7 +168,7 @@ UNION ALL
 UNION ALL
     SELECT 'FilestreamEffectiveLevel', CONVERT(NVARCHAR(255), SERVERPROPERTY('FilestreamEffectiveLevel'))
 UNION ALL
-    SELECT 'FullVersion', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), ' '), CHAR(10), ' '),1,1024)
+    SELECT 'FullVersion', SUBSTRING(REPLACE(REPLACE(CONVERT(NVARCHAR(254), @@version), CHAR(13), ' '), CHAR(10), ' '),1,254)
 UNION ALL
     SELECT 'LogicalCpuCount', CONVERT(varchar, cpu_count)
     from sys.dm_os_sys_info
@@ -363,7 +363,7 @@ END;
 SELECT
     '"' + @PKEY + '"'  as PKEY,
     '"' + a.property_name + '"' as property_name ,
-    '"' + CONVERT(NVARCHAR(MAX), a.property_value) + '"' as property_value,
+    '"' + CONVERT(NVARCHAR(255), a.property_value) + '"' as property_value,
     '"' + @DMA_SOURCE_ID + '"' as dma_source_id,
     '"' + @DMA_MANUAL_ID + '"' as dma_manual_id
 FROM #serverProperties a;
