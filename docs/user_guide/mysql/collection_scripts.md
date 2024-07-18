@@ -1,4 +1,4 @@
-## Please note: For Postgres homogenous migrations, please upload the collections files to Google Migration Center
+## Please note: For MySQL homogenous migrations, please upload the collections files to Google Migration Center
 
 
 # Gather workload metadata
