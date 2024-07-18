@@ -1,5 +1,7 @@
-## Please note: For MySQL homogenous migrations, please upload the collections files to Google Migration Center
-
+!!! note
+```
+For MySQL homogenous migrations, please upload the collections files to Google Migration Center
+```
 
 # Gather workload metadata
 
