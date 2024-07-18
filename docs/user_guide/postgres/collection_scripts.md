@@ -1,3 +1,6 @@
+## Please note: For Postgres homogenous migrations, please upload the collections files to Google Migration Center
+
+
 # Gather workload metadata
 
 The workload collection supports Postgres 12 and newer. Older versions of Postgres are not currently supported.
