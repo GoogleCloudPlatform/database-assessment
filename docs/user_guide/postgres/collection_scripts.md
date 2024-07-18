@@ -1,5 +1,7 @@
-## Please note: For Postgres homogenous migrations, please upload the collections files to Google Migration Center
-
+!!! note
+```
+For Postgres homogenous migrations, please upload the collections files to Google Migration Center
+```
 
 # Gather workload metadata
 
