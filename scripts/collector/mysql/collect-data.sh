@@ -151,6 +151,10 @@ SET @PKEY='${V_FILE_TAG}';
 source ${f}
 exit
 EOF
+if [ ! -s ${OUTPUT_DIR}/opdb__mysql_${fname}__${V_TAG} ]; then
+  hdr=$(echo ${f} | cut -d '.' -f 1 | rev | cut -d '/' -f 1 | rev)
+  cat sql/headers/${hdr}.header > ${OUTPUT_DIR}/opdb__mysql_${fname}__${V_TAG}
+fi
 done
 for f in $(ls -1 sql/${SCRIPT_PATH}/*.sql | grep -v -E "init.sql|_base_path_lookup.sql|hostname.sql")
 do
@@ -163,12 +167,17 @@ source ${f}
 exit
 EOF
 
+if [ ! -s ${OUTPUT_DIR}/opdb__mysql_${fname}__${V_TAG} ]; then
+  hdr=$(echo ${f} | cut -d '.' -f 1 | rev | cut -d '/' -f 1 | rev)
+  cat sql/headers/${hdr}.header > ${OUTPUT_DIR}/opdb__mysql_${fname}__${V_TAG}
+fi
+done
+
 serverHostname=$(${SQLCMD} --user=$user --password=$pass -h $host -P $port --force --silent --skip-column-names $db 2>>${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log < sql/hostname.sql | tr -d '\r')
 serverIPs=$(getent hosts "$serverHostname" | awk '{print $1}' | tr '\n' ',')
 hostOut="output/opdb__mysql_db_host_${V_FILE_TAG}.csv"
 echo "HOSTNAME|IP_ADDRESSES" > "$hostOut"
 echo "\"$serverHostname\"|\"$serverIPs\"" >> "$hostOut"
-done
 
 specsOut="output/opdb__mysql_db_machine_specs_${V_FILE_TAG}.csv"
 host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
@@ -214,7 +223,7 @@ do
     cp sed_${V_FILE_TAG}.tmp ${outfile}
     rm sed_${V_FILE_TAG}.tmp
   else
-    ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 s/[a-z]/\U&/g' ${outfile} > sed_${V_FILE_TAG}.tmp
+    ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 s/[a-z]/\U&/g' ${outfile} | ${SED} '1 s/[a-z]/\U&/g' > sed_${V_FILE_TAG}.tmp
     cp sed_${V_FILE_TAG}.tmp ${outfile}
     rm sed_${V_FILE_TAG}.tmp
   fi
