@@ -157,7 +157,7 @@ exclude = ["/.github", "/docs"]
 installer = "uv"
 
 [tool.hatch.envs.default.env-vars]
-USE_LEGACY_DOCKER_COMPOSE = "True"
+USE_LEGACY_DOCKER_COMPOSE = "False"
 
 [tool.hatch.envs.default.scripts]
 upgrade-all = "PIP_COMPILE_UPGRADE=1 hatch env run --env {env_name} -- python --version"
