@@ -240,7 +240,7 @@ lint: 												## Runs pre-commit hooks; includes ruff linting, codespell, bl
 .PHONY: test
 test:  												## Run the tests
 	@echo "=> Running test cases"
-	@hatch run local:cov
+	@hatch run +py="3.12" test:cov
 	@echo "=> Tests complete"
 
 .PHONY: test-all
