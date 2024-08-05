@@ -38,8 +38,8 @@ class _ContextManagerWrapper:
     def __init__(self, cm: AbstractContextManager[T]) -> None:
         self._cm = cm
 
-    async def __aenter__(self) -> T:
-        return self._cm.__enter__()
+    async def __aenter__(self) -> T:  # pyright: ignore[reportInvalidTypeVarUse]
+        return self._cm.__enter__()  # type: ignore
 
     async def __aexit__(
         self,
@@ -73,7 +73,7 @@ def wrap_sync(fn: Callable[P, T]) -> Callable[P, Awaitable[T]]:
         return fn
 
     async def wrapped(*args: P.args, **kwargs: P.kwargs) -> T:
-        return await anyio.to_thread.run_sync(partial(fn, *args, **kwargs))
+        return await anyio.to_thread.run_sync(partial(fn, *args, **kwargs))  # pyright: ignore[reportAttributeAccessIssue]
 
     return wrapped
 
