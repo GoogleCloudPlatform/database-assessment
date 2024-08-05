@@ -223,7 +223,7 @@ do
     cp sed_${V_FILE_TAG}.tmp ${outfile}
     rm sed_${V_FILE_TAG}.tmp
   else
-    ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 s/[a-z]/\U&/g' ${outfile} | ${SED} '1 s/[a-z]/\U&/g' > sed_${V_FILE_TAG}.tmp
+    ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;' ${outfile} > sed_${V_FILE_TAG}.tmp
     cp sed_${V_FILE_TAG}.tmp ${outfile}
     rm sed_${V_FILE_TAG}.tmp
   fi
