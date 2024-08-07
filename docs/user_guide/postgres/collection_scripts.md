@@ -1,8 +1,9 @@
-!!! note
-    
-    For Postgres homogenous migrations, please upload the collections files to Google Migration Center
 
 # Gather workload metadata
+
+!!! note
+    For Postgres homogenous migrations, please upload the collections files to Google Migration Center
+!!!
 
 The workload collection supports Postgres 12 and newer. Older versions of Postgres are not currently supported.
 
@@ -42,11 +43,15 @@ unzip db-migration-assessment-collection-scripts-postgres.zip
 - NOTE: The collector can be run for a single database or all databases in the instance.
 
 Execute the collection script with connection parameters:
+
 ```
     ./collect-data.sh --collectionUserName postgres --collectionUserPass secret --hostName myhost.example.com --port 25432 --vmUserName myuser --extraSSHArg -p --extraSSHArg 12248
 ```
+
 The example above will connect to a database named 'postgres' (the default) on host myhost.example.com on port 25432 as user "postgres" with password "secret".  It will also ssh as the current user to myhost.example.com, port 12248 to collect information on about the machine running the database.
-  - Parameters
+
+- Parameters
+
 ```
  Connection definition must one of:
       {
@@ -70,7 +75,6 @@ The example above will connect to a database named 'postgres' (the default) on h
         --extraSSHArg         Extra args to be passed as is to ssh. Can be specified multiple times or as a single quoted string..
 
 ```
-
 
 Examples:
 
