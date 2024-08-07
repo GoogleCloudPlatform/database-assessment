@@ -173,6 +173,8 @@ BEGIN
                 name,
                 ISNULL((SELECT count(1) FROM sys.master_files AS mf WHERE mf.database_id = db.database_id AND mf.type = 2),0) AS hasfs
             FROM sys.databases AS db
+            WHERE state = 0
+            AND is_read_only = 0
         )
         INSERT INTO #FeaturesEnabled SELECT
             ''IsFileStreamEnabled'',
@@ -381,7 +383,9 @@ BEGIN
                 CONVERT(NVARCHAR(255), count(*)),
                 CONVERT(int, count(*))
             FROM sys.databases
-            WHERE is_encrypted <> 0');
+            WHERE is_encrypted <> 0
+            AND state = 0
+            AND is_read_only = 0');
 END
 
 --TempDB Metadata Memory Optimized

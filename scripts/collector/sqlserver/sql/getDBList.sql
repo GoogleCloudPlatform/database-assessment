@@ -39,6 +39,7 @@ FROM sys.databases
 WHERE name NOT IN ('master','model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin','SSISDB','DWDiagnostics','DWConfiguration','DWQueue', 'DQS_STAGING_DATA')
     AND name like @ASSESSMENT_DATABSE_NAME
     AND state = 0
+    AND is_read_only = 0
     AND HAS_DBACCESS(name) = @HASDBACCESS;
 END;
 /* Execute the following statment to get the databases to run against */
@@ -48,7 +49,8 @@ BEGIN
     FROM sys.databases
     WHERE name NOT IN ('master','model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin','SSISDB','DWDiagnostics','DWConfiguration','DWQueue', 'DQS_STAGING_DATA')
         AND name like @ASSESSMENT_DATABSE_NAME
-        AND state = 0;
+        AND state = 0
+        AND is_read_only = 0;
 END;
 /* Hard code NULL as in Azure the user should be able to log into all databases */
 IF @CLOUDTYPE = 'AZURE' AND @HASDBACCESS = '0'
