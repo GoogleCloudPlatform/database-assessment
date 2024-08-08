@@ -56,11 +56,7 @@ class QueryManager:
         queries: Queries,
         connection: Any,
     ) -> AsyncIterator[QueryManagerT]:
-        """Context manager that returns instance of query manager object.
-
-        Returns:
-            The service object instance.
-        """
+        """Context manager that returns instance of query manager object."""
         yield cls(connection=connection, queries=queries)
 
     async def select(self, method: str, **binds: Any) -> list[dict[str, Any]]:
