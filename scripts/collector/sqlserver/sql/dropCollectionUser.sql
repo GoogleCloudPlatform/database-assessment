@@ -25,7 +25,8 @@ DECLARE db_cursor CURSOR FOR
 SELECT name
 FROM sys.databases
 WHERE name NOT IN ('model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-    AND state = 0;
+    AND state = 0
+    AND is_read_only = 0;
 
 SELECT @COLLECTION_USER = N'$(collectionUser)'
 
