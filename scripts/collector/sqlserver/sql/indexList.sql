@@ -47,6 +47,7 @@ BEGIN
       WHERE name NOT IN ('master','model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
          AND name like @ASSESSMENT_DATABSE_NAME
          AND state = 0
+         AND is_read_only = 0
    END
 
    BEGIN TRY

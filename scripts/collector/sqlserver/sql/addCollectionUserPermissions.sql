@@ -27,7 +27,8 @@ DECLARE db_cursor CURSOR FOR
 SELECT name
 FROM sys.databases
 WHERE name NOT IN ('model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
-    AND state = 0;
+    AND state = 0
+    AND is_read_only = 0;
 
 SELECT @PRODUCT_VERSION = CONVERT(INTEGER, PARSENAME(CONVERT(NVARCHAR(255), SERVERPROPERTY('productversion')), 4));
 SELECT @COLLECTION_USER = N'$(collectionUser)'

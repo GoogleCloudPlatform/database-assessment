@@ -1,5 +1,9 @@
 # Gather workload metadata
 
+!!! note
+    For MySQL homogenous migrations, please upload the collections files to Google Migration Center
+!!!
+
 The workload collection supports MySQL 5.6 and newer. Older versions of MySQL are not currently supported.  MariaDB is also not currently supported with this version of the script.
 
 ## System environment
@@ -36,12 +40,16 @@ unzip db-migration-assessment-collection-scripts-mysql.zip
 - Execute this from a system that can access your database via mysql command line client.
 
 Execute the collection script with connection parameters:
+
 ```
     ./collect-data.sh --collectionUserName root --collectionUserPass secret --hostName myhost.example.com --port 25432 --databaseService sys --vmUserName myuser --extraSSHArg "-p" --extraSSHA
 rg "12248"
 ```
+
 The example above will connect to a database named 'sys' on host myhost.example.com on port 25432 as user "root" with password "secret".  It will also ssh as the current user to myhost.example.com, port 12248 to collect information on about the machine running the database.
-  - Parameters
+
+- Parameters
+
 ```
  Connection definition must one of:
       {
@@ -62,7 +70,6 @@ The example above will connect to a database named 'sys' on host myhost.example.
         --extraSSHArg         Extra args to be passed as is to ssh. Can be specified multiple times or as a single quoted string..
 
 ```
-
 
 Examples:
 

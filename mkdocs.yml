@@ -4,7 +4,8 @@ edit_uri: ./edit/main/docs
 
 theme:
   name: "material"
-
+markdown_extensions:
+  - admonition
 plugins:
   - search
   - mkdocstrings

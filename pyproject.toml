@@ -8,7 +8,7 @@ license = { text = "Apache-2.0" }
 name = "dma"
 readme = "README.md"
 requires-python = ">=3.9,<3.13"
-version = "4.3.37"
+version = "4.3.38"
 
 # keywords for easier look-up on PyPI
 authors = [
@@ -72,56 +72,12 @@ Issues = "https://github.com/GoogleCloudPlatform/database-assessment/issues"
 Source = "https://github.com/GoogleCloudPlatform/database-assessment"
 
 [project.optional-dependencies]
-docs = [
-    "mkdocs-include-markdown-plugin",
-    "mkdocs-gen-files",
-    "mkdocs-literate-nav",
-    "mkdocs-section-index",
-    "mkdocstrings[python]",
-    "mkdocs-glightbox>=0.3.0",
-    "mkdocs-material[git,imaging,recommended]",
-    "mkdocs-minify-plugin",
-    "mike>=2.0.0",
-    # Extensions
-    "pymdown-extensions>=10.5",
-    # Necessary for syntax highlighting in code blocks
-    "pygments>=2.13",
-    # Validation
-    "linkchecker>=10.3",
-]
-linting = [
-    "mypy",
-    "ruff",
-    "pylint",
-    "pre-commit",
-    "types-click",
-    "types-six",
-    "types-decorator",
-    "types-pyyaml",
-    "types-setuptools",
-    "asyncpg-stubs",
-    "pyyaml>=6",
-]
 mssql = ["aioodbc"]
 mysql = ["asyncmy>=0.2.9"]
 oracle = ["oracledb"]
 postgres = ["asyncpg>=0.29.0"]
 server = ["litestar[structlog,jinja]>=2.7.0", "litestar-granian>=0.2.3"]
-testing = [
-    "nodeenv",
-    # required test dependencies
-    "cython",
-    "anyio",
-    "coverage[toml]>=6.2",
-    "pytest",
-    "pytest-cov",
-    "pytest-mock",
-    "pytest-vcr",
-    "pytest-sugar",
-    "pytest-click",
-    "pytest-xdist",
-    "pytest-databases",
-]
+
 
 [project.scripts]
 dma = "dma.cli.main:app"
@@ -154,10 +110,58 @@ exclude = ["/.github", "/docs"]
 
 # Default environment with production dependencies
 [tool.hatch.envs.default]
-installer = "uv"
+extra-dependencies = [
+    "bump2version",
+    "nodeenv",
+    # required test dependencies
+    "cython",
+    "anyio",
+    "coverage[toml]>=6.2",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-vcr",
+    "pytest-sugar",
+    "pytest-click",
+    "pytest-xdist",
+    "pytest-databases",
+    # lint
+    "mypy",
+    "ruff",
+    "pylint",
+    "pre-commit",
+    "types-click",
+    "types-six",
+    "types-decorator",
+    "types-pyyaml",
+    "types-setuptools",
+    "asyncpg-stubs",
+    "pyyaml>=6",
+    # docs
+    "mkdocs-include-markdown-plugin",
+    "mkdocs-gen-files",
+    "mkdocs-literate-nav",
+    "mkdocs-section-index",
+    "mkdocstrings[python]",
+    "mkdocs-glightbox>=0.3.0",
+    "mkdocs-material[git,imaging,recommended]",
+    "mkdocs-minify-plugin",
+    "mike>=2.0.0",
+    # Extensions
+    "pymdown-extensions>=10.5",
+    # Necessary for syntax highlighting in code blocks
+    "pygments>=2.13",
+    # Validation
+    "linkchecker>=10.3",
+    # cli databasae brwoser
+    "harlequin",
+    "jupyterlab",
+    "ipython",
+    "seaborn",
+    "pandas",
 
-[tool.hatch.envs.default.env-vars]
-USE_LEGACY_DOCKER_COMPOSE = "True"
+]
+installer = "uv"
 
 [tool.hatch.envs.default.scripts]
 upgrade-all = "PIP_COMPILE_UPGRADE=1 hatch env run --env {env_name} -- python --version"
@@ -165,7 +169,7 @@ upgrade-pkg = "PIP_COMPILE_UPGRADE='{args}' hatch env run --env {env_name} -- py
 
 # Test environment with test-only dependencies
 [tool.hatch.envs.test]
-features = ["server", "oracle", "mysql", "mssql", "postgres", "testing"]
+features = ["server", "oracle", "mysql", "mssql", "postgres"]
 template = "default"
 type = "virtual"
 
@@ -181,7 +185,7 @@ no-cov = "cov --no-cov {args}"
 
 # Docs environment
 [tool.hatch.envs.docs]
-features = ["server", "oracle", "mysql", "mssql", "postgres", "testing", "docs"]
+features = ["server", "oracle", "mysql", "mssql", "postgres"]
 template = "default"
 type = "virtual"
 
@@ -200,21 +204,11 @@ validate = "linkchecker --config .linkcheckerrc --ignore-url=/reference --ignore
 build-check = ["build", "validate"]
 
 [tool.hatch.envs.local]
-extra-dependencies = [
-    "bump2version",
-    # cli databasae brwoser
-    "harlequin",
-    "jupyterlab",
-    "ipython",
-    "seaborn",
-    "pandas",
-
-]
-features = ["server", "oracle", "mysql", "mssql", "postgres", "testing", "docs", "linting"]
+features = ["server", "oracle", "mysql", "mssql", "postgres"]
 lock-filename = "requirements/requirements-dev.txt"
 path = ".venv/"
 python = "3.12"
-template = "test"
+template = "default"
 type = "virtual"
 
 [tool.hatch.envs.local.scripts]
@@ -224,8 +218,9 @@ stop-infra = "docker-compose -f tests/docker-compose.yml down --remove-orphans -
 
 # Lint environment
 [tool.hatch.envs.lint]
-features = ["server", "oracle", "mysql", "mssql", "postgres", "testing", "docs", "linting"]
+features = ["server", "oracle", "mysql", "mssql", "postgres"]
 python = "3.12"
+template = "default"
 type = "virtual"
 
 [tool.hatch.envs.lint.scripts]
@@ -393,6 +388,11 @@ lint.ignore = [
     "PERF203", # ignore for now; investigate
     "COM812",
     "PLR0917",
+    "DOC201",  # `return` is not documented in docstring
+    "DOC501",  # Raised exception missing from docstring
+    "DOC502",  # Raised exception missing from docstring
+    "A005",    # module shadows builtin
+    "DOC402",  # Yield missing from docstring
 ]
 lint.select = ["ALL"]
 # Allow unused variables when underscore-prefixed.

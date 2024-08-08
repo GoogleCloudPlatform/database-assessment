@@ -47,6 +47,7 @@ BEGIN
         WHERE name NOT IN ('master','model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
             AND name like @ASSESSMENT_DATABSE_NAME
             AND state = 0
+            AND is_read_only = 0
     END
 
     BEGIN TRY
@@ -71,12 +72,15 @@ BEGIN
             WHERE db_name() NOT IN ('master', 'model', 'msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
 			    AND d.name = db_name()
                 AND sm.type IN (0,1)
+                AND d.state = 0
+                AND d.is_read_only = 0
                 AND EXISTS (SELECT 1
                 FROM sys.databases sd
                 WHERE sd.state = 0
                     AND sd.name NOT IN ('master','model','msdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
                     AND sd.name like @ASSESSMENT_DATABSE_NAME
                     AND sd.state = 0
+                    AND sd.is_read_only = 0
                     AND sd.name =db_name())
             GROUP BY sm.type_desc, d.recovery_model_desc) sizing
     END
