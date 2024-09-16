@@ -180,7 +180,7 @@ async def _collect_data(
     execution_id = f"{db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
     with get_duckdb_connection(working_path) as local_db:
         async with AsyncSession(async_engine) as db_session:
-            collection_manager = await anext(
+            collection_manager = await anext(  # noqa: F821 # pyright: ignore[reportUndefinedVariable]
                 provide_collection_query_manager(
                     db_session=db_session, execution_id=execution_id, manual_id=collection_identifier
                 )
@@ -332,7 +332,7 @@ async def _readiness_check(
     execution_id = f"{db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
     with get_duckdb_connection(working_path) as local_db:
         async with AsyncSession(async_engine) as db_session:
-            collection_manager = await anext(
+            collection_manager = await anext(  # noqa: F821 # pyright: ignore[reportUndefinedVariable]
                 provide_collection_query_manager(
                     db_session=db_session, execution_id=execution_id, manual_id=collection_identifier
                 )
