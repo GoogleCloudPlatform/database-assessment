@@ -114,6 +114,10 @@ extra-dependencies = [
     "bump2version",
     "nodeenv",
     # required test dependencies
+    "psycopg[binary]",
+    "pymysql",
+    "pymssql",
+    "oracledb",
     "cython",
     "anyio",
     "coverage[toml]>=6.2",
@@ -155,10 +159,6 @@ extra-dependencies = [
     "linkchecker>=10.3",
     # cli databasae brwoser
     "harlequin",
-    "jupyterlab",
-    "ipython",
-    "seaborn",
-    "pandas",
 
 ]
 installer = "uv"

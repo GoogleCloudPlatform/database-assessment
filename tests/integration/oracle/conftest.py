@@ -61,13 +61,13 @@ async def oracle18c_async_engine(
 
 
 @pytest.fixture(scope="session")
-async def oracle23c_async_engine(
+async def oracle23ai_async_engine(
     oracle_docker_ip: str,
     oracle_user: str,
     oracle_password: str,
-    oracle23c_port: int,
-    oracle23c_service_name: str,
-    oracle23c_service: None,
+    oracle23ai_port: int,
+    oracle23ai_service_name: str,
+    oracle23ai_service: None,
 ) -> AsyncEngine:
     """Oracle 23c instance for end-to-end testing.
 
@@ -83,8 +83,8 @@ async def oracle23c_async_engine(
             "user": oracle_user,
             "password": oracle_password,
             "host": oracle_docker_ip,
-            "port": oracle23c_port,
-            "service_name": oracle23c_service_name,
+            "port": oracle23ai_port,
+            "service_name": oracle23ai_service_name,
         },
         poolclass=NullPool,
     )
@@ -99,7 +99,7 @@ async def oracle23c_async_engine(
             marks=[pytest.mark.oracle],
         ),
         pytest.param(
-            "oracle23c_async_engine",
+            "oracle23ai_async_engine",
             marks=[pytest.mark.oracle],
         ),
     ],
