@@ -19,7 +19,7 @@ import aiosql
 from rich.padding import Padding
 
 from dma.cli._utils import console
-from dma.collector.workflows.readiness_check._postgres.helpers import get_db_major_version
+from dma.collector.util.postgres.helpers import get_db_major_version
 from dma.lib.db.query_manager import QueryManager
 from dma.lib.exceptions import ApplicationError
 from dma.utils import module_to_os_path
@@ -89,6 +89,17 @@ class CollectionQueryManager(QueryManager):
             msg = "Database Version was not set.  Ensure the initialization step complete successfully."
             raise ApplicationError(msg)
         return set(self.available_queries("extended_collection"))
+
+    def get_per_db_collection_queries(self) -> set[str]:  # noqa: PLR6301
+        """Get the collection queries that need to be executed for each DB in the instance"""
+        msg = "Implement this execution method."
+        raise NotImplementedError(msg)
+
+    def get_db_version(self) -> str:
+        if self.db_version is None:
+            msg = "Database Version was not set.  Ensure the initialization step complete successfully."
+            raise ApplicationError(msg)
+        return self.db_version
 
     async def set_identifiers(
         self,
@@ -198,6 +209,32 @@ class CollectionQueryManager(QueryManager):
                 console.print(" [dim grey]:heavy_check_mark: No extended collection queries for this database type[/]")
             return results
 
+    async def execute_per_db_collection_queries(
+        self,
+        execution_id: str | None = None,
+        source_id: str | None = None,
+        manual_id: str | None = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Execute per DB pre-processing queries."""
+        await self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
+        console.print(Padding("PER DB QUERIES", 1, style="bold", expand=True), width=80)
+        with console.status("[bold green]Executing queries...[/]") as status:
+            results: dict[str, Any] = {}
+            for script in self.get_per_db_collection_queries():
+                status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
+                script_result = await self.select(
+                    script, PKEY=self.execution_id, DMA_SOURCE_ID=self.source_id, DMA_MANUAL_ID=self.manual_id
+                )
+                results[script] = script_result
+                status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
+            if not self.get_per_db_collection_queries():
+                status.console.print(
+                    " [dim grey]:heavy_check_mark: No DB specific collection queries for this database type[/]"
+                )
+            return results
+
 
 class PostgresCollectionQueryManager(CollectionQueryManager):
     def __init__(
@@ -230,7 +267,6 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             "collection_postgres_bg_writer_stats",
             "collection_postgres_calculated_metrics",
             "collection_postgres_data_types",
-            "collection_postgres_extensions",
             "collection_postgres_index_details",
             "collection_postgres_replication_stats",
             "collection_postgres_schema_details",
@@ -242,6 +278,15 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             "collection_postgres_user_tables_without_privilege",
             "collection_postgres_user_views_without_privilege",
             "collection_postgres_user_sequences_without_privilege",
+        }
+
+    def get_per_db_collection_queries(self) -> set[str]:
+        if self.db_version is None:
+            msg = "Database Version was not set.  Ensure the initialization step complete successfully."
+            raise ApplicationError(msg)
+        get_db_major_version(self.db_version)
+        return {
+            "collection_postgres_extensions",
         }
 
     def get_collection_filenames(self) -> dict[str, str]:

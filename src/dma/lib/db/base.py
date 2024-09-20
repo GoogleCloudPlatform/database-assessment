@@ -13,52 +13,63 @@
 # limitations under the License.
 from __future__ import annotations
 
-from typing import Literal
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
+if TYPE_CHECKING:
+    from dma.types import (
+        SupportedSources,
+    )
+
+
+@dataclass
+class SourceInfo:
+    db_type: SupportedSources
+    username: str
+    password: str
+    hostname: str
+    port: int
+
 
 def get_engine(
-    db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
-    username: str,
-    password: str,
-    hostname: str,
-    port: int,
+    src_info: SourceInfo,
     database: str,
 ) -> AsyncEngine:
-    if db_type == "POSTGRES":
+    if src_info.db_type == "POSTGRES":
         return create_async_engine(
             URL(
                 drivername="postgresql+asyncpg",
-                username=username,
-                password=password,
-                host=hostname,
-                port=port,
+                username=src_info.username,
+                password=src_info.password,
+                host=src_info.hostname,
+                port=src_info.port,
                 database=database,
                 query={},  # type: ignore[arg-type]
             ),
         )
-    if db_type == "MYSQL":
+    if src_info.db_type == "MYSQL":
         return create_async_engine(
             URL(
                 drivername="mysql+asyncmy",
-                username=username,
-                password=password,
-                host=hostname,
-                port=port,
+                username=src_info.username,
+                password=src_info.password,
+                host=src_info.hostname,
+                port=src_info.port,
                 database=database,
                 query={},  # type: ignore[arg-type]
             ),
         )
-    if db_type == "MSSQL":
+    if src_info.db_type == "MSSQL":
         return create_async_engine(
             URL(
                 drivername="mssql+aioodbc",
-                username=username,
-                password=password,
-                host=hostname,
-                port=port,
+                username=src_info.username,
+                password=src_info.password,
+                host=src_info.hostname,
+                port=src_info.port,
                 database=database,
                 query={
                     "driver": "ODBC Driver 18 for SQL Server",
@@ -71,17 +82,17 @@ def get_engine(
                 },  # type: ignore[arg-type]
             ),
         )
-    if db_type == "ORACLE":
+    if src_info.db_type == "ORACLE":
         return create_async_engine(
             "oracle+oracledb://:@",
             thick_mode=False,
             connect_args={
-                "user": username,
-                "password": password,
-                "host": hostname,
-                "port": port,
+                "user": src_info.username,
+                "password": src_info.password,
+                "host": src_info.hostname,
+                "port": src_info.port,
                 "service_name": database,
             },
         )
-    msg = f"{db_type} is not a supported engine."  # type: ignore[unreachable]
+    msg = f"{src_info.db_type} is not a supported engine."  # type: ignore[unreachable]
     raise NotImplementedError(msg)

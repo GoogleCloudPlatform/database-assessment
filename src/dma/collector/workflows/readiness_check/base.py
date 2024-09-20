@@ -19,14 +19,17 @@ from typing import TYPE_CHECKING
 from rich.console import Console
 from rich.table import Table
 
+from dma.collector.dependencies import provide_canonical_queries
 from dma.collector.workflows.collection_extractor.base import CollectionExtractor
 from dma.lib.exceptions import ApplicationError
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from duckdb import DuckDBPyConnection
     from rich.console import Console
 
-    from dma.collector.query_managers import CanonicalQueryManager, CollectionQueryManager
+    from dma.lib.db.base import SourceInfo
     from dma.types import (
         MSSQLVariants,
         MySQLVariants,
@@ -44,25 +47,49 @@ class ReadinessCheckTargetConfig:
     maximum_supported_major_version: float | None
 
 
-class ReadinessCheck(CollectionExtractor):
+class ReadinessCheck:
     def __init__(
         self,
         local_db: DuckDBPyConnection,
-        canonical_query_manager: CanonicalQueryManager,
-        collection_query_manager: CollectionQueryManager,
-        db_type: SupportedSources,
+        src_info: SourceInfo,
+        database: str,
         console: Console,
+        collection_identifier: str | None,
+        working_path: Path | None = None,
     ) -> None:
         self.executor: ReadinessCheckExecutor | None = None
-        super().__init__(local_db, canonical_query_manager, collection_query_manager, db_type, console)
+        self.collection_extractor: CollectionExtractor | None = None
+        self.local_db = local_db
+        self.src_info = src_info
+        self.database = database
+        self.console = console
+        self.collection_identifier = collection_identifier
+        self.working_path = working_path
+        # super().__init__(local_db, canonical_query_manager, #collection_query_manager, db_type, console)
 
     async def execute(self) -> None:
-        await super().execute()
+        await self.execute_data_collection()
         self.execute_readiness_check()
+
+    async def execute_data_collection(self) -> None:
+        canonical_query_manager = next(
+            provide_canonical_queries(local_db=self.local_db, working_path=self.working_path)
+        )
+
+        self.collection_extractor = CollectionExtractor(
+            local_db=self.local_db,
+            src_info=self.src_info,
+            database=self.database,
+            canonical_query_manager=canonical_query_manager,
+            console=self.console,
+            collection_identifier=self.collection_identifier,
+        )
+        await self.collection_extractor.execute()
+        self.db_version = self.collection_extractor.get_db_version()
 
     def execute_readiness_check(self) -> None:
         """Execute postgres assessments"""
-        if self.db_type == "POSTGRES":
+        if self.src_info.db_type == "POSTGRES":
             # lazy loaded to help with circular import issues
             from dma.collector.workflows.readiness_check._postgres.main import (  # noqa: PLC0415
                 PostgresReadinessCheckExecutor,
@@ -73,7 +100,7 @@ class ReadinessCheck(CollectionExtractor):
                 console=self.console,
             )
             self.executor.execute()
-        elif self.db_type == "MYSQL":
+        elif self.src_info.db_type == "MYSQL":
             # lazy loaded to help with circular import issues
             from dma.collector.workflows.readiness_check._mysql.main import (  # noqa: PLC0415
                 MySQLReadinessCheckExecutor,
@@ -85,13 +112,8 @@ class ReadinessCheck(CollectionExtractor):
             )
             self.executor.execute()
         else:
-            msg = f"{self.db_type} is not implemented."
+            msg = f"{self.src_info.db_type} is not implemented."
             raise ApplicationError(msg)
-
-    async def extract_collection(self) -> None:
-        await super().extract_collection()
-        extended_collection = await self.collection_query_manager.execute_extended_collection_queries()
-        self.import_to_table(extended_collection)
 
     def print_summary(self) -> None:
         """Print Summary of the Migration Readiness Assessment."""
@@ -102,7 +124,7 @@ class ReadinessCheck(CollectionExtractor):
         if self.executor:
             self.executor.print_summary()
         else:
-            msg = f"{self.db_type} is not implemented."
+            msg = f"{self.src_info.db_type} is not implemented."
             raise ApplicationError(msg)
 
 
@@ -111,13 +133,18 @@ class ReadinessCheckExecutor:
         self.console = console
         self.readiness_check = readiness_check
         self.local_db = readiness_check.local_db
-        self.canonical_query_manager = readiness_check.canonical_query_manager
-        self.db_version = readiness_check.collection_query_manager.db_version
+        self.db_version = readiness_check.db_version
 
     def execute(self) -> None:  # noqa: PLR6301
         """Execute checks"""
         msg = "Implement this execution method."
         raise NotImplementedError(msg)
+
+    def get_all_dbs(self) -> set[str]:
+        result = self.local_db.sql("""
+            select database_name from extended_collection_postgres_all_databases
+        """).fetchall()
+        return {row[0] for row in result}
 
     def print_summary(self) -> None:  # noqa: PLR6301
         """Summarizes results"""
