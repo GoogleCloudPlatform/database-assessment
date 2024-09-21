@@ -58,7 +58,7 @@ class CollectionExtractor(BaseWorkflow):
     async def collect_data(self, execution_id: str) -> None:
         async_engine = get_engine(self.src_info, self.database)
         async with AsyncSession(async_engine) as db_session:
-            collection_manager = await anext(
+            collection_manager = await anext(  # noqa: F821 # pyright: ignore[reportUndefinedVariable]
                 provide_collection_query_manager(
                     db_session=db_session, execution_id=execution_id, manual_id=self.collection_identifier
                 )
@@ -74,7 +74,7 @@ class CollectionExtractor(BaseWorkflow):
         for db in dbs:
             async_engine = get_engine(src_info=self.src_info, database=db)
             async with AsyncSession(async_engine) as db_session:
-                collection_manager = await anext(
+                collection_manager = await anext(  # noqa: F821 # pyright: ignore[reportUndefinedVariable]
                     provide_collection_query_manager(
                         db_session=db_session, execution_id=execution_id, manual_id=self.collection_identifier
                     )

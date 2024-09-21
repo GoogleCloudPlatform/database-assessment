@@ -65,7 +65,6 @@ class ReadinessCheck:
         self.console = console
         self.collection_identifier = collection_identifier
         self.working_path = working_path
-        # super().__init__(local_db, canonical_query_manager, #collection_query_manager, db_type, console)
 
     async def execute(self) -> None:
         await self.execute_data_collection()
