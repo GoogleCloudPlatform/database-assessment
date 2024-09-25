@@ -16,6 +16,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import aiosql
+from asyncpg import UndefinedTableError
 from rich.padding import Padding
 
 from dma.cli._utils import console
@@ -224,11 +225,14 @@ class CollectionQueryManager(QueryManager):
             results: dict[str, Any] = {}
             for script in self.get_per_db_collection_queries():
                 status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                script_result = await self.select(
-                    script, PKEY=self.execution_id, DMA_SOURCE_ID=self.source_id, DMA_MANUAL_ID=self.manual_id
-                )
-                results[script] = script_result
-                status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
+                try:
+                    script_result = await self.select(
+                        script, PKEY=self.execution_id, DMA_SOURCE_ID=self.source_id, DMA_MANUAL_ID=self.manual_id
+                    )
+                    results[script] = script_result
+                    status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
+                except UndefinedTableError:
+                    status.console.print(rf"Skipped `{script}` as the table doesn't exist")
             if not self.get_per_db_collection_queries():
                 status.console.print(
                     " [dim grey]:heavy_check_mark: No DB specific collection queries for this database type[/]"
@@ -273,11 +277,6 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             "collection_postgres_schema_objects",
             "collection_postgres_settings",
             "collection_postgres_source_details",
-            "collection_postgres_pglogical_privileges",
-            "collection_postgres_user_schemas_without_privilege",
-            "collection_postgres_user_tables_without_privilege",
-            "collection_postgres_user_views_without_privilege",
-            "collection_postgres_user_sequences_without_privilege",
         }
 
     def get_per_db_collection_queries(self) -> set[str]:
@@ -287,6 +286,12 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
         get_db_major_version(self.db_version)
         return {
             "collection_postgres_extensions",
+            "collection_postgres_pglogical_provider_node",
+            "collection_postgres_pglogical_privileges",
+            "collection_postgres_user_schemas_without_privilege",
+            "collection_postgres_user_tables_without_privilege",
+            "collection_postgres_user_views_without_privilege",
+            "collection_postgres_user_sequences_without_privilege",
         }
 
     def get_collection_filenames(self) -> dict[str, str]:

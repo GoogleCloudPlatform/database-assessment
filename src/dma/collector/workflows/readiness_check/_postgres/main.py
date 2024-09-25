@@ -105,6 +105,8 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         for db in self.get_all_dbs():
             is_pglogical_installed = self._check_pglogical_installed(db)
             self._check_privileges(db, is_pglogical_installed)
+            if is_pglogical_installed:
+                self._check_if_node_exists(db)
 
     def _check_collation(self) -> None:
         rule_code = "COLLATION"
@@ -219,6 +221,29 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     f"user doesn't have SELECT privilege on table pglogical.node_interface for the database {db_name}"
                 )
         return errors
+
+    def _check_if_node_exists(self, db_name: str) -> None:
+        rule_code = "PGLOGICAL_NODE_ALREADY_EXISTS"
+        result = self.local_db.sql(
+            "select count(*) from collection_postgres_pglogical_provider_node where database_name = $db_name",
+            params={"db_name": db_name},
+        ).fetchone()
+        node_exists = result[0] > 0 if result is not None else False
+        for c in self.rule_config:
+            if node_exists:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "ERROR",
+                    f"pglogical provider node has already existed on database {db_name}",
+                )
+            else:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "PASS",
+                    "No existing pglogical provider node",
+                )
 
     def check_user_obj_privileges(self, db_name: str) -> list[str]:
         errors: list[str] = []
