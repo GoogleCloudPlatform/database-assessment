@@ -292,6 +292,7 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             "collection_postgres_user_tables_without_privilege",
             "collection_postgres_user_views_without_privilege",
             "collection_postgres_user_sequences_without_privilege",
+            "collection_postgres_tables_with_no_primary_key",
         }
 
     def get_collection_filenames(self) -> dict[str, str]:
@@ -317,6 +318,7 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             "collection_postgres_schema_objects": "postgres_schema_objects",
             "collection_postgres_settings": "postgres_settings",
             "collection_postgres_source_details": "postgres_source_details",
+            "collection_postgres_tables_with_no_primary_key": "postgres_table_details",
         }
 
 

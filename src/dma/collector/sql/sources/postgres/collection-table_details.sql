@@ -435,3 +435,35 @@ select :PKEY as pkey,
   COALESCE(src.toast_index_read, 0) as toast_index_read,
   current_database() as database_name
 from src;
+
+
+-- name: collection-postgres-tables-with-no-primary-key
+with src as (
+SELECT onr.nspname, oc.relname
+		FROM pg_namespace onr, pg_class oc
+		WHERE onr.oid = oc.relnamespace
+		  AND oc.relkind = 'r'::"char"
+			AND oc.relpersistence = 'p'::"char"
+			AND onr.nspname not in ('pg_catalog', 'information_schema', 'pglogical', 'pglogical_origin')
+			AND onr.nspname not like 'pg\_%'
+			AND (onr.nspname, oc.relname) NOT IN
+		(SELECT nr.nspname, r.relname
+		FROM pg_namespace nr,
+			 pg_class r,
+			 pg_namespace nc,
+			 pg_constraint c
+		WHERE
+			nr.oid = r.relnamespace
+			AND r.oid = c.conrelid
+			AND nc.oid = c.connamespace
+			AND c.contype = 'p'::"char"
+			AND r.relkind = 'r'::"char"
+			AND NOT pg_catalog.pg_is_other_temp_schema(nr.oid))
+)
+select :PKEY as pkey,
+  :DMA_SOURCE_ID as dma_source_id,
+  :DMA_MANUAL_ID as dma_manual_id,
+  src.nspname,
+  src.relname,
+  current_database() as database_name
+from src;

@@ -858,3 +858,12 @@ create or replace table collection_postgres_db_machine_specs(
     primary_mac VARCHAR,
     ip_addresses VARCHAR
   );
+
+create or replace table collection_postgres_tables_with_no_primary_key(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    nspname VARCHAR,
+    relname VARCHAR,
+    database_name VARCHAR
+  );

@@ -107,6 +107,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             self._check_privileges(db, is_pglogical_installed)
             if is_pglogical_installed:
                 self._check_if_node_exists(db)
+            self._check_tables_without_pk(db)
 
     def _check_collation(self) -> None:
         rule_code = "COLLATION"
@@ -129,6 +130,22 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     rule_code,
                     "PASS",
                     "All utilized collations are supported.",
+                )
+
+    def _check_tables_without_pk(self, db_name: str) -> None:
+        rule_code = "TABLES_WITH_NO_PK"
+        result = self.local_db.sql(
+            "select CONCAT(nspname, '.', relname) from collection_postgres_tables_with_no_primary_key where database_name = $db_name",
+            params={"db_name": db_name},
+        ).fetchall()
+        tables = ", ".join(row[0] for row in result)
+        for c in self.rule_config:
+            if tables:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "WARNING",
+                    f"Some tables have limited support. Tables without primary keys were identified and only INSERT statements will be replicated for these tables: {tables} in database {db_name} doesn't have primary keys",
                 )
 
     def _check_version(self) -> None:
