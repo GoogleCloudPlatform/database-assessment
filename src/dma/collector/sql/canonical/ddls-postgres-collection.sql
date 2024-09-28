@@ -867,3 +867,12 @@ create or replace table collection_postgres_tables_with_no_primary_key(
     relname VARCHAR,
     database_name VARCHAR
   );
+
+create or replace table collection_postgres_pglogical_provider_node(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    node_id VARCHAR,
+    node_name VARCHAR,
+    database_name VARCHAR
+);

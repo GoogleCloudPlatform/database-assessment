@@ -318,6 +318,7 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             "collection_postgres_schema_objects": "postgres_schema_objects",
             "collection_postgres_settings": "postgres_settings",
             "collection_postgres_source_details": "postgres_source_details",
+            "collection_postgres_pglogical_provider_node": "postgres_pglogical_details",
             "collection_postgres_tables_with_no_primary_key": "postgres_table_details",
         }
 
