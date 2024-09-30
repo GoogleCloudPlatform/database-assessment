@@ -65,6 +65,7 @@ $powerShellVersion = $PSVersionTable.PSVersion.Major
 $foldername = ""
 $totalErrorCount = 0
 
+# Pull the windows version so that we can know wether or not to skip perfmon collection or not
 $windowsOSVersion = [Environment]::OSVersion.Version
 $checkWindowsOSVersion = [Environment]::OSVersion.Version -ge (new-object 'Version' 6,2)
 
@@ -273,6 +274,8 @@ if ([string]($isValidSQLInstanceVersion) -eq "N") {
     }
 }
 
+# Ignore and create empty perfmon if flag is set or Windows version is not > Server 2008.  Otherwise set flags
+# so that perfmon is processed as directed
 if ($ignorePerfmon -eq "true") {
     $perfCounterLabel = "NoPerfCounter"
 } elseif ($checkWindowsOSVersion -eq $false) {
