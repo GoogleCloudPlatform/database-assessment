@@ -65,6 +65,10 @@ $powerShellVersion = $PSVersionTable.PSVersion.Major
 $foldername = ""
 $totalErrorCount = 0
 
+# Pull the windows version so that we can know wether or not to skip perfmon collection or not
+$windowsOSVersion = [Environment]::OSVersion.Version
+$checkWindowsOSVersion = [Environment]::OSVersion.Version -ge (new-object 'Version' 6,2)
+
 if ($ignorePerfmon -eq "true") {
     Write-Host "#############################################################"
     Write-Host "#                                                           #"
@@ -245,7 +249,7 @@ $validSQLInstanceVersionCheckValues = $splitValidInstanceVerisionCheckObj | ForE
 $isValidSQLInstanceVersion = $validSQLInstanceVersionCheckValues[0]
 $isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
 
-$op_version = "4.3.38"
+$op_version = "4.3.39"
 
 if ([string]($isValidSQLInstanceVersion) -eq "N") {
     Write-Host "#############################################################"
@@ -270,8 +274,14 @@ if ([string]($isValidSQLInstanceVersion) -eq "N") {
     }
 }
 
+# Ignore and create empty perfmon if flag is set or Windows version is not > Server 2008.  Otherwise set flags
+# so that perfmon is processed as directed
 if ($ignorePerfmon -eq "true") {
     $perfCounterLabel = "NoPerfCounter"
+} elseif ($checkWindowsOSVersion -eq $false) {
+    $perfCounterLabel = "NoPerfCounter"
+    $ignorePerfmon = "true"
+    $ignorePerfmonOsIncompatible = $true
 }
 else {
     $perfCounterLabel = "PerfCounter"
@@ -337,6 +347,15 @@ foreach ($logFileName in $logFileArray) {
 
 WriteLog -logLocation $foldername\$logFile -logMessage "PS Version Table" -logOperation "FILE"
 $PSVersionTable | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
+
+WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "Windows OS Version" -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "$windowsOSVersion" -logOperation "FILE"
+
+if ($ignorePerfmonOsIncompatible -eq $true) {
+    WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Skipping Perfmon Collection Due to OS Incompatibility" -logOperation "FILE"
+}
 
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "Registry Value for Long Paths" -logOperation "FILE"
