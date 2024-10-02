@@ -173,7 +173,7 @@ async def _collect_data(
     working_path: Path | None = None,
 ) -> None:
     working_path = working_path or Path("tmp/")
-    f"{src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
+    _execution_id = f"{src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
     with get_duckdb_connection(working_path) as local_db:
         canonical_query_manager = next(provide_canonical_queries(local_db=local_db, working_path=working_path))
         collection_extractor = CollectionExtractor(
@@ -316,7 +316,7 @@ async def _readiness_check(
     working_path: Path | None = None,
 ) -> None:
     working_path = working_path or Path("tmp/")
-    f"{src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
+    _execution_id = f"{src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
     with get_duckdb_connection(working_path) as local_db:
         workflow = ReadinessCheck(
             local_db=local_db,
