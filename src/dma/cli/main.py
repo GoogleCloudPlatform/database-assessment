@@ -23,14 +23,13 @@ from click import group, pass_context
 from rich import prompt
 from rich.padding import Padding
 from rich.table import Table
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from dma.__about__ import __version__ as current_version
 from dma.cli._utils import console
-from dma.collector.dependencies import provide_canonical_queries, provide_collection_query_manager
+from dma.collector.dependencies import provide_canonical_queries
 from dma.collector.workflows.collection_extractor.base import CollectionExtractor
 from dma.collector.workflows.readiness_check.base import ReadinessCheck
-from dma.lib.db.base import get_engine
+from dma.lib.db.base import SourceInfo
 from dma.lib.db.local import get_duckdb_connection
 
 if TYPE_CHECKING:
@@ -151,11 +150,13 @@ def collect_data(
         asyncio.run(
             _collect_data(
                 console=console,
-                db_type=db_type.upper(),  # type: ignore[arg-type]
-                username=username,
-                password=password,
-                hostname=hostname,
-                port=port,
+                src_info=SourceInfo(
+                    db_type=db_type.upper(),  # type: ignore[arg-type]
+                    username=username,
+                    password=password,
+                    hostname=hostname,
+                    port=port,
+                ),
                 database=database,
                 collection_identifier=collection_identifier,
             )
@@ -166,36 +167,25 @@ def collect_data(
 
 async def _collect_data(
     console: Console,
-    db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
-    username: str,
-    password: str,
-    hostname: str,
-    port: int,
+    src_info: SourceInfo,
     database: str,
     collection_identifier: str | None,
     working_path: Path | None = None,
 ) -> None:
-    async_engine = get_engine(db_type, username, password, hostname, port, database)
     working_path = working_path or Path("tmp/")
-    execution_id = f"{db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
+    _execution_id = f"{src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
     with get_duckdb_connection(working_path) as local_db:
-        async with AsyncSession(async_engine) as db_session:
-            collection_manager = await anext(  # noqa: F821 # pyright: ignore[reportUndefinedVariable]
-                provide_collection_query_manager(
-                    db_session=db_session, execution_id=execution_id, manual_id=collection_identifier
-                )
-            )
-            canonical_query_manager = next(provide_canonical_queries(local_db=local_db, working_path=working_path))
-            collection_extractor = CollectionExtractor(
-                local_db=local_db,
-                canonical_query_manager=canonical_query_manager,
-                collection_query_manager=collection_manager,
-                db_type=db_type,
-                console=console,
-            )
-            await collection_extractor.execute()
-            collection_extractor.dump_database(working_path)
-        await async_engine.dispose()
+        canonical_query_manager = next(provide_canonical_queries(local_db=local_db, working_path=working_path))
+        collection_extractor = CollectionExtractor(
+            local_db=local_db,
+            src_info=src_info,
+            database=database,
+            canonical_query_manager=canonical_query_manager,
+            console=console,
+            collection_identifier=collection_identifier,
+        )
+        await collection_extractor.execute()
+        collection_extractor.dump_database(working_path)
 
 
 @app.command(
@@ -303,11 +293,13 @@ def readiness_assessment(
         asyncio.run(
             _readiness_check(
                 console=console,
-                db_type=db_type.upper(),  # type: ignore[arg-type]
-                username=username,
-                password=password,
-                hostname=hostname,
-                port=port,
+                src_info=SourceInfo(
+                    db_type=db_type.upper(),  # type: ignore[arg-type]
+                    username=username,
+                    password=password,
+                    hostname=hostname,
+                    port=port,
+                ),
                 database=database,
                 collection_identifier=collection_identifier,
             )
@@ -318,39 +310,28 @@ def readiness_assessment(
 
 async def _readiness_check(
     console: Console,
-    db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
-    username: str,
-    password: str,
-    hostname: str,
-    port: int,
+    src_info: SourceInfo,
     database: str,
     collection_identifier: str | None,
     working_path: Path | None = None,
 ) -> None:
-    async_engine = get_engine(db_type, username, password, hostname, port, database)
     working_path = working_path or Path("tmp/")
-    execution_id = f"{db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
+    _execution_id = f"{src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
     with get_duckdb_connection(working_path) as local_db:
-        async with AsyncSession(async_engine) as db_session:
-            collection_manager = await anext(  # noqa: F821 # pyright: ignore[reportUndefinedVariable]
-                provide_collection_query_manager(
-                    db_session=db_session, execution_id=execution_id, manual_id=collection_identifier
-                )
-            )
-            canonical_query_manager = next(provide_canonical_queries(local_db=local_db, working_path=working_path))
-            workflow = ReadinessCheck(
-                local_db=local_db,
-                canonical_query_manager=canonical_query_manager,
-                collection_query_manager=collection_manager,
-                db_type=db_type,
-                console=console,
-            )
-            await workflow.execute()
-            console.print(Padding("", 1, expand=True))
-            console.rule("Processing collected data.", align="left")
-            workflow.print_summary()
-            workflow.dump_database(working_path)
-        await async_engine.dispose()
+        workflow = ReadinessCheck(
+            local_db=local_db,
+            src_info=src_info,
+            database=database,
+            console=console,
+            collection_identifier=collection_identifier,
+            working_path=working_path,
+        )
+        await workflow.execute()
+        console.print(Padding("", 1, expand=True))
+        console.rule("Processing collected data.", align="left")
+        workflow.print_summary()
+        if workflow.collection_extractor is not None:
+            workflow.collection_extractor.dump_database(working_path)
 
 
 def print_app_info() -> None:

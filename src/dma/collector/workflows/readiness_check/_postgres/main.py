@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, cast
 
 from rich.table import Table
 
+from dma.collector.util.postgres.helpers import get_db_major_version, get_db_minor_version
 from dma.collector.workflows.readiness_check._postgres.constants import (
     ALLOYDB_SUPPORTED_COLLATIONS,
     ALLOYDB_SUPPORTED_EXTENSIONS,
@@ -28,7 +29,6 @@ from dma.collector.workflows.readiness_check._postgres.constants import (
     DB_TYPE_MAP,
     RDS_MINOR_VERSION_SUPPORT_MAP,
 )
-from dma.collector.workflows.readiness_check._postgres.helpers import get_db_major_version, get_db_minor_version
 from dma.collector.workflows.readiness_check.base import (
     ReadinessCheck,
     ReadinessCheckExecutor,
@@ -102,8 +102,12 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         self._check_max_worker_processes()
         self._check_extensions()
         self._check_fdw()
-        is_pglogical_installed = self._check_pglogical_installed()
-        self._check_privileges(is_pglogical_installed)
+        for db in self.get_all_dbs():
+            is_pglogical_installed = self._check_pglogical_installed(db)
+            self._check_privileges(db, is_pglogical_installed)
+            if is_pglogical_installed:
+                self._check_if_node_exists(db)
+            self._check_tables_without_pk(db)
 
     def _check_collation(self) -> None:
         rule_code = "COLLATION"
@@ -126,6 +130,22 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     rule_code,
                     "PASS",
                     "All utilized collations are supported.",
+                )
+
+    def _check_tables_without_pk(self, db_name: str) -> None:
+        rule_code = "TABLES_WITH_NO_PK"
+        result = self.local_db.sql(
+            "select CONCAT(nspname, '.', relname) from collection_postgres_tables_with_no_primary_key where database_name = $db_name",
+            params={"db_name": db_name},
+        ).fetchall()
+        tables = ", ".join(row[0] for row in result)
+        for c in self.rule_config:
+            if tables:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "WARNING",
+                    f"Some tables have limited support. Tables without primary keys were identified and only INSERT statements will be replicated for these tables: {tables} in database {db_name} doesn't have primary keys",
                 )
 
     def _check_version(self) -> None:
@@ -168,10 +188,11 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     f"Version {self.db_version} is supported.  Please ensure that you selected a version that meets or exceeds version {detected_major_version!s}.",
                 )
 
-    def _check_pglogical_installed(self) -> bool:
+    def _check_pglogical_installed(self, db_name: str) -> bool:
         rule_code = "PGLOGICAL_INSTALLED"
         result = self.local_db.sql(
-            "select count(*) from collection_postgres_extensions where extension_name = 'pglogical'"
+            query="select count(*) from collection_postgres_extensions where extension_name = 'pglogical' and database_name = $db_name",
+            params={"db_name": db_name},
         ).fetchone()
         is_installed = result[0] > 0 if result is not None else False
         for c in self.rule_config:
@@ -180,7 +201,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     c.db_variant,
                     rule_code,
                     "ERROR",
-                    "The `pglogical` extension is not installed on the database.",
+                    f"The `pglogical` extension is not installed on the database {db_name}.",
                 )
             else:
                 self.save_rule_result(
@@ -191,57 +212,100 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 )
         return is_installed
 
-    def _check_pglogical_privileges(self) -> list[str]:
+    def _check_pglogical_privileges(self, db_name: str) -> list[str]:
         result = self.local_db.sql(
-            "select has_schema_usage_privilege, has_tables_select_privilege, has_local_node_select_privilege, has_node_select_privilege, has_node_interface_select_privilege from collection_postgres_pglogical_privileges"
+            "select has_schema_usage_privilege, has_tables_select_privilege, has_local_node_select_privilege, has_node_select_privilege, has_node_interface_select_privilege from collection_postgres_pglogical_privileges where database_name = $db_name",
+            params={"db_name": db_name},
         ).fetchone()
         errors: list[str] = []
         if result is None:
             errors.append("Empty result reading pglogical schema privileges for the user")
         else:
             if not result[0]:
-                errors.append("user doesn't have USAGE privilege on schema pglogical")
+                errors.append(f"user doesn't have USAGE privilege on schema pglogical for the database {db_name}")
             if not result[1]:
-                errors.append("user doesn't have SELECT privilege on table pglogical.tables")
+                errors.append(
+                    f"user doesn't have SELECT privilege on table pglogical.tables for the database {db_name}"
+                )
             if not result[2]:
-                errors.append("user doesn't have SELECT privilege on table pglogical.local_node")
+                errors.append(
+                    f"user doesn't have SELECT privilege on table pglogical.local_node for the database {db_name}"
+                )
             if not result[3]:
-                errors.append("user doesn't have SELECT privilege on table pglogical.node")
+                errors.append(f"user doesn't have SELECT privilege on table pglogical.node for the database {db_name}")
             if not result[4]:
-                errors.append("user doesn't have SELECT privilege on table pglogical.node_interface")
+                errors.append(
+                    f"user doesn't have SELECT privilege on table pglogical.node_interface for the database {db_name}"
+                )
         return errors
 
-    def check_user_obj_privileges(self) -> list[str]:
+    def _check_if_node_exists(self, db_name: str) -> None:
+        rule_code = "PGLOGICAL_NODE_ALREADY_EXISTS"
+        result = self.local_db.sql(
+            "select count(*) from collection_postgres_pglogical_provider_node where database_name = $db_name",
+            params={"db_name": db_name},
+        ).fetchone()
+        node_exists = result[0] > 0 if result is not None else False
+        for c in self.rule_config:
+            if node_exists:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "ERROR",
+                    f"pglogical provider node has already existed on database {db_name}",
+                )
+            else:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    "PASS",
+                    "No existing pglogical provider node",
+                )
+
+    def check_user_obj_privileges(self, db_name: str) -> list[str]:
         errors: list[str] = []
         rows = self.local_db.sql(
-            "select namespace_name from collection_postgres_user_schemas_without_privilege"
+            "select namespace_name from collection_postgres_user_schemas_without_privilege where database_name = $db_name",
+            params={"db_name": db_name},
         ).fetchall()
-        errors.extend(f"user doesn't have USAGE privilege on schema {row[0]}" for row in rows)
+        errors.extend(
+            f"user doesn't have USAGE privilege on schema {row[0]} for the database {db_name}" for row in rows
+        )
 
         rows = self.local_db.sql(
-            "select schema_name, table_name from collection_postgres_user_tables_without_privilege"
+            "select schema_name, table_name from collection_postgres_user_tables_without_privilege where database_name = $db_name",
+            params={"db_name": db_name},
         ).fetchall()
-        errors.extend(f"user doesn't have SELECT privilege on table {row[0]}.{row[1]}" for row in rows)
+        errors.extend(
+            f"user doesn't have SELECT privilege on table {row[0]}.{row[1]} for the database {db_name}" for row in rows
+        )
 
         rows = self.local_db.sql(
-            "select schema_name, view_name from collection_postgres_user_views_without_privilege"
+            "select schema_name, view_name from collection_postgres_user_views_without_privilege where database_name = $db_name",
+            params={"db_name": db_name},
         ).fetchall()
-        errors.extend(f"user doesn't have SELECT privilege on view {row[0]}.{row[1]}" for row in rows)
+        errors.extend(
+            f"user doesn't have SELECT privilege on view {row[0]}.{row[1]} for the database {db_name}" for row in rows
+        )
 
         rows = self.local_db.sql(
-            "select namespace_name, rel_name from collection_postgres_user_sequences_without_privilege"
+            "select namespace_name, rel_name from collection_postgres_user_sequences_without_privilege where database_name = $db_name",
+            params={"db_name": db_name},
         ).fetchall()
-        errors.extend(f"user doesn't have SELECT privilege on sequence {row[0]}.{row[1]}" for row in rows)
+        errors.extend(
+            f"user doesn't have SELECT privilege on sequence {row[0]}.{row[1]} for the database {db_name}"
+            for row in rows
+        )
         return errors
 
-    def _check_privileges(self, is_pglogical_installed: bool) -> None:
+    def _check_privileges(self, db_name: str, is_pglogical_installed: bool) -> None:
         rule_code = "PRIVILEGES"
         errors: list[str] = []
 
         if is_pglogical_installed:
-            errors = self._check_pglogical_privileges()
+            errors = self._check_pglogical_privileges(db_name)
 
-        errors.extend(self.check_user_obj_privileges())
+        errors.extend(self.check_user_obj_privileges(db_name))
         all_errors = "\n".join(errors)
         for c in self.rule_config:
             if len(errors) > 0:
@@ -251,7 +315,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     c.db_variant,
                     rule_code,
                     "PASS",
-                    "User has all privileges required for migration",
+                    f"User has all privileges required for migration for the database {db_name}",
                 )
 
     def _check_wal_level(self) -> None:
