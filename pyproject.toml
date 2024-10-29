@@ -88,7 +88,7 @@ dma = "dma.cli.main:app"
 
 [build-system]
 build-backend = "hatchling.build"
-requires = ["hatchling", "nodeenv"]
+requires = ["hatchling"]
 
 [tool.hatch.metadata]
 # direct dependency references, e.g `pip @ git+https://github.com/pypa/pip.git@master`
