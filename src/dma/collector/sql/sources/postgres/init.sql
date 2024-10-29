@@ -14,7 +14,7 @@
  limitations under the License.
  */
 -- name: init-get-db-version$
-select current_setting('server_version_num')::VARCHAR as db_version;
+select current_setting('server_version')::VARCHAR as db_version;
 
 -- name: init-get-execution-id$
 select 'postgres_' || current_setting('server_version_num') || '_' || to_char(current_timestamp, 'YYYYMMDDHH24MISSMS') as execution_id;

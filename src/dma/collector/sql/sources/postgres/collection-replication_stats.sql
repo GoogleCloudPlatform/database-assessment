@@ -19,7 +19,7 @@ with src as (
     r.usesysid,
     r.usename,
     r.application_name,
-    r.client_addr,
+    host(r.client_addr) as client_addr,
     r.client_hostname,
     r.client_port,
     r.backend_start,
