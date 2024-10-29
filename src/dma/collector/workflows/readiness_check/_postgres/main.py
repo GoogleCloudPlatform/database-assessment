@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from dma.types import PostgresVariants
 
 ERROR: Final[str] = "ERROR"
-WARNING: Final = "WARNING"
+WARNING: Final[str] = "WARNING"
 PASS: Final = "PASS"
 PGLOGICAL_INSTALLED: Final[str] = "PGLOGICAL_INSTALLED"
 PRIVILEGES: Final[str] = "PRIVILEGES"
