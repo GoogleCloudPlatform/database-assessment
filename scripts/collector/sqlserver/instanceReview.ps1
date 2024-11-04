@@ -37,6 +37,8 @@
     Note the script will attempt to collect VM specs using the current users regardless. (default:false)
 .PARAMETER useWindowsAuthentication
     Specifies if the loging to the database will utilize the current Windows Authenticated User or the supplied username / password for SQL Authentication (default:false)
+.PARAMETER outputDirectory
+    User specified output directory if desired to be different from the $PSScriptRoot default
 .EXAMPLE
     To use a specific username / password combination for a named instance:
         instanceReview.ps1 -serverName [server name / ip address]\[instance name] -collectionUserName [collection username] -collectionUserPass [collection username password] -ignorePerfmon [true/false] -dmaManualId [string]
@@ -56,7 +58,8 @@ Param(
     [Parameter(Mandatory = $false)][string]$ignorePerfmon = "false",
     [Parameter(Mandatory = $false)][string]$manualUniqueId = "NA",
     [Parameter(Mandatory = $false)][switch]$collectVMSpecs,
-    [Parameter(Mandatory = $false)][switch]$useWindowsAuthentication = $false
+    [Parameter(Mandatory = $false)][switch]$useWindowsAuthentication = $false,
+    [Parameter(Mandatory = $false)][string]$outputDirectory = "default"
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
@@ -661,10 +664,20 @@ else {
     $zippedopfolder = $foldername + '.zip'
 }
 
-WriteLog -logLocation $foldername\$logFile -logMessage "Zipping Output to $zippedopfolder..." -logOperation "BOTH"
-
 if ($powerShellVersion -ge 5) {
-    Compress-Archive -Path $foldername\*.csv, $foldername\*.log, $foldername\*.txt -DestinationPath $zippedopfolder
+    
+    if (([string]::IsNullorEmpty($outputDir)) -or ($outputDir -eq "default")) {
+        WriteLog -logLocation $foldername\$logFile -logMessage "Zipping Output to $zippedopfolder..." -logOperation "BOTH"
+        Compress-Archive -Path $foldername\*.csv, $foldername\*.log, $foldername\*.txt -DestinationPath $zippedopfolder
+    } else {
+        if (Test-Path -Path $outputDirectory) {
+            WriteLog -logLocation $foldername\$logFile -logMessage "Zipping Output to $outputDirectory\$zippedopfolder..." -logOperation "BOTH"
+            Compress-Archive -Path $foldername\*.csv, $foldername\*.log, $foldername\*.txt -DestinationPath $outputDirectory\$zippedopfolder
+        } else {
+            WriteLog -logLocation $foldername\$logFile -logMessage "Specified $outputDir is not valid.  Zipping Output to default directory $PSScriptRoot\$zippedopfolder..." -logOperation "BOTH"
+            Compress-Archive -Path $foldername\*.csv, $foldername\*.log, $foldername\*.txt -DestinationPath $zippedopfolder
+        }
+    }
 
     if (Test-Path -Path $zippedopfolder) {
         WriteLog -logLocation $foldername\$logFile -logMessage "Removing directory $foldername..." -logOperation "MESSAGE"

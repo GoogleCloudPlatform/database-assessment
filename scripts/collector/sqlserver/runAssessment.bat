@@ -23,7 +23,7 @@ set noPerfmon=false
 set collectVMSpecs=
 set useWindowsAuthentication=false
 
-set helpMessage=Usage: runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [username] -collectionUserPass [password] -ignorePerfmon [true/false] -manualUniqueId [unique tag to identify collection] [-collectVMSpecs]
+set helpMessage=Usage: runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [username] -collectionUserPass [password] -ignorePerfmon [true/false] -manualUniqueId [unique tag to identify collection] [-collectVMSpecs] -outputDirectory [write zip file to different directory]
 set helpExample=Example (default port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
 set helpExamplePort=Example (specified port): runAssessment.bat -serverName MS-SERVER1 -port 1436 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
 set helpExampleDatabase=Example (default port / single database): runAssessment.bat -serverName MS-SERVER1\SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
@@ -50,6 +50,7 @@ if /i "%1" == "-ignorePerfmon" set "noPerfmon=%2"
 if /i "%1" == "-manualUniqueId" set "manualUniqueId=%2"
 if /i "%1" == "-collectVMSpecs" set "collectVMSpecs=true"
 if /i "%1" == "-useWindowsAuthentication" set "useWindowsAuthentication=true"
+if /i "%1" == "-outputDirectory" set "outputDir=%2"
 
 shift
 goto :loop
@@ -69,15 +70,15 @@ if [%user%] == [] (
 
 if "%useWindowsAuthentication%"=="false" (
     if not [%user%]==[] (
-        SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId%"
+        SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId% -outputDirectory %outputDir%"
 	) ELSE (
         goto error
     )
 ) ELSE (
     if not [%user%]==[] (
-        SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId% -useWindowsAuthentication"
+        SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -collectionUserName %user% -collectionUserPass %pass% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId% -useWindowsAuthentication -outputDirectory %outputDir%"
     ) ELSE (
-        SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId% -useWindowsAuthentication"
+        SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId% -useWindowsAuthentication -outputDirectory %outputDir%"
     )
 )
 
