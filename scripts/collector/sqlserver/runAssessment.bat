@@ -22,6 +22,7 @@ set database=all
 set noPerfmon=false
 set collectVMSpecs=
 set useWindowsAuthentication=false
+set outputDir=default
 
 set helpMessage=Usage: runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [username] -collectionUserPass [password] -ignorePerfmon [true/false] -manualUniqueId [unique tag to identify collection] [-collectVMSpecs] -outputDirectory [write zip file to different directory]
 set helpExample=Example (default port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1

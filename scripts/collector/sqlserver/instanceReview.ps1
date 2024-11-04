@@ -354,6 +354,7 @@ $PSVersionTable | out-string | Add-Content -Encoding utf8 -Path $foldername\$log
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "Windows OS Version" -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "$windowsOSVersion" -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "Custom Output Directory: " $outputDirectory
 
 if ($ignorePerfmonOsIncompatible -eq $true) {
     WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
@@ -665,17 +666,20 @@ else {
 }
 
 if ($powerShellVersion -ge 5) {
-    
-    if (([string]::IsNullorEmpty($outputDir)) -or ($outputDir -eq "default")) {
+
+    if (([string]::IsNullorEmpty($outputDirectory)) -or ($outputDirectory -eq "default")) {
         WriteLog -logLocation $foldername\$logFile -logMessage "Zipping Output to $zippedopfolder..." -logOperation "BOTH"
         Compress-Archive -Path $foldername\*.csv, $foldername\*.log, $foldername\*.txt -DestinationPath $zippedopfolder
+		$customOutputDir = 0
     } else {
-        if (Test-Path -Path $outputDirectory) {
+        if ((Test-Path -Path $outputDirectory) -and ($outputDirectory -ne "default")) {
             WriteLog -logLocation $foldername\$logFile -logMessage "Zipping Output to $outputDirectory\$zippedopfolder..." -logOperation "BOTH"
             Compress-Archive -Path $foldername\*.csv, $foldername\*.log, $foldername\*.txt -DestinationPath $outputDirectory\$zippedopfolder
+			$customOutputDir = 1
         } else {
-            WriteLog -logLocation $foldername\$logFile -logMessage "Specified $outputDir is not valid.  Zipping Output to default directory $PSScriptRoot\$zippedopfolder..." -logOperation "BOTH"
+            WriteLog -logLocation $foldername\$logFile -logMessage "Specified $outputDirectory is not valid.  Zipping Output to default directory $PSScriptRoot\$zippedopfolder..." -logOperation "BOTH"
             Compress-Archive -Path $foldername\*.csv, $foldername\*.log, $foldername\*.txt -DestinationPath $zippedopfolder
+			$customOutputDir = 0
         }
     }
 
@@ -690,9 +694,15 @@ if ($powerShellVersion -ge 5) {
 
     WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "MESSAGE"
     WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "MESSAGE"
-    WriteLog -logLocation $foldername\$logFile -logMessage "Return file $PSScriptRoot\$zippedopfolder" -logOperation "MESSAGE"
-    WriteLog -logLocation $foldername\$logFile -logMessage "to Google to complete assessment" -logOperation "MESSAGE"
-    WriteLog -logLocation $foldername\$logFile -logMessage "Collection Complete..." -logOperation "MESSAGE"
+
+	if ($customOutputDir -eq 0) {
+		WriteLog -logLocation $foldername\$logFile -logMessage "Return file $PSScriptRoot\$zippedopfolder" -logOperation "MESSAGE"
+		WriteLog -logLocation $foldername\$logFile -logMessage "to Google to complete assessment" -logOperation "MESSAGE"
+    } else {
+		WriteLog -logLocation $foldername\$logFile -logMessage "Return file $outputDirectory\$zippedopfolder" -logOperation "MESSAGE"
+		WriteLog -logLocation $foldername\$logFile -logMessage "to Google to complete assessment" -logOperation "MESSAGE"	
+	}
+	WriteLog -logLocation $foldername\$logFile -logMessage "Collection Complete..." -logOperation "MESSAGE"
 }
 else {
     WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "MESSAGE"
