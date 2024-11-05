@@ -207,7 +207,7 @@ Operating System Versions:
                 -ignorePerfmon **Optional (Defaults to "false" / Set to "true" to ignore perfmon collection)
                 -manualUniqueId **Optional (Defaults to "NA" - Gives the ability the user to tag their collection with a unique name)
                 -collectVMSpecs **Optional switch. See below.
-                -outputDirectory  ** Optional (write the final zip file to another location - must be escaped properly if spaces are in the directory name)
+                -outputDirectory  **Optional (write the final zip file to another location - must be escaped properly if spaces are in the directory name)
 
         For a Named Instance (all databases):
             .\runAssessment.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password] -manualUniqueId [string]
