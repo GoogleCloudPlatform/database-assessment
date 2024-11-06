@@ -37,6 +37,8 @@
     Note the script will attempt to collect VM specs using the current users regardless. (default:false)
 .PARAMETER useWindowsAuthentication
     Specifies if the loging to the database will utilize the current Windows Authenticated User or the supplied username / password for SQL Authentication (default:false)
+.PARAMETER outputDirectory
+    User specified output directory if desired to be different from the $PSScriptRoot default
 .EXAMPLE
     To use a specific username / password combination for a named instance:
         instanceReview.ps1 -serverName [server name / ip address]\[instance name] -collectionUserName [collection username] -collectionUserPass [collection username password] -ignorePerfmon [true/false] -dmaManualId [string]
@@ -56,7 +58,8 @@ Param(
     [Parameter(Mandatory = $false)][string]$ignorePerfmon = "false",
     [Parameter(Mandatory = $false)][string]$manualUniqueId = "NA",
     [Parameter(Mandatory = $false)][switch]$collectVMSpecs,
-    [Parameter(Mandatory = $false)][switch]$useWindowsAuthentication = $false
+    [Parameter(Mandatory = $false)][switch]$useWindowsAuthentication = $false,
+    [Parameter(Mandatory = $false)][string]$outputDirectory = "default"
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
@@ -249,7 +252,7 @@ $validSQLInstanceVersionCheckValues = $splitValidInstanceVerisionCheckObj | ForE
 $isValidSQLInstanceVersion = $validSQLInstanceVersionCheckValues[0]
 $isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
 
-$op_version = "4.3.39"
+$op_version = "4.3.40"
 
 if ([string]($isValidSQLInstanceVersion) -eq "N") {
     Write-Host "#############################################################"
@@ -351,6 +354,7 @@ $PSVersionTable | out-string | Add-Content -Encoding utf8 -Path $foldername\$log
 WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "Windows OS Version" -logOperation "FILE"
 WriteLog -logLocation $foldername\$logFile -logMessage "$windowsOSVersion" -logOperation "FILE"
+WriteLog -logLocation $foldername\$logFile -logMessage "Custom Output Directory: " $outputDirectory
 
 if ($ignorePerfmonOsIncompatible -eq $true) {
     WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "FILE"
@@ -661,10 +665,23 @@ else {
     $zippedopfolder = $foldername + '.zip'
 }
 
-WriteLog -logLocation $foldername\$logFile -logMessage "Zipping Output to $zippedopfolder..." -logOperation "BOTH"
-
 if ($powerShellVersion -ge 5) {
-    Compress-Archive -Path $foldername\*.csv, $foldername\*.log, $foldername\*.txt -DestinationPath $zippedopfolder
+
+    if (([string]::IsNullorEmpty($outputDirectory)) -or ($outputDirectory -eq "default")) {
+        WriteLog -logLocation $foldername\$logFile -logMessage "Zipping Output to $zippedopfolder..." -logOperation "BOTH"
+        Compress-Archive -Path $foldername\*.csv, $foldername\*.log, $foldername\*.txt -DestinationPath $zippedopfolder
+		$customOutputDir = 0
+    } else {
+        if ((Test-Path -Path $outputDirectory) -and ($outputDirectory -ne "default")) {
+            WriteLog -logLocation $foldername\$logFile -logMessage "Zipping Output to $outputDirectory\$zippedopfolder..." -logOperation "BOTH"
+            Compress-Archive -Path $foldername\*.csv, $foldername\*.log, $foldername\*.txt -DestinationPath $outputDirectory\$zippedopfolder
+			$customOutputDir = 1
+        } else {
+            WriteLog -logLocation $foldername\$logFile -logMessage "Specified $outputDirectory is not valid.  Zipping Output to default directory $PSScriptRoot\$zippedopfolder..." -logOperation "BOTH"
+            Compress-Archive -Path $foldername\*.csv, $foldername\*.log, $foldername\*.txt -DestinationPath $zippedopfolder
+			$customOutputDir = 0
+        }
+    }
 
     if (Test-Path -Path $zippedopfolder) {
         WriteLog -logLocation $foldername\$logFile -logMessage "Removing directory $foldername..." -logOperation "MESSAGE"
@@ -677,9 +694,15 @@ if ($powerShellVersion -ge 5) {
 
     WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "MESSAGE"
     WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "MESSAGE"
-    WriteLog -logLocation $foldername\$logFile -logMessage "Return file $PSScriptRoot\$zippedopfolder" -logOperation "MESSAGE"
-    WriteLog -logLocation $foldername\$logFile -logMessage "to Google to complete assessment" -logOperation "MESSAGE"
-    WriteLog -logLocation $foldername\$logFile -logMessage "Collection Complete..." -logOperation "MESSAGE"
+
+	if ($customOutputDir -eq 0) {
+		WriteLog -logLocation $foldername\$logFile -logMessage "Return file $PSScriptRoot\$zippedopfolder" -logOperation "MESSAGE"
+		WriteLog -logLocation $foldername\$logFile -logMessage "to Google to complete assessment" -logOperation "MESSAGE"
+    } else {
+		WriteLog -logLocation $foldername\$logFile -logMessage "Return file $outputDirectory\$zippedopfolder" -logOperation "MESSAGE"
+		WriteLog -logLocation $foldername\$logFile -logMessage "to Google to complete assessment" -logOperation "MESSAGE"	
+	}
+	WriteLog -logLocation $foldername\$logFile -logMessage "Collection Complete..." -logOperation "MESSAGE"
 }
 else {
     WriteLog -logLocation $foldername\$logFile -logMessage " " -logOperation "MESSAGE"
