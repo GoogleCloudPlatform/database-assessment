@@ -147,7 +147,8 @@ def collect_data(
         password = prompt.Prompt.ask("Please enter a password", password=True)
     input_confirmed = True if no_prompt else prompt.Confirm.ask("Are you ready to start the assessment?")
     if input_confirmed:
-        asyncio.run(
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
             _collect_data(
                 console=console,
                 src_info=SourceInfo(
@@ -290,7 +291,8 @@ def readiness_assessment(
         password = prompt.Prompt.ask("Please enter a password", password=True)
     input_confirmed = True if no_prompt else prompt.Confirm.ask("Are you ready to start the assessment?")
     if input_confirmed:
-        asyncio.run(
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(
             _readiness_check(
                 console=console,
                 src_info=SourceInfo(

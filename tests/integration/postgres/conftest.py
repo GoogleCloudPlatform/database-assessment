@@ -15,23 +15,52 @@
 
 from __future__ import annotations
 
-from sys import version_info
-from typing import cast
+from textwrap import dedent
+from typing import TYPE_CHECKING, cast
 
 import pytest
+from click.testing import CliRunner
 from pytest import FixtureRequest
-from sqlalchemy import URL, NullPool
+from sqlalchemy import URL, NullPool, text
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
-if version_info < (3, 10):  # pragma: nocover
-    pass
-
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 pytestmark = [
     pytest.mark.anyio,
     pytest.mark.postgres,
     pytest.mark.xdist_group("postgres"),
 ]
+
+
+@pytest.fixture
+def runner() -> CliRunner:
+    return CliRunner()
+
+
+@pytest.fixture(scope="session")
+async def postgres17_async_engine(
+    postgres_docker_ip: str,
+    postgres_user: str,
+    postgres_password: str,
+    postgres_database: str,
+    postgres17_port: int,
+    postgres17_service: None,
+) -> AsyncEngine:
+    """Postgresql instance for end-to-end testing."""
+    return create_async_engine(
+        URL(
+            drivername="postgresql+asyncpg",
+            username=postgres_user,
+            password=postgres_password,
+            host=postgres_docker_ip,
+            port=postgres17_port,
+            database=postgres_database,
+            query={},  # type: ignore[arg-type]
+        ),
+        poolclass=NullPool,
+    )
 
 
 @pytest.fixture(scope="session")
@@ -187,7 +216,19 @@ async def postgres12_async_engine(
                 pytest.mark.postgres,
             ],
         ),
+        pytest.param(
+            "postgres17_async_engine",
+            marks=[
+                pytest.mark.postgres,
+            ],
+        ),
     ],
 )
-def async_engine(request: FixtureRequest) -> AsyncEngine:
-    return cast("AsyncEngine", request.getfixturevalue(request.param))
+def async_engine(request: FixtureRequest) -> Generator[AsyncEngine, None, None]:
+    yield cast("AsyncEngine", request.getfixturevalue(request.param))
+
+
+@pytest.fixture(scope="session")
+async def _seed_postgres_database(async_engine: AsyncEngine) -> None:
+    async with async_engine.begin() as conn:
+        await conn.execute(text(dedent("""create extension if not exists pg_stat_statements;""")))

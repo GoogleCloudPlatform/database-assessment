@@ -31,23 +31,20 @@ install-pipx: 										## Install pipx
 	@python3 -m pip install --upgrade --user pipx
 
 install-hatch: 										## Install Hatch, UV, and Ruff
-	@pipx install hatch --force
-	@pipx inject hatch ruff uv hatch-pip-compile hatch-vcs --include-deps --include-apps --force
+	@sh ./tools/install-hatch.sh
 
 configure-hatch: 										## Configure Hatch defaults
 	@hatch config set dirs.env.virtual .direnv
 	@hatch config set dirs.env.pip-compile .direnv
 
 upgrade-hatch: 										## Update Hatch, UV, and Ruff
-	@pipx upgrade hatch --include-injected
+	@hatch self update
 
 install: 										## Install the project and all dependencies
 	@if [ "$(VENV_EXISTS)" ]; then echo "=> Removing existing virtual environment"; $(MAKE) destroy-venv; fi
 	@$(MAKE) clean
 	@if [ "$(NODE_MODULES_EXISTS)" ]; then echo "=> Removing existing node modules"; $(MAKE) destroy-node_modules; fi
-	@if ! pipx --version > /dev/null; then echo '=> Installing `pipx`'; $(MAKE) install-pipx ; fi
-	@if ! hatch --version > /dev/null; then echo '=> Installing `hatch` with `pipx`'; $(MAKE) install-hatch ; fi
-	@if ! hatch-pip-compile --version > /dev/null; then echo '=> Updating `hatch` and installing plugins'; $(MAKE) upgrade-hatch ; fi
+	@if ! hatch --version > /dev/null; then echo '=> Installing `hatch`'; $(MAKE) install-hatch ; fi
 	@echo "=> Creating Python environments..."
 	@$(MAKE) configure-hatch
 	@hatch env create local
@@ -58,12 +55,12 @@ install: 										## Install the project and all dependencies
 .PHONY: upgrade
 upgrade:       										## Upgrade all dependencies to the latest stable versions
 	@echo "=> Updating all dependencies"
-	@hatch-pip-compile --upgrade --all
 	@echo "=> Python Dependencies Updated"
 	@if [ "$(USING_NPM)" ]; then hatch run local:npm upgrade --latest; fi
 	@echo "=> Node Dependencies Updated"
 	@hatch run lint:pre-commit autoupdate
 	@echo "=> Updated Pre-commit"
+	@$(MAKE) install
 
 
 .PHONY: clean
@@ -245,8 +242,8 @@ test:  												## Run the tests
 	@hatch run +py="3.12" test:cov
 	@echo "=> Tests complete"
 
-.PHONY: test-all
-test-all:  												## Run the tests against all python versions
+.PHONY: test-all-pythons
+test-all-pythons:  												## Run the tests against all python versions
 	@echo "=> Running test cases"
 	@hatch run test:cov
 	@echo "=> Tests complete"
