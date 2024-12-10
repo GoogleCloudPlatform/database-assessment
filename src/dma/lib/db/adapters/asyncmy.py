@@ -35,8 +35,8 @@ class AsyncMYAdapter:
         """
         return sql
 
-    async def select(self, conn, _query_name, sql, parameters, record_class=None):
-        async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
+    async def select(self, conn, query_name, sql, parameters, record_class=None):
+        async with self.select_cursor(conn, query_name, sql, parameters) as cur:
             await cur.execute(sql)
             results = await cur.fetchall()
             if record_class is not None:
@@ -44,8 +44,8 @@ class AsyncMYAdapter:
                 results = [record_class(**dict(zip(column_names, row))) for row in results]
         return results
 
-    async def select_one(self, conn, _query_name, sql, parameters, record_class=None):
-        async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
+    async def select_one(self, conn, query_name, sql, parameters, record_class=None):
+        async with self.select_cursor(conn, query_name, sql, parameters) as cur:
             await cur.execute(sql)
             result = await cur.fetchone()
             if result is not None and record_class is not None:
@@ -53,8 +53,8 @@ class AsyncMYAdapter:
                 result = record_class(**dict(zip(column_names, result)))
         return result
 
-    async def select_value(self, conn, _query_name, sql, parameters):
-        async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
+    async def select_value(self, conn, query_name, sql, parameters):
+        async with self.select_cursor(conn, query_name, sql, parameters) as cur:
             await cur.execute(sql)
             result = await cur.fetchone()
         if isinstance(result, dict):
@@ -66,21 +66,21 @@ class AsyncMYAdapter:
         async with conn.cursor(cursor=asyncmy.cursors.DictCursor) as cur:
             yield cur
 
-    async def insert_returning(self, conn, _query_name, sql, parameters):
-        async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
+    async def insert_returning(self, conn, query_name, sql, parameters):
+        async with self.select_cursor(conn, query_name, sql, parameters) as cur:
             await cur.execute(sql)
             return cur.lastrowid
 
-    async def insert_update_delete(self, conn, _query_name, sql, parameters):
-        async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
+    async def insert_update_delete(self, conn, query_name, sql, parameters):
+        async with self.select_cursor(conn, query_name, sql, parameters) as cur:
             await cur.execute(sql)
             return cur.rowcount
 
-    async def insert_update_delete_many(self, conn, _query_name, sql, parameters):
-        async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
+    async def insert_update_delete_many(self, conn, query_name, sql, parameters):
+        async with self.select_cursor(conn, query_name, sql, parameters) as cur:
             await cur.executemany(sql, parameters)
 
-    async def execute_script(self, conn, _query_name, sql, parameters):
-        async with self.select_cursor(conn, _query_name, sql, parameters) as cur:
+    async def execute_script(self, conn, query_name, sql, parameters):
+        async with self.select_cursor(conn, query_name, sql, parameters) as cur:
             await cur.execute(sql)
         return "DONE"

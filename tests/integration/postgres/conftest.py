@@ -190,4 +190,4 @@ async def postgres12_async_engine(
     ],
 )
 def async_engine(request: FixtureRequest) -> AsyncEngine:
-    return cast(AsyncEngine, request.getfixturevalue(request.param))
+    return cast("AsyncEngine", request.getfixturevalue(request.param))

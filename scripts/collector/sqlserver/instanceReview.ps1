@@ -700,7 +700,7 @@ if ($powerShellVersion -ge 5) {
 		WriteLog -logLocation $foldername\$logFile -logMessage "to Google to complete assessment" -logOperation "MESSAGE"
     } else {
 		WriteLog -logLocation $foldername\$logFile -logMessage "Return file $outputDirectory\$zippedopfolder" -logOperation "MESSAGE"
-		WriteLog -logLocation $foldername\$logFile -logMessage "to Google to complete assessment" -logOperation "MESSAGE"	
+		WriteLog -logLocation $foldername\$logFile -logMessage "to Google to complete assessment" -logOperation "MESSAGE"
 	}
 	WriteLog -logLocation $foldername\$logFile -logMessage "Collection Complete..." -logOperation "MESSAGE"
 }
