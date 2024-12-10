@@ -13,7 +13,7 @@
 # limitations under the License.
 import pytest
 
-from dma.collector.workflows.readiness_check._postgres.helpers import get_db_major_version, get_db_minor_version
+from dma.collector.util.postgres.helpers import get_db_major_version, get_db_minor_version
 
 pytestmark = pytest.mark.anyio
 

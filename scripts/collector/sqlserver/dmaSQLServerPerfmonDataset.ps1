@@ -564,6 +564,8 @@ function CollectDMAPerfmonDataSet {
 		WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "BOTH"
 		$fileExists = $true
 		foreach ($file in Get-ChildItem -Path $env:SystemDrive\PerfLogs\Admin\Google-DMA-SQLServerDataSet\*$dataset*.csv) {
+			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Copying raw perfmon datafile: $file to the $outputDir for debugging purposes" -logOperation "BOTH"
+			Copy-Item $file -Destination $outputDir
 			WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Moving perfmon datafile: $file to the $env:TEMP directory without header" -logOperation "BOTH"
 			$tempFileName = Split-Path $file -leaf
 			Get-Content -Path $file | Select-Object -Skip 1 | Set-Content -Encoding utf8 -Path $env:TEMP\$tempFileName
@@ -576,11 +578,6 @@ function CollectDMAPerfmonDataSet {
 		foreach ($file in Get-ChildItem -Path $env:TEMP\*$dataSet*.csv) {
 			$tempFileName = 'PKEY_' + (Split-Path $file -leaf)
 			Get-Content -Path $file | ForEach-Object {
-				# Old way of splitting file
-				#$arr = $_.ToString() -split ','
-				#$left = $arr[0..($arr.Length-3)] -join ','
-				#$right = $arr[($arr.Length-2)..($arr.Length-1)] -join ','
-				#'"' + $pkey + '",' + $left + ',"' + $dmaSourceId + '","' + $dmaManualId + '",' + $right
 				#New file split method
 				$perfmonCsv = $_.ToString() -split ','
 				$perfmonFormattedDate = checkTimestampFormat($perfmonCsv[0])

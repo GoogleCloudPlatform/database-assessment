@@ -12,6 +12,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from __future__ import annotations
+
 import argparse
 import csv
 import logging
@@ -21,32 +23,47 @@ import string
 import sys
 import tarfile
 import zipfile as zf
+from dataclasses import dataclass
 from enum import Flag, auto
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
-from typing import Dict, List, NamedTuple, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 from packaging.version import Version
 from packaging.version import parse as parse_version
 
-__all__ = [
+__all__ = (
     "ApplicationError",
     "DataMaskRule",
     "main",
     "run_masker",
-]
+)
 
-__version__ = "4.3.38"
+__version__ = "4.3.40"
 
 logger = logging.getLogger(__name__)
 
 here = Path(__file__).parent
 
-DataMaskRule = NamedTuple("DataMaskRule", ["mask_type", "table_name", "column_position", "missing_ok", "fake_function"])
-FileMetadata = NamedTuple(
-    "FileMetadata",
-    ["script_version", "host_name", "database_name", "instance_name", "date_time", "pkey", "collection_key"],
-)
+
+@dataclass
+class DataMaskRule:
+    mask_type: DataMaskTypes
+    table_name: str
+    column_position: int
+    missing_ok: bool
+    fake_function: Any
+
+
+@dataclass
+class FileMetadata:
+    script_version: str
+    host_name: str
+    database_name: str
+    instance_name: str
+    date_time: str
+    pkey: str
+    collection_key: str
 
 
 class DMAFaker:
@@ -346,7 +363,7 @@ class ApplicationError(Exception):
     """
 
 
-def run_masker(input_dir: Optional[Path] = None, output_path: Optional[Path] = None) -> None:
+def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -> None:
     """Run Masker.
 
     Args:
@@ -375,9 +392,9 @@ def run_masker(input_dir: Optional[Path] = None, output_path: Optional[Path] = N
             identity_map: dict[str, str] = {collection_metadata.pkey: fake.pkey()}
             _extract_collection(collection, work_dir)
             for rule in DATA_MASK_CONFIG:
-                if rule.mask_type == DataMaskTypes.DMA_SOURCE_ID and collection_metadata.script_version < Version(
-                    "4.3.15"
-                ):
+                if rule.mask_type == DataMaskTypes.DMA_SOURCE_ID and Version(
+                    collection_metadata.script_version
+                ) < Version("4.3.15"):
                     continue
                 collection_files = _find_files_referenced_by_rule(rule, work_dir)
                 if collection_files:
@@ -416,7 +433,7 @@ def _metadata_from_filename(collection_file: Path) -> FileMetadata:
     """
     try:
         meta_values = collection_file.stem.split("__", maxsplit=2)[-1].split("_")[1:6]
-        meta_values[0] = parse_version(meta_values[0])  # type: ignore[call-overload]
+        meta_values[0] = str(parse_version(meta_values[0]))  # type: ignore[call-overload]
         meta_values.append("_".join(meta_values[1:3] + [meta_values[4]]))  # pkey
         meta_values.append("_".join(meta_values[1:5]))  # collection_key
         metadata = FileMetadata(*meta_values)
@@ -475,12 +492,11 @@ def _extract_collection(collection_file: Path, extract_path: Path) -> None:
         with zf.ZipFile(collection_file, "r") as f:
             f.extractall(path=extract_path)
     elif str(collection_file).endswith("gz"):
-        tf = tarfile.open(collection_file)
-        tf.extractall(extract_path)
-        tf.close()
+        with tarfile.open(collection_file) as tf:
+            tf.extractall(extract_path)
 
 
-def _find_files_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> Optional[Path]:
+def _find_files_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> Path | None:
     """Find files referenced by data masking rule.
 
     Args:
@@ -514,7 +530,7 @@ def _find_files_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> Opt
 def _generate_identity_map_from_rule(
     rule: DataMaskRule,
     collection_file: Path,
-    existing_identity_map: Optional[Dict[str, str]] = None,
+    existing_identity_map: Dict[str, str] | None = None,
 ) -> Dict[str, str]:
     """Generate identity map from rule.
 
@@ -536,7 +552,7 @@ def _generate_identity_map_from_rule(
     all_values: List[str] = list(existing_identity_map.keys())
     collection_metadata = _metadata_from_filename(collection_file)
     column_position = rule.column_position
-    if collection_metadata.script_version < Version("4.3.15") and rule.column_position < -2:
+    if Version(collection_metadata.script_version) < Version("4.3.15") and rule.column_position < -2:
         column_position += 2
     with collection_file.open(mode="r", encoding="utf-8") as f:
         data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
@@ -574,7 +590,7 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
         temp_file = csv.writer(t, delimiter="|", quotechar='"')
         collection_metadata = _metadata_from_filename(collection_file)
         column_position = rule.column_position
-        if collection_metadata.script_version < Version("4.3.15") and rule.column_position < -2:
+        if Version(collection_metadata.script_version) < Version("4.3.15") and rule.column_position < -2:
             column_position += 2
         for rn, row in enumerate(data_to_mask):
             if rn > 0:
@@ -609,7 +625,7 @@ def _package_collection(
     matched_files = (
         list(extract_path.glob("*.csv")) + list(extract_path.glob("*.log")) + list(extract_path.glob("*.txt"))
     )
-    with zf.ZipFile(archive_file, "w") as f:
+    with zf.ZipFile(archive_file, "w", compression=zf.ZIP_DEFLATED, compresslevel=9) as f:
         for matched_file in matched_files:
             masked_file = _mask_file_collection_key(matched_file)
             identity_map[matched_file.name] = masked_file.name

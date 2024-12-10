@@ -13,12 +13,16 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
--- name: init-get-db-version$
-select current_setting('server_version')::VARCHAR as db_version;
-
--- name: init-get-execution-id$
-select 'postgres_' || current_setting('server_version_num') || '_' || to_char(current_timestamp, 'YYYYMMDDHH24MISSMS') as execution_id;
-
--- name: init-get-source-id$
-select system_identifier::VARCHAR as source_id
-from pg_control_system();
+-- name: collection-postgres-pglogical-provider-node
+with src as (
+SELECT pglogical.node.node_id, pglogical.node.node_name
+          FROM pglogical.local_node, pglogical.node
+          WHERE pglogical.local_node.node_id = pglogical.node.node_id
+)
+select :PKEY as pkey,
+  :DMA_SOURCE_ID as dma_source_id,
+  :DMA_MANUAL_ID as dma_manual_id,
+  src.node_id,
+  src.node_name,
+  current_database() as database_name
+from src;

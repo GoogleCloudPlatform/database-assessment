@@ -14,10 +14,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Final
 
 from rich.table import Table
 
+from dma.collector.util.postgres.helpers import get_db_major_version, get_db_minor_version
 from dma.collector.workflows.readiness_check._postgres.constants import (
     ALLOYDB_SUPPORTED_COLLATIONS,
     ALLOYDB_SUPPORTED_EXTENSIONS,
@@ -28,7 +29,6 @@ from dma.collector.workflows.readiness_check._postgres.constants import (
     DB_TYPE_MAP,
     RDS_MINOR_VERSION_SUPPORT_MAP,
 )
-from dma.collector.workflows.readiness_check._postgres.helpers import get_db_major_version, get_db_minor_version
 from dma.collector.workflows.readiness_check.base import (
     ReadinessCheck,
     ReadinessCheckExecutor,
@@ -39,6 +39,14 @@ if TYPE_CHECKING:
     from rich.console import Console
 
     from dma.types import PostgresVariants
+
+ERROR: Final = "ERROR"
+WARNING: Final = "WARNING"
+PASS: Final = "PASS"
+PGLOGICAL_INSTALLED: Final = "PGLOGICAL_INSTALLED"
+PRIVILEGES: Final = "PRIVILEGES"
+PGLOGICAL_NODE_ALREADY_EXISTS: Final = "PGLOGICAL_NODE_ALREADY_EXISTS"
+TABLES_WITH_NO_PK: Final = "TABLES_WITH_NO_PK"
 
 
 @dataclass
@@ -59,7 +67,7 @@ POSTGRES_RULE_CONFIGURATIONS: list[PostgresReadinessCheckTargetConfig] = [
         db_variant="ALLOYDB",
         minimum_supported_major_version=9.4,
         minimum_supported_rds_major_version=9.6,
-        maximum_supported_major_version=15,
+        maximum_supported_major_version=16,
         supported_collations=ALLOYDB_SUPPORTED_COLLATIONS,
         supported_extensions=ALLOYDB_SUPPORTED_EXTENSIONS,
         supported_fdws=ALLOYDB_SUPPORTED_FDWS,
@@ -77,6 +85,17 @@ POSTGRES_RULE_CONFIGURATIONS: list[PostgresReadinessCheckTargetConfig] = [
         extra_replication_subscriptions_required=10,
     ),
 ]
+
+
+def init_results_dict(db_check_results: dict, rule_code: str) -> None:
+    if not db_check_results.get(rule_code):
+        db_check_results[rule_code] = {}
+    if not db_check_results[rule_code].get(ERROR):
+        db_check_results[rule_code][ERROR] = []
+    if not db_check_results[rule_code].get(PASS):
+        db_check_results[rule_code][PASS] = []
+    if not db_check_results[rule_code].get(WARNING):
+        db_check_results[rule_code][WARNING] = []
 
 
 class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
@@ -102,37 +121,107 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         self._check_max_worker_processes()
         self._check_extensions()
         self._check_fdw()
-        is_pglogical_installed = self._check_pglogical_installed()
-        self._check_privileges(is_pglogical_installed)
+
+        # Per DB Checks.
+        # db_check_results stores the verification results for all DBs.
+        for config in self.rule_config:
+            db_check_results: dict[str, dict[str, list]] = {}
+            for db in self.get_all_dbs():
+                is_pglogical_installed = self._check_pglogical_installed(db, db_check_results)
+                if is_pglogical_installed:
+                    self._check_privileges(db, db_check_results)
+                    self._check_if_node_exists(db, db_check_results)
+                self._check_tables_without_pk(db, db_check_results)
+            self._save_results(config.db_variant, db_check_results)
+
+    def _save_results(self, db_variant: PostgresVariants, db_check_results: dict[str, dict[str, list]]) -> None:
+        for rule, result in db_check_results.items():
+            for severity in [ERROR, WARNING, PASS]:
+                output_str = ""
+                if rule == PGLOGICAL_INSTALLED:
+                    if severity == ERROR:
+                        output_str = (
+                            f"`pglogical` extension is not installed on the databases: {','.join(result[ERROR])}."
+                        )
+                    elif severity == PASS:
+                        output_str = f"`pglogical` is installed on the databases: {','.join(result[PASS])}."
+                    else:
+                        continue
+
+                if rule == PRIVILEGES:
+                    if severity == ERROR:
+                        output_str = ";".join(result[ERROR])
+                    elif severity == PASS:
+                        output_str = ";".join(result[PASS])
+                    else:
+                        continue
+
+                if rule == PGLOGICAL_NODE_ALREADY_EXISTS:
+                    if severity == ERROR:
+                        output_str = f"pglogical provider node already exists on databases: {','.join(result[ERROR])}"
+                    elif severity == PASS:
+                        output_str = f"No existing pglogical provider node on the database: {','.join(result[PASS])}"
+                    else:
+                        continue
+
+                if rule == TABLES_WITH_NO_PK:
+                    if severity == WARNING:
+                        output_str = f"Some tables have limited support. Tables without primary keys were identified and only INSERT statements will be replicated for these tables: {';'.join(result[WARNING])}"
+                    else:
+                        continue
+
+                if len(result[severity]) > 0:
+                    self.save_rule_result(
+                        db_variant,
+                        rule,
+                        severity,  # type: ignore
+                        output_str,
+                    )
 
     def _check_collation(self) -> None:
         rule_code = "COLLATION"
         result = self.local_db.sql(
             "select distinct database_collation from collection_postgres_database_details"
         ).fetchmany()
-        collations = {row[0] for row in result}
+        collations = {row[0].lower() for row in result}
         for c in self.rule_config:
-            unsupported_collations = collations.difference(c.supported_collations)
+            supported_collations = {coll.lower() for coll in c.supported_collations}
+            unsupported_collations = collations.difference(supported_collations)
             for unsupported_collation in unsupported_collations:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "ERROR",
+                    ERROR,
                     f"Unsupported collation: {unsupported_collation} is not supported on this instance",
                 )
             if len(unsupported_collations) == 0:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "PASS",
+                    PASS,
                     "All utilized collations are supported.",
                 )
 
+    def _check_tables_without_pk(self, db_name: str, db_check_results: dict[str, dict[str, list]]) -> None:
+        rule_code = TABLES_WITH_NO_PK
+        result = self.local_db.sql(
+            "select CONCAT(nspname, '.', relname) from collection_postgres_tables_with_no_primary_key where database_name = $db_name",
+            params={"db_name": db_name},
+        ).fetchall()
+        tables = ", ".join(row[0] for row in result)
+        init_results_dict(db_check_results, rule_code)
+        if tables:
+            db_check_results[rule_code][WARNING].append(f"In database {db_name}, {tables} don't have primary keys")
+
     def _check_version(self) -> None:
         rule_code = "DATABASE_VERSION"
+        self.console.print(f"version: {self.db_version}")
         detected_major_version = get_db_major_version(self.db_version)
         detected_minor_version = get_db_minor_version(self.db_version)
         is_rds = self._is_rds()
+        self.console.print(
+            f"version: {self.db_version}, major version: {detected_major_version}, minor version: {detected_minor_version}"
+        )
         for c in self.rule_config:
             if is_rds:
                 supported_minor_version = c.rds_minor_version_support_map.get(detected_major_version)
@@ -140,14 +229,14 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     self.save_rule_result(
                         c.db_variant,
                         rule_code,
-                        "ERROR",
+                        ERROR,
                         f"Source RDS database server has unsupported minor version: ({detected_minor_version})",
                     )
                 else:
                     self.save_rule_result(
                         c.db_variant,
                         rule_code,
-                        "PASS",
+                        PASS,
                         f"Version {self.db_version} is supported.  Please ensure that you selected a version that meets or exceeds version {detected_major_version!s}.",
                     )
             elif (
@@ -157,43 +246,35 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "ERROR",
+                    ERROR,
                     f"Replication from source database server ({self.db_version}) is not supported",
                 )
             else:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "PASS",
+                    PASS,
                     f"Version {self.db_version} is supported.  Please ensure that you selected a version that meets or exceeds version {detected_major_version!s}.",
                 )
 
-    def _check_pglogical_installed(self) -> bool:
-        rule_code = "PGLOGICAL_INSTALLED"
+    def _check_pglogical_installed(self, db_name: str, db_check_results: dict[str, dict[str, list]]) -> bool:
+        rule_code = PGLOGICAL_INSTALLED
         result = self.local_db.sql(
-            "select count(*) from collection_postgres_extensions where extension_name = 'pglogical'"
+            query="select count(*) from collection_postgres_extensions where extension_name = 'pglogical' and database_name = $db_name",
+            params={"db_name": db_name},
         ).fetchone()
         is_installed = result[0] > 0 if result is not None else False
-        for c in self.rule_config:
-            if not is_installed:
-                self.save_rule_result(
-                    c.db_variant,
-                    rule_code,
-                    "ERROR",
-                    "The `pglogical` extension is not installed on the database.",
-                )
-            else:
-                self.save_rule_result(
-                    c.db_variant,
-                    rule_code,
-                    "PASS",
-                    "`pglogical` is installed on the database.",
-                )
+        init_results_dict(db_check_results, rule_code)
+        if not is_installed:
+            db_check_results[rule_code][ERROR].append(db_name)
+        else:
+            db_check_results[rule_code][PASS].append(db_name)
         return is_installed
 
-    def _check_pglogical_privileges(self) -> list[str]:
+    def _check_pglogical_privileges(self, db_name: str) -> list[str]:
         result = self.local_db.sql(
-            "select has_schema_usage_privilege, has_tables_select_privilege, has_local_node_select_privilege, has_node_select_privilege, has_node_interface_select_privilege from collection_postgres_pglogical_privileges"
+            "select has_schema_usage_privilege, has_tables_select_privilege, has_local_node_select_privilege, has_node_select_privilege, has_node_interface_select_privilege from collection_postgres_pglogical_privileges where database_name = $db_name",
+            params={"db_name": db_name},
         ).fetchone()
         errors: list[str] = []
         if result is None:
@@ -211,68 +292,78 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 errors.append("user doesn't have SELECT privilege on table pglogical.node_interface")
         return errors
 
-    def check_user_obj_privileges(self) -> list[str]:
+    def _check_if_node_exists(self, db_name: str, db_check_results: dict[str, dict[str, list]]) -> None:
+        rule_code = PGLOGICAL_NODE_ALREADY_EXISTS
+        result = self.local_db.sql(
+            "select count(*) from collection_postgres_pglogical_provider_node where database_name = $db_name",
+            params={"db_name": db_name},
+        ).fetchone()
+        node_exists = result[0] > 0 if result is not None else False
+        init_results_dict(db_check_results, rule_code)
+        if node_exists:
+            db_check_results[rule_code][ERROR].append(db_name)
+        else:
+            db_check_results[rule_code][PASS].append(db_name)
+
+    def check_user_obj_privileges(self, db_name: str) -> list[str]:
         errors: list[str] = []
         rows = self.local_db.sql(
-            "select namespace_name from collection_postgres_user_schemas_without_privilege"
+            "select namespace_name from collection_postgres_user_schemas_without_privilege where database_name = $db_name",
+            params={"db_name": db_name},
         ).fetchall()
         errors.extend(f"user doesn't have USAGE privilege on schema {row[0]}" for row in rows)
 
         rows = self.local_db.sql(
-            "select schema_name, table_name from collection_postgres_user_tables_without_privilege"
+            "select schema_name, table_name from collection_postgres_user_tables_without_privilege where database_name = $db_name",
+            params={"db_name": db_name},
         ).fetchall()
         errors.extend(f"user doesn't have SELECT privilege on table {row[0]}.{row[1]}" for row in rows)
 
         rows = self.local_db.sql(
-            "select schema_name, view_name from collection_postgres_user_views_without_privilege"
+            "select schema_name, view_name from collection_postgres_user_views_without_privilege where database_name = $db_name",
+            params={"db_name": db_name},
         ).fetchall()
         errors.extend(f"user doesn't have SELECT privilege on view {row[0]}.{row[1]}" for row in rows)
 
         rows = self.local_db.sql(
-            "select namespace_name, rel_name from collection_postgres_user_sequences_without_privilege"
+            "select namespace_name, rel_name from collection_postgres_user_sequences_without_privilege where database_name = $db_name",
+            params={"db_name": db_name},
         ).fetchall()
         errors.extend(f"user doesn't have SELECT privilege on sequence {row[0]}.{row[1]}" for row in rows)
         return errors
 
-    def _check_privileges(self, is_pglogical_installed: bool) -> None:
-        rule_code = "PRIVILEGES"
-        errors: list[str] = []
+    def _check_privileges(self, db_name: str, db_check_results: dict[str, dict[str, list]]) -> None:
+        rule_code = PRIVILEGES
+        errors = self._check_pglogical_privileges(db_name)
 
-        if is_pglogical_installed:
-            errors = self._check_pglogical_privileges()
-
-        errors.extend(self.check_user_obj_privileges())
+        errors.extend(self.check_user_obj_privileges(db_name))
         all_errors = "\n".join(errors)
-        for c in self.rule_config:
-            if len(errors) > 0:
-                self.save_rule_result(c.db_variant, rule_code, "ERROR", all_errors)
-            else:
-                self.save_rule_result(
-                    c.db_variant,
-                    rule_code,
-                    "PASS",
-                    "User has all privileges required for migration",
-                )
+        init_results_dict(db_check_results, rule_code)
+        if len(errors) > 0:
+            db_check_results[rule_code][ERROR].append(f"{all_errors} in database {db_name}")
+        else:
+            db_check_results[rule_code][PASS].append(
+                f"User has all privileges required for migration for the database {db_name}"
+            )
 
     def _check_wal_level(self) -> None:
         rule_code = "WAL_LEVEL"
         result = self.local_db.sql(
             "select c.setting_value as wal_level from collection_postgres_settings c where c.setting_name='wal_level' and c.setting_value!='logical';"
         ).fetchone()
-        wal_level = cast("str", result[0] if result is not None else "unset")
         for c in self.rule_config:
-            if wal_level != "logical":
+            if result is not None:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "ERROR",
-                    f'The `wal_level` settings should be set to "logical" instead of "{wal_level}".',
+                    ERROR,
+                    f'The `wal_level` settings should be set to "logical" instead of "{result[0]}".',
                 )
             else:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "PASS",
+                    PASS,
                     '`wal_level` is correctly set to "logical".',
                 )
 
@@ -291,14 +382,14 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     self.save_rule_result(
                         c.db_variant,
                         rule_code,
-                        "ERROR",
+                        ERROR,
                         f'`rds.logical_replication` should be set to "on" instead of ({rds_logical_replication})',
                     )
                 else:
                     self.save_rule_result(
                         c.db_variant,
                         rule_code,
-                        "PASS",
+                        PASS,
                         '`rds.logical_replication` was correctly set to "on"',
                     )
 
@@ -328,21 +419,21 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "ERROR",
+                    ERROR,
                     f"Insufficient `max_replication_slots`: {total_replication_slots}, should be set to at least {required_replication_slots}. Up to {c.extra_replication_subscriptions_required} additional subscriptions might be required depending on the parallelism level set for migration. {url_link}",
                 )
             elif total_replication_slots < max_required_replication_slots:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "WARNING",
+                    WARNING,
                     f"`max_replication_slots` current value: {total_replication_slots}, this might need to be increased to {max_required_replication_slots} depending on the parallelism level set for migration. {url_link}",
                 )
             else:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "PASS",
+                    PASS,
                     f"`max_replication_slots` current value: {total_replication_slots}, this meets or exceeds the maximum required value of {max_required_replication_slots}",
                 )
 
@@ -363,21 +454,21 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "ERROR",
+                    ERROR,
                     f"Insufficient `max_wal_senders`: {wal_senders}, should be set to at least {db_count}. Up to {c.extra_replication_subscriptions_required} additional `wal_senders` might be required depending on the parallelism level set for migration. {url_link}",
                 )
             elif wal_senders < max_required_subscriptions:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "WARNING",
+                    WARNING,
                     f"`max_wal_senders` current value: {wal_senders}, this might need to be increased to {max_required_subscriptions} depending on the parallelism level set for migration. {url_link}",
                 )
             else:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "PASS",
+                    PASS,
                     f"`max_wal_senders` current value: {wal_senders}, this meets or exceeds the maximum required value of {max_required_subscriptions}",
                 )
 
@@ -398,14 +489,14 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "ERROR",
+                    ERROR,
                     f"Insufficient `max_wal_senders`: {wal_senders}, should be set to at least the same as `max_replication_slots`: {total_replication_slots}.",
                 )
             else:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "PASS",
+                    PASS,
                     f"`max_wal_senders` current value: {wal_senders}, this meets or exceeds the `max_replication_slots` value of {total_replication_slots}",
                 )
 
@@ -426,21 +517,21 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "ERROR",
+                    ERROR,
                     f"Insufficient `max_worker_processes`: {max_worker_processes}, should be set to at least {db_count}. Up to {c.extra_replication_subscriptions_required} additional `worker_processes` might be required depending on the parallelism level set for migration. {url_link}",
                 )
             elif max_worker_processes < max_required_subscriptions:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "WARNING",
+                    WARNING,
                     f"`max_worker_processes` current value: {max_worker_processes}, this might need to be increased to {max_required_subscriptions} depending on the parallelism level set for migration. {url_link}",
                 )
             else:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "PASS",
+                    PASS,
                     f"`max_worker_processes` current value: {max_worker_processes}, this meets or exceeds the maximum required value of {max_required_subscriptions}",
                 )
 
@@ -454,14 +545,14 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "ERROR",
+                    ERROR,
                     f"Unsupported extensions: {unsupported_extension} is not supported on this instance",
                 )
             if len(unsupported_extensions) == 0:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "PASS",
+                    PASS,
                     "All utilized extensions are supported.",
                 )
 
@@ -478,14 +569,14 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "ERROR",
+                    ERROR,
                     f'Unsupported FDW: detected {table_count} "{unsupported_fdw}" foreign tables.',
                 )
             if len(unsupported_fdws) == 0:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    "PASS",
+                    PASS,
                     "All utilized foreign data wrappers are supported.",
                 )
 
@@ -528,9 +619,9 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             for row in results:
                 count_table.add_row(
                     f"[bold green]{row[0]}[/]"
-                    if row[0] == "PASS"
+                    if row[0] == PASS
                     else f"[bold yellow]{row[0]}[/]"
-                    if row[0] == "WARNING"
+                    if row[0] == WARNING
                     else f"[bold red]{row[0]}[/]",
                     f"[bold]{row[1]}[/]",
                     row[2],

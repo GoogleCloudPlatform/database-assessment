@@ -254,7 +254,13 @@ BEGIN
         IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
             exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', ''0'' /* SQL Server 2016 (13.x) and above */');
     END CATCH
-
+    BEGIN TRY
+        exec('INSERT INTO #serverProperties SELECT ''AvailabilityGroupCount'', count(*) FROM sys.availability_groups /* SQL Server 2012 (11.x) and above */')
+    END TRY
+    BEGIN CATCH
+        IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
+            exec('INSERT INTO #serverProperties SELECT ''AvailabilityGroupCount'', ''0''');
+    END CATCH
     exec('INSERT INTO #serverProperties SELECT ''HostPlatform'', ''Azure VM''');
     exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', ''Linux''');
     exec('INSERT INTO #serverProperties SELECT ''HostRelease'', ''UNKNOWN''');
@@ -357,6 +363,7 @@ BEGIN
         exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(NVARCHAR(255), committed_target_kb/1024) FROM sys.dm_os_sys_info /* SQL Server 2012 (11.x) above */');
         /* Must Query a different column for committed memory in versions above 10.x */
         exec('INSERT INTO #serverProperties SELECT ''TotalSQLServerCommittedMemoryMB'', CONVERT(NVARCHAR(255), committed_target_kb/1024) FROM sys.dm_os_sys_info')
+        exec('INSERT INTO #serverProperties SELECT ''AvailabilityGroupCount'', count(*) FROM sys.availability_groups /* SQL Server 2012 (11.x) and above */')
     END;
 END;
 

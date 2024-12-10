@@ -108,24 +108,24 @@ jobs:
         #   release_suffix: i686-linux
         # Windows
         - target: x86_64-pc-windows-msvc
-          os: windows-2022
+          os: windows-latest
           release_suffix: x86_64-windows
         # - target: i686-pc-windows-msvc
-        #   os: windows-2022
+        #   os: windows-latest
         #   release_suffix: i686-windows
         # macOS
         - target: aarch64-apple-darwin
-          os: macos-12
+          os: macos-latest
           release_suffix: aarch64-osx
         - target: x86_64-apple-darwin
-          os: macos-12
+          os: macos-latest
           release_suffix: x86_64-osx
 
     env:
       CARGO: cargo
       CARGO_BUILD_TARGET: ${{ matrix.job.target }}
       PYAPP_REPO: pyapp
-      PYAPP_VERSION: v0.23.0
+      PYAPP_VERSION: v0.24.0
       PYAPP_PYTHON_VERSION: "3.12"
       PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server
       PYAPP_DISTRIBUTION_EMBED: "1"
