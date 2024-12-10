@@ -118,4 +118,4 @@ async def mysql56_asyncmy_engine(
     ],
 )
 def async_engine(request: FixtureRequest) -> AsyncEngine:
-    return cast(AsyncEngine, request.getfixturevalue(request.param))
+    return cast("AsyncEngine", request.getfixturevalue(request.param))
