@@ -38,7 +38,7 @@ SELECT :v_pkey AS pkey,
         FROM   (SELECT TRUNC(first_time) dia,
                        COUNT(*)          conta
                 FROM   v$log_history
-                WHERE  first_time >= TRUNC(SYSDATE) - '&&dtrange'
+                WHERE  first_time >= TRUNC(SYSDATE) - '&&dtrange'   
                        AND first_time < TRUNC(SYSDATE)
                 GROUP  BY TRUNC(first_time)),
                v$log)                                                           AS redo_gb_per_day,
