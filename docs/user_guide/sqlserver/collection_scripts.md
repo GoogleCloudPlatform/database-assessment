@@ -84,7 +84,7 @@ In order to begin running the Database Migration Assessment Collection process, 
     - Unzip the install archive:
         unzip db-migration-assessment-collection-scripts-sqlserver.zip
 
-    - As of the current release, the collection scripts require a user with the SYSADMIN privilege.  An existing user may be used or one can be created using the scripts as shown below:
+    - An existing user may be used or one can be created using the scripts as shown below.  SYSADMIN is not required although a user with that privilege may be used:
 
         If an existing user with SYSADMIN privileges wil not be used, from a command prompt, execute either of the following scripts depending on what type of authentication you currently use for your SYSADMIN user.
 
