@@ -108,17 +108,17 @@ jobs:
         #   release_suffix: i686-linux
         # Windows
         - target: x86_64-pc-windows-msvc
-          os: windows-2022
+          os: windows-latest
           release_suffix: x86_64-windows
         # - target: i686-pc-windows-msvc
-        #   os: windows-2022
+        #   os: windows-latest
         #   release_suffix: i686-windows
         # macOS
         - target: aarch64-apple-darwin
-          os: macos-12
+          os: macos-latest
           release_suffix: aarch64-osx
         - target: x86_64-apple-darwin
-          os: macos-12
+          os: macos-latest
           release_suffix: x86_64-osx
 
     env:
