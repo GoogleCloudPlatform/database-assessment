@@ -252,7 +252,7 @@ $validSQLInstanceVersionCheckValues = $splitValidInstanceVerisionCheckObj | ForE
 $isValidSQLInstanceVersion = $validSQLInstanceVersionCheckValues[0]
 $isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
 
-$op_version = "4.3.40"
+$op_version = "4.3.41"
 
 if ([string]($isValidSQLInstanceVersion) -eq "N") {
     Write-Host "#############################################################"
@@ -523,7 +523,9 @@ sqlcmd -S $serverName -i sql\dbServerConfigurationSettings.sql -d master -C -l 3
 if ($isCloudOrLinuxHost -eq "AZURE") {
     WriteLog -logLocation $foldername\$logFile -logMessage "Skipping SQL Server Transaction Log Backup Info...Unavailable in AZURE SQL Managed Instance." -logOperation "BOTH"
     Set-Content -Path $foldername\$tranLogBkupCountByDayByHour -Encoding utf8 -Value '"PKEY"|"collection_date"|"day_of_month"|"total_logs_generated"|"h0_count"|"h1_count"|"h2_count"|"h3_count"|"h4_count"|"h5_count"|"h6_count"|"h7_count"|"h8_count"|"h9_count"|"h10_count"|"h11_count"|"h12_count"|"h13_count"|"h14_count"|"h15_count"|"h16_count"|"h17_count"|"h18_count"|"h19_count"|"h20_count"|"h21_count"|"h22_count"|"h23_count"|"avg_per_hour"|"dma_source_id"|"dma_manual_id"'
+    WriteLog -logLocation $foldername\$logFile -logMessage "     Writing Empty $tranLogBkupCountByDayByHour File" -logOperation "BOTH"
     Set-Content -Path $foldername\$tranLogBkupSizeByDayByHour -Encoding utf8 -Value '"PKEY"|"collection_date"|"day_of_month"|"total_logs_generated_in_mb"|"h0_size_in_mb"|"h1_size_in_mb"|"h2_size_in_mb"|"h3_size_in_mb"|"h4_size_in_mb"|"h5_size_in_mb"|"h6_size_in_mb"|"h7_size_in_mb"|"h8_size_in_mb"|"h9_size_in_mb"|"h10_size_in_mb"|"h11_size_in_mb"|"h12_size_in_mb"|"h13_size_in_mb"|"h14_size_in_mb"|"h15_size_in_mb"|"h16_size_in_mb"|"h17_size_in_mb"|"h18_size_in_mb"|"h19_size_in_mb"|"h20_size_in_mb"|"h21_size_in_mb"|"h22_size_in_mb"|"h23_size_in_mb"|"avg_mb_per_hour"|"dma_source_id"|"dma_manual_id"'
+    WriteLog -logLocation $foldername\$logFile -logMessage "     Writing Empty $tranLogBkupSizeByDayByHour File" -logOperation "BOTH"
 }
 else {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Transaction Log Backup Info..." -logOperation "BOTH"
@@ -612,6 +614,7 @@ else {
 <# Getting HW Specs. #>
 if ($isCloudOrLinuxHost -eq "AZURE") {
     WriteLog -logLocation $foldername\$logFile -logMessage "Skipping SQL Server HW Shape Info for Machine $machinename ...Unavailable in AZURE SQL Managed Instance." -logOperation "BOTH"
+    WriteLog -logLocation $foldername\$logFile -logMessage "     Writing Empty $computerSpecsFile file" -logOperation "BOTH"
     Set-Content -Path $foldername\$computerSpecsFile -Encoding utf8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"MachineName"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
 }
 elseif ($isCloudOrLinuxHost -eq "LINUX") {
@@ -656,6 +659,17 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv, $foldername\*.log) {
         WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "     Errors found within collection $inputFile ..." -logOperation "FILE"
     }
     $totalErrorCount = $totalErrorCount + $errorContentCount
+}
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Checking for the presence of all required files..." -logOperation "BOTH"
+foreach ($directory in $outputFileArray) {
+    if (Test-Path -Path $PSScriptRoot\$foldername\$directory) {
+        WriteLog -logLocation $foldername\$logFile -logMessage "  File $directory exists" -logOperation "FILE"
+    }
+    else {
+        WriteLog -logLocation $foldername\$logFile -logMessage "  File $directory does not exist" -logOperation "BOTH"
+		$totalErrorCount = $totalErrorCount + $errorContentCount
+    }
 }
 
 if ($totalErrorCount -gt 0) {
