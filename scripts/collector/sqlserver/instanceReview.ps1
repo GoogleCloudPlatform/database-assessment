@@ -661,6 +661,17 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv, $foldername\*.log) {
     $totalErrorCount = $totalErrorCount + $errorContentCount
 }
 
+WriteLog -logLocation $foldername\$logFile -logMessage "Checking for the presence of all required files..." -logOperation "BOTH"
+foreach ($directory in $outputFileArray) {
+    if (Test-Path -Path $PSScriptRoot\$foldername\$directory) {
+        WriteLog -logLocation $foldername\$logFile -logMessage "  File $directory exists" -logOperation "FILE"
+    }
+    else {
+        WriteLog -logLocation $foldername\$logFile -logMessage "  File $directory does not exist" -logOperation "BOTH"
+		$totalErrorCount = $totalErrorCount + $errorContentCount
+    }
+}
+
 if ($totalErrorCount -gt 0) {
     $zippedopfolder = $foldername + '_ERROR.zip'
 }
