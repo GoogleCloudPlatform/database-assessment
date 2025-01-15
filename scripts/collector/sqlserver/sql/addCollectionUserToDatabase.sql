@@ -35,8 +35,8 @@ IF @CLOUDTYPE = 'AZURE'
 BEGIN
 	BEGIN TRY
          exec ('CREATE USER [' + @COLLECTION_USER + '] FROM LOGIN [' + @COLLECTION_USER + '] WITH DEFAULT_SCHEMA=dbo');
-    END TRY
-    BEGIN CATCH
+	END TRY
+	BEGIN CATCH
          SELECT
 			host_name() as host_name,
 			db_name() as database_name,
@@ -46,5 +46,5 @@ BEGIN
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
-    END CATCH
+	END CATCH
 END;
