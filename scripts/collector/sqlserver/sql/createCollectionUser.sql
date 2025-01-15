@@ -24,7 +24,7 @@ DECLARE @COLLECTION_PASS VARCHAR(256);
 DECLARE @PRODUCT_VERSION AS INTEGER;
 DECLARE @CLOUDTYPE AS VARCHAR(256);
 
-DECLARE db_cursor CURSOR FOR
+DECLARE db_cursor CURSOR LOCAL FOR
 SELECT name
 FROM sys.databases
 WHERE name NOT IN ('model','msdb','tempdb','distribution','reportserver', 'reportservertempdb','resource','rdsadmin')
@@ -40,7 +40,8 @@ IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
 BEGIN
-IF NOT EXISTS (SELECT name FROM master.sys.server_principals WHERE name = @COLLECTION_USER)
+IF DB_NAME() = 'master'
+  IF NOT EXISTS (SELECT name FROM sys.sql_logins WHERE name = @COLLECTION_USER)
 	BEGIN TRY
     IF @CLOUDTYPE = 'AZURE'
         exec ('CREATE LOGIN [' + @COLLECTION_USER + '] WITH PASSWORD=N''' + @COLLECTION_PASS + '''');
@@ -70,13 +71,17 @@ BEGIN
         SELECT
         host_name() as host_name,
         db_name() as database_name,
-        'Execute Grant in master DB' as module_name,
+        'Execute SERVER ROLE Grant in ' + DB_NAME() + ' DB' as module_name,
+		SUBSTRING(CONVERT(NVARCHAR(255),ERROR_LINE()),1,254) as error_line,
         SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
         SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
         SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
         SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
 	END CATCH
+END
+BEGIN
     IF @CLOUDTYPE <> 'AZURE'
+	BEGIN
 		BEGIN TRY
         exec ('GRANT VIEW SERVER STATE TO [' + @COLLECTION_USER + ']');
         exec ('GRANT VIEW ANY DATABASE TO [' + @COLLECTION_USER + ']');
@@ -86,7 +91,8 @@ BEGIN
 			SELECT
 			host_name() as host_name,
 			db_name() as database_name,
-			'Execute Grant in master DB' as module_name,
+			'Execute Grant in ' + DB_NAME() + ' DB' as module_name,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_LINE()),1,254) as error_line,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
@@ -100,7 +106,8 @@ BEGIN
 			SELECT
 			host_name() as host_name,
 			db_name() as database_name,
-			'Execute Grant in master DB' as module_name,
+			'Execute USER SECURABLE Grant in ' + DB_NAME() + ' DB' as module_name,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_LINE()),1,254) as error_line,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
@@ -117,20 +124,40 @@ BEGIN
 			SELECT
 			host_name() as host_name,
 			db_name() as database_name,
-			'Execute Grant in master DB' as module_name,
+			'Execute VIEW SERVER Grant in ' + DB_NAME() + ' DB' as module_name,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_LINE()),1,254) as error_line,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
 		END CATCH
+	END;
+END;
+
+IF @CLOUDTYPE = 'AZURE'
+BEGIN
+  IF NOT EXISTS (SELECT name FROM sys.sysusers WHERE name = @COLLECTION_USER)
+	BEGIN TRY
+         exec ('CREATE USER [' + @COLLECTION_USER + '] FROM LOGIN [' + @COLLECTION_USER + '] WITH DEFAULT_SCHEMA=dbo');
+    END TRY
+    BEGIN CATCH
+         SELECT
+			host_name() as host_name,
+			db_name() as database_name,
+			'Execute Create User in ' + DB_NAME() + ' DB' as module_name,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_LINE()),1,254) as error_line,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
+    END CATCH
 END;
 
 IF @CLOUDTYPE <> 'AZURE'
+BEGIN
     OPEN db_cursor
     FETCH NEXT FROM db_cursor INTO @dbname
-
     WHILE @@FETCH_STATUS = 0
-	BEGIN
 		BEGIN TRY
         exec ('
             use [' + @dbname + '];
@@ -141,24 +168,19 @@ IF @CLOUDTYPE <> 'AZURE'
                 CREATE USER [' + @COLLECTION_USER + '] FOR LOGIN  [' + @COLLECTION_USER + '];
             END;
 			GRANT VIEW DATABASE STATE TO  [' + @COLLECTION_USER + '];');
-		FETCH NEXT FROM db_cursor INTO @dbname;
 		END TRY
 		BEGIN CATCH
 			SELECT
 			host_name() as host_name,
 			@dbname as used_db_name,
 			db_name() as current_database_name,
-			'Execute Grant in individual DB' as module_name,
+			'Execute Grant in ' + DB_NAME() + ' DB' as module_name,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
 			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
 		END CATCH
-	END;
+	FETCH NEXT FROM db_cursor INTO @dbname;
 	CLOSE db_cursor
 	DEALLOCATE db_cursor
-
-IF @CLOUDTYPE = 'AZURE'
-BEGIN
-    exec ('CREATE USER [' + @COLLECTION_USER + '] FROM LOGIN [' + @COLLECTION_USER + '] WITH DEFAULT_SCHEMA=dbo');
 END;
