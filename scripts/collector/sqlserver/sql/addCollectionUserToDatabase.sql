@@ -37,7 +37,7 @@ BEGIN
          exec ('CREATE USER [' + @COLLECTION_USER + '] FROM LOGIN [' + @COLLECTION_USER + '] WITH DEFAULT_SCHEMA=dbo');
 	END TRY
 	BEGIN CATCH
-         SELECT
+		SELECT
 			host_name() as host_name,
 			db_name() as database_name,
 			'Execute Create User in ' + DB_NAME() + ' DB' as module_name,
