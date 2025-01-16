@@ -150,7 +150,8 @@
     "source.convertImportFormat"
   ],
   "sqltools.disableReleaseNotifications": true,
-"sqltools.disableNodeDetectNotifications": true,
+  "sqltools.disableNodeDetectNotifications": true,
+  "cloudcode.duetAI.enable": true,
   "cloudcode.compute.sshInternalIp": true,
   "python.testing.pytestArgs": [
       "tests"
@@ -186,6 +187,5 @@
 "python.analysis.experimentalserver": true,
 "python.analysis.diagnosticSeverityOverrides": {
     "reportUnknownMemberType": "none"
-},
-"geminicodeassist.enable": true
+}
 }
