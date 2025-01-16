@@ -113,7 +113,7 @@ else {
     if ($isCloudOrLinuxHost -eq "AZURE") {
         $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database="all" -v hasdbaccess=1)
         foreach ($databaseName in $dbNameArray) {
-            WriteLog -logMessage "Adding AZURE collection user into the following databases:" -logOperation "MESSAGE"
+            WriteLog -logMessage "Adding Azure collection user into the following databases:" -logOperation "MESSAGE"
             WriteLog -logMessage "            $databaseName" -logOperation "MESSAGE"
         }
         foreach ($databaseName in $dbNameArray) {
