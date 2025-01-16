@@ -94,7 +94,7 @@ if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
 
     ### If Azure, need to get a list of databases from master and log in to each individually to create the user
     if ($isCloudOrLinuxHost -eq "AZURE") {
-        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database="all")
+        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database="all" -v hasdbaccess=1)
         foreach ($databaseName in $dbNameArray) {
             WriteLog -logMessage "Adding collection user into the following databases:" -logOperation "MESSAGE"
             WriteLog -logMessage "            $databaseName" -logOperation "MESSAGE"
@@ -111,9 +111,9 @@ else {
 
     ### If Azure, need to get a list of databases from master and log in to each individually to create the user
     if ($isCloudOrLinuxHost -eq "AZURE") {
-        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database="all")
+        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -U $collectionUserName -P $collectionUserPass -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database="all" -v hasdbaccess=1)
         foreach ($databaseName in $dbNameArray) {
-            WriteLog -logMessage "Adding collection user into the following databases:" -logOperation "MESSAGE"
+            WriteLog -logMessage "Adding AZURE collection user into the following databases:" -logOperation "MESSAGE"
             WriteLog -logMessage "            $databaseName" -logOperation "MESSAGE"
         }
         foreach ($databaseName in $dbNameArray) {
