@@ -31,9 +31,20 @@ SELECT @CLOUDTYPE = 'NONE';
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE'
 
+IF @CLOUDTYPE = 'AZURE'
 BEGIN
-    IF @CLOUDTYPE = 'AZURE'
-    BEGIN
-        exec ('CREATE USER [' + @COLLECTION_USER + '] FROM LOGIN [' + @COLLECTION_USER + '] WITH DEFAULT_SCHEMA=dbo');
-    END;
+	BEGIN TRY
+         exec ('CREATE USER [' + @COLLECTION_USER + '] FROM LOGIN [' + @COLLECTION_USER + '] WITH DEFAULT_SCHEMA=dbo');
+	END TRY
+	BEGIN CATCH
+		SELECT
+			host_name() as host_name,
+			db_name() as database_name,
+			'Execute Create User in ' + DB_NAME() + ' DB' as module_name,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_LINE()),1,254) as error_line,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
+			SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
+	END CATCH
 END;
