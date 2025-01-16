@@ -125,7 +125,7 @@ BEGIN
 				host_name() as host_name,
 				db_name() as database_name,
 				'Execute VIEW SERVER Grant in ' + DB_NAME() + ' DB' as module_name,
-				UBSTRING(CONVERT(NVARCHAR(255),ERROR_LINE()),1,254) as error_line,
+				SUBSTRING(CONVERT(NVARCHAR(255),ERROR_LINE()),1,254) as error_line,
 				SUBSTRING(CONVERT(NVARCHAR(255),ERROR_NUMBER()),1,254) as error_number,
 				SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
 				SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
