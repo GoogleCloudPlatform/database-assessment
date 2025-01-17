@@ -25,6 +25,7 @@ DECLARE @TABLE_PERMISSION_COUNT AS INTEGER
 DECLARE @ROW_COUNT_VAR AS INTEGER
 DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
 DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
+DECLARE @ERROR_NUMBER AS INT
 
 SELECT @PKEY = N'$(pkey)';
 SELECT @CLOUDTYPE = 'NONE';
@@ -149,18 +150,27 @@ BEGIN
             from dqs_service');
         END TRY
     BEGIN CATCH
-        exec('
-        WITH dqs_service as (
-        select count(*) as dqs_count from sys.sql_logins where name like ''##MS_dqs%'')
-        INSERT INTO #FeaturesEnabled
-            SELECT
-                ''DATA QUALITY SERVICES'' as Features,
-                CASE
-                    WHEN dqs_count > 0 THEN 1
-                    ELSE 0
-                END AS Is_EnabledOrUsed,
-                dqs_count as Count
-            from dqs_service');
+        SELECT @ERROR_NUMBER = ERROR_NUMBER()
+        IF @ERROR_NUMBER = 229
+            exec('
+            INSERT INTO #FeaturesEnabled
+                SELECT
+                    ''DATA QUALITY SERVICES'' as Features,
+                    ''0'' as Is_EnabledOrUsed,
+                    ''0'' as Count');
+        ELSE
+            exec('
+            WITH dqs_service as (
+            select count(*) as dqs_count from sys.sql_logins where name like ''##MS_dqs%'')
+            INSERT INTO #FeaturesEnabled
+                SELECT
+                    ''DATA QUALITY SERVICES'' as Features,
+                    CASE
+                        WHEN dqs_count > 0 THEN 1
+                        ELSE 0
+                    END AS Is_EnabledOrUsed,
+                    dqs_count as Count
+                from dqs_service');  
         END CATCH
 END;
 
