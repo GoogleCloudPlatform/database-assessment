@@ -21,22 +21,14 @@ DEFINE v_dodiagnostics=&3
 DEFINE v_tag=&4
 DEFINE outputdir=&5
 DEFINE v_manualUniqueId=&6
-DEFINE v_statsWindow=&7
+DEFINE v_statsWindow="&7"
+DEFINE v_statsStartDate="&8"
+DEFINE v_statsDBIDRequested="&9"
 
 DEFINE EXTRACTSDIR=&SQLDIR/extracts
 DEFINE AWRDIR=&EXTRACTSDIR/awr
 DEFINE STATSPACKDIR=&EXTRACTSDIR/statspack
 DEFINE TERMOUTOFF=OFF
-prompt
-prompt ***********************************************************************************
-prompt
-prompt !!! ATTENTION !!!
-prompt
-@&SQLDIR/prompt_&v_dodiagnostics
-prompt
-prompt
-prompt ***********************************************************************************
-prompt
 
 prompt Initializing Database Migration Assessment Collector...
 prompt
@@ -94,5 +86,6 @@ set termout on
 prompt Step completed.
 prompt
 prompt Database Migration Assessment data successfully extracted.
+prompt &p_end_of_job_summary
 prompt
 exit

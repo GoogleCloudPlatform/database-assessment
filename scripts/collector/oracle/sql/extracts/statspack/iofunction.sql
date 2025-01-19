@@ -61,16 +61,21 @@ SELECT :v_pkey AS pkey,
        NVL(DECODE(GREATEST(iof.wait_time, NVL(LAG(iof.wait_time)
                                               OVER (PARTITION BY iof.dbid, iof.instance_number, fn.function_name ORDER BY iof.snap_id), 0)),
                   iof.wait_time, iof.wait_time - LAG(iof.wait_time)
-                                                 OVER (PARTITION BY iof.dbid, iof.instance_number, fn.function_name ORDER BY iof.snap_id),0), 0) AS tot_watime_delta_value
+                                                 OVER (PARTITION BY iof.dbid, iof.instance_number, fn.function_name ORDER BY iof.snap_id),0), 0) AS tot_watime_delta_value,
+       startup_time,
+       lag_startup_time
 FROM STATS$IOSTAT_FUNCTION iof
-     INNER JOIN STATS$SNAPSHOT snap
+     INNER JOIN ( SELECT dbid, instance_number, snap_time, snap_id, startup_time, lag(startup_time) OVER (PARTITION BY dbid, instance_number ORDER BY snap_time) AS lag_startup_time
+                  FROM STATS$SNAPSHOT
+		  WHERE dbid = &&v_statsDBID
+		  AND snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
+                ) snap
      ON iof.snap_id = snap.snap_id
       AND iof.instance_number = snap.instance_number
       AND iof.dbid = snap.dbid
      INNER JOIN STATS$IOSTAT_FUNCTION_NAME fn
      ON fn.function_id = iof.function_id
-WHERE snap.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-AND snap.dbid = &&v_dbid),
+),
 vperciof AS (
 SELECT pkey,
        dbid,
@@ -118,6 +123,7 @@ SELECT pkey,
        PERCENTILE_CONT(0.00)
          within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P100
 FROM vrawiof
+WHERE startup_time = lag_startup_time
 GROUP BY pkey,
          dbid,
          instance_number,
