@@ -264,9 +264,58 @@ Operating System Versions:
 
 !!! IMPORTANT Do not modify the name or the contents of the zip file without consultation from Google.
 
-5. License
+5. Digitially Signing Powershell Scripts (If Necessary)
 ------------
-Copyright 2024 Google LLC
+
+#### Signing Scripts (Optional)
+
+    Occasionally, organizational security policies require that Powershell scripts be digitally signed
+    before they can be executed.  Google will not provide a certificate to do this, however, the customer
+    can create a self-signed certificate and then sign the scripts on their own using the following steps:
+
+        - Create directory to store the certificates
+            - $PSScriptRoot\_Certs\
+
+        - Assign directories to variables
+            - $certExport = "C:\dma-mssql\_Certs\"
+            - $ScriptRepo = "C:\dma-mssql"
+
+        - Create variable params with relevant information to create the self signed certificate
+            $params = @{
+                Subject = 'Google DMA Self Signed PS Code Signing'
+                DnsName = 'Self@google.com'
+                FriendlyName = 'Google DMA Self Signed PS Code Signing'
+                NotAfter = (Get-Date).AddYears(5)
+                Type = 'CodeSigning'  
+                CertStoreLocation = 'cert:\CurrentUser\My' 
+                KeyUsage = 'DigitalSignature'
+                KeyAlgorithm = 'RSA'
+                KeyLength = 2048 
+                HashAlgorithm = 'sha256' 
+                }
+
+        - Create a new self-signed certificate based on the above parameters and send the details to 'newCodeSigningCert' variable for reference later.
+            - New-SelfSignedCertificate @params -OutVariable newCodeSigningCert
+
+        - Export the public key to the file system.
+            - Export-Certificate -Cert "cert:\CurrentUser\My\$($newCodeSigningCert.Thumbprint)" -FilePath "$($certExport)\CodeSigning.cer"
+
+        - Re-import certificate into Trusted Root otherwise it's not possible to validate any signed scripts.
+            - Import-Certificate -FilePath "$($certExport)\CodeSigning.cer" -Cert Cert:\LocalMachine\root
+
+        - Sign all DMA Scripts
+            - Set-AuthenticodeSignature $ScriptRepo\instanceReview.ps1 -Certificate (Get-ChildItem "cert:\CurrentUser\My\$($newCodeSigningCert.Thumbprint)" -CodeSigningCert)
+            - Set-AuthenticodeSignature $ScriptRepo\createUserWithSQLAuth.ps1 -Certificate (Get-ChildItem "cert:\CurrentUser\My\$($newCodeSigningCert.Thumbprint)" -CodeSigningCert)
+            - Set-AuthenticodeSignature $ScriptRepo\createUserWithWindowsAuth.ps1 -Certificate (Get-ChildItem "cert:\CurrentUser\My\$($newCodeSigningCert.Thumbprint)" -CodeSigningCert)
+            - Set-AuthenticodeSignature $ScriptRepo\dmaCollectorCommonFunctions.psm1 -Certificate (Get-ChildItem "cert:\CurrentUser\My\$($newCodeSigningCert.Thumbprint)" -CodeSigningCert)
+            - Set-AuthenticodeSignature $ScriptRepo\dmaSQLServerCorrectPerfmonDataset.ps1 -Certificate (Get-ChildItem "cert:\CurrentUser\My\$($newCodeSigningCert.Thumbprint)" -CodeSigningCert)
+            - Set-AuthenticodeSignature $ScriptRepo\dmaSQLServerHWSpecs.ps1 -Certificate (Get-ChildItem "cert:\CurrentUser\My\$($newCodeSigningCert.Thumbprint)" -CodeSigningCert)
+            - Set-AuthenticodeSignature $ScriptRepo\dmaSQLServerPerfmonDataset.ps1 -Certificate (Get-ChildItem "cert:\CurrentUser\My\$($newCodeSigningCert.Thumbprint)" -CodeSigningCert)
+
+
+6. License
+------------
+Copyright 2025 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
