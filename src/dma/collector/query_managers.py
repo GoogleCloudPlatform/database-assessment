@@ -391,7 +391,7 @@ class OracleCollectionQueryManager(CollectionQueryManager):
         source_id: str | None = None,
         manual_id: str | None = None,
         queries: Queries = aiosql.from_path(
-            sql_path=f"{_root_path}/collector/sql/sources/oracle", driver_adapter="oracledb"
+            sql_path=f"{_root_path}/collector/sql/sources/oracle", driver_adapter="async_oracledb"
         ),
     ) -> None:
         super().__init__(
