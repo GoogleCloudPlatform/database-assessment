@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING, cast
 
@@ -231,3 +232,10 @@ def sync_engine(request: FixtureRequest) -> Generator[Engine, None, None]:
 def _seed_postgres_database(sync_engine: Engine) -> None:
     with sync_engine.begin() as conn:
         conn.execute(text(dedent("""create extension if not exists pg_stat_statements;""")))
+        driver_connection = conn._dbapi_connection
+        assert driver_connection is not None
+        cursor = driver_connection.cursor()
+        with Path(Path(__file__).parent / "northwind_ddl.sql").open(encoding="utf-8") as f:
+            cursor.execute(f.read())
+        with Path(Path(__file__).parent / "northwind_data.sql").open(encoding="utf-8") as f:
+            cursor.execute(f.read())
