@@ -47,13 +47,13 @@ class CanonicalQueryManager(QueryManager):
         self.manual_id = manual_id
         super().__init__(connection, queries)
 
-    async def execute_ddl_scripts(self, *args: Any, **kwargs: Any) -> None:
+    def execute_ddl_scripts(self, *args: Any, **kwargs: Any) -> None:
         """Execute pre-processing queries."""
         console.print(Padding("CANONICAL DATA MODEL", 1, style="bold", expand=True), width=80)
         with console.status("[bold green]Creating tables...[/]") as status:
             for script in self.available_queries("ddl"):
                 status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                await self.execute(script)
+                self.execute(script)
                 status.console.print(rf" [green]:heavy_check_mark:[/] Created [bold magenta]`{script}`[/]")
             if not self.available_queries("ddl"):
                 console.print(" [dim grey]:heavy_check_mark: No DDL scripts to load[/]")
@@ -91,7 +91,7 @@ class CollectionQueryManager(QueryManager):
             raise ApplicationError(msg)
         return set(self.available_queries("extended_collection"))
 
-    def get_per_db_collection_queries(self) -> set[str]:  # noqa: PLR6301
+    def get_per_db_collection_queries(self) -> set[str]:
         """Get the collection queries that need to be executed for each DB in the instance"""
         msg = "Implement this execution method."
         raise NotImplementedError(msg)
@@ -102,7 +102,7 @@ class CollectionQueryManager(QueryManager):
             raise ApplicationError(msg)
         return self.db_version
 
-    async def set_identifiers(
+    def set_identifiers(
         self,
         execution_id: str | None = None,
         source_id: str | None = None,
@@ -119,7 +119,7 @@ class CollectionQueryManager(QueryManager):
         if db_version is not None:
             self.db_version = db_version
         if self.execution_id is None or self.source_id is None or self.db_version is None:
-            init_results = await self.execute_init_queries()
+            init_results = self.execute_init_queries()
             self.source_id = (
                 source_id if source_id is not None else cast("str | None", init_results.get("init_get_source_id", None))
             )
@@ -139,7 +139,7 @@ class CollectionQueryManager(QueryManager):
         if self.expected_collection_queries is None:
             self.expected_collection_queries = self.get_collection_queries()
 
-    async def execute_init_queries(
+    def execute_init_queries(
         self,
         *args: Any,
         **kwargs: Any,
@@ -150,7 +150,7 @@ class CollectionQueryManager(QueryManager):
             results: dict[str, Any] = {}
             for script in self.available_queries("init"):
                 status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                script_result = await self.select_one_value(script)
+                script_result = self.select_one_value(script)
                 results[script] = script_result
                 status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
             if not self.available_queries("init"):
@@ -159,7 +159,7 @@ class CollectionQueryManager(QueryManager):
                 )
             return results
 
-    async def execute_collection_queries(
+    def execute_collection_queries(
         self,
         execution_id: str | None = None,
         source_id: str | None = None,
@@ -168,13 +168,13 @@ class CollectionQueryManager(QueryManager):
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Execute pre-processing queries."""
-        await self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
+        self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
         console.print(Padding("COLLECTION QUERIES", 1, style="bold", expand=True), width=80)
         with console.status("[bold green]Executing queries...[/]") as status:
             results: dict[str, Any] = {}
             for script in self.get_collection_queries():
                 status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                script_result = await self.select(
+                script_result = self.select(
                     script, PKEY=self.execution_id, DMA_SOURCE_ID=self.source_id, DMA_MANUAL_ID=self.manual_id
                 )
                 results[script] = script_result
@@ -183,7 +183,7 @@ class CollectionQueryManager(QueryManager):
                 status.console.print(" [dim grey]:heavy_check_mark: No collection queries for this database type[/]")
             return results
 
-    async def execute_extended_collection_queries(
+    def execute_extended_collection_queries(
         self,
         execution_id: str | None = None,
         source_id: str | None = None,
@@ -195,13 +195,13 @@ class CollectionQueryManager(QueryManager):
 
         Returns: None
         """
-        await self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
+        self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
         console.print(Padding("EXTENDED COLLECTION QUERIES", 1, style="bold", expand=True), width=80)
         with console.status("[bold green]Executing queries...[/]") as status:
             results: dict[str, Any] = {}
             for script in self.get_extended_collection_queries():
                 status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                script_result = await self.select(
+                script_result = self.select(
                     script, PKEY=self.execution_id, DMA_SOURCE_ID=self.source_id, DMA_MANUAL_ID=self.manual_id
                 )
                 results[script] = script_result
@@ -210,7 +210,7 @@ class CollectionQueryManager(QueryManager):
                 console.print(" [dim grey]:heavy_check_mark: No extended collection queries for this database type[/]")
             return results
 
-    async def execute_per_db_collection_queries(
+    def execute_per_db_collection_queries(
         self,
         execution_id: str | None = None,
         source_id: str | None = None,
@@ -219,14 +219,14 @@ class CollectionQueryManager(QueryManager):
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Execute per DB pre-processing queries."""
-        await self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
+        self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
         console.print(Padding("PER DB QUERIES", 1, style="bold", expand=True), width=80)
         with console.status("[bold green]Executing queries...[/]") as status:
             results: dict[str, Any] = {}
             for script in self.get_per_db_collection_queries():
                 status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
                 try:
-                    script_result = await self.select(
+                    script_result = self.select(
                         script, PKEY=self.execution_id, DMA_SOURCE_ID=self.source_id, DMA_MANUAL_ID=self.manual_id
                     )
                     results[script] = script_result
@@ -248,7 +248,7 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
         source_id: str | None = None,
         manual_id: str | None = None,
         queries: Queries = aiosql.from_path(
-            sql_path=f"{_root_path}/collector/sql/sources/postgres", driver_adapter="asyncpg"
+            sql_path=f"{_root_path}/collector/sql/sources/postgres", driver_adapter="psycopg"
         ),
     ) -> None:
         super().__init__(

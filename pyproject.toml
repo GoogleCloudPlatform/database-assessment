@@ -62,7 +62,7 @@ dependencies = [
     "sqlalchemy>=2.0.25",
     "typing-extensions>=4.0.0",
     "msgspec",
-    "greenlet; sys_platform == \"darwin\"",
+    "greenlet",
 ]
 
 [project.urls]
@@ -75,7 +75,7 @@ Source = "https://github.com/GoogleCloudPlatform/database-assessment"
 mssql = ["aioodbc"]
 mysql = ["asyncmy>=0.2.9"]
 oracle = ["oracledb"]
-postgres = ["asyncpg>=0.29.0"]
+postgres = ["psycopg[pool,binary]"]
 server = ["litestar[structlog,jinja]>=2.7.0", "litestar-granian>=0.2.3"]
 
 

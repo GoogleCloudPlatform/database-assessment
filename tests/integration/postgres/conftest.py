@@ -21,8 +21,7 @@ from typing import TYPE_CHECKING, cast
 import pytest
 from click.testing import CliRunner
 from pytest import FixtureRequest
-from sqlalchemy import URL, NullPool, text
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy import URL, Engine, NullPool, create_engine, text
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -40,18 +39,18 @@ def runner() -> CliRunner:
 
 
 @pytest.fixture(scope="session")
-async def postgres17_async_engine(
+def postgres17_sync_engine(
     postgres_docker_ip: str,
     postgres_user: str,
     postgres_password: str,
     postgres_database: str,
     postgres17_port: int,
     postgres17_service: None,
-) -> AsyncEngine:
+) -> Generator[Engine, None, None]:
     """Postgresql instance for end-to-end testing."""
-    return create_async_engine(
+    yield create_engine(
         URL(
-            drivername="postgresql+asyncpg",
+            drivername="postgresql+psycopg",
             username=postgres_user,
             password=postgres_password,
             host=postgres_docker_ip,
@@ -64,18 +63,18 @@ async def postgres17_async_engine(
 
 
 @pytest.fixture(scope="session")
-async def postgres16_async_engine(
+def postgres16_sync_engine(
     postgres_docker_ip: str,
     postgres_user: str,
     postgres_password: str,
     postgres_database: str,
     postgres16_port,
     postgres16_service: None,
-) -> AsyncEngine:
+) -> Generator[Engine, None, None]:
     """Postgresql instance for end-to-end testing."""
-    return create_async_engine(
+    yield create_engine(
         URL(
-            drivername="postgresql+asyncpg",
+            drivername="postgresql+psycopg",
             username=postgres_user,
             password=postgres_password,
             host=postgres_docker_ip,
@@ -88,18 +87,18 @@ async def postgres16_async_engine(
 
 
 @pytest.fixture(scope="session")
-async def postgres15_async_engine(
+def postgres15_sync_engine(
     postgres_docker_ip: str,
     postgres_user: str,
     postgres_password: str,
     postgres_database: str,
     postgres15_port,
     postgres15_service: None,
-) -> AsyncEngine:
+) -> Generator[Engine, None, None]:
     """Postgresql instance for end-to-end testing."""
-    return create_async_engine(
+    yield create_engine(
         URL(
-            drivername="postgresql+asyncpg",
+            drivername="postgresql+psycopg",
             username=postgres_user,
             password=postgres_password,
             host=postgres_docker_ip,
@@ -112,18 +111,18 @@ async def postgres15_async_engine(
 
 
 @pytest.fixture(scope="session")
-async def postgres14_async_engine(
+def postgres14_sync_engine(
     postgres_docker_ip: str,
     postgres_user: str,
     postgres_password: str,
     postgres_database: str,
     postgres14_port,
     postgres14_service: None,
-) -> AsyncEngine:
+) -> Generator[Engine, None, None]:
     """Postgresql instance for end-to-end testing."""
-    return create_async_engine(
+    yield create_engine(
         URL(
-            drivername="postgresql+asyncpg",
+            drivername="postgresql+psycopg",
             username=postgres_user,
             password=postgres_password,
             host=postgres_docker_ip,
@@ -136,18 +135,18 @@ async def postgres14_async_engine(
 
 
 @pytest.fixture(scope="session")
-async def postgres13_async_engine(
+def postgres13_sync_engine(
     postgres_docker_ip: str,
     postgres_user: str,
     postgres_password: str,
     postgres_database: str,
     postgres13_port,
     postgres13_service: None,
-) -> AsyncEngine:
+) -> Generator[Engine, None, None]:
     """Postgresql instance for end-to-end testing."""
-    return create_async_engine(
+    yield create_engine(
         URL(
-            drivername="postgresql+asyncpg",
+            drivername="postgresql+psycopg",
             username=postgres_user,
             password=postgres_password,
             host=postgres_docker_ip,
@@ -160,18 +159,18 @@ async def postgres13_async_engine(
 
 
 @pytest.fixture(scope="session")
-async def postgres12_async_engine(
+def postgres12_sync_engine(
     postgres_docker_ip: str,
     postgres_user: str,
     postgres_password: str,
     postgres_database: str,
     postgres12_port,
     postgres12_service: None,
-) -> AsyncEngine:
+) -> Generator[Engine, None, None]:
     """Postgresql instance for end-to-end testing."""
-    return create_async_engine(
+    yield create_engine(
         URL(
-            drivername="postgresql+asyncpg",
+            drivername="postgresql+psycopg",
             username=postgres_user,
             password=postgres_password,
             host=postgres_docker_ip,
@@ -187,48 +186,48 @@ async def postgres12_async_engine(
     scope="session",
     params=[
         pytest.param(
-            "postgres12_async_engine",
+            "postgres12_sync_engine",
             marks=[
                 pytest.mark.postgres,
             ],
         ),
         pytest.param(
-            "postgres13_async_engine",
+            "postgres13_sync_engine",
             marks=[
                 pytest.mark.postgres,
             ],
         ),
         pytest.param(
-            "postgres14_async_engine",
+            "postgres14_sync_engine",
             marks=[
                 pytest.mark.postgres,
             ],
         ),
         pytest.param(
-            "postgres15_async_engine",
+            "postgres15_sync_engine",
             marks=[
                 pytest.mark.postgres,
             ],
         ),
         pytest.param(
-            "postgres16_async_engine",
+            "postgres16_sync_engine",
             marks=[
                 pytest.mark.postgres,
             ],
         ),
         pytest.param(
-            "postgres17_async_engine",
+            "postgres17_sync_engine",
             marks=[
                 pytest.mark.postgres,
             ],
         ),
     ],
 )
-def async_engine(request: FixtureRequest) -> Generator[AsyncEngine, None, None]:
-    yield cast("AsyncEngine", request.getfixturevalue(request.param))
+def sync_engine(request: FixtureRequest) -> Generator[Engine, None, None]:
+    yield cast("Engine", request.getfixturevalue(request.param))
 
 
 @pytest.fixture(scope="session")
-async def _seed_postgres_database(async_engine: AsyncEngine) -> None:
-    async with async_engine.begin() as conn:
-        await conn.execute(text(dedent("""create extension if not exists pg_stat_statements;""")))
+def _seed_postgres_database(sync_engine: Engine) -> None:
+    with sync_engine.begin() as conn:
+        conn.execute(text(dedent("""create extension if not exists pg_stat_statements;""")))

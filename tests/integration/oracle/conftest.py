@@ -16,12 +16,14 @@
 from __future__ import annotations
 
 import platform
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from pytest import FixtureRequest
-from sqlalchemy import NullPool
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy import Engine, NullPool, create_engine
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 pytestmark = [
     pytest.mark.anyio,
@@ -32,21 +34,16 @@ pytestmark = [
 
 
 @pytest.fixture(scope="session")
-async def oracle18c_async_engine(
+def oracle18c_sync_engine(
     oracle_docker_ip: str,
     oracle_user: str,
     oracle_password: str,
     oracle18c_port: int,
     oracle18c_service_name: str,
     oracle18c_service: None,
-) -> AsyncEngine:
-    """Oracle 18c instance for end-to-end testing.
-
-
-    Returns:
-        Async SQLAlchemy engine instance.
-    """
-    return create_async_engine(
+) -> Generator[Engine, None, None]:
+    """Oracle 18c instance for end-to-end testing."""
+    yield create_engine(
         "oracle+oracledb://:@",
         thick_mode=False,
         connect_args={
@@ -61,22 +58,16 @@ async def oracle18c_async_engine(
 
 
 @pytest.fixture(scope="session")
-async def oracle23ai_async_engine(
+def oracle23ai_engine(
     oracle_docker_ip: str,
     oracle_user: str,
     oracle_password: str,
     oracle23ai_port: int,
     oracle23ai_service_name: str,
     oracle23ai_service: None,
-) -> AsyncEngine:
-    """Oracle 23c instance for end-to-end testing.
-
-
-
-    Returns:
-        Async SQLAlchemy engine instance.
-    """
-    return create_async_engine(
+) -> Generator[Engine, None, None]:
+    """Oracle 23c instance for end-to-end testing."""
+    yield create_engine(
         "oracle+oracledb://:@",
         thick_mode=False,
         connect_args={
@@ -92,17 +83,17 @@ async def oracle23ai_async_engine(
 
 @pytest.fixture(
     scope="session",
-    name="async_engine",
+    name="sync_engine",
     params=[
         pytest.param(
-            "oracle18c_async_engine",
+            "oracle18c_sync_engine",
             marks=[pytest.mark.oracle],
         ),
         pytest.param(
-            "oracle23ai_async_engine",
+            "oracle23ai_sync_engine",
             marks=[pytest.mark.oracle],
         ),
     ],
 )
-def async_engine(request: FixtureRequest) -> AsyncEngine:
-    return cast("AsyncEngine", request.getfixturevalue(request.param))
+def sync_engine(request: FixtureRequest) -> Generator[Engine, None, None]:
+    yield cast("Engine", request.getfixturevalue(request.param))

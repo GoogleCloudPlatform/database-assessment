@@ -13,7 +13,6 @@
 # limitations under the License.
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -147,26 +146,23 @@ def collect_data(
         password = prompt.Prompt.ask("Please enter a password", password=True)
     input_confirmed = True if no_prompt else prompt.Confirm.ask("Are you ready to start the assessment?")
     if input_confirmed:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            _collect_data(
-                console=console,
-                src_info=SourceInfo(
-                    db_type=db_type.upper(),  # type: ignore[arg-type]
-                    username=username,
-                    password=password,
-                    hostname=hostname,
-                    port=port,
-                ),
-                database=database,
-                collection_identifier=collection_identifier,
-            )
+        _collect_data(
+            console=console,
+            src_info=SourceInfo(
+                db_type=db_type.upper(),  # type: ignore[arg-type]
+                username=username,
+                password=password,
+                hostname=hostname,
+                port=port,
+            ),
+            database=database,
+            collection_identifier=collection_identifier,
         )
     else:
         console.rule("Skipping execution until input is confirmed", align="left")
 
 
-async def _collect_data(
+def _collect_data(
     console: Console,
     src_info: SourceInfo,
     database: str,
@@ -185,7 +181,7 @@ async def _collect_data(
             console=console,
             collection_identifier=collection_identifier,
         )
-        await collection_extractor.execute()
+        collection_extractor.execute()
         collection_extractor.dump_database(working_path)
 
 
@@ -291,26 +287,23 @@ def readiness_assessment(
         password = prompt.Prompt.ask("Please enter a password", password=True)
     input_confirmed = True if no_prompt else prompt.Confirm.ask("Are you ready to start the assessment?")
     if input_confirmed:
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(
-            _readiness_check(
-                console=console,
-                src_info=SourceInfo(
-                    db_type=db_type.upper(),  # type: ignore[arg-type]
-                    username=username,
-                    password=password,
-                    hostname=hostname,
-                    port=port,
-                ),
-                database=database,
-                collection_identifier=collection_identifier,
-            )
+        _readiness_check(
+            console=console,
+            src_info=SourceInfo(
+                db_type=db_type.upper(),  # type: ignore[arg-type]
+                username=username,
+                password=password,
+                hostname=hostname,
+                port=port,
+            ),
+            database=database,
+            collection_identifier=collection_identifier,
         )
     else:
         console.rule("Skipping execution until input is confirmed", align="left")
 
 
-async def _readiness_check(
+def _readiness_check(
     console: Console,
     src_info: SourceInfo,
     database: str,
@@ -328,7 +321,7 @@ async def _readiness_check(
             collection_identifier=collection_identifier,
             working_path=working_path,
         )
-        await workflow.execute()
+        workflow.execute()
         console.print(Padding("", 1, expand=True))
         console.rule("Processing collected data.", align="left")
         workflow.print_summary()

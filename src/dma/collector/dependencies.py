@@ -27,19 +27,19 @@ from dma.lib.db.local import get_duckdb_connection
 from dma.lib.exceptions import ApplicationError
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Generator
+    from collections.abc import Generator, Iterator
     from pathlib import Path
 
     import duckdb
-    from sqlalchemy.ext.asyncio import AsyncSession
+    from sqlalchemy.orm import Session
 
 
-async def provide_collection_query_manager(
-    db_session: AsyncSession,
+def provide_collection_query_manager(
+    db_session: Session,
     execution_id: str | None = None,
     source_id: str | None = None,
     manual_id: str | None = None,
-) -> AsyncIterator[CollectionQueryManager]:
+) -> Iterator[CollectionQueryManager]:
     """Provide collection query manager.
 
     Uses SQLAlchemy Connection management to establish and retrieve a valid database session.
@@ -47,9 +47,9 @@ async def provide_collection_query_manager(
     The driver dialect is detected from the session and the underlying raw DBAPI connection is fetched and passed to the Query Manager.
     """
     dialect = db_session.bind.dialect if db_session.bind is not None else db_session.get_bind().dialect
-    db_connection = await db_session.connection()
+    db_connection = db_session.connection()
 
-    raw_connection = await db_connection.get_raw_connection()
+    raw_connection = db_connection.engine.raw_connection()
     if not raw_connection.driver_connection:
         msg = "Unable to fetch raw connection from session."
         raise ApplicationError(msg)

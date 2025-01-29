@@ -21,7 +21,7 @@ import pytest
 from sqlalchemy import text
 
 if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncEngine
+    from sqlalchemy import Engine
 
 
 pytestmark = [
@@ -31,8 +31,8 @@ pytestmark = [
 ]
 
 
-async def test_engine_connectivity(async_engine: AsyncEngine) -> None:
-    async with async_engine.begin() as conn:
-        await conn.execute(
+def test_engine_connectivity(sync_engine: Engine) -> None:
+    with sync_engine.begin() as conn:
+        conn.execute(
             text("select 1 from dual"),
         )

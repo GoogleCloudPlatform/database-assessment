@@ -16,8 +16,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from sqlalchemy import URL
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy import URL, Engine, create_engine
 
 if TYPE_CHECKING:
     from dma.types import (
@@ -37,11 +36,11 @@ class SourceInfo:
 def get_engine(
     src_info: SourceInfo,
     database: str,
-) -> AsyncEngine:
+) -> Engine:
     if src_info.db_type == "POSTGRES":
-        return create_async_engine(
+        return create_engine(
             URL(
-                drivername="postgresql+asyncpg",
+                drivername="postgresql+psycopg",
                 username=src_info.username,
                 password=src_info.password,
                 host=src_info.hostname,
@@ -51,7 +50,7 @@ def get_engine(
             ),
         )
     if src_info.db_type == "MYSQL":
-        return create_async_engine(
+        return create_engine(
             URL(
                 drivername="mysql+asyncmy",
                 username=src_info.username,
@@ -63,7 +62,7 @@ def get_engine(
             ),
         )
     if src_info.db_type == "MSSQL":
-        return create_async_engine(
+        return create_engine(
             URL(
                 drivername="mssql+aioodbc",
                 username=src_info.username,
@@ -83,7 +82,7 @@ def get_engine(
             ),
         )
     if src_info.db_type == "ORACLE":
-        return create_async_engine(
+        return create_engine(
             "oracle+oracledb://:@",
             thick_mode=False,
             connect_args={

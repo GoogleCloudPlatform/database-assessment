@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from rich.table import Table
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from dma.__about__ import __version__ as current_version
 from dma.collector.dependencies import provide_collection_query_manager
@@ -47,43 +47,43 @@ class CollectionExtractor(BaseWorkflow):
         self.collection_identifier = collection_identifier
         super().__init__(local_db, canonical_query_manager, src_info.db_type, console)
 
-    async def execute(self) -> None:
-        await super().execute()
+    def execute(self) -> None:
+        super().execute()
         execution_id = (
             f"{self.src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
         )
-        await self.collect_data(execution_id)
-        await self.collect_db_specific_data(execution_id)
+        self.collect_data(execution_id)
+        self.collect_db_specific_data(execution_id)
 
-    async def collect_data(self, execution_id: str) -> None:
-        async_engine = get_engine(self.src_info, self.database)
-        async with AsyncSession(async_engine) as db_session:
-            collection_manager = await anext(  # noqa: F821 # pyright: ignore[reportUndefinedVariable]
+    def collect_data(self, execution_id: str) -> None:
+        sync_engine = get_engine(self.src_info, self.database)
+        with Session(sync_engine) as db_session:
+            collection_manager = next(
                 provide_collection_query_manager(
                     db_session=db_session, execution_id=execution_id, manual_id=self.collection_identifier
                 )
             )
-            await self.extract_collection(collection_manager)
-            await self.extract_extended_collection(collection_manager)
-            await self.process_collection()
+            self.extract_collection(collection_manager)
+            self.extract_extended_collection(collection_manager)
+            self.process_collection()
             self.db_version = collection_manager.get_db_version()
-        await async_engine.dispose()
+        sync_engine.dispose()
 
-    async def collect_db_specific_data(self, execution_id: str) -> None:
-        dbs = await self.get_all_dbs()
+    def collect_db_specific_data(self, execution_id: str) -> None:
+        dbs = self.get_all_dbs()
         for db in dbs:
             async_engine = get_engine(src_info=self.src_info, database=db)
-            async with AsyncSession(async_engine) as db_session:
-                collection_manager = await anext(  # noqa: F821 # pyright: ignore[reportUndefinedVariable]
+            with Session(async_engine) as db_session:
+                collection_manager = next(
                     provide_collection_query_manager(
                         db_session=db_session, execution_id=execution_id, manual_id=self.collection_identifier
                     )
                 )
-                db_collection = await collection_manager.execute_per_db_collection_queries()
+                db_collection = collection_manager.execute_per_db_collection_queries()
                 self.import_to_table(db_collection)
-            await async_engine.dispose()
+            async_engine.dispose()
 
-    async def get_all_dbs(self) -> set[str]:
+    def get_all_dbs(self) -> set[str]:
         result = self.local_db.sql("""
             select database_name from extended_collection_postgres_all_databases
         """).fetchall()
@@ -95,15 +95,15 @@ class CollectionExtractor(BaseWorkflow):
             raise ApplicationError(msg)
         return self.db_version
 
-    async def extract_collection(self, collection_query_manager: CollectionQueryManager) -> None:
-        collection = await collection_query_manager.execute_collection_queries()
+    def extract_collection(self, collection_query_manager: CollectionQueryManager) -> None:
+        collection = collection_query_manager.execute_collection_queries()
         self.import_to_table(collection)
 
-    async def extract_extended_collection(self, collection_query_manager: CollectionQueryManager) -> None:
-        extended_collection = await collection_query_manager.execute_extended_collection_queries()
+    def extract_extended_collection(self, collection_query_manager: CollectionQueryManager) -> None:
+        extended_collection = collection_query_manager.execute_extended_collection_queries()
         self.import_to_table(extended_collection)
 
-    async def process_collection(self) -> None:
+    def process_collection(self) -> None:
         """Process Collections"""
 
     def print_summary(self) -> None:

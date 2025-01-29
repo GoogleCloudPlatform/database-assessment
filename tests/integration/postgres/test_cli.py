@@ -24,7 +24,7 @@ from dma.cli.main import app
 
 if TYPE_CHECKING:
     from click.testing import CliRunner
-    from sqlalchemy.ext.asyncio import AsyncEngine
+    from sqlalchemy import Engine
 
 pytestmark = [
     pytest.mark.anyio,
@@ -33,12 +33,12 @@ pytestmark = [
 ]
 
 
-async def test_cli_postgres(
-    async_engine: AsyncEngine,
+def test_cli_postgres(
+    sync_engine: Engine,
     _seed_postgres_database: None,
     runner: CliRunner,
 ) -> None:
-    url = urlparse(str(async_engine.url))
+    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
     result = runner.invoke(
         app,
         [
