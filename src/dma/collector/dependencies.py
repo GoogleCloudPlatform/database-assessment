@@ -55,6 +55,9 @@ def provide_collection_query_manager(
         raise ApplicationError(msg)
     rdbms_type = dialect.name
     if rdbms_type == "postgresql":
+        from psycopg.rows import dict_row  # noqa: PLC0415
+
+        raw_connection.driver_connection.row_factory = dict_row
         query_manager: CollectionQueryManager = PostgresCollectionQueryManager(
             connection=raw_connection.driver_connection,
             manual_id=manual_id,
