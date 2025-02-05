@@ -261,6 +261,11 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             raise ApplicationError(msg)
         major_version = get_db_major_version(self.db_version)
         version_prefix = "base" if major_version > 13 else "13" if major_version == 13 else "12"
+        bg_writer_stats = (
+            "collection_postgres_bg_writer_stats"
+            if major_version < 17
+            else "collection_postgres_bg_writer_stats_from_pg17"
+        )
         return {
             f"collection_postgres_{version_prefix}_table_details",
             f"collection_postgres_{version_prefix}_database_details",
@@ -268,7 +273,7 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             "collection_postgres_applications",
             "collection_postgres_aws_extension_dependency",
             "collection_postgres_aws_oracle_exists",
-            "collection_postgres_bg_writer_stats",
+            bg_writer_stats,
             "collection_postgres_calculated_metrics",
             "collection_postgres_data_types",
             "collection_postgres_index_details",
@@ -309,6 +314,7 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             "collection_postgres_aws_extension_dependency": "postgres_aws_extension_dependency",
             "collection_postgres_aws_oracle_exists": "postgres_aws_oracle_exists",
             "collection_postgres_bg_writer_stats": "postgres_bg_writer_stats",
+            "collection_postgres_bg_writer_stats_from_pg17": "postgres_bg_writer_stats_from_pg17",
             "collection_postgres_calculated_metrics": "postgres_calculated_metrics",
             "collection_postgres_data_types": "postgres_data_types",
             "collection_postgres_extensions": "postgres_extensions",

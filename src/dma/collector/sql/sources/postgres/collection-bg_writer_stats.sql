@@ -43,3 +43,21 @@ select :PKEY as pkey,
   src.buffers_allocated,
   src.stats_reset
 from src;
+
+-- name: collection-postgres-bg-writer-stats-from-pg17
+with src as (
+  select
+    w.buffers_clean,
+    w.maxwritten_clean as max_written_clean,
+    w.buffers_alloc as buffers_allocated,
+    w.stats_reset
+  from pg_stat_bgwriter w
+)
+select :PKEY as pkey,
+  :DMA_SOURCE_ID as dma_source_id,
+  :DMA_MANUAL_ID as dma_manual_id,
+  src.buffers_clean,
+  src.max_written_clean,
+  src.buffers_allocated,
+  src.stats_reset
+from src;

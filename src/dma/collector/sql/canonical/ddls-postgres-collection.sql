@@ -302,6 +302,16 @@ create or replace table collection_postgres_bg_writer_stats(
     stats_reset TIMESTAMP
   );
 
+  create or replace table collection_postgres_bg_writer_stats_from_pg17(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    buffers_clean BIGINT,
+    max_written_clean BIGINT,
+    buffers_allocated BIGINT,
+    stats_reset TIMESTAMP
+  );
+
 create or replace table collection_postgres_calculated_metrics(
     pkey VARCHAR,
     dma_source_id VARCHAR,
