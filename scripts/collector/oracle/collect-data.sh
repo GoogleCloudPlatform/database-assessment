@@ -112,7 +112,9 @@ connectString="$1"
 OpVersion=$2
 DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
 manualUniqueId="${4}"
-statsWindow=${5}
+statsWindow="${5}"
+statsStartDate="${6}"
+statsDBID="${7}"
 
 if ! [ -x "$(command -v ${SQLPLUS})" ]; then
   echo "Could not find ${SQLPLUS} command. Source in environment and try again"
@@ -120,11 +122,10 @@ if ! [ -x "$(command -v ${SQLPLUS})" ]; then
   exit 1
 fi
 
-
 ${SQLPLUS} -s /nolog << EOF
 SET DEFINE OFF
 connect ${connectString}
-@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${SQLOUTPUT_DIR} "${manualUniqueId}" ${statsWindow}
+@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${SQLOUTPUT_DIR} "${manualUniqueId}" "${statsWindow}" "${statsStartDate}" "${statsDBID}"
 exit;
 EOF
 
@@ -240,6 +241,10 @@ fi
 
 if [ -f $OUTFILE ]
 then
+  if [ -f opdb__eoj__${V_FILE_TAG}.csv ]
+    then
+      cat opdb__eoj__${V_FILE_TAG}.csv
+  fi
   rm  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
 fi
 
@@ -325,6 +330,8 @@ statsSrc=""
 connStr=""
 manualUniqueId=""
 statsWindow=30
+statsStartDate=""
+statsDBID=""
 
  if [[ $(($# & 1)) == 1 ]] ;
  then
@@ -344,6 +351,8 @@ statsWindow=30
 	 elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
 	 elif [[ "$1" == "--manualUniqueId" ]];     then manualUniqueId="${2}"
 	 elif [[ "$1" == "--statsWindow" ]];        then statsWindow="${2}"
+	 elif [[ "$1" == "--statsStartDate" ]];     then statsStartDate="${2}"   # Experimental - Statspack only
+	 elif [[ "$1" == "--statsDBID" ]];          then statsDBID="${2}"        # Experimental - Statspack only
 	 else
 		 echo "Unknown parameter ${1}"
 		 printUsage
@@ -359,16 +368,27 @@ statsWindow=30
 
  if [[ "${statsSrc}" = "awr" ]]; then
           DIAGPACKACCESS="UseDiagnostics"
+	  if [[ "$statsStartDate" != "" ]]; then
+		  echo Parameter statsStartDate is not yet supported with AWR source.
+		  exit 1
+	  fi
+	  if [[ "$statsDBID" != "" ]]; then
+		  echo Parameter statsDBID is not yet supported with AWR source.
+		  exit 1
+	  fi
  elif [[ "${statsSrc}" = "statspack" ]] ; then
           DIAGPACKACCESS="NoDiagnostics"
- else
-	 echo No performance data will be collected.
+ else 
+         echo User requested no performance data collection.
          DIAGPACKACCESS="nostatspack"
  fi
 
- if [[ ${statsWindow} -ne 30 ]] && [[ ${statsWindow} -ne 7 ]] ; then
+ if [[ "${statsWindow}" == "" ]] ; then 
 	 statsWindow=30
  fi
+# if [[ ${statsWindow} -ne 30 ]] && [[ ${statsWindow} -ne 7 ]] ; then
+#        statsWindow=30
+# fi
 
  if [[ "${connStr}" == "" ]] ; then
 	 if [[ "${hostName}" != "" && "${port}" != "" && "${databaseService}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
@@ -405,6 +425,16 @@ statsWindow=30
 # MAIN
 #############################################################################
 
+extractorVersion="$(getVersion)"
+
+echo ""
+echo "==================================================================================="
+echo "Database Migration Assessment Database Assessment Collector Version ${OpVersion}"
+printExtractorVersion "${extractorVersion}"
+echo "==================================================================================="
+echo ""
+echo "Connecting to database..."
+
 connectString="${connStr}"
 sqlcmd_result=$(checkVersion "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | cut -d '~' -f 2)
 if [[ "${sqlcmd_result}" = "" ]];
@@ -416,14 +446,6 @@ fi
 retval=$?
 
 # DIAGPACKACCESS="$2"
-
-extractorVersion="$(getVersion)"
-
-echo ""
-echo "==================================================================================="
-echo "Database Migration Assessment Database Assessment Collector Version ${OpVersion}"
-printExtractorVersion "${extractorVersion}"
-echo "==================================================================================="
 
 if [ $retval -eq 0 ]; then
   if [ "$(echo ${sqlcmd_result} | $GREP -E '(ORA-|SP2-)')" != "" ]; then
@@ -445,7 +467,7 @@ if [ $retval -eq 0 ]; then
       fi
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS} "${manualUniqueId}" $statsWindow
+    executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS} "${manualUniqueId}" "$statsWindow" "$statsStartDate" "$statsDBID"
     retval=$?
     if [ $retval -ne 0 ]; then
       createErrorLog  $(echo ${V_TAG} | sed 's/.csv//g')
