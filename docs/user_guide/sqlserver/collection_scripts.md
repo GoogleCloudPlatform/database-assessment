@@ -15,19 +15,19 @@ Operating System Versions:
 
 ---
 
-## Introduction
+## [Introduction](#introduction)
 
 This utility extracts metadata about the tables, partitions and SQL workload in a database into CSV files. It also leverages perfmon data that must have a perfmon counter started before the final data collection. These CSV files are then used by Database Migration Assessment internally to analyze the data with Google Database Migration Assessment.
 
 ---
 
-## License Requirements
+## [License Requirements](#license-requirements)
 
 !!! IMPORTANT Google Database Migration Assessment does not require any additional licensing with regards to Microsoft SQL Server.
 
 ---
 
-## Database Privileges
+## [Database Privileges](#database-privileges)
 
 This utility must be run as a database user with privileges to SELECT from certain data dictionary views. The scripts "createUserForAssessmentWithSQLAuth.bat" and "createUserForAssessmentWithWindowsAuth.bat" are supplied to create the required user and privileges. Instructions for executing it are below. Alternatively, you may use a user that already has following privileges:
 
@@ -52,7 +52,7 @@ In addition the user must also be mapped to all user databases, tempdb and maste
 
 ---
 
-## System Requirements
+## [System Requirements](#system-requirements)
 
 The collection script depends on the following executables to be available on the machine from which it is run. The script is also expected to be run from a Windows machine in "Administrator Mode":
 
@@ -71,7 +71,7 @@ If needed sqlcmd can be downloaded from [here](https://learn.microsoft.com/en-us
 
 ---
 
-## Preparation
+## [Preparation](#preparation)
 
 In order to begin running the Database Migration Assessment Collection process, download the collector script from [here](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-sqlserver.zip) onto the host to be collected and follow the below instructions:
 
@@ -120,9 +120,11 @@ In order to begin running the Database Migration Assessment Collection process, 
 
 ---
 
-## Execution
+## [Execution](#execution)
 
-#### Perfmon Requirements (Optional)
+#### [Perfmon Requirements](#perfmon-requirements)
+
+(Optional)
 
 - NOTE: Executing Perfmon is OPTIONAL. If not executed the tool will evaluate complexity of migration, but not rightsizing requirements.
 - NOTE: The standard perfmon collector collects every 10 minutes for 8 days.
@@ -214,7 +216,7 @@ The script will create a permon data set that will collect the above metrics at 
 
 <br/>
 
-#### Perform Collection
+#### [Perform Collection](#perform-collection)
 
 - When the perfmon dataset completes or if you would like to execute the collection sooner, execute the following command from a command prompt session in "Administrator Mode" on the server you would like to collect data on and return the subsequent .zip file to Google.
 - The collection can also be run for all user databases or a single user database. See the below examples for each scenario
@@ -274,7 +276,7 @@ To Execute the Collection:
           3. When using a port to connect only provide the local host name
           4. The manualUniqueId can be used to give the collection a unique identifier specified by the customer
 
-##### CollectVMSpecs:
+##### [CollectVMSpecs](#collectvmspecs)
 
 To provide rightsizing information the script attempts to connect to the host VM using the current users credentials and collect hardware specs (number of CPUs/amount of memory).
 
@@ -286,7 +288,7 @@ This is recommended if you plan to upload the results to the Migration Center.
 
 ---
 
-## Return Results
+## [Return Results](#return-results)
 
 - An archive of the extracted results will be created in the directory collector/output.
 - The full path and file name will be displayed on completion.
@@ -294,7 +296,9 @@ This is recommended if you plan to upload the results to the Migration Center.
 
 !!! IMPORTANT Do not modify the name or the contents of the zip file without consultation from Google.
 
-## Digitially Signing Powershell Scripts (Optional / Only if Necessary)
+## [Digitially Signing Powershell Scripts](#digitially-signing-powershell-scripts)
+
+(Optional / Only if Necessary)
 
 Occasionally, organizational security policies require that Powershell scripts be digitally signed before they can be executed.  Google will not provide a certificate to do this, however, the customer can create a self-signed certificate and then sign the scripts on their own using the following steps:
 
@@ -337,7 +341,7 @@ Occasionally, organizational security policies require that Powershell scripts b
         - Set-AuthenticodeSignature $ScriptRepo\dmaSQLServerHWSpecs.ps1 -Certificate (Get-ChildItem "cert:\CurrentUser\My\$($newCodeSigningCert.Thumbprint)" -CodeSigningCert)
         - Set-AuthenticodeSignature $ScriptRepo\dmaSQLServerPerfmonDataset.ps1 -Certificate (Get-ChildItem "cert:\CurrentUser\My\$($newCodeSigningCert.Thumbprint)" -CodeSigningCert)
 
-## License
+## [License](#license)
 
 Copyright 2025 Google LLC
 
