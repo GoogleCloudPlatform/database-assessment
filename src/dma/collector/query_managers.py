@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import aiosql
-from asyncpg import UndefinedTableError
+import psycopg
 from rich.padding import Padding
 
 from dma.cli._utils import console
@@ -231,7 +231,7 @@ class CollectionQueryManager(QueryManager):
                     )
                     results[script] = script_result
                     status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
-                except UndefinedTableError:
+                except psycopg.errors.UndefinedTable:
                     status.console.print(rf"Skipped `{script}` as the table doesn't exist")
             if not self.get_per_db_collection_queries():
                 status.console.print(
