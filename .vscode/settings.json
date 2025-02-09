@@ -96,16 +96,7 @@
     "topsql",
     "vsysstat"
 ],
-  "ruff.format.args": [
-      "--config=${workspaceFolder}/pyproject.toml"
-  ],
-  "ruff.lint.run": "onType",
-  "ruff.lint.args": [
-      "--config=${workspaceFolder}/pyproject.toml"
-  ],
   "mypy-type-checker.importStrategy": "fromEnvironment",
-  "black-formatter.importStrategy": "fromEnvironment",
-  "pylint.importStrategy": "fromEnvironment",
   "python.autoComplete.extraPaths": [
       "${workspaceFolder}/src"
   ],
@@ -177,7 +168,7 @@
       "tag:yaml.org,2002:python/name:material.extensions.emoji.twemoji",
       "tag:yaml.org,2002:python/name:pymdownx.superfences.fence_code_format"
 ],
-"python.analysis.typeCheckingMode": "standard",
+"python.analysis.typeCheckingMode": "strict",
 "python.analysis.inlayHints.callArgumentNames": "partial",
 "notebook.defaultFormatter": "charliermarsh.ruff",
 "editor.defaultFormatter": "charliermarsh.ruff",
