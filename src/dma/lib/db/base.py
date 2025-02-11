@@ -47,7 +47,8 @@ def get_engine(
                 port=src_info.port,
                 database=database,
                 query={},  # type: ignore[arg-type]
-            )
+            ),
+            isolation_level='AUTOCOMMIT'
         )
     if src_info.db_type == "MYSQL":
         return create_engine(
