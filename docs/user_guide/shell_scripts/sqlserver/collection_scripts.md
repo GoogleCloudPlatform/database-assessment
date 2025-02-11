@@ -311,12 +311,12 @@ Occasionally, organizational security policies require that Powershell scripts b
             DnsName = 'Self@google.com'
             FriendlyName = 'Google DMA Self Signed PS Code Signing'
             NotAfter = (Get-Date).AddYears(5)
-            Type = 'CodeSigning'  
-            CertStoreLocation = 'cert:\CurrentUser\My' 
+            Type = 'CodeSigning'
+            CertStoreLocation = 'cert:\CurrentUser\My'
             KeyUsage = 'DigitalSignature'
             KeyAlgorithm = 'RSA'
-            KeyLength = 2048 
-            HashAlgorithm = 'sha256' 
+            KeyLength = 2048
+            HashAlgorithm = 'sha256'
             }
 
     - Create a new self-signed certificate based on the above parameters and send the details to 'newCodeSigningCert' variable for reference later.

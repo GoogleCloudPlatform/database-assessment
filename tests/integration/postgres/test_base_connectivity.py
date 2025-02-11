@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Unit tests for the Oracle."""
+"""Unit tests for the Postgres Connectivity."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ import pytest
 from sqlalchemy import text
 
 if TYPE_CHECKING:
-    from sqlalchemy.ext.asyncio import AsyncEngine
+    from sqlalchemy import Engine
 
 
 pytestmark = [
@@ -31,8 +31,9 @@ pytestmark = [
 ]
 
 
-async def test_engine_connectivity(async_engine: AsyncEngine) -> None:
-    async with async_engine.begin() as conn:
-        await conn.execute(
+def test_engine_connectivity(sync_engine: Engine) -> None:
+    with sync_engine.begin() as conn:
+        result = conn.execute(
             text("select 1"),
         )
+        assert result.scalar() == 1

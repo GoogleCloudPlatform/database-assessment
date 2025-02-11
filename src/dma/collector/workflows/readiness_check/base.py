@@ -66,11 +66,11 @@ class ReadinessCheck:
         self.collection_identifier = collection_identifier
         self.working_path = working_path
 
-    async def execute(self) -> None:
-        await self.execute_data_collection()
+    def execute(self) -> None:
+        self.execute_data_collection()
         self.execute_readiness_check()
 
-    async def execute_data_collection(self) -> None:
+    def execute_data_collection(self) -> None:
         canonical_query_manager = next(
             provide_canonical_queries(local_db=self.local_db, working_path=self.working_path)
         )
@@ -83,7 +83,7 @@ class ReadinessCheck:
             console=self.console,
             collection_identifier=self.collection_identifier,
         )
-        await self.collection_extractor.execute()
+        self.collection_extractor.execute()
         self.db_version = self.collection_extractor.get_db_version()
 
     def execute_readiness_check(self) -> None:
@@ -134,7 +134,7 @@ class ReadinessCheckExecutor:
         self.local_db = readiness_check.local_db
         self.db_version = readiness_check.db_version
 
-    def execute(self) -> None:  # noqa: PLR6301
+    def execute(self) -> None:
         """Execute checks"""
         msg = "Implement this execution method."
         raise NotImplementedError(msg)
@@ -145,7 +145,7 @@ class ReadinessCheckExecutor:
         """).fetchall()
         return {row[0] for row in result}
 
-    def print_summary(self) -> None:  # noqa: PLR6301
+    def print_summary(self) -> None:
         """Summarizes results"""
         msg = "Implement this execution method."
         raise NotImplementedError(msg)

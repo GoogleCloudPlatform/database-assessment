@@ -42,9 +42,9 @@ class BaseWorkflow:
         self.db_type = db_type
         self.canonical_query_manager = canonical_query_manager
 
-    async def execute(self) -> None:
+    def execute(self) -> None:
         """Execute Workflow"""
-        await self.canonical_query_manager.execute_ddl_scripts()
+        self.canonical_query_manager.execute_ddl_scripts()
 
     def import_to_table(self, data: dict[str, list[dict]]) -> None:
         """Load a dictionary of result sets into duckdb.

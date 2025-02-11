@@ -445,7 +445,7 @@ SELECT onr.nspname, oc.relname
 		  AND oc.relkind = 'r'::"char"
 			AND oc.relpersistence = 'p'::"char"
 			AND onr.nspname not in ('pg_catalog', 'information_schema', 'pglogical', 'pglogical_origin')
-			AND onr.nspname not like 'pg\_%'
+			AND onr.nspname not like 'pg\_%%'
 			AND (onr.nspname, oc.relname) NOT IN
 		(SELECT nr.nspname, r.relname
 		FROM pg_namespace nr,

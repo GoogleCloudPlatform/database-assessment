@@ -170,7 +170,7 @@ BEGIN
                         ELSE 0
                     END AS Is_EnabledOrUsed,
                     dqs_count as Count
-                from dqs_service');  
+                from dqs_service');
         END CATCH
 END;
 
