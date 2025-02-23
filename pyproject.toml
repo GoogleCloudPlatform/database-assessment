@@ -128,7 +128,7 @@ extra-dependencies = [
     "pytest-sugar",
     "pytest-click",
     "pytest-xdist",
-    "pytest-databases",
+    "pytest-databases<=0.10.0",
     # lint
     "mypy",
     "ruff",
