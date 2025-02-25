@@ -77,9 +77,11 @@ The grant_wrapper script will grant privileges required and will output a list o
 
 Launch the collection script: (Note that the parameter names have changed from earlier versions of the collector)
 
-- NOTE: If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
-  - If you are licensed for the Oracle Tuning and Diagnostics packs, pass the parameter UseDiagnostics to use the AWR data.
-  - If you are NOT licensed for the Oracle Tuning and Diagnostics packs, pass the parameter NoDiagnostics to exclude the AWR data. The script will attempt to use STATSPACK data if available.
+- NOTES: 
+  - If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
+  - If you are licensed for the Oracle Diagnostic pack, specify AWR for the --statsSrc parameter.
+  - If you are NOT licensed for the Oracle Diagnostics pack, specify STATSPACK for the --statsSrc parameter.
+  - If you do not want to collect performance data, specife NONE for the --statsSrc parameter. This will block the ability to provide sizing and pricing estimates.
 
   - Parameters
 ```
@@ -94,7 +96,9 @@ Launch the collection script: (Note that the parameter names have changed from e
        --collectionUserPass  Database password
     }
  Performance statistics source
-     --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.  When using STATSPACK, see note about --statsWindow parameter below.
+     --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.  
+                             When using STATSPACK, see note about --statsWindow parameter below.
+                             When using AWR, ensure you are licensed for the Oracle Diagnostics Pack.
  Performance statistics window
      --statsWindow           Optional. Number of days of performance stats to collect.  Must be one of 7, 30.  Default is 30.
                              NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION.
@@ -108,7 +112,7 @@ Launch the collection script: (Note that the parameter names have changed from e
 ```
 
 
-To use the licensed Oracle Tuning and Diagnostics pack data:
+To use the licensed Oracle Diagnostic pack AWR/ASH data:
 
 ```shell
 ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR
@@ -123,7 +127,7 @@ or
 ```
 
 OR
-To avoid using the licensed Oracle Tuning and Diagnostics pack data:
+To use performance data from STATSPACK collection:
 
 ```shell
 ./collect-data.sh --connectionStr {user}/{password}@//{db hosti}:{listener port}/{service name} --statsSrc STATSPACK
@@ -146,12 +150,13 @@ or
 
 Collections can be run as SYS if needed by setting ORACLE_SID and running on the database host:
 
+To use the licensed Oracle Diagnostic pack AWR/ASH data:
 ```shell
 ./collect-data.sh --connectionStr '/ as sysdba' --statsSrc AWR
 ```
 
 OR
-To avoid using the licensed Oracle Tuning and Diagnostics pack data:
+To use performance data from STATSPACK collection:
 
 ```shell
 ./collect-data.sh  --connectionStr '/ as sysdba' --statsSrc STATSPACK
