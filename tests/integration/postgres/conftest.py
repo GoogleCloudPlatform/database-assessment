@@ -183,11 +183,6 @@ def postgres12_sync_engine(
     )
 
 
-@pytest.fixture(scope="session")
-def postgres_docker_compose_files() -> list[Path]:
-    return [Path(Path(__file__).parent / "docker-compose.yml")]
-
-
 @pytest.fixture(
     scope="session",
     params=[

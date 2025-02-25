@@ -48,7 +48,7 @@ def get_engine(
                 database=database,
                 query={},  # type: ignore[arg-type]
             ),
-            isolation_level="AUTOCOMMIT",
+            isolation_level='AUTOCOMMIT'
         )
     if src_info.db_type == "MYSQL":
         return create_engine(
