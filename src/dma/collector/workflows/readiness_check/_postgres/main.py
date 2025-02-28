@@ -129,7 +129,9 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             for db in self.get_all_dbs():
                 is_pglogical_installed = self._check_pglogical_installed(db, db_check_results)
                 if is_pglogical_installed:
-                    self._check_privileges(db, db_check_results)
+                    privilege_check_passed = self._check_privileges(db, db_check_results)
+                    if not privilege_check_passed:
+                        break
                     self._check_if_node_exists(db, db_check_results)
                 self._check_tables_without_pk(db, db_check_results)
             self._save_results(config.db_variant, db_check_results)
@@ -271,24 +273,37 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             db_check_results[rule_code][PASS].append(db_name)
         return is_installed
 
-    def _check_pglogical_privileges(self, db_name: str) -> list[str]:
+
+    def _check_pglogical_schema_usage_privilege(self, db_name: str) -> str|None:
         result = self.local_db.sql(
-            "select has_schema_usage_privilege, has_tables_select_privilege, has_local_node_select_privilege, has_node_select_privilege, has_node_interface_select_privilege from collection_postgres_pglogical_privileges where database_name = $db_name",
+            "select has_schema_usage_privilege from collection_postgres_pglogical_schema_usage_privilege where database_name = $db_name",
+            params={"db_name": db_name},
+        ).fetchone()
+        if result is None:
+            return "Empty result reading pglogical schema usage privilege for the user"
+        elif not result[0]:
+            return "user doesn't have USAGE privilege on schema pglogical"
+
+
+    def _check_pglogical_privileges(self, db_name: str) -> list[str]:
+        err = self._check_pglogical_schema_usage_privilege(db_name)
+        if err is not None:
+            return [err]
+        result = self.local_db.sql(
+            "select has_tables_select_privilege, has_local_node_select_privilege, has_node_select_privilege, has_node_interface_select_privilege from collection_postgres_pglogical_privileges where database_name = $db_name",
             params={"db_name": db_name},
         ).fetchone()
         errors: list[str] = []
         if result is None:
-            errors.append("Empty result reading pglogical schema privileges for the user")
+            errors.append("Empty result reading pglogical privileges for the user")
         else:
             if not result[0]:
-                errors.append("user doesn't have USAGE privilege on schema pglogical")
-            if not result[1]:
                 errors.append("user doesn't have SELECT privilege on table pglogical.tables")
-            if not result[2]:
+            if not result[1]:
                 errors.append("user doesn't have SELECT privilege on table pglogical.local_node")
-            if not result[3]:
+            if not result[2]:
                 errors.append("user doesn't have SELECT privilege on table pglogical.node")
-            if not result[4]:
+            if not result[3]:
                 errors.append("user doesn't have SELECT privilege on table pglogical.node_interface")
         return errors
 
@@ -332,7 +347,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         errors.extend(f"user doesn't have SELECT privilege on sequence {row[0]}.{row[1]}" for row in rows)
         return errors
 
-    def _check_privileges(self, db_name: str, db_check_results: dict[str, dict[str, list]]) -> None:
+    def _check_privileges(self, db_name: str, db_check_results: dict[str, dict[str, list]]) -> bool:
         rule_code = PRIVILEGES
         errors = self._check_pglogical_privileges(db_name)
 
@@ -345,6 +360,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             db_check_results[rule_code][PASS].append(
                 f"User has all privileges required for migration for the database {db_name}"
             )
+        return len(errors) == 0
 
     def _check_wal_level(self) -> None:
         rule_code = "WAL_LEVEL"

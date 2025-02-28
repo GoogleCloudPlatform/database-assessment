@@ -233,6 +233,8 @@ class CollectionQueryManager(QueryManager):
                     status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
                 except psycopg.errors.UndefinedTable:
                     status.console.print(rf"Skipped `{script}` as the table doesn't exist")
+                except psycopg.errors.InsufficientPrivilege:
+                    status.console.print(rf"Skipped `{script}` due to insufficient privileges.")
             if not self.get_per_db_collection_queries():
                 status.console.print(
                     " [dim grey]:heavy_check_mark: No DB specific collection queries for this database type[/]"
@@ -293,6 +295,7 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             "collection_postgres_extensions",
             "collection_postgres_pglogical_provider_node",
             "collection_postgres_pglogical_privileges",
+            "collection_postgres_pglogical_schema_usage_privilege",
             "collection_postgres_user_schemas_without_privilege",
             "collection_postgres_user_tables_without_privilege",
             "collection_postgres_user_views_without_privilege",
