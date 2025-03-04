@@ -29,7 +29,7 @@ create or replace table readiness_check_summary(
       'SPANNER',
       'BIGQUERY'
     ),
-    severity ENUM ('INFO', 'WARNING', 'ERROR', 'PASS'),
+    severity ENUM ('INFO', 'PASS', 'WARNING', 'ACTION REQUIRED'),
     rule_code varchar,
     info varchar
   );
