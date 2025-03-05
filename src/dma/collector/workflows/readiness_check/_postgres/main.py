@@ -13,6 +13,7 @@
 # limitations under the License.
 from __future__ import annotations
 
+from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final
 
@@ -49,6 +50,9 @@ PGLOGICAL_NODE_ALREADY_EXISTS: Final = "PGLOGICAL_NODE_ALREADY_EXISTS"
 TABLES_WITH_NO_PK: Final = "TABLES_WITH_NO_PK"
 CLOUDSQL: Final = "CLOUDSQL"
 ALLOYDB: Final = "ALLOYDB"
+CloudSQL_SUPER_ROLE: Final = "cloudsqladmin"
+ALLOYDB_SUPER_ROLE: Final = "alloydbadmin"
+NONMIGRATED_EXTENSIONS: Final = {"pg_cron"}
 
 
 @dataclass
@@ -144,9 +148,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 output_str = ""
                 if rule == PGLOGICAL_INSTALLED:
                     if severity == ACTION_REQUIRED:
-                        output_str = (
-                            f"`pglogical` extension is not installed on the databases: {','.join(result[ACTION_REQUIRED])}."
-                        )
+                        output_str = f"`pglogical` extension is not installed on the databases: {','.join(result[ACTION_REQUIRED])}."
                     elif severity == PASS:
                         output_str = f"`pglogical` is installed on the databases: {','.join(result[PASS])}."
                     else:
@@ -162,7 +164,9 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
                 if rule == PGLOGICAL_NODE_ALREADY_EXISTS:
                     if severity == ACTION_REQUIRED:
-                        output_str = f"pglogical provider node already exists on databases: {','.join(result[ACTION_REQUIRED])}"
+                        output_str = (
+                            f"pglogical provider node already exists on databases: {','.join(result[ACTION_REQUIRED])}"
+                        )
                     elif severity == PASS:
                         output_str = f"No existing pglogical provider node on the database: {','.join(result[PASS])}"
                     else:
@@ -186,7 +190,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         rule_code = "COLLATION"
         result = self.local_db.sql(
             "select distinct database_collation from collection_postgres_database_details"
-        ).fetchmany()
+        ).fetchall()
         collations = {row[0].lower() for row in result}
         for c in self.rule_config:
             supported_collations = {coll.lower() for coll in c.supported_collations}
@@ -275,17 +279,16 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             db_check_results[rule_code][PASS].append(db_name)
         return is_installed
 
-
-    def _check_pglogical_schema_usage_privilege(self, db_name: str) -> str|None:
+    def _check_pglogical_schema_usage_privilege(self, db_name: str) -> str | None:
         result = self.local_db.sql(
             "select has_schema_usage_privilege from collection_postgres_pglogical_schema_usage_privilege where database_name = $db_name",
             params={"db_name": db_name},
         ).fetchone()
         if result is None:
             return "Empty result reading pglogical schema usage privilege for the user"
-        elif not result[0]:
+        if not result[0]:
             return "user doesn't have USAGE privilege on schema pglogical"
-
+        return None
 
     def _check_pglogical_privileges(self, db_name: str) -> list[str]:
         err = self._check_pglogical_schema_usage_privilege(db_name)
@@ -553,25 +556,83 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     f"`max_worker_processes` current value: {max_worker_processes}, this meets or exceeds the maximum required value of {max_required_subscriptions}",
                 )
 
+    @dataclass
+    class ExtensionInfo:
+        name: str
+        owner: str
+
     def _check_extensions(self) -> None:
-        rule_code = "EXTENSIONS"
-        result = self.local_db.sql("select distinct extension_name from collection_postgres_extensions").fetchmany()
-        extensions = {row[0] for row in result}
+        result = self.local_db.sql(
+            "select extension_name, extension_owner, database_name from collection_postgres_extensions"
+        ).fetchall()
+        installed_db_extensions: defaultdict[str, list[PostgresReadinessCheckExecutor.ExtensionInfo]] = defaultdict(
+            list
+        )
+        for row in result:
+            ext_name = row[0]
+            ext_owner = row[1]
+            db_name = row[2]
+            exts = installed_db_extensions[db_name]
+            exts.append(self.ExtensionInfo(ext_name, ext_owner))
+
+        self._check_unsupported_extensions(installed_db_extensions)
+        self._check_extensions_not_migrated(installed_db_extensions)
+
+    def _check_unsupported_extensions(
+        self, installed_db_extensions: defaultdict[str, list[PostgresReadinessCheckExecutor.ExtensionInfo]]
+    ) -> None:
+        unsupported_extensions_rule_code = "UNSUPPORTED_EXTENSIONS_NOT_MIGRATED"
         for c in self.rule_config:
-            unsupported_extensions = extensions.difference(c.supported_extensions)
-            for unsupported_extension in unsupported_extensions:
+            ext_err = ""
+            for db, extensions in installed_db_extensions.items():
+                unsupported_extensions = []
+                for ext in extensions:
+                    if ext.owner in {CloudSQL_SUPER_ROLE, ALLOYDB_SUPER_ROLE}:
+                        continue
+                    if ext.name not in c.supported_extensions:
+                        unsupported_extensions.append(ext.name)
+                if len(unsupported_extensions) != 0:
+                    ext_err += f"database {db} has unsupported extensions installed and they will be not be migrated: {','.join(unsupported_extensions)};\n\n"
+            if ext_err == "":
                 self.save_rule_result(
                     c.db_variant,
-                    rule_code,
-                    ACTION_REQUIRED,
-                    f"Unsupported extensions: {unsupported_extension} is not supported on this instance",
-                )
-            if len(unsupported_extensions) == 0:
-                self.save_rule_result(
-                    c.db_variant,
-                    rule_code,
+                    unsupported_extensions_rule_code,
                     PASS,
                     "All utilized extensions are supported.",
+                )
+            else:
+                self.save_rule_result(
+                    c.db_variant,
+                    unsupported_extensions_rule_code,
+                    WARNING,
+                    ext_err,
+                )
+
+    def _check_extensions_not_migrated(
+        self, installed_db_extensions: defaultdict[str, list[PostgresReadinessCheckExecutor.ExtensionInfo]]
+    ) -> None:
+        extensions_not_migrated_rule_code = "EXTENSIONS_NOT_MIGRATED"
+        for c in self.rule_config:
+            ext_err = ""
+            for db, extensions in installed_db_extensions.items():
+                extensions_not_migrated = [ext.name for ext in extensions if ext.name in NONMIGRATED_EXTENSIONS]
+
+                if len(extensions_not_migrated) != 0:
+                    ext_err += f"database {db} has extensions that will be not be migrated: {','.join(extensions_not_migrated)};\n\n"
+
+            if ext_err == "":
+                self.save_rule_result(
+                    c.db_variant,
+                    extensions_not_migrated_rule_code,
+                    PASS,
+                    "All utilized extensions will be migrated.",
+                )
+            else:
+                self.save_rule_result(
+                    c.db_variant,
+                    extensions_not_migrated_rule_code,
+                    WARNING,
+                    ext_err,
                 )
 
     def _check_fdw(self) -> None:
@@ -624,7 +685,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
         def table_for_target(migration_target: PostgresVariants) -> None:
             results = self.local_db.execute(
-                "select severity, rule_code, info from readiness_check_summary where migrationq_target = ? ORDER BY severity, rule_code",
+                "select severity, rule_code, info from readiness_check_summary where migration_target = ? ORDER BY severity, rule_code",
                 [migration_target],
             ).fetchall()
             count_table = Table(
@@ -647,9 +708,13 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             self.console.print("\n")
             self.console.print(count_table)
             if migration_target == ALLOYDB:
-                self.console.print("Please refer to https://cloud.google.com/database-migration/docs/postgresql-to-alloydb/configure-source-database for more details.")
+                self.console.print(
+                    "Please refer to https://cloud.google.com/database-migration/docs/postgresql-to-alloydb/configure-source-database for more details."
+                )
             if migration_target == CLOUDSQL:
-                self.console.print("Please refer to https://cloud.google.com/database-migration/docs/postgres/configure-source-database for more details.")
+                self.console.print(
+                    "Please refer to https://cloud.google.com/database-migration/docs/postgres/configure-source-database for more details."
+                )
 
         for v in db_variants:
             table_for_target(v)
