@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from textwrap import dedent
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 from urllib.parse import urlparse
 
 import pytest
@@ -35,6 +35,11 @@ pytestmark = [
     pytest.mark.postgres,
     pytest.mark.xdist_group("postgres"),
 ]
+
+ACTION_REQUIRED: Final = "ACTION REQUIRED"
+ERROR: Final = "ERROR"
+WARNING: Final = "WARNING"
+PASS: Final = "PASS"
 
 
 def test_pglogical(
@@ -69,7 +74,101 @@ def test_pglogical(
             "select severity from readiness_check_summary WHERE rule_code = 'PGLOGICAL_INSTALLED'",
         ).fetchall()
         for row in rows:
-            assert row[0] == "PASS"
+            assert row[0] == PASS
+
+
+def test_privileges_success(
+    sync_engine: Engine,
+    runner: CliRunner,
+) -> None:
+    test_user = "testuser"
+    test_passwd = "testpasswd"
+    with sync_engine.begin() as conn:
+        # setup test user.
+        conn.execute(text(dedent(f"create user {test_user} WITH PASSWORD '{test_passwd}';")))
+
+        conn.execute(text(dedent("""create extension if not exists pglogical;""")))
+        grant_privilege_cmds = [
+            "GRANT USAGE on SCHEMA pglogical to testuser",
+            "GRANT SELECT on ALL TABLES in SCHEMA pglogical to testuser;"
+            "GRANT SELECT on ALL TABLES in SCHEMA public to testuser;",
+        ]
+        for cmd in grant_privilege_cmds:
+            conn.execute(text(cmd))
+    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    result = runner.invoke(
+        app,
+        [
+            "readiness-check",
+            "--db-type",
+            "postgres",
+            "--no-prompt",
+            "--hostname",
+            f"{url.hostname}",
+            "--port",
+            f"{url.port!s}",
+            "--database",
+            f"{url.path.lstrip('/')}",
+            "--username",
+            f"{test_user}",
+            "--password",
+            f"{test_passwd}",
+        ],
+    )
+    # cleanup.
+    with sync_engine.begin() as conn:
+        conn.execute(text("DROP OWNED BY testuser; DROP USER testuser;"))
+    assert result.exit_code == 0
+    with get_duckdb_connection(Path("tmp/")) as local_db:
+        rows = local_db.sql(
+            "select severity, info from readiness_check_summary where rule_code='PRIVILEGES'",
+        ).fetchall()
+        for row in rows:
+            assert row[0] == PASS
+
+
+def test_privileges_failure(
+    sync_engine: Engine,
+    runner: CliRunner,
+) -> None:
+    test_user = "testuser"
+    test_passwd = "testpasswd"
+    with sync_engine.begin() as conn:
+        # setup test user.
+        conn.execute(text(dedent(f"create user {test_user} WITH PASSWORD '{test_passwd}';")))
+        conn.execute(text(dedent("""create extension if not exists pglogical;""")))
+    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    result = runner.invoke(
+        app,
+        [
+            "readiness-check",
+            "--db-type",
+            "postgres",
+            "--no-prompt",
+            "--hostname",
+            f"{url.hostname}",
+            "--port",
+            f"{url.port!s}",
+            "--database",
+            f"{url.path.lstrip('/')}",
+            "--username",
+            f"{test_user}",
+            "--password",
+            f"{test_passwd}",
+        ],
+    )
+
+    # Cleanup.
+    with sync_engine.begin() as conn:
+        conn.execute(text("DROP OWNED BY testuser; DROP USER testuser;"))
+
+    assert result.exit_code == 0
+    with get_duckdb_connection(Path("tmp/")) as local_db:
+        rows = local_db.sql(
+            "select severity, info from readiness_check_summary where rule_code='PRIVILEGES'",
+        ).fetchall()
+        for row in rows:
+            assert row[0] == ACTION_REQUIRED
 
 
 def test_wal_level(
@@ -103,3 +202,48 @@ def test_wal_level(
         ).fetchall()
         for row in rows:
             assert row[0] == "PASS"
+
+
+def test_pg_version(
+    sync_engine: Engine,
+    runner: CliRunner,
+):
+    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    result = runner.invoke(
+        app,
+        [
+            "readiness-check",
+            "--db-type",
+            "postgres",
+            "--no-prompt",
+            "--hostname",
+            f"{url.hostname}",
+            "--port",
+            f"{url.port!s}",
+            "--database",
+            f"{url.path.lstrip('/')}",
+            "--username",
+            f"{url.username}",
+            "--password",
+            f"{url.password}",
+        ],
+    )
+    assert result.exit_code == 0
+    with sync_engine.begin() as conn:
+        res = conn.execute(text("SHOW server_version_num;"))
+        pg_version = res.fetchone()
+        pg_major_version = 0
+        if pg_version:
+            pg_major_version = int(int(pg_version[0]) / 10000)
+
+    with get_duckdb_connection(Path("tmp/")) as local_db:
+        rows = local_db.sql(
+            "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'DATABASE_VERSION'",
+        ).fetchall()
+        for row in rows:
+            migration_target = row[1]
+            if migration_target == "ALLOYDB" and pg_major_version == 17:
+                # AlloyDB doesn't support pg17 yet. Remove this check after AlloyDB supports pg17.
+                assert row[0] == ERROR
+            else:
+                assert row[0] == PASS

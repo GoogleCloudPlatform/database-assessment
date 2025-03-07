@@ -42,6 +42,7 @@ if TYPE_CHECKING:
     from dma.types import PostgresVariants
 
 ACTION_REQUIRED: Final = "ACTION REQUIRED"
+ERROR: Final = "ERROR"
 WARNING: Final = "WARNING"
 PASS: Final = "PASS"
 PGLOGICAL_INSTALLED: Final = "PGLOGICAL_INSTALLED"
@@ -84,7 +85,7 @@ POSTGRES_RULE_CONFIGURATIONS: list[PostgresReadinessCheckTargetConfig] = [
         db_variant=CLOUDSQL,
         minimum_supported_major_version=9.4,
         minimum_supported_rds_major_version=9.6,
-        maximum_supported_major_version=16,
+        maximum_supported_major_version=17,
         supported_collations=CLOUDSQL_SUPPORTED_COLLATIONS,
         supported_extensions=CLOUDSQL_SUPPORTED_EXTENSIONS,
         supported_fdws=CLOUDSQL_SUPPORTED_FDWS,
@@ -237,7 +238,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     self.save_rule_result(
                         c.db_variant,
                         rule_code,
-                        ACTION_REQUIRED,
+                        ERROR,
                         f"Source RDS database server has unsupported minor version: ({detected_minor_version})",
                     )
                 else:
@@ -250,12 +251,13 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             elif (
                 detected_major_version not in c.db_version_map
                 or detected_major_version < c.minimum_supported_major_version
+                or (c.maximum_supported_major_version and detected_major_version > c.maximum_supported_major_version)
             ):
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    ACTION_REQUIRED,
-                    f"Replication from source database server ({self.db_version}) is not supported",
+                    ERROR,
+                    f"Migration from source database server ({self.db_version}) is not supported",
                 )
             else:
                 self.save_rule_result(
