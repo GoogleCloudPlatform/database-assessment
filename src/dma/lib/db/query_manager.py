@@ -17,6 +17,8 @@ import contextlib
 import faulthandler
 from typing import TYPE_CHECKING, Any, TypeVar
 
+from typing_extensions import Self
+
 from dma.lib.exceptions import ApplicationError
 
 faulthandler.enable()
@@ -51,10 +53,10 @@ class QueryManager:
     @classmethod
     @contextlib.contextmanager
     def from_connection(
-        cls: type[QueryManagerT],
+        cls,
         queries: Queries,
         connection: Any,
-    ) -> Iterator[QueryManagerT]:
+    ) -> Iterator[Self]:
         """Context manager that returns instance of query manager object."""
         yield cls(connection=connection, queries=queries)
 
