@@ -7,7 +7,7 @@ description = "Database Migration Assessment"
 license = { text = "Apache-2.0" }
 name = "dma"
 readme = "README.md"
-requires-python = ">=3.9,<3.13"
+requires-python = ">=3.9"
 version = "4.3.41"
 
 # keywords for easier look-up on PyPI
@@ -49,6 +49,7 @@ classifiers = [ # ToDo: Modify according to your needs!
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
 ]
 # direct dependencies of this package, installed when users `pip install dma` later.

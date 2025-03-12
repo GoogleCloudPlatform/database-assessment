@@ -1,5 +1,26 @@
+SHELL := /bin/bash
+
+# -----------------------------------------------------------------------------
+# Display Formatting and Colors
+# -----------------------------------------------------------------------------
+BLUE := $(shell printf "\033[1;34m")
+GREEN := $(shell printf "\033[1;32m")
+RED := $(shell printf "\033[1;31m")
+YELLOW := $(shell printf "\033[1;33m")
+NC := $(shell printf "\033[0m")
+INFO := $(shell printf "$(BLUE)ℹ$(NC)")
+OK := $(shell printf "$(GREEN)✓$(NC)")
+WARN := $(shell printf "$(YELLOW)⚠$(NC)")
+ERROR := $(shell printf "$(RED)✖$(NC)")
+
+# =============================================================================
+# Configuration and Environment Variables
+# =============================================================================
 .DEFAULT_GOAL:=help
 .ONESHELL:
+.EXPORT_ALL_VARIABLES:
+MAKEFLAGS += --no-print-directory
+
 USING_NPM             = $(shell python3 -c "if __import__('pathlib').Path('package-lock.json').exists(): print('yes')")
 ENV_PREFIX		        =.venv/bin/
 VENV_EXISTS           =	$(shell python3 -c "if __import__('pathlib').Path('.venv/bin/activate').exists(): print('yes')")
@@ -20,9 +41,13 @@ endif
 REPO_INFO ?= $(shell git config --get remote.origin.url)
 COMMIT_SHA ?= git-$(shell git rev-parse --short HEAD)
 
-help:  ## Display this help
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+# =============================================================================
+# Help and Documentation
+# =============================================================================
 
+.PHONY: help
+help:                                               ## Display this help text for Makefile
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z0-9_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 # =============================================================================
 # Developer Utils
@@ -64,18 +89,17 @@ upgrade:       										## Upgrade all dependencies to the latest stable versio
 
 
 .PHONY: clean
-clean: 														## remove all build, testing, and static documentation files
-	@echo "=> Cleaning working directory"
-	@rm -rf .pytest_cache .ruff_cache .hypothesis build/ dist/ .eggs/ .coverage coverage.xml coverage.json htmlcov/ .mypy_cache
-	@find . -name '*.egg-info' -exec rm -rf {} +
-	@find . -name '*.egg' -exec rm -f {} +
-	@find . -name '*.pyc' -exec rm -f {} +
-	@find . -name '*.pyo' -exec rm -f {} +
-	@find . -name '*~' -exec rm -f {} +
-	@find . -name '__pycache__' -exec rm -rf {} +
-	@find . -name '.pytest_cache' -exec rm -rf {} +
-	@find . -name '.ipynb_checkpoints' -exec rm -rf {} +
-	@echo "=> Source cleaned successfully"
+clean:                                              ## Cleanup temporary build artifacts
+	@echo "${INFO} Cleaning working directory... 🧹"
+	@rm -rf .pytest_cache .ruff_cache .hypothesis build/ dist/ .eggs/ .coverage coverage.xml coverage.json htmlcov/ .pytest_cache tests/.pytest_cache tests/**/.pytest_cache .mypy_cache .unasyncd_cache/ .auto_pytabs_cache node_modules >/dev/null 2>&1
+	@find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1
+	@find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1
+	@find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1
+	@find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1
+	@find . -name '*~' -exec rm -f {} + >/dev/null 2>&1
+	@find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1
+	@find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1
+	@echo "${OK} Working directory cleaned"
 
 deep-clean: clean destroy-venv destroy-node_modules							## Clean everything up
 	@hatch python remove all
@@ -187,7 +211,7 @@ build: clean        ## Build and package the collectors
 build-all: clean			## Build collector, wheel, and standalone collector binary
 	@$(MAKE) build-collector
 	@echo "=> Building sdist, wheel and binary packages..."
-	@scripts/build-binary-package.sh
+	@tools/build-binary-package.sh
 	@echo "=> Package build complete..."
 
 

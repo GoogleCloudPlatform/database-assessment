@@ -34,7 +34,7 @@ defaults:
     shell: bash
 
 env:
-  STABLE_PYTHON_VERSION: "3.11"
+  STABLE_PYTHON_VERSION: "3.12"
 
 jobs:
   collection-scripts:
@@ -125,7 +125,7 @@ jobs:
       CARGO: cargo
       CARGO_BUILD_TARGET: ${{ matrix.job.target }}
       PYAPP_REPO: pyapp
-      PYAPP_VERSION: v0.24.0
+      PYAPP_VERSION: v0.27.0
       PYAPP_PYTHON_VERSION: "3.12"
       PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server
       PYAPP_DISTRIBUTION_EMBED: "1"
