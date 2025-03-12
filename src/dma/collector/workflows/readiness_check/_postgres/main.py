@@ -187,12 +187,15 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                         output_str,
                     )
 
-    def _check_collation(self) -> None:
-        rule_code = "COLLATION"
+    def _get_collation(self) -> set[str]:
         result = self.local_db.sql(
             "select distinct database_collation from collection_postgres_database_details"
         ).fetchall()
-        collations = {row[0].lower() for row in result}
+        return {row[0].lower() for row in result}
+
+    def _check_collation(self) -> None:
+        rule_code = "COLLATION"
+        collations = self._get_collation()
         for c in self.rule_config:
             supported_collations = {coll.lower() for coll in c.supported_collations}
             unsupported_collations = collations.difference(supported_collations)
@@ -200,7 +203,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
-                    ACTION_REQUIRED,
+                    ERROR,
                     f"Unsupported collation: {unsupported_collation} is not supported on this instance",
                 )
             if len(unsupported_collations) == 0:
@@ -390,15 +393,16 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     '`wal_level` is correctly set to "logical".',
                 )
 
-    def _check_rds_logical_replication(self) -> None:
-        rule_code = "RDS_LOGICAL_REPLICATION"
-        is_rds = self._is_rds()
+    def _get_rds_logical_replication(self) -> str:
         rds_logical_replication_result = self.local_db.sql(
             "select c.setting_value from collection_postgres_settings c where c.setting_name='rds.logical_replication';"
         ).fetchone()
-        rds_logical_replication = (
-            rds_logical_replication_result[0] if rds_logical_replication_result is not None else "unset"
-        )
+        return rds_logical_replication_result[0] if rds_logical_replication_result is not None else "unset"
+
+    def _check_rds_logical_replication(self) -> None:
+        rule_code = "RDS_LOGICAL_REPLICATION"
+        is_rds = self._is_rds()
+        rds_logical_replication = self._get_rds_logical_replication()
         if is_rds:
             for c in self.rule_config:
                 if rds_logical_replication != "on":

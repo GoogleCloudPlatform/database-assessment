@@ -247,3 +247,60 @@ def test_pg_version(
                 assert row[0] == ERROR
             else:
                 assert row[0] == PASS
+
+
+def test_pg_source_settings(
+    sync_engine: Engine,
+    runner: CliRunner,
+):
+    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    result = runner.invoke(
+        app,
+        [
+            "readiness-check",
+            "--db-type",
+            "postgres",
+            "--no-prompt",
+            "--hostname",
+            f"{url.hostname}",
+            "--port",
+            f"{url.port!s}",
+            "--database",
+            f"{url.path.lstrip('/')}",
+            "--username",
+            f"{url.username}",
+            "--password",
+            f"{url.password}",
+        ],
+    )
+    assert result.exit_code == 0
+    with get_duckdb_connection(Path("tmp/")) as local_db:
+        rows = local_db.sql(
+            "select severity, info from readiness_check_summary WHERE rule_code = 'MAX_REPLICATION_SLOTS'",
+        ).fetchall()
+        for row in rows:
+            assert row[0] == WARNING
+            assert (
+                row[1]
+                == """`max_replication_slots` current value: 10, this might need to be increased to 11 depending on the parallelism level set for migration. Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."""
+            )
+
+        rows = local_db.sql(
+            "select severity, info from readiness_check_summary WHERE rule_code = 'WAL_SENDERS_REPLICATION_SLOTS'",
+        ).fetchall()
+        for row in rows:
+            assert row[0] == PASS
+            assert (
+                row[1]
+                == """`max_wal_senders` current value: 10, this meets or exceeds the `max_replication_slots` value of 10"""
+            )
+
+        rows = local_db.sql(
+            "select severity, info from readiness_check_summary WHERE rule_code = 'MAX_WORKER_PROCESSES'",
+        ).fetchall()
+        for row in rows:
+            assert row[0] == WARNING
+            assert (
+                row[1]
+                == "`max_worker_processes` current value: 8, this might need to be increased to 11 depending on the parallelism level set for migration. Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
+            )
