@@ -812,11 +812,18 @@ create or replace table collection_postgres_pglogical_privileges(
     pkey VARCHAR,
     dma_source_id VARCHAR,
     dma_manual_id VARCHAR,
-    has_schema_usage_privilege BOOLEAN,
     has_tables_select_privilege BOOLEAN,
     has_local_node_select_privilege BOOLEAN,
     has_node_select_privilege BOOLEAN,
     has_node_interface_select_privilege BOOLEAN,
+    database_name VARCHAR
+  );
+
+create or replace table collection_postgres_pglogical_schema_usage_privilege(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    has_schema_usage_privilege BOOLEAN,
     database_name VARCHAR
   );
 
