@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from rich.table import Table
 
@@ -562,19 +562,22 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     f"`max_worker_processes` current value: {max_worker_processes}, this meets or exceeds the maximum required value of {max_required_subscriptions}",
                 )
 
+    def _get_installed_extensions(self) -> list[Any]:
+        return self.local_db.sql(
+            "select extension_name, extension_owner, database_name from collection_postgres_extensions"
+        ).fetchall()
+
     @dataclass
     class ExtensionInfo:
         name: str
         owner: str
 
     def _check_extensions(self) -> None:
-        result = self.local_db.sql(
-            "select extension_name, extension_owner, database_name from collection_postgres_extensions"
-        ).fetchall()
+        installed_extensions = self._get_installed_extensions()
         installed_db_extensions: defaultdict[str, list[PostgresReadinessCheckExecutor.ExtensionInfo]] = defaultdict(
             list
         )
-        for row in result:
+        for row in installed_extensions:
             ext_name = row[0]
             ext_owner = row[1]
             db_name = row[2]
