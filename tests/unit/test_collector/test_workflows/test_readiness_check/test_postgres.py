@@ -69,7 +69,7 @@ def test_collation(collations, expected_severity):
             "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._get_collation",
             return_value=collations,
         ),
-        get_duckdb_connection(Path("tmp/tmp")) as local_db,
+        get_duckdb_connection(Path("tmp/")) as local_db,
     ):
         executor = _dummy_postgres_readiness_executor(local_db)
         _create_readiness_check_summary_table(local_db)
@@ -95,13 +95,63 @@ def test_rds_logical_replication(rds_logical_replication, expected_severity):
             "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._get_rds_logical_replication",
             return_value=rds_logical_replication,
         ),
-        get_duckdb_connection(Path("tmp/tmp")) as local_db,
+        get_duckdb_connection(Path("tmp/")) as local_db,
     ):
         executor = _dummy_postgres_readiness_executor(local_db)
         _create_readiness_check_summary_table(local_db)
         executor._check_rds_logical_replication()
         rows = local_db.sql(
             "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'RDS_LOGICAL_REPLICATION'",
+        ).fetchall()
+        for row in rows:
+            assert row[0] == expected_severity
+
+
+@pytest.mark.parametrize(
+    ("installed_extensions, expected_severity"),
+    argvalues=[
+        [[["unsupported_ext", "postgres", "postgres"]], "WARNING"],
+        [[["unsupported_ext", "alloydbadmin", "postgres"], ["pgAudit", "postgres", "postgres"]], "PASS"],
+    ],
+)
+def test_unsupported_extensions(installed_extensions, expected_severity):
+    with (
+        patch(
+            "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._get_installed_extensions",
+            return_value=installed_extensions,
+        ),
+        get_duckdb_connection(Path("tmp/")) as local_db,
+    ):
+        executor = _dummy_postgres_readiness_executor(local_db)
+        _create_readiness_check_summary_table(local_db)
+        executor._check_extensions()
+        rows = local_db.sql(
+            "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'UNSUPPORTED_EXTENSIONS_NOT_MIGRATED'",
+        ).fetchall()
+        for row in rows:
+            assert row[0] == expected_severity
+
+
+@pytest.mark.parametrize(
+    ("installed_extensions, expected_severity"),
+    argvalues=[
+        [[["pg_cron", "postgres", "postgres"]], "WARNING"],
+        [[["pgAudit", "postgres", "postgres"]], "PASS"],
+    ],
+)
+def test_unmigrated_extensions(installed_extensions, expected_severity):
+    with (
+        patch(
+            "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._get_installed_extensions",
+            return_value=installed_extensions,
+        ),
+        get_duckdb_connection(Path("tmp/")) as local_db,
+    ):
+        executor = _dummy_postgres_readiness_executor(local_db)
+        _create_readiness_check_summary_table(local_db)
+        executor._check_extensions()
+        rows = local_db.sql(
+            "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'EXTENSIONS_NOT_MIGRATED'",
         ).fetchall()
         for row in rows:
             assert row[0] == expected_severity
@@ -117,7 +167,7 @@ def test_rds_db_version(database_version, expected_severity):
             "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._is_rds",
             return_value=True,
         ),
-        get_duckdb_connection(Path("tmp/tmp")) as local_db,
+        get_duckdb_connection(Path("tmp/")) as local_db,
     ):
         executor = _dummy_postgres_readiness_executor(local_db, database_version)
         _create_readiness_check_summary_table(local_db)
