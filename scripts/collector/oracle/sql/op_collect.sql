@@ -40,6 +40,11 @@ prompt
 
 prompt Initializing Database Migration Assessment Collector...
 prompt
+BEGIN
+ DBMS_SESSION.set_identifier('DMA COLLECTOR');
+END;
+/
+
 set termout &TERMOUTOFF
 @@op_collect_init.sql
 set termout on
