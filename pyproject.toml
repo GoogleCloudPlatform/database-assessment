@@ -125,14 +125,13 @@ extra-dependencies = [
     "pytest",
     "pytest-cov",
     "pytest-mock",
-    "pytest-vcr",
     "pytest-sugar",
     "pytest-click",
     "pytest-xdist",
     "pytest-databases<=0.10.0",
     # lint
     "mypy",
-    "ruff",
+    "ruff<0.10.0",
     "pylint",
     "pre-commit",
     "types-click",
@@ -222,9 +221,6 @@ stop-infra = "docker-compose -f tests/docker-compose.yml down --remove-orphans -
 features = ["server", "oracle", "mysql", "mssql", "postgres"]
 python = "3.9"
 template = "default"
-extra-dependencies = [
-    "mypy", "ruff"
-]
 type = "virtual"
 
 [tool.hatch.envs.lint.scripts]
