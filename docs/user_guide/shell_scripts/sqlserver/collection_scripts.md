@@ -122,7 +122,7 @@ In order to begin running the Database Migration Assessment Collection process, 
 
 ## [Execution](#execution)
 
-#### [Perfmon Requirements](#perfmon-requirements)
+### [Perfmon Requirements](#perfmon-requirements)
 
 (Optional)
 
@@ -216,7 +216,7 @@ The script will create a permon data set that will collect the above metrics at 
 
 <br/>
 
-#### [Perform Collection](#perform-collection)
+### [Perform Collection](#perform-collection)
 
 - When the perfmon dataset completes or if you would like to execute the collection sooner, execute the following command from a command prompt session in "Administrator Mode" on the server you would like to collect data on and return the subsequent .zip file to Google.
 - The collection can also be run for all user databases or a single user database. See the below examples for each scenario
@@ -276,7 +276,7 @@ To Execute the Collection:
           3. When using a port to connect only provide the local host name
           4. The manualUniqueId can be used to give the collection a unique identifier specified by the customer
 
-##### [CollectVMSpecs](#collectvmspecs)
+#### [CollectVMSpecs](#collectvmspecs)
 
 To provide rightsizing information the script attempts to connect to the host VM using the current users credentials and collect hardware specs (number of CPUs/amount of memory).
 
