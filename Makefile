@@ -228,7 +228,7 @@ pre-release:       ## bump the version and create the release tag
 ###############
 .PHONY: doc-privs
 doc-privs:   ## Extract the list of privileges required from code and create the documentation
-	cat > docs/user_guide/oracle/permissions.md <<EOF
+	cat > docs/user_guide/shell_scripts/oracle/permissions.md <<EOF
 	# Create a user for Collection
 
 	 The collection scripts can be executed with any DBA account. Alternatively, create a new user with the minimum privileges required.
@@ -240,7 +240,7 @@ doc-privs:   ## Extract the list of privileges required from code and create the
 	The following permissions are required for the script execution:
 
 	 EOF
-	 grep "rectype_(" scripts/collector/oracle/sql/setup/grants_wrapper.sql | grep -v FUNCTION | sed "s/rectype_(//g;s/),//g;s/)//g;s/'//g;s/,/ ON /1;s/,/./g" >> docs/user_guide/oracle/permissions.md
+	 grep "rectype_(" scripts/collector/oracle/sql/setup/grants_wrapper.sql | grep -v FUNCTION | sed "s/rectype_(//g;s/),//g;s/)//g;s/'//g;s/,/ ON /1;s/,/./g" >> docs/user_guide/shell_scripts/oracle/permissions.md
 
 .PHONY: serve-docs
 serve-docs:       ## Serve HTML documentation
