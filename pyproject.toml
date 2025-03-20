@@ -231,7 +231,7 @@ fix = [
     "ruff check --fix --unsafe-fixes {args:.}",
     "typing",
     "style",                                    # feedback on what is not fixable
-    "pre-commit run --all-files",
+
 ]
 style = ["echo \"VERSION: `ruff --version`\"", "ruff check {args:.}", "ruff format --check {args:.}"]
 typing = ["echo \"VERSION: `mypy --version`\"", "mypy --install-types --non-interactive {args}"]

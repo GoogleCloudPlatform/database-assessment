@@ -63,7 +63,7 @@ def app(ctx: Context) -> None:
     "-db",
     help="The type of the database to connect to",
     default=None,
-    type=click.Choice({"mysql", "postgres", "oracle", "mssql"}),
+    type=click.Choice(["mysql", "postgres", "oracle", "mssql"]),
     required=False,
     show_default=False,
 )

@@ -22,7 +22,7 @@ class ApplicationError(Exception):
     detail: str
 
     def __init__(self, *args: Any, detail: str = "") -> None:
-        """Initialize ``AdvancedAlchemyException``.
+        """Initialize ``ApplicationError``.
 
         Args:
             *args: args are converted to :class:`str` before passing to :class:`Exception`
