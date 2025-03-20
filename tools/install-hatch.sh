@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # --- Constants ---
 BASE_URL="https://github.com/pypa/hatch/releases/latest/download"
@@ -6,8 +6,8 @@ EXTRACT_CMD="tar -xzf"
 
 # --- Handle Optional Installation Directory ---
 INSTALL_DIR="$1"  # Default: current directory
-if [[ -n "$INSTALL_DIR" ]]; then
-    if [[ ! -d "$INSTALL_DIR" ]]; then  # Check if directory exists
+if [ -n "$INSTALL_DIR" ]; then
+    if [ ! -d "$INSTALL_DIR" ]; then  # Check if directory exists
         INSTALL_DIR="$HOME/.local/bin"
         echo "Error: Invalid install directory '$INSTALL_DIR'"
         exit 1
@@ -20,14 +20,14 @@ PLATFORM=$(uname -s)
 MACHINE=$(uname -m)
 FILE_EXT="tar.gz"
 
-if [[ $PLATFORM == "Darwin" ]]; then
+if [ "$PLATFORM" = "Darwin" ]; then
     PLATFORM_NAME="apple-darwin"
-elif [[ $PLATFORM == "Linux" ]]; then
+elif [ "$PLATFORM" = "Linux" ]; then
     PLATFORM_NAME="unknown-linux-gnu"
-    if [[ $MACHINE == "aarch64" ]]; then
+    if [ "$MACHINE" = "aarch64" ]; then
         MACHINE="aarch64"
     fi
-elif [[ $PLATFORM == "Windows" ]]; then
+elif [ "$PLATFORM" = "Windows" ]; then
     PLATFORM_NAME="pc-windows-msvc"
     FILE_EXT="zip"
     EXTRACT_CMD="unzip"
@@ -49,7 +49,7 @@ $EXTRACT_CMD "$FILENAME" -C "$INSTALL_DIR"  # Extract to install directory
 rm "$FILENAME"  # Remove archive
 
 HATCH_BINARY="$INSTALL_DIR/hatch"  # Path to the extracted binary
-if [[ -x "$HATCH_BINARY" ]]; then
+if [ -x "$HATCH_BINARY" ]; then
     echo "Hatch binary successfully installed at '$HATCH_BINARY'"
 else
     echo "Error: Hatch binary not found or not executable."
