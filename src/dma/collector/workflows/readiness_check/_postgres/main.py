@@ -49,6 +49,8 @@ PGLOGICAL_INSTALLED: Final = "PGLOGICAL_INSTALLED"
 PRIVILEGES: Final = "PRIVILEGES"
 PGLOGICAL_NODE_ALREADY_EXISTS: Final = "PGLOGICAL_NODE_ALREADY_EXISTS"
 TABLES_WITH_NO_PK: Final = "TABLES_WITH_NO_PK"
+UNSUPPORTED_TABLES_WITH_REPLICA_IDENTITY: Final = "UNSUPPORTED_TABLES_WITH_REPLICA_IDENTITY"
+REPLICATION_ROLE: Final = "REPLICATION_ROLE"
 CLOUDSQL: Final = "CLOUDSQL"
 ALLOYDB: Final = "ALLOYDB"
 CloudSQL_SUPER_ROLE: Final = "cloudsqladmin"
@@ -126,21 +128,23 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         self._check_max_replication_slots()
         self._check_max_wal_senders_replication_slots()
         self._check_max_worker_processes()
-        self._check_extensions()
         self._check_fdw()
 
         # Per DB Checks.
+        self._check_extensions()
+        self._check_replication_role()
         # db_check_results stores the verification results for all DBs.
         for config in self.rule_config:
             db_check_results: dict[str, dict[str, list]] = {}
-            for db in self.get_all_dbs():
+            for db in sorted(self.get_all_dbs()):
                 is_pglogical_installed = self._check_pglogical_installed(db, db_check_results)
                 if is_pglogical_installed:
                     privilege_check_passed = self._check_privileges(db, db_check_results)
                     if not privilege_check_passed:
-                        break
+                        continue
                     self._check_if_node_exists(db, db_check_results)
                 self._check_tables_without_pk(db, db_check_results)
+                self._check_tables_replica_identity(db, db_check_results)
             self._save_results(config.db_variant, db_check_results)
 
     def _save_results(self, db_variant: PostgresVariants, db_check_results: dict[str, dict[str, list]]) -> None:
@@ -157,9 +161,9 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
                 if rule == PRIVILEGES:
                     if severity == ACTION_REQUIRED:
-                        output_str = ";".join(result[ACTION_REQUIRED])
+                        output_str = ";\n\n".join(result[ACTION_REQUIRED])
                     elif severity == PASS:
-                        output_str = ";".join(result[PASS])
+                        output_str = ";\n".join(result[PASS])
                     else:
                         continue
 
@@ -176,6 +180,12 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 if rule == TABLES_WITH_NO_PK:
                     if severity == WARNING:
                         output_str = f"Some tables have limited support. Tables without primary keys were identified and only INSERT statements will be replicated for these tables: {';'.join(result[WARNING])}"
+                    else:
+                        continue
+
+                if rule == UNSUPPORTED_TABLES_WITH_REPLICA_IDENTITY:
+                    if severity == ACTION_REQUIRED:
+                        output_str = f"Source has table(s) with both primary key and replica identity FULL or NOTHING. Please remove replica identity or change it to DEFAULT to migrate: {';'.join(result[ACTION_REQUIRED])}"
                     else:
                         continue
 
@@ -224,6 +234,17 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         init_results_dict(db_check_results, rule_code)
         if tables:
             db_check_results[rule_code][WARNING].append(f"In database {db_name}, {tables} don't have primary keys")
+
+    def _check_tables_replica_identity(self, db_name: str, db_check_results: dict[str, dict[str, list]]) -> None:
+        rule_code = UNSUPPORTED_TABLES_WITH_REPLICA_IDENTITY
+        result = self.local_db.sql(
+            "select CONCAT(nspname, '.', relname) from collection_postgres_tables_with_primary_key_replica_identity where database_name = $db_name",
+            params={"db_name": db_name},
+        ).fetchall()
+        tables = ", ".join(row[0] for row in result)
+        init_results_dict(db_check_results, rule_code)
+        if tables:
+            db_check_results[rule_code][ACTION_REQUIRED].append(f"{tables} in database {db_name}")
 
     def _check_version(self) -> None:
         rule_code = "DATABASE_VERSION"
@@ -356,6 +377,29 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         ).fetchall()
         errors.extend(f"user doesn't have SELECT privilege on sequence {row[0]}.{row[1]}" for row in rows)
         return errors
+
+    def _check_replication_role(self) -> None:
+        if self._is_rds():
+            return
+        rule_code = REPLICATION_ROLE
+        result = self.local_db.sql("SELECT rolreplication FROM collection_postgres_replication_role").fetchone()
+        if result is None:
+            return
+        for c in self.rule_config:
+            if result[0] == "false":
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    ACTION_REQUIRED,
+                    "user does not have rolreplication role.",
+                )
+            else:
+                self.save_rule_result(
+                    c.db_variant,
+                    rule_code,
+                    PASS,
+                    "user has rolreplication role.",
+                )
 
     def _check_privileges(self, db_name: str, db_check_results: dict[str, dict[str, list]]) -> bool:
         rule_code = PRIVILEGES

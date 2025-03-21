@@ -885,6 +885,24 @@ create or replace table collection_postgres_tables_with_no_primary_key(
     database_name VARCHAR
   );
 
+create or replace table collection_postgres_tables_with_primary_key_replica_identity(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    nspname VARCHAR,
+    relname VARCHAR,
+    database_name VARCHAR
+  );
+
+create or replace table collection_postgres_replication_role(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    rolname VARCHAR,
+    rolreplication VARCHAR,
+    database_name VARCHAR
+  );
+
 create or replace table collection_postgres_pglogical_provider_node(
     pkey VARCHAR,
     dma_source_id VARCHAR,
