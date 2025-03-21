@@ -136,7 +136,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         # db_check_results stores the verification results for all DBs.
         for config in self.rule_config:
             db_check_results: dict[str, dict[str, list]] = {}
-            for db in self.get_all_dbs():
+            for db in sorted(self.get_all_dbs()):
                 is_pglogical_installed = self._check_pglogical_installed(db, db_check_results)
                 if is_pglogical_installed:
                     privilege_check_passed = self._check_privileges(db, db_check_results)
