@@ -466,7 +466,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_max_replication_slots(self) -> None:
         rule_code = "MAX_REPLICATION_SLOTS"
-        url_link = "Refer to the [link=https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info]documentation[/link] for more info."
+        url_link = "Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
         db_count_result = self.local_db.sql(
             "select count(*) from extended_collection_postgres_all_databases"
         ).fetchone()
@@ -510,7 +510,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_max_wal_senders(self) -> None:
         rule_code = "MAX_WAL_SENDERS"
-        url_link = "Refer to the [link=https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info]documentation[/link] for more info."
+        url_link = "Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
         db_count_result = self.local_db.sql(
             "select count(*) from extended_collection_postgres_all_databases"
         ).fetchone()
@@ -573,7 +573,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_max_worker_processes(self) -> None:
         rule_code = "MAX_WORKER_PROCESSES"
-        url_link = "Refer to the [link=https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info]documentation[/link] for more info."
+        url_link = "Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
         db_count_result = self.local_db.sql(
             "select count(*) from extended_collection_postgres_all_databases"
         ).fetchone()
@@ -762,11 +762,11 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             self.console.print(count_table)
             if migration_target == ALLOYDB:
                 self.console.print(
-                    "Please refer to the [link=https://cloud.google.com/database-migration/docs/postgresql-to-alloydb/configure-source-database]Alloy DB[/link] documentation for more details."
+                    "Please refer to the Alloy DB documentation for more details: https://cloud.google.com/database-migration/docs/postgresql-to-alloydb/configure-source-database"
                 )
             if migration_target == CLOUDSQL:
                 self.console.print(
-                    "Please refer to the [link=https://cloud.google.com/database-migration/docs/postgres/configure-source-database]CloudSQL[/link] documentation for more details.",
+                    "Please refer to the CloudSQL documentation for more details: https://cloud.google.com/database-migration/docs/postgres/configure-source-database",
                     markup=True,
                 )
 

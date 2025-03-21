@@ -302,7 +302,7 @@ def test_pg_source_settings(
             assert row[0] == WARNING
             assert (
                 row[1]
-                == """`max_replication_slots` current value: 10, this might need to be increased to 11 depending on the parallelism level set for migration. Refer to the [link=https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info]documentation[/link] for more info."""
+                == """`max_replication_slots` current value: 10, this might need to be increased to 11 depending on the parallelism level set for migration. Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."""
             )
 
         rows = local_db.sql(
@@ -322,7 +322,7 @@ def test_pg_source_settings(
             assert row[0] == WARNING
             assert (
                 row[1]
-                == "`max_worker_processes` current value: 8, this might need to be increased to 11 depending on the parallelism level set for migration. Refer to the [link=https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info]documentation[/link] for more info."
+                == "`max_worker_processes` current value: 8, this might need to be increased to 11 depending on the parallelism level set for migration. Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
             )
 
 
