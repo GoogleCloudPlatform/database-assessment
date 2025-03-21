@@ -66,6 +66,8 @@ def test_pglogical(
             f"{url.username}",
             "--password",
             f"{url.password}",
+            "--export",
+            "tmp/",
         ],
     )
     assert result.exit_code == 0
@@ -113,6 +115,8 @@ def test_privileges_success(
             f"{test_user}",
             "--password",
             f"{test_passwd}",
+            "--export",
+            "tmp/",
         ],
     )
     # cleanup.
@@ -155,6 +159,8 @@ def test_privileges_failure(
             f"{test_user}",
             "--password",
             f"{test_passwd}",
+            "--export",
+            "tmp/",
         ],
     )
 
@@ -193,6 +199,8 @@ def test_wal_level(
             f"{url.username}",
             "--password",
             f"{url.password}",
+            "--export",
+            "tmp/",
         ],
     )
     assert result.exit_code == 0
@@ -226,6 +234,8 @@ def test_pg_version(
             f"{url.username}",
             "--password",
             f"{url.password}",
+            "--export",
+            "tmp/",
         ],
     )
     assert result.exit_code == 0
@@ -271,6 +281,8 @@ def test_pg_source_settings(
             f"{url.username}",
             "--password",
             f"{url.password}",
+            "--export",
+            "tmp/",
         ],
     )
     assert result.exit_code == 0
@@ -330,6 +342,8 @@ def test_tables_without_pk(
             f"{url.username}",
             "--password",
             f"{url.password}",
+            "--export",
+            "tmp/",
         ],
     )
     assert result.exit_code == 0
