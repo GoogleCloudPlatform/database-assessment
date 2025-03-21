@@ -15,7 +15,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from textwrap import dedent
 from typing import TYPE_CHECKING, Final
 from urllib.parse import urlparse
@@ -27,6 +26,8 @@ from dma.cli.main import app
 from dma.lib.db.local import get_duckdb_connection
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from click.testing import CliRunner
     from sqlalchemy import Engine
 
@@ -45,6 +46,7 @@ PASS: Final = "PASS"
 def test_pglogical(
     sync_engine: Engine,
     runner: CliRunner,
+    tmp_path: Path,
 ) -> None:
     with sync_engine.begin() as conn:
         conn.execute(text(dedent("""create extension if not exists pglogical;""")))
@@ -67,11 +69,11 @@ def test_pglogical(
             "--password",
             f"{url.password}",
             "--export",
-            "tmp/",
+            str(tmp_path),
         ],
     )
     assert result.exit_code == 0
-    with get_duckdb_connection(Path("tmp/")) as local_db:
+    with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
         rows = local_db.sql(
             "select severity from readiness_check_summary WHERE rule_code = 'PGLOGICAL_INSTALLED'",
         ).fetchall()
@@ -82,6 +84,7 @@ def test_pglogical(
 def test_privileges_success(
     sync_engine: Engine,
     runner: CliRunner,
+    tmp_path: Path,
 ) -> None:
     test_user = "testuser"
     test_passwd = "testpasswd"
@@ -98,6 +101,7 @@ def test_privileges_success(
         for cmd in grant_privilege_cmds:
             conn.execute(text(cmd))
     url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+
     result = runner.invoke(
         app,
         [
@@ -116,14 +120,14 @@ def test_privileges_success(
             "--password",
             f"{test_passwd}",
             "--export",
-            "tmp/",
+            str(tmp_path),
         ],
     )
     # cleanup.
     with sync_engine.begin() as conn:
         conn.execute(text("DROP OWNED BY testuser; DROP USER testuser;"))
     assert result.exit_code == 0
-    with get_duckdb_connection(Path("tmp/")) as local_db:
+    with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
         rows = local_db.sql(
             "select severity, info from readiness_check_summary where rule_code='PRIVILEGES'",
         ).fetchall()
@@ -134,6 +138,7 @@ def test_privileges_success(
 def test_privileges_failure(
     sync_engine: Engine,
     runner: CliRunner,
+    tmp_path: Path,
 ) -> None:
     test_user = "testuser"
     test_passwd = "testpasswd"
@@ -160,7 +165,7 @@ def test_privileges_failure(
             "--password",
             f"{test_passwd}",
             "--export",
-            "tmp/",
+            str(tmp_path),
         ],
     )
 
@@ -169,7 +174,7 @@ def test_privileges_failure(
         conn.execute(text("DROP OWNED BY testuser; DROP USER testuser;"))
 
     assert result.exit_code == 0
-    with get_duckdb_connection(Path("tmp/")) as local_db:
+    with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
         rows = local_db.sql(
             "select severity, info from readiness_check_summary where rule_code='PRIVILEGES'",
         ).fetchall()
@@ -180,6 +185,7 @@ def test_privileges_failure(
 def test_wal_level(
     sync_engine: Engine,
     runner: CliRunner,
+    tmp_path: Path,
 ) -> None:
     url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
     result = runner.invoke(
@@ -200,11 +206,11 @@ def test_wal_level(
             "--password",
             f"{url.password}",
             "--export",
-            "tmp/",
+            str(tmp_path),
         ],
     )
     assert result.exit_code == 0
-    with get_duckdb_connection(Path("tmp/")) as local_db:
+    with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
         rows = local_db.sql(
             "select severity from readiness_check_summary WHERE rule_code = 'WAL_LEVEL'",
         ).fetchall()
@@ -215,6 +221,7 @@ def test_wal_level(
 def test_pg_version(
     sync_engine: Engine,
     runner: CliRunner,
+    tmp_path: Path,
 ):
     url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
     result = runner.invoke(
@@ -235,7 +242,7 @@ def test_pg_version(
             "--password",
             f"{url.password}",
             "--export",
-            "tmp/",
+            str(tmp_path),
         ],
     )
     assert result.exit_code == 0
@@ -246,7 +253,7 @@ def test_pg_version(
         if pg_version:
             pg_major_version = int(int(pg_version[0]) / 10000)
 
-    with get_duckdb_connection(Path("tmp/")) as local_db:
+    with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
         rows = local_db.sql(
             "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'DATABASE_VERSION'",
         ).fetchall()
@@ -262,6 +269,7 @@ def test_pg_version(
 def test_pg_source_settings(
     sync_engine: Engine,
     runner: CliRunner,
+    tmp_path: Path,
 ):
     url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
     result = runner.invoke(
@@ -282,11 +290,11 @@ def test_pg_source_settings(
             "--password",
             f"{url.password}",
             "--export",
-            "tmp/",
+            str(tmp_path),
         ],
     )
     assert result.exit_code == 0
-    with get_duckdb_connection(Path("tmp/")) as local_db:
+    with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
         rows = local_db.sql(
             "select severity, info from readiness_check_summary WHERE rule_code = 'MAX_REPLICATION_SLOTS'",
         ).fetchall()
@@ -294,7 +302,7 @@ def test_pg_source_settings(
             assert row[0] == WARNING
             assert (
                 row[1]
-                == """`max_replication_slots` current value: 10, this might need to be increased to 11 depending on the parallelism level set for migration. Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."""
+                == """`max_replication_slots` current value: 10, this might need to be increased to 11 depending on the parallelism level set for migration. Refer to the [link=https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info]documentation[/link] for more info."""
             )
 
         rows = local_db.sql(
@@ -314,13 +322,14 @@ def test_pg_source_settings(
             assert row[0] == WARNING
             assert (
                 row[1]
-                == "`max_worker_processes` current value: 8, this might need to be increased to 11 depending on the parallelism level set for migration. Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
+                == "`max_worker_processes` current value: 8, this might need to be increased to 11 depending on the parallelism level set for migration. Refer to the [link=https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info]documentation[/link] for more info."
             )
 
 
 def test_tables_without_pk(
     sync_engine: Engine,
     runner: CliRunner,
+    tmp_path: Path,
 ):
     with sync_engine.begin() as conn:
         conn.execute(text("CREATE TABLE test_table (id INTEGER, data text);"))
@@ -343,11 +352,11 @@ def test_tables_without_pk(
             "--password",
             f"{url.password}",
             "--export",
-            "tmp/",
+            str(tmp_path),
         ],
     )
     assert result.exit_code == 0
-    with get_duckdb_connection(Path("tmp/")) as local_db:
+    with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
         rows = local_db.sql(
             "select severity, info from readiness_check_summary WHERE rule_code = 'TABLES_WITH_NO_PK'",
         ).fetchall()

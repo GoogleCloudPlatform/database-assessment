@@ -25,13 +25,17 @@ if TYPE_CHECKING:
 
 
 @contextmanager
-def get_duckdb_connection(working_path: Path | None = None) -> Iterator[duckdb.DuckDBPyConnection]:
+def get_duckdb_connection(
+    working_path: Path | None = None, export_path: Path | None = None, database: str | None = None
+) -> Iterator[duckdb.DuckDBPyConnection]:
     """Yield a new duckdb connections and automatically manages resource cleanup."""
+
+    if database is None and export_path is not None:
+        database = f"{Path(export_path / 'assessment.db').absolute()!s}"
+    elif database is None:
+        database = ":memory:"
     if working_path is None:
         working_path = Path(tempfile.gettempdir())
-        database = ":memory:"
-    else:
-        database = f"{working_path!s}/assessment.db"
     config = {
         "memory_limit": "1GB",
         "temp_directory": str(working_path),

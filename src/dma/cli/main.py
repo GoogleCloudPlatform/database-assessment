@@ -163,10 +163,11 @@ def _collect_data(
     database: str,
     collection_identifier: str | None,
     working_path: Path | None = None,
+    export_path: Path | None = None,
+    export_delimiter: str = "|",
 ) -> None:
-    working_path = working_path or Path("tmp/")
     _execution_id = f"{src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
-    with get_duckdb_connection(working_path) as local_db:
+    with get_duckdb_connection(working_path=working_path, export_path=export_path) as local_db:
         canonical_query_manager = next(provide_canonical_queries(local_db=local_db, working_path=working_path))
         collection_extractor = CollectionExtractor(
             local_db=local_db,
@@ -177,7 +178,9 @@ def _collect_data(
             collection_identifier=collection_identifier,
         )
         collection_extractor.execute()
-        collection_extractor.dump_database(working_path)
+        if collection_extractor is not None and export_path is not None:
+            collection_extractor.dump_database(export_path=export_path, delimiter=export_delimiter)
+        console.rule("Assessment complete.", align="left")
 
 
 @app.command(
@@ -259,8 +262,17 @@ def _collect_data(
 )
 @click.option(
     "--export",
-    "-wp",
+    "-e",
     help="Path to export the results.",
+    default=None,
+    type=click.Path(),
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--working-path",
+    "-wp",
+    help="Path to store the temporary artifacts during assessment.",
     default=None,
     type=click.Path(),
     required=False,
@@ -276,6 +288,7 @@ def readiness_assessment(
     database: str | None = None,
     collection_identifier: str | None = None,
     export: str | None = None,
+    working_path: str | None = None,
 ) -> None:
     """Process a collection of advisor extracts."""
     print_app_info()
@@ -303,6 +316,7 @@ def readiness_assessment(
             ),
             database=database,
             collection_identifier=collection_identifier,
+            working_path=Path(working_path) if working_path else None,
             export_path=Path(export) if export else None,
         )
     else:
@@ -319,7 +333,7 @@ def _readiness_check(
     export_delimiter: str = "|",
 ) -> None:
     _execution_id = f"{src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
-    with get_duckdb_connection(working_path) as local_db:
+    with get_duckdb_connection(working_path=working_path, export_path=export_path) as local_db:
         workflow = ReadinessCheck(
             local_db=local_db,
             src_info=src_info,

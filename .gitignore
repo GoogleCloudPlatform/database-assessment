@@ -180,7 +180,8 @@ duck.db
 local.duckdb
 node_modules
 opdb__*
-
+assessment.db
+assessment.db.wal*
 src/dma/static
 src/dma/templates/*
 .astro
