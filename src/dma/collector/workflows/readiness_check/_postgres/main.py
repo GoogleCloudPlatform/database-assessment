@@ -141,7 +141,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 if is_pglogical_installed:
                     privilege_check_passed = self._check_privileges(db, db_check_results)
                     if not privilege_check_passed:
-                        break
+                        continue
                     self._check_if_node_exists(db, db_check_results)
                 self._check_tables_without_pk(db, db_check_results)
                 self._check_tables_replica_identity(db, db_check_results)
@@ -161,9 +161,9 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
                 if rule == PRIVILEGES:
                     if severity == ACTION_REQUIRED:
-                        output_str = ";".join(result[ACTION_REQUIRED])
+                        output_str = ";\n\n".join(result[ACTION_REQUIRED])
                     elif severity == PASS:
-                        output_str = ";".join(result[PASS])
+                        output_str = ";\n".join(result[PASS])
                     else:
                         continue
 
