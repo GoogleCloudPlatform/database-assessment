@@ -137,3 +137,16 @@ select :PKEY as pkey,
   src.relname as rel_name,
   current_database() as database_name
 from src;
+
+-- name: collection-postgres-replication-role
+with src as (
+  SELECT rolname, rolreplication FROM pg_catalog.pg_roles
+  WHERE rolname IN (SELECT CURRENT_USER)
+)
+select :PKEY as pkey,
+  :DMA_SOURCE_ID as dma_source_id,
+  :DMA_MANUAL_ID as dma_manual_id,
+  src.rolname,
+  src.rolreplication,
+  current_database() as database_name
+from src;

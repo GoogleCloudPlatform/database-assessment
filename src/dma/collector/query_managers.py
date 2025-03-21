@@ -284,6 +284,7 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             "collection_postgres_schema_objects",
             "collection_postgres_settings",
             "collection_postgres_source_details",
+            "collection_postgres_replication_role",
         }
 
     def get_per_db_collection_queries(self) -> set[str]:
@@ -301,6 +302,7 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             "collection_postgres_user_views_without_privilege",
             "collection_postgres_user_sequences_without_privilege",
             "collection_postgres_tables_with_no_primary_key",
+            "collection_postgres_tables_with_primary_key_replica_identity",
         }
 
     def get_collection_filenames(self) -> dict[str, str]:
@@ -329,6 +331,8 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
             "collection_postgres_source_details": "postgres_source_details",
             "collection_postgres_pglogical_provider_node": "postgres_pglogical_details",
             "collection_postgres_tables_with_no_primary_key": "postgres_table_details",
+            "collection_postgres_tables_with_primary_key_replica_identity": "postgres_table_details",
+            "collection_postgres_replication_role": "collection_privileges",
         }
 
 
