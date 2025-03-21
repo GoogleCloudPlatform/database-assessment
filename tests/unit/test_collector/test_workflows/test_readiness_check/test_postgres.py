@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -69,7 +68,7 @@ def test_collation(collations, expected_severity):
             "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._get_collation",
             return_value=collations,
         ),
-        get_duckdb_connection(Path("tmp/")) as local_db,
+        get_duckdb_connection() as local_db,
     ):
         executor = _dummy_postgres_readiness_executor(local_db)
         _create_readiness_check_summary_table(local_db)
@@ -95,7 +94,7 @@ def test_rds_logical_replication(rds_logical_replication, expected_severity):
             "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._get_rds_logical_replication",
             return_value=rds_logical_replication,
         ),
-        get_duckdb_connection(Path("tmp/")) as local_db,
+        get_duckdb_connection() as local_db,
     ):
         executor = _dummy_postgres_readiness_executor(local_db)
         _create_readiness_check_summary_table(local_db)
@@ -120,7 +119,7 @@ def test_unsupported_extensions(installed_extensions, expected_severity):
             "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._get_installed_extensions",
             return_value=installed_extensions,
         ),
-        get_duckdb_connection(Path("tmp/")) as local_db,
+        get_duckdb_connection() as local_db,
     ):
         executor = _dummy_postgres_readiness_executor(local_db)
         _create_readiness_check_summary_table(local_db)
@@ -145,7 +144,7 @@ def test_unmigrated_extensions(installed_extensions, expected_severity):
             "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._get_installed_extensions",
             return_value=installed_extensions,
         ),
-        get_duckdb_connection(Path("tmp/")) as local_db,
+        get_duckdb_connection() as local_db,
     ):
         executor = _dummy_postgres_readiness_executor(local_db)
         _create_readiness_check_summary_table(local_db)
@@ -167,7 +166,7 @@ def test_rds_db_version(database_version, expected_severity):
             "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._is_rds",
             return_value=True,
         ),
-        get_duckdb_connection(Path("tmp/")) as local_db,
+        get_duckdb_connection() as local_db,
     ):
         executor = _dummy_postgres_readiness_executor(local_db, database_version)
         _create_readiness_check_summary_table(local_db)

@@ -92,11 +92,13 @@ def provide_collection_query_manager(
 
 
 def provide_canonical_queries(
-    local_db: duckdb.DuckDBPyConnection | None = None, working_path: Path | None = None
+    local_db: duckdb.DuckDBPyConnection | None = None,
+    working_path: Path | None = None,
+    export_path: Path | None = None,
 ) -> Generator[CanonicalQueryManager, None, None]:
     """Construct repository and service objects for the request."""
     if local_db:
         yield CanonicalQueryManager(connection=local_db)
     else:
-        with get_duckdb_connection(working_path=working_path) as db_connection:
+        with get_duckdb_connection(working_path=working_path, export_path=export_path) as db_connection:
             yield CanonicalQueryManager(connection=db_connection)

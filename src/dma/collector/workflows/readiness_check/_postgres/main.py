@@ -762,11 +762,12 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             self.console.print(count_table)
             if migration_target == ALLOYDB:
                 self.console.print(
-                    "Please refer to https://cloud.google.com/database-migration/docs/postgresql-to-alloydb/configure-source-database for more details."
+                    "Please refer to the Alloy DB documentation for more details: https://cloud.google.com/database-migration/docs/postgresql-to-alloydb/configure-source-database"
                 )
             if migration_target == CLOUDSQL:
                 self.console.print(
-                    "Please refer to https://cloud.google.com/database-migration/docs/postgres/configure-source-database for more details."
+                    "Please refer to the CloudSQL documentation for more details: https://cloud.google.com/database-migration/docs/postgres/configure-source-database",
+                    markup=True,
                 )
 
         for v in db_variants:

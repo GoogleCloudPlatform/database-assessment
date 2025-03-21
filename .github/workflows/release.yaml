@@ -110,10 +110,6 @@ jobs:
         - target: x86_64-pc-windows-msvc
           os: windows-latest
           release_suffix: x86_64-windows
-        # - target: i686-pc-windows-msvc
-        #   os: windows-latest
-        #   release_suffix: i686-windows
-        # macOS
         - target: aarch64-apple-darwin
           os: macos-latest
           release_suffix: aarch64-osx
@@ -128,10 +124,10 @@ jobs:
       PYAPP_VERSION: v0.27.0
       PYAPP_PYTHON_VERSION: "3.12"
       PYAPP_PROJECT_FEATURES: oracle,postgres,mssql,mysql,server
-      PYAPP_DISTRIBUTION_EMBED: "1"
-      PYAPP_UV_ENABLED: "1"
+      PYAPP_DISTRIBUTION_EMBED: "true"
+      PYAPP_UV_ENABLED: "true"
       HATCH_BUILD_LOCATION: dist
-      PYAPP_FULL_ISOLATION: "1"
+      PYAPP_FULL_ISOLATION: "true"
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
