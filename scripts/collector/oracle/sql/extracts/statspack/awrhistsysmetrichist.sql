@@ -19,28 +19,30 @@ spool &outputdir/opdb__awrhistsysmetrichist__&v_tag
 prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|METRIC_NAME|METRIC_UNIT|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|MIN_VALUE|MAX_VALUE|SUM_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsysmetric AS (
 SELECT :v_pkey AS pkey,
-       hsm.dbid,
-       hsm.instance_number,
-       TO_CHAR(dhsnap.snap_time, 'hh24')          hour,
-       hsm.name as metric_name,
+       dbid,
+       instance_number,
+       TO_CHAR(snap_time, 'hh24')          hour,
+       name as metric_name,
        null as metric_unit,
-       ROUND(AVG(hsm.delta_value))                           avg_value,
-       ROUND(STATS_MODE(hsm.delta_value))                    mode_value,
-       ROUND(MEDIAN(hsm.delta_value))                        median_value,
-       ROUND(MIN(hsm.delta_value))                           min_value,
-       ROUND(MAX(hsm.delta_value))                           max_value,
-       ROUND(SUM(hsm.delta_value))                           sum_value,
+       ROUND(AVG(delta_value))                           avg_value,
+       ROUND(STATS_MODE(delta_value))                    mode_value,
+       ROUND(MEDIAN(delta_value))                        median_value,
+       ROUND(MIN(delta_value))                           min_value,
+       ROUND(MAX(delta_value))                           max_value,
+       ROUND(SUM(delta_value))                           sum_value,
        ROUND(PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY hsm.delta_value DESC)) AS "PERC50",
+         within GROUP (ORDER BY delta_value DESC)) AS "PERC50",
        ROUND(PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY hsm.delta_value DESC)) AS "PERC75",
+         within GROUP (ORDER BY delta_value DESC)) AS "PERC75",
        ROUND(PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY hsm.delta_value DESC)) AS "PERC90",
+         within GROUP (ORDER BY delta_value DESC)) AS "PERC90",
        ROUND(PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY hsm.delta_value DESC)) AS "PERC95",
+         within GROUP (ORDER BY delta_value DESC)) AS "PERC95",
        ROUND(PERCENTILE_CONT(0)
-         within GROUP (ORDER BY hsm.delta_value DESC)) AS "PERC100"
-FROM   (
+         within GROUP (ORDER BY delta_value DESC)) AS "PERC100"
+FROM
+( SELECT hsm.*, dhsnap.snap_time, dhsnap.startup_time, dhsnap.lag_startup_time
+  FROM (   (
         SELECT s.snap_id, s.dbid, s.instance_number, s.name, s.value,
                NVL(
                    DECODE(
@@ -50,25 +52,28 @@ FROM   (
                         0),
                  0) AS delta_value
            FROM perfstat.stats$sysstat s ) hsm
-       INNER JOIN stats$snapshot dhsnap
+       INNER JOIN ( SELECT dbid, instance_number, snap_id, snap_time, startup_time, lag(startup_time) OVER (PARTITION BY dbid, instance_number ORDER BY snap_time) AS lag_startup_time
+                    FROM stats$snapshot
+                    WHERE snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
+                    AND dbid = &&v_statsDBID
+               ) dhsnap
                ON hsm.snap_id = dhsnap.snap_id
                   AND hsm.instance_number = dhsnap.instance_number
-                  AND hsm.dbid = dhsnap.dbid
-WHERE  dhsnap.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-AND hsm.dbid = &&v_dbid
+                  AND hsm.dbid = dhsnap.dbid)
+WHERE startup_time = lag_startup_time)
 GROUP  BY :v_pkey,
-          hsm.dbid,
-          hsm.instance_number,
-          TO_CHAR(dhsnap.snap_time, 'hh24'),
-          hsm.name
-ORDER  BY hsm.dbid,
-          hsm.instance_number,
-          hsm.name,
-          TO_CHAR(dhsnap.snap_time, 'hh24'))
+          dbid,
+          instance_number,
+          TO_CHAR(snap_time, 'hh24'),
+          name
+ORDER  BY dbid,
+          instance_number,
+          name,
+          TO_CHAR(snap_time, 'hh24'))
 SELECT pkey , dbid , instance_number , hour , metric_name ,
        metric_unit , avg_value , mode_value , median_value , min_value , max_value ,
-	   sum_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100,
-	       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+        sum_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100,
+            :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vsysmetric;
 spool off
 COLUMN HOUR CLEAR
