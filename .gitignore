@@ -189,3 +189,6 @@ src/dma/templates/*
 .npmrc
 # vscode
 # .vscode
+
+scripts/collector/mysql/output/
+scripts/collector/postgres/output/
