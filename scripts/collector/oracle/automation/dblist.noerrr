@@ -1,0 +1,29 @@
+#SYS,USER,DB
+# db2
+sys/captain,WP/wp,@//192.168.1.174:13012/o12nc,STATSPACK,7
+sys/captain,dma_noprivs/dma,@//192.168.1.174:13012/o12nc,STATSPACK,7
+# RAC194 RAC21
+sys/captain,C##WP/wp,@//192.168.1.174:12142/o19c.wpuziewicz.com,STATSPACK,7
+# db2
+sys/captain,WP3/wp,@//192.168.1.174:13013/o11wp,STATSPACK,7
+#sys/captain,wp/wp#foo&1,@//192.168.1.174:13012/o11w,STATSPACK,7
+# RAC194 RAC21
+sys/captain42=,C##WP3/wp,@//192.168.1.174:12141/ousprd.wpuziewicz.com,STATSPACK,7
+# db2
+sys/captain,C##WP/wp3,@//192.168.1.174:13012/o12c,STATSPACK,7
+# RAC194 RAC21
+#sys/captain,WP/wp,@//192.168.1.174:12141/o1211a,STATSPACK,7
+# RAC194 RAC21
+#sys/captain,C##WP/wp,@//192.168.1.174:12141/o1211cdb,STATSPACK,7
+# ora10
+sys/captain,WP/wp,@//192.168.1.174:12343/orcl10,STATSPACK,7
+# ora10
+sys/captain,WP/wp,@//192.168.1.174:12343/orcl111,STATSPACK,7
+# apps.example.com
+sys/Kaptain42=,C##WP/wp,@//192.168.1.174:12244/EBSCDB,STATSPACK,7
+# NA
+#sys/captain,error/error,@//no.such.database:1521/orc,STATSPACK,7
+# ora9i /cent39   - Unable to connect with modern sqlplus
+#sys/captain,WP/wp,@//192.168.1.174:12246/edb920.enkitec.com
+# edb817 / cent21 - Unable to connect with modern sqlplus
+# sys/captain,WP/wp,@//192.168.1.174:12245/edb817
