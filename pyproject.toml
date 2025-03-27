@@ -64,6 +64,7 @@ dependencies = [
     "typing-extensions>=4.0.0",
     "msgspec",
     "greenlet",
+    "anyio"
 ]
 
 [project.urls]

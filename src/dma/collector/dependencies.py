@@ -15,14 +15,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from dma.collector.query_managers import (
-    CanonicalQueryManager,
-    CollectionQueryManager,
-    MySQLCollectionQueryManager,
-    OracleCollectionQueryManager,
-    PostgresCollectionQueryManager,
-    SQLServerCollectionQueryManager,
-)
+from dma.collector.query_managers import CanonicalQueryManager
 from dma.lib.db.local import get_duckdb_connection
 from dma.lib.exceptions import ApplicationError
 
@@ -32,6 +25,8 @@ if TYPE_CHECKING:
 
     import duckdb
     from sqlalchemy.orm import Session
+
+    from dma.collector.query_managers import CollectionQueryManager
 
 
 def provide_collection_query_manager(
@@ -57,6 +52,8 @@ def provide_collection_query_manager(
     if rdbms_type == "postgresql":
         from psycopg.rows import dict_row  # noqa: PLC0415
 
+        from dma.collector.query_managers import PostgresCollectionQueryManager  # noqa: PLC0415
+
         raw_connection.driver_connection.row_factory = dict_row
         query_manager: CollectionQueryManager = PostgresCollectionQueryManager(
             connection=raw_connection.driver_connection,
@@ -65,6 +62,8 @@ def provide_collection_query_manager(
             execution_id=execution_id,
         )
     elif rdbms_type == "mysql":
+        from dma.collector.query_managers import MySQLCollectionQueryManager  # noqa: PLC0415
+
         query_manager = MySQLCollectionQueryManager(
             connection=raw_connection.driver_connection,
             manual_id=manual_id,
@@ -72,6 +71,8 @@ def provide_collection_query_manager(
             execution_id=execution_id,
         )
     elif rdbms_type == "oracle":
+        from dma.collector.query_managers import OracleCollectionQueryManager  # noqa: PLC0415
+
         query_manager = OracleCollectionQueryManager(
             connection=raw_connection.driver_connection,
             manual_id=manual_id,
@@ -79,6 +80,8 @@ def provide_collection_query_manager(
             execution_id=execution_id,
         )
     elif rdbms_type == "mssql":
+        from dma.collector.query_managers import SQLServerCollectionQueryManager  # noqa: PLC0415
+
         query_manager = SQLServerCollectionQueryManager(
             connection=raw_connection.driver_connection,
             manual_id=manual_id,
