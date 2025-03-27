@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from duckdb import DuckDBPyConnection
     from rich.console import Console
 
-    from dma.collector.query_managers import CanonicalQueryManager, CollectionQueryManager
+    from dma.collector.query_managers.base import CanonicalQueryManager, CollectionQueryManager
 
 
 class CollectionExtractor(BaseWorkflow):
