@@ -13,18 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-exec dbms_application_info.set_action('cpucoresusage');
-spool &outputdir./opdb__cpucoresusage__&s_tag.
-prompt PKEY|DT|CPU_COUNT|CPU_CORE_COUNT|CPU_SOCKET_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
-WITH vcpursc AS (
-SELECT :v_pkey AS pkey,
-       TO_CHAR(timestamp, 'MM/DD/YY HH24:MI') dt,
-       cpu_count,
-       cpu_core_count,
-       cpu_socket_count
-FROM   dba_cpu_usage_statistics
-ORDER  BY timestamp)
-SELECT pkey , dt , cpu_count , cpu_core_count , cpu_socket_count,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
-FROM vcpursc;
-spool off
+prompt This collection will use the Automatic Workload Repository (AWR) for performance dataq.
+prompt The AWR views and packages that are licensed separately under the 
+prompt Oracle Diagnostics Pack and Oracle Tuning Pack. Please ensure
+prompt you have the correct licenses to run this utility. See the README for further details.

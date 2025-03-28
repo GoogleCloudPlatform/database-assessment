@@ -13,7 +13,8 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__dbinstances__&v_tag
+exec dbms_application_info.set_action('dbinstances');
+spool &outputdir./opdb__dbinstances__&s_tag.
 prompt PKEY|INST_ID|INSTANCE_NAME|HOST_NAME|VERSION|STATUS|DATABASE_STATUS|INSTANCE_ROLE|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdbinst as (
 SELECT :v_pkey AS pkey,

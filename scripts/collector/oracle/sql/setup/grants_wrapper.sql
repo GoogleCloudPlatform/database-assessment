@@ -23,7 +23,7 @@ set echo off
 
 prompt "Please enter the database local username (or CDB username) to receive all required grants. "
 accept dbusername    char prompt "Enter exactly as defined in the database, upper/lower case must match: "
-accept usediagnostics char default 'Y' prompt "Please enter Y or N to allow or disallow use of the Tuning and Diagnostic Pack (AWR/ASH) data (Y) "
+accept useAWR char default 'Y' prompt "Please enter Y or N to allow or disallow use of the AWR/ASH data (Requires Tuning and Diagnostic Pack license) (Y) "
 
 DECLARE
   cnt NUMBER;
@@ -147,7 +147,7 @@ BEGIN
 
   -- The rectype entries in the code blocks below are parsed to generate documentation.
   -- Please follow the same format of one entry per line when adding new privileges.
-  IF upper('&usediagnostics') = 'Y' THEN
+  IF upper('&useAWR') = 'Y' THEN
   dbms_output.put_line('Granting privs for AWR/ASH data');
     v_source_table_list := t_source_table_list(
       rectype_('SELECT','SYS','CDB_HIST_ACTIVE_SESS_HISTORY'),

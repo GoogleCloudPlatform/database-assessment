@@ -13,16 +13,17 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-COLUMN t_sql_cmd   NEW_VALUE  v_sql_cmd NOPRINT
-COLUMN t_machine   NEW_VALUE  v_machine NOPRINT
+exec dbms_application_info.set_action('sourceconn');
+COLUMN t_sql_cmd   NEW_VALUE  s_sql_cmd NOPRINT
+COLUMN t_machine   NEW_VALUE  s_machine NOPRINT
 COLUMN MACHINE FORMAT A60
 
 
-SELECT  CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '&AWRDIR/sqlcmd10.sql' ELSE '&AWRDIR/sqlcmd12.sql' END as t_sql_cmd,
-        CASE WHEN '&v_dbversion' LIKE '10%' OR  '&v_dbversion' = '111' THEN '''N/A''' ELSE 'has.machine' END as t_machine
+SELECT  CASE WHEN '&s_dbversion.' LIKE '10%' OR  '&s_dbversion.' = '111' THEN '&AWRDIR./sqlcmd10.sql' ELSE '&AWRDIR./sqlcmd12.sql' END as t_sql_cmd,
+        CASE WHEN '&s_dbversion.' LIKE '10%' OR  '&s_dbversion.' = '111' THEN '''N/A''' ELSE 'has.machine' END as t_machine
 FROM DUAL;
 
-spool &outputdir/opdb__sourceconn__&v_tag
+spool &outputdir./opdb__sourceconn__&s_tag.
 prompt PKEY|DBID|INSTANCE_NUMBER|HO|PROGRAM|MODULE|MACHINE|COMMAND_NAME|CNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsrcconn AS (
 SELECT :v_pkey AS pkey,
@@ -31,18 +32,18 @@ SELECT :v_pkey AS pkey,
        TO_CHAR(dhsnap.begin_interval_time, 'hh24') hour,
        replace(has.program, '|', '_') program,
        replace(has.module, '|', '_') module,
-       replace(&v_machine, '|', '_') machine,
+       replace(&s_machine., '|', '_') machine,
        scmd.command_name,
        count(1) cnt
-FROM &v_tblprefix._HIST_ACTIVE_SESS_HISTORY has
-     INNER JOIN &v_tblprefix._HIST_SNAPSHOT dhsnap
+FROM &s_tblprefix._HIST_ACTIVE_SESS_HISTORY has
+     INNER JOIN &s_tblprefix._HIST_SNAPSHOT dhsnap
      ON has.snap_id = dhsnap.snap_id
      AND has.instance_number = dhsnap.instance_number
      AND has.dbid = dhsnap.dbid
-@&v_sql_cmd
+@&s_sql_cmd.
         ON has.sql_opcode = scmd.COMMAND_TYPE
-WHERE  has.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
-AND has.dbid = &&v_dbid
+WHERE  has.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+AND has.dbid = :v_dbid
 AND has.session_type = 'FOREGROUND'
 group by :v_pkey,
        TO_CHAR(dhsnap.begin_interval_time, 'hh24'),
@@ -50,7 +51,7 @@ group by :v_pkey,
        has.instance_number,
        has.program,
        has.module,
-       &v_machine,
+       &s_machine.,
        scmd.command_name)
 SELECT pkey , dbid , instance_number , hour , program ,
        module , machine , command_name , cnt,

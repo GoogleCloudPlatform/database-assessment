@@ -13,7 +13,8 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__pdbsopenmode__&v_tag
+exec dbms_application_info.set_action('pdbsopenmode');
+spool &outputdir./opdb__pdbsopenmode__&s_tag.
 prompt PKEY|CON_ID|NAME|OPEN_MODE|TOTAL_GB|CON_UID|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vpdbmode as (
 SELECT :v_pkey AS pkey,

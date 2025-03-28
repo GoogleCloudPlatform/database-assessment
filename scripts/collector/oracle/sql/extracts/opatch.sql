@@ -13,8 +13,8 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-
-spool &outputdir/opdb__opatch__&v_tag
+exec dbms_application_info.set_action('opatch');
+spool &outputdir./opdb__opatch__&s_tag.
 column c_patchinfo new_value p_patchinfo noprint
 
 variable v_patchinfo VARCHAR2(500);
@@ -46,7 +46,7 @@ SELECT :v_patchinfo
 
 
 WITH xml AS (
-SELECT  &p_patchinfo
+SELECT  &p_patchinfo.
         AS x
     FROM
         dual ),

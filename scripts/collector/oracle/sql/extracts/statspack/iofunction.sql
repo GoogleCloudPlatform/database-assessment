@@ -13,8 +13,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('iofunction');
 column hour format a4
-spool &outputdir/opdb__iofunction__&v_tag
+spool &outputdir./opdb__iofunction__&s_tag.
 
 WITH vrawiof AS (
 SELECT :v_pkey AS pkey,
@@ -69,8 +70,8 @@ FROM STATS$IOSTAT_FUNCTION iof
       AND iof.dbid = snap.dbid
      INNER JOIN STATS$IOSTAT_FUNCTION_NAME fn
      ON fn.function_id = iof.function_id
-WHERE snap.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-AND snap.dbid = &&v_dbid),
+WHERE snap.snap_time BETWEEN :v_min_snaptime AND :v_max_snaptime
+AND snap.dbid = :v_dbid),
 vperciof AS (
 SELECT pkey,
        dbid,

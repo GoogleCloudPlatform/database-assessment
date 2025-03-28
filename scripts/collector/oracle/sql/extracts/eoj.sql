@@ -14,6 +14,6 @@
 -- limitations under the License.
 --
 -- This file intentionally has no extraction SQL.
-spool &outputdir/opdb__eoj__&v_tag
+spool &outputdir./opdb__eoj__&s_tag.
 prompt END_OF_DMA_COLLECTION
 spool off

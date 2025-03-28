@@ -13,20 +13,21 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__usedspacedetails__&v_tag
+exec dbms_application_info.set_action('usedspacedetails');
+spool &outputdir./opdb__usedspacedetails__&s_tag.
 prompt PKEY|CON_ID|OWNER|SEGMENT_TYPE|GB|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vused AS (
 SELECT :v_pkey AS pkey,
-       &v_a_con_id AS con_id,
+       &s_a_con_id. AS con_id,
        owner,
        segment_type,
        ROUND(SUM(bytes) / 1024 / 1024 / 1024, 0) GB
-       FROM   &v_tblprefix._segments a
+       FROM   &s_tblprefix._segments a
        WHERE  owner NOT IN (
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
 )
        GROUP  BY :v_pkey,
-              &v_a_con_id , owner, segment_type )
+              &s_a_con_id. , owner, segment_type )
 SELECT pkey , con_id , owner , segment_type , GB,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vused;

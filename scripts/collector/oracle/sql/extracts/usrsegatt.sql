@@ -13,19 +13,20 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__usrsegatt__&v_tag
+exec dbms_application_info.set_action('usrsegatt');
+spool &outputdir./opdb__usrsegatt__&s_tag.
 prompt PKEY|CON_ID|OWNER|SEGMENT_NAME|SEGMENT_TYPE|TABLESPACE_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vuseg AS (
  SELECT :v_pkey AS pkey,
-        &v_a_con_id AS con_id,
+        &s_a_con_id. AS con_id,
         owner,
         segment_name,
         segment_type,
         tablespace_name
- FROM &v_tblprefix._segments a
+ FROM &s_tblprefix._segments a
  WHERE tablespace_name IN ('SYSAUX', 'SYSTEM')
  AND owner NOT IN
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
 )
 SELECT pkey , con_id , owner , segment_name , segment_type , tablespace_name,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID

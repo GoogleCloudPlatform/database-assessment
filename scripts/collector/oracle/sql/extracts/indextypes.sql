@@ -13,6 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('indextypes');
 COLUMN PARTITIONED FORMAT A20
 COLUMN TEMPORARY FORMAT A20
 COLUMN SECONDARY FORMAT A20
@@ -21,11 +22,11 @@ COLUMN JOIN_INDEX FORMAT A20
 COLUMN CUSTOM_INDEX_TYPE FORMAT A20
 COLUMN VISIBILITY FORMAT A20
 COLUMN COMPRESSION FORMAT A11
-spool &outputdir/opdb__indextypes__&v_tag
+spool &outputdir./opdb__indextypes__&s_tag.
 prompt PKEY|CON_ID|OWNER|INDEX_TYPE|UNIQUENESS|COMPRESSION|PARTITIONED|TEMPORARY|SECONDARY|VISIBILITY|JOIN_INDEX|CUSTOM_INDEX_TYPE|CNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vidxtype AS (
 SELECT :v_pkey AS pkey,
-       &v_a_con_id AS con_id,
+       &s_a_con_id. AS con_id,
        a.owner,
        a.index_type,
        a.uniqueness,
@@ -33,15 +34,15 @@ SELECT :v_pkey AS pkey,
        a.partitioned,
        a.temporary,
        a.secondary,
-       &v_index_visibility AS VISIBILITY,
+       &s_index_visibility. AS VISIBILITY,
        a.join_index,
        CASE WHEN a.ityp_owner IS NOT NULL THEN 'Y' ELSE 'N' END AS custom_index_type,
        COUNT(1) as cnt
-FROM   &v_tblprefix._indexes a
+FROM   &s_tblprefix._indexes a
 WHERE  owner NOT IN
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
 GROUP  BY :v_pkey,
-          &v_a_con_id ,
+          &s_a_con_id. ,
           a.owner,
           a.index_type,
           a.uniqueness,
@@ -49,7 +50,7 @@ GROUP  BY :v_pkey,
           a.partitioned,
           a.temporary,
           a.secondary,
-          &v_index_visibility,
+          &s_index_visibility.,
           a.join_index,
           CASE WHEN a.ityp_owner IS NOT NULL THEN 'Y' ELSE 'N' END
 )

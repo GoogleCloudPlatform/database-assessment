@@ -13,7 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-
+exec dbms_application_info.set_action('sqlstats');
 COLUMN sp_con_id FORMAT A6 HEADING CON_ID
 COLUMN PHYSICAL_READ_BYTES_TOTAL      FORMAT A40
 COLUMN PHYSICAL_WRITE_BYTES_TOTAL     FORMAT A40
@@ -23,7 +23,7 @@ COLUMN OPTIMIZED_PHYSICAL_READS_TOTAL FORMAT A40
 COLUMN CELL_UNCOMPRESSED_BYTES_TOTAL  FORMAT A40
 COLUMN IO_OFFLOAD_RETURN_BYTES_TOTAL  FORMAT A40
 
-spool &outputdir/opdb__sqlstats__&v_tag
+spool &outputdir./opdb__sqlstats__&s_tag.
 prompt PKEY|CON_ID|DBID|INSTANCE_NUMBER|FORCE_MATCHING_SIGNATURE|SQL_ID|TOTAL_EXECUTIONS|TOTAL_PX_SERVERS_EXECS|ELAPSED_TIME_TOTAL|DISK_READS_TOTAL|PHYSICAL_READ_BYTES_TOTAL|PHYSICAL_WRITE_BYTES_TOTAL|IO_OFFLOAD_ELIG_BYTES_TOTAL|IO_INTERCONNECT_BYTES_TOTAL|OPTIMIZED_PHYSICAL_READS_TOTAL|CELL_UNCOMPRESSED_BYTES_TOTAL|IO_OFFLOAD_RETURN_BYTES_TOTAL|DIRECT_WRITES_TOTAL|PERC_EXEC_FINISHED|AVG_ROWS|AVG_DISK_READS|AVG_BUFFER_GETS|AVG_CPU_TIME_US|AVG_ELAPSED_US|AVG_IOWAIT_US|AVG_CLWAIT_US|AVG_APWAIT_US|AVG_CCWAIT_US|AVG_PLSEXEC_US|AVG_JAVEXEC_US|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsqlstat AS(
 SELECT :v_pkey AS pkey,
@@ -185,8 +185,8 @@ From STATS$SQL_SUMMARY s
 WHERE a.snap_id = b.snap_id
 AND a.instance_number = b.instance_number
 AND a.dbid = b.dbid
-AND b.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-AND b.dbid = &&v_dbid
+AND b.snap_time BETWEEN :v_min_snaptime AND :v_max_snaptime
+AND b.dbid = :v_dbid
 GROUP BY :v_pkey,
        b.dbid, b.instance_number, force_matching_signature
 ORDER BY elapsed_time_total DESC)

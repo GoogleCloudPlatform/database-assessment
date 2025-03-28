@@ -13,11 +13,12 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__dbfeatures__&v_tag
+exec dbms_application_info.set_action('dbfeatures');
+spool &outputdir./opdb__dbfeatures__&s_tag.
 prompt PKEY|CON_ID|NAME|CURRE|DETECTED_USAGES|TOTAL_SAMPLES|FIRST_USAGE|LAST_USAGE|AUX_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdbf AS(
 SELECT :v_pkey AS pkey,
-       &v_a_con_id AS con_id,
+       &s_a_con_id. AS con_id,
        REPLACE(name, ',', '/')                       name,
        currently_used,
        detected_usages,
@@ -25,8 +26,8 @@ SELECT :v_pkey AS pkey,
        TO_CHAR(first_usage_date, 'MM/DD/YY HH24:MI') first_usage,
        TO_CHAR(last_usage_date, 'MM/DD/YY HH24:MI')  last_usage,
        aux_count
-FROM   &v_tblprefix._feature_usage_statistics a
-WHERE dbid = &&v_dbid
+FROM   &s_tblprefix._feature_usage_statistics a
+WHERE dbid = :v_dbid
 ORDER  BY name)
 SELECT pkey , con_id , name , currently_used , detected_usages ,
        total_samples , first_usage , last_usage , aux_count,

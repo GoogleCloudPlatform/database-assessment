@@ -13,7 +13,8 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__dbahistsysstat__&v_tag
+exec dbms_application_info.set_action('dbahistsysstat');
+spool &outputdir./opdb__dbahistsysstat__&s_tag.
 prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|STAT_NAME|CNT|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|MIN_VALUE|MAX_VALUE|SUM_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsysstat AS (
 SELECT
@@ -55,11 +56,11 @@ SELECT
                                                                                        PARTITION BY s.dbid, s.instance_number, g.stat_name
                                                                                        ORDER BY s.snap_id),
                                                                     0), 0) AS VALUE
-FROM   &v_tblprefix._hist_snapshot s,
-       &v_tblprefix._hist_sysstat g
+FROM   &s_tblprefix._hist_snapshot s,
+       &s_tblprefix._hist_sysstat g
 WHERE  s.snap_id = g.snap_id
-       AND s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
-       AND s.dbid = &&v_dbid
+       AND s.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+       AND s.dbid = :v_dbid
        AND s.instance_number = g.instance_number
        AND s.dbid = g.dbid
        AND (LOWER(stat_name) LIKE '%db%time%'

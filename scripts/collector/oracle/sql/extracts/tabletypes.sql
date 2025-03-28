@@ -13,6 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('tabletypes');
 COLUMN TEMPORARY FORMAT A20
 COLUMN SECONDARY FORMAT A20
 COLUMN NESTED    FORMAT A20
@@ -21,17 +22,17 @@ COLUMN OBJECT_TABLE FORMAT A20
 COLUMN XML_TABLE FORMAT A20
 
 VARIABLE xml_select_sql VARCHAR2(100);
-COLUMN p_xml_select new_value v_xml_select noprint
+COLUMN p_xml_select new_value s_xml_select noprint
 
 DECLARE
   cnt NUMBER;
 BEGIN
   SELECT count(1) INTO cnt
-  FROM &v_tblprefix._views
-  WHERE view_name = upper('&v_tblprefix._XML_TABLES');
+  FROM &s_tblprefix._views
+  WHERE view_name = upper('&s_tblprefix._XML_TABLES');
 
   IF cnt > 0 THEN
-    :xml_select_sql := '&v_tblprefix._XML_TABLES';
+    :xml_select_sql := '&s_tblprefix._XML_TABLES';
   ELSE
     :xml_select_sql := '(SELECT NULL AS con_id, NULL AS owner FROM dual WHERE 1=2)';
   END IF;
@@ -40,11 +41,11 @@ END;
 
 SELECT :xml_select_sql AS p_xml_select FROM dual;
 
-spool &outputdir/opdb__tabletypes__&v_tag
+spool &outputdir./opdb__tabletypes__&s_tag.
 prompt PKEY|CON_ID|OWNER|PAR|IOT_TYPE|NESTED|TEMPORARY|SECONDARY|CLUSTERED_TABLE|TABLE_COUNT|OBJECT_TABLE|XML_TABLE|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH tblinfo AS (
 SELECT
-    &v_a_con_id AS con_id,
+    &s_a_con_id. AS con_id,
     a.owner,
     a.partitioned,
     a.iot_type,
@@ -60,12 +61,12 @@ SELECT
     COUNT(1) AS table_count,
     'N' AS object_table,
     'N' AS xml_table
-FROM &v_tblprefix._tables a
+FROM &s_tblprefix._tables a
 WHERE a.owner NOT IN (
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
        )
 GROUP BY
-    &v_a_con_id,
+    &s_a_con_id.,
     a.owner,
     a.partitioned,
     a.iot_type,
@@ -82,7 +83,7 @@ GROUP BY
     'N'
 UNION ALL
 SELECT
-    &v_b_con_id AS con_id,
+    &s_b_con_id. AS con_id,
     b.owner,
     'NO' partitioned,
     NULL iot_type,
@@ -93,16 +94,16 @@ SELECT
     COUNT(1) AS table_count,
     'N' AS object_table,
     'Y' AS xml_table
-FROM &v_xml_select b
+FROM &s_xml_select. b
 WHERE b.owner NOT IN (
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
        )
 GROUP BY
-    &v_b_con_id,
+    &s_b_con_id.,
     b.owner
 UNION ALL
 SELECT
-    &v_c_con_id AS con_id,
+    &s_c_con_id. AS con_id,
     c.owner,
     c.partitioned,
     c.iot_type,
@@ -118,12 +119,12 @@ SELECT
     COUNT(1) AS table_count,
     'Y' AS object_table,
     'N' AS xml_table
-FROM &v_tblprefix._object_tables c
+FROM &s_tblprefix._object_tables c
 WHERE c.owner NOT IN (
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
        )
 GROUP BY
-    &v_c_con_id,
+    &s_c_con_id.,
     c.owner,
     c.partitioned,
     c.iot_type,

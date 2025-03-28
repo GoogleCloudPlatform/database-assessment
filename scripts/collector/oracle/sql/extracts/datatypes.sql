@@ -13,11 +13,12 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__datatypes__&v_tag
+exec dbms_application_info.set_action('datatypes');
+spool &outputdir./opdb__datatypes__&s_tag.
 prompt PKEY|CON_ID|OWNER|DATA_TYPE|CNT|DATA_LENGTH|DATA_PRECISION|DATA_SCALE|AVG_COL_LEN|DISTINCT_TABLE_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdtype AS (
 SELECT /*+ USE_HASH(b a) NOPARALLEL */ :v_pkey AS pkey,
-       &v_a_con_id con_id,
+       &s_a_con_id. con_id,
        a.owner,
        data_type,
        COUNT(1) as cnt,
@@ -25,12 +26,12 @@ SELECT /*+ USE_HASH(b a) NOPARALLEL */ :v_pkey AS pkey,
        data_precision,
        data_scale,
        avg_col_len,
-       count(distinct &v_a_con_id||a.owner||table_name) as distinct_table_count
-FROM   &v_tblprefix._tab_columns a INNER JOIN &v_tblprefix._objects b ON &v_a_con_id = &v_b_con_id AND a.owner = b.owner AND a.table_name = b.object_name and b.object_type = 'TABLE'
+       count(distinct &s_a_con_id.||a.owner||table_name) as distinct_table_count
+FROM   &s_tblprefix._tab_columns a INNER JOIN &s_tblprefix._objects b ON &s_a_con_id. = &s_b_con_id. AND a.owner = b.owner AND a.table_name = b.object_name and b.object_type = 'TABLE'
 WHERE  a.owner NOT IN
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
 GROUP  BY :v_pkey,
-          &v_a_con_id ,
+          &s_a_con_id. ,
           a.owner,
           data_type,
           data_length,

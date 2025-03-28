@@ -13,14 +13,15 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('opkeylog');
 COLUMN DB_NAME FORMAT A20
 COLUMN INSTANCE_NAME FORMAT A20
-spool &outputdir/opdb__opkeylog__&v_tag
+spool &outputdir./opdb__opkeylog__&s_tag.
 prompt PKEY|OPSCRI|DB_|HOSTNAME|DB_NAME|INSTANCE_NAME|COLLECTION_T|DB_ID|C|DMA_SOURCE_ID|DMA_MANUAL_ID
 with vop as (
 select :v_pkey AS pkey,
-'&&version' opscriptversion, '&&v_dbversion' db_version, '&&v_host' hostname,
-'&&v_dbname' db_name, '&&v_inst' instance_name, '&&v_hora' collection_time, &&v_dbid db_id, null "CMNT"
+'&&dmaVersion.' opscriptversion, '&&s_dbversion.' db_version, '&&s_host.' hostname,
+'&&s_dbname.' db_name, '&&s_inst.' instance_name, '&&s_hora.' collection_time, :v_dbid db_id, null "CMNT"
 from dual)
 select pkey , opscriptversion , db_version , hostname
        , db_name , instance_name , collection_time , db_id , CMNT,

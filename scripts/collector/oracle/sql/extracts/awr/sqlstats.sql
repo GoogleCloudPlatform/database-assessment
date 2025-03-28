@@ -13,11 +13,12 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__sqlstats__&v_tag
+exec dbms_application_info.set_action('sqlstats');
+spool &outputdir./opdb__sqlstats__&s_tag.
 prompt PKEY|CON_ID|DBID|INSTANCE_NUMBER|FORCE_MATCHING_SIGNATURE|SQL_ID|TOTAL_EXECUTIONS|TOTAL_PX_SERVERS_EXECS|ELAPSED_TIME_TOTAL|DISK_READS_TOTAL|PHYSICAL_READ_BYTES_TOTAL|PHYSICAL_WRITE_BYTES_TOTAL|IO_OFFLOAD_ELIG_BYTES_TOTAL|IO_INTERCONNECT_BYTES_TOTAL|OPTIMIZED_PHYSICAL_READS_TOTAL|CELL_UNCOMPRESSED_BYTES_TOTAL|IO_OFFLOAD_RETURN_BYTES_TOTAL|DIRECT_WRITES_TOTAL|PERC_EXEC_FINISHED|AVG_ROWS|AVG_DISK_READS|AVG_BUFFER_GETS|AVG_CPU_TIME_US|AVG_ELAPSED_US|AVG_IOWAIT_US|AVG_CLWAIT_US|AVG_APWAIT_US|AVG_CCWAIT_US|AVG_PLSEXEC_US|AVG_JAVEXEC_US|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsqlstat AS(
 SELECT :v_pkey AS pkey,
-       &v_a_con_id AS con_id,
+       &s_a_con_id. AS con_id,
        b.dbid,
        b.instance_number,
        to_char(force_matching_signature) force_matching_signature,
@@ -46,17 +47,17 @@ SELECT :v_pkey AS pkey,
        trunc(decode(sum(executions_delta), 0, 0, sum(ccwait_delta)/sum(executions_delta))) avg_ccwait_us,
        trunc(decode(sum(executions_delta), 0, 0, sum(plsexec_time_delta)/sum(executions_delta))) avg_plsexec_us,
        trunc(decode(sum(executions_delta), 0, 0, sum(javexec_time_delta)/sum(executions_delta))) avg_javexec_us
-FROM &v_tblprefix._hist_sqlstat a, &v_tblprefix._hist_snapshot b
+FROM &s_tblprefix._hist_sqlstat a, &s_tblprefix._hist_snapshot b
 WHERE a.snap_id = b.snap_id
 AND a.instance_number = b.instance_number
 AND a.dbid = b.dbid
-AND b.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
-AND b.dbid = &&v_dbid
--- AND &v_a_con_id = &v_b_con_id
+AND b.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+AND b.dbid = :v_dbid
+-- AND &s_a_con_id. = &s_b_con_id.
 --and t.command_type <> 47
 -- and s.executions_total > 100
 GROUP BY :v_pkey,
-       &v_a_con_id, b.dbid, b.instance_number, force_matching_signature
+       &s_a_con_id., b.dbid, b.instance_number, force_matching_signature
 ORDER BY elapsed_time_total DESC)
 SELECT pkey , con_id , dbid , instance_number , force_matching_signature , sql_id ,
        total_executions , total_px_servers_execs , elapsed_time_total , disk_reads_total ,

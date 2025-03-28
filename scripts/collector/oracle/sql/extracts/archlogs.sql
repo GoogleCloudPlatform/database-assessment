@@ -13,7 +13,8 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__archlogs__&v_tag
+exec dbms_application_info.set_action('archlogs');
+spool &outputdir./opdb__archlogs__&s_tag.
 prompt PKEY|LOG_START_DATE|HO|THREAD_NUM|DEST_ID|CNT|MBYTES|DMA_SOURCE_ID|DMA_MANUAL_ID
 SELECT :v_pkey AS pkey,
        trunc(first_Time) as log_start_date,
@@ -24,7 +25,7 @@ SELECT :v_pkey AS pkey,
        round(sum(blocks * block_size)/1024/1024) as mbytes,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM gv$archived_log
-WHERE first_time >= trunc(sysdate) - '&&dtrange'
+WHERE first_time >= trunc(sysdate) - :v_statsWindow
 GROUP BY trunc(first_time), thread#, to_char(first_time, 'HH24'), dest_id
 ;
 spool off

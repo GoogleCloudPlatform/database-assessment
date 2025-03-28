@@ -13,10 +13,11 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-define cdbjoin = "AND con_id = p.con_id"
+exec dbms_application_info.set_action('pdbsinfo');
 column logging format a10
 
-spool &outputdir/opdb__pdbsinfo__&v_tag
+define s_app_join_cond='&s_pdb_join_cond.'
+spool &outputdir./opdb__pdbsinfo__&s_tag.
 prompt PKEY|DBID|PDB_ID|PDB_NAME|STATUS|LOGGING|CON_ID|CON_UID|EBS_OWNER|SIEBEL_OWNER|PSFT_OWNER|RDS_FLAG|OCI_AUTONOMOUS_FLAG|DBMS_CLOUD_PKG_INSTALLED|APEX_INSTALLED|SAP_OWNER|SGA_ALLOCATED_BYTES|PGA_USED_BYTES|PGA_ALLOCATED_BYTES|PGA_MAX_BYTES|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH opdbinfo AS (
 SELECT :v_pkey AS pkey,
@@ -24,10 +25,10 @@ SELECT :v_pkey AS pkey,
        pdb_id,
        pdb_name,
        status,
-       &v_pluggablelogging AS logging,
+       &s_pluggablelogging. AS logging,
        con_id,
        con_uid
-FROM   &v_tblprefix._pdbs
+FROM   &s_tblprefix._pdbs
 UNION
 SELECT :v_pkey AS pkey,
        c.dbid,
@@ -49,7 +50,7 @@ FROM sys.container$ c, sys.obj$ o
 WHERE o.obj# = c.obj# AND con_id#=1),
 vpdbinfo AS (
             SELECT p.*,
-@&EXTRACTSDIR/app_schemas.sql
+@&EXTRACTSDIR./app_schemas.sql 
             FROM opdbinfo p ),
 pdb_sga AS (
             SELECT con_id, inst_id, SUM(bytes) AS sga_allocated_bytes

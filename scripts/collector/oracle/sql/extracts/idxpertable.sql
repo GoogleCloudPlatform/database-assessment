@@ -13,15 +13,16 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__idxpertable__&v_tag
+exec dbms_application_info.set_action('idxpertable');
+spool &outputdir./opdb__idxpertable__&s_tag.
 prompt PKEY|CON_ID|TAB_COUNT|IDX_CNT|IDX_PERC|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vrawidx AS(
 SELECT :v_pkey AS pkey,
-       &v_a_con_id AS con_id, table_owner, table_name, count(1) idx_cnt
-FROM &v_tblprefix._indexes a
+       &s_a_con_id. AS con_id, table_owner, table_name, count(1) idx_cnt
+FROM &s_tblprefix._indexes a
 WHERE  owner NOT IN
-@&EXTRACTSDIR/exclude_schemas.sql
-group by &v_a_con_id, table_owner, table_name),
+@&EXTRACTSDIR./exclude_schemas.sql
+group by &s_a_con_id., table_owner, table_name),
 vcidx AS (
 SELECT pkey,
        con_id,

@@ -13,7 +13,8 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__tableconstraints__&v_tag
+exec dbms_application_info.set_action('tableconstraints');
+spool &outputdir./opdb__tableconstraints__&s_tag.
 prompt PKEY|CON_ID|OWNER|TABLE_NAME|PK|UK|CK|RI|VWCK|VWRO|HASHEXPR|SUPLOG|TOTAL_CONS|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vnopk AS (
 SELECT :v_pkey AS pkey,
@@ -29,7 +30,7 @@ SELECT :v_pkey AS pkey,
        SUM(hashexpr)              hashexpr,
        SUM(suplog)                suplog,
        COUNT(1)                   total_cons
-FROM   (SELECT &v_a_con_id AS con_id,
+FROM   (SELECT &s_a_con_id. AS con_id,
                a.owner,
                a.table_name,
                DECODE(b.constraint_type, 'P', 1,
@@ -50,13 +51,13 @@ FROM   (SELECT &v_a_con_id AS con_id,
                                          NULL) refcolcons,
                DECODE(b.constraint_type, 'S', 1,
                                          NULL) suplog
-        FROM   &v_tblprefix._tables a
-               left outer join &v_tblprefix._constraints b
-                            ON &v_a_con_id = &v_b_con_id
+        FROM   &s_tblprefix._tables a
+               left outer join &s_tblprefix._constraints b
+                            ON &s_a_con_id. = &s_b_con_id.
                                AND a.owner = b.owner
                                AND a.table_name = b.table_name
         WHERE a.owner NOT IN
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
        )
 GROUP  BY :v_pkey,
           con_id,

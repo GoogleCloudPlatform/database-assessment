@@ -13,8 +13,8 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-set echo on
-spool &outputdir/opdb__awrhistosstat__&v_tag
+exec dbms_application_info.set_action('awrhistosstat');
+spool &outputdir./opdb__awrhistosstat__&s_tag.
 prompt PKEY|DBID|INSTANCE_NUMBER|HH|STAT_NAME|HH24_TOTAL_SECS|CUMULATIVE_VALUE|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|MIN_VALUE|MAX_VALUE|SUM_VALUE|COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH v_osstat_all
      AS (SELECT os.dbid,
@@ -62,13 +62,13 @@ WITH v_osstat_all
 			       ORDER BY s.snap_id),
 			    0), 0)
 			ELSE s.value END AS delta_value
-                    FROM &v_tblprefix._hist_osstat s
-                         inner join &v_tblprefix._hist_snapshot snap
+                    FROM &s_tblprefix._hist_osstat s
+                         inner join &s_tblprefix._hist_snapshot snap
                          ON s.snap_id = snap.snap_id
                          AND s.instance_number = snap.instance_number
                          AND s.dbid = snap.dbid
-                    WHERE s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
-                    AND s.dbid = &&v_dbid) os ) ,
+                    WHERE s.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+                    AND s.dbid = :v_dbid) os ) ,
 vossummary AS (
 SELECT :v_pkey AS pkey,
        dbid,

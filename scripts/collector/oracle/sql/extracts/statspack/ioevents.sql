@@ -13,8 +13,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('ioevents');
 column hour format a4
-spool &outputdir/opdb__ioevents__&v_tag
+spool &outputdir./opdb__ioevents__&s_tag.
 prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|WAIT_CLASS|EVENT_NAME|TOT_WAITS_DELTA_VALUE_P95|TOT_TOUT_DELTA_VALUE_P95|TIME_WA_US_DELTA_VALUE_P95|TOT_WAITS_DELTA_VALUE_P100|TOT_TOUT_DELTA_VALUE_P100|TIME_WA_US_DELTA_VALUE_P100|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vrawev AS (
 SELECT :v_pkey AS pkey,
@@ -45,8 +46,8 @@ FROM STATS$SYSTEM_EVENT sev
      AND sev.instance_number = dhsnap.instance_number
      AND sev.dbid = dhsnap.dbid
      INNER JOIN v$event_name en ON en.name = sev.event
-WHERE  dhsnap.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-AND sev.dbid = &&v_dbid
+WHERE  dhsnap.snap_time BETWEEN :v_min_snaptime AND :v_max_snaptime
+AND sev.dbid = :v_dbid
 AND en.wait_class IN ('User I/O', 'System I/O', 'Commit')),
 vpercev AS(
 SELECT pkey,

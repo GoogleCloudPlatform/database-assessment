@@ -13,18 +13,19 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__triggers__&v_tag
+exec dbms_application_info.set_action('triggers');
+spool &outputdir./opdb__triggers__&s_tag.
 prompt PKEY|CON_ID|OWNER|TRIGGER_TYPE|TRIGGERING_EVENT|BASE_OBJECT_TYPE|TRIGGER_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH trginfo AS (
 SELECT
-    &v_a_con_id AS con_id,
+    &s_a_con_id. AS con_id,
     owner,
     trigger_type,
     triggering_event,
     base_object_type,
     COUNT(1) AS trigger_count
 FROM
-    &v_tblprefix._triggers a
+    &s_tblprefix._triggers a
 WHERE
     TRIM(base_object_type) IN ( 'DATABASE', 'SCHEMA' )
     AND status = 'ENABLED'
@@ -45,7 +46,7 @@ WHERE
                                          ( 'SYS', 'AW_DROP_TRG' )
                                          )
 GROUP BY
-    &v_a_con_id,
+    &s_a_con_id.,
     owner,
     trigger_type,
     triggering_event,

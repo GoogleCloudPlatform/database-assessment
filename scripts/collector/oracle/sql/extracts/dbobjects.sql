@@ -13,29 +13,30 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('dbobjects');
 COLUMN EDITIONABLE FORMAT A11
 
-spool &outputdir/opdb__dbobjects__&v_tag
+spool &outputdir./opdb__dbobjects__&s_tag.
 prompt PKEY|CON_ID|OWNER|OBJECT_TYPE|EDITIONABLE|COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH
 vdbobji AS (
         SELECT
-               &v_a_con_id AS con_id,
+               &s_a_con_id. AS con_id,
                owner,
                object_type,
-               &v_editionable_col AS editionable,
+               &s_editionable_col. AS editionable,
                object_name
-        FROM &v_tblprefix._objects a
+        FROM &s_tblprefix._objects a
         WHERE  (owner = 'SYS' AND object_type = 'DIRECTORY')
            OR owner NOT IN
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
 ),
 vdbobjx AS (
-        SELECT 'SYNONYM' as object_type, owner, synonym_name  ,  &v_b_con_id AS con_id, table_owner
-        FROM &v_tblprefix._synonyms b
+        SELECT 'SYNONYM' as object_type, owner, synonym_name  ,  &s_b_con_id. AS con_id, table_owner
+        FROM &s_tblprefix._synonyms b
         WHERE owner = 'PUBLIC' and
               table_owner in
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
               ),
 vdbobj AS (
         SELECT :v_pkey AS pkey,

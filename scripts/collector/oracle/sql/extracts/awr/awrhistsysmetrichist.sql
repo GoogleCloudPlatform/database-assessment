@@ -13,7 +13,8 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__awrhistsysmetrichist__&v_tag
+exec dbms_application_info.set_action('awrhistsysmetrichist');
+spool &outputdir./opdb__awrhistsysmetrichist__&s_tag.
 prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|METRIC_NAME|METRIC_UNIT|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|MIN_VALUE|MAX_VALUE|SUM_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsysmetric AS (
 SELECT :v_pkey AS pkey,
@@ -38,13 +39,13 @@ SELECT :v_pkey AS pkey,
          within GROUP (ORDER BY hsm.value DESC)) AS "PERC95",
        ROUND(PERCENTILE_CONT(0)
          within GROUP (ORDER BY hsm.value DESC)) AS "PERC100"
-FROM   &v_tblprefix._hist_sysmetric_history hsm
-       inner join &v_tblprefix._hist_snapshot dhsnap
+FROM   &s_tblprefix._hist_sysmetric_history hsm
+       inner join &s_tblprefix._hist_snapshot dhsnap
                ON hsm.snap_id = dhsnap.snap_id
                   AND hsm.instance_number = dhsnap.instance_number
                   AND hsm.dbid = dhsnap.dbid
-WHERE  hsm.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
-AND hsm.dbid = &&v_dbid
+WHERE  hsm.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+AND hsm.dbid = :v_dbid
 GROUP  BY :v_pkey,
           hsm.dbid,
           hsm.instance_number,

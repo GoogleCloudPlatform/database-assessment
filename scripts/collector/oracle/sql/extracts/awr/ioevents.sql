@@ -13,8 +13,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('ioevents');
 column hour format a4
-spool &outputdir/opdb__ioevents__&v_tag
+spool &outputdir./opdb__ioevents__&s_tag.
 prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|WAIT_CLASS|EVENT_NAME|TOT_WAITS_DELTA_VALUE_P95|TOT_TOUT_DELTA_VALUE_P95|TIME_WA_US_DELTA_VALUE_P95|TOT_WAITS_DELTA_VALUE_P100|TOT_TOUT_DELTA_VALUE_P100|TIME_WA_US_DELTA_VALUE_P100|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vrawev AS (
 SELECT :v_pkey AS pkey,
@@ -39,13 +40,13 @@ SELECT :v_pkey AS pkey,
                                                         OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id), 0)),
                   sev.time_waited_micro, sev.time_waited_micro - LAG(sev.time_waited_micro)
                                                                       OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id),0), 0) AS time_wa_us_delta_value
-FROM &v_tblprefix._HIST_SYSTEM_EVENT sev
-     INNER JOIN &v_tblprefix._HIST_SNAPSHOT dhsnap
+FROM &s_tblprefix._HIST_SYSTEM_EVENT sev
+     INNER JOIN &s_tblprefix._HIST_SNAPSHOT dhsnap
      ON sev.snap_id = dhsnap.snap_id
      AND sev.instance_number = dhsnap.instance_number
      AND sev.dbid = dhsnap.dbid
-WHERE  sev.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
-AND sev.dbid = &&v_dbid
+WHERE  sev.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+AND sev.dbid = :v_dbid
 AND sev.wait_class IN ('User I/O', 'System I/O', 'Commit')),
 vpercev AS(
 SELECT pkey,

@@ -14,6 +14,6 @@
 -- limitations under the License.
 --
 -- This file intentionally left empty
-spool &outputdir/opdb__cpucoresusage__&v_tag
+spool &outputdir./opdb__cpucoresusage__&s_tag.
 prompt PKEY|DT|CPU_COUNT|CPU_CORE_COUNT|CPU_SOCKET_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 spool off

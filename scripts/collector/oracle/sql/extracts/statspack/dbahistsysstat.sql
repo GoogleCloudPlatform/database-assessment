@@ -13,8 +13,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('dbahistsysstat');
 COLUMN HOUR FORMAT A4
-spool &outputdir/opdb__dbahistsysstat__&v_tag
+spool &outputdir./opdb__dbahistsysstat__&s_tag.
 prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|STAT_NAME|CNT|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|MIN_VALUE|MAX_VALUE|SUM_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsysstat AS (
 SELECT
@@ -59,8 +60,8 @@ SELECT
 FROM   STATS$SNAPSHOT s,
        STATS$SYSSTAT g
 WHERE  s.snap_id = g.snap_id
-       AND s.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-       AND s.dbid = '&&v_dbid'
+       AND s.snap_time BETWEEN :v_min_snaptime AND :v_max_snaptime
+       AND s.dbid = :v_dbid
        AND s.instance_number = g.instance_number
        AND s.dbid = g.dbid
        AND (LOWER(name) LIKE '%db%time%'

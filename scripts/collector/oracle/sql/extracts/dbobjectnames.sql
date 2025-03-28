@@ -13,41 +13,42 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('dbobjectnames');
 COLUMN EDITIONABLE FORMAT A11
-spool &outputdir/opdb__dbobjectnames__&v_tag
+spool &outputdir./opdb__dbobjectnames__&s_tag.
 prompt PKEY|CON_ID|OWNER|OBJECT_NAME|OBJECT_TYPE|EDITIONABLE|LINES|STATUS|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH
 vdbobji AS (
         SELECT
-               &v_a_con_id AS con_id,
+               &s_a_con_id. AS con_id,
                owner,
                object_type,
-               &v_editionable_col AS editionable,
+               &s_editionable_col. AS editionable,
                object_name,
                status
-        FROM &v_tblprefix._objects a
+        FROM &s_tblprefix._objects a
         WHERE  (owner = 'SYS' AND object_type = 'DIRECTORY')
            OR owner NOT IN
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
 ),
 vdbobjx AS (
-        SELECT 'SYNONYM' as object_type, owner, synonym_name  ,  &v_b_con_id AS con_id, table_owner
-        FROM &v_tblprefix._synonyms b
+        SELECT 'SYNONYM' as object_type, owner, synonym_name  ,  &s_b_con_id. AS con_id, table_owner
+        FROM &s_tblprefix._synonyms b
         WHERE owner = 'PUBLIC' and
               table_owner in
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
               ),
 vsrc   AS (SELECT
-                  &v_c_con_id AS con_id,
+                  &s_c_con_id. AS con_id,
                   owner,
                   name,
                   type,
                   max(line) as lines
-           FROM  &v_tblprefix._source  c
+           FROM  &s_tblprefix._source  c
            WHERE owner NOT IN (
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
            )
-           GROUP BY &v_c_con_id , owner, name, type
+           GROUP BY &s_c_con_id. , owner, name, type
 ),
 vdbobj AS (
         SELECT /*+ USE_HASH(i x s) */

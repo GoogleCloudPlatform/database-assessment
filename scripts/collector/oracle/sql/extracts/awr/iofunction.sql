@@ -13,8 +13,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('iofunction');
 column hour format a4
-spool &outputdir/opdb__iofunction__&v_tag
+spool &outputdir./opdb__iofunction__&s_tag.
 
 WITH vrawiof AS (
 SELECT :v_pkey AS pkey,
@@ -61,13 +62,13 @@ SELECT :v_pkey AS pkey,
                                               OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id), 0)),
                   iof.wait_time, iof.wait_time - LAG(iof.wait_time)
                                                  OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id),0), 0) AS tot_watime_delta_value
-FROM &v_tblprefix._HIST_IOSTAT_FUNCTION iof
-INNER JOIN &v_tblprefix._HIST_SNAPSHOT snap
+FROM &s_tblprefix._HIST_IOSTAT_FUNCTION iof
+INNER JOIN &s_tblprefix._HIST_SNAPSHOT snap
 ON iof.snap_id = snap.snap_id
 AND iof.instance_number = snap.instance_number
 AND iof.dbid = snap.dbid
-WHERE snap.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
-AND snap.dbid = &&v_dbid),
+WHERE snap.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+AND snap.dbid = :v_dbid),
 vperciof AS (
 SELECT pkey,
        dbid,

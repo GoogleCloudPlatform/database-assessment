@@ -16,12 +16,13 @@
 
 set termout on pause on
 SET DEFINE "&"
+DEFINE dmaVersion=&1
 DEFINE SQLDIR=&2
-DEFINE v_dodiagnostics=&3
-DEFINE v_tag=&4
+DEFINE s_useawr=&3
+DEFINE s_tag=&4
 DEFINE outputdir=&5
-DEFINE v_manualUniqueId=&6
-DEFINE v_statsWindow=&7
+DEFINE s_manualUniqueId=&6
+DEFINE p_statsWindow=&7
 
 DEFINE EXTRACTSDIR=&SQLDIR/extracts
 DEFINE AWRDIR=&EXTRACTSDIR/awr
@@ -32,7 +33,7 @@ prompt *************************************************************************
 prompt
 prompt !!! ATTENTION !!!
 prompt
-@&SQLDIR/prompt_&v_dodiagnostics
+@&SQLDIR/prompt_&s_useawr
 prompt
 prompt
 prompt ***********************************************************************************
@@ -55,14 +56,14 @@ set termout &TERMOUTOFF
 @&EXTRACTSDIR/defines.sql
 @&EXTRACTSDIR/archlogs.sql
 @&EXTRACTSDIR/users.sql
-@&EXTRACTSDIR/&v_ora9ind.backups.sql
+@&EXTRACTSDIR/&s_ora9ind.backups.sql
 @&EXTRACTSDIR/columntypes.sql
 -- @&EXTRACTSDIR/compressbytype.sql
-@&EXTRACTSDIR/&v_ora9ind.cpucoresusage.sql
+@&EXTRACTSDIR/&s_ora9ind.cpucoresusage.sql
 @&EXTRACTSDIR/dataguard.sql
 @&EXTRACTSDIR/datatypes.sql
-@&EXTRACTSDIR/&v_ora9ind.dbfeatures.sql
-@&EXTRACTSDIR/&v_ora9ind.dbhwmarkstatistics.sql
+@&EXTRACTSDIR/&s_ora9ind.dbfeatures.sql
+@&EXTRACTSDIR/&s_ora9ind.dbhwmarkstatistics.sql
 @&EXTRACTSDIR/dbinstances.sql
 @&EXTRACTSDIR/dblinks.sql
 @&EXTRACTSDIR/dbobjects.sql
@@ -84,8 +85,8 @@ set termout &TERMOUTOFF
 @&EXTRACTSDIR/triggers.sql
 @&EXTRACTSDIR/usedspacedetails.sql
 @&EXTRACTSDIR/usrsegatt.sql
-@&SQLDIR/&v_dopluggable
-@&SQLDIR/op_collect_&v_dodiagnostics
+@&SQLDIR/&s_dopluggable
+@&SQLDIR/op_collect_&s_useawr
 @&EXTRACTSDIR/lobsizing.sql
 --@&EXTRACTSDIR/opatch.sql
 @&EXTRACTSDIR/eoj.sql

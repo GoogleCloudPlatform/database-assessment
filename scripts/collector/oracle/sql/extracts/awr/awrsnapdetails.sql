@@ -13,11 +13,12 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('awrsnapdetails');
 COLUMN HOUR FORMAT A4
 COLUMN MIN_BEGIN_INTERVAL_TIME FORMAT A26
 COLUMN MAX_BEGIN_INTERVAL_TIME FORMAT A26
 
-spool &outputdir/opdb__awrsnapdetails__&v_tag
+spool &outputdir./opdb__awrsnapdetails__&s_tag.
 prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|MIN_SNAP_ID|MAX_SNAP_ID|MIN_BEGIN_INTERVAL_TIME|MAX_BEGIN_INTERVAL_TIME|CNT|SUM_SNAPS_DIFF_SECS|AVG_SNAPS_DIFF_SECS|MEDIAN_SNAPS_DIFF_SECS|MODE_SNAPS_DIFF_SECS|MIN_SNAPS_DIFF_SECS|MAX_SNAPS_DIFF_SECS|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vawrsnap as (
 SELECT  :v_pkey AS pkey,
@@ -43,9 +44,9 @@ SELECT
                      (begin_interval_time) AS DATE)) * 60 * 60 * 24 ) snaps_diff_secs,
        s.startup_time,
        lag(s.startup_time,1) over (partition by s.dbid, s.instance_number order by s.snap_id) lag_startup_time
-FROM   &v_tblprefix._hist_snapshot s
-WHERE  s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
-AND dbid = &&v_dbid
+FROM   &s_tblprefix._hist_snapshot s
+WHERE  s.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+AND dbid = :v_dbid
 )
 WHERE startup_time = lag_startup_time
 GROUP BY :v_pkey, dbid, instance_number, hour)

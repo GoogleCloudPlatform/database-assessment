@@ -13,9 +13,12 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-define cdbjoin = "AND 1=1"
+exec dbms_application_info.set_action('dbsummary');
 column FORCE_LOGGING format A15
-spool &outputdir/opdb__dbsummary__&v_tag
+set echo on
+set verify on
+define s_app_join_cond='&s_cdb_join_cond.'
+spool &outputdir./opdb__dbsummary__&s_tag.
 prompt PKEY|DBID|DB_NAME|CDB|DB_VERSION|DB_FULLVERSION|LOG_MODE|FORCE_LOGGING|REDO_GB_PER_DAY|RAC_DBINSTANCES|CHARACTERSET|PLATFORM_NAME|STARTUP_TIME|USER_SCHEMAS|BUFFER_CACHE_MB|SHARED_POOL_MB|TOTAL_PGA_ALLOCATED_MB|DB_SIZE_ALLOCATED_GB|DB_SIZE_IN_USE_GB|DB_LONG_SIZE_GB|DG_DATABASE_ROLE|DG_PROTECTION_MODE|DG_PROTECTION_LEVEL|DB_SIZE_TEMP_ALLOCATED_GB|DB_SIZE_REDO_ALLOCATED_GB|EBS_OWNER|SIEBEL_OWNER|PSFT_OWNER|RDS_FLAG|OCI_AUTONOMOUS_FLAG|DBMS_CLOUD_PKG_INSTALLED|APEX_INSTALLED|SAP_OWNER|DB_UNIQUE_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdbsummary AS (
 SELECT :v_pkey AS pkey,
@@ -23,7 +26,7 @@ SELECT :v_pkey AS pkey,
         FROM   v$database)                                                      AS dbid,
        (SELECT name
         FROM   v$database)                                                      AS db_name,
-       (SELECT &v_db_container_col
+       (SELECT &s_db_container_col.
         FROM   v$database)                                                      AS cdb,
        (SELECT version
         FROM   v$instance)                                                      AS db_version,
@@ -38,7 +41,7 @@ SELECT :v_pkey AS pkey,
         FROM   (SELECT TRUNC(first_time) dia,
                        COUNT(*)          conta
                 FROM   v$log_history
-                WHERE  first_time >= TRUNC(SYSDATE) - '&&dtrange'
+                WHERE  first_time >= TRUNC(SYSDATE) - :v_statsWindow
                        AND first_time < TRUNC(SYSDATE)
                 GROUP  BY TRUNC(first_time)),
                v$log)                                                           AS redo_gb_per_day,
@@ -55,14 +58,14 @@ SELECT :v_pkey AS pkey,
        || (SELECT value
            FROM   nls_database_parameters a
            WHERE  a.parameter = 'NLS_CHARACTERSET')                             AS characterset,
-       (SELECT &v_platform_name as  platform_name
+       (SELECT &s_platform_name. as  platform_name
         FROM   v$database)                                                      AS platform_name,
        (SELECT TO_CHAR(startup_time, 'YYYY-MM-DD HH24:MI:SS')
         FROM   v$instance)                                                      AS startup_time,
        (SELECT COUNT(1)
-        FROM   &v_tblprefix._users
+        FROM   &s_tblprefix._users
         WHERE  username NOT IN
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
        )
                                                                                AS user_schemas,
        (SELECT ROUND(SUM(bytes / 1024 / 1024))
@@ -75,16 +78,16 @@ SELECT :v_pkey AS pkey,
         FROM   v$pgastat
         WHERE  name = 'total PGA allocated')                                    AS total_pga_allocated_mb,
        (SELECT ( ROUND(SUM(bytes) / 1024 / 1024 / 1024) )
-        FROM   &v_tblprefix._data_files)                                                  db_size_allocated_gb,
+        FROM   &s_tblprefix._data_files)                                                  db_size_allocated_gb,
        (SELECT ( ROUND(SUM(bytes) / 1024 / 1024 / 1024) )
-        FROM   &v_tblprefix._segments
+        FROM   &s_tblprefix._segments
         WHERE  owner NOT IN ( 'SYS', 'SYSTEM' ))                                AS db_size_in_use_gb,
        (SELECT ( ROUND(SUM(bytes) / 1024 / 1024 / 1024) )
-        FROM   &v_tblprefix._segments
+        FROM   &s_tblprefix._segments
         WHERE  owner NOT IN ( 'SYS', 'SYSTEM' )
                AND ( owner, segment_name ) IN (SELECT owner,
                                                       table_name
-                                               FROM   &v_tblprefix._tab_columns
+                                               FROM   &s_tblprefix._tab_columns
                                                WHERE  data_type LIKE '%LONG%')) AS db_long_size_gb,
        (SELECT database_role
         FROM   v$database)                                                      AS dg_database_role,
@@ -93,13 +96,13 @@ SELECT :v_pkey AS pkey,
        (SELECT protection_level
         FROM   v$database)                                                      AS dg_protection_level,
        (SELECT ( ROUND(SUM(bytes) / 1024 / 1024 / 1024) )
-        FROM   &v_tblprefix._temp_files)                                        AS db_size_temp_allocated_gb,
+        FROM   &s_tblprefix._temp_files)                                        AS db_size_temp_allocated_gb,
        (SELECT  ( ROUND(SUM(l.bytes) / 1024 / 1024 / 1024 ) )
         FROM v$log l,
              v$logfile f
         WHERE f.group# = l.group#     )                                         AS db_size_redo_allocated_gb,
-@&EXTRACTSDIR/app_schemas.sql
-        , (SELECT &v_db_unique_name as db_unique_name
+@&EXTRACTSDIR./app_schemas.sql 
+        , (SELECT &s_db_unique_name. as db_unique_name
            FROM v$database)                                                     AS db_unique_name
 FROM   dual)
 SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , force_logging ,
@@ -111,3 +114,5 @@ SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , fo
            apex_installed, sap_owner, db_unique_name, :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdbsummary;
 spool off
+set echo off
+set verify off

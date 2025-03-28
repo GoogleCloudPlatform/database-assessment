@@ -22,5 +22,5 @@ prompt statspackdir = &STATSPACKDIR
 @&STATSPACKDIR/dbahistsysstat.sql
 @&STATSPACKDIR/dbahistsystimemodel.sql
 @&STATSPACKDIR/ioevents.sql
-@&STATSPACKDIR/&v_io_function_sql
+@&STATSPACKDIR/&s_io_function_sql
 @&STATSPACKDIR/sqlstats.sql

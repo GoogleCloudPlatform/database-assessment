@@ -13,12 +13,12 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-
-spool &outputdir/opdb__awrhistcmdtypes__&v_tag
+exec dbms_application_info.set_action('awrhistcmdtypes');
+spool &outputdir./opdb__awrhistcmdtypes__&s_tag.
 prompt PKEY|CON_ID|HH|COMMAND_TYPE|CNT|AVG_BUFFER_GETS|AVG_ELASPED_TIME|AVG_ROWS_PROCESSED|AVG_EXECUTIONS|AVG_CPU_TIME|AVG_IOWAIT|AVG_CLWAIT|AVG_APWAIT|AVG_CCWAIT|AVG_PLSEXEC_TIME|COMMAND_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vcmdtype AS(
 SELECT :v_pkey AS pkey,
-       &v_a_con_id AS con_id,
+       &s_a_con_id. AS con_id,
        TO_CHAR(c.begin_interval_time, 'hh24') hh24,
        b.command_type,
        COUNT(1)                               cnt,
@@ -33,21 +33,21 @@ SELECT :v_pkey AS pkey,
        ROUND(AVG(ccwait_delta))                      AVG_CCWAIT,
        ROUND(AVG(plsexec_time_delta))                AVG_PLSEXEC_TIME,
        aa.name                                       COMMAND_NAME
-FROM   &v_tblprefix._hist_sqlstat a
-       inner join &v_tblprefix._hist_sqltext b
-               ON ( &v_a_con_id = &v_b_con_id
+FROM   &s_tblprefix._hist_sqlstat a
+       inner join &s_tblprefix._hist_sqltext b
+               ON ( &s_a_con_id. = &s_b_con_id.
                     AND a.sql_id = b.sql_id
                     AND a.dbid = b.dbid)
-       inner join &v_tblprefix._hist_snapshot c
+       inner join &s_tblprefix._hist_snapshot c
                ON (
                a.snap_id = c.snap_id
                AND a.dbid = c.dbid
                AND a.instance_number = c.instance_number)
        left outer join audit_actions aa on b.command_type = aa.action
-WHERE  a.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
-AND a.dbid = &&v_dbid
+WHERE  a.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+AND a.dbid = :v_dbid
 GROUP  BY :v_pkey,
-          &v_a_con_id,
+          &s_a_con_id.,
           TO_CHAR(c.begin_interval_time, 'hh24'),
           b.command_type, aa.name)
 SELECT pkey , con_id , hh24 , command_type , cnt , avg_buffer_gets , avg_elasped_time ,

@@ -13,6 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('dataguard');
 COLUMN DEST_ID FORMAT 9999999999
 COLUMN DEST_NAME FORMAT A20
 COLUMN DESTINATION FORMAT A200
@@ -27,11 +28,11 @@ COLUMN VALID_ROLE FORMAT A20
 COLUMN VERIFY FORMAT A20
 COLUMN LOG_ARCHIVE_CONFIG FORMAT A200
 
-spool &outputdir/opdb__dataguard__&v_tag
+spool &outputdir./opdb__dataguard__&s_tag.
 prompt PKEY|CON_ID|INST_ID|LOG_ARCHIVE_CONFIG|DEST_ID|DEST_NAME|DESTINATION|STATUS|TARGET|SCHEDULE|REGISTER|ALTERNATE|TRANSMIT_MODE|AFFIRM|VALID_ROLE|VERIFY|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vodg AS (
 SELECT  :v_pkey AS pkey,
-        &v_a_con_id as con_id, inst_id,
+        &s_a_con_id. as con_id, inst_id,
         dest_id,
         dest_name,
         REPLACE(destination ,'|', ' ')destination,
@@ -42,8 +43,8 @@ SELECT  :v_pkey AS pkey,
         REPLACE(alternate  ,'|', ' ')alternate,
         transmit_mode,
         affirm,
-        &v_dg_valid_role AS valid_role,
-        &v_dg_verify     AS verify,
+        &s_dg_valid_role. AS valid_role,
+        &s_dg_verify.     AS verify,
         'N/A' as log_archive_config
 FROM gv$archive_dest a
 WHERE destination IS NOT NULL)

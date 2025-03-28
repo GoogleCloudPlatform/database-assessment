@@ -13,7 +13,8 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__sourcecode__&v_tag
+exec dbms_application_info.set_action('sourcecode');
+spool &outputdir./opdb__sourcecode__&s_tag.
 prompt PKEY|CON_ID|OWNER|TYPE|SUM_NR_LINES|QT_OBJS|SUM_NR_LINES_W_UTL|SUM_NR_LINES_W_DBMS|COUNT_EXEC_IM|COUNT_DBMS_SQL|SUM_NR_LINES_W_DBMS_UTL|SUM_COUNT_TOTAL|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsrc AS (
 SELECT pkey,
@@ -29,7 +30,7 @@ SELECT pkey,
        SUM(count_dbms_utl) sum_nr_lines_w_dbms_utl,
        SUM(count_total)    sum_count_total
 FROM   (SELECT :v_pkey AS pkey,
-               &v_a_con_id AS con_id,
+               &s_a_con_id. AS con_id,
                owner,
                name,
                TYPE,
@@ -51,11 +52,11 @@ FROM   (SELECT :v_pkey AS pkey,
                        WHEN LOWER(text) LIKE '%dbms_sql%' THEN 1
                      END)    count_dbms_sql,
                COUNT(1)      count_total
-        FROM   &v_tblprefix._source a
+        FROM   &s_tblprefix._source a
         WHERE  owner NOT IN
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
         GROUP  BY :v_pkey,
-                  &v_a_con_id ,
+                  &s_a_con_id. ,
                   owner,
                   name,
                   TYPE)

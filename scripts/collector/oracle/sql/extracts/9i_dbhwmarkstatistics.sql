@@ -14,6 +14,6 @@
 -- limitations under the License.
 --
 -- This file intentionally left empty
-spool &outputdir/opdb__dbhwmarkstatistics__&v_tag
+spool &outputdir./opdb__dbhwmarkstatistics__&s_tag.
 prompt PKEY|DESCRIPTION|HIGHWATER|LAST_VALUE|CON_ID|DMA_SOURCE_ID|DMA_MANUAL_ID
 spool off

@@ -13,9 +13,10 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('awrhistsysmetrichist');
 COLUMN HOUR FORMAT A4
 COLUMN METRIC_UNIT FORMAT A15
-spool &outputdir/opdb__awrhistsysmetrichist__&v_tag
+spool &outputdir./opdb__awrhistsysmetrichist__&s_tag.
 prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|METRIC_NAME|METRIC_UNIT|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|MIN_VALUE|MAX_VALUE|SUM_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vsysmetric AS (
 SELECT :v_pkey AS pkey,
@@ -54,8 +55,8 @@ FROM   (
                ON hsm.snap_id = dhsnap.snap_id
                   AND hsm.instance_number = dhsnap.instance_number
                   AND hsm.dbid = dhsnap.dbid
-WHERE  dhsnap.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-AND hsm.dbid = &&v_dbid
+WHERE  dhsnap.snap_time BETWEEN :v_min_snaptime AND :v_max_snaptime
+AND hsm.dbid = :v_dbid
 GROUP  BY :v_pkey,
           hsm.dbid,
           hsm.instance_number,

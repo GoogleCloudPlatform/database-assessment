@@ -13,6 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('tabletypedtl');
 COLUMN TEMPORARY FORMAT A20
 COLUMN SECONDARY FORMAT A20
 COLUMN NESTED    FORMAT A20
@@ -23,17 +24,17 @@ COLUMN PARTITIONING_TYPE FORMAT A20
 COLUMN SUBPARTITIONING_TYPE FORMAT A20
 
 VARIABLE xml_select_sql VARCHAR2(100);
-COLUMN p_xml_select new_value v_xml_select noprint
+COLUMN p_xml_select new_value s_xml_select noprint
 
 DECLARE
   cnt NUMBER;
 BEGIN
   SELECT count(1) INTO cnt
-  FROM &v_tblprefix._views
-  WHERE view_name = upper('&v_tblprefix._XML_TABLES');
+  FROM &s_tblprefix._views
+  WHERE view_name = upper('&s_tblprefix._XML_TABLES');
 
   IF cnt > 0 THEN
-    :xml_select_sql := '&v_tblprefix._XML_TABLES';
+    :xml_select_sql := '&s_tblprefix._XML_TABLES';
   ELSE
     :xml_select_sql := '(SELECT NULL AS con_id, NULL AS owner, NULL AS table_name FROM dual WHERE 1=2)';
   END IF;
@@ -42,11 +43,11 @@ END;
 
 SELECT :xml_select_sql AS p_xml_select FROM dual;
 
-spool &outputdir/opdb__tabletypedtl__&v_tag
+spool &outputdir./opdb__tabletypedtl__&s_tag.
 prompt PKEY|CON_ID|OWNER|TABLE_NAME|PAR|IOT_TYPE|NESTED|TEMPORARY|SECONDARY|CLUSTERED_TABLE|OBJECT_TABLE|XML_TABLE|PARTITIONING_TYPE|SUBPARTITIONING_TYPE|PARTITION_COUNT|SUBPARTITION_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH tblinfo AS (
 SELECT
-    &v_a_con_id AS con_id,
+    &s_a_con_id. AS con_id,
     a.owner,
     a.table_name,
     a.partitioned,
@@ -62,13 +63,13 @@ SELECT
     END      AS clustered_table,
     'N' AS object_table,
     'N' AS xml_table
-FROM &v_tblprefix._tables a
+FROM &s_tblprefix._tables a
 WHERE a.owner NOT IN (
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
        )
 UNION ALL
 SELECT
-    &v_b_con_id AS con_id,
+    &s_b_con_id. AS con_id,
     b.owner,
     b.table_name,
     'NO' partitioned,
@@ -79,13 +80,13 @@ SELECT
     'N' clustered_table,
     'N' AS object_table,
     'Y' AS xml_table
-FROM &v_xml_select b
+FROM &s_xml_select. b
 WHERE b.owner NOT IN (
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
        )
 UNION ALL
 SELECT
-    &v_c_con_id AS con_id,
+    &s_c_con_id. AS con_id,
     c.owner,
     c.table_name,
     c.partitioned,
@@ -101,21 +102,21 @@ SELECT
     END      AS clustered_table,
     'Y' AS object_table,
     'N' AS xml_table
-FROM &v_tblprefix._object_tables c
+FROM &s_tblprefix._object_tables c
 WHERE c.owner NOT IN (
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
        )
 ),
 subpartinfo AS (
-SELECT &v_d_con_id AS con_id,
+SELECT &s_d_con_id. AS con_id,
        d.table_owner,
        d.table_name,
        count(1) cnt
-FROM &v_tblprefix._tab_subpartitions d
+FROM &s_tblprefix._tab_subpartitions d
 WHERE d.table_owner NOT IN (
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
        )
-GROUP BY &v_d_con_id,
+GROUP BY &s_d_con_id.,
        d.table_owner,
        d.table_name
 )
@@ -137,14 +138,14 @@ SELECT :v_pkey AS pkey,
        sp.cnt AS subpartition_count,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM  tblinfo a
-LEFT OUTER JOIN &v_tblprefix._part_tables p
+LEFT OUTER JOIN &s_tblprefix._part_tables p
               ON a.owner = p.owner
                AND a.table_name = p.table_name
-               AND a.con_id = &v_p_con_id
+               AND a.con_id = &s_p_con_id.
 LEFT OUTER JOIN subpartinfo sp
               ON sp.table_owner = p.owner
                AND sp.table_name = p.table_name
-               AND sp.con_id = &v_p_con_id
+               AND sp.con_id = &s_p_con_id.
 ;
 spool off
 COLUMN TEMPORARY CLEAR

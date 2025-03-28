@@ -13,17 +13,18 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('dbparameters');
 column default_value format a255
-spool &outputdir/opdb__dbparameters__&v_tag
+spool &outputdir./opdb__dbparameters__&s_tag.
 prompt PKEY|INST_ID|CON_ID|NAME|VALUE|DEFAULT_VALUE|ISDEFAULT|DMA_SOURCE_ID|DMA_MANUAL_ID
 
 WITH vparam AS (
 SELECT :v_pkey AS pkey,
        inst_id,
-       &v_a_con_id AS con_id,
+       &s_a_con_id. AS con_id,
        replace(name, chr(39), chr(34))   name,
        TRANSLATE(SUBSTR(value, 1, 60), chr(124)||chr(10)||chr(13)||chr(39), ' ')         value,
-       TRANSLATE(SUBSTR(&v_dbparam_dflt_col, 1, 30), chr(124)||chr(10)||chr(13)||chr(39), ' ')  default_value,
+       TRANSLATE(SUBSTR(&s_dbparam_dflt_col., 1, 30), chr(124)||chr(10)||chr(13)||chr(39), ' ')  default_value,
        isdefault
 FROM   gv$system_parameter a
 ORDER  BY 2,3 )

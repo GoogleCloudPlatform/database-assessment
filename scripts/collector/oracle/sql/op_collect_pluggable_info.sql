@@ -13,5 +13,5 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-@&EXTRACTSDIR/pdbsinfo.sql
+@&EXTRACTSDIR/pdbsinfo.sql '&s_pdb_join_cond.'
 @&EXTRACTSDIR/pdbsopenmode.sql

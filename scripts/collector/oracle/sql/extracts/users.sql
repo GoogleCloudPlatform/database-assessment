@@ -13,13 +13,14 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir/opdb__users__&v_tag
+exec dbms_application_info.set_action('users');
+spool &outputdir./opdb__users__&s_tag.
 prompt PKEY|CON_ID|USERNAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vuser AS (
 SELECT :v_pkey AS pkey,
-       &v_a_con_id AS con_id,
+       &s_a_con_id. AS con_id,
        username
-FROM   &v_tblprefix._users a
+FROM   &s_tblprefix._users a
 ORDER  BY username)
 SELECT pkey , con_id, username,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID

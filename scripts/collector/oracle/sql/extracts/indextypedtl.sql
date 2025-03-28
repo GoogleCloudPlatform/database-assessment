@@ -13,6 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+exec dbms_application_info.set_action('indextypedtl');
 COLUMN PARTITIONED FORMAT A20
 COLUMN TEMPORARY FORMAT A20
 COLUMN SECONDARY FORMAT A20
@@ -21,11 +22,11 @@ COLUMN JOIN_INDEX FORMAT A20
 COLUMN CUSTOM_INDEX_TYPE FORMAT A20
 COLUMN VISIBILITY FORMAT A20
 COLUMN COMPRESSION FORMAT A20
-spool &outputdir/opdb__indextypedtl__&v_tag
+spool &outputdir./opdb__indextypedtl__&s_tag.
 prompt PKEY|CON_ID|OWNER|INDEX_TYPE|UNIQUENESS|COMPRESSION|PARTITIONED|TEMPORARY|SECONDARY|VISIBILITY|JOIN_INDEX|CUSTOM_INDEX_TYPE|TABLE_NAME|INDEX_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vidxtype AS (
 SELECT :v_pkey AS pkey,
-       &v_a_con_id AS con_id,
+       &s_a_con_id. AS con_id,
        a.owner,
        a.index_type,
        a.uniqueness,
@@ -33,14 +34,14 @@ SELECT :v_pkey AS pkey,
        a.partitioned,
        a.temporary,
        a.secondary,
-       &v_index_visibility AS VISIBILITY,
+       &s_index_visibility. AS VISIBILITY,
        a.join_index,
        CASE WHEN a.ityp_owner IS NOT NULL THEN 'Y' ELSE 'N' END AS custom_index_type,
        a.table_name,
        a.index_name
-FROM   &v_tblprefix._indexes a
+FROM   &s_tblprefix._indexes a
 WHERE  owner NOT IN
-@&EXTRACTSDIR/exclude_schemas.sql
+@&EXTRACTSDIR./exclude_schemas.sql
 )
 SELECT pkey ,
        con_id ,

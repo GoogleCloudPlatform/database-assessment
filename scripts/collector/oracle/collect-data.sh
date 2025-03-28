@@ -110,7 +110,7 @@ EOF
 function executeOP {
 connectString="$1"
 OpVersion=$2
-DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
+StatsSrc=$(echo $3 | tr [[:upper:]] [[:lower:]])
 manualUniqueId="${4}"
 statsWindow=${5}
 
@@ -124,7 +124,7 @@ fi
 ${SQLPLUS} -s /nolog << EOF
 SET DEFINE OFF
 connect ${connectString}
-@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${SQLOUTPUT_DIR} "${manualUniqueId}" ${statsWindow}
+@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${StatsSrc} ${V_TAG} ${SQLOUTPUT_DIR} "${manualUniqueId}" ${statsWindow}
 exit;
 EOF
 
@@ -192,7 +192,7 @@ fi
 ERRCNT=$(wc -l < ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log)
 if [ ! -f ${OUTPUT_DIR}/opdb__eoj__${V_FILE_TAG}.csv ] ; then
 	ERRCNT=$((${ERRCNT} + 1))
-	echo "End of job marker file not found.  Data collection did not complete."
+	echo "End of job marker file not found.  Data collection did not complete." >> ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
 fi
 if [[ ${ERRCNT} -ne 0 ]]
 then
@@ -204,8 +204,8 @@ then
   echo "Please rerun the extract after correcting the error condition."
 fi
 
-TARFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tar
-ZIPFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.zip
+TARFILE=opdb_oracle_${STATSSOURCE}__${V_FILE_TAG}${V_ERR_TAG}.tar
+ZIPFILE=opdb_oracle_${STATSSOURCE}__${V_FILE_TAG}${V_ERR_TAG}.zip
 
 locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
 
@@ -358,12 +358,12 @@ statsWindow=30
  fi
 
  if [[ "${statsSrc}" = "awr" ]]; then
-          DIAGPACKACCESS="UseDiagnostics"
+          STATSSOURCE="awr"
  elif [[ "${statsSrc}" = "statspack" ]] ; then
-          DIAGPACKACCESS="NoDiagnostics"
+          STATSSOURCE="statspack"
  else
 	 echo No performance data will be collected.
-         DIAGPACKACCESS="nostatspack"
+         STATSSOURCE="nostats"
  fi
 
  if [[ ${statsWindow} -ne 30 ]] && [[ ${statsWindow} -ne 7 ]] ; then
@@ -387,21 +387,6 @@ statsWindow=30
  fi
 
 
-#############################################################################
-#
-#if [[  $# -ne 2  || (  "$2" != "UseDiagnostics" && "$2" != "NoDiagnostics" ) ]]
-# then
-#  echo
-#  echo "You must indicate whether or not to use the Diagnostics Pack views."
-#  echo "If this database is licensed to use the Diagnostics pack:"
-#  echo "  $0 $1 UseDiagnostics"
-#  echo " "
-#  echo "If this database is NOT licensed to use the Diagnostics pack:"
-#  echo "  $0 $1 NoDiagnostics"
-#  echo " "
-#  exit 1
-#fi
-
 # MAIN
 #############################################################################
 
@@ -415,7 +400,7 @@ fi
 
 retval=$?
 
-# DIAGPACKACCESS="$2"
+# STATSSOURCE="$2"
 
 extractorVersion="$(getVersion)"
 
@@ -441,11 +426,14 @@ if [ $retval -eq 0 ]; then
     else if [ "${dbmajor}" = "09" ]
       then
        echo "Oracle 9 support is experimental."
-       DIAGPACKACCESS="NoDiagnostics"
+       if [ "${STATSSOURCE}" = "awr" ]
+         then
+           STATSSOURCE="statspack"
+       fi
       fi
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS} "${manualUniqueId}" $statsWindow
+    executeOP "${connectString}" ${OpVersion} ${STATSSOURCE} "${manualUniqueId}" $statsWindow
     retval=$?
     if [ $retval -ne 0 ]; then
       createErrorLog  $(echo ${V_TAG} | sed 's/.csv//g')
