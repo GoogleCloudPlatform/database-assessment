@@ -110,7 +110,7 @@ def test_rds_logical_replication(rds_logical_replication, expected_severity):
     ("installed_extensions, expected_severity"),
     argvalues=[
         [[["unsupported_ext", "postgres", "postgres"]], "WARNING"],
-        [[["unsupported_ext", "alloydbadmin", "postgres"], ["pgAudit", "postgres", "postgres"]], "PASS"],
+        [[["unsupported_ext", "alloydbadmin", "postgres"], ["pgaudit", "postgres", "postgres"]], "PASS"],
     ],
 )
 def test_unsupported_extensions(installed_extensions, expected_severity):
