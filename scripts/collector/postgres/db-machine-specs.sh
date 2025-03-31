@@ -47,7 +47,7 @@ coreScript=$(cat <<'EOF'
     hostName=$(hostname)
     physicalCpuCount=$(cat /proc/cpuinfo | grep -i '\s*core id\s*:' | sort | uniq | wc -l)
     logicalCpuCount=$(cat /proc/cpuinfo | grep -c -i '\s*processor\s*:')
-    memoryMB=$(free -b | awk '/^Mem/{print ($2+0) / (1024*1024)}')
+    memoryMB=$(free -b | awk '/^Mem/{printf("%d\n", ($2+0) / (1024*1024))}')
     totalSizeBytes=$(df --total / | awk '/total/{printf("%.0f\n", ($2+0) * 1024)}')
     usedSizeBytes=$(df --output=used -B1 / | awk 'NR==2{printf("%.0f\n", ($1+0))}')
     ipAddresses=$(ip -4 addr show scope global | awk '/inet / {gsub(/\/.*$/, "", $2); print $2}' | tr '\n' ',')
