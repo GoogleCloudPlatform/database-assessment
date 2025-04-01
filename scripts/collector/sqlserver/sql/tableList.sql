@@ -78,7 +78,7 @@ BEGIN
 														WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 														)
 											END
-						,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+						,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( COALESCE(au.total_pages,0)      * (8/1024.00)), 2)))
 						,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
 						,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 						,[partition_type] = ISNULL(pf.type_desc,''NONE'')
@@ -149,7 +149,7 @@ BEGIN
 														WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 														)
 											END
-						,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+						,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( COALESCE(au.total_pages,0)       * (8/1024.00)), 2)))
 						,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
 						,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 						,[partition_type] = ISNULL(pf.type_desc,''NONE'')
@@ -224,7 +224,7 @@ BEGIN
 													WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 													)
 										END
-					,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+					,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( COALESCE(au.total_pages,0)      * (8/1024.00)), 2)))
 					,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
 					,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 					,[partition_type] = ISNULL(pf.type_desc,''NONE'')
@@ -296,7 +296,7 @@ BEGIN
 													WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 													)
 										END
-					,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+					,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( COALESCE(au.total_pages,0)      * (8/1024.00)), 2)))
 					,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
 					,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 					,[partition_type] = ISNULL(pf.type_desc,''NONE'')
@@ -371,7 +371,7 @@ BEGIN
 												WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 												)
 									END
-				,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+				,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( COALESCE(au.total_pages,0)      * (8/1024.00)), 2)))
 				,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
 				,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 				,[partition_type] = ISNULL(pf.type_desc,''NONE'')
@@ -443,7 +443,7 @@ BEGIN
 												WHERE i.[object_id] = p.[object_id] AND i.index_id = p.index_id
 												)
 									END
-				,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( au.total_pages                  * (8/1024.00)), 2)))
+				,[total_space_mb]   = CONVERT(NVARCHAR(255),(round(( COALESCE(au.total_pages,0)      * (8/1024.00)), 2)))
 				,[used_space_mb]    = CONVERT(NVARCHAR(255),(round(( au.used_pages                   * (8/1024.00)), 2)))
 				,[unused_space_mb]  = CONVERT(NVARCHAR(255),(round(((au.total_pages - au.used_pages) * (8/1024.00)), 2)))
 				,[partition_type] = ISNULL(pf.type_desc,''NONE'')
