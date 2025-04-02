@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from duckdb import DuckDBPyConnection
     from rich.console import Console
 
-    from dma.collector.query_managers import CanonicalQueryManager
+    from dma.collector.query_managers.base import CanonicalQueryManager
 
 
 class BaseWorkflow:
@@ -42,9 +42,9 @@ class BaseWorkflow:
         self.db_type = db_type
         self.canonical_query_manager = canonical_query_manager
 
-    async def execute(self) -> None:
+    def execute(self) -> None:
         """Execute Workflow"""
-        await self.canonical_query_manager.execute_ddl_scripts()
+        self.canonical_query_manager.execute_ddl_scripts()
 
     def import_to_table(self, data: dict[str, list[dict]]) -> None:
         """Load a dictionary of result sets into duckdb.

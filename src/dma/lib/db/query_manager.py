@@ -17,12 +17,13 @@ import contextlib
 import faulthandler
 from typing import TYPE_CHECKING, Any, TypeVar
 
+from typing_extensions import Self
+
 from dma.lib.exceptions import ApplicationError
-from dma.utils import maybe_async
 
 faulthandler.enable()
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator
+    from collections.abc import Iterator
 
     from aiosql.queries import Queries
 
@@ -50,37 +51,37 @@ class QueryManager:
         )
 
     @classmethod
-    @contextlib.asynccontextmanager
-    async def from_connection(
-        cls: type[QueryManagerT],
+    @contextlib.contextmanager
+    def from_connection(
+        cls,
         queries: Queries,
         connection: Any,
-    ) -> AsyncIterator[QueryManagerT]:
+    ) -> Iterator[Self]:
         """Context manager that returns instance of query manager object."""
         yield cls(connection=connection, queries=queries)
 
-    async def select(self, method: str, **binds: Any) -> list[dict[str, Any]]:
-        data = await maybe_async(self.fn(method)(conn=self.connection, **binds))
+    def select(self, method: str, **binds: Any) -> list[dict[str, Any]]:
+        data = self.fn(method)(conn=self.connection, **binds)
         return [dict(row) for row in data]
 
-    async def select_one(self, method: str, **binds: Any) -> dict[str, Any]:
-        data = await maybe_async(self.fn(method)(conn=self.connection, **binds))
+    def select_one(self, method: str, **binds: Any) -> dict[str, Any]:
+        data = self.fn(method)(conn=self.connection, **binds)
         return dict(data)
 
-    async def select_one_value(self, method: str, **binds: Any) -> Any:
-        return await maybe_async(self.fn(method)(conn=self.connection, **binds))
+    def select_one_value(self, method: str, **binds: Any) -> Any:
+        return self.fn(method)(conn=self.connection, **binds)
 
-    async def insert_update_delete(self, method: str, **binds: Any) -> None:
-        return await maybe_async(self.fn(method)(conn=self.connection, **binds))
+    def insert_update_delete(self, method: str, **binds: Any) -> None:
+        return self.fn(method)(conn=self.connection, **binds)
 
-    async def insert_update_delete_many(self, method: str, **binds: Any) -> Any | None:
-        return await maybe_async(self.fn(method)(conn=self.connection, **binds))
+    def insert_update_delete_many(self, method: str, **binds: Any) -> Any | None:
+        return self.fn(method)(conn=self.connection, **binds)
 
-    async def insert_returning(self, method: str, **binds: Any) -> Any | None:
-        return await maybe_async(self.fn(method)(conn=self.connection, **binds))
+    def insert_returning(self, method: str, **binds: Any) -> Any | None:
+        return self.fn(method)(conn=self.connection, **binds)
 
-    async def execute(self, method: str, **binds: Any) -> Any:
-        return await maybe_async(self.fn(method)(conn=self.connection, **binds))
+    def execute(self, method: str, **binds: Any) -> Any:
+        return self.fn(method)(conn=self.connection, **binds)
 
     def fn(self, method: str) -> Any:
         try:

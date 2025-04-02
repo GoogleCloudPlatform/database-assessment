@@ -16,11 +16,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import aiosql
-from asyncpg import UndefinedTableError
+import psycopg
 from rich.padding import Padding
 
 from dma.cli._utils import console
-from dma.collector.util.postgres.helpers import get_db_major_version
 from dma.lib.db.query_manager import QueryManager
 from dma.lib.exceptions import ApplicationError
 from dma.utils import module_to_os_path
@@ -47,13 +46,13 @@ class CanonicalQueryManager(QueryManager):
         self.manual_id = manual_id
         super().__init__(connection, queries)
 
-    async def execute_ddl_scripts(self, *args: Any, **kwargs: Any) -> None:
+    def execute_ddl_scripts(self, *args: Any, **kwargs: Any) -> None:
         """Execute pre-processing queries."""
         console.print(Padding("CANONICAL DATA MODEL", 1, style="bold", expand=True), width=80)
         with console.status("[bold green]Creating tables...[/]") as status:
             for script in self.available_queries("ddl"):
                 status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                await self.execute(script)
+                self.execute(script)
                 status.console.print(rf" [green]:heavy_check_mark:[/] Created [bold magenta]`{script}`[/]")
             if not self.available_queries("ddl"):
                 console.print(" [dim grey]:heavy_check_mark: No DDL scripts to load[/]")
@@ -91,7 +90,7 @@ class CollectionQueryManager(QueryManager):
             raise ApplicationError(msg)
         return set(self.available_queries("extended_collection"))
 
-    def get_per_db_collection_queries(self) -> set[str]:  # noqa: PLR6301
+    def get_per_db_collection_queries(self) -> set[str]:
         """Get the collection queries that need to be executed for each DB in the instance"""
         msg = "Implement this execution method."
         raise NotImplementedError(msg)
@@ -102,7 +101,7 @@ class CollectionQueryManager(QueryManager):
             raise ApplicationError(msg)
         return self.db_version
 
-    async def set_identifiers(
+    def set_identifiers(
         self,
         execution_id: str | None = None,
         source_id: str | None = None,
@@ -119,7 +118,7 @@ class CollectionQueryManager(QueryManager):
         if db_version is not None:
             self.db_version = db_version
         if self.execution_id is None or self.source_id is None or self.db_version is None:
-            init_results = await self.execute_init_queries()
+            init_results = self.execute_init_queries()
             self.source_id = (
                 source_id if source_id is not None else cast("str | None", init_results.get("init_get_source_id", None))
             )
@@ -139,7 +138,7 @@ class CollectionQueryManager(QueryManager):
         if self.expected_collection_queries is None:
             self.expected_collection_queries = self.get_collection_queries()
 
-    async def execute_init_queries(
+    def execute_init_queries(
         self,
         *args: Any,
         **kwargs: Any,
@@ -150,7 +149,7 @@ class CollectionQueryManager(QueryManager):
             results: dict[str, Any] = {}
             for script in self.available_queries("init"):
                 status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                script_result = await self.select_one_value(script)
+                script_result = self.select_one_value(script)
                 results[script] = script_result
                 status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
             if not self.available_queries("init"):
@@ -159,7 +158,7 @@ class CollectionQueryManager(QueryManager):
                 )
             return results
 
-    async def execute_collection_queries(
+    def execute_collection_queries(
         self,
         execution_id: str | None = None,
         source_id: str | None = None,
@@ -168,13 +167,13 @@ class CollectionQueryManager(QueryManager):
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Execute pre-processing queries."""
-        await self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
+        self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
         console.print(Padding("COLLECTION QUERIES", 1, style="bold", expand=True), width=80)
         with console.status("[bold green]Executing queries...[/]") as status:
             results: dict[str, Any] = {}
             for script in self.get_collection_queries():
                 status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                script_result = await self.select(
+                script_result = self.select(
                     script, PKEY=self.execution_id, DMA_SOURCE_ID=self.source_id, DMA_MANUAL_ID=self.manual_id
                 )
                 results[script] = script_result
@@ -183,7 +182,7 @@ class CollectionQueryManager(QueryManager):
                 status.console.print(" [dim grey]:heavy_check_mark: No collection queries for this database type[/]")
             return results
 
-    async def execute_extended_collection_queries(
+    def execute_extended_collection_queries(
         self,
         execution_id: str | None = None,
         source_id: str | None = None,
@@ -195,13 +194,13 @@ class CollectionQueryManager(QueryManager):
 
         Returns: None
         """
-        await self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
+        self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
         console.print(Padding("EXTENDED COLLECTION QUERIES", 1, style="bold", expand=True), width=80)
         with console.status("[bold green]Executing queries...[/]") as status:
             results: dict[str, Any] = {}
             for script in self.get_extended_collection_queries():
                 status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                script_result = await self.select(
+                script_result = self.select(
                     script, PKEY=self.execution_id, DMA_SOURCE_ID=self.source_id, DMA_MANUAL_ID=self.manual_id
                 )
                 results[script] = script_result
@@ -210,7 +209,7 @@ class CollectionQueryManager(QueryManager):
                 console.print(" [dim grey]:heavy_check_mark: No extended collection queries for this database type[/]")
             return results
 
-    async def execute_per_db_collection_queries(
+    def execute_per_db_collection_queries(
         self,
         execution_id: str | None = None,
         source_id: str | None = None,
@@ -219,197 +218,24 @@ class CollectionQueryManager(QueryManager):
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Execute per DB pre-processing queries."""
-        await self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
+        self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
         console.print(Padding("PER DB QUERIES", 1, style="bold", expand=True), width=80)
         with console.status("[bold green]Executing queries...[/]") as status:
             results: dict[str, Any] = {}
             for script in self.get_per_db_collection_queries():
                 status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
                 try:
-                    script_result = await self.select(
+                    script_result = self.select(
                         script, PKEY=self.execution_id, DMA_SOURCE_ID=self.source_id, DMA_MANUAL_ID=self.manual_id
                     )
                     results[script] = script_result
                     status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
-                except UndefinedTableError:
+                except psycopg.errors.UndefinedTable:
                     status.console.print(rf"Skipped `{script}` as the table doesn't exist")
+                except psycopg.errors.InsufficientPrivilege:
+                    status.console.print(rf"Skipped `{script}` due to insufficient privileges.")
             if not self.get_per_db_collection_queries():
                 status.console.print(
                     " [dim grey]:heavy_check_mark: No DB specific collection queries for this database type[/]"
                 )
             return results
-
-
-class PostgresCollectionQueryManager(CollectionQueryManager):
-    def __init__(
-        self,
-        connection: Any,
-        execution_id: str | None = None,
-        source_id: str | None = None,
-        manual_id: str | None = None,
-        queries: Queries = aiosql.from_path(
-            sql_path=f"{_root_path}/collector/sql/sources/postgres", driver_adapter="asyncpg"
-        ),
-    ) -> None:
-        super().__init__(
-            connection=connection, queries=queries, execution_id=execution_id, source_id=source_id, manual_id=manual_id
-        )
-
-    def get_collection_queries(self) -> set[str]:
-        if self.db_version is None:
-            msg = "Database Version was not set.  Ensure the initialization step complete successfully."
-            raise ApplicationError(msg)
-        major_version = get_db_major_version(self.db_version)
-        version_prefix = "base" if major_version > 13 else "13" if major_version == 13 else "12"
-        bg_writer_stats = (
-            "collection_postgres_bg_writer_stats"
-            if major_version < 17
-            else "collection_postgres_bg_writer_stats_from_pg17"
-        )
-        return {
-            f"collection_postgres_{version_prefix}_table_details",
-            f"collection_postgres_{version_prefix}_database_details",
-            f"collection_postgres_{version_prefix}_replication_slots",
-            "collection_postgres_applications",
-            "collection_postgres_aws_extension_dependency",
-            "collection_postgres_aws_oracle_exists",
-            bg_writer_stats,
-            "collection_postgres_calculated_metrics",
-            "collection_postgres_data_types",
-            "collection_postgres_index_details",
-            "collection_postgres_replication_stats",
-            "collection_postgres_schema_details",
-            "collection_postgres_schema_objects",
-            "collection_postgres_settings",
-            "collection_postgres_source_details",
-        }
-
-    def get_per_db_collection_queries(self) -> set[str]:
-        if self.db_version is None:
-            msg = "Database Version was not set.  Ensure the initialization step complete successfully."
-            raise ApplicationError(msg)
-        get_db_major_version(self.db_version)
-        return {
-            "collection_postgres_extensions",
-            "collection_postgres_pglogical_provider_node",
-            "collection_postgres_pglogical_privileges",
-            "collection_postgres_user_schemas_without_privilege",
-            "collection_postgres_user_tables_without_privilege",
-            "collection_postgres_user_views_without_privilege",
-            "collection_postgres_user_sequences_without_privilege",
-            "collection_postgres_tables_with_no_primary_key",
-        }
-
-    def get_collection_filenames(self) -> dict[str, str]:
-        if self.db_version is None:
-            msg = "Database Version was not set.  Ensure the initialization step complete successfully."
-            raise ApplicationError(msg)
-        major_version = get_db_major_version(self.db_version)
-        version_prefix = "base" if major_version > 13 else "13" if major_version == 13 else "12"
-        return {
-            f"collection_postgres_{version_prefix}_table_details": "postgres_table_details",
-            f"collection_postgres_{version_prefix}_database_details": "postgres_database_details",
-            f"collection_postgres_{version_prefix}_replication_slots": "postgres_replication_slots",
-            "collection_postgres_applications": "postgres_applications",
-            "collection_postgres_aws_extension_dependency": "postgres_aws_extension_dependency",
-            "collection_postgres_aws_oracle_exists": "postgres_aws_oracle_exists",
-            "collection_postgres_bg_writer_stats": "postgres_bg_writer_stats",
-            "collection_postgres_bg_writer_stats_from_pg17": "postgres_bg_writer_stats_from_pg17",
-            "collection_postgres_calculated_metrics": "postgres_calculated_metrics",
-            "collection_postgres_data_types": "postgres_data_types",
-            "collection_postgres_extensions": "postgres_extensions",
-            "collection_postgres_index_details": "postgres_index_details",
-            "collection_postgres_replication_stats": "postgres_replication_stats",
-            "collection_postgres_schema_details": "postgres_schema_details",
-            "collection_postgres_schema_objects": "postgres_schema_objects",
-            "collection_postgres_settings": "postgres_settings",
-            "collection_postgres_source_details": "postgres_source_details",
-            "collection_postgres_pglogical_provider_node": "postgres_pglogical_details",
-            "collection_postgres_tables_with_no_primary_key": "postgres_table_details",
-        }
-
-
-class MySQLCollectionQueryManager(CollectionQueryManager):
-    def __init__(
-        self,
-        connection: Any,
-        execution_id: str | None = None,
-        source_id: str | None = None,
-        manual_id: str | None = None,
-        queries: Queries = aiosql.from_path(
-            sql_path=f"{_root_path}/collector/sql/sources/mysql", driver_adapter="asyncmy"
-        ),
-    ) -> None:
-        super().__init__(
-            connection=connection, queries=queries, execution_id=execution_id, source_id=source_id, manual_id=manual_id
-        )
-
-    def get_collection_queries(self) -> set[str]:
-        if self.db_version is None:
-            msg = "Database Version was not set.  Ensure the initialization step complete successfully."
-            raise ApplicationError(msg)
-        major_version = int(self.db_version[:1])
-        version_prefix = "base" if major_version > 5.8 else "5"
-        return {
-            f"collection_mysql_{version_prefix}_resource_groups",
-            f"collection_mysql_{version_prefix}_process_list",
-            "collection_mysql_config",
-            "collection_mysql_data_types",
-            "collection_mysql_database_details",
-            "collection_mysql_engines",
-            "collection_mysql_plugins",
-            "collection_mysql_schema_objects",
-            "collection_mysql_table_details",
-            "collection_mysql_users",
-        }
-
-    def get_collection_filenames(self) -> dict[str, str]:
-        if self.db_version is None:
-            msg = "Database Version was not set.  Ensure the initialization step complete successfully."
-            raise ApplicationError(msg)
-        major_version = int(self.db_version[:1])
-        version_prefix = "base" if major_version > 5.8 else "5"
-        return {
-            f"collection_mysql_{version_prefix}_resource_groups": "mysql_resource_groups",
-            f"collection_mysql_{version_prefix}_process_list": "mysql_process_list",
-            "collection_mysql_config": "mysql_config",
-            "collection_mysql_data_types": "mysql_data_types",
-            "collection_mysql_database_details": "mysql_database_details",
-            "collection_mysql_engines": "mysql_engines",
-            "collection_mysql_plugins": "mysql_plugins",
-            "collection_mysql_schema_objects": "mysql_schema_objects",
-            "collection_mysql_table_details": "mysql_table_details",
-            "collection_mysql_users": "mysql_users",
-        }
-
-
-class OracleCollectionQueryManager(CollectionQueryManager):
-    def __init__(
-        self,
-        connection: Any,
-        execution_id: str | None = None,
-        source_id: str | None = None,
-        manual_id: str | None = None,
-        queries: Queries = aiosql.from_path(
-            sql_path=f"{_root_path}/collector/sql/sources/oracle", driver_adapter="async_oracledb"
-        ),
-    ) -> None:
-        super().__init__(
-            connection=connection, queries=queries, execution_id=execution_id, source_id=source_id, manual_id=manual_id
-        )
-
-
-class SQLServerCollectionQueryManager(CollectionQueryManager):
-    def __init__(
-        self,
-        connection: Any,
-        execution_id: str | None = None,
-        source_id: str | None = None,
-        manual_id: str | None = None,
-        queries: Queries = aiosql.from_path(
-            sql_path=f"{_root_path}/collector/sql/sources/mssql", driver_adapter="aioodbc"
-        ),
-    ) -> None:
-        super().__init__(
-            connection=connection, queries=queries, execution_id=execution_id, source_id=source_id, manual_id=manual_id
-        )

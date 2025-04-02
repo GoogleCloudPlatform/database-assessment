@@ -445,7 +445,7 @@ SELECT onr.nspname, oc.relname
 		  AND oc.relkind = 'r'::"char"
 			AND oc.relpersistence = 'p'::"char"
 			AND onr.nspname not in ('pg_catalog', 'information_schema', 'pglogical', 'pglogical_origin')
-			AND onr.nspname not like 'pg\_%'
+			AND onr.nspname not like 'pg\_%%'
 			AND (onr.nspname, oc.relname) NOT IN
 		(SELECT nr.nspname, r.relname
 		FROM pg_namespace nr,
@@ -459,6 +459,33 @@ SELECT onr.nspname, oc.relname
 			AND c.contype = 'p'::"char"
 			AND r.relkind = 'r'::"char"
 			AND NOT pg_catalog.pg_is_other_temp_schema(nr.oid))
+)
+select :PKEY as pkey,
+  :DMA_SOURCE_ID as dma_source_id,
+  :DMA_MANUAL_ID as dma_manual_id,
+  src.nspname,
+  src.relname,
+  current_database() as database_name
+from src;
+
+-- name: collection-postgres-tables-with-primary-key-replica-identity
+with src as (
+SELECT nr.nspname, r.relname
+	FROM pg_namespace nr,
+		pg_class r,
+		pg_namespace nc,
+	  pg_constraint c
+	WHERE
+			nr.oid = r.relnamespace
+			AND r.oid = c.conrelid
+			AND nc.oid = c.connamespace
+			AND c.contype = 'p'::"char"
+			AND r.relkind = 'r'::"char"
+			AND r.relpersistence = 'p'::"char"
+			AND r.relreplident IN ('f'::"char", 'n'::"char")
+			AND NOT pg_catalog.pg_is_other_temp_schema(nr.oid)
+			AND nr.nspname not in ('pg_catalog', 'information_schema', 'pglogical', 'pglogical_origin')
+			and nr.nspname not like 'pg\_%%'
 )
 select :PKEY as pkey,
   :DMA_SOURCE_ID as dma_source_id,

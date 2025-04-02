@@ -812,11 +812,18 @@ create or replace table collection_postgres_pglogical_privileges(
     pkey VARCHAR,
     dma_source_id VARCHAR,
     dma_manual_id VARCHAR,
-    has_schema_usage_privilege BOOLEAN,
     has_tables_select_privilege BOOLEAN,
     has_local_node_select_privilege BOOLEAN,
     has_node_select_privilege BOOLEAN,
     has_node_interface_select_privilege BOOLEAN,
+    database_name VARCHAR
+  );
+
+create or replace table collection_postgres_pglogical_schema_usage_privilege(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    has_schema_usage_privilege BOOLEAN,
     database_name VARCHAR
   );
 
@@ -875,6 +882,24 @@ create or replace table collection_postgres_tables_with_no_primary_key(
     dma_manual_id VARCHAR,
     nspname VARCHAR,
     relname VARCHAR,
+    database_name VARCHAR
+  );
+
+create or replace table collection_postgres_tables_with_primary_key_replica_identity(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    nspname VARCHAR,
+    relname VARCHAR,
+    database_name VARCHAR
+  );
+
+create or replace table collection_postgres_replication_role(
+    pkey VARCHAR,
+    dma_source_id VARCHAR,
+    dma_manual_id VARCHAR,
+    rolname VARCHAR,
+    rolreplication VARCHAR,
     database_name VARCHAR
   );
 

@@ -13,10 +13,22 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
+ -- name: collection-postgres-pglogical-schema-usage-privilege
+with src as (
+  select pg_catalog.has_schema_privilege('pglogical', 'USAGE') as has_schema_usage_privilege
+  from pg_extension
+  where extname = 'pglogical'
+)
+select :PKEY as pkey,
+  :DMA_SOURCE_ID as dma_source_id,
+  :DMA_MANUAL_ID as dma_manual_id,
+  src.has_schema_usage_privilege,
+  current_database() as database_name
+from src;
+
 -- name: collection-postgres-pglogical-privileges
 with src as (
-  select pg_catalog.has_schema_privilege('pglogical', 'USAGE') as has_schema_usage_privilege,
-    pg_catalog.has_table_privilege('"pglogical"."tables"', 'SELECT') as has_tables_select_privilege,
+  select pg_catalog.has_table_privilege('"pglogical"."tables"', 'SELECT') as has_tables_select_privilege,
     pg_catalog.has_table_privilege('"pglogical"."local_node"', 'SELECT') as has_local_node_select_privilege,
     pg_catalog.has_table_privilege('"pglogical"."node"', 'SELECT') as has_node_select_privilege,
     pg_catalog.has_table_privilege('"pglogical"."node_interface"', 'SELECT') as has_node_interface_select_privilege
@@ -26,7 +38,6 @@ with src as (
 select :PKEY as pkey,
   :DMA_SOURCE_ID as dma_source_id,
   :DMA_MANUAL_ID as dma_manual_id,
-  src.has_schema_usage_privilege,
   src.has_tables_select_privilege,
   src.has_local_node_select_privilege,
   src.has_node_select_privilege,
@@ -41,7 +52,10 @@ with src as (
   where nspname not in (
       'information_schema',
       'pglogical',
-      'pglogical_origin'
+      'pglogical_origin',
+      'cron',
+      'pgbouncer',
+      'google_vacuum_mgmt'
     )
     and nspname not like 'pg\_%%'
     and pg_catalog.has_schema_privilege(nspname, 'USAGE') = 'f'
@@ -121,5 +135,18 @@ select :PKEY as pkey,
   :DMA_MANUAL_ID as dma_manual_id,
   src.nspname as namespace_name,
   src.relname as rel_name,
+  current_database() as database_name
+from src;
+
+-- name: collection-postgres-replication-role
+with src as (
+  SELECT rolname, rolreplication FROM pg_catalog.pg_roles
+  WHERE rolname IN (SELECT CURRENT_USER)
+)
+select :PKEY as pkey,
+  :DMA_SOURCE_ID as dma_source_id,
+  :DMA_MANUAL_ID as dma_manual_id,
+  src.rolname,
+  src.rolreplication,
   current_database() as database_name
 from src;

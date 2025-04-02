@@ -25,8 +25,15 @@ if TYPE_CHECKING:
 
 
 @contextmanager
-def get_duckdb_connection(working_path: Path | None = None) -> Iterator[duckdb.DuckDBPyConnection]:
+def get_duckdb_connection(
+    working_path: Path | None = None, export_path: Path | None = None, database: str | None = None
+) -> Iterator[duckdb.DuckDBPyConnection]:
     """Yield a new duckdb connections and automatically manages resource cleanup."""
+
+    if database is None and export_path is not None:
+        database = f"{Path(export_path / 'assessment.db').absolute()!s}"
+    elif database is None:
+        database = ":memory:"
     if working_path is None:
         working_path = Path(tempfile.gettempdir())
     config = {
@@ -37,15 +44,11 @@ def get_duckdb_connection(working_path: Path | None = None) -> Iterator[duckdb.D
     }
     Path(working_path).mkdir(parents=True, exist_ok=True)
     with duckdb.connect(
-        database=f"{working_path!s}/assessment.db",
+        database=database,
         read_only=False,
         config=config,
     ) as local_db:
         try:
-            # for extension in extensions:
-            """
-            local_db.execute("SET disabled_optimizers TO 'join_order'")
-            """
             yield local_db
         finally:
             local_db.close()

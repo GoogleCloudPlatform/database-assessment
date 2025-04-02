@@ -13,11 +13,23 @@
 # limitations under the License.
 from __future__ import annotations
 
+import contextlib
+
 import aiosql
 
-from dma.lib.db.adapters import AIOODBCAdapter, AsyncMYAdapter, AsyncOracleDBAdapter, AsyncPGAdapter
+with contextlib.suppress(ImportError):
+    from dma.lib.db.adapters.aioodbc import AIOODBCAdapter
 
-aiosql.register_adapter("asyncpg", AsyncPGAdapter)  # type: ignore[arg-type]
-aiosql.register_adapter("asyncmy", AsyncMYAdapter)  # type: ignore[arg-type]
-aiosql.register_adapter("async_oracledb", AsyncOracleDBAdapter)  # type: ignore[arg-type]
-aiosql.register_adapter("aioodbc", AIOODBCAdapter)  # type: ignore[arg-type]
+    aiosql.register_adapter("aioodbc", AIOODBCAdapter)  # type: ignore[arg-type]
+with contextlib.suppress(ImportError):
+    from dma.lib.db.adapters.oracledb import AsyncOracleDBAdapter
+
+    aiosql.register_adapter("async_oracledb", AsyncOracleDBAdapter)  # type: ignore[arg-type]
+with contextlib.suppress(ImportError):
+    from dma.lib.db.adapters.asyncmy import AsyncMYAdapter
+
+    aiosql.register_adapter("asyncmy", AsyncMYAdapter)  # type: ignore[arg-type]
+with contextlib.suppress(ImportError):
+    from dma.lib.db.adapters.asyncpg import AsyncPGAdapter
+
+    aiosql.register_adapter("asyncpg", AsyncPGAdapter)  # type: ignore[arg-type]

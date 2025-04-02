@@ -15,31 +15,26 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from dma.collector.query_managers import (
-    CanonicalQueryManager,
-    CollectionQueryManager,
-    MySQLCollectionQueryManager,
-    OracleCollectionQueryManager,
-    PostgresCollectionQueryManager,
-    SQLServerCollectionQueryManager,
-)
+from dma.collector.query_managers.base import CanonicalQueryManager
 from dma.lib.db.local import get_duckdb_connection
 from dma.lib.exceptions import ApplicationError
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator, Generator
+    from collections.abc import Generator, Iterator
     from pathlib import Path
 
     import duckdb
-    from sqlalchemy.ext.asyncio import AsyncSession
+    from sqlalchemy.orm import Session
+
+    from dma.collector.query_managers.base import CollectionQueryManager
 
 
-async def provide_collection_query_manager(
-    db_session: AsyncSession,
+def provide_collection_query_manager(
+    db_session: Session,
     execution_id: str | None = None,
     source_id: str | None = None,
     manual_id: str | None = None,
-) -> AsyncIterator[CollectionQueryManager]:
+) -> Iterator[CollectionQueryManager]:
     """Provide collection query manager.
 
     Uses SQLAlchemy Connection management to establish and retrieve a valid database session.
@@ -47,14 +42,19 @@ async def provide_collection_query_manager(
     The driver dialect is detected from the session and the underlying raw DBAPI connection is fetched and passed to the Query Manager.
     """
     dialect = db_session.bind.dialect if db_session.bind is not None else db_session.get_bind().dialect
-    db_connection = await db_session.connection()
+    db_connection = db_session.connection()
 
-    raw_connection = await db_connection.get_raw_connection()
+    raw_connection = db_connection.engine.raw_connection()
     if not raw_connection.driver_connection:
         msg = "Unable to fetch raw connection from session."
         raise ApplicationError(msg)
     rdbms_type = dialect.name
     if rdbms_type == "postgresql":
+        from psycopg.rows import dict_row  # noqa: PLC0415
+
+        from dma.collector.query_managers.postgres import PostgresCollectionQueryManager  # noqa: PLC0415
+
+        raw_connection.driver_connection.row_factory = dict_row
         query_manager: CollectionQueryManager = PostgresCollectionQueryManager(
             connection=raw_connection.driver_connection,
             manual_id=manual_id,
@@ -62,6 +62,8 @@ async def provide_collection_query_manager(
             execution_id=execution_id,
         )
     elif rdbms_type == "mysql":
+        from dma.collector.query_managers.mysql import MySQLCollectionQueryManager  # noqa: PLC0415
+
         query_manager = MySQLCollectionQueryManager(
             connection=raw_connection.driver_connection,
             manual_id=manual_id,
@@ -69,6 +71,8 @@ async def provide_collection_query_manager(
             execution_id=execution_id,
         )
     elif rdbms_type == "oracle":
+        from dma.collector.query_managers.oracle import OracleCollectionQueryManager  # noqa: PLC0415
+
         query_manager = OracleCollectionQueryManager(
             connection=raw_connection.driver_connection,
             manual_id=manual_id,
@@ -76,6 +80,8 @@ async def provide_collection_query_manager(
             execution_id=execution_id,
         )
     elif rdbms_type == "mssql":
+        from dma.collector.query_managers.mssql import SQLServerCollectionQueryManager  # noqa: PLC0415
+
         query_manager = SQLServerCollectionQueryManager(
             connection=raw_connection.driver_connection,
             manual_id=manual_id,
@@ -89,11 +95,13 @@ async def provide_collection_query_manager(
 
 
 def provide_canonical_queries(
-    local_db: duckdb.DuckDBPyConnection | None = None, working_path: Path | None = None
+    local_db: duckdb.DuckDBPyConnection | None = None,
+    working_path: Path | None = None,
+    export_path: Path | None = None,
 ) -> Generator[CanonicalQueryManager, None, None]:
     """Construct repository and service objects for the request."""
     if local_db:
         yield CanonicalQueryManager(connection=local_db)
     else:
-        with get_duckdb_connection(working_path=working_path) as db_connection:
+        with get_duckdb_connection(working_path=working_path, export_path=export_path) as db_connection:
             yield CanonicalQueryManager(connection=db_connection)

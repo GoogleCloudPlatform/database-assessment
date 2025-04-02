@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.41"
+OpVersion="4.3.43"
 dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
@@ -468,21 +468,6 @@ DIAGPACKACCESS="postgres"
  else manualUniqueId='NA'
 
  fi
-
-#############################################################################
-
-# if [[  $# -lt 3  || $# -gt 4 || (  "$2" != "UseDiagnostics" && "$2" != "NoDiagnostics" ) ]]
-#  then
-#   echo
-#   echo "You must indicate whether or not to use the Diagnostics Pack views."
-#   echo "If this database is licensed to use the Diagnostics pack:"
-#   echo "  $0 $1 UseDiagnostics"
-#   echo " "
-#   echo "If this database is NOT licensed to use the Diagnostics pack:"
-#   echo "  $0 $1 NoDiagnostics"
-#   echo " "
-#   exit 1
-# fi
 
 # MAIN
 #############################################################################
