@@ -131,6 +131,7 @@ V_FILE_TAG=$3
 V_MANUAL_ID="${4}"
 V_PGVERSION="${5}"
 allDbs="${6}"
+V_PKEY="${7}"
 user=$(echo "${connectString}" | cut -d '/' -f 1)
 pass=$(echo "${connectString}" | cut -d '/' -f 2 | cut -d '@' -f 1)
 host=$(echo "${connectString}" | cut -d '/' -f 4 | cut -d ':' -f 1)
@@ -143,6 +144,9 @@ if ! [ -x "$(command -v ${SQLCMD})" ]; then
   exit 1
 fi
 
+if [[ "${V_PARENT_TAG}" == "" ]]; then
+  export V_PARENT_TAG="${V_FILE_TAG}"
+fi
 
 DMA_SOURCE_ID=$(PGPASSWORD="$pass" ${SQLCMD} -X --user=$user  -h $host -w -p $port -d "$db" -t --no-align <<EOF
 SELECT system_identifier FROM pg_control_system();
@@ -172,7 +176,6 @@ if [[ "${allDbs}" == "Y" ]] ;
 then
       export OLDIFS=$IFS
       IFS=$(echo -en "\n\b")
-      echo PGPASSWORD="${pass}" ${SQLCMD}  --user=$user  -h $host -w -p $port -d "${db}" -t --no-align
       dblist=$(PGPASSWORD="${pass}" ${SQLCMD}  --user=$user  -h $host -w -p $port -d "${db}" -t --no-align <<EOF
 SELECT datname FROM pg_database WHERE datname NOT LIKE 'template%' ORDER BY datname;
 EOF
@@ -182,24 +185,44 @@ EOF
 	do
             export DMA_RECURSION=1
             export IFS=$OLDIFS
-  	    ./collect-data.sh --connectionStr ${user}/${pass}@//${host}:${port}/"${db}"  --manualUniqueId ${V_MANUAL_ID}  --specsPath "$specsOut" --allDbs N
+            dbext=$(echo "${db}" | tr ' ' '~')
+            executeOPPg "${user}/${pass}@//${host}:${port}/${db}" ${OpVersion} "${V_PARENT_TAG}~${dbext}" "${manualUniqueId}" "${PGVER}" N "${V_PKEY}"
 	done
         if [ -f ${specsOut} ]; then
           rm ${specsOut}
         fi
-	exit
+	return
 else
 # If given a database name, create a collection for that one database.
+if [[ "${DMA_RECURSION}" == "" ]]
+then
+  DMA_RECURSION=0
+fi
 export PGPASSWORD="$pass"
-${SQLCMD} -X --user=${user} -d "${db}" -h ${host} -w -p ${port}  --no-align --echo-errors 2>output/opdb__stderr_${V_FILE_TAG}.log <<EOF
+${SQLCMD} -X --user=${user} -d "${db}" -h ${host} -w -p ${port}  --no-align --echo-errors 2>>output/opdb__stderr_${V_PARENT_TAG}.log <<EOF
 \set VTAG ${V_FILE_TAG}
-\set PKEY '\'${V_FILE_TAG}\''
+\set PKEY '\'${V_PKEY}\''
 \set DMA_SOURCE_ID '\'${DMA_SOURCE_ID}\''
 \set DMA_MANUAL_ID '\'${V_MANUAL_ID}\''
 \set VPGVERSION ${V_PGVERSION}
 \i sql/op_collect.sql
 EOF
 
+if ! [[ "${V_FILE_TAG}" == "${V_PARENT_TAG}" ]]
+  then
+    echo "Consolidating files for tag ${V_FILE_TAG}"
+    for ff in output/opdb*${V_PARENT_TAG}~*.csv
+    do
+      of=$(echo "${ff}" | sed "s/${V_FILE_TAG}/${V_PARENT_TAG}/" )
+      if [ -f "${of}" ]
+      then
+         tail +2 "${ff}" >> "${of}"
+         rm "${ff}"
+      else
+         mv "${ff}" "${of}"
+      fi
+    done
+  fi
 fi
 }
 
@@ -240,10 +263,16 @@ do
     ${SED} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
     cp sed_${V_FILE_TAG}.tmp ${outfile}
     rm sed_${V_FILE_TAG}.tmp
-  else
-	  ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 s/[a-z]/\U&/g' ${outfile} > sed_${V_FILE_TAG}.tmp
+  else if [ "$(uname)" = "Darwin" ]
+  then
+    ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/' ${outfile} > sed_${V_FILE_TAG}.tmp
     cp sed_${V_FILE_TAG}.tmp ${outfile}
     rm sed_${V_FILE_TAG}.tmp
+  else
+    ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 s/[a-z]/\U&/g' ${outfile} > sed_${V_FILE_TAG}.tmp
+    cp sed_${V_FILE_TAG}.tmp ${outfile}
+    rm sed_${V_FILE_TAG}.tmp
+  fi
   fi
   fi
   fi
@@ -397,7 +426,7 @@ echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {pass
 ### Validate input
 
 hostName=""
-port=""
+port="5432"
 databaseService="postgres"
 collectionUserName=""
 collectionUserPass=""
@@ -405,7 +434,7 @@ DBTYPE="postgres"
 statsSrc=""
 connStr=""
 manualUniqueId=""
-vmUserName=""
+vmUserName="${USER}"
 extraSSHArgs=()
 specsPath=""
 allDbs="Y"
@@ -509,28 +538,29 @@ if [ $retval -eq 0 ]; then
   else
     echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
     dbmajor=$((echo ${sqlcmd_result} | cut -d '|' -f1)  |cut -d '.' -f 1)
-    V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
+    P_KEY="$(echo ${sqlcmd_result} | cut -d '|' -f2)"
+    V_TAG="${P_KEY}.csv"; export V_TAG
 
     if [ "$DBTYPE" == "postgres" ]; then
       PGVER=$(echo $dbmajor | cut -c 1-2)
       if [ $PGVER -gt 13 ] ; then
         PGVER="base"
       fi
-      executeOPPg "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g') "${manualUniqueId}" "${PGVER}" "${allDbs}"
+      executeOPPg "${connectString}" ${OpVersion} "${P_KEY}" "${manualUniqueId}" "${PGVER}" "${allDbs}" "${P_KEY}"
       retval=$?
     fi
 
     if [ $retval -ne 0 ]; then
-      createErrorLog  $(echo ${V_TAG} | ${SED} 's/.csv//g')
-      compressOpFiles $(echo ${V_TAG} | ${SED} 's/.csv//g') ${hostName}
+      createErrorLog  "${P_KEY}"
+      compressOpFiles "${P_KEY}" ${hostName}
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${LOG_DIR}"
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Exiting...."
       exit 255
     fi
-    createErrorLog  $(echo ${V_TAG} | sed 's/.csv//g')
-    cleanupOpOutput $(echo ${V_TAG} | sed 's/.csv//g')
+    createErrorLog  "${P_KEY}"
+    cleanupOpOutput "${P_KEY}"
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -539,7 +569,7 @@ if [ $retval -eq 0 ]; then
       echo "Exiting...."
       exit 255
     fi
-    compressOpFiles $(echo ${V_TAG} | ${SED} 's/.csv//g') ${hostName}
+    compressOpFiles "${P_KEY}" ${hostName}
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
