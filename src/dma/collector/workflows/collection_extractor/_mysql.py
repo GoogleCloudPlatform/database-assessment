@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     import duckdb
     from rich.console import Console
 
-    from dma.collector.query_managers import CanonicalQueryManager
+    from dma.collector.query_managers.base import CanonicalQueryManager
 
 
 def print_summary_mysql(

@@ -16,8 +16,23 @@
 set -euxo pipefail
 current_version=$(hatch version)
 
-export PYAPP_VERSION="v0.27.0"
+
 export HATCH_BUILD_LOCATION="dist"
+export CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_DEBUG="true"
+# export CARGO_BUILD_TARGET="x86_64-unknown-linux-gnu"
+export RUST_BACKTRACE="full"
+export PYAPP_VERSION="v0.27.0"
+export PYAPP_REPO="dist/.scratch"
+export PYAPP_PROJECT_PATH="$(realpath dist/dma-${current_version}-py3-none-any.whl)"
+export PYAPP_PROJECT_NAME="dma"
+export PYAPP_PROJECT_VERSION="${current_version}"
+export PYAPP_PROJECT_DEPENDENCY_FILE="$(realpath dist/requirements.txt)"
+export PYAPP_PYTHON_VERSION="3.12"
+export PYAPP_PROJECT_FEATURES="postgres"
+export PYAPP_DISTRIBUTION_VARIANT="v1"
+export PYAPP_UV_ENABLED="true"
+export PYAPP_FULL_ISOLATION="true"
+export PYAPP_DISTRIBUTION_EMBED="true"
 rm -Rf dist/.scratch
 git clone --quiet --depth 1 --branch $PYAPP_VERSION https://github.com/ofek/pyapp dist/.scratch
 
@@ -25,20 +40,5 @@ hatch build
 hatch dep show requirements --project-only > dist/requirements.txt
 hatch dep show requirements -p  -f postgres -f server >> dist/requirements.txt
 echo "$(realpath dist/dma-${current_version}-py3-none-any.whl)" >> dist/requirements.txt
+cd dist/.scratch && cargo build --release  &&  cd -
 
-
-CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_DEBUG="true" \
-CARGO="cargo" \
-PYAPP_REPO="dist/.scratch" \
-PYAPP_PROJECT_DEPENDENCY_FILE="$(realpath dist/requirements.txt)" \
-CARGO_BUILD_TARGET="x86_64-unknown-linux-musl" \
-RUST_BACKTRACE="full" \
-PYAPP_PROJECT_PATH="$(realpath dist/dma-${current_version}-py3-none-any.whl)" \
-PYAPP_PYTHON_VERSION="3.13" \
-PYAPP_PROJECT_FEATURES="postgres" \
-PYAPP_PIP_EXTRA_ARGS="--only-binary :all:" \
-PYAPP_DISTRIBUTION_VARIANT="v1" \
-PYAPP_UV_ENABLED="true" \
-PYAPP_FULL_ISOLATION="true" \
-PYAPP_DISTRIBUTION_EMBED="true" \
-hatch -v build -t binary

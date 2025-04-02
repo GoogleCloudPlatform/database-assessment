@@ -645,7 +645,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     if ext.name not in c.supported_extensions:
                         unsupported_extensions.append(ext.name)
                 if len(unsupported_extensions) != 0:
-                    ext_err += f"database {db} has unsupported extensions installed and they will be not be migrated: {','.join(unsupported_extensions)};\n\n"
+                    ext_err += f"database {db} has unsupported extensions installed and they will not be migrated: {','.join(unsupported_extensions)};\n\n"
             if ext_err == "":
                 self.save_rule_result(
                     c.db_variant,
@@ -671,7 +671,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 extensions_not_migrated = [ext.name for ext in extensions if ext.name in NONMIGRATED_EXTENSIONS]
 
                 if len(extensions_not_migrated) != 0:
-                    ext_err += f"database {db} has extensions that will be not be migrated: {','.join(extensions_not_migrated)};\n\n"
+                    ext_err += f"database {db} has extensions that will not be migrated: {','.join(extensions_not_migrated)};\n\n"
 
             if ext_err == "":
                 self.save_rule_result(
