@@ -40,11 +40,11 @@ SELECT CASE WHEN &s_is_container. != 0 THEN 'c.con_id'   ELSE '''N/A''' END as c
        CASE WHEN &s_is_container. != 0 THEN 's.con_id'   ELSE '''N/A''' END as s_con_id
 FROM DUAL;
 
-SELECT  CASE WHEN '&s_dbversion.' LIKE '9%' OR '&s_dbversion.' LIKE '10%' OR  '&s_dbversion.' = '111' THEN '''N/A''' ELSE 't.segment_created'   END as t_segment_created,
-        CASE WHEN '&s_dbversion.' LIKE '9%' OR '&s_dbversion.' LIKE '10%' OR  '&s_dbversion.' = '111' THEN '''N/A''' ELSE 'tp.segment_created'  END as tp_segment_created,
-        CASE WHEN '&s_dbversion.' LIKE '9%' OR '&s_dbversion.' LIKE '10%' OR  '&s_dbversion.' = '111' THEN '''N/A''' ELSE 'lp.segment_created'  END as lp_segment_created,
-        CASE WHEN '&s_dbversion.' LIKE '9%' OR '&s_dbversion.' LIKE '10%' OR  '&s_dbversion.' = '111' THEN '''N/A''' ELSE 'tsp.segment_created' END as tsp_segment_created,
-        CASE WHEN '&s_dbversion.' LIKE '9%' OR '&s_dbversion.' LIKE '10%' OR  '&s_dbversion.' = '111' THEN '''N/A''' ELSE 'lsp.segment_created' END as lsp_segment_created
+SELECT  CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 't.segment_created'   END as t_segment_created,
+        CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'tp.segment_created'  END as tp_segment_created,
+        CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'lp.segment_created'  END as lp_segment_created,
+        CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'tsp.segment_created' END as tsp_segment_created,
+        CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'lsp.segment_created' END as lsp_segment_created
 FROM DUAL;
 
 
@@ -143,7 +143,7 @@ FROM
 WHERE
     c.data_type LIKE '%LOB%'
     AND c.owner NOT IN (
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
     )
 )
 SELECT  :v_pkey AS pkey,

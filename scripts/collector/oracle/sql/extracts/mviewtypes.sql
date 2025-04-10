@@ -34,7 +34,7 @@ SELECT
     a.compile_state
 FROM &s_tblprefix._mviews a
 WHERE a.owner NOT IN (
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
        )
 )
 SELECT :v_pkey AS pkey,

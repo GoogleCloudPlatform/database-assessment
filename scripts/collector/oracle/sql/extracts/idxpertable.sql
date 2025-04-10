@@ -21,7 +21,7 @@ SELECT :v_pkey AS pkey,
        &s_a_con_id. AS con_id, table_owner, table_name, count(1) idx_cnt
 FROM &s_tblprefix._indexes a
 WHERE  owner NOT IN
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
 group by &s_a_con_id., table_owner, table_name),
 vcidx AS (
 SELECT pkey,

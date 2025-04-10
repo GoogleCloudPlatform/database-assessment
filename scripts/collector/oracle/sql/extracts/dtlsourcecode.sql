@@ -55,7 +55,7 @@ FROM   (SELECT :v_pkey AS pkey,
                COUNT(1)      count_total
         FROM   &s_tblprefix._source a
         WHERE  owner NOT IN
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
         GROUP  BY :v_pkey,
                   &s_a_con_id. ,
                   owner,

@@ -50,7 +50,7 @@ FROM sys.container$ c, sys.obj$ o
 WHERE o.obj# = c.obj# AND con_id#=1),
 vpdbinfo AS (
             SELECT p.*,
-@&EXTRACTSDIR./app_schemas.sql 
+@sql/extracts/app_schemas.sql 
             FROM opdbinfo p ),
 pdb_sga AS (
             SELECT con_id, inst_id, SUM(bytes) AS sga_allocated_bytes

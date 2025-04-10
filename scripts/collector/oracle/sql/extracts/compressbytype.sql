@@ -46,7 +46,7 @@ WITH vcompresstype AS (
                     AND b.partition_name IS NULL
                     AND compression = 'ENABLED'
                     AND a.owner NOT IN
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
              GROUP  BY &s_a_con_id.,
                        a.owner,
                        &s_compress_col.
@@ -63,7 +63,7 @@ WITH vcompresstype AS (
                     AND a.partition_name = b.partition_name
                     AND compression = 'ENABLED'
                     AND a.table_owner NOT IN
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
              GROUP  BY &s_a_con_id.,
                        a.table_owner,
                        &s_compress_col.
@@ -80,7 +80,7 @@ WITH vcompresstype AS (
                     AND a.subpartition_name = b.partition_name
                     AND compression = 'ENABLED'
                     AND a.table_owner NOT IN
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
              GROUP  BY &s_a_con_id.,
                        a.table_owner,
                        &s_compress_col.)

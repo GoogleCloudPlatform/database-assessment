@@ -25,15 +25,15 @@ DEFINE s_manualUniqueId=&6
 DEFINE p_statsWindow=&7
 
 DEFINE EXTRACTSDIR=&SQLDIR/extracts
-DEFINE AWRDIR=&EXTRACTSDIR/awr
-DEFINE STATSPACKDIR=&EXTRACTSDIR/statspack
+DEFINE AWRDIR=sql/extracts/awr
+DEFINE STATSPACKDIR=sql/extracts/statspack
 DEFINE TERMOUTOFF=OFF
 prompt
 prompt ***********************************************************************************
 prompt
 prompt !!! ATTENTION !!!
 prompt
-@&SQLDIR/prompt_&s_useawr
+@&SQLDIR/prompt_&s_useawr.
 prompt
 prompt
 prompt ***********************************************************************************
@@ -53,43 +53,42 @@ prompt Collecting Database Migration Assessment data...
 prompt
 
 set termout &TERMOUTOFF
-@&EXTRACTSDIR/defines.sql
-@&EXTRACTSDIR/archlogs.sql
-@&EXTRACTSDIR/users.sql
-@&EXTRACTSDIR/&s_ora9ind.backups.sql
-@&EXTRACTSDIR/columntypes.sql
--- @&EXTRACTSDIR/compressbytype.sql
-@&EXTRACTSDIR/&s_ora9ind.cpucoresusage.sql
-@&EXTRACTSDIR/dataguard.sql
-@&EXTRACTSDIR/datatypes.sql
-@&EXTRACTSDIR/&s_ora9ind.dbfeatures.sql
-@&EXTRACTSDIR/&s_ora9ind.dbhwmarkstatistics.sql
-@&EXTRACTSDIR/dbinstances.sql
-@&EXTRACTSDIR/dblinks.sql
-@&EXTRACTSDIR/dbobjects.sql
-@&EXTRACTSDIR/dbobjectnames.sql
-@&EXTRACTSDIR/dbparameters.sql
-@&EXTRACTSDIR/dbsummary.sql
-@&EXTRACTSDIR/exttab.sql
-@&EXTRACTSDIR/idxpertable.sql
-@&EXTRACTSDIR/indextypes.sql
-@&EXTRACTSDIR/indextypedtl.sql
-@&EXTRACTSDIR/mviewtypes.sql
-@&EXTRACTSDIR/opkeylog.sql
-@&EXTRACTSDIR/sourcecode.sql
-@&EXTRACTSDIR/dtlsourcecode.sql
-@&EXTRACTSDIR/tablesnopk.sql
-@&EXTRACTSDIR/tableconstraints.sql
-@&EXTRACTSDIR/tabletypes.sql
-@&EXTRACTSDIR/tabletypedtl.sql
-@&EXTRACTSDIR/triggers.sql
-@&EXTRACTSDIR/usedspacedetails.sql
-@&EXTRACTSDIR/usrsegatt.sql
-@&SQLDIR/&s_dopluggable
-@&SQLDIR/op_collect_&s_useawr
-@&EXTRACTSDIR/lobsizing.sql
---@&EXTRACTSDIR/opatch.sql
-@&EXTRACTSDIR/eoj.sql
+@sql/extracts/defines.sql
+@sql/extracts/archlogs.sql
+@sql/extracts/users.sql
+@sql/extracts/&s_ora9ind.backups.sql
+@sql/extracts/columntypes.sql
+-- @sql/extracts/compressbytype.sql
+@sql/extracts/&s_ora9ind.cpucoresusage.sql
+@sql/extracts/dataguard.sql
+@sql/extracts/datatypes.sql
+@sql/extracts/&s_ora9ind.dbfeatures.sql
+@sql/extracts/&s_ora9ind.dbhwmarkstatistics.sql
+@sql/extracts/dbinstances.sql
+@sql/extracts/dblinks.sql
+@sql/extracts/dbobjects.sql
+@sql/extracts/dbobjectnames.sql
+@sql/extracts/dbparameters.sql
+@sql/extracts/dbsummary.sql
+@sql/extracts/exttab.sql
+@sql/extracts/idxpertable.sql
+@sql/extracts/indextypes.sql
+@sql/extracts/indextypedtl.sql
+@sql/extracts/mviewtypes.sql
+@sql/extracts/opkeylog.sql
+@sql/extracts/sourcecode.sql
+@sql/extracts/dtlsourcecode.sql
+@sql/extracts/tablesnopk.sql
+@sql/extracts/tableconstraints.sql
+@sql/extracts/tabletypes.sql
+@sql/extracts/tabletypedtl.sql
+@sql/extracts/triggers.sql
+@sql/extracts/usedspacedetails.sql
+@sql/extracts/usrsegatt.sql
+@sql/&s_dopluggable.
+@sql/op_collect_&s_useawr.
+@sql/extracts/lobsizing.sql
+@sql/extracts/eoj.sql
 
 set termout on
 prompt Step completed.

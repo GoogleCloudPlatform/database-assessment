@@ -18,6 +18,7 @@ column FORCE_LOGGING format A15
 set echo on
 set verify on
 define s_app_join_cond='&s_cdb_join_cond.'
+define s_app_join_dbsum_cond='&s_cdb_join_cond.'
 spool &outputdir./opdb__dbsummary__&s_tag.
 prompt PKEY|DBID|DB_NAME|CDB|DB_VERSION|DB_FULLVERSION|LOG_MODE|FORCE_LOGGING|REDO_GB_PER_DAY|RAC_DBINSTANCES|CHARACTERSET|PLATFORM_NAME|STARTUP_TIME|USER_SCHEMAS|BUFFER_CACHE_MB|SHARED_POOL_MB|TOTAL_PGA_ALLOCATED_MB|DB_SIZE_ALLOCATED_GB|DB_SIZE_IN_USE_GB|DB_LONG_SIZE_GB|DG_DATABASE_ROLE|DG_PROTECTION_MODE|DG_PROTECTION_LEVEL|DB_SIZE_TEMP_ALLOCATED_GB|DB_SIZE_REDO_ALLOCATED_GB|EBS_OWNER|SIEBEL_OWNER|PSFT_OWNER|RDS_FLAG|OCI_AUTONOMOUS_FLAG|DBMS_CLOUD_PKG_INSTALLED|APEX_INSTALLED|SAP_OWNER|DB_UNIQUE_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdbsummary AS (
@@ -65,7 +66,7 @@ SELECT :v_pkey AS pkey,
        (SELECT COUNT(1)
         FROM   &s_tblprefix._users
         WHERE  username NOT IN
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
        )
                                                                                AS user_schemas,
        (SELECT ROUND(SUM(bytes / 1024 / 1024))
@@ -101,7 +102,7 @@ SELECT :v_pkey AS pkey,
         FROM v$log l,
              v$logfile f
         WHERE f.group# = l.group#     )                                         AS db_size_redo_allocated_gb,
-@&EXTRACTSDIR./app_schemas.sql 
+@sql/extracts/app_schemas_dbsummary.sql 
         , (SELECT &s_db_unique_name. as db_unique_name
            FROM v$database)                                                     AS db_unique_name
 FROM   dual)

@@ -17,7 +17,7 @@ spool &outputdir./opdb__allvars__&s_tag.
 
 PROMPT "SUBSTITUTION VARIABLES"
 PROMPT AWRDIR                        = &AWRDIR.
-PROMPT EXTRACTSDIR                   = &EXTRACTSDIR.
+PROMPT EXTRACTSDIR                   = extracts
 PROMPT SQLDIR                        = &SQLDIR.
 PROMPT STATSPACKDIR                  = &STATSPACKDIR.
 PROMPT TERMOUTOFF                    = &TERMOUTOFF.
@@ -27,24 +27,26 @@ PROMPT p_statsWindow                 = &p_statsWindow.
 PROMPT s_a_con_id                    = &s_a_con_id.
 PROMPT s_b_con_id                    = &s_b_con_id.
 PROMPT s_c_con_id                    = &s_c_con_id.
+-- PROMPT s_app_join_cond               ='&s_app_join_cond.'
+-- PROMPT s_app_join_dbsum_cond         ='&s_app_join_dbsum_cond.'
 PROMPT s_cdb_join_cond               = &s_cdb_join_cond.
 PROMPT s_compress_col                = &s_compress_col.
 PROMPT s_d_con_id                    = &s_d_con_id.
 PROMPT s_db_container_col            = &s_db_container_col.
 PROMPT s_db_unique_name              = &s_db_unique_name.
 PROMPT s_dbid                        = &s_dbid.
-PROMPT s_dbname                      = &s_dbname.
+--PROMPT s_dbname                      = &s_dbname.
 PROMPT s_dbparam_dflt_col            = &s_dbparam_dflt_col.
-PROMPT s_dbversion                   = &s_dbversion.
+--PROMPT s_dbversion                   = &s_dbversion.
 PROMPT s_dg_valid_role               = &s_dg_valid_role.
 PROMPT s_dg_verify                   = &s_dg_verify.
 PROMPT s_editionable_col             = &s_editionable_col.
 PROMPT s_h_con_id                    = &s_h_con_id.
-PROMPT s_hora                        = &s_hora.
-PROMPT s_host                        = &s_host.
+--PROMPT s_hora                        = &s_hora.
+--PROMPT s_host                        = &s_host.
 PROMPT s_index_visibility            = &s_index_visibility.
 PROMPT s_info_prompt                 = &s_info_prompt.
-PROMPT s_inst                        = &s_inst.
+--PROMPT s_inst                        = &s_inst.
 PROMPT s_is_container                = &s_is_container.
 PROMPT s_lob_compression_col         = &s_lob_compression_col.
 PROMPT s_lob_dedup_col               = &s_lob_dedup_col.
@@ -66,6 +68,7 @@ PROMPT s_tag                         = &s_tag.
 PROMPT s_tblprefix                   = &s_tblprefix.
 PROMPT s_umf_test                    = &s_umf_test.
 PROMPT s_useawr                      = &s_useawr.
+
 
 PROMPT
 PROMPT "BIND VARIABLES"

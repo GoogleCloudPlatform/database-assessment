@@ -40,7 +40,7 @@ SELECT :v_pkey AS pkey,
        COUNT(1) as cnt
 FROM   &s_tblprefix._indexes a
 WHERE  owner NOT IN
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
 GROUP  BY :v_pkey,
           &s_a_con_id. ,
           a.owner,

@@ -124,7 +124,7 @@ fi
 ${SQLPLUS} -s /nolog << EOF
 SET DEFINE OFF
 connect ${connectString}
-@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${StatsSrc} ${V_TAG} ${SQLOUTPUT_DIR} "${manualUniqueId}" ${statsWindow}
+@${SQL_DIR}/op_collect.sql ${OpVersion} sql ${StatsSrc} ${V_TAG} output "${manualUniqueId}" ${statsWindow}
 exit;
 EOF
 

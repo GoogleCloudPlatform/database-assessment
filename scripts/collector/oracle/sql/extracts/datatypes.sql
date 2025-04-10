@@ -29,7 +29,7 @@ SELECT /*+ USE_HASH(b a) NOPARALLEL */ :v_pkey AS pkey,
        count(distinct &s_a_con_id.||a.owner||table_name) as distinct_table_count
 FROM   &s_tblprefix._tab_columns a INNER JOIN &s_tblprefix._objects b ON &s_a_con_id. = &s_b_con_id. AND a.owner = b.owner AND a.table_name = b.object_name and b.object_type = 'TABLE'
 WHERE  a.owner NOT IN
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
 GROUP  BY :v_pkey,
           &s_a_con_id. ,
           a.owner,

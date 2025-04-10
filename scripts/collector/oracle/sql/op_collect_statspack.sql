@@ -13,14 +13,14 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-prompt statspackdir = &STATSPACKDIR
-@&STATSPACKDIR/awrsnapdetails.sql
-@&STATSPACKDIR/awrhistcmdtypes.sql
-@&STATSPACKDIR/awrhistosstat.sql
-@&STATSPACKDIR/awrhistsysmetrichist.sql
-@&STATSPACKDIR/awrhistsysmetricsumm.sql
-@&STATSPACKDIR/dbahistsysstat.sql
-@&STATSPACKDIR/dbahistsystimemodel.sql
-@&STATSPACKDIR/ioevents.sql
-@&STATSPACKDIR/&s_io_function_sql
-@&STATSPACKDIR/sqlstats.sql
+prompt statspackdir = &STATSPACKDIR.
+@&STATSPACKDIR./awrsnapdetails.sql
+@&STATSPACKDIR./awrhistcmdtypes.sql
+@&STATSPACKDIR./awrhistosstat.sql
+@&STATSPACKDIR./awrhistsysmetrichist.sql
+@&STATSPACKDIR./awrhistsysmetricsumm.sql
+@&STATSPACKDIR./dbahistsysstat.sql
+@&STATSPACKDIR./dbahistsystimemodel.sql
+@&STATSPACKDIR./ioevents.sql
+@&STATSPACKDIR./&s_io_function_sql.
+@&STATSPACKDIR./sqlstats.sql

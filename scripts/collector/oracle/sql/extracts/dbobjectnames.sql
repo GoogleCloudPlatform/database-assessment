@@ -29,14 +29,14 @@ vdbobji AS (
         FROM &s_tblprefix._objects a
         WHERE  (owner = 'SYS' AND object_type = 'DIRECTORY')
            OR owner NOT IN
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
 ),
 vdbobjx AS (
         SELECT 'SYNONYM' as object_type, owner, synonym_name  ,  &s_b_con_id. AS con_id, table_owner
         FROM &s_tblprefix._synonyms b
         WHERE owner = 'PUBLIC' and
               table_owner in
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
               ),
 vsrc   AS (SELECT
                   &s_c_con_id. AS con_id,
@@ -46,7 +46,7 @@ vsrc   AS (SELECT
                   max(line) as lines
            FROM  &s_tblprefix._source  c
            WHERE owner NOT IN (
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
            )
            GROUP BY &s_c_con_id. , owner, name, type
 ),

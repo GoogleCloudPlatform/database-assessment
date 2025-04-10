@@ -23,25 +23,25 @@ COLUMN XML_TABLE FORMAT A20
 COLUMN PARTITIONING_TYPE FORMAT A20
 COLUMN SUBPARTITIONING_TYPE FORMAT A20
 
-VARIABLE xml_select_sql VARCHAR2(100);
-COLUMN p_xml_select new_value s_xml_select noprint
-
-DECLARE
-  cnt NUMBER;
-BEGIN
-  SELECT count(1) INTO cnt
-  FROM &s_tblprefix._views
-  WHERE view_name = upper('&s_tblprefix._XML_TABLES');
-
-  IF cnt > 0 THEN
-    :xml_select_sql := '&s_tblprefix._XML_TABLES';
-  ELSE
-    :xml_select_sql := '(SELECT NULL AS con_id, NULL AS owner, NULL AS table_name FROM dual WHERE 1=2)';
-  END IF;
-END;
-/
-
-SELECT :xml_select_sql AS p_xml_select FROM dual;
+--VARIABLE xml_select_sql VARCHAR2(100);
+--COLUMN p_xml_select new_value s_xml_select noprint
+--
+--DECLARE
+--  cnt NUMBER;
+--BEGIN
+--  SELECT count(1) INTO cnt
+--  FROM &s_tblprefix._views
+--  WHERE view_name = upper('&s_tblprefix._XML_TABLES');
+--
+--  IF cnt > 0 THEN
+--    :xml_select_sql := '&s_tblprefix._XML_TABLES';
+--  ELSE
+--    :xml_select_sql := '(SELECT NULL AS con_id, NULL AS owner, NULL AS table_name FROM dual WHERE 1=2)';
+--  END IF;
+--END;
+--/
+--
+--SELECT :xml_select_sql AS p_xml_select FROM dual;
 
 spool &outputdir./opdb__tabletypedtl__&s_tag.
 prompt PKEY|CON_ID|OWNER|TABLE_NAME|PAR|IOT_TYPE|NESTED|TEMPORARY|SECONDARY|CLUSTERED_TABLE|OBJECT_TABLE|XML_TABLE|PARTITIONING_TYPE|SUBPARTITIONING_TYPE|PARTITION_COUNT|SUBPARTITION_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
@@ -65,7 +65,7 @@ SELECT
     'N' AS xml_table
 FROM &s_tblprefix._tables a
 WHERE a.owner NOT IN (
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
        )
 UNION ALL
 SELECT
@@ -80,9 +80,9 @@ SELECT
     'N' clustered_table,
     'N' AS object_table,
     'Y' AS xml_table
-FROM &s_xml_select. b
+FROM &s_xml_select_dtl. b
 WHERE b.owner NOT IN (
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
        )
 UNION ALL
 SELECT
@@ -104,7 +104,7 @@ SELECT
     'N' AS xml_table
 FROM &s_tblprefix._object_tables c
 WHERE c.owner NOT IN (
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
        )
 ),
 subpartinfo AS (
@@ -114,7 +114,7 @@ SELECT &s_d_con_id. AS con_id,
        count(1) cnt
 FROM &s_tblprefix._tab_subpartitions d
 WHERE d.table_owner NOT IN (
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
        )
 GROUP BY &s_d_con_id.,
        d.table_owner,

@@ -14,14 +14,14 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('sourceconn');
-COLUMN t_sql_cmd   NEW_VALUE  s_sql_cmd NOPRINT
-COLUMN t_machine   NEW_VALUE  s_machine NOPRINT
-COLUMN MACHINE FORMAT A60
+--COLUMN t_sql_cmd   NEW_VALUE  s_sql_cmd NOPRINT
+--COLUMN t_machine   NEW_VALUE  s_machine NOPRINT
+--COLUMN MACHINE FORMAT A60
 
 
-SELECT  CASE WHEN '&s_dbversion.' LIKE '10%' OR  '&s_dbversion.' = '111' THEN '&AWRDIR./sqlcmd10.sql' ELSE '&AWRDIR./sqlcmd12.sql' END as t_sql_cmd,
-        CASE WHEN '&s_dbversion.' LIKE '10%' OR  '&s_dbversion.' = '111' THEN '''N/A''' ELSE 'has.machine' END as t_machine
-FROM DUAL;
+--SELECT  CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '&AWRDIR./sqlcmd10.sql' ELSE '&AWRDIR./sqlcmd12.sql' END as t_sql_cmd,
+--        CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'has.machine' END as t_machine
+--FROM DUAL;
 
 spool &outputdir./opdb__sourceconn__&s_tag.
 prompt PKEY|DBID|INSTANCE_NUMBER|HO|PROGRAM|MODULE|MACHINE|COMMAND_NAME|CNT|DMA_SOURCE_ID|DMA_MANUAL_ID

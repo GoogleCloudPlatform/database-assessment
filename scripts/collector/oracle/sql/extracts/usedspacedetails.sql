@@ -24,7 +24,7 @@ SELECT :v_pkey AS pkey,
        ROUND(SUM(bytes) / 1024 / 1024 / 1024, 0) GB
        FROM   &s_tblprefix._segments a
        WHERE  owner NOT IN (
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
 )
        GROUP  BY :v_pkey,
               &s_a_con_id. , owner, segment_type )

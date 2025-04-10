@@ -138,7 +138,7 @@ WITH coltypes AS (
             &s_a_con_id. AS con_id,
             a.owner,
             table_name,
-@&EXTRACTSDIR./&s_data_type_exp.
+@sql/extracts/&s_data_type_exp.
             AS data_type,
             data_type_owner,
             1                                                 AS col_count
@@ -146,7 +146,7 @@ WITH coltypes AS (
             &s_tblprefix._tab_columns a INNER JOIN &s_tblprefix._objects b ON &s_a_con_id. = &s_b_con_id. AND a.owner = b.owner AND a.table_name = b.object_name and b.object_type = 'TABLE'
         WHERE
             a.owner NOT IN
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
            )
    GROUP BY
     con_id, owner, table_name

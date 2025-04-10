@@ -26,7 +26,7 @@ WITH vuseg AS (
  FROM &s_tblprefix._segments a
  WHERE tablespace_name IN ('SYSAUX', 'SYSTEM')
  AND owner NOT IN
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
 )
 SELECT pkey , con_id , owner , segment_name , segment_type , tablespace_name,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID

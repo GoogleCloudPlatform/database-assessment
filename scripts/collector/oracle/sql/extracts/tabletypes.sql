@@ -21,25 +21,25 @@ COLUMN CLUSTERED_TABLE FORMAT A20
 COLUMN OBJECT_TABLE FORMAT A20
 COLUMN XML_TABLE FORMAT A20
 
-VARIABLE xml_select_sql VARCHAR2(100);
-COLUMN p_xml_select new_value s_xml_select noprint
+--VARIABLE xml_select_sql VARCHAR2(100);
+--COLUMN p_xml_select new_value s_xml_select noprint
 
-DECLARE
-  cnt NUMBER;
-BEGIN
-  SELECT count(1) INTO cnt
-  FROM &s_tblprefix._views
-  WHERE view_name = upper('&s_tblprefix._XML_TABLES');
-
-  IF cnt > 0 THEN
-    :xml_select_sql := '&s_tblprefix._XML_TABLES';
-  ELSE
-    :xml_select_sql := '(SELECT NULL AS con_id, NULL AS owner FROM dual WHERE 1=2)';
-  END IF;
-END;
-/
-
-SELECT :xml_select_sql AS p_xml_select FROM dual;
+--DECLARE
+--  cnt NUMBER;
+--BEGIN
+--  SELECT count(1) INTO cnt
+--  FROM &s_tblprefix._views
+--  WHERE view_name = upper('&s_tblprefix._XML_TABLES');
+--
+--  IF cnt > 0 THEN
+--    :xml_select_sql := '&s_tblprefix._XML_TABLES';
+--  ELSE
+--    :xml_select_sql := '(SELECT NULL AS con_id, NULL AS owner FROM dual WHERE 1=2)';
+--  END IF;
+--END;
+--/
+--
+--SELECT :xml_select_sql AS p_xml_select FROM dual;
 
 spool &outputdir./opdb__tabletypes__&s_tag.
 prompt PKEY|CON_ID|OWNER|PAR|IOT_TYPE|NESTED|TEMPORARY|SECONDARY|CLUSTERED_TABLE|TABLE_COUNT|OBJECT_TABLE|XML_TABLE|DMA_SOURCE_ID|DMA_MANUAL_ID
@@ -63,7 +63,7 @@ SELECT
     'N' AS xml_table
 FROM &s_tblprefix._tables a
 WHERE a.owner NOT IN (
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
        )
 GROUP BY
     &s_a_con_id.,
@@ -96,7 +96,7 @@ SELECT
     'Y' AS xml_table
 FROM &s_xml_select. b
 WHERE b.owner NOT IN (
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
        )
 GROUP BY
     &s_b_con_id.,
@@ -121,7 +121,7 @@ SELECT
     'N' AS xml_table
 FROM &s_tblprefix._object_tables c
 WHERE c.owner NOT IN (
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
        )
 GROUP BY
     &s_c_con_id.,

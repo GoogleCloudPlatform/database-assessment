@@ -56,6 +56,12 @@ SELECT '&p_statsWindow' INTO :v_statsWindow FROM DUAL;
 END;
 /
 
+variable v_dmaVersion VARCHAR2(30);
+BEGIN
+SELECT '&dmaVersion' INTO :v_dmaVersion FROM DUAL;
+END;
+/
+
 variable v_useawr VARCHAR2(20);
 BEGIN
   :v_useawr := '&s_useawr';
@@ -74,7 +80,7 @@ variable v_dflt_value_flag  VARCHAR2(1);
 
 -- to handle column 'COMPRESS_FOR' in 'DBA_TABLES'. Depends on Oracle version
 variable v_compress_col VARCHAR2(20);
-
+prompt Creating variables - begin
 variable v_lob_compression_col         VARCHAR2(30);
 variable v_lob_part_compression_col    VARCHAR2(30);
 variable v_lob_subpart_compression_col VARCHAR2(30);
@@ -94,6 +100,13 @@ variable v_min_snaptime                VARCHAR2(20);
 variable v_max_snaptime                VARCHAR2(20);
 
 variable v_dbid                        NUMBER;
+variable v_dbversion                   VARCHAR2(20);
+variable v_dbname                      VARCHAR2(100);
+variable v_hora                        VARCHAR2(20);
+variable v_host                        VARCHAR2(100);
+variable v_instance                    VARCHAR2(100);
+
+prompt Creating variables - end
 
 -- Session settings to support creating substitution variables for the scripts.
 column instnc                        new_value s_inst noprint
@@ -128,26 +141,48 @@ column p_lob_subpart_dedup_col       new_value s_lob_subpart_dedup_col noprint
 column p_index_visibility            new_value s_index_visibility noprint
 column p_io_function_sql             new_value s_io_function_sql noprint
 
+prompt -- Define some session info for the extraction -- BEGIN
 -- Define some session info for the extraction -- BEGIN
+BEGIN
 SELECT host_name     hostnc,
        instance_name instnc
-FROM   v$instance
-/
-
-SELECT name dbname
-FROM   v$database
-/
-
-
-SELECT RTRIM(SUBSTR('&s_tag',INSTR('&s_tag','_',1,5)+1), '.csv') horanc from dual;
-
-SELECT substr(replace(version,'.',''),0,3) dbversion
-FROM v$instance
-/
-BEGIN
-  :v_pkey := '&&s_host' || '_' || '&&s_dbname' || '_' || '&&s_hora';
+INTO :v_host,
+     :v_instance 
+FROM v$instance;
 END;
 /
+
+BEGIN
+SELECT name dbname INTO :v_dbname
+FROM   v$database;
+END;
+/
+
+BEGIN
+SELECT RTRIM(SUBSTR('&s_tag',INSTR('&s_tag','_',1,5)+1), '.csv') horanc INTO :v_hora from dual;
+END;
+/
+
+BEGIN
+SELECT substr(replace(version,'.',''),0,3) dbversion INTO :v_dbversion
+FROM v$instance;
+END;
+/
+
+BEGIN
+  :v_pkey := :v_host || '_' || :v_dbname || '_' || :v_hora;
+END;
+/
+
+COLUMN t_sql_cmd   NEW_VALUE  s_sql_cmd NOPRINT
+COLUMN t_machine   NEW_VALUE  s_machine NOPRINT
+COLUMN MACHINE FORMAT A60
+
+
+SELECT  CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '&AWRDIR./sqlcmd10.sql' ELSE '&AWRDIR./sqlcmd12.sql' END as t_sql_cmd,
+        CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'has.machine' END as t_machine
+FROM DUAL;
+
 
 -- Define some session info for the extraction -- END
 
@@ -155,10 +190,10 @@ END;
 -- Determine how we will transform the data_type column based on database version. --BEGIN
 COLUMN p_data_type_exp NEW_VALUE s_data_type_exp noprint
 COLUMN p_ora9ind NEW_VALUE s_ora9ind noprint
-SELECT CASE WHEN  '&s_dbversion' LIKE '9%' THEN 'data_type_col_9i.sql'
+SELECT CASE WHEN  :v_dbversion LIKE '9%' THEN 'data_type_col_9i.sql'
             ELSE 'data_type_col_regex.sql'
        END as p_data_type_exp,
-       CASE WHEN  '&s_dbversion' LIKE '9%' THEN '9i_'
+       CASE WHEN  :v_dbversion LIKE '9%' THEN '9i_'
             ELSE ''
        END AS p_ora9ind
 FROM dual;
@@ -176,7 +211,7 @@ SELECT
         'name'    AS p_db_unique_name,
         '''N/A''' AS p_platform_name
 FROM DUAL
-WHERE '&s_dbversion' LIKE '9%'
+WHERE :v_dbversion LIKE '9%'
 UNION
 SELECT
         REPLACE('REPLACE(valid_role ,"|", " ")', chr(34), chr(39)) ,
@@ -184,7 +219,7 @@ SELECT
         'db_unique_name' AS p_db_unique_name,
         'platform_name'  AS p_platform_name
 FROM DUAL
-WHERE '&s_dbversion' NOT LIKE '9%';
+WHERE :v_dbversion NOT LIKE '9%';
 -- Determine how we will get certain databasae and Dat Guard parameters based on databasee version. --END
 
 
@@ -265,31 +300,21 @@ DECLARE
 BEGIN
   :v_pdb_logging_flag := 'N';
   :v_dflt_value_flag := 'N';
-  IF '&s_dbversion'  = '121' THEN
-    SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner ='SYS' AND table_name ='V_$SYSTEM_PARAMETER' AND column_name ='DEFAULT_VALUE';
-    IF cnt = 0 THEN
-      :v_dflt_value_flag := 'N';
-    ELSE
-      :v_dflt_value_flag := 'Y';
-    END IF;
+  SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner ='SYS' AND table_name ='V_$SYSTEM_PARAMETER' AND column_name ='DEFAULT_VALUE';
+  IF cnt = 1 THEN
+    :v_dflt_value_flag := 'Y';
+  END IF;
 
-    SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner = 'SYS' AND table_name ='DBA_PDBS' AND column_name ='LOGGING';
-    IF cnt = 0 THEN
-      :v_pdb_logging_flag := 'N';
-    ELSE
-      :v_pdb_logging_flag := 'Y';
-    END IF;
-  ELSE IF  '&s_dbversion'  LIKE '11%' OR  '&s_dbversion'  LIKE '10%'  OR  '&s_dbversion'  LIKE '9%'  THEN
-          :v_dflt_value_flag := 'N';
-          :v_pdb_logging_flag := 'N';
-       END IF;
+  SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner = 'SYS' AND table_name ='DBA_PDBS' AND column_name ='LOGGING';
+  IF cnt = 1 THEN
+    :v_pdb_logging_flag := 'Y';
   END IF;
 END;
 /
 
 SELECT CASE WHEN :v_dflt_value_flag = 'N' THEN '''N/A''' ELSE 'DEFAULT_VALUE' END as p_dbparam_dflt_col ,
        CASE WHEN :v_pdb_logging_flag = 'N' THEN  '''N/A''' ELSE 'LOGGING' END AS p_pluggablelogging,
-       CASE WHEN '&s_dbversion' LIKE '10%' OR  '&s_dbversion' = '111' THEN 'sqlcmd10g.sql' ELSE 'sqlcmd.sql' END AS p_sqlcmd
+       CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN 'sqlcmd10g.sql' ELSE 'sqlcmd.sql' END AS p_sqlcmd
 FROM DUAL;
 -- Determine if the database version supports the 'default_value' column in v$parameter --END
 
@@ -421,6 +446,55 @@ SELECT :v_index_visibility AS p_index_visibility FROM DUAL;
 -- Determine if this version of the database supports invisible indexes -- END
 
 
+-- Determine columns to select for tabletypes query -- BEGIN
+VARIABLE xml_select_sql VARCHAR2(100);
+COLUMN p_xml_select new_value s_xml_select noprint
+
+DECLARE
+  cnt NUMBER;
+BEGIN
+  SELECT count(1) INTO cnt
+  FROM &s_tblprefix._views
+  WHERE view_name = upper('&s_tblprefix._XML_TABLES');
+
+  IF cnt > 0 THEN
+    :xml_select_sql := '&s_tblprefix._XML_TABLES';
+  ELSE
+    :xml_select_sql := '(SELECT NULL AS con_id, NULL AS owner FROM dual WHERE 1=2)';
+  END IF;
+END;
+/
+
+SELECT :xml_select_sql AS p_xml_select FROM dual;
+
+-- Determine columns to select for tabletypes query -- END 
+
+
+
+-- Determine columns to select for tabletypes detail query -- BEGIN
+VARIABLE xml_select_dtl_sql VARCHAR2(100);
+COLUMN p_xml_select_dtl new_value s_xml_select_dtl noprint
+
+DECLARE
+  cnt NUMBER;
+BEGIN
+  SELECT count(1) INTO cnt
+  FROM &s_tblprefix._views
+  WHERE view_name = upper('&s_tblprefix._XML_TABLES');
+
+  IF cnt > 0 THEN
+    :xml_select_dtl_sql := '&s_tblprefix._XML_TABLES';
+  ELSE
+    :xml_select_dtl_sql := '(SELECT NULL AS con_id, NULL AS owner, NULL AS table_name FROM dual WHERE 1=2)';
+  END IF;
+END;
+/
+
+SELECT :xml_select_dtl_sql AS p_xml_select_dtl FROM dual;
+
+-- Determine columns to select for tabletypes detail query -- END
+
+
 -- This is where we determine which source (AWR, STATSPACK or NONE) we will use for performance metrics -- BEGiN
 -- and which snaps we will collect.
 variable v_stats_prompt VARCHAR2(100);
@@ -458,14 +532,17 @@ BEGIN
            :v_useawr := 'statspack';
            l_tab_name := 'STATS$SNAPSHOT';
            l_col_name := 'snap_time';
+           dbms_output.put_line('Verified access to the STATSPACK tables.');
          ELSE
               l_tab_name := 'NONE' ;
               :v_stats_prompt  := 'prompt_nostats.sql';
               :v_useawr := 'nostats';
+              dbms_output.put_line('There is no access to the STATSPACK tables so cannot collect performance data.');
          END IF;
        -- If instructed to not collect performance metrics, do not collect stats.
        ELSE IF  :v_useawr = 'nostats' THEN
               :v_stats_prompt  := 'prompt_nostats.sql';
+              dbms_output.put_line('Requested to skip collection of performance stats.');
             -- If we get here, then there was a problem.
             ELSE l_tab_name :=  'ERROR - Unexpected parameter: ' || :v_useawr;
             END IF;
@@ -540,7 +617,7 @@ END;
 
 set termout on
 begin
-dbms_output.put_line('Collecting data for database &s_dbname ' ||  :v_dbid || ' &s_info_prompt');
+dbms_output.put_line('Collecting data for database ' || :v_dbname || ' ' ||  :v_dbid || ' &s_info_prompt');
 end;
 /
 

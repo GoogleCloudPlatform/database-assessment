@@ -41,7 +41,7 @@ SELECT :v_pkey AS pkey,
        a.index_name
 FROM   &s_tblprefix._indexes a
 WHERE  owner NOT IN
-@&EXTRACTSDIR./exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
 )
 SELECT pkey ,
        con_id ,
