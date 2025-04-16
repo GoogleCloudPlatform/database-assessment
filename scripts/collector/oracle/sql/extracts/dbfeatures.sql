@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('dbfeatures');
-spool &outputdir./opdb__dbfeatures__&s_tag.
+-- spool &outputdir./opdb__dbfeatures__&s_tag.
 prompt PKEY|CON_ID|NAME|CURRE|DETECTED_USAGES|TOTAL_SAMPLES|FIRST_USAGE|LAST_USAGE|AUX_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdbf AS(
 SELECT :v_pkey AS pkey,
@@ -33,4 +33,4 @@ SELECT pkey , con_id , name , currently_used , detected_usages ,
        total_samples , first_usage , last_usage , aux_count,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdbf;
-spool off
+-- spool off

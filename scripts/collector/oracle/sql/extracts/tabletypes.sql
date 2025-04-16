@@ -41,7 +41,7 @@ COLUMN XML_TABLE FORMAT A20
 --
 --SELECT :xml_select_sql AS p_xml_select FROM dual;
 
-spool &outputdir./opdb__tabletypes__&s_tag.
+-- spool &outputdir./opdb__tabletypes__&s_tag.
 prompt PKEY|CON_ID|OWNER|PAR|IOT_TYPE|NESTED|TEMPORARY|SECONDARY|CLUSTERED_TABLE|TABLE_COUNT|OBJECT_TABLE|XML_TABLE|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH tblinfo AS (
 SELECT
@@ -154,7 +154,7 @@ SELECT :v_pkey AS pkey,
        xml_table,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM  tblinfo;
-spool off
+-- spool off
 COLUMN TEMPORARY CLEAR
 COLUMN SECONDARY CLEAR
 COLUMN NESTED CLEAR

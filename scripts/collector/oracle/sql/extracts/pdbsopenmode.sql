@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('pdbsopenmode');
-spool &outputdir./opdb__pdbsopenmode__&s_tag.
+-- spool &outputdir./opdb__pdbsopenmode__&s_tag.
 prompt PKEY|CON_ID|NAME|OPEN_MODE|TOTAL_GB|CON_UID|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vpdbmode as (
 SELECT :v_pkey AS pkey,
@@ -27,4 +27,4 @@ FROM   v$pdbs )
 SELECT pkey , con_id , name , open_mode , TOTAL_GB, con_uid,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vpdbmode;
-spool off
+-- spool off

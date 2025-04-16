@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('awrhistosstat');
-spool &outputdir./opdb__awrhistosstat__&s_tag.
+-- spool &outputdir./opdb__awrhistosstat__&s_tag.
 prompt PKEY|DBID|INSTANCE_NUMBER|HH|STAT_NAME|HH24_TOTAL_SECS|CUMULATIVE_VALUE|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|MIN_VALUE|MAX_VALUE|SUM_VALUE|COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH v_osstat_all
      AS (SELECT os.dbid,
@@ -100,4 +100,4 @@ SELECT pkey , dbid , instance_number , hh24 , stat_name , hh24_total_secs ,
 	     min_value , max_value , sum_value , count,
 	       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vossummary;
-spool off
+-- spool off

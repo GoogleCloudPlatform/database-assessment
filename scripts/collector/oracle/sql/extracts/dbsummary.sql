@@ -14,12 +14,10 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('dbsummary');
-column FORCE_LOGGING format A15
-set echo on
-set verify on
+COLUMN FORCE_LOGGING FORMAT A15
 define s_app_join_cond='&s_cdb_join_cond.'
 define s_app_join_dbsum_cond='&s_cdb_join_cond.'
-spool &outputdir./opdb__dbsummary__&s_tag.
+-- spool &outputdir./opdb__dbsummary__&s_tag.
 prompt PKEY|DBID|DB_NAME|CDB|DB_VERSION|DB_FULLVERSION|LOG_MODE|FORCE_LOGGING|REDO_GB_PER_DAY|RAC_DBINSTANCES|CHARACTERSET|PLATFORM_NAME|STARTUP_TIME|USER_SCHEMAS|BUFFER_CACHE_MB|SHARED_POOL_MB|TOTAL_PGA_ALLOCATED_MB|DB_SIZE_ALLOCATED_GB|DB_SIZE_IN_USE_GB|DB_LONG_SIZE_GB|DG_DATABASE_ROLE|DG_PROTECTION_MODE|DG_PROTECTION_LEVEL|DB_SIZE_TEMP_ALLOCATED_GB|DB_SIZE_REDO_ALLOCATED_GB|EBS_OWNER|SIEBEL_OWNER|PSFT_OWNER|RDS_FLAG|OCI_AUTONOMOUS_FLAG|DBMS_CLOUD_PKG_INSTALLED|APEX_INSTALLED|SAP_OWNER|DB_UNIQUE_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdbsummary AS (
 SELECT :v_pkey AS pkey,
@@ -114,6 +112,6 @@ SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , fo
            ebs_owner, siebel_owner, psft_owner, rds_flag, oci_autonomous_flag, dbms_cloud_pkg_installed,
            apex_installed, sap_owner, db_unique_name, :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdbsummary;
-spool off
+-- spool off
 set echo off
 set verify off

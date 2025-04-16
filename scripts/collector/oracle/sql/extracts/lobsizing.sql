@@ -14,38 +14,38 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('lobsizing');
-column c_con_id   new_value s_c_con_id   noprint
-column t_con_id   new_value s_t_con_id   noprint
-column l_con_id   new_value s_l_con_id   noprint
-column tp_con_id  new_value s_tp_con_id  noprint
-column tsp_con_id new_value s_tsp_con_id noprint
-column lp_con_id  new_value s_lp_con_id  noprint
-column lsp_con_id new_value s_lsp_con_id noprint
-column s_con_id   new_value s_s_con_id   noprint
+--column c_con_id   new_value s_c_con_id   noprint
+--column t_con_id   new_value s_t_con_id   noprint
+--column l_con_id   new_value s_l_con_id   noprint
+--column tp_con_id  new_value s_tp_con_id  noprint
+--column tsp_con_id new_value s_tsp_con_id noprint
+--column lp_con_id  new_value s_lp_con_id  noprint
+--column lsp_con_id new_value s_lsp_con_id noprint
+--column s_con_id   new_value s_s_con_id   noprint
 
-column t_segment_created   new_value  s_t_segment_created
-column tp_segment_created  new_value  s_tp_segment_created
-column lp_segment_created  new_value  s_lp_segment_created
-column tsp_segment_created new_value  s_tsp_segment_created
-column lsp_segment_created new_value  s_lsp_segment_created
+--column t_segment_created   new_value  s_t_segment_created
+--column tp_segment_created  new_value  s_tp_segment_created
+--column lp_segment_created  new_value  s_lp_segment_created
+--column tsp_segment_created new_value  s_tsp_segment_created
+--column lsp_segment_created new_value  s_lsp_segment_created
 
 
-SELECT CASE WHEN &s_is_container. != 0 THEN 'c.con_id'   ELSE '''N/A''' END as c_con_id,
-       CASE WHEN &s_is_container. != 0 THEN 't.con_id'   ELSE '''N/A''' END as t_con_id,
-       CASE WHEN &s_is_container. != 0 THEN 'l.con_id'   ELSE '''N/A''' END as l_con_id,
-       CASE WHEN &s_is_container. != 0 THEN 'tp.con_id'  ELSE '''N/A''' END as tp_con_id,
-       CASE WHEN &s_is_container. != 0 THEN 'tsp.con_id' ELSE '''N/A''' END as tsp_con_id,
-       CASE WHEN &s_is_container. != 0 THEN 'lp.con_id'  ELSE '''N/A''' END as lp_con_id,
-       CASE WHEN &s_is_container. != 0 THEN 'lsp.con_id' ELSE '''N/A''' END as lsp_con_id,
-       CASE WHEN &s_is_container. != 0 THEN 's.con_id'   ELSE '''N/A''' END as s_con_id
-FROM DUAL;
+--SELECT CASE WHEN &s_is_container. != 0 THEN 'c.con_id'   ELSE '''N/A''' END as c_con_id,
+--       CASE WHEN &s_is_container. != 0 THEN 't.con_id'   ELSE '''N/A''' END as t_con_id,
+--       CASE WHEN &s_is_container. != 0 THEN 'l.con_id'   ELSE '''N/A''' END as l_con_id,
+--       CASE WHEN &s_is_container. != 0 THEN 'tp.con_id'  ELSE '''N/A''' END as tp_con_id,
+--       CASE WHEN &s_is_container. != 0 THEN 'tsp.con_id' ELSE '''N/A''' END as tsp_con_id,
+--       CASE WHEN &s_is_container. != 0 THEN 'lp.con_id'  ELSE '''N/A''' END as lp_con_id,
+--       CASE WHEN &s_is_container. != 0 THEN 'lsp.con_id' ELSE '''N/A''' END as lsp_con_id,
+--       CASE WHEN &s_is_container. != 0 THEN 's.con_id'   ELSE '''N/A''' END as s_con_id
+--FROM DUAL;
 
-SELECT  CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 't.segment_created'   END as t_segment_created,
-        CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'tp.segment_created'  END as tp_segment_created,
-        CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'lp.segment_created'  END as lp_segment_created,
-        CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'tsp.segment_created' END as tsp_segment_created,
-        CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'lsp.segment_created' END as lsp_segment_created
-FROM DUAL;
+--SELECT  CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 't.segment_created'   END as t_segment_created,
+--        CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'tp.segment_created'  END as tp_segment_created,
+--        CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'lp.segment_created'  END as lp_segment_created,
+--        CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'tsp.segment_created' END as tsp_segment_created,
+--        CASE WHEN :v_dbversion LIKE '9%' OR :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'lsp.segment_created' END as lsp_segment_created
+--FROM DUAL;
 
 
 COLUMN PARTITIONED FORMAT A40
@@ -69,7 +69,7 @@ COLUMN LOB_DEDUPLICATION FORMAT A40
 COLUMN LOB_PARTITION_DEDUPLICATION FORMAT A40
 COLUMN LOB_SUBPARTITION_DEDUPLICATION FORMAT A40
 
-spool &outputdir./opdb__lobsizing__&s_tag.
+-- spool &outputdir./opdb__lobsizing__&s_tag.
 prompt PKEY|CON_ID|OWNER|TABLE_NAME|TABLE_NUM_ROWS|TAB|PARTITIONED|COLUMN_NAME|DATA_TYPE|TABLE_PARTITION_NAME|TABLE_PARTITION_SEG_CREATED|PARTITION_NUM_ROWS|LOB_PARTITION_NAME|LOB_PARTITION_SEG_CREATED|SUBPARTITION_COUNT|TABLE_SUBPARTITION_NAME|TABLE_SUBPARTITION_CREATED|SUBPARTITION_NUM_ROWS|LOB_SUBPARTITION_NAME|LOB_SUBPARTITION_SEG_CREATED|LOB_SEG_NAME|SEG_NAME|SEG_PARTITION_NAME|LOB_COMPRESSION|LOB_PARTITION_COMPRESSION|LOB_SUBPARTITION_COMPRESSION|LOB_DEDUPLICATION|LOB_PARTITION_DEDUPLICATION|LOB_SUBPARTITION_DEDUPLICATION|SEG_BYTES|TABLE_AVG_LOB_BYTES|PARTITION_AVG_LOB_BYTES|SUBPARTITION_AVG_LOB_BYTES|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH lobdata AS (
 SELECT
@@ -181,26 +181,26 @@ SELECT  :v_pkey AS pkey,
        subpartition_avg_lob_bytes,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM lobdata;
-spool off
+-- spool off
 
 
-COLUMN PARTITIONED
-COLUMN COLUMN_NAME
-COLUMN DATA_TYPE
-COLUMN TABLE_PARTITION_NAME
-COLUMN TABLE_PARTITION_SEG_CREATED
-COLUMN LOB_PARTITION_NAME
-COLUMN LOB_PARTITION_SEG_CREATED
-COLUMN TABLE_SUBPARTITION_NAME
-COLUMN TABLE_SUBPARTITION_CREATED
-COLUMN LOB_SUBPARTITION_NAME
-COLUMN LOB_SUBPARTITION_SEG_CREATED
-COLUMN LOB_SEG_NAME
-COLUMN SEG_NAME
-COLUMN SEG_PARTITION_NAME
-COLUMN LOB_COMPRESSION
-COLUMN LOB_PARTITION_COMPRESSION
-COLUMN LOB_SUBPARTITION_COMPRESSION
-COLUMN LOB_DEDUPLICATION
-COLUMN LOB_PARTITION_DEDUPLICATION
-COLUMN LOB_SUBPARTITION_DEDUPLICATION
+COLUMN PARTITIONED CLEAR
+COLUMN COLUMN_NAME CLEAR
+COLUMN DATA_TYPE CLEAR
+COLUMN TABLE_PARTITION_NAME CLEAR
+COLUMN TABLE_PARTITION_SEG_CREATED CLEAR
+COLUMN LOB_PARTITION_NAME CLEAR
+COLUMN LOB_PARTITION_SEG_CREATED CLEAR
+COLUMN TABLE_SUBPARTITION_NAME CLEAR
+COLUMN TABLE_SUBPARTITION_CREATED CLEAR
+COLUMN LOB_SUBPARTITION_NAME CLEAR
+COLUMN LOB_SUBPARTITION_SEG_CREATED CLEAR
+COLUMN LOB_SEG_NAME CLEAR
+COLUMN SEG_NAME CLEAR
+COLUMN SEG_PARTITION_NAME CLEAR
+COLUMN LOB_COMPRESSION CLEAR
+COLUMN LOB_PARTITION_COMPRESSION CLEAR
+COLUMN LOB_SUBPARTITION_COMPRESSION CLEAR
+COLUMN LOB_DEDUPLICATION CLEAR
+COLUMN LOB_PARTITION_DEDUPLICATION CLEAR
+COLUMN LOB_SUBPARTITION_DEDUPLICATION CLEAR

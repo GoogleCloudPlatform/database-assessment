@@ -13,5 +13,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
+spool &outputdir./opdb__pdbsinfo__&s_tag.
 @sql/extracts/pdbsinfo.sql '&s_pdb_join_cond.'
+spool off
+spool &outputdir./opdb__pdbsopenmode__&s_tag.
 @sql/extracts/pdbsopenmode.sql
+spool off

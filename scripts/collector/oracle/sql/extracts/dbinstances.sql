@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('dbinstances');
-spool &outputdir./opdb__dbinstances__&s_tag.
+-- spool &outputdir./opdb__dbinstances__&s_tag.
 prompt PKEY|INST_ID|INSTANCE_NAME|HOST_NAME|VERSION|STATUS|DATABASE_STATUS|INSTANCE_ROLE|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vdbinst as (
 SELECT :v_pkey AS pkey,
@@ -30,4 +30,4 @@ SELECT pkey , inst_id , instance_name , host_name ,
        version , status , database_status , instance_role,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdbinst;
-spool off
+-- spool off

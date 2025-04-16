@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('triggers');
-spool &outputdir./opdb__triggers__&s_tag.
+-- spool &outputdir./opdb__triggers__&s_tag.
 prompt PKEY|CON_ID|OWNER|TRIGGER_TYPE|TRIGGERING_EVENT|BASE_OBJECT_TYPE|TRIGGER_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH trginfo AS (
 SELECT
@@ -60,4 +60,4 @@ SELECT :v_pkey AS pkey,
        trigger_count,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM  trginfo;
-spool off
+-- spool off

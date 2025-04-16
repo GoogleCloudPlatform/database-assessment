@@ -16,7 +16,7 @@
 exec dbms_application_info.set_action('opkeylog');
 COLUMN DB_NAME FORMAT A20
 COLUMN INSTANCE_NAME FORMAT A20
-spool &outputdir./opdb__opkeylog__&s_tag.
+-- spool &outputdir./opdb__opkeylog__&s_tag.
 prompt PKEY|OPSCRI|DB_|HOSTNAME|DB_NAME|INSTANCE_NAME|COLLECTION_T|DB_ID|C|DMA_SOURCE_ID|DMA_MANUAL_ID
 with vop as (
 select :v_pkey AS pkey,
@@ -27,6 +27,6 @@ select pkey , opscriptversion , db_version , hostname
        , db_name , instance_name , collection_time , db_id , CMNT,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 from vop;
-spool off
+-- spool off
 COLUMN DB_NAME CLEAR
 COLUMN INSTANCE_NAME CLEAR

@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('idxpertable');
-spool &outputdir./opdb__idxpertable__&s_tag.
+-- spool &outputdir./opdb__idxpertable__&s_tag.
 prompt PKEY|CON_ID|TAB_COUNT|IDX_CNT|IDX_PERC|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vrawidx AS(
 SELECT :v_pkey AS pkey,
@@ -34,4 +34,4 @@ GROUP BY pkey, con_id, idx_cnt)
 SELECT pkey , con_id , tab_count , idx_cnt , idx_perc,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vcidx;
-spool off
+-- spool off

@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('usedspacedetails');
-spool &outputdir./opdb__usedspacedetails__&s_tag.
+-- spool &outputdir./opdb__usedspacedetails__&s_tag.
 prompt PKEY|CON_ID|OWNER|SEGMENT_TYPE|GB|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vused AS (
 SELECT :v_pkey AS pkey,
@@ -31,4 +31,4 @@ SELECT :v_pkey AS pkey,
 SELECT pkey , con_id , owner , segment_type , GB,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vused;
-spool off
+-- spool off

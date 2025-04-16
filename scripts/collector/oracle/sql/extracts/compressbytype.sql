@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('compressbytype');
-spool &outputdir./opdb__compressbytype__&s_tag.
+-- spool &outputdir./opdb__compressbytype__&s_tag.
 prompt PKEY|CON_ID|OWNER|BASIC|OLTP|QUERY_LOW|QUERY_HIGH|ARCHIVE_LOW|ARCHIVE_HIGH|TOTAL_GB|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vcompresstype AS (
      SELECT :v_pkey AS pkey,
@@ -93,4 +93,4 @@ SELECT pkey , con_id , owner , basic , oltp , query_low ,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vcompresstype
 ORDER BY total_gb DESC;
-spool off
+-- spool off

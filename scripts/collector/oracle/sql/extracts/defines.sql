@@ -13,7 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir./opdb__allvars__&s_tag.
+-- spool &outputdir./opdb__defines__&s_tag.
 
 PROMPT "SUBSTITUTION VARIABLES"
 PROMPT AWRDIR                        = &AWRDIR.
@@ -46,6 +46,7 @@ PROMPT s_h_con_id                    = &s_h_con_id.
 --PROMPT s_host                        = &s_host.
 PROMPT s_index_visibility            = &s_index_visibility.
 PROMPT s_info_prompt                 = &s_info_prompt.
+PROMPT s_io_function                 = &s_io_function_sql.
 --PROMPT s_inst                        = &s_inst.
 PROMPT s_is_container                = &s_is_container.
 PROMPT s_lob_compression_col         = &s_lob_compression_col.
@@ -68,6 +69,21 @@ PROMPT s_tag                         = &s_tag.
 PROMPT s_tblprefix                   = &s_tblprefix.
 PROMPT s_umf_test                    = &s_umf_test.
 PROMPT s_useawr                      = &s_useawr.
+
+PROMPT s_l_con_id                    = &s_l_con_id.  
+PROMPT s_lp_con_id                   = &s_lp_con_id. 
+PROMPT s_lsp_con_id                  = &s_lsp_con_id.
+PROMPT s_s_con_id                    = &s_s_con_id.  
+PROMPT s_t_con_id                    = &s_t_con_id.  
+PROMPT s_tp_con_id                   = &s_tp_con_id. 
+PROMPT s_tsp_con_id                  = &s_tsp_con_id.
+
+PROMPT s_lp_segment_created          = &s_lp_segment_created. 
+PROMPT s_lsp_segment_created         = &s_lsp_segment_created.
+PROMPT s_t_segment_created           = &s_t_segment_created.  
+PROMPT s_tp_segment_created          = &s_tp_segment_created. 
+PROMPT s_tsp_segment_created         = &s_tsp_segment_created.
+
 
 
 PROMPT
@@ -122,6 +138,6 @@ PROMPT
 PROMPT "DUMP ALL BIND VARIABLES"
 PRINT
 
-spool off
+-- spool off
 
 

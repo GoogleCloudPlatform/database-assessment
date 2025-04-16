@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('usrsegatt');
-spool &outputdir./opdb__usrsegatt__&s_tag.
+-- spool &outputdir./opdb__usrsegatt__&s_tag.
 prompt PKEY|CON_ID|OWNER|SEGMENT_NAME|SEGMENT_TYPE|TABLESPACE_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH vuseg AS (
  SELECT :v_pkey AS pkey,
@@ -31,4 +31,4 @@ WITH vuseg AS (
 SELECT pkey , con_id , owner , segment_name , segment_type , tablespace_name,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vuseg;
-spool off
+-- spool off

@@ -15,7 +15,7 @@
 --
 exec dbms_application_info.set_action('dbobjectnames');
 COLUMN EDITIONABLE FORMAT A11
-spool &outputdir./opdb__dbobjectnames__&s_tag.
+-- spool &outputdir./opdb__dbobjectnames__&s_tag.
 prompt PKEY|CON_ID|OWNER|OBJECT_NAME|OBJECT_TYPE|EDITIONABLE|LINES|STATUS|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH
 vdbobji AS (
@@ -76,4 +76,4 @@ SELECT pkey ,
        status,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdbobj a;
-spool off
+-- spool off

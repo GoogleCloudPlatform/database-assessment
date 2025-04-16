@@ -23,7 +23,8 @@ set echo off
 
 prompt "Please enter the database local username (or CDB username) to receive all required grants. "
 accept dbusername    char prompt "Enter exactly as defined in the database, upper/lower case must match: "
-accept useAWR char default 'Y' prompt "Please enter Y or N to allow or disallow use of the AWR/ASH data (Requires Tuning and Diagnostic Pack license) (Y) "
+prompt "Use of AWR/ASH data requires a licens for the Tuning and Diagnostics Pack."
+accept useAWR char default 'Y' prompt "Please enter Y or N to allow or disallow use of the AWR/ASH data (Y) "
 
 DECLARE
   cnt NUMBER;

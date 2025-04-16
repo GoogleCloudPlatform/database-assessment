@@ -14,8 +14,8 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('iofunction');
-column hour format a4
-spool &outputdir./opdb__iofunction__&s_tag.
+COLUMN HOUR FORMAT A4
+-- spool &outputdir./opdb__iofunction__&s_tag.
 
 WITH vrawiof AS (
 SELECT :v_pkey AS pkey,
@@ -187,5 +187,5 @@ SELECT pkey , dbid , instance_number , hour , function_name ,
        total_write_req_P100,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM viof;
-spool off
-column hour clear
+-- spool off
+COLUMN HOUR CLEAR
