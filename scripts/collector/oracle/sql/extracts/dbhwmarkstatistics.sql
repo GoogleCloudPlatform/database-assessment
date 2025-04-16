@@ -14,8 +14,8 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('dbhwmarkstatistics');
--- spool &outputdir./opdb__dbhwmarkstatistics__&s_tag.
-prompt PKEY|DESCRIPTION|HIGHWATER|LAST_VALUE|CON_ID|DMA_SOURCE_ID|DMA_MANUAL_ID
+
+
 
 WITH vhwmst AS (
 SELECT :v_pkey AS pkey,
@@ -28,4 +28,4 @@ ORDER  BY description)
 SELECT pkey , description , highwater , last_value, con_id,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vhwmst;
--- spool off
+

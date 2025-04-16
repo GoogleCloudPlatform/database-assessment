@@ -17,8 +17,8 @@ exec dbms_application_info.set_action('pdbsinfo');
 COLUMN LOGGING FORMAT A10
 
 define s_app_join_cond='&s_pdb_join_cond.'
--- spool &outputdir./opdb__pdbsinfo__&s_tag.
-prompt PKEY|DBID|PDB_ID|PDB_NAME|STATUS|LOGGING|CON_ID|CON_UID|EBS_OWNER|SIEBEL_OWNER|PSFT_OWNER|RDS_FLAG|OCI_AUTONOMOUS_FLAG|DBMS_CLOUD_PKG_INSTALLED|APEX_INSTALLED|SAP_OWNER|SGA_ALLOCATED_BYTES|PGA_USED_BYTES|PGA_ALLOCATED_BYTES|PGA_MAX_BYTES|DMA_SOURCE_ID|DMA_MANUAL_ID
+
+
 WITH opdbinfo AS (
 SELECT :v_pkey AS pkey,
        dbid,
@@ -74,5 +74,5 @@ SELECT i.*, m.sga_allocated_bytes, m.pga_used_bytes, m.pga_allocated_bytes, m.pg
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM  vpdbinfo i
       LEFT OUTER JOIN mem_stats m ON i.con_id = m.con_id;
--- spool off
+
 COLUMN LOGGING CLEAR

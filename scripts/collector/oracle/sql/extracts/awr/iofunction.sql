@@ -15,7 +15,7 @@
 --
 exec dbms_application_info.set_action('iofunction');
 COLUMN HOUR FORMAT A4
--- spool &outputdir./opdb__iofunction__&s_tag.
+
 
 WITH vrawiof AS (
 SELECT :v_pkey AS pkey,
@@ -187,5 +187,5 @@ SELECT pkey , dbid , instance_number , hour , function_name ,
        total_write_req_P100,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM viof;
--- spool off
+
 COLUMN HOUR CLEAR

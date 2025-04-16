@@ -14,8 +14,8 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('users');
--- spool &outputdir./opdb__users__&s_tag.
-prompt PKEY|CON_ID|USERNAME|DMA_SOURCE_ID|DMA_MANUAL_ID
+
+
 WITH vuser AS (
 SELECT :v_pkey AS pkey,
        &s_a_con_id. AS con_id,
@@ -25,4 +25,4 @@ ORDER  BY username)
 SELECT pkey , con_id, username,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vuser;
--- spool off
+

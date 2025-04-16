@@ -28,8 +28,8 @@ COLUMN VALID_ROLE FORMAT A20
 COLUMN VERIFY FORMAT A20
 COLUMN LOG_ARCHIVE_CONFIG FORMAT A200
 
--- spool &outputdir./opdb__dataguard__&s_tag.
-prompt PKEY|CON_ID|INST_ID|LOG_ARCHIVE_CONFIG|DEST_ID|DEST_NAME|DESTINATION|STATUS|TARGET|SCHEDULE|REGISTER|ALTERNATE|TRANSMIT_MODE|AFFIRM|VALID_ROLE|VERIFY|DMA_SOURCE_ID|DMA_MANUAL_ID
+
+
 WITH vodg AS (
 SELECT  :v_pkey AS pkey,
         &s_a_con_id. as con_id, inst_id,
@@ -53,7 +53,7 @@ SELECT pkey , con_id , inst_id , log_archive_config , dest_id , dest_name , dest
        transmit_mode , affirm , valid_role , verify,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vodg;
--- spool off
+
 
 COLUMN DEST_ID CLEAR
 COLUMN DEST_NAME CLEAR

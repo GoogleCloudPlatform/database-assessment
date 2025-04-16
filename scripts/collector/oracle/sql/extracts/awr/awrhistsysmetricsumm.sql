@@ -14,8 +14,8 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('awrhistsysmetricsumm');
--- spool &outputdir./opdb__awrhistsysmetricsumm__&s_tag.
-prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|METRIC_NAME|METRIC_UNIT|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|MIN_VALUE|MAX_VALUE|SUM_VALUE|PERC50|PERC75|PERC90|PERC95|PERC100|DMA_SOURCE_ID|DMA_MANUAL_ID
+
+
 WITH vsysmetricsumm AS (
 SELECT :v_pkey AS pkey,
        hsm.dbid,
@@ -81,4 +81,4 @@ SELECT pkey , dbid , instance_number , hour , metric_name ,
 	   sum_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100,
 	       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vsysmetricsummperhour;
--- spool off
+

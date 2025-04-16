@@ -14,8 +14,8 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('backups');
--- spool &outputdir./opdb__backups__&s_tag.
-prompt PKEY|BACKUP_START_DATE|CON_ID|INPUT_TYPE|ELAPSED_SECONDS|MBYTES_IN|MBYTES_OUT|DMA_SOURCE_ID|DMA_MANUAL_ID
+
+
 SELECT :v_pkey AS pkey,
        trunc(start_time) AS backup_start_date,
        &s_a_con_id. AS con_id,
@@ -28,4 +28,4 @@ FROM v$rman_backup_job_details a
 WHERE start_time >= trunc(sysdate) - :v_statsWindow
 GROUP BY trunc(start_time), input_type, &s_a_con_id.
 ;
--- spool off
+

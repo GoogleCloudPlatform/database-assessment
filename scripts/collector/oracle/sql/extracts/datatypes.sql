@@ -14,8 +14,8 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('datatypes');
--- spool &outputdir./opdb__datatypes__&s_tag.
-prompt PKEY|CON_ID|OWNER|DATA_TYPE|CNT|DATA_LENGTH|DATA_PRECISION|DATA_SCALE|AVG_COL_LEN|DISTINCT_TABLE_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
+
+
 WITH vdtype AS (
 SELECT /*+ USE_HASH(b a) NOPARALLEL */ :v_pkey AS pkey,
        &s_a_con_id. con_id,
@@ -43,4 +43,4 @@ SELECT pkey , con_id , owner , data_type , cnt,
        data_length, data_precision, data_scale, avg_col_len, distinct_table_count,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdtype;
--- spool off
+

@@ -15,8 +15,8 @@
 --
 exec dbms_application_info.set_action('ioevents');
 COLUMN HOUR FORMAT A4
--- spool &outputdir./opdb__ioevents__&s_tag.
-prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|WAIT_CLASS|EVENT_NAME|TOT_WAITS_DELTA_VALUE_P95|TOT_TOUT_DELTA_VALUE_P95|TIME_WA_US_DELTA_VALUE_P95|TOT_WAITS_DELTA_VALUE_P100|TOT_TOUT_DELTA_VALUE_P100|TIME_WA_US_DELTA_VALUE_P100|DMA_SOURCE_ID|DMA_MANUAL_ID
+
+
 WITH vrawev AS (
 SELECT :v_pkey AS pkey,
        sev.dbid,
@@ -98,5 +98,5 @@ SELECT pkey , dbid , instance_number , hour , wait_class , event_name ,
        time_wa_us_delta_value_P100,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vfev;
--- spool off
+
 COLUMN HOUR CLEAR

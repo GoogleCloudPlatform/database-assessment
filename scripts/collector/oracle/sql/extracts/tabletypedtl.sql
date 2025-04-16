@@ -43,8 +43,8 @@ COLUMN SUBPARTITIONING_TYPE FORMAT A20
 --
 --SELECT :xml_select_sql AS p_xml_select FROM dual;
 
--- spool &outputdir./opdb__tabletypedtl__&s_tag.
-prompt PKEY|CON_ID|OWNER|TABLE_NAME|PAR|IOT_TYPE|NESTED|TEMPORARY|SECONDARY|CLUSTERED_TABLE|OBJECT_TABLE|XML_TABLE|PARTITIONING_TYPE|SUBPARTITIONING_TYPE|PARTITION_COUNT|SUBPARTITION_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
+
+
 WITH tblinfo AS (
 SELECT
     &s_a_con_id. AS con_id,
@@ -147,7 +147,7 @@ LEFT OUTER JOIN subpartinfo sp
                AND sp.table_name = p.table_name
                AND sp.con_id = &s_p_con_id.
 ;
--- spool off
+
 COLUMN TEMPORARY CLEAR
 COLUMN SECONDARY CLEAR
 COLUMN NESTED CLEAR

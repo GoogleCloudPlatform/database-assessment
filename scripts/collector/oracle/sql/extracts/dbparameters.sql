@@ -15,8 +15,8 @@
 --
 exec dbms_application_info.set_action('dbparameters');
 COLUMN DEFAULT_VALUE FORMAT A255
--- spool &outputdir./opdb__dbparameters__&s_tag.
-prompt PKEY|INST_ID|CON_ID|NAME|VALUE|DEFAULT_VALUE|ISDEFAULT|DMA_SOURCE_ID|DMA_MANUAL_ID
+
+
 
 WITH vparam AS (
 SELECT :v_pkey AS pkey,
@@ -31,5 +31,5 @@ ORDER  BY 2,3 )
 SELECT pkey , inst_id , con_id , name , value , default_value , isdefault,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vparam;
--- spool off
+
 COLUMN DEFAULT_VALUE CLEAR

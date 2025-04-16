@@ -14,8 +14,8 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('archlogs');
--- spool &outputdir./opdb__archlogs__&s_tag.
-prompt PKEY|LOG_START_DATE|HO|THREAD_NUM|DEST_ID|CNT|MBYTES|DMA_SOURCE_ID|DMA_MANUAL_ID
+
+
 SELECT :v_pkey AS pkey,
        trunc(first_Time) as log_start_date,
        to_char(first_time, 'HH24') as hour,
@@ -28,4 +28,4 @@ FROM gv$archived_log
 WHERE first_time >= trunc(sysdate) - :v_statsWindow
 GROUP BY trunc(first_time), thread#, to_char(first_time, 'HH24'), dest_id
 ;
--- spool off
+

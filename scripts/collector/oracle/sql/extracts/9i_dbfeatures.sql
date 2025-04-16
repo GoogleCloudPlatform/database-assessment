@@ -14,6 +14,6 @@
 -- limitations under the License.
 --
 -- This file intentionally left empty
--- spool &outputdir./opdb__dbfeatures__&s_tag.
-prompt PKEY|CON_ID|NAME|CURRE|DETECTED_USAGES|TOTAL_SAMPLES|FIRST_USAGE|LAST_USAGE|AUX_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
--- spool off
+
+
+

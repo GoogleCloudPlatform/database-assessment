@@ -16,8 +16,8 @@
 exec dbms_application_info.set_action('awrhistcmdtypes');
 COLUMN SP_CON_ID FORMAT A6 HEADING CON_ID
 
--- spool &outputdir./opdb__awrhistcmdtypes__&s_tag.
-prompt PKEY|CON_ID|HH|COMMAND_TYPE|CNT|AVG_BUFFER_GETS|AVG_ELASPED_TIME|AVG_ROWS_PROCESSED|AVG_EXECUTIONS|AVG_CPU_TIME|AVG_IOWAIT|AVG_CLWAIT|AVG_APWAIT|AVG_CCWAIT|AVG_PLSEXEC_TIME|COMMAND_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
+
+
 WITH vcmdtype AS(
 SELECT :v_pkey AS pkey,
        'N/A'                       AS con_id,
@@ -175,5 +175,5 @@ SELECT pkey , con_id AS sp_con_id, hh24 , command_type , cnt , avg_buffer_gets ,
        avg_apwait , avg_ccwait , avg_plsexec_time, command_name,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vcmdtype;
--- spool off
+
 COLUMN SP_CON_ID CLEAR

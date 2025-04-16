@@ -23,8 +23,8 @@ exec dbms_application_info.set_action('sourceconn');
 --        CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'has.machine' END as t_machine
 --FROM DUAL;
 
--- spool &outputdir./opdb__sourceconn__&s_tag.
-prompt PKEY|DBID|INSTANCE_NUMBER|HO|PROGRAM|MODULE|MACHINE|COMMAND_NAME|CNT|DMA_SOURCE_ID|DMA_MANUAL_ID
+
+
 WITH vsrcconn AS (
 SELECT :v_pkey AS pkey,
        has.dbid,
@@ -58,4 +58,4 @@ SELECT pkey , dbid , instance_number , hour , program ,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vsrcconn
 order by hour;
--- spool off
+

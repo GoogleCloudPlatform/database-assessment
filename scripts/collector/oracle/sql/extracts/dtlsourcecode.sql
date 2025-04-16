@@ -14,8 +14,8 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('dtlsourcecode');
--- spool &outputdir./opdb__dtlsourcecode__&s_tag.
-prompt PKEY|CON_ID|OWNER|NAME|TYPE|SUM_NR_LINES|QT_OBJS|SUM_NR_LINES_W_UTL|SUM_NR_LINES_W_DBMS|COUNT_EXEC_IM|COUNT_DBMS_SQL|SUM_NR_LINES_W_DBMS_UTL|SUM_COUNT_TOTAL|DMA_SOURCE_ID|DMA_MANUAL_ID
+
+
 WITH vsrc AS (
 SELECT pkey,
        con_id,
@@ -70,4 +70,4 @@ SELECT pkey , con_id , owner, name , type , sum_nr_lines , qt_objs ,
        sum_nr_lines_w_utl , sum_nr_lines_w_dbms , count_exec_im , count_dbms_sql , sum_nr_lines_w_dbms_utl , sum_count_total,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vsrc;
--- spool off
+
