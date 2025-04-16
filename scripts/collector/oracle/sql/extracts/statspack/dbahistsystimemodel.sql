@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('dbahistsystimemodel');
-COLUMN HOUR FORMAT A4
+
 
 
 WITH vtimemodel AS (
@@ -80,4 +80,4 @@ SELECT pkey, dbid, instance_number, hour, stat_name, cnt,
 FROM vtimemodel;
 
 
-COLUMN HOUR CLEAR
+

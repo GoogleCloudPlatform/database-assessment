@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('dbobjects');
-COLUMN EDITIONABLE FORMAT A11
+
 
 
 

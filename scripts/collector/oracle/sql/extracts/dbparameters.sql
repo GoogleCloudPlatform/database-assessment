@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('dbparameters');
-COLUMN DEFAULT_VALUE FORMAT A255
+
 
 
 
@@ -32,4 +32,4 @@ SELECT pkey , inst_id , con_id , name , value , default_value , isdefault,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vparam;
 
-COLUMN DEFAULT_VALUE CLEAR
+

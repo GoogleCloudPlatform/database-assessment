@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('dbsummary');
-COLUMN FORCE_LOGGING FORMAT A15
+
 define s_app_join_cond='&s_cdb_join_cond.'
 define s_app_join_dbsum_cond='&s_cdb_join_cond.'
 

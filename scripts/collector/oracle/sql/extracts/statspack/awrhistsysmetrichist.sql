@@ -14,8 +14,8 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('awrhistsysmetrichist');
-COLUMN HOUR FORMAT A4
-COLUMN METRIC_UNIT FORMAT A15
+
+
 
 
 WITH vsysmetric AS (
@@ -72,5 +72,5 @@ SELECT pkey , dbid , instance_number , hour , metric_name ,
 	       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vsysmetric;
 
-COLUMN HOUR CLEAR
-COLUMN METRIC_UNIT CLEAR
+
+

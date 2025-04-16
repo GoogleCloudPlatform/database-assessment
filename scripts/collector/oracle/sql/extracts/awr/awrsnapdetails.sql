@@ -14,9 +14,9 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('awrsnapdetails');
-COLUMN HOUR FORMAT A4
-COLUMN MIN_BEGIN_INTERVAL_TIME FORMAT A26
-COLUMN MAX_BEGIN_INTERVAL_TIME FORMAT A26
+
+
+
 
 
 

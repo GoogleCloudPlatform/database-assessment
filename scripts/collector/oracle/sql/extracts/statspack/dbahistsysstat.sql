@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('dbahistsysstat');
-COLUMN HOUR FORMAT A4
+
 
 
 WITH vsysstat AS (
@@ -93,4 +93,4 @@ SELECT pkey , dbid , instance_number , hour , stat_name , cnt ,
 FROM vsysstat;
 
 
-COLUMN HOUR CLEAR
+

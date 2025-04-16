@@ -14,12 +14,12 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('tabletypes');
-COLUMN TEMPORARY FORMAT A20
-COLUMN SECONDARY FORMAT A20
-COLUMN NESTED    FORMAT A20
-COLUMN CLUSTERED_TABLE FORMAT A20
-COLUMN OBJECT_TABLE FORMAT A20
-COLUMN XML_TABLE FORMAT A20
+
+
+
+
+
+
 
 --VARIABLE xml_select_sql VARCHAR2(100);
 --COLUMN p_xml_select new_value s_xml_select noprint
@@ -155,9 +155,9 @@ SELECT :v_pkey AS pkey,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM  tblinfo;
 
-COLUMN TEMPORARY CLEAR
-COLUMN SECONDARY CLEAR
-COLUMN NESTED CLEAR
-COLUMN CLUSTERED_TABLE CLEAR
-COLUMN OBJECT_TABLE CLEAR
-COLUMN XML_TABLE CLEAR
+
+
+
+
+
+

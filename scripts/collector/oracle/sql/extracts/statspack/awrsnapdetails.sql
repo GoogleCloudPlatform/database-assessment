@@ -14,9 +14,9 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('awrsnapdetails');
-COLUMN HOUR FORMAT A4
-COLUMN MIN_BEGIN_INTERVAL_TIME FORMAT A30
-COLUMN MAX_BEGIN_INTERVAL_TIME FORMAT A30
+
+
+
 
 
 
@@ -70,6 +70,6 @@ SELECT pkey , dbid , instance_number , hour , min_snap_id , max_snap_id , min_be
 FROM vawrsnap;
 
 
-COLUMN HOUR CLEAR
-COLUMN MIN_BEGIN_INTERVAL_TIME CLEAR
-COLUMN MAX_BEGIN_INTERVAL_TIME CLEAR
+
+
+

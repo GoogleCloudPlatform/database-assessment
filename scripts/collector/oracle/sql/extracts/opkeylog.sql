@@ -14,8 +14,8 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('opkeylog');
-COLUMN DB_NAME FORMAT A20
-COLUMN INSTANCE_NAME FORMAT A20
+
+
 
 
 with vop as (
@@ -28,5 +28,5 @@ select pkey , opscriptversion , db_version , hostname
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 from vop;
 
-COLUMN DB_NAME CLEAR
-COLUMN INSTANCE_NAME CLEAR
+
+

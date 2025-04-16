@@ -194,6 +194,7 @@ SELECT CASE WHEN  :v_dbversion LIKE '9%' THEN 'data_type_col_9i.sql'
             ELSE 'data_type_col_regex.sql'
        END as p_data_type_exp,
        CASE WHEN  :v_dbversion LIKE '9%' THEN '9i_'
+            WHEN  :v_dbversion LIKE '101%' THEN '9i_'
             ELSE ''
        END AS p_ora9ind
 FROM dual;
@@ -706,3 +707,6 @@ column v_dma_manual_id format a100
 column dma_source_id format a100
 column dma_manual_id format a100
 column pkey format a100
+
+@set_columns.sql
+

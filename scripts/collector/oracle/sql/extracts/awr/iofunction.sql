@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('iofunction');
-COLUMN HOUR FORMAT A4
+
 
 
 WITH vrawiof AS (
@@ -188,4 +188,4 @@ SELECT pkey , dbid , instance_number , hour , function_name ,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM viof;
 
-COLUMN HOUR CLEAR
+

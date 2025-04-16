@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('pdbsinfo');
-COLUMN LOGGING FORMAT A10
+
 
 define s_app_join_cond='&s_pdb_join_cond.'
 
@@ -75,4 +75,4 @@ SELECT i.*, m.sga_allocated_bytes, m.pga_used_bytes, m.pga_allocated_bytes, m.pg
 FROM  vpdbinfo i
       LEFT OUTER JOIN mem_stats m ON i.con_id = m.con_id;
 
-COLUMN LOGGING CLEAR
+

@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('awrhistcmdtypes');
-COLUMN SP_CON_ID FORMAT A6 HEADING CON_ID
+
 
 
 
@@ -176,4 +176,4 @@ SELECT pkey , con_id AS sp_con_id, hh24 , command_type , cnt , avg_buffer_gets ,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vcmdtype;
 
-COLUMN SP_CON_ID CLEAR
+

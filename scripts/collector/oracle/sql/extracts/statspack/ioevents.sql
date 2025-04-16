@@ -14,7 +14,7 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('ioevents');
-COLUMN HOUR FORMAT A4
+
 
 
 WITH vrawev AS (
@@ -99,4 +99,4 @@ SELECT pkey , dbid , instance_number , hour , wait_class , event_name ,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vfev;
 
-COLUMN HOUR CLEAR
+
