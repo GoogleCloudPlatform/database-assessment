@@ -18,7 +18,7 @@ set termout on pause on
 SET DEFINE "&"
 DEFINE dmaVersion=&1
 DEFINE SQLDIR=&2
-DEFINE s_useawr=&3
+DEFINE s_statssrc=&3
 DEFINE s_tag=&4
 DEFINE outputdir=&5
 DEFINE s_manualUniqueId=&6
@@ -33,7 +33,7 @@ prompt *************************************************************************
 prompt
 prompt !!! ATTENTION !!!
 prompt
-@&SQLDIR/prompt_&s_useawr.
+@&SQLDIR/prompt_&s_statssrc.
 prompt
 prompt
 prompt ***********************************************************************************
@@ -243,8 +243,10 @@ prompt PKEY|CON_ID|OWNER|SEGMENT_NAME|SEGMENT_TYPE|TABLESPACE_NAME|DMA_SOURCE_ID
 spool off
 
 
-@sql/&s_dopluggable.
-@sql/op_collect_&s_useawr.
+@sql/&s_tenancy.
+
+@sql/op_collect_stats_&s_statssrc.
+
 spool &outputdir./opdb__lobsizing__&s_tag.
 prompt PKEY|CON_ID|OWNER|TABLE_NAME|TABLE_NUM_ROWS|TAB|PARTITIONED|COLUMN_NAME|DATA_TYPE|TABLE_PARTITION_NAME|TABLE_PARTITION_SEG_CREATED|PARTITION_NUM_ROWS|LOB_PARTITION_NAME|LOB_PARTITION_SEG_CREATED|SUBPARTITION_COUNT|TABLE_SUBPARTITION_NAME|TABLE_SUBPARTITION_CREATED|SUBPARTITION_NUM_ROWS|LOB_SUBPARTITION_NAME|LOB_SUBPARTITION_SEG_CREATED|LOB_SEG_NAME|SEG_NAME|SEG_PARTITION_NAME|LOB_COMPRESSION|LOB_PARTITION_COMPRESSION|LOB_SUBPARTITION_COMPRESSION|LOB_DEDUPLICATION|LOB_PARTITION_DEDUPLICATION|LOB_SUBPARTITION_DEDUPLICATION|SEG_BYTES|TABLE_AVG_LOB_BYTES|PARTITION_AVG_LOB_BYTES|SUBPARTITION_AVG_LOB_BYTES|DMA_SOURCE_ID|DMA_MANUAL_ID
 @sql/extracts/lobsizing.sql

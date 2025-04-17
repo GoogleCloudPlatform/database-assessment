@@ -62,9 +62,9 @@ SELECT '&dmaVersion' INTO :v_dmaVersion FROM DUAL;
 END;
 /
 
-variable v_useawr VARCHAR2(20);
+variable v_statssrc VARCHAR2(20);
 BEGIN
-  :v_useawr := '&s_useawr';
+  :v_statssrc := '&s_statssrc';
 END;
 /
 
@@ -127,7 +127,7 @@ column p_cdb_join_cond               new_value s_cdb_join_cond noprint
 column p_pdb_join_cond               new_value s_pdb_join_cond noprint
 column p_dbparam_dflt_col            new_value s_dbparam_dflt_col noprint
 column p_editionable_col             new_value s_editionable_col noprint
-column p_dopluggable                 new_value s_dopluggable noprint
+column p_tenancy                     new_value s_tenancy noprint
 column p_db_container_col            new_value s_db_container_col noprint
 column p_pluggablelogging            new_value s_pluggablelogging noprint
 column p_sqlcmd                      new_value s_sqlcmd noprint
@@ -245,7 +245,7 @@ END;
 var lv_tblprefix VARCHAR2(3);
 var lv_is_container NUMBER;
 var lv_editionable_col  VARCHAR2(20);
-var lv_do_pluggable     VARCHAR2(40);
+var lv_tenancy          VARCHAR2(40);
 var lv_db_container_col VARCHAR2(30);
 var lv_cdb_join_cond    VARCHAR2(30);
 var lv_pdb_join_cond    VARCHAR2(30);
@@ -257,7 +257,7 @@ BEGIN
   :lv_tblprefix := 'dba';
   :lv_is_container := 0;
   :lv_editionable_col := '''N/A''';
-  :lv_do_pluggable := 'op_collect_nopluggable_info.sql';
+  :lv_tenancy := 'op_collect_tenancy_single.sql';
   :lv_db_container_col := '''N/A''';
   :lv_cdb_join_cond := 'AND 1=1';
   :lv_pdb_join_cond := 'AND 1=1';
@@ -268,7 +268,7 @@ BEGIN
     IF cnt > 0 THEN
       :lv_tblprefix := 'cdb' ;
       :lv_is_container := 1;
-      :lv_do_pluggable := 'op_collect_pluggable_info.sql';
+      :lv_tenancy := 'op_collect_tenancy_multi.sql';
       :lv_db_container_col := 'cdb';
       :lv_cdb_join_cond := 'AND 1=1';
       :lv_pdb_join_cond := 'AND con_id = p.con_id';
@@ -284,7 +284,7 @@ END;
 SELECT :lv_tblprefix AS p_tblprefix,
        :lv_is_container AS p_is_container,
        :lv_editionable_col AS p_editionable_col,
-       :lv_do_pluggable AS p_dopluggable,
+       :lv_tenancy AS p_tenancy,
        :lv_db_container_col as p_db_container_col,
        :lv_cdb_join_cond as p_cdb_join_cond,
        :lv_pdb_join_cond as p_pdb_join_cond
@@ -343,9 +343,9 @@ DECLARE
 cnt NUMBER;
 BEGIN
   SELECT SUM(cnt) INTO cnt FROM (
-    SELECT count(1) FROM dba_views WHERE (view_name = 'DBA_HIST_IOSTAT_FUNCTION' AND :v_useawr = 'awr')
+    SELECT count(1) FROM dba_views WHERE (view_name = 'DBA_HIST_IOSTAT_FUNCTION' AND :v_statssrc = 'awr')
     UNION
-    SELECT count(1) FROM dba_tables WHERE (table_name ='STATS$IOSTAT_FUNCTION_NAME' AND :v_useawr = 'statspack' AND OWNER ='PERFSTAT')
+    SELECT count(1) FROM dba_tables WHERE (table_name ='STATS$IOSTAT_FUNCTION_NAME' AND :v_statssrc = 'statspack' AND OWNER ='PERFSTAT')
   );
   IF (cnt > 0 ) THEN :v_io_function_sql := 'iofunction.sql';
   ELSE
@@ -555,35 +555,35 @@ BEGIN
   :v_stats_prompt  := 'prompt_nostats.sql';
 
   -- Use AWR repository if requested.
-  IF :v_useawr = 'awr' THEN
+  IF :v_statssrc = 'awr' THEN
      l_tab_name := 'DBA_HIST_SNAPSHOT';
      l_col_name := 'begin_interval_time';
      :v_stats_prompt := 'prompt_awr.sql';
 
   -- If STATSPACK has been requested, check that it is installed and permissions granted.
-  ELSE IF :v_useawr = 'statspack' THEN
+  ELSE IF :v_statssrc = 'statspack' THEN
          SELECT count(1) INTO cnt FROM all_tables WHERE owner ='PERFSTAT' AND table_name IN ('STATS$OSSTAT', 'STATS$OSSTATNAME', 'STATS$SNAPSHOT', 'STATS$SQL_SUMMARY', 'STATS$SYSSTAT', 'STATS$SYSTEM_EVENT', 'STATS$SYS_TIME_MODEL', 'STATS$TIME_MODEL_STATNAME');
 
          -- If we have access to STATSPACK, use STATSPACK as the source of performance metrics
  	 IF cnt = 8 THEN
            --:v_stats_prompt := 'op_collect_statspack.sql';
            :v_stats_prompt := 'prompt_statspack.sql';
-           :v_useawr := 'statspack';
+           :v_statssrc := 'statspack';
            l_tab_name := 'STATS$SNAPSHOT';
            l_col_name := 'snap_time';
            dbms_output.put_line('Verified access to the STATSPACK tables.');
          ELSE
               l_tab_name := 'NONE' ;
               :v_stats_prompt  := 'prompt_nostats.sql';
-              :v_useawr := 'nostats';
+              :v_statssrc := 'nostats';
               dbms_output.put_line('There is no access to the STATSPACK tables so cannot collect performance data.');
          END IF;
        -- If instructed to not collect performance metrics, do not collect stats.
-       ELSE IF  :v_useawr = 'nostats' THEN
+       ELSE IF  :v_statssrc = 'nostats' THEN
               :v_stats_prompt  := 'prompt_nostats.sql';
               dbms_output.put_line('Requested to skip collection of performance stats.');
             -- If we get here, then there was a problem.
-            ELSE l_tab_name :=  'ERROR - Unexpected parameter: ' || :v_useawr;
+            ELSE l_tab_name :=  'ERROR - Unexpected parameter: ' || :v_statssrc;
             END IF;
        END IF;
   END IF;
@@ -591,7 +591,7 @@ BEGIN
   BEGIN
     IF l_tab_name = 'NONE' THEN
         dbms_output.put_line('No performance data will be collected.');
-        :v_useawr := 'nostats';
+        :v_statssrc := 'nostats';
     ELSE
       -- Verify there are metrics to collect.
       BEGIN
@@ -602,7 +602,7 @@ BEGIN
             dbms_output.put_line('No data found in ' ||  upper(l_tab_name) || '.  No performance data will be collected.');
             :v_stats_prompt := 'promt_nostats.sql';
             l_tab_name := 'NONE';
-            :v_useawr := 'nostats';
+            :v_statssrc := 'nostats';
         END IF;
         EXCEPTION WHEN table_does_not_exist THEN
           RAISE_APPLICATION_ERROR(-20002, 'This user does not have SELECT privileges on ' || upper(l_tab_name) || '.  Please ensure the grants_wrapper.sql script has been executed for this user.');
@@ -622,7 +622,7 @@ BEGIN
           :v_min_snapid := -1;
           :v_max_snapid := -1;
           :v_info_prompt := 'without performance data';
-          :v_useawr := 'nostats';
+          :v_statssrc := 'nostats';
        ELSE
           :v_info_prompt := 'between snaps ' || :v_min_snapid || ' and ' || :v_max_snapid;
        END IF;
@@ -695,10 +695,10 @@ BEGIN
 END;
 /
 
-column c_useawr new_value s_useawr NOPRINT
-SELECT :v_useawr as c_useawr FROM DUAL;
+column c_statssrc new_value s_statssrc NOPRINT
+SELECT :v_statssrc as c_statssrc FROM DUAL;
 
-exec dbms_output.put_line('Stats source is &s_useawr + ' ||  :v_useawr);
+exec dbms_output.put_line('Stats source is &s_statssrc + ' ||  :v_statssrc);
 
 -- Session settings for output
 set numwidth 48

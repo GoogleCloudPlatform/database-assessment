@@ -68,7 +68,7 @@ PROMPT s_pluggablelogging            = &s_pluggablelogging.
 PROMPT s_tag                         = &s_tag.
 PROMPT s_tblprefix                   = &s_tblprefix.
 PROMPT s_umf_test                    = &s_umf_test.
-PROMPT s_useawr                      = &s_useawr.
+PROMPT s_statssrc                    = &s_statssrc.
 
 PROMPT s_l_con_id                    = &s_l_con_id.  
 PROMPT s_lp_con_id                   = &s_lp_con_id. 
@@ -98,7 +98,7 @@ BEGIN
 --dbms_output.put_line( 'visibility                    = ' ||  :visibility);
 dbms_output.put_line( 'lv_cdb_join_cond              = ' ||  :lv_cdb_join_cond);
 dbms_output.put_line( 'lv_db_container_col           = ' ||  :lv_db_container_col);
-dbms_output.put_line( 'lv_do_pluggable               = ' ||  :lv_do_pluggable);
+dbms_output.put_line( 'lv_tenancy                    = ' ||  :lv_tenancy);
 dbms_output.put_line( 'lv_editionable_col            = ' ||  :lv_editionable_col);
 dbms_output.put_line( 'lv_is_container               = ' ||  :lv_is_container);
 dbms_output.put_line( 'lv_pdb_join_cond              = ' ||  :lv_pdb_join_cond);
@@ -126,7 +126,7 @@ dbms_output.put_line( 'v_pkey                        = ' ||  :v_pkey);
 dbms_output.put_line( 'v_stats_prompt                = ' ||  :v_stats_prompt);
 dbms_output.put_line( 'v_statsWindow                 = ' ||  :v_statsWindow);
 dbms_output.put_line( 'v_umfflag                     = ' ||  :v_umfflag);
-dbms_output.put_line( 'v_useawr                      = ' ||  :v_useawr);
+dbms_output.put_line( 'v_statssrc                    = ' ||  :v_statssrc);
 END;
 /
 
