@@ -16,33 +16,6 @@
 exec dbms_application_info.set_action('tabletypes');
 
 
-
-
-
-
-
---VARIABLE xml_select_sql VARCHAR2(100);
---COLUMN p_xml_select new_value s_xml_select noprint
-
---DECLARE
---  cnt NUMBER;
---BEGIN
---  SELECT count(1) INTO cnt
---  FROM &s_tblprefix._views
---  WHERE view_name = upper('&s_tblprefix._XML_TABLES');
---
---  IF cnt > 0 THEN
---    :xml_select_sql := '&s_tblprefix._XML_TABLES';
---  ELSE
---    :xml_select_sql := '(SELECT NULL AS con_id, NULL AS owner FROM dual WHERE 1=2)';
---  END IF;
---END;
---/
---
---SELECT :xml_select_sql AS p_xml_select FROM dual;
-
-
-
 WITH tblinfo AS (
 SELECT
     &s_a_con_id. AS con_id,

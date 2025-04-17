@@ -14,16 +14,6 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('sourceconn');
---COLUMN t_sql_cmd   NEW_VALUE  s_sql_cmd NOPRINT
---COLUMN t_machine   NEW_VALUE  s_machine NOPRINT
---COLUMN MACHINE FORMAT A60
-
-
---SELECT  CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '&AWRDIR./sqlcmd10.sql' ELSE '&AWRDIR./sqlcmd12.sql' END as t_sql_cmd,
---        CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'has.machine' END as t_machine
---FROM DUAL;
-
-
 
 WITH vsrcconn AS (
 SELECT :v_pkey AS pkey,
