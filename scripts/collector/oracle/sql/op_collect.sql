@@ -70,7 +70,7 @@ prompt PKEY|CON_ID|USERNAME|DMA_SOURCE_ID|DMA_MANUAL_ID
 spool off
 
 
-spool &outputdir./opdb_backups__&s_tag.
+spool &outputdir./opdb__backups__&s_tag.
 prompt PKEY|BACKUP_START_DATE|CON_ID|INPUT_TYPE|ELAPSED_SECONDS|MBYTES_IN|MBYTES_OUT|DMA_SOURCE_ID|DMA_MANUAL_ID
 @sql/extracts/&s_ora9ind.backups.sql
 spool off
