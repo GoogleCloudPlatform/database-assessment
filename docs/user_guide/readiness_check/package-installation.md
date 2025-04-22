@@ -31,7 +31,8 @@ A virtual environment isolates the DMA collector's dependencies from other Pytho
 Navigate to your desired project directory and run:
 
 ```bash
-python3 -m venv .venv
+# you'll typically see this as .venv, but we'll use `dma` for clarity
+python3 -m venv dma
 ```
 
 ### Activate the virtual environment
@@ -39,10 +40,10 @@ python3 -m venv .venv
 Activate the virtual environment by running:
 
 ```bash
-source .venv/bin/activate
+source dma/bin/activate
 ```
 
-*(Note: You can often identify when you’ve activated the virtual environment in your terminal. When active, you'll typically see the virtual environment name in parentheses at the beginning of your terminal prompt: `(.venv) $`)*
+*(Note: You can often identify when you’ve activated the virtual environment in your terminal. When active, you'll typically see the virtual environment name in parentheses at the beginning of your terminal prompt: `(dma) $`)*
 
 ## Install the DMA Readiness Check Utility
 
@@ -107,8 +108,8 @@ To remove the DMA collector utility and its dependencies, simply deactivate and 
     deactivate
     ```
 
-2. Remove the virtual environment directory (assuming it's named `.venv` in your current location):
+2. Remove the virtual environment directory (assuming it's named `dma` in your current location):
 
     ```bash
-    rm -Rf ./.venv/
+    rm -Rf ./dma/
     ```
