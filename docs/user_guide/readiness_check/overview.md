@@ -11,7 +11,7 @@ Running the readiness check *before* initiating a migration can help you proacti
 Based on the collected data, the utility generates a report highlighting:
 
 * **Version Compatibility:** Checks if your source PostgreSQL version is supported by the target service (Cloud SQL or AlloyDB).
-* **Required Extensions:** Verifies the presence and configuration of necessary extensions, such as `pglogical`, which is crucial for logical replication used by Database Migration Service (DMS).
+* **DMS Compatibility:** Verifies the presence and configuration of necessary extensions, such as `pglogical`, which is crucial for logical replication used by Database Migration Service (DMS).
 * **WAL Configuration:** Ensures the Write-Ahead Log (`wal_level`) is set correctly (typically to `logical`) for replication.
 * **Replication Settings:** Examines parameters like `max_replication_slots`, `max_wal_senders`, and `max_worker_processes` to ensure they are sufficient for the migration process, potentially suggesting increases based on database count and parallelism.
 * **Table Structure:** Identifies tables lacking primary keys, as this can limit Change Data Capture (CDC) replication (only `INSERT`s might be replicated).
