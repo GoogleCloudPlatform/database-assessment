@@ -194,21 +194,27 @@ UNION ALL
         from sys.resource_governor_configuration
         WHERE is_enabled = 1
     ) gov_enabled;
-WITH
-    BUFFER_POOL_SIZE
-    AS
-    (
-        SELECT database_id AS DatabaseID
-		, DB_NAME(database_id) AS DatabaseName
-		, COUNT(file_id) * 8 / 1024.0 AS BufferSizeInMB
-        FROM sys.dm_os_buffer_descriptors
-        GROUP BY DB_NAME(database_id)
-		,database_id
-    )
-INSERT INTO #serverProperties
-SELECT 'total_buffer_size_in_mb'
-	, SUM(BufferSizeInMB)
-FROM BUFFER_POOL_SIZE;
+
+WITH BUFFER_POOL_SIZE AS (
+    SELECT
+        (COUNT_BIG (*) * 8192) / 1024 / 1024 AS cached_pages_count,
+        CASE database_id
+        WHEN 32767 THEN
+            'ResourceDb'
+        ELSE
+            db_name (database_id)
+        END AS database_name
+    FROM
+        sys.dm_os_buffer_descriptors
+    GROUP BY
+        DB_NAME (database_id),
+        database_id)
+    INSERT INTO #serverProperties
+    SELECT
+        'total_buffer_size_in_mb',
+        CAST(SUM(cached_pages_count) AS NVARCHAR (255))
+    FROM
+        BUFFER_POOL_SIZE;
 
 /* Certain clouds do not allow access to certain tables so we need to catch the table does not exist error and default the setting */
 IF @CLOUDTYPE = 'AZURE'
