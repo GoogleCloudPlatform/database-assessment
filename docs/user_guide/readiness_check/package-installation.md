@@ -1,6 +1,6 @@
-# Getting Started with the Database Migration Assessment (DMA) Collector
+# Getting Started with the Readiness Check Utility
 
-These instructions will guide you through setting up and running the DMA collector using the Python CLI.
+These instructions will guide you through setting up and running the DMA Readiness Check utility using the Python CLI.
 
 ## Verify Python Version
 
@@ -24,7 +24,7 @@ curl -sL https://api.github.com/repos/GoogleCloudPlatform/database-assessment/re
 
 ## Create a Virtual Environment (Recommended)
 
-A virtual environment isolates the DMA collector's dependencies from other Python projects. This prevents conflicts and ensures a consistent environment.
+A virtual environment isolates the DMA utility's dependencies from other Python projects. This helps prevent conflicts and ensures a more consistent environment.
 
 ### Create the virtual environment
 
@@ -37,8 +37,9 @@ python3 -m venv dma
 
 ### Activate the virtual environment
 
-Activate the virtual environment by running:
+The command to activate the virtual environment depends on your operating system and shell.
 
+**Linux/Unix-like systems (using bash/zsh):**
 ```bash
 source dma/bin/activate
 ```
