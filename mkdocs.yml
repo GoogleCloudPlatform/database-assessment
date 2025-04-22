@@ -16,18 +16,22 @@ plugins:
 
 nav:
   - Home: index.md
-  - Oracle Data Collection:
-      - Data Collection: user_guide/shell_scripts/oracle/collection_scripts.md
-      - Permissions Required: user_guide/shell_scripts/oracle/permissions.md
-      - Database User Scripts: user_guide/shell_scripts/oracle/db_user_create.md
-      - Collection Masking: user_guide/shell_scripts/oracle/collection_masker.md
-  - Microsoft SQL Server Data Collection:
-      - Data Collection: user_guide/shell_scripts/sqlserver/collection_scripts.md
-      - Database User Scripts: user_guide/shell_scripts/sqlserver/db_user_create.md
-  - Postgres Data Collection:
-      - Data Collection: user_guide/shell_scripts/postgres/collection_scripts.md
-  - MySQL Data Collection:
-      - Data Collection: user_guide/shell_scripts/mysql/collection_scripts.md
+  - Collection Scripts:
+    - Oracle Data Collection:
+        - Data Collection: user_guide/shell_scripts/oracle/collection_scripts.md
+        - Permissions Required: user_guide/shell_scripts/oracle/permissions.md
+        - Database User Scripts: user_guide/shell_scripts/oracle/db_user_create.md
+        - Collection Masking: user_guide/shell_scripts/oracle/collection_masker.md
+    - Microsoft SQL Server Data Collection:
+        - Data Collection: user_guide/shell_scripts/sqlserver/collection_scripts.md
+        - Database User Scripts: user_guide/shell_scripts/sqlserver/db_user_create.md
+    - Postgres Data Collection:
+        - Data Collection: user_guide/shell_scripts/postgres/collection_scripts.md
+    - MySQL Data Collection:
+        - Data Collection: user_guide/shell_scripts/mysql/collection_scripts.md
+  - Readiness Check Utility:
+      - Overview: user_guide/readiness_check/overview.md
+      - Installation: user_guide/readiness_check/package-installation.md
   - Developers:
       - Developer Setup: developer_guide/developer_setup.md
       - Commands: developer_guide/commands.md

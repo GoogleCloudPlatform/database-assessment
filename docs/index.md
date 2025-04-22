@@ -15,3 +15,7 @@ Download the collection scripts from the latest release. Instructions for execut
 * [MySQL](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-mysql.zip)
 
 Instructions for execution are included in the README bundled with the collection scripts.
+
+If you are looking for the Readiness Assessment utility:
+
+* [Getting Started with the Readiness Check](user_guide/readiness_check/package-installation.md)
