@@ -13,10 +13,12 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-column t_sqlstats   new_value  s_sqlstats noprint
+--column t_sqlstats_dir   new_value  s_sqlstats_dir noprint
+--column t_sqlstats_ver   new_value  s_sqlstats_ver noprint
 
-SELECT  CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN 'sql/extracts/awr/sqlstats111.sql' ELSE 'sql/extracts/awr/sqlstats.sql' END as t_sqlstats
-FROM DUAL;
+--SELECT  CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN 'sqlstats111.sql' ELSE 'sqlstats.sql' END as t_sqlstats_ver,
+--        CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN 'sql/extracts/awr/' ELSE 'sql/extracts/awr/' END as t_sqlstats_dir
+--FROM DUAL;
 
 spool &outputdir./opdb__awrsnapdetails__&s_tag.
 prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|MIN_SNAP_ID|MAX_SNAP_ID|MIN_BEGIN_INTERVAL_TIME|MAX_BEGIN_INTERVAL_TIME|CNT|SUM_SNAPS_DIFF_SECS|AVG_SNAPS_DIFF_SECS|MEDIAN_SNAPS_DIFF_SECS|MODE_SNAPS_DIFF_SECS|MIN_SNAPS_DIFF_SECS|MAX_SNAPS_DIFF_SECS|DMA_SOURCE_ID|DMA_MANUAL_ID
@@ -79,7 +81,7 @@ spool off
 
 spool &outputdir./opdb__sqlstats__&s_tag.
 prompt PKEY|CON_ID|DBID|INSTANCE_NUMBER|FORCE_MATCHING_SIGNATURE|SQL_ID|TOTAL_EXECUTIONS|TOTAL_PX_SERVERS_EXECS|ELAPSED_TIME_TOTAL|DISK_READS_TOTAL|PHYSICAL_READ_BYTES_TOTAL|PHYSICAL_WRITE_BYTES_TOTAL|IO_OFFLOAD_ELIG_BYTES_TOTAL|IO_INTERCONNECT_BYTES_TOTAL|OPTIMIZED_PHYSICAL_READS_TOTAL|CELL_UNCOMPRESSED_BYTES_TOTAL|IO_OFFLOAD_RETURN_BYTES_TOTAL|DIRECT_WRITES_TOTAL|PERC_EXEC_FINISHED|AVG_ROWS|AVG_DISK_READS|AVG_BUFFER_GETS|AVG_CPU_TIME_US|AVG_ELAPSED_US|AVG_IOWAIT_US|AVG_CLWAIT_US|AVG_APWAIT_US|AVG_CCWAIT_US|AVG_PLSEXEC_US|AVG_JAVEXEC_US|DMA_SOURCE_ID|DMA_MANUAL_ID
-@&s_sqlstats.
+@&s_sqlstats_dir.&s_sqlstats_ver.
 spool off
 
 

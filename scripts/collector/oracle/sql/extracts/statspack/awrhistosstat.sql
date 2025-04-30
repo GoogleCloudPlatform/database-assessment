@@ -49,7 +49,7 @@ WITH v_osstat_all
                          PARTITION BY os.dbid, os.instance_number,
                        TO_CHAR(os.SNAP_TIME, 'hh24'), os.stat_name) AS
                      "PERC100"
-              FROM (SELECT snap.SNAP_TIME, s.*, osname.STAT_NAME,
+              FROM (SELECT snap.SNAP_TIME, s.snap_id, s.dbid, s.instance_number, s.value, osname.STAT_NAME,
                     NVL(DECODE(GREATEST(value, NVL(LAG(value)
                     OVER (
                     PARTITION BY s.dbid, s.instance_number, osname.STAT_NAME
@@ -63,7 +63,9 @@ WITH v_osstat_all
                          ON s.snap_id = snap.snap_id
                          AND s.instance_number = snap.instance_number
                          AND s.dbid = snap.dbid
-                         inner join STATS$OSSTATNAME osname
+                         inner join 
+&s_statsosstatname.  
+                            osname
                          ON s.osstat_id = osname.osstat_id
                     WHERE snap.snap_time BETWEEN (SELECT max(snap_time) FROM  STATS$SNAPSHOT WHERE snap_time < :v_min_snaptime  ) AND :v_max_snaptime
                     AND s.dbid = :v_dbid) os ) ,

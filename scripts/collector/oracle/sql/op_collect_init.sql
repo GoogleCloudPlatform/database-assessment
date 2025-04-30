@@ -105,6 +105,8 @@ variable v_dbname                      VARCHAR2(100);
 variable v_hora                        VARCHAR2(20);
 variable v_host                        VARCHAR2(100);
 variable v_instance                    VARCHAR2(100);
+variable v_app_join_pdbsinfo_cond      VARCHAR2(100);
+variable v_app_join_dbsum_cond         VARCHAR2(100);
 
 prompt Creating variables - end
 
@@ -140,6 +142,16 @@ column p_lob_part_dedup_col          new_value s_lob_part_dedup_col noprint
 column p_lob_subpart_dedup_col       new_value s_lob_subpart_dedup_col noprint
 column p_index_visibility            new_value s_index_visibility noprint
 column p_io_function_sql             new_value s_io_function_sql noprint
+column p_app_join_pdbsinfo_cond      new_value s_app_join_pdbsinfo_cond noprint
+column p_app_join_dbsum_cond         new_value s_app_join_dbsum_cond noprint
+column p_session_type                new_value s_session_type noprint
+column p_px_servers_execs_delta      new_value s_px_servers_execs_delta noprint
+column p_px_servers_executions       new_value s_px_servers_executions noprint
+column p_force_matching_sig          new_value s_force_matching_sig noprint
+column p_sqlstats_dir                new_value s_sqlstats_dir noprint
+column p_sqlstats_ver                new_value s_sqlstats_ver noprint
+column p_statsosstatname             new_value s_statsosstatname noprint
+
 
 prompt -- Define some session info for the extraction -- BEGIN
 -- Define some session info for the extraction -- BEGIN
@@ -180,8 +192,17 @@ COLUMN MACHINE FORMAT A60
 
 
 SELECT  CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '&AWRDIR./sqlcmd10.sql' ELSE '&AWRDIR./sqlcmd12.sql' END as t_sql_cmd,
-        CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'has.machine' END as t_machine
+        CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'has.machine' END as t_machine,
+        CASE WHEN :v_dbversion LIKE '101'                          THEN '1'       ELSE '''FOREGROUND''' END as p_session_type,
+        CASE WHEN :v_dbversion LIKE '101'                          THEN '0'       ELSE 'px_servers_execs_delta' END as p_px_servers_execs_delta,
+        CASE WHEN :v_dbversion LIKE '101'                          THEN '0'       ELSE 'px_servers_executions' END as p_px_servers_executions,
+        CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN '''N/A''' ELSE 'force_matching_signature' END as p_force_matching_sig,
+        CASE WHEN :v_dbversion LIKE '10%' OR  :v_dbversion = '111' THEN 'sqlstats111.sql' ELSE 'sqlstats.sql' END as p_sqlstats_ver,
+        CASE WHEN upper(:v_statssrc) = 'AWR'                       THEN 'sql/extracts/awr/' ELSE 'sql/extracts/statspack/' END as p_sqlstats_dir,
+        CASE WHEN :v_dbversion LIKE '101'                          THEN '@&STATSPACKDIR/osstatsname.sql' ELSE 'stats$osstatname' END as p_statsosstatname
 FROM DUAL;
+
+
 
 
 -- Define some session info for the extraction -- END
@@ -261,6 +282,8 @@ BEGIN
   :lv_db_container_col := '''N/A''';
   :lv_cdb_join_cond := 'AND 1=1';
   :lv_pdb_join_cond := 'AND 1=1';
+  :v_app_join_pdbsinfo_cond := 'AND 1=1';
+  :v_app_join_dbsum_cond := 'AND 1=1';
 
   SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner ='SYS' AND table_name = 'V_$DATABASE' AND column_name = 'CDB';
   IF cnt > 0 THEN
@@ -272,6 +295,7 @@ BEGIN
       :lv_db_container_col := 'cdb';
       :lv_cdb_join_cond := 'AND 1=1';
       :lv_pdb_join_cond := 'AND con_id = p.con_id';
+      :v_app_join_pdbsinfo_cond := 'AND con_id = p.con_id';
     END IF;
   END IF;
 
@@ -287,7 +311,9 @@ SELECT :lv_tblprefix AS p_tblprefix,
        :lv_tenancy AS p_tenancy,
        :lv_db_container_col as p_db_container_col,
        :lv_cdb_join_cond as p_cdb_join_cond,
-       :lv_pdb_join_cond as p_pdb_join_cond
+       :lv_pdb_join_cond as p_pdb_join_cond,
+       :v_app_join_pdbsinfo_cond as p_app_join_pdbsinfo_cond,
+       :v_app_join_dbsum_cond as p_app_join_dbsum_cond
 FROM DUAL;
 /
 
@@ -709,4 +735,6 @@ column dma_manual_id format a100
 column pkey format a100
 
 @set_columns.sql
+
+
 

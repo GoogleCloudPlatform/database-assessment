@@ -15,9 +15,7 @@
 --
 exec dbms_application_info.set_action('pdbsinfo');
 
-
-define s_app_join_cond='&s_pdb_join_cond.'
-
+-- define s_app_join_pdbsinfo_cond='AND 1=1'
 
 WITH opdbinfo AS (
 SELECT :v_pkey AS pkey,
@@ -50,7 +48,7 @@ FROM sys.container$ c, sys.obj$ o
 WHERE o.obj# = c.obj# AND con_id#=1),
 vpdbinfo AS (
             SELECT p.*,
-@sql/extracts/app_schemas.sql 
+@sql/extracts/app_schemas_pdbsinfo.sql 
             FROM opdbinfo p ),
 pdb_sga AS (
             SELECT con_id, inst_id, SUM(bytes) AS sga_allocated_bytes

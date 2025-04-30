@@ -13,5 +13,4 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-
-Prompt Skipping collection of pluggable database information
+-- This file intentionally left empty.

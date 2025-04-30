@@ -21,10 +21,10 @@ SELECT :v_pkey AS pkey,
        &s_a_con_id. AS con_id,
        b.dbid,
        b.instance_number,
-       to_char(force_matching_signature) force_matching_signature,
+       to_char(&s_force_matching_sig.) force_matching_signature,
        min(sql_id) sql_id,
        ROUND(sum(executions_delta)) total_executions,
-       ROUND(sum(px_servers_execs_delta)) total_px_servers_execs,
+       ROUND(sum(&s_px_servers_execs_delta.)) total_px_servers_execs,
        ROUND(sum(elapsed_time_total)) elapsed_time_total,
        ROUND(sum(disk_reads_delta)) disk_reads_total,
        -1 physical_read_bytes_total,
@@ -57,7 +57,7 @@ AND b.dbid = :v_dbid
 --and t.command_type <> 47
 -- and s.executions_total > 100
 GROUP BY :v_pkey,
-       &s_a_con_id., b.dbid, b.instance_number, force_matching_signature
+       &s_a_con_id., b.dbid, b.instance_number, &s_force_matching_sig. 
 ORDER BY elapsed_time_total DESC)
 SELECT pkey , con_id , dbid , instance_number , force_matching_signature , sql_id ,
        total_executions , total_px_servers_execs , elapsed_time_total , disk_reads_total ,
