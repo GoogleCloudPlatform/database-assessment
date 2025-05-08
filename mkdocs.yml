@@ -22,6 +22,7 @@ nav:
         - Permissions Required: user_guide/shell_scripts/oracle/permissions.md
         - Database User Scripts: user_guide/shell_scripts/oracle/db_user_create.md
         - Collection Masking: user_guide/shell_scripts/oracle/collection_masker.md
+        - DMS Migration Job Validation: user_guide/shell_scripts/oracle/dms_migration_job_validation.md
     - Microsoft SQL Server Data Collection:
         - Data Collection: user_guide/shell_scripts/sqlserver/collection_scripts.md
         - Database User Scripts: user_guide/shell_scripts/sqlserver/db_user_create.md
