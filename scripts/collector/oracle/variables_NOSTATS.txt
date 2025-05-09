@@ -1,0 +1,4 @@
+&s_sqlstats_dir.                : sql\/extracts\/nostats\/
+&AWRDIR.                        : sql\/extracts\/nostats
+&STATSPACKDIR.                  : sql\/extracts\/nostats
+&s_statssrc.                    : nostats\.sql

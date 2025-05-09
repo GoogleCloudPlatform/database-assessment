@@ -1,0 +1,2 @@
+&s_umf_test.                    :  dbid
+&v_umfflag.                     :  dbid

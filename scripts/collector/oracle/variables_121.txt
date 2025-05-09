@@ -1,0 +1,29 @@
+&s_dbparam_dflt_col.            : default_value
+&s_editionable_col.             : editionable
+&s_io_function_sql.             : iofunction.sql
+&s_compress_col.                : COMPRESS_FOR
+&s_data_type_exp.               : data_type_col_regex.sql
+&s_index_visibility.            : visibility
+&s_machine.                     : has.machine
+&s_ora9ind.                     : 
+&s_xml_select.                  : (SELECT NULL AS con_id, NULL AS owner FROM dual WHERE 1=2)
+&s_xml_select_dtl.              : (SELECT NULL AS con_id, NULL AS owner, NULL AS table_name FROM dual WHERE 1=2)
+&s_pluggablelogging.            : \'N\/A\'
+&s_sql_cmd.                     : \&AWRDIR.\/sqlcmd12.sql
+&s_lob_compression_col.         : l.compression
+&s_lob_dedup_col.               : l.deduplication
+&s_lob_part_compression_col.    : lp.compression
+&s_lob_part_dedup_col.          : lp.deduplication
+&s_lob_subpart_compression_col. : lsp.compression
+&s_lob_subpart_dedup_col.       : lsp.deduplication
+&s_lp_segment_created.          : lp.segment_created
+&s_lsp_segment_created.         : lsp.segment_created
+&s_t_segment_created.           : t.segment_created
+&s_tp_segment_created.          : tp.segment_created
+&s_tsp_segment_created.         : tsp.segment_created
+&s_force_matching_sig.          : force_matching_signature
+&s_session_type.                : \'FOREGROUND\'
+&s_px_servers_execs_delta.      : px_servers_execs_delta
+&s_sqlstats_ver.                : sqlstats.sql
+&s_px_servers_executions.       : px_servers_executions
+&s_statsosstatname.             : stats$osstatname

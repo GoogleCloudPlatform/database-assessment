@@ -1,0 +1,19 @@
+&s_a_con_id.                    : a.con_id
+&s_b_con_id.                    : b.con_id
+&s_c_con_id.                    : c.con_id
+&s_d_con_id.                    : d.con_id
+&s_db_container_col.            : cdb
+&s_is_container.                : 1
+&s_p_con_id.                    : p.con_id
+&s_pdb_join_cond.               : AND con_id = p.con_id
+&s_app_join_cond.               : AND con_id = p.con_id
+&s_tenancy.                     : op_collect_tenancy_multi.sql
+&s_tblprefix.                   : cdb
+&s_l_con_id.                    : l.con_id
+&s_lp_con_id.                   : lp.con_id
+&s_lsp_con_id.                  : lsp.con_id
+&s_s_con_id.                    : s.con_id
+&s_t_con_id.                    : t.con_id
+&s_tp_con_id.                   : tp.con_id
+&s_tsp_con_id.                  : tsp.con_id
+&s_app_join_pdbsinfo_cond.      : AND con_id = p.con_id

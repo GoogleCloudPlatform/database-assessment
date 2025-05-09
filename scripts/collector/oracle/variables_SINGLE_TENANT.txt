@@ -1,0 +1,19 @@
+&s_a_con_id.                    : \'N\/A\'		      
+&s_b_con_id.                    : \'N\/A\'		      
+&s_c_con_id.                    : \'N\/A\'		      
+&s_d_con_id.                    : \'N\/A\'		      
+&s_db_container_col.            : \'N\/A\'		      
+&s_is_container.                : 0			      
+&s_p_con_id.                    : \'N\/A\'		      
+&s_pdb_join_cond.               : AND 1=1		      
+&s_app_join_cond.               : AND 1=1
+&s_tenancy.                     : op_collect_tenancy_single.sql
+&s_tblprefix.                   : dba			      
+&s_l_con_id.                    : \'N\/A\'
+&s_lp_con_id.                   : \'N\/A\'
+&s_lsp_con_id.                  : \'N\/A\'
+&s_s_con_id.                    : \'N\/A\'
+&s_t_con_id.                    : \'N\/A\'
+&s_tp_con_id.                   : \'N\/A\'
+&s_tsp_con_id.                  : \'N\/A\'
+&s_app_join_pdbsinfo_cond.      : AND 1=1

@@ -1,0 +1,2 @@
+&s_umf_test.                     : 'dbms_umf.get_node_id_local'
+&v_umfflag.                      : 'dbms_umf.get_node_id_local'

@@ -1,0 +1,8 @@
+&s_app_join_dbsum_cond.         : AND 1=1
+&s_cdb_join_cond.               : AND 1=1                
+&s_db_unique_name.              : db_unique_name               
+&s_dg_valid_role.               : REPLACE(valid_role ,\'|\', \' \')
+&s_dg_verify.                   : verify                    
+&s_platform_name.               : platform_name                
+&outputdir.                     : output
+&EXTRACTSDIR.                   : sql\/extracts

@@ -1,0 +1,4 @@
+&s_sqlstats_dir.                : sql\/extracts\/statspack\/
+&AWRDIR.                        : sql\/extracts\/statspack
+&STATSPACKDIR.                  : sql\/extracts\/statspack
+&s_statssrc.                    : statspack\.sql
