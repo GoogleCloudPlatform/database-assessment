@@ -1,3 +1,5 @@
+#!/bin/bash 
+
 # Generate all combinations of single-purpose collectors.
 OUTPUTBASEDIR=dist
 
@@ -6,9 +8,6 @@ if [[ "Darwin" = "$(uname)" ]];
 then
   SED='sed -i ""'
 fi
-
-
-echo sedsuffix = ${sedsuffix}
 
 AWKCMD='
 print $0
