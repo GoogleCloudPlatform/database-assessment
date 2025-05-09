@@ -1,6 +1,15 @@
 # Generate all combinations of single-purpose collectors.
 OUTPUTBASEDIR=dist
 
+SED='sed -i '
+if [[ "Darwin" = "$(uname)" ]];
+then
+  SED='sed -i ""'
+fi
+
+
+echo sedsuffix = ${sedsuffix}
+
 AWKCMD='
 print $0
 '
@@ -29,7 +38,7 @@ function gen_file {
          sedcmd="${sedcmd}${sedsep}s/\&${subvar}\./${subval}/g"
          sedsep=";"
        done < <(grep -h -v -e '^#' -e '^--' -e '^$'  ${varfile}  )
-       sed -i ""  "${sedcmd}" ${outfile} 
+       ${SED} "${sedcmd}" ${outfile} 
     done
 
 }
@@ -83,13 +92,13 @@ do
   mkdir -p ${outputdir}
 
   # Generate output files from the extracts directory.
-  for fname in $(find sql/extracts -type f -maxdepth 1)
+  for fname in $(find sql/extracts -maxdepth 1 -type f )
   do
     gen_file "${fname}" "${outputdir}"
   done
 
   # Generate output files for the chosen stats type
-  for fname in $(find sql/extracts/${statsdir} -type f -maxdepth 1)
+  for fname in $(find sql/extracts/${statsdir} -maxdepth 1 -type f )
   do
     gen_file "${fname}" "${outputdir}"
   done
@@ -131,7 +140,7 @@ do
   cp README.txt ${outputdir}
 
   # Copy the automation directory.  (Exclude this? )
-  cp -r automation ${outputdir}
+  #cp -r automation ${outputdir}
 
   # Generate the driver SQL files.
   gen_file sql/op_collect.sql "${outputdir}"
