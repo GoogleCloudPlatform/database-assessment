@@ -55,12 +55,12 @@ FROM (
 												       ORDER BY s.snap_id),
 										    0), 0) * 60 * 60 * 24 AS snaps_diff_secs,
                        s.startup_time,
-                       LAG(s.startup_time,1) OVER (partition by instance_number ORDER BY snap_time) as lag_startup_time
+                       LAG(s.startup_time,1) OVER (partition by dbid, instance_number ORDER BY snap_time) as lag_startup_time
 		FROM   STATS$SNAPSHOT s
 		WHERE  s.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-		AND dbid = &&v_dbid
+		AND dbid = &&v_statsDBID
 		order by s.snap_id )
-        WHERE startup_time = lag_startup_time
+        WHERE startup_time = lag_startup_time -- Skip the first snap after a restart
         )
 GROUP BY :v_pkey, dbid, instance_number, hour)
 SELECT pkey , dbid , instance_number , hour , min_snap_id , max_snap_id , min_begin_interval_time ,
