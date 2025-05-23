@@ -29,13 +29,14 @@ The SQL script performs the following checks:
 * **Unsupported character set:** Verifies the database is using a supported character set
 * **Oracle Autonomous Database:** Verifies the database is not an Oracle Autonomous Database
 * **Unsupported object names:** Verifies object names in the schema(s) to be migrated do not contain unsupported characters
+* **Oracle hidden column names:** Verifies Oracle hidden column names due to: function-based indexes, extended statistics, custom types and LOBs in the schema(s) to be migrated
 * **Unsupported column names:** Verifies column names in the schema(s) to be migrated do not contain unsupported characters
 * **Index-organized tables (IOTs):** Verifies there are no IOTs in the schema(s) to be migrated
 * **Tables without primary keys:** Verifies tables have primary keys in the schema(s) to be migrated
 * **Oracle Label Security (OLS):** Verifies if OLS is in use (ORACLE LABEL SECURITY OPTION ENABLED ONLY)
 * **Unsupported data types with NOT NULL constraints:** Verifies unsupported data types with `NOT NULL` constraints in the schema(s) to be migrated
 * **Unsupported data types without NOT NULL constraints:** Verifies unsupported data types without `NOT NULL` constraints in the schema(s) to be migrated 
-* **Count of tables to be migrated:** Verifies the count of all tables in the schema(s) to be migrated 
+* **Count of tables to be migrated:** Verifies the count of all tables in the schema(s) to be migrated
 * **Global temporary tables:** Verifies global temporary tables in the schema(s) to be migrated
 * **DBMS_JOB or DBMS_SCHEDULER jobs:** Verifies `DBMS_JOB` or `DBMS_SCHEDULER` jobs in the schema(s) to be migrated 
 * **Materialized views:** Verifies materialized views in the schema(s) to be migrated 
@@ -68,7 +69,10 @@ The SQL script must be run as a database user with the following privileges:
   * `CDB_TAB_PRIVS` (MULTITENANT ONLY)
   * `CDB_USERS` (MULTITENANT ONLY)
   * `DBA_CONSTRAINTS`
+  * `DBA_IND_COLUMNS`
+  * `DBA_IND_EXPRESSIONS`
   * `DBA_JOBS`
+  * `DBA_LOBS`
   * `DBA_LOG_GROUPS`
   * `DBA_MVIEWS`
   * `DBA_OBJECT_TABLES`
@@ -139,3 +143,24 @@ Enter the format for the generated report (TEXT or HTML, default=HTML)         :
 ```
 
 The report is generated in the current working directory.
+
+# Feedback
+
+Raise issues and feature requests at the [database-assessment](https://github.com/GoogleCloudPlatform/database-assessment/issues) GitHub repository.
+
+# Changelog
+
+## v1.1 (22 May 2025)
+
+* Fix bug causing User privileges / permissions check to execute test code
+* Expand list of excluded Oracle internal users (applicable to all schema related checks)
+* Exclude materialized view log tables (`MLOG$`) from unsupported column list check
+* Report internal hidden columns (e.g. `SYS_NC12345$`) as separate check
+* List materialized views by name rather than a count by schema
+* Add database version to report metadata section
+* Minor changes to descriptions and/or actions
+* Update required privileges section of this readme
+
+## v1.0 (12 May 2025)
+
+* Initial release
