@@ -133,11 +133,12 @@ spool &_report_name
 DECLARE
     sql_message         VARCHAR2(1000)         := :sql_message;
     c_cdc_mode          CONSTANT VARCHAR2(20)  := 'LOG_MINER';
-    c_script_version    CONSTANT VARCHAR2(3)   := '1.0';
+    c_script_version    CONSTANT VARCHAR2(3)   := '1.1';
     c_user_name         CONSTANT VARCHAR2(128) := UPPER('&_user_name');
     c_pdb_name          CONSTANT VARCHAR2(128) := UPPER('&_pdb_name');
     c_report_format     CONSTANT VARCHAR2(4)   := NVL(UPPER('&_report_format'), 'HTML');
     v_schemas           CLOB                   := '&_schemas_csv';
+    v_db_version        VARCHAR2(17);
     --
     TYPE finding_result_rt IS RECORD
     ( result_object     VARCHAR2(1024)
@@ -170,6 +171,7 @@ DECLARE
     c_check_oci_db              CONSTANT VARCHAR2(60) := 'Oracle Autonomous Database';
     c_check_obj_names           CONSTANT VARCHAR2(60) := 'Unsupported object names';
     c_check_col_names           CONSTANT VARCHAR2(60) := 'Unsupported column names';
+    c_check_internal_col_names  CONSTANT VARCHAR2(60) := 'Oracle hidden column names';
     c_check_iots                CONSTANT VARCHAR2(60) := 'Index-organized tables (IOTs)';
     c_check_no_pk               CONSTANT VARCHAR2(60) := 'Tables without primary keys';
     c_check_ols                 CONSTANT VARCHAR2(60) := 'Oracle Label Security (OLS)';
@@ -360,6 +362,8 @@ DECLARE
                 p('<div class="cell"><span class="tag is-light">DB name</span></div>');
                 p('<div class="cell is-col-span-7"><code>' || escape_html(UPPER(SYS_CONTEXT('USERENV', 'DB_NAME'))) || '</code></div>');
             END IF;
+            p('<div class="cell"><span class="tag is-light">DB version</span></div>');
+            p('<div class="cell is-col-span-7"><code>' || v_db_version || '</code></div>');
             p('<div class="cell"><span class="tag is-light">CDC mode</span></div>');
             p('<div class="cell is-col-span-7"><code>' || escape_html(UPPER(c_cdc_mode)) || '</code></div>');
             p('<div class="cell"><span class="tag is-light">Schemas</span></div>');
@@ -378,6 +382,7 @@ DECLARE
             ELSE
                 p('DB name:', UPPER(SYS_CONTEXT('USERENV', 'DB_NAME')));
             END IF;
+            p('DB version:', v_db_version);
             p('CDC mode:', UPPER(c_cdc_mode));
             p('Schemas:', CASE WHEN v_schemas IS NOT NULL THEN UPPER(v_schemas) ELSE 'ALL NON-ORACLE' END);
             p('Generated at:', TO_CHAR(SYSDATE,'DD-MON-YYYY HH24:MI:SS'));
@@ -515,16 +520,20 @@ DECLARE
         ELSE
             RETURN q'[SELECT username
                     FROM  ]' || CASE WHEN container_id IS NOT NULL THEN 'cdb' ELSE 'dba' END || q'[_users
-                    WHERE  NOT ( username IN ('ANONYMOUS', 'APPQOSSYS', 'AUDSYS', 'CTXSYS',
-                                              'DBSNMP', 'DIP', 'DMSYS', 'DVSYS', 'DVF', 'EXFSYS',
-                                              'GSMADMIN_INTERNAL', 'GSMCATUSER', 'GSMUSER', 'LBACSYS',
-                                              'MDDATA', 'MDSYS', 'MGMT_VIEW', 'ODMRSYS', 'OJVMSYS', 'OLAPSYS',
-                                              'ORACLE_OCM', 'ORDDATA', 'ORDPLUGINS', 'ORDSYS', 'OUTLN', 'OWBSYS',
-                                              'OWBSYS_AUDIT', 'SI_INFORMTN_SCHEMA', 'SPATIAL_CSW_ADMIN_USR',
-                                              'SPATIAL_WFS_ADMIN_USR', 'SYS', 'SYSBACKUP', 'SYSDG', 'SYSKM',
-                                              'SYSMAN', 'SYSTEM', 'WK_PROXY', 'WK_TEST', 'WKSYS', 'WMSYS',
-                                              'XDB', 'XS$NULL', 'DMA_COLLECTOR')
+                    WHERE  NOT ( username IN ('ANONYMOUS', 'APPQOSSYS', 'AUDSYS', 'CSMIG', 'CTXSYS', 'DBSFWUSER',
+                                              'DBSNMP', 'DIP', 'DMA_COLLECTOR', 'DMSYS', 'DVSYS', 'DVF', 'EXFSYS',
+                                              'GSMADMIN_INTERNAL', 'GSMCATUSER', 'GSMUSER', 'LBACSYS', 'MDDATA',
+                                              'MDSYS', 'MGDSYS', 'MGMT_VIEW', 'MTMSYS', 'ODM', 'ODM_MTR', 'ODMRSYS',
+                                              'OJVMSYS', 'OLAPSYS', 'ORACLE_OCM', 'ORDDATA', 'ORDPLUGINS',
+                                              'ORDS_METADATA', 'ORDS_PUBLIC_USER', 'ORDSYS', 'OSE$HTTP$ADMIN',
+                                              'OUTLN', 'OWBSYS', 'OWBSYS_AUDIT', 'PERFSTAT', 'SI_INFORMTN_SCHEMA',
+                                              'SPATIAL_CSW_ADMIN_USR', 'SPATIAL_WFS_ADMIN_USR', 'SQLTXPLAIN',
+                                              'SYS$UMF', 'SYS', 'SYSBACKUP', 'SYSDG', 'SYSKM', 'SYSMAN', 'SYSTEM',
+                                              'TRACESRV', 'TSMSYS', 'WEBSYS', 'WK_PROXY', 'WK_TEST', 'WKPROXY',
+                                              'WKSYS', 'WMSYS', 'XDB', 'XS$NULL')
                                 OR username LIKE 'APEX^_%' ESCAPE '^'
+                                OR username LIKE 'AURORA$%'
+                                OR username LIKE 'OPS$%'
                                 OR username LIKE 'FLOWS^_%' ESCAPE '^')
                      ]' || CASE WHEN container_id IS NOT NULL THEN 'AND con_id = ' || container_id END || q'[
             ]';
@@ -601,9 +610,13 @@ BEGIN
             END IF;
         $END
 
+        SELECT version
+        INTO v_db_version
+        FROM v$instance;
+
         -- Critical checks
         v_finding_types(c_check_arch_log_mode).type_severity := c_finding_critical;
-        v_finding_types(c_check_arch_log_mode).type_description := 'The database must be in archive log mode';
+        v_finding_types(c_check_arch_log_mode).type_description := 'The database must be in archive log mode for CDC to function';
         v_finding_types(c_check_arch_log_mode).type_action := 'Enable archive log mode';
 
         v_finding_types(c_check_arch_log_count).type_severity := c_finding_critical;
@@ -638,20 +651,24 @@ BEGIN
         v_finding_types(c_check_obj_names).type_severity := c_finding_critical;
         v_finding_types(c_check_obj_names).type_description := 'Schema and table names that include other than alphanumeric characters or an underscore (_) aren''t supported';
         v_finding_types(c_check_obj_names).type_description_html := 'Schema and table names that include other than alphanumeric characters or an underscore (<code>_</code>) aren''t supported';
-        v_finding_types(c_check_obj_names).type_action := 'These objects must be renamed to include only supported characters otherwise they must be excluded from the migration job for it to succeed';
+        v_finding_types(c_check_obj_names).type_action := 'Materialized view tables should be excluded as they do not need to be migrated. The other objects must be renamed to include only supported characters otherwise they must be excluded from the migration job for it to succeed';
 
         v_finding_types(c_check_col_names).type_severity := c_finding_critical;
         v_finding_types(c_check_col_names).type_description := 'Column names that include characters other than alphanumeric characters or an underscore (_) aren''t supported';
         v_finding_types(c_check_col_names).type_description_html := 'Column names that include characters other than alphanumeric characters or an underscore (<code>_</code>) aren''t supported';
         v_finding_types(c_check_col_names).type_action := 'These columns must be renamed to include only supported characters otherwise the tables must be excluded from the migration job for it to succeed';
 
+        v_finding_types(c_check_internal_col_names).type_severity := c_finding_warning;
+        v_finding_types(c_check_internal_col_names).type_description := 'Oracle hidden column names include unsupported characters. These will be reported by DMS in the test of a migration job';
+        v_finding_types(c_check_internal_col_names).type_action := 'Whilst these columns can be ignored, it is important to understand that DMS will only create Function-based indexes for you in the DMS Conversion Workspace. Therefore you should read the list carefully and consider how the use of the other Oracle features represented by these columns (such as Extended statistics) can be implemented in the PostgreSQL target outside of DMS';
+
         v_finding_types(c_check_iots).type_severity := c_finding_warning;
         v_finding_types(c_check_iots).type_description := 'IOTs aren''t supported for LogMiner based CDC with DMS';
         v_finding_types(c_check_iots).type_action := 'Ensure that you do not include IOTs in the migration job. Doing so will lead to the migration job status remaining in the "Full dump" phase indefinitely';
 
         v_finding_types(c_check_no_pk).type_severity := c_finding_information;
-        v_finding_types(c_check_no_pk).type_description := 'All tables in the destination should have a primary key. If a table in the source doesn''t have a primary key, then one should be created using one of the options in "Migrate tables without primary keys". The Conversion Workspace will generate the necessary ROWID pseudocolumn and supporting object code for PostgreSQL automatically';
-        v_finding_types(c_check_no_pk).type_description_html := 'All tables in the destination should have a primary key. If a table in the source doesn''t have a primary key, then one should be created using one of the options in <a href="https://cloud.google.com/database-migration/docs/oracle-to-postgresql/migrate-tables-without-pks" target="_new">Migrate tables without primary keys</a>. The Conversion Workspace will generate the necessary <code>ROWID</code> pseudocolumn and supporting object code for PostgreSQL automatically';
+        v_finding_types(c_check_no_pk).type_description := 'All tables in the destination should have a primary key. If a table in the source doesn''t have a primary key, then one should be created using one of the options in "Migrate tables without primary keys". The DMS Conversion Workspace will generate the necessary ROWID pseudocolumn and supporting object code for PostgreSQL automatically';
+        v_finding_types(c_check_no_pk).type_description_html := 'All tables in the destination should have a primary key. If a table in the source doesn''t have a primary key, then one should be created using one of the options in <a href="https://cloud.google.com/database-migration/docs/oracle-to-postgresql/migrate-tables-without-pks" target="_new">Migrate tables without primary keys</a>. The DMS Conversion Workspace will generate the necessary <code>ROWID</code> pseudocolumn and supporting object code for PostgreSQL automatically';
         v_finding_types(c_check_no_pk).type_action := 'Following the promotion of the migration job the ROWID pseudocolumn can either be retained or dropped';
         v_finding_types(c_check_no_pk).type_action_html := 'Following the promotion of the migration job the <code>ROWID</code> pseudocolumn can either be retained or dropped';
 
@@ -701,12 +718,12 @@ BEGIN
 
         v_finding_types(c_check_namespace_clash).type_severity := c_finding_critical;
         v_finding_types(c_check_namespace_clash).type_description := 'Table and constraint namespace clash';
-        v_finding_types(c_check_namespace_clash).type_action := 'Oracle namespacing allows a table and constraint with the same name to exist. This is not allowed in Postgres. DMS does not currently recognise this and generate unique names. The following constraints need to be manually renamed to be unique before applying to the target';
+        v_finding_types(c_check_namespace_clash).type_action := 'Oracle namespacing allows a table and constraint with the same name to exist. This is not allowed in PostgreSQL. DMS does not currently recognise this and generates names that clash. The following constraints need to be manually renamed to be unique before applying to the target';
 
         v_finding_types(c_check_name_lengths).type_severity := c_finding_critical;
         v_finding_types(c_check_name_lengths).type_description := 'Oracle LogMiner requires tables or column names selected for mining not to exceed 30 characters';
         v_finding_types(c_check_name_lengths).type_action := 'Rename the tables or columns to shorten the length then after CDC is finished as part of cutover restore the original names. If this is not an option use the binary log reader CDC method';
-        v_finding_types(c_check_name_lengths).type_action_html := 'Rename or copy the tables or columns to shorten the length then, once CDC is finished, as part of cutover restore the original names on the target. If this is not an option use the binary log reader CDC method. For further guidance see the <a href="https://cloud.google.com/database-migration/docs/oracle-to-postgresql/about-data-flow#cdc" target="_new">Change Data Capture (CDC)</a> section of the documentation';
+        v_finding_types(c_check_name_lengths).type_action_html := 'Rename or copy the tables or columns to shorten their length. Then, once CDC is finished, as part of cutover restore the original names on the target. If this is not a feasible option use the binary log reader CDC method. For further guidance see the <a href="https://cloud.google.com/database-migration/docs/oracle-to-postgresql/about-data-flow#cdc" target="_new">Change Data Capture (CDC)</a> section of the documentation';
 
         DBMS_APPLICATION_INFO.SET_ACTION('Summary Report');
         report_header;
@@ -792,12 +809,12 @@ BEGIN
         -- c_check_mviews
         DBMS_APPLICATION_INFO.SET_ACTION(c_check_mviews);
 
-        v_finding_sql := q'|SELECT 'Count of materialized views in schema '|| owner AS result_message
-             , COUNT(*) AS result_object
+        v_finding_sql := q'|SELECT 'Materialized view' AS result_message
+             , owner || '.' || mview_name AS result_object
         FROM dba_mviews
         WHERE owner IN (|' || valid_schema_subquery || q'|)
-        GROUP BY owner
-        ORDER BY owner|';
+        ORDER BY owner
+       , mview_name|';
 
         execute_statement(v_finding_sql, c_pdb_name);
         v_finding_types(c_check_mviews).type_results := v_finding_results;
@@ -936,7 +953,9 @@ BEGIN
             AND REGEXP_LIKE(username, '[^a-zA-Z0-9_]')
         UNION
         SELECT owner || '.' || table_name
-             , 'Unsupported table name'
+             , CASE WHEN table_name LIKE 'MLOG$^_%' ESCAPE '^'
+                THEN 'Materialized view table'
+                ELSE 'Unsupported table name' END
         FROM dba_tables
         WHERE temporary = 'N'
         AND owner IN (|' || valid_schema_subquery || q'|)
@@ -954,26 +973,72 @@ BEGIN
         v_finding_sql := q'|SELECT result_message
              , result_object
         FROM (
-        SELECT 'Unsupported '||
-        CASE WHEN c.hidden_column = 'YES' THEN 'HIDDEN '
-        WHEN c.virtual_column = 'YES' THEN 'VIRTUAL' END
-        || 'column name in table ' || t.owner || '.' || t.table_name AS result_message
-             , c.column_name ||
-             CASE WHEN c.qualified_col_name != c.column_name THEN ' (' || c.qualified_col_name || ')' END
-              AS result_object
+        SELECT 'Unsupported column name in table ' || t.owner || '.' || t.table_name AS result_message
+             , c.column_name AS result_object
         FROM dba_tables t
             INNER JOIN dba_tab_cols c ON
                 t.owner = c.owner
                 AND t.table_name = c.table_name
         WHERE t.temporary = 'N'
         AND t.owner IN (|' || valid_schema_subquery || q'|)
+        AND t.table_name NOT LIKE 'MLOG$^_%' ESCAPE '^'
         AND REGEXP_LIKE(c.column_name, '[^a-zA-Z0-9_]')
+        AND c.hidden_column = 'NO'
         )
         ORDER BY result_message
                 , result_object|';
 
         execute_statement(v_finding_sql, c_pdb_name);
         v_finding_types(c_check_col_names).type_results := v_finding_results;
+
+        -- c_check_internal_col_names
+        DBMS_APPLICATION_INFO.SET_ACTION(c_check_internal_col_names);
+
+        v_finding_sql := q'|SELECT result_message
+             , result_object
+        FROM (
+        SELECT CASE
+            WHEN c.qualified_col_name != c.column_name THEN 'Type '
+            WHEN ie.column_expression IS NOT NULL THEN 'Function-based index '
+            WHEN l.column_name IS NOT NULL THEN 'LOB '
+            WHEN c.column_name LIKE 'SYS_ST%' THEN 'Extended statistics '
+            ELSE 'Unknown ' END
+            || 'column name in table ' || t.owner || '.' || t.table_name AS result_message
+        , c.column_name || ' (' ||
+            CASE
+                WHEN c.qualified_col_name != c.column_name THEN c.qualified_col_name
+                WHEN l.column_name IS NOT NULL THEN l.segment_name
+                WHEN ie.column_expression IS NOT NULL THEN 'Column position #' || TO_CHAR(ie.column_position + 1)
+                WHEN c.column_name LIKE 'SYS_ST%' THEN 'Not queried'
+                ELSE '?'
+                END || ')' AS result_object
+        FROM dba_tables t
+            INNER JOIN dba_tab_cols c ON
+                t.owner = c.owner
+                AND t.table_name = c.table_name
+            LEFT JOIN dba_ind_columns ic ON
+                t.owner = ic.table_owner
+                AND t.table_name = ic.table_name
+                AND c.column_name = ic.column_name
+            LEFT JOIN dba_ind_expressions ie ON
+                ic.table_owner = ie.table_owner
+                AND ic.table_name = ie.table_name
+                AND ic.column_position = ie.column_position
+            LEFT JOIN dba_lobs l ON
+                c.owner = l.owner
+                AND c.table_name = l.table_name
+                AND c.column_name = l.column_name
+        WHERE t.temporary = 'N'
+        AND t.owner IN (|' || valid_schema_subquery || q'|)
+        AND REGEXP_LIKE(c.column_name, '[^a-zA-Z0-9_]')
+        AND c.hidden_column = 'YES'
+        )
+        ORDER BY result_message
+                , result_object|';
+
+        execute_statement(v_finding_sql, c_pdb_name);
+        v_finding_types(c_check_internal_col_names).type_results := v_finding_results;
+
 
         -- c_check_iots
         DBMS_APPLICATION_INFO.SET_ACTION(c_check_iots);
@@ -1371,10 +1436,6 @@ BEGIN
                 ORDER BY result_object
                        , result_message]';
 
-                v_finding_sql := q'[SELECT NULL AS result_message
-                     , NULL AS result_object
-                FROM dual
-                WHERE 1 = 2]';
                 execute_statement(v_finding_sql);
             END IF;
         ELSE
