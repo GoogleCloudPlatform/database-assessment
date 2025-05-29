@@ -41,8 +41,8 @@ IF OBJECT_ID('tempdb..#FeaturesEnabled') IS NOT NULL
 
 CREATE TABLE #FeaturesEnabled
 (
-    Features NVARCHAR(40),
-    Is_EnabledOrUsed NVARCHAR(4),
+    Features NVARCHAR(255),
+    Is_EnabledOrUsed NVARCHAR(255),
     Count INT
 );
 
@@ -143,8 +143,8 @@ BEGIN
             SELECT
                 ''DATA QUALITY SERVICES'' as Features,
                 CASE
-                    WHEN dqs_count > 0 THEN 1
-                    ELSE 0
+                    WHEN dqs_count > 0 THEN ''1''
+                    ELSE ''0''
                 END AS Is_EnabledOrUsed,
                 dqs_count as Count
             from dqs_service');
@@ -568,7 +568,7 @@ BEGIN
     BEGIN TRY
             exec('INSERT INTO #FeaturesEnabled
                 SELECT
-                    tmp.permission_name,
+                    SUBSTRING(tmp.permission_name,1,254),
 					CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
                     count(1)
                 FROM (
@@ -609,7 +609,6 @@ BEGIN
                         ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'',
                         ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'',
                         ''EXTERNAL ACCESS ASSEMBLY'', ''SHUTDOWN'', ''EXTERNAL ASSEMBLIES'', ''CREATE ASSEMBLY'')
-
                     ) tmp
                 GROUP BY
                     tmp.permission_name');
@@ -619,7 +618,7 @@ BEGIN
             BEGIN TRY
                     exec('INSERT INTO #FeaturesEnabled
                         SELECT
-                            tmp.permission_name,
+                            SUBSTRING(tmp.permission_name,1,254),
                             CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
                             count(1)
                         FROM (
