@@ -38,6 +38,26 @@ vdbobjx AS (
               table_owner in
 @sql/extracts/exclude_schemas.sql
               ),
+vidx AS (
+     SELECT
+       &s_a_con_id. AS con_id,
+       a.index_type,
+       a.uniqueness,
+       a.compression,
+       a.partitioned,
+       a.temporary,
+       a.secondary,
+       &s_index_visibility. AS VISIBILITY,
+       a.join_index,
+       CASE WHEN a.ityp_owner IS NOT NULL THEN 'Y' ELSE 'N' END AS custom_index_type,
+       a.table_name,
+       a.index_name,
+       a.owner
+     FROM   &s_tblprefix._indexes a
+     WHERE table_owner NOT IN (
+@sql/extracts/exclude_schemas.sql
+                              )
+     ),
 vsrc   AS (SELECT
                   &s_c_con_id. AS con_id,
                   owner,
@@ -63,6 +83,7 @@ vdbobj AS (
         FROM vdbobji i
         LEFT OUTER JOIN vdbobjx x ON i.object_type = x.object_type AND i.owner = x.owner AND i.object_name = x.synonym_name AND i.con_id = x.con_id
         LEFT OUTER JOIN vsrc s    ON i.object_type = s.type AND i.owner = s.owner AND i.object_name = s.name AND i.con_id = s.con_id
+        LEFT OUTER JOIN vidx v    ON i.object_type = 'INDEX' AND v.owner = i.owner AND v.index_name = i.object_name AND v.con_id = i.con_id
         WHERE NOT ( i.object_type = 'SYNONYM' AND i.owner ='PUBLIC' AND ( i.object_name LIKE '/%' OR x.table_owner IS NOT NULL OR x.table_owner ='SYS') )
         AND i.object_name NOT LIKE 'BIN$%'
 )
@@ -76,4 +97,5 @@ SELECT pkey ,
        status,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdbobj a;
+
 

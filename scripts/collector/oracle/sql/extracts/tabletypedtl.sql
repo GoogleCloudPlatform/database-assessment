@@ -90,6 +90,21 @@ WHERE d.table_owner NOT IN (
 GROUP BY &s_d_con_id.,
        d.table_owner,
        d.table_name
+),
+mv as (SELECT
+    &s_a_con_id. AS con_id,
+    a.owner,
+    a.mview_name,
+    a.updatable,
+    a.rewrite_enabled,
+    a.refresh_mode,
+    a.refresh_method,
+    a.fast_refreshable,
+    a.compile_state
+FROM &s_tblprefix._mviews a
+WHERE a.owner NOT IN (
+@sql/extracts/exclude_schemas.sql
+       )
 )
 SELECT :v_pkey AS pkey,
        a.con_id,
@@ -107,6 +122,12 @@ SELECT :v_pkey AS pkey,
        p.subpartitioning_type,
        p.partition_count,
        sp.cnt AS subpartition_count,
+       mv.updatable,
+       mv.rewrite_enabled,
+       mv.refresh_mode,
+       mv.refresh_method,
+       mv.fast_refreshable,
+       mv.compile_state,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM  tblinfo a
 LEFT OUTER JOIN &s_tblprefix._part_tables p
@@ -117,6 +138,10 @@ LEFT OUTER JOIN subpartinfo sp
               ON sp.table_owner = p.owner
                AND sp.table_name = p.table_name
                AND sp.con_id = &s_p_con_id.
+LEFT OUTER JOIN mv 
+              ON mv.con_id = a.con_id
+               AND mv.owner = a.owner
+               AND mv.mview_name = a.table_name
 ;
 
 

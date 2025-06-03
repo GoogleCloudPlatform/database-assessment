@@ -23,6 +23,8 @@ Please ensure you have proper licensing. For more information consult Oracle Sup
 --define version = '&1'
 define colspr = '|'
 
+exec dbms_application_info.set_action('DB MIGRATION ASSESSMENT');
+
 -- Set the environment to a known state, overriding any custom configuration.
 @@op_set_sql_env.sql
 set headsep off
@@ -41,6 +43,8 @@ set appinfo 'DB MIGRATION ASSESSMENT'
 set colsep '|'
 set timing off
 set time off
+
+set timing on
 
 alter session set nls_numeric_characters='.,';
 alter session set nls_date_format='YYYY-MM-DD HH24:MI:SS';

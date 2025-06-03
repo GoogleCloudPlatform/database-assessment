@@ -18,10 +18,13 @@ exec dbms_application_info.set_action('dtlsourcecode');
 
 WITH vsrc AS (
 SELECT pkey,
-       con_id,
-       owner,
-       name,
-       TYPE,
+       src.con_id,
+       src.owner,
+       src.name,
+       src.type,
+       trigger_type,
+       triggering_event,
+       base_object_type,
        SUM(nr_lines)       sum_nr_lines,
        COUNT(1)            qt_objs,
        SUM(count_utl)      sum_nr_lines_w_utl,
@@ -32,42 +35,52 @@ SELECT pkey,
        SUM(count_total)    sum_count_total
 FROM   (SELECT :v_pkey AS pkey,
                &s_a_con_id. AS con_id,
-               owner,
-               name,
-               TYPE,
-               MAX(line)     NR_LINES,
+               a.owner,
+               a.name,
+               a.TYPE,
+               MAX(a.line)     NR_LINES,
                COUNT(CASE
-                       WHEN LOWER(text) LIKE '%utl_%' THEN 1
+                       WHEN LOWER(a.text) LIKE '%utl_%' THEN 1
                      END)    count_utl,
                COUNT(CASE
-                       WHEN LOWER(text) LIKE '%dbms_%' THEN 1
+                       WHEN LOWER(a.text) LIKE '%dbms_%' THEN 1
                      END)    count_dbms,
                COUNT(CASE
-                       WHEN LOWER(text) LIKE '%dbms_%'
-                            AND LOWER(text) LIKE '%utl_%' THEN 1
+                       WHEN LOWER(a.text) LIKE '%dbms_%'
+                            AND LOWER(a.text) LIKE '%utl_%' THEN 1
                      END)    count_dbms_utl,
                COUNT(CASE
-                       WHEN LOWER(text) LIKE '%execute%immediate%' THEN 1
+                       WHEN LOWER(a.text) LIKE '%execute%immediate%' THEN 1
                      END)    count_exec_im,
                COUNT(CASE
-                       WHEN LOWER(text) LIKE '%dbms_sql%' THEN 1
+                       WHEN LOWER(a.text) LIKE '%dbms_sql%' THEN 1
                      END)    count_dbms_sql,
                COUNT(1)      count_total
         FROM   &s_tblprefix._source a
-        WHERE  owner NOT IN
+        WHERE  a.owner NOT IN
 @sql/extracts/exclude_schemas.sql
         GROUP  BY :v_pkey,
                   &s_a_con_id. ,
-                  owner,
-                  name,
-                  TYPE)
+                  a.owner,
+                  a.name,
+                  a.type
+) src
+        LEFT JOIN &s_tblprefix._triggers t ON &s_t_con_id. = src.con_id
+                                           AND t.owner = src.owner
+                                           AND t.trigger_name = src.name
 GROUP  BY pkey,
-          con_id,
-          owner,
-          name,
-          TYPE)
+          src.con_id,
+          src.owner,
+          src.name,
+          src.type,
+          t.trigger_type,
+          t.triggering_event,
+          t.base_object_type)
 SELECT pkey , con_id , owner, name , type , sum_nr_lines , qt_objs ,
        sum_nr_lines_w_utl , sum_nr_lines_w_dbms , count_exec_im , count_dbms_sql , sum_nr_lines_w_dbms_utl , sum_count_total,
+       trigger_type,
+       triggering_event,
+       base_object_type,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vsrc;
 
