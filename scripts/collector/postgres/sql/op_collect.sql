@@ -56,7 +56,7 @@
 \o
 
 \o output/opdb__pg_replication_stats_:VTAG.csv
-\i sql/replication_stats.sql
+\i sql/:VPGVERSION/replication_stats.sql
 \o
 
 \o output/opdb__pg_settings_:VTAG.csv
