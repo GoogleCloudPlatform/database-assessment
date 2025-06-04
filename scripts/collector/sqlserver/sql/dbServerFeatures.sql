@@ -25,7 +25,6 @@ DECLARE @TABLE_PERMISSION_COUNT AS BIGINT
 DECLARE @ROW_COUNT_VAR AS BIGINT
 DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
 DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
-DECLARE @ERROR_NUMBER AS INT
 
 SELECT @PKEY = N'$(pkey)';
 SELECT @CLOUDTYPE = 'NONE';
@@ -148,11 +147,17 @@ BEGIN
                 END AS Is_EnabledOrUsed,
                 dqs_count as Count
             from dqs_service');
-        END TRY
+    END TRY
     BEGIN CATCH
-        SELECT @ERROR_NUMBER = ERROR_NUMBER()
-        IF @ERROR_NUMBER = 229
+        IF ERROR_NUMBER() = 229
             exec('
+            INSERT INTO #FeaturesEnabled
+                SELECT
+                    ''DATA QUALITY SERVICES'' as Features,
+                    ''0'' as Is_EnabledOrUsed,
+                    ''0'' as Count');
+        ELSE IF ERROR_NUMBER() = 208
+             exec('
             INSERT INTO #FeaturesEnabled
                 SELECT
                     ''DATA QUALITY SERVICES'' as Features,
@@ -171,7 +176,7 @@ BEGIN
                     END AS Is_EnabledOrUsed,
                     dqs_count as Count
                 from dqs_service');
-        END CATCH
+    END CATCH
 END;
 
 --filestream enabled
