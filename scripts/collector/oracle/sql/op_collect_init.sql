@@ -112,6 +112,7 @@ column p_lob_part_dedup_col new_value v_lob_part_dedup_col noprint
 column p_lob_subpart_dedup_col new_value v_lob_subpart_dedup_col noprint
 column p_index_visibility new_value v_index_visibility noprint
 column p_io_function_sql new_value v_io_function_sql noprint
+column p_lss_owner new_value v_lss_owner noprint
 
 -- Define some session info for the extraction -- BEGIN
 SELECT host_name     hostnc,
@@ -136,6 +137,12 @@ END;
 
 -- Define some session info for the extraction -- END
 
+-- Determine the owner of logstdby$skip_support -- BEGIN
+SELECT owner AS p_lss_owner
+FROM dba_tables 
+WHERE table_name = 'LOGSTDBY$SKIP_SUPPORT'
+/
+-- Determine the owner of logstdby$skip_support -- END
 
 -- Determine how we will transform the data_type column based on database version. --BEGIN
 COLUMN p_data_type_exp NEW_VALUE v_data_type_exp noprint

@@ -43,18 +43,18 @@
            &cdbjoin
         )
         ) as psft_owner,
-        (SELECT RPAD('Y',30)
+        (SELECT 'Y'
          FROM &v_tblprefix._objects
          WHERE owner = 'RDSADMIN'
            AND object_name = 'RDAADMIN_UTIL'
            &cdbjoin
            AND ROWNUM = 1) AS rds_flag,
-         (SELECT RPAD('Y',30)
+         (SELECT 'Y'
           FROM &v_tblprefix._views
           WHERE view_name ='OCI_AUTONOMOUS_DATABASES'
             &cdbjoin
             AND ROWNUM = 1) AS oci_autonomous_flag,
-         (SELECT RPAD('Y',30)
+         (SELECT 'Y'
           FROM &v_tblprefix._objects
           WHERE object_name = 'DBMS_CLOUD'
             &cdbjoin
@@ -64,7 +64,7 @@
                          &cdbjoin
                         ) || 'CLOUD$SERVICE'
             AND ROWNUM = 1) AS dbms_cloud_pkg_installed,
-         (SELECT RPAD('Y',30)
+         (SELECT 'Y'
           FROM &v_tblprefix._objects
           WHERE object_name = 'WWV_FLOW'
             AND object_type = 'PACKAGE'

@@ -21,5 +21,5 @@
    OR username LIKE 'WWV_FLOWS%'
    OR username LIKE 'APEX%'
    OR username LIKE '%GGADMIN'
-   OR username IN ( SELECT name FROM system.logstdby$skip_support where action=0)
+   OR username IN ( SELECT name FROM &v_lss_owner..logstdby$skip_support where action=0)
 )

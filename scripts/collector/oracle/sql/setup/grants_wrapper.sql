@@ -284,6 +284,7 @@ BEGIN
       rectype_('SELECT','SYS','V_$SYSTEM_PARAMETER'),
       rectype_('SELECT','SYS','V_$TEMP_SPACE_HEADER'),
       rectype_('SELECT','SYS','V_$VERSION'),
+      rectype_('SELECT','SYS','LOGSTDBY$SKIP_SUPPORT'),
       rectype_('SELECT','SYSTEM','LOGSTDBY$SKIP_SUPPORT')
     );
   grant_privs(v_source_table_list);

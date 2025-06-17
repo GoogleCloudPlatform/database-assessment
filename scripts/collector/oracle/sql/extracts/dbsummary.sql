@@ -71,7 +71,7 @@ SELECT :v_pkey AS pkey,
        (SELECT ROUND(SUM(bytes / 1024 / 1024))
         FROM   v$sgastat
         WHERE  pool = 'shared pool')                                            shared_pool_mb,
-       (SELECT ROUND(value / 1024 / 1024, 0)
+       (SELECT ROUND(sum(value) / 1024 / 1024, 0)
         FROM   v$pgastat
         WHERE  name = 'total PGA allocated')                                    AS total_pga_allocated_mb,
        (SELECT ( ROUND(SUM(bytes) / 1024 / 1024 / 1024) )
