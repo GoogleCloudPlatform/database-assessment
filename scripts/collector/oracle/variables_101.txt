@@ -27,4 +27,4 @@
 &s_sqlstats_ver.                : sqlstats111.sql
 &s_px_servers_executions.       : 0
 &s_statsosstatname.             : \@\&STATSPACKDIR.\/osstatsname.sql
-
+&s_lss_owner.                   : system

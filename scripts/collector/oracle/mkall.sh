@@ -150,4 +150,6 @@ do
     replace_includes $fname ${outputdir}
   done
 done 
-  
+
+echo Done
+ 

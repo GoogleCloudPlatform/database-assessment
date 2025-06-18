@@ -27,3 +27,4 @@
 &s_sqlstats_ver.                : sqlstats.sql
 &s_px_servers_executions.       : px_servers_executions
 &s_statsosstatname.             : stats$osstatname
+&s_lss_owner.                   : system
