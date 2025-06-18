@@ -6,7 +6,7 @@ OUTPUTBASEDIR=dist
 SED='sed -i '
 if [[ "Darwin" = "$(uname)" ]];
 then
-  SED='sed -i ""'
+  SED='sed -i bak'
 fi
 
 AWKCMD='
@@ -38,6 +38,7 @@ function gen_file {
          sedsep=";"
        done < <(grep -h -v -e '^#' -e '^--' -e '^$'  ${varfile}  )
        ${SED} "${sedcmd}" ${outfile} 
+       mv ${outfile}bak ${outfile}
     done
 
 }
@@ -135,6 +136,7 @@ do
 
   # Copy the remaining files
   cp -r sql/setup ${outputdir}/sql
+  cp sql/op_collect_init.sql ${outputdir}/sql
   cp collect-data.sh ${outputdir}
   cp README.txt ${outputdir}
 
