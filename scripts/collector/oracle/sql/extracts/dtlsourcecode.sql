@@ -57,8 +57,19 @@ FROM   (SELECT :v_pkey AS pkey,
                      END)    count_dbms_sql,
                COUNT(1)      count_total
         FROM   &s_tblprefix._source a
-        WHERE  (a.owner NOT IN
+        GROUP  BY :v_pkey,
+                  &s_a_con_id. ,
+                  a.owner,
+                  a.name,
+                  a.type
+       ) src
+        LEFT JOIN &s_tblprefix._triggers t ON &s_t_con_id. = src.con_id
+                                           AND t.owner = src.owner
+                                           AND t.trigger_name = src.name
+        WHERE  (t.trigger_name IS NULL 
+                AND src.owner NOT IN
 @sql/extracts/exclude_schemas.sql
+)
                OR (
         TRIM(t.base_object_type) IN ( 'DATABASE', 'SCHEMA' )
     AND t.status = 'ENABLED'
@@ -77,16 +88,7 @@ FROM   (SELECT :v_pkey AS pkey,
                                              ( 'SYS', 'AW_TRUNC_TRG' ),
                                              ( 'SYS', 'AW_REN_TRG' ) ,
                                              ( 'SYS', 'AW_DROP_TRG' )
-                                           )))
-        GROUP  BY :v_pkey,
-                  &s_a_con_id. ,
-                  a.owner,
-                  a.name,
-                  a.type
-) src
-        LEFT JOIN &s_tblprefix._triggers t ON &s_t_con_id. = src.con_id
-                                           AND t.owner = src.owner
-                                           AND t.trigger_name = src.name
+                                           ))
 GROUP  BY pkey,
           src.con_id,
           src.owner,
@@ -102,3 +104,4 @@ SELECT pkey , con_id , owner, name , type , sum_nr_lines , qt_objs ,
        base_object_type,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vsrc;
+

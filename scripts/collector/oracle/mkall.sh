@@ -137,6 +137,7 @@ do
 
   # Copy the remaining files
   cp -r sql/setup ${outputdir}/sql
+  cp sql/op_collect_init.sql ${outputdir}/sql
   cp collect-data.sh ${outputdir}
   cp README.txt ${outputdir}
 

@@ -139,7 +139,7 @@ WITH coltypes AS (
             a.owner,
             table_name,
 @sql/extracts/&s_data_type_exp.
-            AS data_type,
+            data_type,
             data_type_owner,
             1                                                 AS col_count
         FROM

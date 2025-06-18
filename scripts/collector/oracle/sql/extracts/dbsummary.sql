@@ -102,7 +102,7 @@ SELECT :v_pkey AS pkey,
 @sql/extracts/app_schemas_dbsummary.sql 
         , (SELECT &s_db_unique_name. as db_unique_name
            FROM v$database)                                                     AS db_unique_name,
-       (SELECT count(distinct destination) FROM gv$archive_log_dest WHERE status = 'VALID' AND target = 'STANDBY') as dg_standby_count
+       (SELECT count(distinct destination) FROM gv$archive_dest WHERE status = 'VALID' AND target = 'STANDBY') as dg_standby_count
 FROM   dual)
 SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , force_logging ,
        redo_gb_per_day , rac_dbinstances , characterset , platform_name , startup_time , user_schemas ,
