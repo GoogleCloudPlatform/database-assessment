@@ -101,7 +101,8 @@ SELECT :v_pkey AS pkey,
         WHERE f.group# = l.group#     )                                         AS db_size_redo_allocated_gb,
 @sql/extracts/app_schemas_dbsummary.sql 
         , (SELECT &s_db_unique_name. as db_unique_name
-           FROM v$database)                                                     AS db_unique_name
+           FROM v$database)                                                     AS db_unique_name,
+       (SELECT count(distinct destination) FROM gv$archive_log_dest WHERE status = 'VALID' AND target = 'STANDBY') as dg_standby_count
 FROM   dual)
 SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , force_logging ,
        redo_gb_per_day , rac_dbinstances , characterset , platform_name , startup_time , user_schemas ,
@@ -109,7 +110,8 @@ SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , fo
 	   db_long_size_gb , dg_database_role , dg_protection_mode , dg_protection_level,
            db_size_temp_allocated_gb, db_size_redo_allocated_gb,
            ebs_owner, siebel_owner, psft_owner, rds_flag, oci_autonomous_flag, dbms_cloud_pkg_installed,
-           apex_installed, sap_owner, db_unique_name, :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+           apex_installed, sap_owner, db_unique_name, dg_standby_count,
+           :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdbsummary;
 
 set echo off

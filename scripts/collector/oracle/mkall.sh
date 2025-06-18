@@ -1,4 +1,5 @@
 #!/bin/bash 
+set -x
 
 # Generate all combinations of single-purpose collectors.
 OUTPUTBASEDIR=dist
@@ -6,7 +7,7 @@ OUTPUTBASEDIR=dist
 SED='sed -i '
 if [[ "Darwin" = "$(uname)" ]];
 then
-  SED='sed -i ""'
+  SED='sed -i bak'
 fi
 
 AWKCMD='
@@ -37,7 +38,8 @@ function gen_file {
          sedcmd="${sedcmd}${sedsep}s/\&${subvar}\./${subval}/g"
          sedsep=";"
        done < <(grep -h -v -e '^#' -e '^--' -e '^$'  ${varfile}  )
-       ${SED} "${sedcmd}" ${outfile} 
+       sed -i bak  "${sedcmd}" ${outfile} 
+       rm ${outfile}bak 
     done
 
 }

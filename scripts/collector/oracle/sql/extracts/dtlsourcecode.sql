@@ -57,8 +57,27 @@ FROM   (SELECT :v_pkey AS pkey,
                      END)    count_dbms_sql,
                COUNT(1)      count_total
         FROM   &s_tblprefix._source a
-        WHERE  a.owner NOT IN
+        WHERE  (a.owner NOT IN
 @sql/extracts/exclude_schemas.sql
+               OR (
+        TRIM(t.base_object_type) IN ( 'DATABASE', 'SCHEMA' )
+    AND t.status = 'ENABLED'
+    AND ( t.owner, t.trigger_name ) NOT IN ( ( 'SYS', 'XDB_PI_TRIG' ),
+                                             ( 'SYS', 'DELETE_ENTRIES' ),
+                                             ( 'SYS', 'OJDS$ROLE_TRIGGER$' ),
+                                             ( 'SYS', 'DBMS_SET_PDB' ),
+                                             ( 'MDSYS', 'SDO_TOPO_DROP_FTBL' ),
+                                             ( 'MDSYS', 'SDO_GEOR_BDDL_TRIGGER' ),
+                                             ( 'MDSYS', 'SDO_GEOR_ADDL_TRIGGER' ),
+                                             ( 'MDSYS', 'SDO_NETWORK_DROP_USER' ),
+                                             ( 'MDSYS', 'SDO_ST_SYN_CREATE' ),
+                                             ( 'MDSYS', 'SDO_DROP_USER' ),
+                                             ( 'GSMADMIN_INTERNAL', 'GSMLOGOFF' ) ,
+                                             ( 'SYSMAN', 'MGMT_STARTUP' ),
+                                             ( 'SYS', 'AW_TRUNC_TRG' ),
+                                             ( 'SYS', 'AW_REN_TRG' ) ,
+                                             ( 'SYS', 'AW_DROP_TRG' )
+                                           )))
         GROUP  BY :v_pkey,
                   &s_a_con_id. ,
                   a.owner,
@@ -83,4 +102,3 @@ SELECT pkey , con_id , owner, name , type , sum_nr_lines , qt_objs ,
        base_object_type,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vsrc;
-
