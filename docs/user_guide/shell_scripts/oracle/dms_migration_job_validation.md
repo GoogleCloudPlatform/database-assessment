@@ -117,7 +117,7 @@ Run as a normal SQL*Plus script either via a command line invocation:
 sqlplus <username>/<password>@//<hostname>:<port>/<service_name> @dms_migration_job_validator.sql
 ```
 
-or at the SQL*Plus prompt after logging on
+or at the SQL*Plus prompt after logging on:
 
 ```
 SQL> @dms_migration_job_validator.sql
@@ -149,6 +149,11 @@ The report is generated in the current working directory.
 Raise issues and feature requests at the [database-assessment](https://github.com/GoogleCloudPlatform/database-assessment/issues) GitHub repository.
 
 # Changelog
+
+## v1.2 (23 Jun 2025)
+
+* Amend wording of unsupported column names and unsupported data types checks
+* Amend output of namespace clash check
 
 ## v1.1 (22 May 2025)
 
