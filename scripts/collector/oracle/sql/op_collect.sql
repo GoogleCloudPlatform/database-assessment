@@ -68,22 +68,22 @@ spool &outputdir./opdb__defines__&s_tag.
 spool off
 
 
-spool &outputdir./opdb__archlogs__&s_tag.
-prompt PKEY|LOG_START_DATE|HO|THREAD_NUM|DEST_ID|CNT|MBYTES|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/archlogs.sql
-spool off
+--spool &outputdir./opdb__archlogs__&s_tag.
+--prompt PKEY|LOG_START_DATE|HO|THREAD_NUM|DEST_ID|CNT|MBYTES|DMA_SOURCE_ID|DMA_MANUAL_ID
+--@sql/extracts/archlogs.sql
+--spool off
 
 
-spool &outputdir./opdb__users__&s_tag.
-prompt PKEY|CON_ID|USERNAME|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/users.sql
-spool off
+--spool &outputdir./opdb__users__&s_tag.
+--prompt PKEY|CON_ID|USERNAME|DMA_SOURCE_ID|DMA_MANUAL_ID
+--@sql/extracts/users.sql
+--spool off
 
 
-spool &outputdir./opdb__backups__&s_tag.
-prompt PKEY|BACKUP_START_DATE|CON_ID|INPUT_TYPE|ELAPSED_SECONDS|MBYTES_IN|MBYTES_OUT|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/&s_ora9ind.backups.sql
-spool off
+--spool &outputdir./opdb__backups__&s_tag.
+--prompt PKEY|BACKUP_START_DATE|CON_ID|INPUT_TYPE|ELAPSED_SECONDS|MBYTES_IN|MBYTES_OUT|DMA_SOURCE_ID|DMA_MANUAL_ID
+--@sql/extracts/&s_ora9ind.backups.sql
+--spool off
 
 
 spool &outputdir./opdb__columntypes__&s_tag.
@@ -97,10 +97,10 @@ spool &outputdir./opdb__compressbytype__&s_tag.
 spool off
 
 
-spool &outputdir./opdb__cpucoresusage__&s_tag.
-prompt PKEY|DT|CPU_COUNT|CPU_CORE_COUNT|CPU_SOCKET_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/&s_ora9ind.cpucoresusage.sql
-spool off
+--spool &outputdir./opdb__cpucoresusage__&s_tag.
+--prompt PKEY|DT|CPU_COUNT|CPU_CORE_COUNT|CPU_SOCKET_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
+--@sql/extracts/&s_ora9ind.cpucoresusage.sql
+--spool off
 
 
 --spool &outputdir./opdb__dataguard__&s_tag.
@@ -121,10 +121,10 @@ prompt PKEY|CON_ID|NAME|CURRE|DETECTED_USAGES|TOTAL_SAMPLES|FIRST_USAGE|LAST_USA
 spool off
 
 
-spool &outputdir./opdb__dbhwmarkstatistics__&s_tag.
-prompt PKEY|DESCRIPTION|HIGHWATER|LAST_VALUE|CON_ID|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/&s_ora9ind.dbhwmarkstatistics.sql
-spool off
+--spool &outputdir./opdb__dbhwmarkstatistics__&s_tag.
+--prompt PKEY|DESCRIPTION|HIGHWATER|LAST_VALUE|CON_ID|DMA_SOURCE_ID|DMA_MANUAL_ID
+--@sql/extracts/&s_ora9ind.dbhwmarkstatistics.sql
+--spool off
 
 
 spool &outputdir./opdb__dbinstances__&s_tag.
@@ -235,10 +235,10 @@ prompt PKEY|CON_ID|OWNER|TABLE_NAME|PAR|IOT_TYPE|NESTED|TEMPORARY|SECONDARY|CLUS
 spool off
 
 
-spool &outputdir./opdb__triggers__&s_tag.
-prompt PKEY|CON_ID|OWNER|TRIGGER_TYPE|TRIGGERING_EVENT|BASE_OBJECT_TYPE|TRIGGER_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/triggers.sql
-spool off
+--spool &outputdir./opdb__triggers__&s_tag.
+--prompt PKEY|CON_ID|OWNER|TRIGGER_TYPE|TRIGGERING_EVENT|BASE_OBJECT_TYPE|TRIGGER_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
+--@sql/extracts/triggers.sql
+--spool off
 
 
 spool &outputdir./opdb__usedspacedetails__&s_tag.
