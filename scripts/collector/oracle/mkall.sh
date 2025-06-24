@@ -1,5 +1,4 @@
 #!/bin/bash 
-set -x
 
 # Generate all combinations of single-purpose collectors.
 OUTPUTBASEDIR=dist
@@ -72,14 +71,8 @@ EOF
      mv awktmp ${fname}
 }
 
-target="$1"
-if [[ "$target" = "" ]];
-  then target=".*"
-fi
-
-# Build all the version-specific SQL files
-for line in $(grep -v '#' build.config | grep -v "^$" | grep "$target" )
-do
+function make_target {
+  line="${1}"
   dbver=$(echo $line | cut -d ',' -f 1)
   tenant=$(echo $line | cut -d ',' -f 2)
   stats=$(echo $line | cut -d ',' -f 3)
@@ -125,7 +118,7 @@ do
       gen_file sql/extracts/statspack/awrhistosstat.sql "${outputdir}"
       cp  sql/prompt_awr.sql ${outputdir}/sql
       ;;
-   "NONE")
+   "NOSTATS")
       cp  sql/op_collect_stats_nostats.sql ${outputdir}/sql
       cp  sql/prompt_nostats.sql ${outputdir}/sql
       ;;
@@ -152,7 +145,58 @@ do
   do 
     replace_includes $fname ${outputdir}
   done
-done 
+}
 
+
+### Validate input
+
+
+ if [[ $(($# & 1)) == 1 ]] ;
+ then
+  echo "Invalid number of parameters "
+  printUsage
+  exit
+ fi
+
+ while (( "$#" )); do
+	 if   [[ "$1" == "--maxParallel" ]];           then MAXPARALLEL="${2}"
+	 else if   [[ "$1" == "--configFile" ]];       then CONFIGFILE="${2}"
+	 else if   [[ "$1" == "--target" ]];           then TARGET="${2}"
+	 else
+		 echo "Unknown parameter ${1}"
+		 printUsage
+		 exit
+	 fi
+         fi
+	 shift 2
+ done
+
+
+if [[ "$TARGET" = "" ]];
+  then TARGET=".*"
+fi
+
+if [[ "$CONFIGFILE" = "" ]];
+  then CONFIGFILE="build.config"
+fi
+
+# Build all the version-specific SQL files
+for line in $(grep -v '#' $CONFIGFILE | grep -v "^$" | grep "$TARGET" )
+do
+done 
+  make_target "${line}"
+
+# Wait a couple of seconds before starting another collection.
+ sleep 2
+ 
+ # Do not run another collection if there are too many running already
+ while [[ $(ps -ef | grep mkall.sh | grep -v grep | wc -l) -ge ${MAXPARALLEL} ]]
+ do
+  echo sleeping for 10 secs while waiting on collections:
+  ps | grep mkall.sh | grep -v grep | cut -d '@' -f 2 | cut -d ' ' -f 1
+
+  sleep 10
+ done
+done 
 echo Done
  
