@@ -143,6 +143,7 @@ column p_lob_subpart_compression_col new_value s_lob_subpart_compression_col nop
 column p_lob_dedup_col               new_value s_lob_dedup_col noprint
 column p_lob_part_dedup_col          new_value s_lob_part_dedup_col noprint
 column p_lob_subpart_dedup_col       new_value s_lob_subpart_dedup_col noprint
+column p_lss_owner                   new_value s_lss_owner noprint
 column p_index_visibility            new_value s_index_visibility noprint
 column p_io_function_sql             new_value s_io_function_sql noprint
 column p_app_join_pdbsinfo_cond      new_value s_app_join_pdbsinfo_cond noprint
@@ -172,6 +173,8 @@ SELECT name dbname INTO :v_dbname
 FROM   v$database;
 END;
 /
+
+SELECT owner AS p_lss_owner FROM dba_objects WHERE object_name = 'LOGSTDBY$SKIP_SUPPORT';
 
 BEGIN
 SELECT RTRIM(SUBSTR('&s_tag',INSTR('&s_tag','_',1,5)+1), '.csv') horanc INTO :v_hora from dual;

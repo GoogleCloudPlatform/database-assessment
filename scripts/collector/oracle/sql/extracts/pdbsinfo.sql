@@ -72,7 +72,7 @@ vpdbmode as (
              SELECT con_id, open_mode, total_size / 1024 / 1024 / 1024 TOTAL_GB
              FROM   v$pdbs 
             )
-SELECT i.*, m.sga_allocated_bytes, m.pga_used_bytes, m.pga_allocated_bytes, m.pga_max_bytes, p.open_mode, p.total_gb
+SELECT i.*, m.sga_allocated_bytes, m.pga_used_bytes, m.pga_allocated_bytes, m.pga_max_bytes, p.open_mode, p.total_gb,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM  vpdbinfo i
       LEFT OUTER JOIN mem_stats m ON i.con_id = m.con_id

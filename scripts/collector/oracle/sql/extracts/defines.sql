@@ -40,6 +40,7 @@ PROMPT s_lob_part_compression_col    = &s_lob_part_compression_col.
 PROMPT s_lob_part_dedup_col          = &s_lob_part_dedup_col.
 PROMPT s_lob_subpart_compression_col = &s_lob_subpart_compression_col.
 PROMPT s_lob_subpart_dedup_col       = &s_lob_subpart_dedup_col.
+PROMPT s_lss_owner                   = &s_lss_owner.
 PROMPT s_p_con_id                    = &s_p_con_id.
 PROMPT s_pdb_join_cond               = &s_pdb_join_cond.
 PROMPT s_platform_name               = &s_platform_name.
