@@ -137,10 +137,10 @@ prompt PKEY|INST_ID|INSTANCE_NAME|HOST_NAME|VERSION|STATUS|DATABASE_STATUS|INSTA
 spool off
 
 
-spool &outputdir./opdb__dblinks__&s_tag.
-prompt PKEY|CON_ID|OWNER|COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/dblinks.sql
-spool off
+--spool &outputdir./opdb__dblinks__&s_tag.
+--prompt PKEY|CON_ID|OWNER|COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
+--@sql/extracts/dblinks.sql
+--spool off
 
 
 --spool &outputdir./opdb__dbobjects__&s_tag.

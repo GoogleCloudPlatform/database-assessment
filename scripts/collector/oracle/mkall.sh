@@ -158,7 +158,8 @@ function make_target {
   exit
  fi
 
- while (( "$#" )); do
+ while (( "$#" )); 
+ do
 	 if   [[ "$1" == "--maxParallel" ]];           then MAXPARALLEL="${2}"
 	 else if   [[ "$1" == "--configFile" ]];       then CONFIGFILE="${2}"
 	 else if   [[ "$1" == "--target" ]];           then TARGET="${2}"
@@ -167,6 +168,7 @@ function make_target {
 		 printUsage
 		 exit
 	 fi
+         fi
          fi
 	 shift 2
  done
@@ -180,10 +182,15 @@ if [[ "$CONFIGFILE" = "" ]];
   then CONFIGFILE="build.config"
 fi
 
+if [[ "$MAXPARALLEL" = "" ]];
+  then MAXPARALLEL=4
+fi
+
+echo Building with configfile $CONFIGFILE   target $TARGET   maxparallel $MAXPARALLEL
+
 # Build all the version-specific SQL files
 for line in $(grep -v '#' $CONFIGFILE | grep -v "^$" | grep "$TARGET" )
 do
-done 
   make_target "${line}"
 
 # Wait a couple of seconds before starting another collection.
