@@ -134,3 +134,8 @@ The following permissions are required for the script execution:
       SELECT ON SYS.V_$TEMP_SPACE_HEADER
       SELECT ON SYS.V_$VERSION
       SELECT ON SYSTEM.LOGSTDBY$SKIP_SUPPORT
+
+On multitenant databases, the statement below must be executed from within the root container to include the PDBs in the collection:
+
+      ALTER USER "&username" SET CONTAINER_DATA=ALL CONTAINER=CURRENT;
+
