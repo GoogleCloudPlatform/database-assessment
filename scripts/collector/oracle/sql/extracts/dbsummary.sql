@@ -27,7 +27,7 @@ SELECT :v_pkey AS pkey,
         FROM   v$database)                                                      AS cdb,
        (SELECT version
         FROM   v$instance)                                                      AS db_version,
-       (SELECT banner
+       (SELECT REPLACE( &v_banner_ver_col, CHR(10), ' ') as banner
         FROM   v$version
         WHERE  ROWNUM < 2)                                                      AS db_fullversion,
        (SELECT log_mode

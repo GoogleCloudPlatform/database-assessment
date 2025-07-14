@@ -113,6 +113,20 @@ column p_lob_subpart_dedup_col new_value v_lob_subpart_dedup_col noprint
 column p_index_visibility new_value v_index_visibility noprint
 column p_io_function_sql new_value v_io_function_sql noprint
 
+column p_banner_ver_col new_value v_banner_ver_col noprint
+
+
+WITH banner_full AS (
+  SELECT count(1) AS cnt 
+  FROM dba_tab_columns
+  WHERE table_name ='V_$VERSION'
+    AND column_name = 'BANNER_FULL')
+SELECT CASE WHEN bf.cnt = 1 THEN 'BANNER_FULL' ELSE 'BANNER' END AS p_banner_ver_col
+FROM banner_full bf;
+
+
+
+
 -- Define some session info for the extraction -- BEGIN
 SELECT host_name     hostnc,
        instance_name instnc
