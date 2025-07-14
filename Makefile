@@ -228,19 +228,25 @@ pre-release:       ## bump the version and create the release tag
 ###############
 .PHONY: doc-privs
 doc-privs:   ## Extract the list of privileges required from code and create the documentation
-	cat > docs/user_guide/shell_scripts/oracle/permissions.md <<EOF
-	# Create a user for Collection
+	@cat > docs/user_guide/shell_scripts/oracle/permissions.md <<EOF
+	@echo # Create a user for Collection>> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo 	 The collection scripts can be executed with any DBA account. Alternatively, create a new user with the minimum privileges required. >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo 	 The included script sql/setup/grants_wrapper.sql will grant the privileges listed below. >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo 	 Please see the Database User Scripts page for information on how to create the user. >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo 	## Permissions Requiredi >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo 	The following permissions are required for the script execution: >> docs/user_guide/shell_scripts/oracle/permissions.md
+	
+	@grep "rectype_(" scripts/collector/oracle/sql/setup/grants_wrapper.sql | grep -v FUNCTION | sed "s/rectype_(//g;s/),//g;s/)//g;s/'//g;s/,/ ON /1;s/,/./g" >> docs/user_guide/shell_scripts/oracle/permissions.md
 
-	 The collection scripts can be executed with any DBA account. Alternatively, create a new user with the minimum privileges required.
-	 The included script sql/setup/grants_wrapper.sql will grant the privileges listed below.
-	 Please see the Database User Scripts page for information on how to create the user.
+	@echo >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo On multitenant databases, the statement below must be executed from within the root container to include the PDBs in the collection: >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo ALTER USER "&username" SET CONTAINER_DATA=ALL CONTAINER=CURRENT >> docs/user_guide/shell_scripts/oracle/permissions.md
 
-	## Permissions Required
 
-	The following permissions are required for the script execution:
-
-	 EOF
-	 grep "rectype_(" scripts/collector/oracle/sql/setup/grants_wrapper.sql | grep -v FUNCTION | sed "s/rectype_(//g;s/),//g;s/)//g;s/'//g;s/,/ ON /1;s/,/./g" >> docs/user_guide/shell_scripts/oracle/permissions.md
 
 .PHONY: serve-docs
 serve-docs:       ## Serve HTML documentation
