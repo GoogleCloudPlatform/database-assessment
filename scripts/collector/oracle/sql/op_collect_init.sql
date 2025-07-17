@@ -156,6 +156,18 @@ column p_sqlstats_dir                new_value s_sqlstats_dir noprint
 column p_sqlstats_ver                new_value s_sqlstats_ver noprint
 column p_statsosstatname             new_value s_statsosstatname noprint
 
+column p_banner_ver_col              new_value s_banner_ver_col noprint
+
+
+WITH banner_full AS (
+  SELECT count(1) AS cnt 
+  FROM dba_tab_columns
+  WHERE table_name ='V_$VERSION'
+    AND column_name = 'BANNER_FULL')
+SELECT CASE WHEN bf.cnt = 1 THEN 'BANNER_FULL' ELSE 'BANNER' END AS p_banner_ver_col
+FROM banner_full bf;
+
+
 
 prompt -- Define some session info for the extraction -- BEGIN
 -- Define some session info for the extraction -- BEGIN
@@ -280,7 +292,7 @@ var lv_pdb_join_cond    VARCHAR2(30);
 DECLARE
   cnt NUMBER;
 BEGIN
-  -- Defaiults for non-container DBs
+  -- Defaults for non-container DBs
   :lv_tblprefix := 'dba';
   :lv_is_container := 0;
   :lv_editionable_col := '''N/A''';

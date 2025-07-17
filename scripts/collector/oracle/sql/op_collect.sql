@@ -61,14 +61,16 @@ prompt
 prompt Collecting Database Migration Assessment data...
 prompt
 
+set termout &TERMOUTOFF
+spool &outputdir./opdb__defines__&s_tag. APPEND
+SELECT 'START TIME ' || to_char(sysdate, 'YYYY/MM/DD HH24:MI:SS') FROM DUAL;
+@sql/extracts/defines.sql
+spool off
+
+
 spool &outputdir./opdb__schemadetail__&s_tag.
 @sql/extracts/schema_detail_hdr.sql
 @sql/extracts/schema_detail.sql
-spool off
-
-set termout &TERMOUTOFF
-spool &outputdir./opdb__defines__&s_tag.
-@sql/extracts/defines.sql
 spool off
 
 
@@ -113,10 +115,10 @@ spool off
 --spool off
 
 
-spool &outputdir./opdb__datatypes__&s_tag.
-prompt PKEY|CON_ID|OWNER|DATA_TYPE|CNT|DATA_LENGTH|DATA_PRECISION|DATA_SCALE|AVG_COL_LEN|DISTINCT_TABLE_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/datatypes.sql
-spool off
+--spool &outputdir./opdb__datatypes__&s_tag.
+--prompt PKEY|CON_ID|OWNER|DATA_TYPE|CNT|DATA_LENGTH|DATA_PRECISION|DATA_SCALE|AVG_COL_LEN|DISTINCT_TABLE_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
+--@sql/extracts/datatypes.sql
+--spool off
 
 
 spool &outputdir./opdb__dbfeatures__&s_tag.
@@ -173,10 +175,10 @@ spool off
 --spool off
 
 
-spool &outputdir./opdb__idxpertable__&s_tag.
-prompt PKEY|CON_ID|TAB_COUNT|IDX_CNT|IDX_PERC|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/idxpertable.sql
-spool off
+--spool &outputdir./opdb__idxpertable__&s_tag.
+--prompt PKEY|CON_ID|TAB_COUNT|IDX_CNT|IDX_PERC|DMA_SOURCE_ID|DMA_MANUAL_ID
+--@sql/extracts/idxpertable.sql
+--spool off
 
 
 --spool &outputdir./opdb__indextypes__&s_tag.
@@ -185,10 +187,10 @@ spool off
 --spool off
 
 
-spool &outputdir./opdb__indextypedtl__&s_tag.
-prompt PKEY|CON_ID|OWNER|INDEX_TYPE|UNIQUENESS|COMPRESSION|PARTITIONED|TEMPORARY|SECONDARY|VISIBILITY|JOIN_INDEX|CUSTOM_INDEX_TYPE|TABLE_NAME|INDEX_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/indextypedtl.sql
-spool off
+--spool &outputdir./opdb__indextypedtl__&s_tag.
+--prompt PKEY|CON_ID|OWNER|INDEX_TYPE|UNIQUENESS|COMPRESSION|PARTITIONED|TEMPORARY|SECONDARY|VISIBILITY|JOIN_INDEX|CUSTOM_INDEX_TYPE|TABLE_NAME|INDEX_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
+--@sql/extracts/indextypedtl.sql
+--spool off
 
 
 --spool &outputdir./opdb__mviewtypes__&s_tag.
@@ -221,10 +223,10 @@ spool off
 --spool off
 
 
-spool &outputdir./opdb__tableconstraints__&s_tag.
-prompt PKEY|CON_ID|OWNER|TABLE_NAME|PK|UK|CK|RI|VWCK|VWRO|HASHEXPR|SUPLOG|TOTAL_CONS|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/tableconstraints.sql
-spool off
+--spool &outputdir./opdb__tableconstraints__&s_tag.
+--prompt PKEY|CON_ID|OWNER|TABLE_NAME|PK|UK|CK|RI|VWCK|VWRO|HASHEXPR|SUPLOG|TOTAL_CONS|DMA_SOURCE_ID|DMA_MANUAL_ID
+--@sql/extracts/tableconstraints.sql
+--spool off
 
 
 --spool &outputdir./opdb__tabletypes__&s_tag.
@@ -245,16 +247,16 @@ spool off
 --spool off
 
 
-spool &outputdir./opdb__usedspacedetails__&s_tag.
-prompt PKEY|CON_ID|OWNER|SEGMENT_TYPE|GB|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/usedspacedetails.sql
-spool off
+--spool &outputdir./opdb__usedspacedetails__&s_tag.
+--prompt PKEY|CON_ID|OWNER|SEGMENT_TYPE|GB|DMA_SOURCE_ID|DMA_MANUAL_ID
+--@sql/extracts/usedspacedetails.sql
+--spool off
 
 
-spool &outputdir./opdb__usrsegatt__&s_tag.
-prompt PKEY|CON_ID|OWNER|SEGMENT_NAME|SEGMENT_TYPE|TABLESPACE_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/usrsegatt.sql
-spool off
+--spool &outputdir./opdb__usrsegatt__&s_tag.
+--prompt PKEY|CON_ID|OWNER|SEGMENT_NAME|SEGMENT_TYPE|TABLESPACE_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
+--@sql/extracts/usrsegatt.sql
+--spool off
 
 
 @sql/&s_tenancy.
@@ -273,13 +275,9 @@ prompt END_OF_DMA_COLLECTION
 spool off
 
 
-
-BEGIN
-DBMS_SQL_MONITOR.BEGIN_OPERATION (
-   dbop_name       => 'DMA COLLECTOR',
-   dbop_eid        => :EID);
-END;
-/
+spool  &outputdir./opdb__defines__&s_tag. APPEND
+SELECT 'END TIME ' || to_char(sysdate, 'YYYY/MM/DD HH24:MI:SS') FROM DUAL;
+spool off
 
 set termout on
 prompt Step completed.
