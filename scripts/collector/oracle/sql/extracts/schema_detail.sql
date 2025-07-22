@@ -16,7 +16,7 @@
 exec dbms_application_info.set_action('schemadetail');
 
 with vobj as (
-        SELECT /*+ MATERIALIZE */
+        SELECT /* + MATERIALIZE */
                &s_a_con_id. AS con_id,
                owner,
                object_type,
@@ -24,12 +24,10 @@ with vobj as (
                object_name,
                status
         FROM &s_tblprefix._objects a
-        WHERE  -- (owner = 'SYS' AND object_type = 'DIRECTORY')
-        --AND 
+        WHERE  
 (
         (
         NOT ( a.object_type IN ('SYNONYM', 'JAVA CLASS') AND a.owner IN ('PUBLIC', 'SYS') /*  AND a.object_name LIKE '%/%' */  )  
-   -- OR a.table_owner IS NOT NULL OR a.table_owner ='SYS') )
         AND a.object_name NOT LIKE 'BIN$%' )
            AND  (owner NOT IN
 @sql/extracts/exclude_schemas.sql
@@ -37,7 +35,7 @@ with vobj as (
 or (object_type in ('DB_LINK', 'DATABASE LINK', 'DIRECTORY')))
 )
 ,
-tblinfo AS ( SELECT /*+ MATERIALIZE */ con_id, owner, table_name, partitioned, iot_type, nested, temporary, secondary, clustered_table, object_table, xml_table FROM ( 
+tblinfo AS ( SELECT /* + MATERIALIZE */ con_id, owner, table_name, partitioned, iot_type, nested, temporary, secondary, clustered_table, object_table, xml_table FROM ( 
 	SELECT 
 	    &s_a_con_id. AS con_id,
 	    a.owner,
@@ -57,7 +55,7 @@ tblinfo AS ( SELECT /*+ MATERIALIZE */ con_id, owner, table_name, partitioned, i
 	    'N' AS xml_table
 	FROM &s_tblprefix._tables a
 	WHERE a.owner NOT IN (
-	@sql/extracts/exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
 	       )
 	UNION ALL
 	SELECT
@@ -72,9 +70,9 @@ tblinfo AS ( SELECT /*+ MATERIALIZE */ con_id, owner, table_name, partitioned, i
 	    'N' clustered_table,
 	    'N' AS object_table,
 	    'Y' AS xml_table
-	FROM &s_xml_select_dtl. b
+        FROM &s_xml_select_dtl. b
 	WHERE b.owner NOT IN (
-	@sql/extracts/exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
 	       )
 	UNION ALL
 	SELECT
@@ -96,26 +94,26 @@ tblinfo AS ( SELECT /*+ MATERIALIZE */ con_id, owner, table_name, partitioned, i
 	    'N' AS xml_table
 	FROM &s_tblprefix._object_tables c
 	WHERE c.owner NOT IN (
-	@sql/extracts/exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
 	       )
         )
 ),
 subpartinfo AS (
-	SELECT /*+ MATERIALIZE */
+	SELECT /* + MATERIALIZE */
                &s_d_con_id. AS con_id,
 	       d.table_owner,
 	       d.table_name,
 	       count(1) cnt
 	FROM &s_tblprefix._tab_subpartitions d
 	WHERE d.table_owner NOT IN (
-	@sql/extracts/exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
 	       )
-	GROUP BY &s_d_con_id.,
+	GROUP BY &s_d_con_id. ,
 	       d.table_owner,
 	       d.table_name
 ),
 mv as (
-        SELECT /*+ MATERIALIZE */ 
+        SELECT /* + MATERIALIZE */ 
 	    &s_a_con_id. AS con_id,
 	    a.owner,
 	    a.mview_name,
@@ -127,11 +125,11 @@ mv as (
 	    a.compile_state
 	FROM &s_tblprefix._mviews a
 	WHERE a.owner NOT IN (
-	@sql/extracts/exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
 	       )
 )  ,
 coltypes AS (
-  SELECT /*+ MATERIALIZE */
+  SELECT /* + MATERIALIZE */
     to_char(con_id) as con_id,
     owner, table_name,
 --    sum(col_count) AS col_count,
@@ -243,7 +241,7 @@ coltypes AS (
     )
       AND data_type_owner NOT IN ('MDSYS') THEN 1 ELSE 0 END) AS "USER_DEFINED_COL_COUNT"
       FROM (
-        SELECT /*+ USE_HASH(b a) NOPARALLEL */
+        SELECT /* + USE_HASH(b a) NOPARALLEL */
             &s_a_con_id. AS con_id,
             a.owner,
             table_name,
@@ -261,7 +259,7 @@ coltypes AS (
     con_id, owner, table_name
 )  , 
 vexttab AS (
-	SELECT /*+ MATERIALIZE */
+	SELECT /* + MATERIALIZE */
 	       &s_a_con_id. as con_id, 
 	       owner, 
 	       table_name, 
@@ -271,9 +269,8 @@ vexttab AS (
 	       default_directory_name
 	FROM &s_tblprefix._external_tables a) 
 ,
-/*
 vsrc as (
-SELECT / *+ MATERIALIZE * /
+SELECT /* + MATERIALIZE */
        src.con_id,
        src.owner,
        src.name,
@@ -289,7 +286,7 @@ SELECT / *+ MATERIALIZE * /
        SUM(count_dbms_sql) count_dbms_sql,
        SUM(count_dbms_utl) sum_nr_lines_w_dbms_utl,
        SUM(count_total)    sum_count_total
-FROM   (SELECT / *  + MATERIALIZE * /
+FROM   (SELECT /* + MATERIALIZE */
                &s_a_con_id. AS con_id,
                a.owner,
                a.name,
@@ -324,7 +321,7 @@ FROM   (SELECT / *  + MATERIALIZE * /
                                            AND t.trigger_name = src.name
         WHERE  (    t.trigger_name IS NULL 
                 AND src.owner NOT IN
---@sql/extracts/exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
                )
                OR (
                        t.base_object_type IN ( 'DATABASE', 'SCHEMA' )
@@ -353,9 +350,9 @@ GROUP BY
           src.type,
           t.trigger_type,
           t.triggering_event,
-          t.base_object_type ) , */
+          t.base_object_type ) , 
 vidxtype AS (
-	SELECT /*+ MATERIALIZE */
+	SELECT /* + MATERIALIZE */
 	       &s_a_con_id. AS con_id,
 	       a.owner,
 	       a.index_type,
@@ -371,10 +368,10 @@ vidxtype AS (
 	       a.index_name
 	FROM   &s_tblprefix._indexes a
 	WHERE  owner NOT IN
-	@sql/extracts/exclude_schemas.sql
+@sql/extracts/exclude_schemas.sql
 	),
 vseg AS (
-        SELECT /*+ MATERIALIZE */
+        SELECT /* + MATERIALIZE */
 	       &s_a_con_id. AS con_id,
                a.owner,
                a.segment_name,
@@ -384,7 +381,7 @@ vseg AS (
         GROUP BY &s_a_con_id. ,a.owner,  a.segment_name
 ),
 vtabcons AS (
-SELECT /*+ MATERIALIZE */
+SELECT /* + MATERIALIZE */
        con_id,
        owner,
        table_name,
@@ -427,10 +424,22 @@ FROM   (SELECT &s_a_con_id. AS con_id,
         WHERE a.owner NOT IN
 @sql/extracts/exclude_schemas.sql
        )
-GROUP  BY :v_pkey,
+GROUP  BY 
           con_id,
           owner,
-          table_name)
+          table_name),
+nncols as (SELECT &s_a_con_id. AS con_id,
+                  owner,
+                  table_name, 
+                  count(1) AS nn_count
+           FROM &s_tblprefix._tab_columns a
+           WHERE nullable ='N'
+             AND owner NOT in
+@sql/extracts/exclude_schemas.sql
+          GROUP BY &s_a_con_id ,
+                   owner,
+                   table_name
+)
 SELECT :v_pkey AS pkey,
        vobj.con_id,
        vobj.owner,
@@ -494,7 +503,7 @@ SELECT :v_pkey AS pkey,
        ct.UNDEFINED_COL_COUNT                        ,
        ct.USER_DEFINED_COL_COUNT                     , 
        -- Source code
-/*       vsrc.type,
+       vsrc.type,
        vsrc.sum_nr_lines,
        vsrc.sum_nr_lines_w_utl , 
        vsrc.sum_nr_lines_w_dbms , 
@@ -505,7 +514,7 @@ SELECT :v_pkey AS pkey,
        vsrc.trigger_type,
        vsrc.triggering_event,
        vsrc.base_object_type,
-*/       -- Index info
+       -- Index info
        vi.index_type,
        vi.uniqueness as index_uniqueness,
        vi.compression as index_compression,
@@ -521,13 +530,14 @@ SELECT :v_pkey AS pkey,
        -- Constraints
        vtabcons.pk as primary_key_count,
        vtabcons.uk as unique_cons_count,
-       vtabcons.ck as check_cons_count,
+       vtabcons.ck - (nvl(nncols.nn_count ,0) - nvl(vtabcons.pk,0))  as check_cons_count,
        vtabcons.ri as foreign_key_cons_count,
        vtabcons.vwck as view_check_cons_count,
        vtabcons.vwro as view_read_only_count,
        vtabcons.hashexpr as hash_expr_count,
        vtabcons.refcolcons,
        vtabcons.suplog as supplemental_logging_count,
+       nncols.nn_count as nnull_cons_count,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vobj 
 LEFT OUTER JOIN tblinfo ti 
@@ -555,13 +565,11 @@ LEFT OUTER JOIN vexttab ext
               ON ext.con_id = ti.con_id
               AND ext.owner = ti.owner
               AND ext.table_name = ti.table_name
-/*
 LEFT OUTER JOIN vsrc
               ON vsrc.con_id = vobj.con_id
               AND vsrc.owner = vobj.owner
               AND vsrc.name = vobj.object_name
               AND vsrc.type = vobj.object_type
-*/
 LEFT OUTER JOIN vidxtype vi
               ON vi.con_id = vobj.con_id
               AND vi.owner = vobj.owner
@@ -575,6 +583,9 @@ LEFT OUTER JOIN vtabcons
               ON vtabcons.con_id = ti.con_id
               AND vtabcons.owner = ti.owner
               AND vtabcons.table_name = ti.table_name
+LEFT OUTER JOIN nncols
+              ON nncols.con_id = vtabcons.con_id
+              AND nncols.owner = vtabcons.owner
+              AND nncols.table_name = vtabcons.table_name
 ;
-
 

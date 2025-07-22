@@ -98,9 +98,9 @@ spool off
 --spool off
 
 
-spool &outputdir./opdb__compressbytype__&s_tag.
-@sql/extracts/compressbytype.sql
-spool off
+--spool &outputdir./opdb__compressbytype__&s_tag.
+--@sql/extracts/compressbytype.sql
+--spool off
 
 
 --spool &outputdir./opdb__cpucoresusage__&s_tag.
