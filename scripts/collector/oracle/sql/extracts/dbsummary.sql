@@ -109,8 +109,13 @@ SELECT pkey , dbid , db_name , cdb , db_version , db_fullversion , log_mode , fo
 	   buffer_cache_mb , shared_pool_mb , total_pga_allocated_mb , db_size_allocated_gb , db_size_in_use_gb ,
 	   db_long_size_gb , dg_database_role , dg_protection_mode , dg_protection_level,
            db_size_temp_allocated_gb, db_size_redo_allocated_gb,
-           ebs_owner, siebel_owner, psft_owner, rds_flag, oci_autonomous_flag, dbms_cloud_pkg_installed,
-           apex_installed, sap_owner, db_unique_name, dg_standby_count,
+           CASE WHEN &s_db_container_col. = 'N/A' THEN ebs_owner ELSE NULL END as ebs_owner, 
+           CASE WHEN &s_db_container_col. = 'N/A' THEN siebel_owner ELSE NULL END as siebel_owner, 
+           CASE WHEN &s_db_container_col. = 'N/A' THEN psft_owner ELSE NULL END as psft_owner, 
+           rds_flag, oci_autonomous_flag, dbms_cloud_pkg_installed,
+           CASE WHEN &s_db_container_col. = 'N/A' THEN apex_installed ELSE NULL END as apex_installed, 
+           CASE WHEN &s_db_container_col. = 'N/A' THEN sap_owner ELSE NULL END as sap_owner, 
+           db_unique_name, dg_standby_count,
            :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vdbsummary;
 

@@ -14,22 +14,6 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('dataguard');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 WITH vodg AS (
 SELECT  :v_pkey AS pkey,
         &s_a_con_id. as con_id, inst_id,

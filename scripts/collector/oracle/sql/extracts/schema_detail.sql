@@ -423,8 +423,8 @@ FROM   (SELECT &s_a_con_id. AS con_id,
                                AND a.table_name = b.table_name
         WHERE a.owner NOT IN
 @sql/extracts/exclude_schemas.sql
-       )
-GROUP  BY 
+        )
+        GROUP  BY 
           con_id,
           owner,
           table_name),
@@ -436,9 +436,9 @@ nncols as (SELECT &s_a_con_id. AS con_id,
            WHERE nullable ='N'
              AND owner NOT in
 @sql/extracts/exclude_schemas.sql
-          GROUP BY &s_a_con_id ,
-                   owner,
-                   table_name
+           GROUP BY &s_a_con_id ,
+                    owner,
+                    table_name
 )
 SELECT :v_pkey AS pkey,
        vobj.con_id,
@@ -530,7 +530,10 @@ SELECT :v_pkey AS pkey,
        -- Constraints
        vtabcons.pk as primary_key_count,
        vtabcons.uk as unique_cons_count,
-       vtabcons.ck - (nvl(nncols.nn_count ,0) - nvl(vtabcons.pk,0))  as check_cons_count,
+       /* Attempt to aproximate number of check constraints that are more than just 'NOT NULL' by 
+          subtracting the number of non-nullable columns from the number of check constraints.
+          Multicolumn primary keys will throw this off, so we use a floor of zero.  */
+       GREATEST(vtabcons.ck - (nvl(nncols.nn_count ,0) - nvl(vtabcons.pk,0)),0)  as check_cons_count, 
        vtabcons.ri as foreign_key_cons_count,
        vtabcons.vwck as view_check_cons_count,
        vtabcons.vwro as view_read_only_count,

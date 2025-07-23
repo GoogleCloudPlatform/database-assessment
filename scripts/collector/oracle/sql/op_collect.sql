@@ -68,16 +68,16 @@ SELECT 'START TIME ' || to_char(sysdate, 'YYYY/MM/DD HH24:MI:SS') FROM DUAL;
 spool off
 
 
-spool &outputdir./opdb__schemadetail__&s_tag.
+spool &outputdir./opdb__schema_detail__&s_tag.
 @sql/extracts/schema_detail_hdr.sql
 @sql/extracts/schema_detail.sql
 spool off
 
 
---spool &outputdir./opdb__archlogs__&s_tag.
---prompt PKEY|LOG_START_DATE|HO|THREAD_NUM|DEST_ID|CNT|MBYTES|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/archlogs.sql
---spool off
+spool &outputdir./opdb__archlogs__&s_tag.
+prompt PKEY|LOG_START_DATE|HO|THREAD_NUM|DEST_ID|CNT|MBYTES|DMA_SOURCE_ID|DMA_MANUAL_ID
+@sql/extracts/archlogs.sql
+spool off
 
 
 --spool &outputdir./opdb__users__&s_tag.
@@ -86,10 +86,10 @@ spool off
 --spool off
 
 
---spool &outputdir./opdb__backups__&s_tag.
---prompt PKEY|BACKUP_START_DATE|CON_ID|INPUT_TYPE|ELAPSED_SECONDS|MBYTES_IN|MBYTES_OUT|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/&s_ora9ind.backups.sql
---spool off
+spool &outputdir./opdb__backups__&s_tag.
+prompt PKEY|BACKUP_START_DATE|CON_ID|INPUT_TYPE|ELAPSED_SECONDS|MBYTES_IN|MBYTES_OUT|DMA_SOURCE_ID|DMA_MANUAL_ID
+@sql/extracts/&s_ora9ind.backups.sql
+spool off
 
 
 --spool &outputdir./opdb__columntypes__&s_tag.
@@ -127,10 +127,10 @@ prompt PKEY|CON_ID|NAME|CURRE|DETECTED_USAGES|TOTAL_SAMPLES|FIRST_USAGE|LAST_USA
 spool off
 
 
---spool &outputdir./opdb__dbhwmarkstatistics__&s_tag.
---prompt PKEY|DESCRIPTION|HIGHWATER|LAST_VALUE|CON_ID|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/&s_ora9ind.dbhwmarkstatistics.sql
---spool off
+spool &outputdir./opdb__dbhwmarkstatistics__&s_tag.
+prompt PKEY|DESCRIPTION|HIGHWATER|LAST_VALUE|CON_ID|DMA_SOURCE_ID|DMA_MANUAL_ID
+@sql/extracts/&s_ora9ind.dbhwmarkstatistics.sql
+spool off
 
 
 spool &outputdir./opdb__dbinstances__&s_tag.
