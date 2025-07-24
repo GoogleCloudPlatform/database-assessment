@@ -47,7 +47,7 @@ SELECT :v_pkey AS pkey,
 FROM sys.container$ c, sys.obj$ o
 WHERE o.obj# = c.obj# AND con_id#=1),
 vpdbinfo AS (
-            SELECT p.*,
+            SELECT pkey, dbid, pdb_id, pdb_name, status, logging, con_id, con_uid, 
 @sql/extracts/app_schemas_pdbsinfo.sql 
             FROM opdbinfo p ),
 pdb_sga AS (
@@ -72,7 +72,9 @@ vpdbmode as (
              SELECT con_id, open_mode, total_size / 1024 / 1024 / 1024 TOTAL_GB
              FROM   v$pdbs 
             )
-SELECT i.*, m.sga_allocated_bytes, m.pga_used_bytes, m.pga_allocated_bytes, m.pga_max_bytes, p.open_mode, p.total_gb,
+SELECT i.pkey, i.dbid, i.pdb_id, i.pdb_name, i.status, i.logging, i.con_id, i.con_uid,
+       i.ebs_owner, i.siebel_owner, i.psft_owner, i.rds_flag, i.oci_autonomous_flag, i.dbms_cloud_pkg_installed, i.apex_installed, i.sap_owner,
+       m.sga_allocated_bytes, m.pga_used_bytes, m.pga_allocated_bytes, m.pga_max_bytes, p.open_mode, p.total_gb,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM  vpdbinfo i
       LEFT OUTER JOIN mem_stats m ON i.con_id = m.con_id

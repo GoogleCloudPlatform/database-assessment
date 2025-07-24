@@ -503,7 +503,7 @@ SELECT :v_pkey AS pkey,
        ct.UNDEFINED_COL_COUNT                        ,
        ct.USER_DEFINED_COL_COUNT                     , 
        -- Source code
-       vsrc.type,
+       -- vsrc.type,
        vsrc.sum_nr_lines,
        vsrc.sum_nr_lines_w_utl , 
        vsrc.sum_nr_lines_w_dbms , 
