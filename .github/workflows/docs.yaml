@@ -50,7 +50,7 @@ jobs:
     - name: Build docs
       run: hatch run docs:build
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v4
       with:
         # Upload entire repository
         path: 'site/'
