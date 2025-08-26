@@ -276,7 +276,7 @@ spool off
 
 
 spool  &outputdir./opdb__defines__&s_tag. APPEND
-SELECT 'END TIME ' || to_char(sysdate, 'YYYY/MM/DD HH24:MI:SS') FROM DUAL;
+SELECT 'END TIME   ' || to_char(sysdate, 'YYYY/MM/DD HH24:MI:SS') FROM DUAL;
 spool off
 
 set termout on

@@ -284,8 +284,7 @@ SELECT /* + MATERIALIZE */
        SUM(count_dbms)     sum_nr_lines_w_dbms,
        SUM(count_exec_im)  count_exec_im,
        SUM(count_dbms_sql) count_dbms_sql,
-       SUM(count_dbms_utl) sum_nr_lines_w_dbms_utl,
-       SUM(count_total)    sum_count_total
+       SUM(count_dbms_utl) sum_nr_lines_w_dbms_utl
 FROM   (SELECT /* + MATERIALIZE */
                &s_a_con_id. AS con_id,
                a.owner,
@@ -307,8 +306,7 @@ FROM   (SELECT /* + MATERIALIZE */
                      END)    count_exec_im,
                COUNT(CASE
                        WHEN LOWER(a.text) LIKE '%dbms_sql%' THEN 1
-                     END)    count_dbms_sql,
-               COUNT(1)      count_total
+                     END)    count_dbms_sql
         FROM   &s_tblprefix._source a
         GROUP  BY 
                   &s_a_con_id. ,
@@ -510,7 +508,6 @@ SELECT :v_pkey AS pkey,
        vsrc.count_exec_im , 
        vsrc.count_dbms_sql , 
        vsrc.sum_nr_lines_w_dbms_utl , 
-       vsrc.sum_count_total,
        vsrc.trigger_type,
        vsrc.triggering_event,
        vsrc.base_object_type,
