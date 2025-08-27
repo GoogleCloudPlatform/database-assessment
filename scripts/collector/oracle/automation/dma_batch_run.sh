@@ -12,7 +12,7 @@ CONFIGFILE=dma_db_list.csv
 function batchRun {
 CURRD=$(pwd)
 LOGNAME=DMA_BATCH_RUN_$(date +%Y%m%d%H%M%S).log
-for x in $(cat "${CONFIGFILE}" | grep -v '^#' | grep -v '^$')
+for x in $(cat "${CONFIGFILE}" | grep -v '^#' | grep -v '^$' |grep '@')
 do
  user=$(echo $x | cut -d ',' -f 2)
  db=$(echo $x | cut -d ',' -f 3)
@@ -27,7 +27,7 @@ do
  fi
  cd ${CURRD}/..
  # Run a collection in the background, capturing screen output to a log file.
- time  ./collect-data.sh --dbType oracle --connectionStr ''${user}${db}'' --statsSrc ${statssrc} ${statsparam} 2>&1 | tee DMA_COLLECT_DATA_${logname}_$(date +%Y%m%d%H%M%S).log &
+ time  ./collect-data.sh --dbType oracle --connectionStr ''${user}${db}'' --statsSrc ${statssrc} ${statsparam} 2>&1 | tee DMA_COLLECT_DATA_${logname}_$(date +%Y%m%d%H%M%S)_$$.log &
 
 # Wait a couple of seconds before starting another collection.
  sleep 2
@@ -36,7 +36,8 @@ do
  while [[ $(ps -ef | grep collect-data | grep -v grep | wc -l) -ge ${MAXPARALLEL} ]]
  do
   echo sleeping for 10 secs while waiting on collections:
-  ps | grep collect-data.sh | grep -v grep | cut -d '@' -f 2 | cut -d ' ' -f 1
+  ps | grep collect-data.sh | grep -v grep 
+  #ps | grep collect-data.sh | grep -v grep | cut -d '@' -f 2 | cut -d ' ' -f 1
 
   sleep 10
  done

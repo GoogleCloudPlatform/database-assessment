@@ -20,8 +20,9 @@ function precheckUser
 for x in $(cat "${CONFIGFILE}" | grep -v '^#' | grep -v '^$')
 do
  user=$(echo $x | cut -d ',' -f 2)
+ username=$(echo ${user} | cut -d '/' -f 1)
  db=$(echo $x | cut -d ',' -f 3)
- echo -n Testing DMA user connection to database ${db}
+ echo -n Testing DMA user connection for user ${username} to database ${db}
  retcd=$(checkConnection "${user}" "${db}" )
  success=$(echo "${retcd}" | grep SUCCESS)
  if [ "${success}" = "SUCCESS" ]
@@ -88,5 +89,7 @@ fi
          fi
 	 shift 2
  done
+
+echo "Running precheckUser using configuration file ${CONFIGFILE}"
 
 precheckUser

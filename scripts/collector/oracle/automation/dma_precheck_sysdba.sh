@@ -93,5 +93,7 @@ fi
 	 shift 2
  done
 
+echo "Running precheckSysdba using configuration file ${CONFIGFILE}"
+
 precheckSysdba
 

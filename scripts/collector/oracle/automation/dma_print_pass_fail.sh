@@ -40,3 +40,16 @@ function print_complete {
   echo
 }
 
+function print_summary {
+  echo
+  echo
+  echo " #####  #     # #     # #     #    #    ######  #     # "
+  echo "#     # #     # ##   ## ##   ##   # #   #     #  #   #  "
+  echo "#       #     # # # # # # # # #  #   #  #     #   # #   "
+  echo " #####  #     # #  #  # #  #  # #     # ######     #    "
+  echo "      # #     # #     # #     # ####### #   #      #    "
+  echo "#     # #     # #     # #     # #     # #    #     #    "
+  echo " #####   #####  #     # #     # #     # #     #    #    "
+  echo
+  echo
+}
