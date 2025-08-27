@@ -41,6 +41,11 @@ prompt
 
 prompt Initializing Database Migration Assessment Collector...
 prompt
+BEGIN
+ DBMS_SESSION.set_identifier('DMA COLLECTOR');
+END;
+/
+
 set termout &TERMOUTOFF
 @@op_collect_init.sql
 prompt
@@ -80,45 +85,10 @@ prompt PKEY|LOG_START_DATE|HO|THREAD_NUM|DEST_ID|CNT|MBYTES|DMA_SOURCE_ID|DMA_MA
 spool off
 
 
---spool &outputdir./opdb__users__&s_tag.
---prompt PKEY|CON_ID|USERNAME|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/users.sql
---spool off
-
-
 spool &outputdir./opdb__backups__&s_tag.
 prompt PKEY|BACKUP_START_DATE|CON_ID|INPUT_TYPE|ELAPSED_SECONDS|MBYTES_IN|MBYTES_OUT|DMA_SOURCE_ID|DMA_MANUAL_ID
 @sql/extracts/&s_ora9ind.backups.sql
 spool off
-
-
---spool &outputdir./opdb__columntypes__&s_tag.
---prompt PKEY|CON_ID|OWNER|TABLE_NAME|ANYDATA_COL_COUNT|BFILE_COL_COUNT|BINARY_DOUBLE_COL_COUNT|BINARY_FLOAT_COL_COUNT|BLOB_COL_COUNT|CFILE_COL_COUNT|CHAR_COL_COUNT|CLOB_COL_COUNT|DATE_COL_COUNT|FLOAT_COL_COUNT|INTERVAL_DAY_TO_SECOND_COL_COUNT|INTERVAL_YEAR_TO_MONTH_COL_COUNT|JSON_COL_COUNT|LONG_RAW_COL_COUNT|LONG_COL_COUNT|MLSLABEL_COL_COUNT|NCHAR_VARYING_COL_COUNT|NCHAR_COL_COUNT|NCLOB_COL_COUNT|NUMBER_COL_COUNT|NVARCHAR2_COL_COUNT|RAW_COL_COUNT|ROWID_COL_COUNT|SPATIAL_COL_COUNT|TIME_WITH_TIME_ZONE_COL_COUNT|TIME_COL_COUNT|TIMESTAMP_WITH_LOCAL_TIME_Z_COUNT|TIMESTAMP_WITH_TIME_ZONE_COL_COUNT|TIMESTAMP_COL_COUNT|UROWID_COL_COUNT|VARCHAR_COL_COUNT|VARCHAR2_COL_COUNT|XMLTYPE_COL_COUNT|UNDEFINED_COL_COUNT|USER_DEFINED_COL_COUNT|BYTES|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/columntypes.sql
---spool off
-
-
---spool &outputdir./opdb__compressbytype__&s_tag.
---@sql/extracts/compressbytype.sql
---spool off
-
-
---spool &outputdir./opdb__cpucoresusage__&s_tag.
---prompt PKEY|DT|CPU_COUNT|CPU_CORE_COUNT|CPU_SOCKET_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/&s_ora9ind.cpucoresusage.sql
---spool off
-
-
---spool &outputdir./opdb__dataguard__&s_tag.
---prompt PKEY|CON_ID|INST_ID|LOG_ARCHIVE_CONFIG|DEST_ID|DEST_NAME|DESTINATION|STATUS|TARGET|SCHEDULE|REGISTER|ALTERNATE|TRANSMIT_MODE|AFFIRM|VALID_ROLE|VERIFY|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/dataguard.sql
---spool off
-
-
---spool &outputdir./opdb__datatypes__&s_tag.
---prompt PKEY|CON_ID|OWNER|DATA_TYPE|CNT|DATA_LENGTH|DATA_PRECISION|DATA_SCALE|AVG_COL_LEN|DISTINCT_TABLE_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/datatypes.sql
---spool off
 
 
 spool &outputdir./opdb__dbfeatures__&s_tag.
@@ -139,24 +109,6 @@ prompt PKEY|INST_ID|INSTANCE_NAME|HOST_NAME|VERSION|STATUS|DATABASE_STATUS|INSTA
 spool off
 
 
---spool &outputdir./opdb__dblinks__&s_tag.
---prompt PKEY|CON_ID|OWNER|COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/dblinks.sql
---spool off
-
-
---spool &outputdir./opdb__dbobjects__&s_tag.
---prompt PKEY|CON_ID|OWNER|OBJECT_TYPE|EDITIONABLE|COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/dbobjects.sql
---spool off
-
-
---spool &outputdir./opdb__dbobjectnames__&s_tag.
---prompt PKEY|CON_ID|OWNER|OBJECT_NAME|OBJECT_TYPE|EDITIONABLE|LINES|STATUS|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/dbobjectnames.sql
---spool off
-
-
 spool &outputdir./opdb__dbparameters__&s_tag.
 prompt PKEY|INST_ID|CON_ID|NAME|VALUE|DEFAULT_VALUE|ISDEFAULT|DMA_SOURCE_ID|DMA_MANUAL_ID
 @sql/extracts/dbparameters.sql
@@ -169,94 +121,10 @@ prompt PKEY|DBID|DB_NAME|CDB|DB_VERSION|DB_FULLVERSION|LOG_MODE|FORCE_LOGGING|RE
 spool off
 
 
---spool &outputdir./opdb__exttab__&s_tag.
---prompt PKEY|CON_ID|OWNER|TABLE_NAME|TYP|TYPE_NAME|DEF|DEFAULT_DIRECTORY_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/exttab.sql
---spool off
-
-
---spool &outputdir./opdb__idxpertable__&s_tag.
---prompt PKEY|CON_ID|TAB_COUNT|IDX_CNT|IDX_PERC|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/idxpertable.sql
---spool off
-
-
---spool &outputdir./opdb__indextypes__&s_tag.
---prompt PKEY|CON_ID|OWNER|INDEX_TYPE|UNIQUENESS|COMPRESSION|PARTITIONED|TEMPORARY|SECONDARY|VISIBILITY|JOIN_INDEX|CUSTOM_INDEX_TYPE|CNT|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/indextypes.sql
---spool off
-
-
---spool &outputdir./opdb__indextypedtl__&s_tag.
---prompt PKEY|CON_ID|OWNER|INDEX_TYPE|UNIQUENESS|COMPRESSION|PARTITIONED|TEMPORARY|SECONDARY|VISIBILITY|JOIN_INDEX|CUSTOM_INDEX_TYPE|TABLE_NAME|INDEX_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/indextypedtl.sql
---spool off
-
-
---spool &outputdir./opdb__mviewtypes__&s_tag.
---prompt PKEY|CON_ID|OWNER|UPDATABLE|REWRITE_ENABLED|REFRESH_MODE|REFRESH_METHOD|FAST_REFRESHABLE|COMPILE_STATE|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/mviewtypes.sql
---spool off
-
-
 spool &outputdir./opdb__opkeylog__&s_tag.
 prompt PKEY|OPSCRI|DB_|HOSTNAME|DB_NAME|INSTANCE_NAME|COLLECTION_T|DB_ID|C|DMA_SOURCE_ID|DMA_MANUAL_ID
 @sql/extracts/opkeylog.sql
 spool off
-
-
---spool &outputdir./opdb__sourcecode__&s_tag.
---prompt PKEY|CON_ID|OWNER|TYPE|SUM_NR_LINES|QT_OBJS|SUM_NR_LINES_W_UTL|SUM_NR_LINES_W_DBMS|COUNT_EXEC_IM|COUNT_DBMS_SQL|SUM_NR_LINES_W_DBMS_UTL|SUM_COUNT_TOTAL|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/sourcecode.sql
---spool off
-
-
---spool &outputdir./opdb__dtlsourcecode__&s_tag.
---prompt PKEY|CON_ID|OWNER|NAME|TYPE|SUM_NR_LINES|QT_OBJS|SUM_NR_LINES_W_UTL|SUM_NR_LINES_W_DBMS|COUNT_EXEC_IM|COUNT_DBMS_SQL|SUM_NR_LINES_W_DBMS_UTL|SUM_COUNT_TOTAL|TRIGGER_TYPE|TRIGGERING_EVENT|BASE_OBJECT_TYPE|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/dtlsourcecode.sql
---spool off
-
-
---spool &outputdir./opdb__tablesnopk__&s_tag.
---prompt PKEY|CON_ID|OWNER|PK|UK|CK|RI|VWCK|VWRO|HASHEXPR|SUPLOG|NUM_TABLES|TOTAL_CONS|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/tablesnopk.sql
---spool off
-
-
---spool &outputdir./opdb__tableconstraints__&s_tag.
---prompt PKEY|CON_ID|OWNER|TABLE_NAME|PK|UK|CK|RI|VWCK|VWRO|HASHEXPR|SUPLOG|TOTAL_CONS|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/tableconstraints.sql
---spool off
-
-
---spool &outputdir./opdb__tabletypes__&s_tag.
---prompt PKEY|CON_ID|OWNER|PAR|IOT_TYPE|NESTED|TEMPORARY|SECONDARY|CLUSTERED_TABLE|TABLE_COUNT|OBJECT_TABLE|XML_TABLE|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/tabletypes.sql
---spool off
-
-
---spool &outputdir./opdb__tabletypedtl__&s_tag.
---prompt PKEY|CON_ID|OWNER|TABLE_NAME|PAR|IOT_TYPE|NESTED|TEMPORARY|SECONDARY|CLUSTERED_TABLE|OBJECT_TABLE|XML_TABLE|PARTITIONING_TYPE|SUBPARTITIONING_TYPE|PARTITION_COUNT|SUBPARTITION_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/tabletypedtl.sql
---spool off
-
-
---spool &outputdir./opdb__triggers__&s_tag.
---prompt PKEY|CON_ID|OWNER|TRIGGER_TYPE|TRIGGERING_EVENT|BASE_OBJECT_TYPE|TRIGGER_COUNT|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/triggers.sql
---spool off
-
-
---spool &outputdir./opdb__usedspacedetails__&s_tag.
---prompt PKEY|CON_ID|OWNER|SEGMENT_TYPE|GB|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/usedspacedetails.sql
---spool off
-
-
---spool &outputdir./opdb__usrsegatt__&s_tag.
---prompt PKEY|CON_ID|OWNER|SEGMENT_NAME|SEGMENT_TYPE|TABLESPACE_NAME|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/usrsegatt.sql
---spool off
 
 
 @sql/&s_tenancy.

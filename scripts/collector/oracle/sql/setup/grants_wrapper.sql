@@ -23,8 +23,11 @@ set echo off
 
 prompt "Please enter the database local username (or CDB username) to receive all required grants. "
 accept dbusername    char prompt "Enter exactly as defined in the database, upper/lower case must match: "
-prompt "Use of AWR/ASH data requires a licens for the Tuning and Diagnostics Pack."
-accept useAWR char default 'Y' prompt "Please enter Y or N to allow or disallow use of the AWR/ASH data (Y) "
+prompt
+prompt "Use of AWR/ASH data requires a license for the Tuning and Diagnostics Pack."
+accept useAWR char default 'Y' prompt "Please enter Y to allow use of the AWR/ASH data or N to exclude AWR/ASH data (Y): "
+prompt 
+prompt Using inputs &&dbusername and &&usediagnostics
 
 DECLARE
   cnt NUMBER;
@@ -180,6 +183,8 @@ BEGIN
   v_source_table_list := t_source_table_list(
       rectype_('EXECUTE','SYS','DBMS_UMF'),
       rectype_('EXECUTE','SYS','DBMS_QOPATCH'),
+      rectype_('EXECUTE','SYS','DBMS_APPLICATION_INFO'),
+      rectype_('EXECUTE','SYS','DBMS_SESSION'),
       rectype_('SELECT','PERFSTAT','STATS$IOSTAT_FUNCTION_NAME'),
       rectype_('SELECT','PERFSTAT','STATS$IOSTAT_FUNCTION'),
       rectype_('SELECT','PERFSTAT','STATS$OSSTATNAME'),
