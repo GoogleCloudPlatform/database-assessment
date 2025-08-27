@@ -15,9 +15,6 @@
 --
 exec dbms_application_info.set_action('dbsummary');
 
--- define s_app_join_cond='&s_cdb_join_cond.'
--- define s_app_join_dbsum_cond='&s_cdb_join_cond.'
-
 WITH vdbsummary AS (
 SELECT :v_pkey AS pkey,
        (SELECT dbid

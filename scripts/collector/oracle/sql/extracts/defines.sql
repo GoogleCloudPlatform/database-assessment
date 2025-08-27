@@ -13,7 +13,6 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
--- spool &outputdir./opdb__defines__&s_tag.
 
 PROMPT "SUBSTITUTION VARIABLES"
 PROMPT AWRDIR                        = &AWRDIR.
@@ -108,6 +107,5 @@ PROMPT
 PROMPT "DUMP ALL BIND VARIABLES"
 PRINT
 
--- spool off
 
 
