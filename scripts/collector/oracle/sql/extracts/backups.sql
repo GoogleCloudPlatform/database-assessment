@@ -23,8 +23,8 @@ SELECT :v_pkey AS pkey,
        ROUND(SUM(elapsed_seconds)) AS elapsed_seconds,
        ROUND(SUM(input_bytes)/1024/1024) AS mbytes_in,
        ROUND(SUM(output_bytes)/1024/1024) AS mbytes_out,
-       :v_dma_source_id AS DMA_SOURCE_ID, 
-       :v_manual_unique_id AS DMA_MANUAL_ID
+       :v_dma_source_id AS dma_source_id, 
+       :v_manual_unique_id AS dma_manual_id
 FROM v$rman_backup_job_details a
 WHERE start_time >= TRUNC(sysdate) - :v_statsWindow
 GROUP BY TRUNC(start_time), input_type, &s_a_con_id.

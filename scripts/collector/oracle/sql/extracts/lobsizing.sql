@@ -123,7 +123,7 @@ SELECT  :v_pkey AS pkey,
        table_avg_lob_bytes,
        partition_avg_lob_bytes,
        subpartition_avg_lob_bytes,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+       :v_dma_source_id AS dma_source_id, :v_manual_unique_id AS dma_manual_id
 FROM lobdata;
 
 

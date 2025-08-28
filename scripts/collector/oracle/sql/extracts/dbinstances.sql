@@ -16,7 +16,7 @@
 exec dbms_application_info.set_action('dbinstances');
 
 
-WITH vdbinst as (
+WITH vdbinst AS (
 SELECT :v_pkey AS pkey,
        inst_id,
        instance_name,
@@ -26,8 +26,15 @@ SELECT :v_pkey AS pkey,
        database_status,
        instance_role
 FROM   gv$instance )
-SELECT pkey , inst_id , instance_name , host_name ,
-       version , status , database_status , instance_role,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+SELECT pkey, 
+       inst_id, 
+       instance_name, 
+       host_name,
+       version, 
+       status, 
+       database_status, 
+       instance_role,
+       :v_dma_source_id AS dma_source_id, 
+       :v_manual_unique_id AS dma_manual_id
 FROM vdbinst;
 

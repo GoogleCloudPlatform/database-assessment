@@ -73,7 +73,7 @@ vpdbmode as (
 SELECT i.pkey, i.dbid, i.pdb_id, i.pdb_name, i.status, i.logging, i.con_id, i.con_uid,
        i.ebs_owner, i.siebel_owner, i.psft_owner, i.rds_flag, i.oci_autonomous_flag, i.dbms_cloud_pkg_installed, i.apex_installed, i.sap_owner,
        m.sga_allocated_bytes, m.pga_used_bytes, m.pga_allocated_bytes, m.pga_max_bytes, p.open_mode, p.total_gb,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+       :v_dma_source_id AS dma_source_id, :v_manual_unique_id AS dma_manual_id
 FROM  vpdbinfo i
       LEFT OUTER JOIN mem_stats m ON i.con_id = m.con_id
       LEFT OUTER JOIN vpdbmode p ON i.con_id = p.con_id;

@@ -328,9 +328,7 @@ vsrc AS (
             AND (t.owner, t.trigger_name) NOT IN (
                 ('SYS', 'XDB_PI_TRIG'),
                 ('SYS', 'DELETE_ENTRIES'),
-                ('SYS', 'OJDS$ROLE_TRIGGER
-
-'),
+                ('SYS', 'OJDS$ROLE_TRIGGER'),
                 ('SYS', 'DBMS_SET_PDB'),
                 ('MDSYS', 'SDO_TOPO_DROP_FTBL'),
                 ('MDSYS', 'SDO_GEOR_BDDL_TRIGGER'),

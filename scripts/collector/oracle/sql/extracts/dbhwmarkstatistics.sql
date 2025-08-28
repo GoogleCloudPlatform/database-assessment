@@ -25,7 +25,11 @@ SELECT :v_pkey AS pkey,
        &s_a_con_id. AS con_id
 FROM   &s_tblprefix._high_water_mark_statistics a
 ORDER  BY description)
-SELECT pkey , description , highwater , last_value, con_id,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+SELECT pkey , 
+       description , 
+       highwater , 
+       last_value, con_id,
+       :v_dma_source_id AS dma_source_id, 
+       :v_manual_unique_id AS dma_manual_id
 FROM vhwmst;
 

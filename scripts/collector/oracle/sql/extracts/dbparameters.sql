@@ -22,14 +22,21 @@ WITH vparam AS (
 SELECT :v_pkey AS pkey,
        inst_id,
        &s_a_con_id. AS con_id,
-       replace(name, chr(39), chr(34))   name,
-       TRANSLATE(SUBSTR(value, 1, 60), chr(124)||chr(10)||chr(13)||chr(39), ' ')         value,
-       TRANSLATE(SUBSTR(&s_dbparam_dflt_col., 1, 30), chr(124)||chr(10)||chr(13)||chr(39), ' ')  default_value,
+       replace(name, chr(39), chr(34)) AS name,
+       TRANSLATE(SUBSTR(value, 1, 60), chr(124)||chr(10)||chr(13)||chr(39), ' ') AS value,
+       TRANSLATE(SUBSTR(&s_dbparam_dflt_col., 1, 30), chr(124)||chr(10)||chr(13)||chr(39), ' ') AS default_value,
        isdefault
 FROM   gv$system_parameter a
 ORDER  BY 2,3 )
-SELECT pkey , inst_id , con_id , name , value , default_value , isdefault,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+SELECT pkey,
+       inst_id,
+       con_id,
+       name,
+       value,
+       default_value,
+       isdefault,
+       :v_dma_source_id AS dma_source_id, 
+       :v_manual_unique_id AS dma_manual_id
 FROM vparam;
 
 
