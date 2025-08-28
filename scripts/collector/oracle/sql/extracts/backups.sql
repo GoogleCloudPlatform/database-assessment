@@ -17,15 +17,16 @@ exec dbms_application_info.set_action('backups');
 
 
 SELECT :v_pkey AS pkey,
-       trunc(start_time) AS backup_start_date,
+       TRUNC(start_time) AS backup_start_date,
        &s_a_con_id. AS con_id,
        input_type,
-       round(sum(elapsed_seconds)) AS elapsed_seconds,
-       round(sum(input_bytes)/1024/1024) AS mbytes_in,
-       round(sum(output_bytes)/1024/1024) AS mbytes_out,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+       ROUND(SUM(elapsed_seconds)) AS elapsed_seconds,
+       ROUND(SUM(input_bytes)/1024/1024) AS mbytes_in,
+       ROUND(SUM(output_bytes)/1024/1024) AS mbytes_out,
+       :v_dma_source_id AS DMA_SOURCE_ID, 
+       :v_manual_unique_id AS DMA_MANUAL_ID
 FROM v$rman_backup_job_details a
-WHERE start_time >= trunc(sysdate) - :v_statsWindow
-GROUP BY trunc(start_time), input_type, &s_a_con_id.
+WHERE start_time >= TRUNC(sysdate) - :v_statsWindow
+GROUP BY TRUNC(start_time), input_type, &s_a_con_id.
 ;
 
