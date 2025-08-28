@@ -50,7 +50,7 @@ function replace_includes {
     fdir=$(dirname ${fname})
 
     awk -v basedir=${destdir} -f- $1 > awktmp <<'EOF'
-/^@/ {
+/^ *@/ {
   filename = substr($0, 2) 
   gsub(/^[[:space:]]+|[[:space:]]+$/, "", filename)
   if (filename != "") {
@@ -146,6 +146,29 @@ function make_target {
     replace_includes $fname ${outputdir}
   done
 }
+
+function printUsage
+{
+echo " Usage:"
+echo "  Parameters"
+echo ""
+echo "  --maxParallel   (Optional)  Number of build threads to run in parallel.  Default is 4. "
+echo ""
+echo "  --configFile    (Optional)  The name of the files listing the targets to build.  Default is 'build.config'. "
+echo ""
+echo "  --target        (Optional)  The name of a target to build, if you do not want to build everything in the build.config file. Will build all targets that contain the string specified. "
+echo ""
+echo ""
+echo " Example:"
+echo
+echo "  To build everything in the build.confg file and limit parallelism to 2:"
+echo "  ./mkall.sh --maxParallel 2"
+echo ""
+echo "  To build all targets for Oracle 19:"
+echo "  ./mkall.sh --target 190 "
+echo
+}
+
 
 
 ### Validate input

@@ -15,8 +15,8 @@
 --
 exec dbms_application_info.set_action('schemadetail');
 
-with vobj as (
-        SELECT /* + MATERIALIZE */
+WITH vobj as (
+        SELECT 
                &s_a_con_id. AS con_id,
                owner,
                object_type,
@@ -25,9 +25,9 @@ with vobj as (
                status
         FROM &s_tblprefix._objects a
         WHERE  
-(
         (
-        NOT ( a.object_type IN ('SYNONYM', 'JAVA CLASS') AND a.owner IN ('PUBLIC', 'SYS') /*  AND a.object_name LIKE '%/%' */  )  
+        (
+        NOT ( a.object_type IN ('SYNONYM', 'JAVA CLASS') AND a.owner IN ('PUBLIC', 'SYS')  )  
         AND a.object_name NOT LIKE 'BIN$%' )
            AND  (owner NOT IN
 @sql/extracts/exclude_schemas.sql
@@ -35,7 +35,7 @@ with vobj as (
 or (object_type in ('DB_LINK', 'DATABASE LINK', 'DIRECTORY')))
 )
 ,
-tblinfo AS ( SELECT /* + MATERIALIZE */ con_id, owner, table_name, partitioned, iot_type, nested, temporary, secondary, clustered_table, object_table, xml_table FROM ( 
+tblinfo AS ( SELECT  con_id, owner, table_name, partitioned, iot_type, nested, temporary, secondary, clustered_table, object_table, xml_table FROM ( 
 	SELECT 
 	    &s_a_con_id. AS con_id,
 	    a.owner,
@@ -99,7 +99,7 @@ tblinfo AS ( SELECT /* + MATERIALIZE */ con_id, owner, table_name, partitioned, 
         )
 ),
 subpartinfo AS (
-	SELECT /* + MATERIALIZE */
+	SELECT 
                &s_d_con_id. AS con_id,
 	       d.table_owner,
 	       d.table_name,
@@ -113,7 +113,7 @@ subpartinfo AS (
 	       d.table_name
 ),
 mv as (
-        SELECT /* + MATERIALIZE */ 
+        SELECT  
 	    &s_a_con_id. AS con_id,
 	    a.owner,
 	    a.mview_name,
@@ -129,10 +129,9 @@ mv as (
 	       )
 )  ,
 coltypes AS (
-  SELECT /* + MATERIALIZE */
+  SELECT 
     to_char(con_id) as con_id,
     owner, table_name,
---    sum(col_count) AS col_count,
     SUM(CASE WHEN data_type = 'ANYDATA'                           THEN 1 ELSE 0 END) as "ANYDATA_COL_COUNT"                          ,
     SUM(CASE WHEN data_type = 'BFILE'                             THEN 1 ELSE 0 END) as "BFILE_COL_COUNT"                            ,
     SUM(CASE WHEN data_type = 'BINARY_DOUBLE'                     THEN 1 ELSE 0 END) as "BINARY_DOUBLE_COL_COUNT"                    ,
@@ -241,7 +240,7 @@ coltypes AS (
     )
       AND data_type_owner NOT IN ('MDSYS') THEN 1 ELSE 0 END) AS "USER_DEFINED_COL_COUNT"
       FROM (
-        SELECT /* + USE_HASH(b a) NOPARALLEL */
+        SELECT 
             &s_a_con_id. AS con_id,
             a.owner,
             table_name,
@@ -259,7 +258,7 @@ coltypes AS (
     con_id, owner, table_name
 )  , 
 vexttab AS (
-	SELECT /* + MATERIALIZE */
+	SELECT 
 	       &s_a_con_id. as con_id, 
 	       owner, 
 	       table_name, 
@@ -270,7 +269,7 @@ vexttab AS (
 	FROM &s_tblprefix._external_tables a) 
 ,
 vsrc as (
-SELECT /* + MATERIALIZE */
+SELECT 
        src.con_id,
        src.owner,
        src.name,
@@ -285,7 +284,7 @@ SELECT /* + MATERIALIZE */
        SUM(count_exec_im)  count_exec_im,
        SUM(count_dbms_sql) count_dbms_sql,
        SUM(count_dbms_utl) sum_nr_lines_w_dbms_utl
-FROM   (SELECT /* + MATERIALIZE */
+FROM   (SELECT 
                &s_a_con_id. AS con_id,
                a.owner,
                a.name,
@@ -350,7 +349,7 @@ GROUP BY
           t.triggering_event,
           t.base_object_type ) , 
 vidxtype AS (
-	SELECT /* + MATERIALIZE */
+	SELECT 
 	       &s_a_con_id. AS con_id,
 	       a.owner,
 	       a.index_type,
@@ -369,7 +368,7 @@ vidxtype AS (
 @sql/extracts/exclude_schemas.sql
 	),
 vseg AS (
-        SELECT /* + MATERIALIZE */
+        SELECT 
 	       &s_a_con_id. AS con_id,
                a.owner,
                a.segment_name,
@@ -379,7 +378,7 @@ vseg AS (
         GROUP BY &s_a_con_id. ,a.owner,  a.segment_name
 ),
 vtabcons AS (
-SELECT /* + MATERIALIZE */
+SELECT 
        con_id,
        owner,
        table_name,
@@ -439,11 +438,13 @@ nncols as (SELECT &s_a_con_id. AS con_id,
                     table_name
 )
 SELECT :v_pkey AS pkey,
+       -- Objects
        vobj.con_id,
        vobj.owner,
        vobj.object_name,
        vobj.object_type,
        vobj.status,
+       -- Tables
        ti.partitioned,
        ti.iot_type,
        ti.nested,
@@ -457,7 +458,7 @@ SELECT :v_pkey AS pkey,
        p.subpartitioning_type,
        p.partition_count,
        sp.cnt AS subpartition_count,
-       -- Mview info
+       -- Mviews 
        mv.updatable,
        mv.rewrite_enabled,
        mv.refresh_mode,
@@ -501,7 +502,6 @@ SELECT :v_pkey AS pkey,
        ct.UNDEFINED_COL_COUNT                        ,
        ct.USER_DEFINED_COL_COUNT                     , 
        -- Source code
-       -- vsrc.type,
        vsrc.sum_nr_lines,
        vsrc.sum_nr_lines_w_utl , 
        vsrc.sum_nr_lines_w_dbms , 
@@ -511,7 +511,7 @@ SELECT :v_pkey AS pkey,
        vsrc.trigger_type,
        vsrc.triggering_event,
        vsrc.base_object_type,
-       -- Index info
+       -- Indexs
        vi.index_type,
        vi.uniqueness as index_uniqueness,
        vi.compression as index_compression,
@@ -538,7 +538,8 @@ SELECT :v_pkey AS pkey,
        vtabcons.refcolcons,
        vtabcons.suplog as supplemental_logging_count,
        nncols.nn_count as nnull_cons_count,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+       :v_dma_source_id AS DMA_SOURCE_ID, 
+       :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vobj 
 LEFT OUTER JOIN tblinfo ti 
               ON ti.owner = vobj.owner
