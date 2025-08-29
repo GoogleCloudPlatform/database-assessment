@@ -18,10 +18,3 @@ prompt PKEY|DBID|PDB_ID|PDB_NAME|STATUS|LOGGING|CON_ID|CON_UID|EBS_OWNER|SIEBEL_
 @sql/extracts/pdb_summary.sql
 spool off
 
-
---spool &outputdir./opdb__pdbsopenmode__&s_tag.
---prompt PKEY|CON_ID|NAME|OPEN_MODE|TOTAL_GB|CON_UID|DMA_SOURCE_ID|DMA_MANUAL_ID
---@sql/extracts/pdbsopenmode.sql
---spool off
-
-

@@ -15,18 +15,27 @@
 --
 exec dbms_application_info.set_action('opkeylog');
 
-
-
-
-with vop as (
-select :v_pkey AS pkey,
-:v_dmaVersion opscriptversion, :v_dbversion db_version, :v_host hostname,
-:v_dbname db_name, :v_instance instance_name, :v_hora collection_time, :v_dbid db_id, null "CMNT"
-from dual)
-select pkey , opscriptversion , db_version , hostname
-       , db_name , instance_name , collection_time , db_id , CMNT,
-       :v_dma_source_id AS dma_source_id, :v_manual_unique_id AS dma_manual_id
-from vop;
-
-
+WITH vop AS (
+SELECT :v_pkey AS pkey,
+       :v_dmaVersion opscriptversion, 
+       :v_dbversion db_version, 
+       :v_host hostname,
+       :v_dbname db_name, 
+       :v_instance instance_name, 
+       :v_hora collection_time, 
+       :v_dbid db_id, 
+       null "CMNT"
+FROM dual)
+SELECT pkey, 
+       opscriptversion, 
+       db_version, 
+       hostname, 
+       db_name, 
+       instance_name, 
+       collection_time, 
+       db_id, 
+       CMNT,
+       :v_dma_source_id AS dma_source_id, 
+       :v_manual_unique_id AS dma_manual_id
+FROM vop;
 

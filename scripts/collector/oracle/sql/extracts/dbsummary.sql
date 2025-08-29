@@ -15,35 +15,23 @@
 --
 exec dbms_application_info.set_action('dbsummary');
 
-WITH vdb AS (
-        SELECT dbid,
-               name AS db_name,
-               &s_db_container_col. AS cdb,
-               log_mode,
-               force_logging,
-               &s_platform_name. AS  platform_name,
-               database_role AS dg_database_role,
-               protection_mode AS dg_protection_mode,
-               protection_level AS dg_protection_level,
-               &s_db_unique_name. as db_unique_name
-        FROM v$database),
-vdbsummary AS (
+WITH vdbsummary AS (
 SELECT :v_pkey AS pkey,
---       (SELECT dbid
---        FROM   v$database)                                                      AS dbid,
---       (SELECT name
---        FROM   v$database)                                                      AS db_name,
---       (SELECT &s_db_container_col.
---        FROM   v$database)                                                      AS cdb,
+       (SELECT dbid
+        FROM   v$database)                                                      AS dbid,
+       (SELECT name
+        FROM   v$database)                                                      AS db_name,
+       (SELECT &s_db_container_col.
+        FROM   v$database)                                                      AS cdb,
        (SELECT version
         FROM   v$instance)                                                      AS db_version,
        (SELECT REPLACE( &s_banner_ver_col. , CHR(10), ' ') as banner
         FROM   v$version
         WHERE  ROWNUM < 2)                                                      AS db_fullversion,
---       (SELECT log_mode
---        FROM   v$database)                                                      AS log_mode,
---       (SELECT force_logging
---        FROM   v$database)                                                      AS force_logging,
+       (SELECT log_mode
+        FROM   v$database)                                                      AS log_mode,
+       (SELECT force_logging
+        FROM   v$database)                                                      AS force_logging,
        (SELECT ( ROUND(AVG(conta) * AVG(bytes) / 1024 / 1024 / 1024) )
         FROM   (SELECT TRUNC(first_time) dia,
                        COUNT(*)          conta
@@ -65,8 +53,8 @@ SELECT :v_pkey AS pkey,
        || (SELECT value
            FROM   nls_database_parameters a
            WHERE  a.parameter = 'NLS_CHARACTERSET')                             AS characterset,
---       (SELECT &s_platform_name. as  platform_name
---        FROM   v$database)                                                      AS platform_name,
+       (SELECT &s_platform_name. as  platform_name
+        FROM   v$database)                                                      AS platform_name,
        (SELECT TO_CHAR(startup_time, 'YYYY-MM-DD HH24:MI:SS')
         FROM   v$instance)                                                      AS startup_time,
        (SELECT COUNT(1)
@@ -96,12 +84,12 @@ SELECT :v_pkey AS pkey,
                                                       table_name
                                                FROM   &s_tblprefix._tab_columns
                                                WHERE  data_type LIKE '%LONG%')) AS db_long_size_gb,
---       (SELECT database_role
---        FROM   v$database)                                                      AS dg_database_role,
---       (SELECT protection_mode
---        FROM   v$database)                                                      AS dg_protection_mode,
---       (SELECT protection_level
---        FROM   v$database)                                                      AS dg_protection_level,
+       (SELECT database_role
+        FROM   v$database)                                                      AS dg_database_role,
+       (SELECT protection_mode
+        FROM   v$database)                                                      AS dg_protection_mode,
+       (SELECT protection_level
+        FROM   v$database)                                                      AS dg_protection_level,
        (SELECT ( ROUND(SUM(bytes) / 1024 / 1024 / 1024) )
         FROM   &s_tblprefix._temp_files)                                        AS db_size_temp_allocated_gb,
        (SELECT  ( ROUND(SUM(l.bytes) / 1024 / 1024 / 1024 ) )
@@ -110,8 +98,8 @@ SELECT :v_pkey AS pkey,
         WHERE f.group# = l.group#     )                                         AS db_size_redo_allocated_gb,
 @sql/extracts/app_schemas_dbsummary.sql 
         ,
--- (SELECT &s_db_unique_name. as db_unique_name
---           FROM v$database)                                                     AS db_unique_name,
+       (SELECT &s_db_unique_name. as db_unique_name
+           FROM v$database)                                                     AS db_unique_name,
        (SELECT count(distinct destination) FROM gv$archive_dest WHERE status = 'VALID' AND target = 'STANDBY') AS dg_standby_count
 FROM   dual)
 SELECT pkey, 
@@ -147,11 +135,11 @@ SELECT pkey,
        dbms_cloud_pkg_installed,
        CASE WHEN &s_db_container_col. = 'N/A' THEN apex_installed ELSE NULL END AS apex_installed, 
        CASE WHEN &s_db_container_col. = 'N/A' THEN sap_owner ELSE NULL END AS sap_owner, 
-       db_unique_name, dg_standby_count,
+       db_unique_name, 
+       dg_standby_count,
        :v_dma_source_id AS dma_source_id, 
        :v_manual_unique_id AS dma_manual_id
 FROM vdbsummary 
-JOIN vdb ON 1=1;
-
+;
 set echo off
 set verify off
