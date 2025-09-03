@@ -18,28 +18,20 @@ exec dbms_application_info.set_action('dbahistsysstat');
 
 WITH vsysstat AS (
 SELECT
-       :v_pkey as pkey,
+       :v_pkey AS pkey,
        dbid,
        instance_number,
        hour,
        stat_name,
-       COUNT(1)                             cnt,
-       ROUND(AVG(value))                           avg_value,
-       ROUND(STATS_MODE(value))                    mode_value,
-       ROUND(MEDIAN(value))                        median_value,
-       ROUND(MIN(value))                           min_value,
-       ROUND(MAX(value))                           max_value,
-       ROUND(SUM(value))                           sum_value,
-       ROUND(PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY value DESC)) AS "PERC50",
-       ROUND(PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY value DESC)) AS "PERC75",
-       ROUND(PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY value DESC)) AS "PERC90",
+       COUNT(1)                              AS    cnt,
+       ROUND(AVG(value))                     AS    avg_value,
+       ROUND(STATS_MODE(value))              AS    mode_value,
+       ROUND(MEDIAN(value))                  AS    median_value,
+       ROUND(MIN(value))                     AS    min_value,
+       ROUND(MAX(value))                     AS    max_value,
+       ROUND(SUM(value))                     AS    sum_value,
        ROUND(PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY value DESC)) AS "PERC95",
-       ROUND(PERCENTILE_CONT(0)
-         within GROUP (ORDER BY value DESC)) AS "PERC100"
+         within GROUP (ORDER BY value DESC)) AS percentile_95 
 FROM (
 SELECT
        s.snap_id,
@@ -49,13 +41,13 @@ SELECT
        to_char(s.begin_interval_time,'hh24') hour,
        g.stat_name,
        NVL(DECODE(GREATEST(value, NVL(LAG(value)
-                                        over (
+                                        OVER (
                                           PARTITION BY s.dbid, s.instance_number, g.stat_name
                                           ORDER BY s.snap_id), 0)), value, value - LAG(value)
-                                                                                     over (
+                                                                                     OVER (
                                                                                        PARTITION BY s.dbid, s.instance_number, g.stat_name
                                                                                        ORDER BY s.snap_id),
-                                                                    0), 0) AS VALUE
+                                                                    0), 0) AS value
 FROM   &s_tblprefix._hist_snapshot s,
        &s_tblprefix._hist_sysstat g
 WHERE  s.snap_id = g.snap_id
@@ -64,21 +56,21 @@ WHERE  s.snap_id = g.snap_id
        AND s.instance_number = g.instance_number
        AND s.dbid = g.dbid
        AND (LOWER(stat_name) LIKE '%db%time%'
-       or LOWER(stat_name) LIKE '%redo%time%'
-       or LOWER(stat_name) LIKE '%parse%time%'
-       or LOWER(stat_name) LIKE 'phy%'
-       or LOWER(stat_name) LIKE '%cpu%'
+       OR LOWER(stat_name) LIKE '%redo%time%'
+       OR LOWER(stat_name) LIKE '%parse%time%'
+       OR LOWER(stat_name) LIKE 'phy%'
+       OR LOWER(stat_name) LIKE '%cpu%'
       -- or LOWER(stat_name) LIKE '%hcc%'
-       or LOWER(stat_name) LIKE 'cell%phy%'
-       or LOWER(stat_name) LIKE 'cell%smart%'
-       or LOWER(stat_name) LIKE 'cell%mem%'
-       or LOWER(stat_name) LIKE 'cell%flash%'
-       or LOWER(stat_name) LIKE 'cell%uncompressed%'
-       or LOWER(stat_name) LIKE '%db%block%'
-       or LOWER(stat_name) LIKE '%execute%'
+       OR LOWER(stat_name) LIKE 'cell%phy%'
+       OR LOWER(stat_name) LIKE 'cell%smart%'
+       OR LOWER(stat_name) LIKE 'cell%mem%'
+       OR LOWER(stat_name) LIKE 'cell%flash%'
+       OR LOWER(stat_name) LIKE 'cell%uncompressed%'
+       OR LOWER(stat_name) LIKE '%db%block%'
+       OR LOWER(stat_name) LIKE '%execute%'
       -- or LOWER(stat_name) LIKE '%lob%'
-       or LOWER(stat_name) LIKE 'user%'
-       or LOWER(stat_name) IN (
+       OR LOWER(stat_name) LIKE 'user%'
+       OR LOWER(stat_name) IN (
                                'physical read total io requests',
                                'physical read total multi block requests',
                                'table fetch by rowid',
@@ -92,9 +84,20 @@ GROUP BY
           instance_number,
           hour,
           stat_name)
-SELECT pkey , dbid , instance_number , hour , stat_name , cnt ,
-       avg_value , mode_value , median_value , min_value , max_value ,
-	   sum_value , perc50 , perc75 , perc90 , perc95 , perc100,
-	       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+SELECT pkey , 
+       dbid , 
+       instance_number , 
+       hour , 
+       stat_name , 
+       cnt ,
+       avg_value , 
+       mode_value , 
+       median_value , 
+       min_value , 
+       max_value ,
+       sum_value ,
+       percentile_95 ,
+       :v_dma_source_id AS dma_source_id, 
+       :v_manual_unique_id AS dma_manual_id
 FROM vsysstat;
 

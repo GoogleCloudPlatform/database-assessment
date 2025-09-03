@@ -64,11 +64,11 @@ SELECT :v_pkey AS pkey,
                                                  OVER (PARTITION BY iof.dbid, iof.instance_number, iof.function_name ORDER BY iof.snap_id),0), 0) AS tot_watime_delta_value
 FROM &s_tblprefix._HIST_IOSTAT_FUNCTION iof
 INNER JOIN &s_tblprefix._HIST_SNAPSHOT snap
-ON iof.snap_id = snap.snap_id
-AND iof.instance_number = snap.instance_number
-AND iof.dbid = snap.dbid
+        ON iof.snap_id = snap.snap_id
+       AND iof.instance_number = snap.instance_number
+       AND iof.dbid = snap.dbid
 WHERE snap.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
-AND snap.dbid = :v_dbid),
+  AND snap.dbid = :v_dbid),
 vperciof AS (
 SELECT pkey,
        dbid,
@@ -76,45 +76,35 @@ SELECT pkey,
        hour,
        function_name,
        PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY sm_read_mb_delta_value DESC) AS sm_read_mb_delta_value_P95,
+         WITHIN GROUP (ORDER BY sm_read_mb_delta_value DESC) AS sm_read_mb_delta_value_P95,
        PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY sm_write_mb_delta_value DESC) AS sm_write_mb_delta_value_P95,
+         WITHIN GROUP (ORDER BY sm_write_mb_delta_value DESC) AS sm_write_mb_delta_value_P95,
        PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY sm_read_rq_delta_value DESC) AS sm_read_rq_delta_value_P95,
+         WITHIN GROUP (ORDER BY sm_read_rq_delta_value DESC) AS sm_read_rq_delta_value_P95,
        PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY sm_write_rq_delta_value DESC) AS sm_write_rq_delta_value_P95,
+         WITHIN GROUP (ORDER BY sm_write_rq_delta_value DESC) AS sm_write_rq_delta_value_P95,
        PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY lg_read_mb_delta_value DESC) AS lg_read_mb_delta_value_P95,
+         WITHIN GROUP (ORDER BY lg_read_mb_delta_value DESC) AS lg_read_mb_delta_value_P95,
        PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY lg_write_mb_delta_value DESC) AS lg_write_mb_delta_value_P95,
+         WITHIN GROUP (ORDER BY lg_write_mb_delta_value DESC) AS lg_write_mb_delta_value_P95,
        PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY lg_read_rq_delta_value DESC) AS lg_read_rq_delta_value_P95,
+         WITHIN GROUP (ORDER BY lg_read_rq_delta_value DESC) AS lg_read_rq_delta_value_P95,
        PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY lg_write_rq_delta_value DESC) AS lg_write_rq_delta_value_P95,
+         WITHIN GROUP (ORDER BY lg_write_rq_delta_value DESC) AS lg_write_rq_delta_value_P95,
        PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P95,
+         WITHIN GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P95,
        PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P95,
-       PERCENTILE_CONT(0.00)
-         within GROUP (ORDER BY sm_read_mb_delta_value DESC) AS sm_read_mb_delta_value_P100,
-       PERCENTILE_CONT(0.00)
-         within GROUP (ORDER BY sm_write_mb_delta_value DESC) AS sm_write_mb_delta_value_P100,
-       PERCENTILE_CONT(0.00)
-         within GROUP (ORDER BY sm_read_rq_delta_value DESC) AS sm_read_rq_delta_value_P100,
-       PERCENTILE_CONT(0.00)
-         within GROUP (ORDER BY sm_write_rq_delta_value DESC) AS sm_write_rq_delta_value_P100,
-       PERCENTILE_CONT(0.00)
-         within GROUP (ORDER BY lg_read_mb_delta_value DESC) AS lg_read_mb_delta_value_P100,
-       PERCENTILE_CONT(0.00)
-         within GROUP (ORDER BY lg_write_mb_delta_value DESC) AS lg_write_mb_delta_value_P100,
-       PERCENTILE_CONT(0.00)
-         within GROUP (ORDER BY lg_read_rq_delta_value DESC) AS lg_read_rq_delta_value_P100,
-       PERCENTILE_CONT(0.00)
-         within GROUP (ORDER BY lg_write_rq_delta_value DESC) AS lg_write_rq_delta_value_P100,
-       PERCENTILE_CONT(0.00)
-         within GROUP (ORDER BY no_iowait_delta_value DESC) AS no_iowait_delta_value_P100,
-       PERCENTILE_CONT(0.00)
-         within GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P100
+         WITHIN GROUP (ORDER BY tot_watime_delta_value DESC) AS tot_watime_delta_value_P95,
+       MAX(sm_read_mb_delta_value)   AS sm_read_mb_delta_value_peak,
+       MAX(sm_write_mb_delta_value ) AS sm_write_mb_delta_value_peak,
+       MAX(sm_read_rq_delta_value )  AS sm_read_rq_delta_value_peak,
+       MAX(sm_write_rq_delta_value ) AS sm_write_rq_delta_value_peak,
+       MAX(lg_read_mb_delta_value )  AS lg_read_mb_delta_value_peak,
+       MAX(lg_write_mb_delta_value ) AS lg_write_mb_delta_value_peak,
+       MAX(lg_read_rq_delta_value )  AS lg_read_rq_delta_value_peak,
+       MAX(lg_write_rq_delta_value ) AS lg_write_rq_delta_value_peak,
+       MAX(no_iowait_delta_value )   AS no_iowait_delta_value_peak,
+       MAX(tot_watime_delta_value )  AS tot_watime_delta_value_peak
 FROM vrawiof
 GROUP BY pkey,
          dbid,
@@ -141,20 +131,20 @@ SELECT pkey,
        ROUND(sm_read_rq_delta_value_P95 + lg_read_rq_delta_value_P95) total_reads_req_P95,
        ROUND(sm_write_mb_delta_value_P95 + lg_write_mb_delta_value_P95) total_writes_mb_P95,
        ROUND(sm_write_rq_delta_value_P95 + lg_write_rq_delta_value_P95) total_write_req_P95,
-       ROUND(sm_read_mb_delta_value_P100) sm_read_mb_delta_value_P100,
-       ROUND(sm_write_mb_delta_value_P100) sm_write_mb_delta_value_P100,
-       ROUND(sm_read_rq_delta_value_P100) sm_read_rq_delta_value_P100,
-       ROUND(sm_write_rq_delta_value_P100) sm_write_rq_delta_value_P100,
-       ROUND(lg_read_mb_delta_value_P100) lg_read_mb_delta_value_P100,
-       ROUND(lg_write_mb_delta_value_P100) lg_write_mb_delta_value_P100,
-       ROUND(lg_read_rq_delta_value_P100) lg_read_rq_delta_value_P100,
-       ROUND(lg_write_rq_delta_value_P100) lg_write_rq_delta_value_P100,
-       ROUND(no_iowait_delta_value_P100) no_iowait_delta_value_P100,
-       ROUND(tot_watime_delta_value_P100) tot_watime_delta_value_P100,
-       ROUND(sm_read_mb_delta_value_P100 + lg_read_mb_delta_value_P100) total_reads_mb_P100,
-       ROUND(sm_read_rq_delta_value_P100 + lg_read_rq_delta_value_P100) total_reads_req_P100,
-       ROUND(sm_write_mb_delta_value_P100 + lg_write_mb_delta_value_P100) total_writes_mb_P100,
-       ROUND(sm_write_rq_delta_value_P100 + lg_write_rq_delta_value_P100) total_write_req_P100
+       ROUND(sm_read_mb_delta_value_peak) sm_read_mb_delta_value_peak,
+       ROUND(sm_write_mb_delta_value_peak) sm_write_mb_delta_value_peak,
+       ROUND(sm_read_rq_delta_value_peak) sm_read_rq_delta_value_peak,
+       ROUND(sm_write_rq_delta_value_peak) sm_write_rq_delta_value_peak,
+       ROUND(lg_read_mb_delta_value_peak) lg_read_mb_delta_value_peak,
+       ROUND(lg_write_mb_delta_value_peak) lg_write_mb_delta_value_peak,
+       ROUND(lg_read_rq_delta_value_peak) lg_read_rq_delta_value_peak,
+       ROUND(lg_write_rq_delta_value_peak) lg_write_rq_delta_value_peak,
+       ROUND(no_iowait_delta_value_peak) no_iowait_delta_value_peak,
+       ROUND(tot_watime_delta_value_peak) tot_watime_delta_value_peak,
+       ROUND(sm_read_mb_delta_value_peak + lg_read_mb_delta_value_peak) total_reads_mb_peak,
+       ROUND(sm_read_rq_delta_value_peak + lg_read_rq_delta_value_peak) total_reads_req_peak,
+       ROUND(sm_write_mb_delta_value_peak + lg_write_mb_delta_value_peak) total_writes_mb_peak,
+       ROUND(sm_write_rq_delta_value_peak + lg_write_rq_delta_value_peak) total_write_req_peak
 FROM vperciof)
 SELECT pkey , dbid , instance_number , hour , function_name ,
        sm_read_mb_delta_value_P95 ,
@@ -171,21 +161,22 @@ SELECT pkey , dbid , instance_number , hour , function_name ,
        total_reads_req_P95 ,
        total_writes_mb_P95 ,
        total_write_req_P95,
-       sm_read_mb_delta_value_P100 ,
-       sm_write_mb_delta_value_P100 ,
-       sm_read_rq_delta_value_P100 ,
-       sm_write_rq_delta_value_P100 ,
-       lg_read_mb_delta_value_P100 ,
-       lg_write_mb_delta_value_P100 ,
-       lg_read_rq_delta_value_P100 ,
-       lg_write_rq_delta_value_P100 ,
-       no_iowait_delta_value_P100 ,
-       tot_watime_delta_value_P100 ,
-       total_reads_mb_P100 ,
-       total_reads_req_P100 ,
-       total_writes_mb_P100 ,
-       total_write_req_P100,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+       sm_read_mb_delta_value_peak ,
+       sm_write_mb_delta_value_peak ,
+       sm_read_rq_delta_value_peak ,
+       sm_write_rq_delta_value_peak ,
+       lg_read_mb_delta_value_peak ,
+       lg_write_mb_delta_value_peak ,
+       lg_read_rq_delta_value_peak ,
+       lg_write_rq_delta_value_peak ,
+       no_iowait_delta_value_peak ,
+       tot_watime_delta_value_peak ,
+       total_reads_mb_peak ,
+       total_reads_req_peak ,
+       total_writes_mb_peak ,
+       total_write_req_peak,
+       :v_dma_source_id AS dma_source_id, 
+       :v_manual_unique_id AS dma_manual_id
 FROM viof;
 
 

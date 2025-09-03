@@ -20,32 +20,24 @@ WITH vsysmetric AS (
 SELECT :v_pkey AS pkey,
        hsm.dbid,
        hsm.instance_number,
-       TO_CHAR(hsm.begin_time, 'hh24')          hour,
+       TO_CHAR(hsm.begin_time, 'hh24')             AS hour,
        hsm.metric_name,
        hsm.metric_unit,
-       ROUND(AVG(hsm.value))                           avg_value,
-       ROUND(STATS_MODE(hsm.value))                    mode_value,
-       ROUND(MEDIAN(hsm.value))                        median_value,
-       ROUND(MIN(hsm.value))                           min_value,
-       ROUND(MAX(hsm.value))                           max_value,
-       ROUND(SUM(hsm.value))                           sum_value,
-       ROUND(PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY hsm.value DESC)) AS "PERC50",
-       ROUND(PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY hsm.value DESC)) AS "PERC75",
-       ROUND(PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY hsm.value DESC)) AS "PERC90",
+       ROUND(AVG(hsm.value))                       AS  avg_value,
+       ROUND(STATS_MODE(hsm.value))                AS  mode_value,
+       ROUND(MEDIAN(hsm.value))                    AS  median_value,
+       ROUND(MIN(hsm.value))                       AS  min_value,
+       ROUND(MAX(hsm.value))                       AS  max_value,
+       ROUND(SUM(hsm.value))                       AS  sum_value,
        ROUND(PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY hsm.value DESC)) AS "PERC95",
-       ROUND(PERCENTILE_CONT(0)
-         within GROUP (ORDER BY hsm.value DESC)) AS "PERC100"
+         within GROUP (ORDER BY hsm.value DESC))   AS percentile_95
 FROM   &s_tblprefix._hist_sysmetric_history hsm
        inner join &s_tblprefix._hist_snapshot dhsnap
                ON hsm.snap_id = dhsnap.snap_id
                   AND hsm.instance_number = dhsnap.instance_number
                   AND hsm.dbid = dhsnap.dbid
 WHERE  hsm.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
-AND hsm.dbid = :v_dbid
+  AND  hsm.dbid = :v_dbid
 GROUP  BY :v_pkey,
           hsm.dbid,
           hsm.instance_number,
@@ -56,9 +48,20 @@ ORDER  BY hsm.dbid,
           hsm.instance_number,
           hsm.metric_name,
           TO_CHAR(hsm.begin_time, 'hh24'))
-SELECT pkey , dbid , instance_number , hour , metric_name ,
-       metric_unit , avg_value , mode_value , median_value , min_value , max_value ,
-	   sum_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100,
-	       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+SELECT pkey , 
+       dbid , 
+       instance_number , 
+       hour , 
+       metric_name ,
+       metric_unit , 
+       avg_value , 
+       mode_value , 
+       median_value , 
+       min_value , 
+       max_value ,
+       sum_value , 
+       percentile_95 ,
+       :v_dma_source_id AS dma_source_id, 
+       :v_manual_unique_id AS dma_manual_id
 FROM vsysmetric;
 

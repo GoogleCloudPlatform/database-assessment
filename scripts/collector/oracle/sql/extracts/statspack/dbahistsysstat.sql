@@ -19,77 +19,81 @@ exec dbms_application_info.set_action('dbahistsysstat');
 
 WITH vsysstat AS (
 SELECT
-       :v_pkey as pkey,
+       :v_pkey AS pkey,
        dbid,
        instance_number,
        hour,
        name stat_name,
-       COUNT(1)                             cnt,
-       ROUND(AVG(value))                           avg_value,
-       ROUND(STATS_MODE(value))                    mode_value,
-       ROUND(MEDIAN(value))                        median_value,
-       ROUND(MIN(value))                           min_value,
-       ROUND(MAX(value))                           max_value,
-       ROUND(SUM(value))                           sum_value,
-       ROUND(PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY value DESC)) AS "PERC50",
-       ROUND(PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY value DESC)) AS "PERC75",
-       ROUND(PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY value DESC)) AS "PERC90",
+       COUNT(1)                              AS cnt,
+       ROUND(AVG(value))                     AS avg_value,
+       ROUND(STATS_MODE(value))              AS mode_value,
+       ROUND(MEDIAN(value))                  AS median_value,
+       ROUND(MIN(value))                     AS min_value,
+       ROUND(MAX(value))                     AS max_value,
+       ROUND(SUM(value))                     AS sum_value,
        ROUND(PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY value DESC)) AS "PERC95",
-       ROUND(PERCENTILE_CONT(0)
-         within GROUP (ORDER BY value DESC)) AS "PERC100"
+         within GROUP (ORDER BY value DESC)) AS percentile_95
 FROM (
-SELECT
-       s.snap_id,
-       s.dbid,
-       s.instance_number,
-       s.snap_time,
-       to_char(s.snap_time,'hh24') hour,
-       g.name,
-       NVL(DECODE(GREATEST(value, NVL(LAG(value)
-                                        over (
-                                          PARTITION BY s.dbid, s.instance_number, g.name
-                                          ORDER BY s.snap_id), 0)), value, value - LAG(value)
-                                                                                     over (
-                                                                                       PARTITION BY s.dbid, s.instance_number, g.name
-                                                                                       ORDER BY s.snap_id),
-                                                                    0), 0) AS VALUE
-FROM   STATS$SNAPSHOT s,
-       STATS$SYSSTAT g
-WHERE  s.snap_id = g.snap_id
-       AND s.snap_time BETWEEN :v_min_snaptime AND :v_max_snaptime
-       AND s.dbid = :v_dbid
-       AND s.instance_number = g.instance_number
-       AND s.dbid = g.dbid
-       AND (LOWER(name) LIKE '%db%time%'
-       or LOWER(name) LIKE '%redo%time%'
-       or LOWER(name) LIKE '%parse%time%'
-       or LOWER(name) LIKE 'phy%'
-       or LOWER(name) LIKE '%cpu%'
-      -- or LOWER(name) LIKE '%hcc%'
-       or LOWER(name) LIKE 'cell%phy%'
-       or LOWER(name) LIKE 'cell%smart%'
-       or LOWER(name) LIKE 'cell%mem%'
-       or LOWER(name) LIKE 'cell%flash%'
-       or LOWER(name) LIKE 'cell%uncompressed%'
-       or LOWER(name) LIKE '%db%block%'
-       or LOWER(name) LIKE '%execute%'
-      -- or LOWER(name) LIKE '%lob%'
-       or LOWER(name) LIKE 'user%')
+      SELECT
+             s.snap_id,
+             s.dbid,
+             s.instance_number,
+             s.snap_time,
+             to_char(s.snap_time,'hh24') hour,
+             g.name,
+             NVL(DECODE(GREATEST(value, NVL(LAG(value)
+                                              OVER (
+                                                PARTITION BY s.dbid, s.instance_number, g.name
+                                                ORDER BY s.snap_id), 0)), value, value - LAG(value)
+                                                                                           OVER (
+                                                                                             PARTITION BY s.dbid, s.instance_number, g.name
+                                                                                             ORDER BY s.snap_id),
+                                                                          0), 0) AS value
+      FROM   STATS$SNAPSHOT s,
+             STATS$SYSSTAT g
+      WHERE  s.snap_id = g.snap_id
+             AND s.snap_time BETWEEN :v_min_snaptime AND :v_max_snaptime
+             AND s.dbid = :v_dbid
+             AND s.instance_number = g.instance_number
+             AND s.dbid = g.dbid
+             AND (LOWER(name) LIKE '%db%time%'
+                  OR LOWER(name) LIKE '%redo%time%'
+                  OR LOWER(name) LIKE '%parse%time%'
+                  OR LOWER(name) LIKE 'phy%'
+                  OR LOWER(name) LIKE '%cpu%'
+               -- or LOWER(name) LIKE '%hcc%'
+                  OR LOWER(name) LIKE 'cell%phy%'
+                  OR LOWER(name) LIKE 'cell%smart%'
+                  OR LOWER(name) LIKE 'cell%mem%'
+                  OR LOWER(name) LIKE 'cell%flash%'
+                  OR LOWER(name) LIKE 'cell%uncompressed%'
+                  OR LOWER(name) LIKE '%db%block%'
+                  OR LOWER(name) LIKE '%execute%'
+               -- or LOWER(name) LIKE '%lob%'
+                  OR LOWER(name) LIKE 'user%'
+                 )
 )
 GROUP BY
-          :v_pkey,
-          dbid,
-          instance_number,
-          hour,
-          name)
-SELECT pkey , dbid , instance_number , hour , stat_name , cnt ,
-       avg_value , mode_value , median_value , min_value , max_value ,
-	   sum_value , perc50 , perc75 , perc90 , perc95 , perc100,
-	       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+         :v_pkey,
+         dbid,
+         instance_number,
+         hour,
+         name)
+SELECT pkey,
+       dbid,
+       instance_number,
+       hour,
+       stat_name,
+       cnt ,
+       avg_value,
+       mode_value,
+       median_value,
+       min_value,
+       max_value ,
+       sum_value,
+       percentile_95 ,
+       :v_dma_source_id AS dma_source_id,
+       :v_manual_unique_id AS dma_manual_id
 FROM vsysstat;
 
 

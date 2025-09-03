@@ -27,14 +27,14 @@ SELECT :v_pkey AS pkey,
        count(1) cnt
 FROM &s_tblprefix._HIST_ACTIVE_SESS_HISTORY has
      INNER JOIN &s_tblprefix._HIST_SNAPSHOT dhsnap
-     ON has.snap_id = dhsnap.snap_id
-     AND has.instance_number = dhsnap.instance_number
-     AND has.dbid = dhsnap.dbid
+             ON has.snap_id = dhsnap.snap_id
+            AND has.instance_number = dhsnap.instance_number
+            AND has.dbid = dhsnap.dbid
 @&s_sql_cmd.
         ON has.sql_opcode = scmd.COMMAND_TYPE
-WHERE  has.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
-AND has.dbid = :v_dbid
-AND has.session_type = &s_session_type. 
+WHERE has.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+  AND has.dbid = :v_dbid
+  AND has.session_type = &s_session_type. 
 group by :v_pkey,
        TO_CHAR(dhsnap.begin_interval_time, 'hh24'),
        has.dbid,
@@ -43,9 +43,17 @@ group by :v_pkey,
        has.module,
        &s_machine.,
        scmd.command_name)
-SELECT pkey , dbid , instance_number , hour , program ,
-       module , machine , command_name , cnt,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+SELECT pkey , 
+       dbid ,
+       instance_number , 
+       hour , 
+       program ,
+       module , 
+       machine , 
+       command_name , 
+       cnt,
+       :v_dma_source_id AS dma_source_id, 
+       :v_manual_unique_id AS dma_manual_id
 FROM vsrcconn
 order by hour;
 

@@ -27,27 +27,27 @@ SELECT :v_pkey AS pkey,
        sev.event_name,
        sev.total_waits,
        NVL(DECODE(GREATEST(sev.total_waits, NVL(LAG(sev.total_waits)
-                                                         OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id), 0)),
+                                                OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id), 0)),
                   sev.total_waits, sev.total_waits - LAG(sev.total_waits)
-                                                                       OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id),0), 0) AS tot_waits_delta_value,
+                                                     OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id),0), 0) AS tot_waits_delta_value,
        sev.total_timeouts,
        NVL(DECODE(GREATEST(sev.total_timeouts, NVL(LAG(sev.total_timeouts)
-                                                        OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id), 0)),
+                                                    OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id), 0)),
                   sev.total_timeouts, sev.total_timeouts - LAG(sev.total_timeouts)
                                                                       OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id),0), 0) AS tot_tout_delta_value,
        sev.time_waited_micro,
        NVL(DECODE(GREATEST(sev.time_waited_micro, NVL(LAG(sev.time_waited_micro)
-                                                        OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id), 0)),
+                                                      OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id), 0)),
                   sev.time_waited_micro, sev.time_waited_micro - LAG(sev.time_waited_micro)
-                                                                      OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id),0), 0) AS time_wa_us_delta_value
+                                                                 OVER (PARTITION BY sev.dbid, sev.instance_number, sev.event_name ORDER BY sev.snap_id),0), 0) AS time_wa_us_delta_value
 FROM &s_tblprefix._HIST_SYSTEM_EVENT sev
      INNER JOIN &s_tblprefix._HIST_SNAPSHOT dhsnap
-     ON sev.snap_id = dhsnap.snap_id
-     AND sev.instance_number = dhsnap.instance_number
-     AND sev.dbid = dhsnap.dbid
-WHERE  sev.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
-AND sev.dbid = :v_dbid
-AND sev.wait_class IN ('User I/O', 'System I/O', 'Commit')),
+             ON sev.snap_id = dhsnap.snap_id
+            AND sev.instance_number = dhsnap.instance_number
+            AND sev.dbid = dhsnap.dbid
+WHERE sev.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+  AND sev.dbid = :v_dbid
+  AND sev.wait_class IN ('User I/O', 'System I/O', 'Commit')),
 vpercev AS(
 SELECT pkey,
        dbid,
@@ -61,12 +61,9 @@ SELECT pkey,
          within GROUP (ORDER BY tot_tout_delta_value DESC) AS tot_tout_delta_value_P95,
        PERCENTILE_CONT(0.05)
          within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P95,
-       PERCENTILE_CONT(0.00)
-         within GROUP (ORDER BY tot_waits_delta_value DESC) AS tot_waits_delta_value_P100,
-       PERCENTILE_CONT(0.00)
-         within GROUP (ORDER BY tot_tout_delta_value DESC) AS tot_tout_delta_value_P100,
-       PERCENTILE_CONT(0.00)
-         within GROUP (ORDER BY time_wa_us_delta_value DESC) AS time_wa_us_delta_value_P100
+       MAX(tot_waits_delta_value) as tot_waits_delta_value_peak,
+       MAX(tot_tout_delta_value) as tot_tout_delta_value_peak,
+       MAX(time_wa_us_delta_value) AS time_wa_us_delta_value_peak
 FROM vrawev
 GROUP BY pkey,
          dbid,
@@ -84,18 +81,24 @@ SELECT pkey,
        ROUND(tot_waits_delta_value_P95) tot_waits_delta_value_P95,
        ROUND(tot_tout_delta_value_P95) tot_tout_delta_value_P95,
        ROUND(time_wa_us_delta_value_P95) time_wa_us_delta_value_P95,
-       ROUND(tot_waits_delta_value_P100) tot_waits_delta_value_P100,
-       ROUND(tot_tout_delta_value_P100) tot_tout_delta_value_P100,
-       ROUND(time_wa_us_delta_value_P100) time_wa_us_delta_value_P100
+       ROUND(tot_waits_delta_value_peak) tot_waits_delta_value_peak,
+       ROUND(tot_tout_delta_value_peak) tot_tout_delta_value_peak,
+       ROUND(time_wa_us_delta_value_peak) time_wa_us_delta_value_peak
 FROM vpercev)
-SELECT pkey , dbid , instance_number , hour , wait_class , event_name ,
+SELECT pkey , 
+       dbid , 
+       instance_number , 
+       hour , 
+       wait_class , 
+       event_name ,
        tot_waits_delta_value_P95 ,
        tot_tout_delta_value_P95 ,
-       time_wa_us_delta_value_P95,
-       tot_waits_delta_value_P100 ,
-       tot_tout_delta_value_P100 ,
-       time_wa_us_delta_value_P100,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+       time_wa_us_delta_value_peak,
+       tot_waits_delta_value_peak ,
+       tot_tout_delta_value_peak ,
+       time_wa_us_delta_value_peak,
+       :v_dma_source_id AS dma_source_id, 
+       :v_manual_unique_id AS dma_manual_id
 FROM vfev;
 
 

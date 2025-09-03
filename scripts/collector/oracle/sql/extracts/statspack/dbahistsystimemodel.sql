@@ -19,65 +19,67 @@ exec dbms_application_info.set_action('dbahistsystimemodel');
 
 WITH vtimemodel AS (
 SELECT
-       :v_pkey as pkey,
+       :v_pkey AS pkey,
        dbid,
        instance_number,
        hour,
        stat_name,
-       COUNT(1)                                    cnt,
-       ROUND(AVG(value))                           avg_value,
-       ROUND(STATS_MODE(value))                    mode_value,
-       ROUND(MEDIAN(value))                        median_value,
-       ROUND(MIN(value))                           min_value,
-       ROUND(MAX(value))                           max_value,
-       ROUND(SUM(value))                           sum_value,
-       ROUND(PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY value DESC)) AS "PERC50",
-       ROUND(PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY value DESC)) AS "PERC75",
-       ROUND(PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY value DESC)) AS "PERC90",
+       COUNT(1)                              AS    cnt,
+       ROUND(AVG(value))                     AS    avg_value,
+       ROUND(STATS_MODE(value))              AS    mode_value,
+       ROUND(MEDIAN(value))                  AS    median_value,
+       ROUND(MIN(value))                     AS    min_value,
+       ROUND(MAX(value))                     AS    max_value,
+       ROUND(SUM(value))                     AS    sum_value,
        ROUND(PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY value DESC)) AS "PERC95",
-       ROUND(PERCENTILE_CONT(0)
-         within GROUP (ORDER BY value DESC)) AS "PERC100"
+         WITHIN GROUP (ORDER BY value DESC)) AS percentile_95
 FROM (
-SELECT
-       s.snap_id,
-       s.dbid,
-       s.instance_number,
-       s.snap_time,
-       to_char(s.snap_time,'hh24') hour,
-       n.stat_name,
-       NVL(DECODE(GREATEST(value, NVL(LAG(value)
-                                        over (
-                                          PARTITION BY s.dbid, s.instance_number, n.stat_name
-                                          ORDER BY s.snap_id), 0)), value, value - LAG(value)
-                                                                                     over (
-                                                                                       PARTITION BY s.dbid, s.instance_number, n.stat_name
-                                                                                       ORDER BY s.snap_id),
-                                                                    0), 0) AS value
-FROM   STATS$SNAPSHOT s,
-       STATS$SYS_TIME_MODEL g,
-       STATS$TIME_MODEL_STATNAME n
-WHERE  s.snap_id = g.snap_id
-       AND s.instance_number = g.instance_number
-       AND s.dbid = g.dbid
-       AND g.stat_id = n.stat_id
-       AND s.snap_time BETWEEN :v_min_snaptime AND :v_max_snaptime
-       AND s.dbid = :v_dbid
-)
+      SELECT
+             s.snap_id,
+             s.dbid,
+             s.instance_number,
+             s.snap_time,
+             to_char(s.snap_time,'hh24') hour,
+             n.stat_name,
+             NVL(DECODE(GREATEST(value, NVL(LAG(value)
+                                              OVER (
+                                                PARTITION BY s.dbid, s.instance_number, n.stat_name
+                                                ORDER BY s.snap_id), 0)), value, value - LAG(value)
+                                                                                           over (
+                                                                                             PARTITION BY s.dbid, s.instance_number, n.stat_name
+                                                                                             ORDER BY s.snap_id),
+                                                                          0), 0) AS value
+      FROM   stats$snapshot s,
+             stats$sys_time_model g,
+             stats$time_model_statname n
+      WHERE  s.snap_id = g.snap_id
+        AND s.instance_number = g.instance_number
+        AND s.dbid = g.dbid
+        AND g.stat_id = n.stat_id
+        AND s.snap_time BETWEEN :v_min_snaptime AND :v_max_snaptime
+        AND s.dbid = :v_dbid
+     )
 GROUP BY
       :v_pkey,
       dbid,
       instance_number,
       hour,
-      stat_name)
-SELECT pkey, dbid, instance_number, hour, stat_name, cnt,
-       avg_value, mode_value, median_value, min_value, max_value,
-	   sum_value, perc50, perc75, perc90, perc95, perc100,
-	       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+      stat_name
+)
+SELECT pkey, 
+       dbid, 
+       instance_number, 
+       hour, 
+       stat_name, 
+       cnt,
+       avg_value, 
+       mode_value, 
+       median_value, 
+       min_value,
+       max_value,
+       sum_value, 
+       percentile_95,
+       :v_dma_source_id AS dma_source_id, 
+       :v_manual_unique_id AS dma_manual_id
 FROM vtimemodel;
-
-
 
