@@ -209,8 +209,8 @@ ZIPFILE=opdb_oracle_${STATSSOURCE}__${V_FILE_TAG}${V_ERR_TAG}.zip
 
 locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
 
-echo "dbmajor = ${dbmajor}"  >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
-echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
+echo "dbmajor = ${dbmajor}"  >> ${OUTPUT_DIR}/opdb__collector_runtime_env__${V_FILE_TAG}.csv
+echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__collector_runtime_env__${V_FILE_TAG}.csv
 
 cd ${OUTPUT_DIR}
 if [ -f opdb__manifest__${V_FILE_TAG}.txt ];
