@@ -26,7 +26,7 @@ WITH v_osstat_all
                      PERCENTILE_CONT(0.05)
                        within GROUP (ORDER BY os.delta_value DESC) OVER (
                          PARTITION BY os.dbid, os.instance_number,
-                       TO_CHAR(os.snap_timE, 'hh24'), os.stat_name) AS percentile_95 --,
+                       TO_CHAR(os.snap_time, 'hh24'), os.stat_name) AS percentile_95 --,
                      -- MAX(os.delta_value) AS peak
               FROM (SELECT snap.snap_time, 
                            s.snap_id, 

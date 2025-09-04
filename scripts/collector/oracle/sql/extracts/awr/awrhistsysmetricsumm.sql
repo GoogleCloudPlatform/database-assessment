@@ -68,7 +68,7 @@ vsysmetricsummperhour as (
          within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC95",
        ROUND(PERCENTILE_CONT(0)
          within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC100"
-    FROM vsysmetricsumm hsm
+    FROM vsysmetricsumm AS hsm
     GROUP  BY pkey,
             hsm.dbid,
             hsm.instance_number,

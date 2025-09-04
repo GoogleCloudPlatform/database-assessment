@@ -37,8 +37,7 @@ SELECT  :v_pkey AS pkey,
         ROUND(MIN(snaps_diff_secs),0) min_snaps_diff_secs,
         ROUND(MAX(snaps_diff_secs),0) max_snaps_diff_secs
 FROM (
-      SELECT
-             s.snap_id,
+      SELECT s.snap_id,
              s.dbid,
              s.instance_number,
              s.begin_interval_time,
@@ -48,8 +47,8 @@ FROM (
                            (begin_interval_time) AS DATE)) * 60 * 60 * 24 ) snaps_diff_secs,
              s.startup_time,
              LAG(s.startup_time,1) OVER (PARTITION BY s.dbid, s.instance_number ORDER BY s.snap_id) lag_startup_time
-      FROM   &s_tblprefix._hist_snapshot s
-      WHERE  s.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+      FROM &s_tblprefix._hist_snapshot s
+      WHERE s.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
         AND dbid = :v_dbid
      )
 WHERE startup_time = lag_startup_time

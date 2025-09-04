@@ -22,10 +22,10 @@ exec dbms_application_info.set_action('awrsnapdetails');
 
 WITH vawrsnap as (
 SELECT  :v_pkey AS pkey,
-        dbid, 
-        instance_number, 
+        dbid,
+        instance_number,
         hour,
-        min(snap_id) min_snap_id, 
+        min(snap_id) min_snap_id,
         max(snap_id) max_snap_id,
         TO_CHAR(min(snap_time), 'YYYY-MM-DD HH24:MI:SS') min_begin_interval_time,
         TO_CHAR(max(snap_time), 'YYYY-MM-DD HH24:MI:SS') max_begin_interval_time,
@@ -44,31 +44,32 @@ FROM (
                hour,
                snaps_diff_secs
         FROM (
-		SELECT
-		       s.snap_id,
-		       s.dbid,
-		       s.instance_number,
-		       s.snap_time,
-		       TO_CHAR(s.snap_time,'hh24') hour,
-		       NVL(DECODE(GREATEST(snap_time, NVL(LAG(snap_time)
-							OVER (
-							  PARTITION BY s.dbid, s.instance_number
-							  ORDER BY s.snap_id), SYSDATE)), snap_time, snap_time - LAG(snap_time)
-												     over (
-												       PARTITION BY s.dbid, s.instance_number
-												       ORDER BY s.snap_id),
-										    0), 0) * 60 * 60 * 24 AS snaps_diff_secs,
-                       s.startup_time,
-                       LAG(s.startup_time,1) OVER (PARTITION BY instance_number ORDER BY snap_time) AS lag_startup_time
-		FROM   STATS$SNAPSHOT s
-		WHERE  s.snap_time BETWEEN :v_min_snaptime AND :v_max_snaptime
-		  AND dbid = :v_dbid
-		ORDER BY s.snap_id )
+              SELECT
+                     s.snap_id,
+                     s.dbid,
+                     s.instance_number,
+                     s.snap_time,
+                     TO_CHAR(s.snap_time,'hh24') hour,
+                     NVL(DECODE(GREATEST(snap_time, NVL(LAG(snap_time)
+                                                        OVER (
+                                                        PARTITION BY s.dbid, s.instance_number
+                                                        ORDER BY s.snap_id), SYSDATE)), snap_time, snap_time - LAG(snap_time)
+                                                                                                               OVER (
+                                                                                                               PARTITION BY s.dbid, s.instance_number
+                                                                                                               ORDER BY s.snap_id),
+                                0), 0) * 60 * 60 * 24 AS snaps_diff_secs,
+                     s.startup_time,
+                     LAG(s.startup_time,1) OVER (PARTITION BY instance_number ORDER BY snap_time) AS lag_startup_time
+              FROM stats$snapshot s
+              WHERE s.snap_time BETWEEN :v_min_snaptime AND :v_max_snaptime
+                AND dbid = :v_dbid
+              ORDER BY s.snap_id
+             )
         WHERE startup_time = lag_startup_time
       )
-GROUP BY :v_pkey, 
-         dbid, 
-         instance_number, 
+GROUP BY :v_pkey,
+         dbid,
+         instance_number,
          hour
 )
 SELECT pkey,
@@ -77,16 +78,16 @@ SELECT pkey,
        hour,
        min_snap_id,
        max_snap_id,
-       min_begin_interval_time ,
+       min_begin_interval_time,
        max_begin_interval_time,
        cnt,
        sum_snaps_diff_secs,
        avg_snaps_diff_secs,
-       median_snaps_diff_secs ,
+       median_snaps_diff_secs,
        mode_snaps_diff_secs,
        min_snaps_diff_secs,
        max_snaps_diff_secs,
-       :v_dma_source_id AS dma_source_id, 
+       :v_dma_source_id AS dma_source_id,
        :v_manual_unique_id AS dma_manual_id
 FROM vawrsnap;
 

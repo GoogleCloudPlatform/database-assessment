@@ -313,17 +313,17 @@ vsrc AS (
             a.type
     ) src
     LEFT JOIN &s_tblprefix._triggers t
-        ON &s_t_con_id. = src.con_id
-        AND t.owner = src.owner
-        AND t.trigger_name = src.name
+           ON &s_t_con_id. = src.con_id
+          AND t.owner = src.owner
+          AND t.trigger_name = src.name
     WHERE
         (
-            t.trigger_name IS NULL
-            AND src.owner NOT IN
+             t.trigger_name IS NULL
+         AND src.owner NOT IN
 @sql/extracts/exclude_schemas.sql
         )
         OR (
-            t.base_object_type IN ('DATABASE', 'SCHEMA')
+                t.base_object_type IN ('DATABASE', 'SCHEMA')
             AND t.status = 'ENABLED'
             AND (t.owner, t.trigger_name) NOT IN (
                 ('SYS', 'XDB_PI_TRIG'),
@@ -415,9 +415,9 @@ vtabcons AS (
             DECODE(b.constraint_type, 'S', 1, NULL) AS suplog
         FROM &s_tblprefix._tables a
         LEFT OUTER JOIN &s_tblprefix._constraints b
-            ON &s_a_con_id. = &s_b_con_id.
-            AND a.owner = b.owner
-            AND a.table_name = b.table_name
+                     ON &s_a_con_id. = &s_b_con_id.
+                    AND a.owner = b.owner
+                    AND a.table_name = b.table_name
         WHERE a.owner NOT IN
 @sql/extracts/exclude_schemas.sql
     )
@@ -548,50 +548,50 @@ SELECT
     :v_manual_unique_id AS dma_manual_id
 FROM vobj
 LEFT OUTER JOIN tblinfo ti
-    ON ti.owner = vobj.owner
-    AND ti.table_name = vobj.object_name
-    AND ti.con_id = vobj.con_id
-    AND vobj.object_type = 'TABLE'
+             ON ti.owner = vobj.owner
+            AND ti.table_name = vobj.object_name
+            AND ti.con_id = vobj.con_id
+            AND vobj.object_type = 'TABLE'
 LEFT OUTER JOIN &s_tblprefix._part_tables p
-    ON ti.owner = p.owner
-    AND ti.table_name = p.table_name
-    AND ti.con_id = &s_p_con_id.
+             ON ti.owner = p.owner
+            AND ti.table_name = p.table_name
+            AND ti.con_id = &s_p_con_id.
 LEFT OUTER JOIN subpartinfo sp
-    ON sp.table_owner = p.owner
-    AND sp.table_name = p.table_name
-    AND sp.con_id = &s_p_con_id.
+             ON sp.table_owner = p.owner
+            AND sp.table_name = p.table_name
+            AND sp.con_id = &s_p_con_id.
 LEFT OUTER JOIN mv
-    ON mv.con_id = ti.con_id
-    AND mv.owner = ti.owner
-    AND mv.mview_name = ti.table_name
+             ON mv.con_id = ti.con_id
+            AND mv.owner = ti.owner
+            AND mv.mview_name = ti.table_name
 LEFT OUTER JOIN coltypes ct
-    ON ct.owner = ti.owner
-    AND ct.table_name = ti.table_name
-    AND ct.con_id = ti.con_id
+             ON ct.owner = ti.owner
+            AND ct.table_name = ti.table_name
+            AND ct.con_id = ti.con_id
 LEFT OUTER JOIN vexttab ext
-    ON ext.con_id = ti.con_id
-    AND ext.owner = ti.owner
-    AND ext.table_name = ti.table_name
+             ON ext.con_id = ti.con_id
+            AND ext.owner = ti.owner
+            AND ext.table_name = ti.table_name
 LEFT OUTER JOIN vsrc
-    ON vsrc.con_id = vobj.con_id
-    AND vsrc.owner = vobj.owner
-    AND vsrc.name = vobj.object_name
-    AND vsrc.type = vobj.object_type
+             ON vsrc.con_id = vobj.con_id
+            AND vsrc.owner = vobj.owner
+            AND vsrc.name = vobj.object_name
+            AND vsrc.type = vobj.object_type
 LEFT OUTER JOIN vidxtype vi
-    ON vi.con_id = vobj.con_id
-    AND vi.owner = vobj.owner
-    AND vi.index_name = vobj.object_name
-    AND vobj.object_type LIKE '%INDEX%'
+             ON vi.con_id = vobj.con_id
+            AND vi.owner = vobj.owner
+            AND vi.index_name = vobj.object_name
+            AND vobj.object_type LIKE '%INDEX%'
 LEFT OUTER JOIN vseg vs
-    ON vs.con_id = vobj.con_id
-    AND vs.owner = vobj.owner
-    AND vs.segment_name = vobj.object_name
+             ON vs.con_id = vobj.con_id
+            AND vs.owner = vobj.owner
+            AND vs.segment_name = vobj.object_name
 LEFT OUTER JOIN vtabcons
-    ON vtabcons.con_id = ti.con_id
-    AND vtabcons.owner = ti.owner
-    AND vtabcons.table_name = ti.table_name
+             ON vtabcons.con_id = ti.con_id
+            AND vtabcons.owner = ti.owner
+            AND vtabcons.table_name = ti.table_name
 LEFT OUTER JOIN nncols
-    ON nncols.con_id = vtabcons.con_id
-    AND nncols.owner = vtabcons.owner
-    AND nncols.table_name = vtabcons.table_name
+             ON nncols.con_id = vtabcons.con_id
+            AND nncols.owner = vtabcons.owner
+            AND nncols.table_name = vtabcons.table_name
 ;

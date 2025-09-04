@@ -14,7 +14,6 @@
 -- limitations under the License.
 --
 exec dbms_application_info.set_action('pdbsinfo');
-
 WITH opdbinfo AS (
     SELECT :v_pkey AS pkey,
            dbid,
@@ -119,3 +118,4 @@ SELECT i.pkey,
 FROM  vpdbinfo i
       LEFT OUTER JOIN mem_stats m ON i.con_id = m.con_id
       LEFT OUTER JOIN vpdbmode p ON i.con_id = p.con_id;
+

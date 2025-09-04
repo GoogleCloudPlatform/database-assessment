@@ -322,7 +322,7 @@ collectionUserName=""
 collectionUserPass=""
 dbType=""
 statsSrc=""
-connStr=""
+connStr=${DMACONNSTR}
 manualUniqueId=""
 statsWindow=30
 
@@ -373,7 +373,7 @@ statsWindow=30
  if [[ "${connStr}" == "" ]] ; then
 	 if [[ "${hostName}" != "" && "${port}" != "" && "${databaseService}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
 		 connStr="${collectionUserName}/${collectionUserPass}@//${hostName}:${port}/${databaseService}"
-		 echo Got Connection ${connStr}
+		 echo Connecting to ${hostName}:${port}/${databaseService}
 	 else
 		 echo "Connection information incomplete"
 		 printUsage

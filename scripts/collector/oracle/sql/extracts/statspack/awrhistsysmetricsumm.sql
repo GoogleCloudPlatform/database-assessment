@@ -15,40 +15,23 @@
 --
 exec dbms_application_info.set_action('awrhistsysmetricsumm');
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 WITH vsysmetricsumm AS (
 SELECT :v_pkey AS pkey,
        hsm.dbid,
        hsm.instance_number,
-       TO_CHAR(dhsnap.snap_time, 'hh24')          hour,
-       hsm.name                              metric_name,
+       TO_CHAR(dhsnap.snap_time, 'hh24')  AS hour,
+       hsm.name                           AS metric_name,
        NULL                               AS metric_unit,
-       NULL                                  avg_value,
-       null                                  mode_value,
-       null                                  median_value,
-       NULL                                  min_value,
-       NULL                                  max_value,
-       null                                  sum_value,
-       null                                  "PERC50",
-       null                                  "PERC75",
-       null                                  "PERC90",
+       NULL                               AS avg_value,
+       NULL                               AS mode_value,
+       NULL                               AS median_value,
+       NULL                               AS min_value,
+       NULL                               AS max_value,
+       NULL                               AS sum_value,
        -- Handle cases where STANDARD_DEVIATION is displayed as NULL but when compared is > .9 repeating but less than 1.
        -- Oberved in 11.2 and 19.3.  Seems to occur when MINVAL < AVERAGE = MAXVAL for 'User Limit %' and 'Session Limit %' metrics.
        -- In most such cases, STARNDARD_DEVIATION = 0, so that is what we will do here.
-       --hsm.AVERAGE+(2* CASE WHEN ( standard_deviation > (.999999999999999999999999999) AND standard_deviation < 1 )
+       -- hsm.AVERAGE+(2* CASE WHEN ( standard_deviation > (.999999999999999999999999999) AND standard_deviation < 1 )
        --                      AND ( MINVAL = 0 AND AVERAGE = MAXVAL )  then 0 else standard_deviation end ) "PERC95",
        AVG(value) OVER (PARTITION BY hsm.dbid, hsm.instance_number,  TO_CHAR(dhsnap.snap_time, 'hh24')  , hsm.name) + (2 * STDDEV (value)  OVER (PARTITION BY hsm.dbid, hsm.instance_number,  TO_CHAR(dhsnap.snap_time, 'hh24')  , hsm.name)) AS "PERC95",
        NULL                                   "PERC100"
