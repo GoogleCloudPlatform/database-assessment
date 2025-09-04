@@ -8,7 +8,8 @@ MINDAYS=7
 
 function checkStats
 {
- sqlplus -S  -L "${1}${2} " << EOF
+ sqlplus -S  -L /nolog  << EOF
+ connect ${1}${2}
  set heading off
  set feedback off
  set trimout on

@@ -50,7 +50,8 @@ do
  fi
  retcd=-1
  echo AWR_FLAG set to ${awr_flag}
- sqlplus "${sys}${db} as sysdba" << EOF
+ sqlplus /nolog   << EOF
+ connect ${sys}${db} as sysdba
  SET ECHO ON
  SET SERVEROUTPUT ON SIZE 50000;
  WHENEVER SQLERROR EXIT FAILURE;

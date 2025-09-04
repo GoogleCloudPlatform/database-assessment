@@ -7,7 +7,8 @@ CONFIGFILE=dma_db_list.csv
 
 function checkConnection
 {
- sqlplus -s -L "${1}${2} " << EOF
+ sqlplus -s -L /nolog  << EOF
+ connect ${1}${2}
  set heading off
  set feedback off
  set trimout on

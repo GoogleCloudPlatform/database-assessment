@@ -27,7 +27,8 @@ do
  fi
  cd ${CURRD}/..
  # Run a collection in the background, capturing screen output to a log file.
- time  ./collect-data.sh --dbType oracle --connectionStr ''${user}${db}'' --statsSrc ${statssrc} ${statsparam} 2>&1 | tee DMA_COLLECT_DATA_${logname}_$(date +%Y%m%d%H%M%S)_$$.log &
+ export DMACONNSTR="${user}${db}"
+ time  ./collect-data.sh --dbType oracle --statsSrc ${statssrc} ${statsparam} 2>&1 | tee DMA_COLLECT_DATA_${logname}_$(date +%Y%m%d%H%M%S)_$$.log &
 
 # Wait a couple of seconds before starting another collection.
  sleep 2

@@ -284,7 +284,7 @@ function printUsage
 {
 echo " Usage:"
 echo "  Parameters"
-echo ""
+echo
 echo "  Connection definition must one of:"
 echo "      {"
 echo "        --connectionStr       Oracle EasyConnect string formatted as {user}/{password}@//{db host}:{listener port}/{service name}"
@@ -295,15 +295,19 @@ echo "        --databaseService     Database service name"
 echo "        --collectionUserName  Database user name"
 echo "        --collectionUserPass  Database password"
 echo "      }"
+echo "    The connection definition can also be defined by setting the environment variable DMACONNSTR instead of specifying it on the command line."
+echo "    This will prevent the connection string from showing up in a process list."
+echo "    If the connection string is supplied on the command line, it will override the environment variable."
+echo
 echo "  Performance statistics source"
 echo "      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.   When using STATSPACK, see note about --statsWindow parameter below."
-echo ""
+echo 
 echo "  Performance statistics window"
 echo "      --statsWindow           Optional. Number of days of performance stats to collect.  Must be one of 7, 30.  Default is 30."
 echo "                              NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION."
 echo "                              IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8"
 echo "                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR."
-echo
+echo 
 echo
 echo " Example:"
 echo
@@ -311,7 +315,12 @@ echo
 echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR"
 echo " or"
 echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR"
-
+echo 
+echo " To use the environment variable method of defining the connection:"
+echo
+echo '  export DMACONNSTR="{user}/{password}@//{db host}:{listener port}/{service name}" '
+echo "  ./collect-data.sh  --statsSrc AWR"
+echo 
 }
 ### Validate input
 
@@ -322,7 +331,7 @@ collectionUserName=""
 collectionUserPass=""
 dbType=""
 statsSrc=""
-connStr=""
+connStr="${DMACONNSTR}"
 manualUniqueId=""
 statsWindow=30
 
@@ -373,7 +382,7 @@ statsWindow=30
  if [[ "${connStr}" == "" ]] ; then
 	 if [[ "${hostName}" != "" && "${port}" != "" && "${databaseService}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
 		 connStr="${collectionUserName}/${collectionUserPass}@//${hostName}:${port}/${databaseService}"
-		 echo Got Connection ${connStr}
+		 echo Connecting to ${hostName}:${port}/${databaseService}
 	 else
 		 echo "Connection information incomplete"
 		 printUsage

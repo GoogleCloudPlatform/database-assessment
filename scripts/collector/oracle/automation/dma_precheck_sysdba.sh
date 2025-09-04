@@ -11,7 +11,8 @@ LOGNAME=dma_precheck_sysdba_$(date +%Y%m%d%H%M%S).log
 
 function checkConnection
 {
- sqlplus -s -L "${1}${2} as sysdba" << EOF
+ sqlplus -s -L /nolog << EOF
+ connect ${1}${2} as sysdba
  set heading off
  set feedback off
  set trimout on
@@ -23,25 +24,19 @@ function precheckSysdba
 {
 for x in $(cat "${CONFIGFILE}" | grep -v '^#' | grep -v '^$')
 do
- sys=$(echo $x | cut -d ',' -f 1)
- db=$(echo $x | cut -d ',' -f 3)
- echo -n Testing SYSDBA connection to database ${db}
- retcd=$(sqlplus -s "${sys}${db} as sysdba" << EOF
- set heading off
- set feedback off
- set trimout on
- SELECT 'SUCCESS' FROM dual;
-EOF)
-retcd=$(checkConnection "${sys}" "${db}" )
-success=$(echo "${retcd}" | grep SUCCESS)
-if [ "${success}" = "SUCCESS" ]
-then
-  echo " : SUCCESS"
-else
-  echo " : FAILED"
-  echo "${retcd}"
-  echo
-fi
+  sys=$(echo $x | cut -d ',' -f 1)
+  db=$(echo $x | cut -d ',' -f 3)
+  echo -n Testing SYSDBA connection to database ${db}
+  retcd=$(checkConnection "${sys}" "${db}" )
+  success=$(echo "${retcd}" | grep SUCCESS)
+  if [ "${success}" = "SUCCESS" ]
+  then
+    echo " : SUCCESS"
+  else
+    echo " : FAILED"
+    echo "${retcd}"
+    echo
+  fi
 done 2>&1 | tee $LOGNAME
 
 PASS=$(grep SUCCESS $LOGNAME | wc -l)
