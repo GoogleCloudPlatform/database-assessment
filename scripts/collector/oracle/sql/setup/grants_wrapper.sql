@@ -290,7 +290,9 @@ BEGIN
       rectype_('SELECT','SYS','V_$SYSTEM_PARAMETER'),
       rectype_('SELECT','SYS','V_$TEMP_SPACE_HEADER'),
       rectype_('SELECT','SYS','V_$VERSION'),
-      rectype_('SELECT','SYSTEM','LOGSTDBY$SKIP_SUPPORT')
+      rectype_('SELECT','SYSTEM','LOGSTDBY$SKIP_SUPPORT'),
+      rectype_('SELECT','SYS','CDB_DEPENDENCIES'),
+      rectype_('SELECT','SYS','DBA_DEPENDENCIES')
     );
   grant_privs(v_source_table_list);
 
