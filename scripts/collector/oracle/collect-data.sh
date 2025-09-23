@@ -38,10 +38,9 @@ SED=$(which sed)
 MD5SUM=$(which md5sum 2>/dev/null)
 MD5COL=1
 
-if [ "$(uname)" = "SunOS" ]
-then
-      GREP=/usr/xpg4/bin/grep
-      SED=/usr/xpg4/bin/sed
+if [ "$(uname)" = "SunOS" ]; then
+  GREP=/usr/xpg4/bin/grep
+  SED=/usr/xpg4/bin/sed
 fi
 
 if [ "$(uname)" = "HP-UX" ]; then
@@ -52,50 +51,47 @@ if [ "$(uname)" = "HP-UX" ]; then
 fi
 
 ZIP=$(which zip 2>/dev/null)
-if [ "${ZIP}" = "" ]
- then
+if [ "${ZIP}" = "" ]; then
   GZIP=$(which gzip 2>/dev/null)
 fi
 
 if [ ! -d ${LOG_DIR} ]; then
-   mkdir -p ${LOG_DIR}
+  mkdir -p ${LOG_DIR}
 fi
 if [ ! -d ${OUTPUT_DIR} ]; then
-   mkdir -p ${OUTPUT_DIR}
+  mkdir -p ${OUTPUT_DIR}
 fi
 
 # Check if running on Windows Subsystem for Linux
 ISWIN=$(uname -a | grep -i microsoft |wc -l)
-if [ ${ISWIN} -eq 1 ]
-  then
-	  SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
-          SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
-	  SQLPLUS=sqlplus.exe
+if [ ${ISWIN} -eq 1 ]; then
+  SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
+  SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
+  SQLPLUS=sqlplus.exe
 fi
 
 # Check if running on Cygwin
 ISCYG=$(uname -a | grep Cygwin | wc -l)
-if [ ${ISCYG} -eq 1 ]
- then
-	  SQL_DIR=$(cygpath -w ${SCRIPT_DIR})/sql
-          SQLOUTPUT_DIR=$(cygpath -w ${SQLOUTPUT_DIR})
-	  SQLPLUS=sqlplus.exe
+if [ ${ISCYG} -eq 1 ]; then
+  SQL_DIR=$(cygpath -w ${SCRIPT_DIR})/sql
+  SQLOUTPUT_DIR=$(cygpath -w ${SQLOUTPUT_DIR})
+  SQLPLUS=sqlplus.exe
 fi
 
 ### Import logging & helper functions
 #############################################################################
 
-function checkVersion {
-connectString="$1"
-OpVersion=$2
+function checkVersion() {
+  connectString="$1"
+  OpVersion=$2
 
-if ! [ -x "$(command -v ${SQLPLUS})" ]; then
-  echo "Could not find ${SQLPLUS} command. Source in environment and try again"
-  echo "Exiting..."
-  exit 1
-fi
+  if ! [ -x "$(command -v ${SQLPLUS})" ]; then
+    echo "Could not find ${SQLPLUS} command. Source in environment and try again"
+    echo "Exiting..."
+    exit 1
+  fi
 
-${SQLPLUS} -s /nolog << EOF
+  ${SQLPLUS} -s /nolog << EOF
 SET DEFINE OFF
 connect ${connectString}
 @${SQL_DIR}/op_set_sql_env.sql
@@ -108,21 +104,21 @@ exit;
 EOF
 }
 
-function executeOP {
-connectString="$1"
-OpVersion=$2
-DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
-manualUniqueId="${4}"
-statsWindow=${5}
+function executeOP() {
+  connectString="$1"
+  OpVersion=$2
+  DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
+  manualUniqueId="${4}"
+  statsWindow=${5}
 
-if ! [ -x "$(command -v ${SQLPLUS})" ]; then
-  echo "Could not find ${SQLPLUS} command. Source in environment and try again"
-  echo "Exiting..."
-  exit 1
-fi
+  if ! [ -x "$(command -v ${SQLPLUS})" ]; then
+    echo "Could not find ${SQLPLUS} command. Source in environment and try again"
+    echo "Exiting..."
+    exit 1
+  fi
 
 
-${SQLPLUS} -s /nolog << EOF
+  ${SQLPLUS} -s /nolog << EOF
 SET DEFINE OFF
 connect ${connectString}
 @${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${SQLOUTPUT_DIR} "${manualUniqueId}" ${statsWindow}
@@ -131,164 +127,157 @@ EOF
 
 }
 
-function createErrorLog {
-V_FILE_TAG=$1
-echo "Checking for errors..."
-$GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
-retval=$?
-if [ ! -f  ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ]; then
-  echo "Error creating error log.  Exiting..."
-  return $retval
-fi
-if [ -f  ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv ]; then
-  $GREP 'sys.dbms_qopatch.get_opatch_lsinventory' ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv >> ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
-fi
+function createErrorLog() {
+  V_FILE_TAG=$1
+  echo "Checking for errors..."
+  $GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+  retval=$?
+  if [ ! -f  ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ]; then
+    echo "Error creating error log.  Exiting..."
+    return $retval
+  fi
+  if [ -f  ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv ]; then
+    $GREP 'sys.dbms_qopatch.get_opatch_lsinventory' ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv >> ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+  fi
 }
 
-function cleanupOpOutput  {
-V_FILE_TAG=$1
-echo "Preparing files for compression."
-for outfile in  ${OUTPUT_DIR}/opdb*${V_FILE_TAG}.csv
-do
- if [ -f $outfile ] ; then
-  if [ $(uname) = "SunOS" ]
-  then
-    sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
-    cp sed_${V_FILE_TAG}.tmp ${outfile}
-    rm sed_${V_FILE_TAG}.tmp
-  else if [ $(uname) = "AIX" ]
-  then
-    sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
-    cp sed_${V_FILE_TAG}.tmp ${outfile}
-    rm sed_${V_FILE_TAG}.tmp
-  else if [ "$(uname)" = "HP-UX" ]
-  then
-    sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
-    cp sed_${V_FILE_TAG}.tmp ${outfile}
-    rm sed_${V_FILE_TAG}.tmp
-  else
-    sed -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d' ${outfile} > sed_${V_FILE_TAG}.tmp
-    cp sed_${V_FILE_TAG}.tmp ${outfile}
-    rm sed_${V_FILE_TAG}.tmp
-  fi
-  fi
-  fi
- fi
-done
+function cleanupOpOutput() {
+  V_FILE_TAG=$1
+  echo "Preparing files for compression."
+  for outfile in  ${OUTPUT_DIR}/opdb*${V_FILE_TAG}.csv
+  do
+    if [ -f $outfile ] ; then
+      if [ $(uname) = "SunOS" ]; then
+        sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
+        cp sed_${V_FILE_TAG}.tmp ${outfile}
+        rm sed_${V_FILE_TAG}.tmp
+      else
+        if [ $(uname) = "AIX" ]; then
+          sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
+          cp sed_${V_FILE_TAG}.tmp ${outfile}
+          rm sed_${V_FILE_TAG}.tmp
+        else
+          if [ "$(uname)" = "HP-UX" ]; then
+            sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
+            cp sed_${V_FILE_TAG}.tmp ${outfile}
+            rm sed_${V_FILE_TAG}.tmp
+          else
+            sed -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d' ${outfile} > sed_${V_FILE_TAG}.tmp
+            cp sed_${V_FILE_TAG}.tmp ${outfile}
+            rm sed_${V_FILE_TAG}.tmp
+          fi
+        fi
+      fi
+    fi
+  done
 }
 
-function compressOpFiles  {
-V_FILE_TAG=$1
-DBTYPE=$2
-V_ERR_TAG=""
-echo ""
-echo "Archiving output files with tag ${V_FILE_TAG}"
-CURRENT_WORKING_DIR=$(pwd)
-cp ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
-if [ -f VERSION.txt ]; then
-  cp VERSION.txt ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
-else
-  echo "No Version file found" >  ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
-fi
-ERRCNT=$(wc -l < ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log)
-if [ ! -f ${OUTPUT_DIR}/opdb__eoj__${V_FILE_TAG}.csv ] ; then
-	ERRCNT=$((${ERRCNT} + 1))
-	echo "End of job marker file not found.  Data collection did not complete."
-fi
-if [[ ${ERRCNT} -ne 0 ]]
-then
-  V_ERR_TAG="_ERROR"
-  retval=1
-  echo "Errors reported during collection:"
-  cat ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
-  echo " "
-  echo "Please rerun the extract after correcting the error condition."
-fi
-
-TARFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tar
-ZIPFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.zip
-
-locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
-
-echo "dbmajor = ${dbmajor}"  >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
-echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
-
-cd ${OUTPUT_DIR}
-if [ -f opdb__manifest__${V_FILE_TAG}.txt ];
-then
-  rm opdb__manifest__${V_FILE_TAG}.txt
-fi
-
-# Skip creating the manifest file if the platform does not have MD5SUM installed
-for file in $(ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt)
-do
- if [ -f "$MD5SUM" ] ; then
-   MD5=$(${MD5SUM} $file | cut -d ' ' -f ${MD5COL})
- else MD5="N/A"
- fi
- echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
-done
-
-if [ ! "${ZIP}" = "" ]
-then
-  $ZIP $ZIPFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
-  OUTFILE=$ZIPFILE
-else
-  tar cvf $TARFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
-  $GZIP $TARFILE
-  OUTFILE=${TARFILE}.gz
-fi
-
-if [ -f $OUTFILE ]
-then
-  rm  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
-fi
-
-cd ${CURRENT_WORKING_DIR}
-echo ""
-echo "Step completed."
-echo ""
-return $retval
-}
-
-function getVersion  {
+function compressOpFiles() {
+  V_FILE_TAG=$1
+  DBTYPE=$2
+  V_ERR_TAG=""
+  echo ""
+  echo "Archiving output files with tag ${V_FILE_TAG}"
+  CURRENT_WORKING_DIR=$(pwd)
+  cp ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
   if [ -f VERSION.txt ]; then
-   githash=$(cat VERSION.txt | cut -d '(' -f 2 | tr -d ')' )
-  else githash="NONE"
+    cp VERSION.txt ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
+  else
+    echo "No Version file found" >  ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
+  fi
+  ERRCNT=$(wc -l < ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log)
+  if [ ! -f ${OUTPUT_DIR}/opdb__eoj__${V_FILE_TAG}.csv ] ; then
+    ERRCNT=$((${ERRCNT} + 1))
+    echo "End of job marker file not found.  Data collection did not complete."
+  fi
+  if [[ ${ERRCNT} -ne 0 ]]; then
+    V_ERR_TAG="_ERROR"
+    retval=1
+    echo "Errors reported during collection:"
+    cat ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
+    echo " "
+    echo "Please rerun the extract after correcting the error condition."
+  fi
+
+  TARFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tar
+  ZIPFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.zip
+
+  locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
+
+  echo "dbmajor = ${dbmajor}"  >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
+  echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
+
+  cd ${OUTPUT_DIR}
+  if [ -f opdb__manifest__${V_FILE_TAG}.txt ]; then
+    rm opdb__manifest__${V_FILE_TAG}.txt
+  fi
+
+  # Skip creating the manifest file if the platform does not have MD5SUM installed
+  for file in $(ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt)
+  do
+    if [ -f "$MD5SUM" ] ; then
+      MD5=$(${MD5SUM} $file | cut -d ' ' -f ${MD5COL})
+    else
+      MD5="N/A"
+    fi
+    echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
+  done
+
+  if [ ! "${ZIP}" = "" ]; then
+    $ZIP $ZIPFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
+    OUTFILE=$ZIPFILE
+  else
+    tar cvf $TARFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
+    $GZIP $TARFILE
+    OUTFILE=${TARFILE}.gz
+  fi
+
+  if [ -f $OUTFILE ]; then
+    rm  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
+  fi
+
+  cd ${CURRENT_WORKING_DIR}
+  echo ""
+  echo "Step completed."
+  echo ""
+  return $retval
+}
+
+function getVersion() {
+  if [ -f VERSION.txt ]; then
+    githash=$(cat VERSION.txt | cut -d '(' -f 2 | tr -d ')' )
+  else
+    githash="NONE"
   fi
   echo "$githash"
 }
 
-function printExtractorVersion
-{
-if [ "$1" == "NONE" ];
-then
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "This appears to be an unsupported version of this code. "
-  echo "Please download the latest stable version from "
-  echo "https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-else
-  echo "Using release version $1"
-fi
+function printExtractorVersion() {
+  if [ "$1" == "NONE" ]; then
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "This appears to be an unsupported version of this code. "
+    echo "Please download the latest stable version from "
+    echo "https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-oracle.zip"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  else
+    echo "Using release version $1"
+  fi
 
 }
 
 
-function getDMASourceId
-{
+function getDMASourceId() {
   echo $(grep v_dma_source_id ${OUTPUT_DIR}/opdb__defines__${1} | cut -d '=' -f 2 | tr -d ' ')
 }
 
 
-function generate_OEE_config
-{
+function generate_OEE_config() {
   oee_guid="${1}"
   oee_database="${2}"
   oee_hostName="${3}"
@@ -302,37 +291,36 @@ function generate_OEE_config
 }
 
 
-function printUsage
-{
-echo " Usage:"
-echo "  Parameters"
-echo ""
-echo "  Connection definition must one of:"
-echo "      {"
-echo "        --connectionStr       Oracle EasyConnect string formatted as {user}/{password}@//{db host}:{listener port}/{service name}"
-echo "       or"
-echo "        --hostName            Database server host name"
-echo "        --port                Database Listener port"
-echo "        --databaseService     Database service name"
-echo "        --collectionUserName  Database user name"
-echo "        --collectionUserPass  Database password"
-echo "      }"
-echo "  Performance statistics source"
-echo "      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.   When using STATSPACK, see note about --statsWindow parameter below."
-echo ""
-echo "  Performance statistics window"
-echo "      --statsWindow           Optional. Number of days of performance stats to collect.  Must be one of 7, 30.  Default is 30."
-echo "                              NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION."
-echo "                              IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8"
-echo "                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR."
-echo
-echo
-echo " Example:"
-echo
-echo
-echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR"
-echo " or"
-echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR"
+function printUsage() {
+  echo " Usage:"
+  echo "  Parameters"
+  echo ""
+  echo "  Connection definition must one of:"
+  echo "      {"
+  echo "        --connectionStr       Oracle EasyConnect string formatted as {user}/{password}@//{db host}:{listener port}/{service name}"
+  echo "       or"
+  echo "        --hostName            Database server host name"
+  echo "        --port                Database Listener port"
+  echo "        --databaseService     Database service name"
+  echo "        --collectionUserName  Database user name"
+  echo "        --collectionUserPass  Database password"
+  echo "      }"
+  echo "  Performance statistics source"
+  echo "      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.   When using STATSPACK, see note about --statsWindow parameter below."
+  echo ""
+  echo "  Performance statistics window"
+  echo "      --statsWindow           Optional. Number of days of performance stats to collect.  Must be one of 7, 30.  Default is 30."
+  echo "                              NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION."
+  echo "                              IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8"
+  echo "                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR."
+  echo
+  echo
+  echo " Example:"
+  echo
+  echo
+  echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR"
+  echo " or"
+  echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR"
 
 }
 ### Validate input
@@ -349,77 +337,77 @@ manualUniqueId=""
 statsWindow=30
 collectOEE="Y"
 oeeGroup="NONE"
-oeeRunId=$(date +%Y%m%d%H%M%S)
+oeeRunId=$(date +%Ym%d%H%M%S)
 
- if [[ $(($# & 1)) == 1 ]] ;
- then
+if [[ $(($# & 1)) == 1 ]] ; then
   echo "Invalid number of parameters "
   printUsage
   exit
- fi
+fi
 
- while (( "$#" )); do
-	 if   [[ "$1" == "--hostName" ]];           then hostName="${2}"
-	 elif [[ "$1" == "--port" ]];               then port="${2}"
-	 elif [[ "$1" == "--databaseService" ]];    then databaseService="${2}"
-	 elif [[ "$1" == "--collectionUserName" ]]; then collectionUserName="${2}"
-	 elif [[ "$1" == "--collectionUserPass" ]]; then collectionUserPass="${2}"
-	 elif [[ "$1" == "--dbType" ]];             then dbType=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
-	 elif [[ "$1" == "--statsSrc" ]];           then statsSrc=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
-	 elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
-	 elif [[ "$1" == "--manualUniqueId" ]];     then manualUniqueId="${2}"
-	 elif [[ "$1" == "--statsWindow" ]];        then statsWindow="${2}"
-         elif [[ "$1" == "--collectOEE" ]];         then collectOEE="${2}"
-         elif [[ "$1" == "--oeeGroup"   ]];         then oeeGroup="${2}"
-         elif [[ "$1" == "--oeeRunId"   ]];         then oeeRunId="${2}"
-	 else
-		 echo "Unknown parameter ${1}"
-		 printUsage
-		 exit
-	 fi
-	 shift 2
- done
+while (( "$#" )); do
+  if   [[ "$1" == "--hostName" ]];           then hostName="${2}"
+  elif [[ "$1" == "--port" ]];               then port="${2}"
+  elif [[ "$1" == "--databaseService" ]];    then databaseService="${2}"
+  elif [[ "$1" == "--collectionUserName" ]]; then collectionUserName="${2}"
+  elif [[ "$1" == "--collectionUserPass" ]]; then collectionUserPass="${2}"
+  elif [[ "$1" == "--dbType" ]];             then dbType=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
+  elif [[ "$1" == "--statsSrc" ]];           then statsSrc=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
+  elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
+  elif [[ "$1" == "--manualUniqueId" ]];     then manualUniqueId="${2}"
+  elif [[ "$1" == "--statsWindow" ]];        then statsWindow="${2}"
+  elif [[ "$1" == "--collectOEE" ]];         then collectOEE="${2}"
+  elif [[ "$1" == "--oeeGroup"   ]];         then oeeGroup="${2}"
+  elif [[ "$1" == "--oeeRunId"   ]];         then oeeRunId="${2}"
+  else
+    echo "Unknown parameter ${1}"
+    printUsage
+    exit
+  fi
+  shift 2
+done
 
- if [[ "${dbType}" != "oracle" ]] ; then
-	 dbType="oracle"
- fi
+if [[ "${dbType}" != "oracle" ]] ; then
+  dbType="oracle"
+fi
 
- if [[ "${statsSrc}" = "awr" ]]; then
-          DIAGPACKACCESS="UseDiagnostics"
- elif [[ "${statsSrc}" = "statspack" ]] ; then
-          DIAGPACKACCESS="NoDiagnostics"
- else
-	 echo No performance data will be collected.
-         DIAGPACKACCESS="nostatspack"
- fi
+if [[ "${statsSrc}" = "awr" ]]; then
+  DIAGPACKACCESS="UseDiagnostics"
+elif [[ "${statsSrc}" = "statspack" ]] ; then
+  DIAGPACKACCESS="NoDiagnostics"
+else
+  echo No performance data will be collected.
+  DIAGPACKACCESS="nostatspack"
+fi
 
- if [[ ${statsWindow} -ne 30 ]] && [[ ${statsWindow} -ne 7 ]] ; then
-	 statsWindow=30
- fi
+if [[ ${statsWindow} -ne 30 ]] && [[ ${statsWindow} -ne 7 ]] ; then
+  statsWindow=30
+fi
 
- if [[ "${connStr}" == "" ]] ; then
-	 if [[ "${hostName}" != "" && "${port}" != "" && "${databaseService}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
-		 connStr="${collectionUserName}/${collectionUserPass}@//${hostName}:${port}/${databaseService}"
-		 echo Got Connection ${connStr}
-	 else
-		 echo "Connection information incomplete"
-		 printUsage
-		 exit
-	 fi
- else
-   # Parse the EZ connect string to get the user/pass for OEE
-   collectionUserName=$(echo ${connStr} | cut -d '/' -f 1)
-   collectionUserPass=$(echo ${connStr} | cut -d '/' -f 2 | cut -d '@' -f 1)
-   hostPort=$(echo ${connStr} | cut -d '/' -f 4)
-   hostName=$(echo ${hostPort} | cut -d ':' -f 1)
-   port=$(echo ${hostPort} | cut -d ':' -f 2)
-   databaseService=$(echo ${connStr} | cut -d '/' -f 5)
- fi
+if [[ "${connStr}" == "" ]] ; then
+  if [[ "${hostName}" != "" && "${port}" != "" && "${databaseService}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
+    connStr="${collectionUserName}/${collectionUserPass}@//${hostName}:${port}/${databaseService}"
+    echo Got Connection ${connStr}
+  else
+    echo "Connection information incomplete"
+    printUsage
+    exit
+  fi
+else
+  # Parse the EZ connect string to get the user/pass for OEE
+  collectionUserName=$(echo ${connStr} | cut -d '/' -f 1)
+  collectionUserPass=$(echo ${connStr} | cut -d '/' -f 2 | cut -d '@' -f 1)
+  hostPort=$(echo ${connStr} | cut -d '/' -f 4)
+  hostName=$(echo ${hostPort} | cut -d ':' -f 1)
+  port=$(echo ${hostPort} | cut -d ':' -f 2)
+  databaseService=$(echo ${connStr} | cut -d '/' -f 5)
+fi
 
- if [[ "${manualUniqueId}" != "" ]]; then
-	 manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
- else manualUniqueId='NA'
- fi
+if [[ "${manualUniqueId}" != "" ]]; then
+  manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+else
+  manualUniqueId='NA'
+fi
 
 
 #############################################################################
@@ -442,8 +430,7 @@ oeeRunId=$(date +%Y%m%d%H%M%S)
 
 connectString="${connStr}"
 sqlcmd_result=$(checkVersion "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | cut -d '~' -f 2)
-if [[ "${sqlcmd_result}" = "" ]];
-then
+if [[ "${sqlcmd_result}" = "" ]]; then
   echo "Unable to connect to the target database using ${connectString}.  Please verify the connection information and target database status."
   exit 255
 fi
@@ -470,13 +457,12 @@ if [ $retval -eq 0 ]; then
   else
     echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
     dbmajor=$((echo ${sqlcmd_result} | cut -d '|' -f1)  |cut -d '.' -f 1)
-    if [ "${dbmajor}" = "10" ]
-    then
-       echo "Oracle 10 support is experimental."
-    else if [ "${dbmajor}" = "09" ]
-      then
-       echo "Oracle 9 support is experimental."
-       DIAGPACKACCESS="NoDiagnostics"
+    if [ "${dbmajor}" = "10" ]; then
+      echo "Oracle 10 support is experimental."
+    else
+      if [ "${dbmajor}" = "09" ]; then
+        echo "Oracle 9 support is experimental."
+        DIAGPACKACCESS="NoDiagnostics"
       fi
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
