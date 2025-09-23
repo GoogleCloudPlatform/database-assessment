@@ -31,6 +31,7 @@ ORACLE_PATH=${SCRIPT_DIR}; export ORACLE_PATH
 TMP_DIR=${SCRIPT_DIR}/tmp
 LOG_DIR=${SCRIPT_DIR}/log
 SQL_DIR=${SCRIPT_DIR}/sql
+OEE_DIR=${SCRIPT_DIR}/oee
 
 GREP=$(which grep)
 SED=$(which sed)
@@ -280,6 +281,27 @@ fi
 }
 
 
+function getDMASourceId
+{
+  echo $(grep v_dma_source_id ${OUTPUT_DIR}/opdb__defines__${1} | cut -d '=' -f 2 | tr -d ' ')
+}
+
+
+function generate_OEE_config
+{
+  oee_guid="${1}"
+  oee_database="${2}"
+  oee_hostName="${3}"
+  oee_port="${4}"
+  oee_user="${5}"
+  oee_pass="${6}"
+  oee_group="${7}"
+  oee_runid="${8}"
+
+  echo ${oee_guid}:${oee_database}://${oee_hostName}:${oee_port}/${oee_database}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid} 
+}
+
+
 function printUsage
 {
 echo " Usage:"
@@ -325,6 +347,9 @@ statsSrc=""
 connStr=""
 manualUniqueId=""
 statsWindow=30
+collectOEE="Y"
+oeeGroup="NONE"
+oeeRunId=$(date +%Y%m%d%H%M%S)
 
  if [[ $(($# & 1)) == 1 ]] ;
  then
@@ -344,6 +369,9 @@ statsWindow=30
 	 elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
 	 elif [[ "$1" == "--manualUniqueId" ]];     then manualUniqueId="${2}"
 	 elif [[ "$1" == "--statsWindow" ]];        then statsWindow="${2}"
+         elif [[ "$1" == "--collectOEE" ]];         then collectOEE="${2}"
+         elif [[ "$1" == "--oeeGroup"   ]];         then oeeGroup="${2}"
+         elif [[ "$1" == "--oeeRunId"   ]];         then oeeRunId="${2}"
 	 else
 		 echo "Unknown parameter ${1}"
 		 printUsage
@@ -351,7 +379,6 @@ statsWindow=30
 	 fi
 	 shift 2
  done
-
 
  if [[ "${dbType}" != "oracle" ]] ; then
 	 dbType="oracle"
@@ -379,6 +406,14 @@ statsWindow=30
 		 printUsage
 		 exit
 	 fi
+ else
+   # Parse the EZ connect string to get the user/pass for OEE
+   collectionUserName=$(echo ${connStr} | cut -d '/' -f 1)
+   collectionUserPass=$(echo ${connStr} | cut -d '/' -f 2 | cut -d '@' -f 1)
+   hostPort=$(echo ${connStr} | cut -d '/' -f 4)
+   hostName=$(echo ${hostPort} | cut -d ':' -f 1)
+   port=$(echo ${hostPort} | cut -d ':' -f 2)
+   databaseService=$(echo ${connStr} | cut -d '/' -f 5)
  fi
 
  if [[ "${manualUniqueId}" != "" ]]; then
@@ -466,6 +501,8 @@ if [ $retval -eq 0 ]; then
       echo "Exiting...."
       exit 255
     fi
+    dma_id=$(getDMASourceId ${V_TAG})
+    generate_OEE_config ${dma_id} ${databaseService} ${hostName} ${port} ${collectionUserName} ${collectionUserPass} ${oeeGroup} ${oeeRunId}
     compressOpFiles $(echo ${V_TAG} | sed 's/.csv//g') $dbType
     retval=$?
     if [ $retval -ne 0 ]; then

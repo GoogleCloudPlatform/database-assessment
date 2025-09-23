@@ -22,8 +22,9 @@ set feedback off
 set echo off
 
 prompt "Please enter the database local username (or CDB username) to receive all required grants. "
-accept dbusername    char prompt "Enter exactly as defined in the database, upper/lower case must match: "
+accept dbusername     char prompt "Enter exactly as defined in the database, upper/lower case must match: "
 accept usediagnostics char default 'Y' prompt "Please enter Y or N to allow or disallow use of the Tuning and Diagnostic Pack (AWR/ASH) data (Y) "
+accept oracleee       char default 'Y' prompt "Please enter Y or N to grant privileges required for Oracle Estate Explorer collection (Y) " 
 
 DECLARE
   cnt NUMBER;
@@ -287,6 +288,62 @@ BEGIN
       rectype_('SELECT','SYSTEM','LOGSTDBY$SKIP_SUPPORT')
     );
   grant_privs(v_source_table_list);
+
+  IF upper('&oracleee') = 'Y' THEN
+    dbms_output.put_line('Granting privs for Oracle Estate Explorer');
+    v_source_table_list := t_source_table_list(
+      rectype_('SELECT','SYS','DBA_ALL_TABLES'),
+      rectype_('SELECT','SYS','DBA_DATA_FILES'),
+      rectype_('SELECT','SYS','DBA_DEPENDENCIES'),
+      rectype_('SELECT','SYS','DBA_DIRECTORIES'),
+      rectype_('SELECT','SYS','DBA_ENCRYPTED_COLUMNS'),
+      rectype_('SELECT','SYS','DBA_FREE_SPACE'),
+      rectype_('SELECT','SYS','DBA_HIST_ACTIVE_SESS_HISTORY'),
+      rectype_('SELECT','SYS','DBA_HIST_CON_SYS_TIME_MODEL'),
+      rectype_('SELECT','SYS','DBA_HIST_CON_SYSMETRIC_SUMM'),
+      rectype_('SELECT','SYS','DBA_HIST_CON_SYSSTAT'),
+      rectype_('SELECT','SYS','DBA_HIST_DATABASE_INSTANCE'),
+      rectype_('SELECT','SYS','DBA_HIST_OSSTAT'),
+      rectype_('SELECT','SYS','DBA_HIST_SNAPSHOT'),
+      rectype_('SELECT','SYS','DBA_HIST_SYSMETRIC_SUMMARY'),
+      rectype_('SELECT','SYS','DBA_HIST_SYSSTAT'),
+      rectype_('SELECT','SYS','DBA_HIST_SYS_TIME_MODEL'),
+      rectype_('SELECT','SYS','DBA_ILMOBJECTS'),
+      rectype_('SELECT','SYS','DBA_LIBRARIES'),
+      rectype_('SELECT','SYS','DBA_PROFILES'),
+      rectype_('SELECT','SYS','DBA_REGISTRY'),
+      rectype_('SELECT','SYS','DBA_ROLE_PRIVS'),
+      rectype_('SELECT','SYS','DBA_ROLES'),
+      rectype_('SELECT','SYS','DBA_SCHEDULER_JOBS'),
+      rectype_('SELECT','SYS','DBA_SCHEDULER_PROGRAMS'),
+      rectype_('SELECT','SYS','DBA_XML_SCHEMAS'),
+      rectype_('SELECT','SYS','DBA_XML_TAB_COLS'),
+      rectype_('EXECUTE','SYS','DBMS_LOB'),
+      rectype_('SELECT','SYS','GV_$ARCHIVED_LOG'),
+      rectype_('SELECT','SYS','GV_$CELL_STATE'),
+      rectype_('SELECT','SYS','GV_$INSTANCE'),
+      rectype_('SELECT','SYS','GV_$PDBS'),
+      rectype_('SELECT','SYS','GV_$SESSION'),
+      rectype_('SELECT','SYS','GV_$SESSION_CONNECT_INFO'),
+      rectype_('SELECT','SYS','RESOURCE_VIEW'),
+      rectype_('SELECT','SYS','TRUSTED_SERVERS'),
+      rectype_('SELECT','SYS','V_$BLOCK_CHANGE_TRACKING'),
+      rectype_('SELECT','SYS','V_$CON_SYSSTAT'),
+      rectype_('SELECT','SYS','V_$DATABASE'),
+      rectype_('SELECT','SYS','V_$SGASTAT'),
+      rectype_('SELECT','SYS','V_$PGASTAT'),
+      rectype_('SELECT','SYS','GV_$DATABASE'),
+      rectype_('SELECT','SYS','GV_$SGASTAT'),
+      rectype_('SELECT','SYS','GV_$PGASTAT'),
+      rectype_('SELECT','SYS','V_$NLS_PARAMETERS'),
+      rectype_('SELECT','SYS','V_$RSRCPDBMETRIC_HISTORY'),
+      rectype_('SELECT','SYS','V_$SQL'),
+      rectype_('SELECT','SYS','V_$SQL_PLAN'),
+      rectype_('SELECT','SYS','V_$SYSTEM_EVENT')
+      );
+    grant_privs(v_source_table_list);
+  END IF;
+
 
 END;
 /
