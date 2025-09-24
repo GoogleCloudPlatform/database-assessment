@@ -286,8 +286,27 @@ function generate_OEE_config() {
   oee_pass="${6}"
   oee_group="${7}"
   oee_runid="${8}"
+  V_FILE_TAG="${9}"
 
+  # For single tenant or container databases
   echo ${oee_guid}:${oee_database}://${oee_hostName}:${oee_port}/${oee_database}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid} 
+
+  # For multitenant, we need to add entries for all the pluggable databases.
+  if [ -f output/opdb__pdb_summary__$V_FILE_TAG ] ; then
+    for pdbname in $($GREP -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" output/opdb__pdb_summary__$V_FILE_TAG | $GREP -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 4)
+    do
+      echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
+      #oee_guid=$(echo ${oee_guid}${pdbname} | md5sum | cut -d ' ' -f ${MD%COL})
+      echo ${oee_guid}_${pdbname}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid} 
+    done
+  elif [ -f output/opdb__pdbsopenmode__$V_FILE_TAG ] ; then
+    for pdbname in $($GREP -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" output/opdb__pdbsopenmode__$V_FILE_TAG | $GREP -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 3)
+    do
+      echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
+      #oee_guid=$(echo ${oee_guid}${pdbname} | md5sum | cut -d ' ' -f ${MD5COL})
+      echo ${oee_guid}_${pdbname}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid} 
+    done
+  fi
 }
 
 
@@ -488,7 +507,7 @@ if [ $retval -eq 0 ]; then
       exit 255
     fi
     dma_id=$(getDMASourceId ${V_TAG})
-    generate_OEE_config ${dma_id} ${databaseService} ${hostName} ${port} ${collectionUserName} ${collectionUserPass} ${oeeGroup} ${oeeRunId}
+    generate_OEE_config ${dma_id} ${databaseService} ${hostName} ${port} ${collectionUserName} ${collectionUserPass} ${oeeGroup} ${oeeRunId} ${V_TAG}
     compressOpFiles $(echo ${V_TAG} | sed 's/.csv//g') $dbType
     retval=$?
     if [ $retval -ne 0 ]; then

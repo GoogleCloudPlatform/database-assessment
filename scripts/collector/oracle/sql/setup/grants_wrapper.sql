@@ -26,6 +26,9 @@ accept dbusername     char prompt "Enter exactly as defined in the database, upp
 accept usediagnostics char default 'Y' prompt "Please enter Y or N to allow or disallow use of the Tuning and Diagnostic Pack (AWR/ASH) data (Y) "
 accept oracleee       char default 'Y' prompt "Please enter Y or N to grant privileges required for Oracle Estate Explorer collection (Y) " 
 
+prompt " "
+prompt "Processing user &&dbusername"
+
 DECLARE
   cnt NUMBER;
 BEGIN
@@ -88,6 +91,7 @@ DECLARE
         dbms_output.put_line('-- This user has no access to pluggable databases.');
         dbms_output.put_line('-- Please execute the below ALTER USER statement in the container database.');
         dbms_output.put_line('ALTER USER "&dbusername"  SET CONTAINER_DATA=ALL CONTAINER = CURRENT;');
+        dbms_output.put_line('GRANT CREATE SESSION TO "&dbusername"  CONTAINER = ALL;');
         dbms_output.put_line(v_errsep);
         dbms_output.put_line(v_errsep);
         raise_application_error(-20002, 'No access to pluggable database information');
@@ -100,38 +104,47 @@ DECLARE
     PROCEDURE grant_privs(p_priv_list t_source_table_list)
     IS
       v_sql VARCHAR2(2000);
+      v_container_all VARCHAR2(100) := '';
+      v_container_cnt NUMBER;
     BEGIN
 
-     FOR x IN p_priv_list.first..p_priv_list.last LOOP
-        v_table_priv  :=  p_priv_list(x).objpriv;
-        v_table_owner :=  p_priv_list(x).objowner;
-        v_table_name  := p_priv_list(x).objname;
+      SELECT count(1) INTO v_cnt FROM dba_tab_columns WHERE table_name ='V_$DATABASE' AND column_name ='CDB';
+      IF (v_cnt > 0) THEN
+         EXECUTE IMMEDIATE 'SELECT count(1) FROM v$containers' INTO v_container_cnt;
+         IF (v_container_cnt > 1) THEN
+           v_container_all := ' CONTAINER = ALL';
+         END IF;
+      END IF;
+ 
+      FOR x IN p_priv_list.first..p_priv_list.last LOOP
+         v_table_priv  :=  p_priv_list(x).objpriv;
+         v_table_owner :=  p_priv_list(x).objowner;
+         v_table_name  := p_priv_list(x).objname;
 
-        BEGIN
-          SELECT count(1)
-          INTO v_cnt
-          FROM dba_objects
-          WHERE owner = v_table_owner
-            AND object_name = v_table_name;
+         BEGIN
+           SELECT count(1)
+           INTO v_cnt
+           FROM dba_objects
+           WHERE owner = v_table_owner
+             AND object_name = v_table_name;
 
-          IF v_cnt != 0 THEN
-            v_sql := 'GRANT ' || v_table_priv || ' ON ' || v_table_owner || '.' || v_table_name || ' TO "&dbusername" ' ;
-            dbms_output.put_line(v_sql || ';' );
-            EXECUTE IMMEDIATE v_sql;
-          END IF;
-        END;
-     END LOOP;
-
-    SELECT count(1) INTO v_cnt FROM dba_tab_columns WHERE table_name ='V_$DATABASE' AND column_name ='CDB';
-    IF (v_cnt > 0) THEN
-       EXECUTE IMMEDIATE 'SELECT count(1) FROM v$containers' INTO v_cnt;
-       IF (v_cnt > 1) THEN
-         v_sql := 'ALTER USER  "&dbusername"  SET CONTAINER_DATA=ALL CONTAINER = CURRENT';
-         dbms_output.put_line(v_sql || ';' );
-         EXECUTE IMMEDIATE v_sql;
-         list_pdbs;
-       END IF;
-    END IF;
+           IF v_cnt != 0 THEN
+             v_sql := 'GRANT ' || v_table_priv || ' ON ' || v_table_owner || '.' || v_table_name || ' TO "&dbusername" ' || v_container_all ;
+             dbms_output.put_line(v_sql || ';' );
+             EXECUTE IMMEDIATE v_sql;
+           END IF;
+         END;
+      END LOOP;
+ 
+      IF v_container_cnt > 0 THEN
+           v_sql := 'ALTER USER  "&dbusername"  SET CONTAINER_DATA=ALL CONTAINER = CURRENT';
+           dbms_output.put_line(v_sql || ';' );
+           EXECUTE IMMEDIATE v_sql;
+           v_sql := 'GRANT CREATE SESSION TO "&dbusername" CONTAINER=ALL';
+           dbms_output.put_line(v_sql || ';' );
+           EXECUTE IMMEDIATE v_sql;
+           list_pdbs;
+      END IF;
     END;
 
 
@@ -149,7 +162,7 @@ BEGIN
   -- The rectype entries in the code blocks below are parsed to generate documentation.
   -- Please follow the same format of one entry per line when adding new privileges.
   IF upper('&usediagnostics') = 'Y' THEN
-  dbms_output.put_line('Granting privs for AWR/ASH data');
+    dbms_output.put_line('Granting privs for AWR/ASH data');
     v_source_table_list := t_source_table_list(
       rectype_('SELECT','SYS','CDB_HIST_ACTIVE_SESS_HISTORY'),
       rectype_('SELECT','SYS','CDB_HIST_IOSTAT_FUNCTION'),
@@ -339,7 +352,8 @@ BEGIN
       rectype_('SELECT','SYS','V_$RSRCPDBMETRIC_HISTORY'),
       rectype_('SELECT','SYS','V_$SQL'),
       rectype_('SELECT','SYS','V_$SQL_PLAN'),
-      rectype_('SELECT','SYS','V_$SYSTEM_EVENT')
+      rectype_('SELECT','SYS','V_$SYSTEM_EVENT'),
+      rectype_('SELECT','SYS','V_$SYSSTAT')
       );
     grant_privs(v_source_table_list);
   END IF;
