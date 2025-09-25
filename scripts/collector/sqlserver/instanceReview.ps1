@@ -638,17 +638,6 @@ else {
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Remove special characters and UTF8 BOM from extracted files..." -logOperation "BOTH"
-<#
-foreach ($file in Get-ChildItem -Path $foldername\*.csv) {
-    $inputFile = Split-Path -Leaf $file
-    #((Get-Content -Path $foldername\$inputFile) -join "`n") + "`n" | Set-Content -NoNewLine -Encoding utf8 -Force -Path $foldername\$inputFile
-    ((Get-Content -Path $foldername\$inputFile) -join "`n") + "`n" | Set-Content -Encoding utf8 -Force -Path $foldername\$inputFile
-    $utf8 = New-Object System.Text.UTF8Encoding $false
-    $fileContent = Get-Content $foldername\$inputFile -Raw
-    Set-Content -Value $utf8.GetBytes($fileContent) -Encoding Byte -Path $foldername\$inputFile -Force
-}
-#>
-
 
 # This portion of the script re-writes the original logic to handle large CSV files efficiently by using
 # a streaming (chunked) approach with a temporary file, preventing high memory usage
@@ -657,6 +646,7 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv) {
 # Define the UTF8 encoding without the Byte Order Mark (BOM)
 # This matches the result of the original $utf8 = New-Object System.Text.UTF8Encoding $false
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+
 # Define the Line Feed character (`n) to force Unix-style line endings
 $LF = "`n" 
 
@@ -667,7 +657,6 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv -ErrorAction Stop) {
     WriteLog -logLocation $foldername\$logFile -logMessage "     Processing $($file.Name)..." -logOperation "BOTH"
 
     # Step 1: Stream the normalized content to a temporary file
-    # This replaces: ((Get-Content ...) -join "`n") + "`n" | Set-Content ...
     $writer = $null
     try {
         # Open the temporary file for writing using the specific UTF8-No-BOM encoding
@@ -680,7 +669,6 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv -ErrorAction Stop) {
         $firstLine = $true
         foreach ($line in $lines) {
             # Explicitly remove any Carriage Return characters (`r) to ensure strict LF-only line endings,
-            # matching the implicit normalization of the original -join "`n" operation.
             $cleanLine = $line.Replace("`r", "")
 
             # The original -join "`n" puts a LF *between* every line.
