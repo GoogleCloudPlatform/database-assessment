@@ -171,7 +171,7 @@ jobs:
         cargo -V
         hatch --version
 
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v5
       with:
         name: wheels
         path: ${{ github.workspace }}/dist
@@ -205,7 +205,7 @@ jobs:
     permissions:
      contents: write
     steps:
-    - uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v5
       with:
         path: dist
         merge-multiple: true
