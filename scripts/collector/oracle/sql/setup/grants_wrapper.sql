@@ -55,8 +55,8 @@ DECLARE
     TYPE t_source_table_list IS
         TABLE OF rectype;
 
-    TABLE_DOES_NOT_EXIST EXCEPTION;
-    PRAGMA EXCEPTION_INIT(TABLE_DOES_NOT_EXIST, -00942);
+    TABLE_NOT_EXIST EXCEPTION;
+    PRAGMA EXCEPTION_INIT(TABLE_NOT_EXIST, -942);
 
     v_source_table_list t_source_table_list;
 
@@ -101,7 +101,7 @@ DECLARE
     END;
 
 
-    PROCEDURE grant_privs(p_priv_list t_source_table_list)
+    PROCEDURE grant_privs(p_priv_list t_source_table_list, p_oee_flag IN VARCHAR2 DEFAULT 'N')
     IS
       v_sql VARCHAR2(2000);
       v_container_all VARCHAR2(100) := '';
@@ -110,10 +110,15 @@ DECLARE
 
       SELECT count(1) INTO v_cnt FROM dba_tab_columns WHERE table_name ='V_$DATABASE' AND column_name ='CDB';
       IF (v_cnt > 0) THEN
-         EXECUTE IMMEDIATE 'SELECT count(1) FROM v$containers' INTO v_container_cnt;
-         IF (v_container_cnt > 1) THEN
+         EXECUTE IMMEDIATE 'SELECT count(1) FROM v$containers c , v$database d WHERE d.cdb = ''YES'' ' INTO v_container_cnt;
+         dbms_output.put_line('Found ' || v_container_cnt || ' containers');
+         IF (v_container_cnt > 1 AND p_oee_flag = 'Y') THEN
            v_container_all := ' CONTAINER = ALL';
+           v_sql := 'ALTER SESSION SET ' || chr(34) || '_ORACLE_SCRIPT' || chr(34) || '=true';
+           EXECUTE IMMEDIATE v_sql;
          END IF;
+      ELSE
+         dbms_output.put_line('This database is not multitenant.');
       END IF;
  
       FOR x IN p_priv_list.first..p_priv_list.last LOOP
@@ -129,9 +134,14 @@ DECLARE
              AND object_name = v_table_name;
 
            IF v_cnt != 0 THEN
+            BEGIN
              v_sql := 'GRANT ' || v_table_priv || ' ON ' || v_table_owner || '.' || v_table_name || ' TO "&dbusername" ' || v_container_all ;
              dbms_output.put_line(v_sql || ';' );
              EXECUTE IMMEDIATE v_sql;
+             EXCEPTION WHEN OTHERS THEN
+                 dbms_output.put_line('Exception performing ' || v_sql);
+                 RAISE;
+             END;
            END IF;
          END;
       END LOOP;
@@ -305,16 +315,20 @@ BEGIN
   IF upper('&oracleee') = 'Y' THEN
     dbms_output.put_line('Granting privs for Oracle Estate Explorer');
     v_source_table_list := t_source_table_list(
+      rectype_('EXECUTE','SYS','DBMS_LOB'),
       rectype_('SELECT','SYS','DBA_ALL_TABLES'),
       rectype_('SELECT','SYS','DBA_DATA_FILES'),
+      rectype_('SELECT','SYS','DBA_DB_LINKS'),
       rectype_('SELECT','SYS','DBA_DEPENDENCIES'),
       rectype_('SELECT','SYS','DBA_DIRECTORIES'),
       rectype_('SELECT','SYS','DBA_ENCRYPTED_COLUMNS'),
+      rectype_('SELECT','SYS','DBA_EXTERNAL_TABLES'),
       rectype_('SELECT','SYS','DBA_FREE_SPACE'),
+      rectype_('SELECT','SYS','DBA_HIGH_WATER_MARK_STATISTICS'),
       rectype_('SELECT','SYS','DBA_HIST_ACTIVE_SESS_HISTORY'),
-      rectype_('SELECT','SYS','DBA_HIST_CON_SYS_TIME_MODEL'),
       rectype_('SELECT','SYS','DBA_HIST_CON_SYSMETRIC_SUMM'),
       rectype_('SELECT','SYS','DBA_HIST_CON_SYSSTAT'),
+      rectype_('SELECT','SYS','DBA_HIST_CON_SYS_TIME_MODEL'),
       rectype_('SELECT','SYS','DBA_HIST_DATABASE_INSTANCE'),
       rectype_('SELECT','SYS','DBA_HIST_OSSTAT'),
       rectype_('SELECT','SYS','DBA_HIST_SNAPSHOT'),
@@ -323,39 +337,55 @@ BEGIN
       rectype_('SELECT','SYS','DBA_HIST_SYS_TIME_MODEL'),
       rectype_('SELECT','SYS','DBA_ILMOBJECTS'),
       rectype_('SELECT','SYS','DBA_LIBRARIES'),
+      rectype_('SELECT','SYS','DBA_LOBS'),
+      rectype_('SELECT','SYS','DBA_OBJECTS'),
       rectype_('SELECT','SYS','DBA_PROFILES'),
       rectype_('SELECT','SYS','DBA_REGISTRY'),
-      rectype_('SELECT','SYS','DBA_ROLE_PRIVS'),
       rectype_('SELECT','SYS','DBA_ROLES'),
+      rectype_('SELECT','SYS','DBA_ROLE_PRIVS'),
       rectype_('SELECT','SYS','DBA_SCHEDULER_JOBS'),
       rectype_('SELECT','SYS','DBA_SCHEDULER_PROGRAMS'),
+      rectype_('SELECT','SYS','DBA_TABLES'),
+      rectype_('SELECT','SYS','DBA_TAB_COLS'),
+      rectype_('SELECT','SYS','DBA_TAB_COLUMNS'),
+      rectype_('SELECT','SYS','DBA_USERS'),
       rectype_('SELECT','SYS','DBA_XML_SCHEMAS'),
+      rectype_('SELECT','SYS','DBA_XML_TABLES'),
       rectype_('SELECT','SYS','DBA_XML_TAB_COLS'),
-      rectype_('EXECUTE','SYS','DBMS_LOB'),
+      rectype_('SELECT','SYS','GV$ARCHIVED_LOG'),
+      rectype_('SELECT','SYS','GV$CELL_STATE'),
+      rectype_('SELECT','SYS','GV$INSTANCE'),
+      rectype_('SELECT','SYS','GV$PDBS'),
+      rectype_('SELECT','SYS','GV$SESSION'),
+      rectype_('SELECT','SYS','GV$SESSION_CONNECT_INFO'),
       rectype_('SELECT','SYS','GV_$ARCHIVED_LOG'),
       rectype_('SELECT','SYS','GV_$CELL_STATE'),
+      rectype_('SELECT','SYS','GV_$DATABASE'),
       rectype_('SELECT','SYS','GV_$INSTANCE'),
       rectype_('SELECT','SYS','GV_$PDBS'),
+      rectype_('SELECT','SYS','GV_$PGASTAT'),
       rectype_('SELECT','SYS','GV_$SESSION'),
       rectype_('SELECT','SYS','GV_$SESSION_CONNECT_INFO'),
+      rectype_('SELECT','SYS','GV_$SGASTAT'),
       rectype_('SELECT','SYS','RESOURCE_VIEW'),
       rectype_('SELECT','SYS','TRUSTED_SERVERS'),
       rectype_('SELECT','SYS','V_$BLOCK_CHANGE_TRACKING'),
       rectype_('SELECT','SYS','V_$CON_SYSSTAT'),
       rectype_('SELECT','SYS','V_$DATABASE'),
-      rectype_('SELECT','SYS','V_$SGASTAT'),
-      rectype_('SELECT','SYS','V_$PGASTAT'),
-      rectype_('SELECT','SYS','GV_$DATABASE'),
-      rectype_('SELECT','SYS','GV_$SGASTAT'),
-      rectype_('SELECT','SYS','GV_$PGASTAT'),
+      rectype_('SELECT','SYS','V_$EVENT_NAME'),
+      rectype_('SELECT','SYS','V_$INSTANCE'),
       rectype_('SELECT','SYS','V_$NLS_PARAMETERS'),
+      rectype_('SELECT','SYS','V_$PARAMETER'),
+      rectype_('SELECT','SYS','V_$PDBS'),
+      rectype_('SELECT','SYS','V_$PGASTAT'),
       rectype_('SELECT','SYS','V_$RSRCPDBMETRIC_HISTORY'),
+      rectype_('SELECT','SYS','V_$SGASTAT'),
       rectype_('SELECT','SYS','V_$SQL'),
       rectype_('SELECT','SYS','V_$SQL_PLAN'),
-      rectype_('SELECT','SYS','V_$SYSTEM_EVENT'),
-      rectype_('SELECT','SYS','V_$SYSSTAT')
+      rectype_('SELECT','SYS','V_$SYSSTAT'),
+      rectype_('SELECT','SYS','V_$SYSTEM_EVENT')
       );
-    grant_privs(v_source_table_list);
+    grant_privs(v_source_table_list, 'Y');
   END IF;
 
 

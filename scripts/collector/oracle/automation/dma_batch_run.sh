@@ -19,11 +19,10 @@ function batchRun() {
     db=$(echo $x | cut -d ',' -f 3)
     statssrc=$(echo $x | cut -d ',' -f 4)
     statswindow=$(echo $x | cut -d ',' -f 5)
-    dmaid=$(echo $x | cut -d ',' -f 6 | tr  -c 'a-zA-Z0-9' '_')
+    dmaid=$(echo $x | cut -d ',' -f 6 | tr -d '\n' | tr  -c 'a-zA-Z0-9' '_')
     oee_flag=$(echo $x | cut -d ',' -f 7)
-    oee_group=$(echo $x | cut -d ',' -f 8 | tr -d '
-' | tr -c 'a-zA-Z0-9' '_')
-    logname=$(echo $db | tr  -c 'a-zA-Z0-9' '_')
+    oee_group=$(echo $x | cut -d ',' -f 8 | tr -d '\n' | tr -c 'a-zA-Z0-9' '_')
+    logname=$(echo $db | tr -d '\n' | tr  -c 'a-zA-Z0-9' '_')
     if [ "${statssrc}" = "NONE" ]
     then
       statsparam=""
@@ -36,6 +35,8 @@ function batchRun() {
       ogg_group="NONE"
     fi
 
+    echo Dmaid = " ${dmaid} "
+
     cd ${CURRD}/..
     # Run a collection in the background, capturing screen output to a log file.
     time  ./collect-data.sh --dbType oracle --connectionStr ''${user}${db}'' --statsSrc ${statssrc} ${statsparam} --manualUniqueId ${dmaid} --collectOEE ${oee_flag} --oeeGroup ${oee_group} --oeeRunId ${RUNID} 2>&1 | tee DMA_COLLECT_DATA_${logname}_$(date +%Y%m%d%H%M%S)_$$.log &
@@ -47,8 +48,8 @@ function batchRun() {
     while [[ $(ps -ef | grep collect-data | grep -v grep | wc -l) -ge ${MAXPARALLEL} ]]
     do
       echo sleeping for 10 secs while waiting on collections:
-      ps | grep collect-data.sh | grep -v grep
-      #ps | grep collect-data.sh | grep -v grep | cut -d '@' -f 2 | cut -d ' ' -f 1
+      #ps | grep collect-data.sh | grep -v grep
+      ps | grep collect-data.sh | grep -v grep | cut -d '@' -f 2-
 
       sleep 10
     done
