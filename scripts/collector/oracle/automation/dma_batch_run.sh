@@ -101,7 +101,13 @@ function packageZips() {
 
 function runOee() {
   dedupDriverFiles
-  packageZips
+  if [ $? -eq 0 ]; then packageZips
+  else print_fail
+  fi
+
+  if [ $? -eq 0 ]; then print_complete
+  else print_fail
+  fi
 }
 
 function printUsage() {

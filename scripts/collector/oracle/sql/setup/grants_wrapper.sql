@@ -45,6 +45,7 @@ set termout on
 set lines 200
 set feedback off
 whenever sqlerror exit failure
+VARIABLE v_err_count NUMBER ;
 DECLARE
     TYPE rectype IS RECORD (
     objpriv varchar2(30),
@@ -58,6 +59,9 @@ DECLARE
     TABLE_NOT_EXIST EXCEPTION;
     PRAGMA EXCEPTION_INIT(TABLE_NOT_EXIST, -942);
 
+    LOCAL_OBJECT EXCEPTION;
+    PRAGMA EXCEPTION_INIT(LOCAL_OBJECT, -65048);
+
     v_source_table_list t_source_table_list;
 
     v_table_owner       VARCHAR2(30);
@@ -69,6 +73,7 @@ DECLARE
     v_infosep           VARCHAR2(100) := rpad('-', 100, '-');
     v_errsep            VARCHAR2(100) := rpad('!', 100, '!');
 
+ 
     PROCEDURE list_pdbs
     IS
       TYPE c_pdb_list_type IS REF CURSOR;
@@ -138,8 +143,19 @@ DECLARE
              v_sql := 'GRANT ' || v_table_priv || ' ON ' || v_table_owner || '.' || v_table_name || ' TO "&dbusername" ' || v_container_all ;
              dbms_output.put_line(v_sql || ';' );
              EXECUTE IMMEDIATE v_sql;
-             EXCEPTION WHEN OTHERS THEN
+             EXCEPTION 
+               WHEN LOCAL_OBJECT THEN
+                 dbms_output.put_line('ERROR: --------------------------------------------------------------------------------------------');
+                 dbms_output.put_line('ERROR:  Unable to grant privileges to an object that is not created in the root container database.');
+                 dbms_output.put_line('Object ' || v_table_owner || '.' || v_table_name || ' is not a global container object.');
+                 dbms_output.put_line('Failing grant is : ' || v_sql);
+                 dbms_output.put_line('Exception is ');
+                 dbms_output.put_line( DBMS_UTILITY.FORMAT_ERROR_STACK);
+                 dbms_output.put_line('ERROR: --------------------------------------------------------------------------------------------');
+                 :v_err_count := :v_err_count + 1;
+               WHEN OTHERS THEN
                  dbms_output.put_line('Exception performing ' || v_sql);
+                 :v_err_count := :v_err_count + 1;
                  RAISE;
              END;
            END IF;
@@ -168,6 +184,8 @@ DECLARE
     END;
 
 BEGIN
+
+  :v_err_count := 0;
 
   -- The rectype entries in the code blocks below are parsed to generate documentation.
   -- Please follow the same format of one entry per line when adding new privileges.
@@ -391,4 +409,4 @@ BEGIN
 
 END;
 /
-exit
+exit :v_err_count
