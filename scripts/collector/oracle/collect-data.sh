@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+. ./dma_print_pass_fail.sh
+. ./dma_oee.sh
+. ./check_release.sh
+
 ### Setup directories needed for execution
 #############################################################################
 OpVersion="4.3.44"
@@ -278,43 +282,43 @@ function getDMASourceId() {
 }
 
 
-function generate_OEE_config() {
-  oee_guid="${1}"
-  oee_database="${2}"
-  oee_hostName="${3}"
-  oee_port="${4}"
-  oee_user="${5}"
-  oee_pass="${6}"
-  oee_group="${7}"
-  oee_runid="${8}"
-  V_FILE_TAG="${9}"
- 
-  dbdomain=$(grep db_domain $OUTPUT_DIR/opdb__dbparameters__$V_FILE_TAG | cut -d '|' -f 5 | uniq | head -1)
-  if [ "${dbdomain}" != "" ]; then
-    dbdomain=".${dbdomain}"
-  fi
-
-  # For single tenant or container databases
-  oee_guid=$(echo ${oee_guid} | md5sum | cut -d ' ' -f ${MD5COL})
-  echo ${oee_guid}:${oee_database}://${oee_hostName}:${oee_port}/${oee_database}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid} 
-
-  # For multitenant, we need to add entries for all the pluggable databases.
-  if [ -f $OUTPUT_DIR/opdb__pdb_summary__$V_FILE_TAG ] ; then
-    for pdbname in $($GREP -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" $OUTPUT_DIR/opdb__pdb_summary__$V_FILE_TAG | $GREP -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 4)
-    do
-      echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
-      oee_guid=$(echo ${oee_guid}${pdbname}${dbdomain} | md5sum | cut -d ' ' -f ${MD%COL})
-      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid} 
-    done
-  elif [ -f $OUTPUT_DIR/opdb__pdbsopenmode__$V_FILE_TAG ] ; then
-    for pdbname in $($GREP -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" $OUTPUT_DIR/opdb__pdbsopenmode__$V_FILE_TAG | $GREP -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 3)
-    do
-      echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
-      oee_guid=$(echo ${oee_guid}${pdbname} | md5sum | cut -d ' ' -f ${MD5COL})
-      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid} 
-    done
-  fi
-}
+#function oeeGenerateConfig() {
+#  oee_guid="${1}"
+#  oee_database="${2}"
+#  oee_hostName="${3}"
+#  oee_port="${4}"
+#  oee_user="${5}"
+#  oee_pass="${6}"
+#  oee_group="${7}"
+#  oee_runid="${8}"
+#  V_FILE_TAG="${9}"
+# 
+#  dbdomain=$(grep db_domain $OUTPUT_DIR/opdb__dbparameters__$V_FILE_TAG | cut -d '|' -f 5 | uniq | head -1)
+#  if [ "${dbdomain}" != "" ]; then
+#    dbdomain=".${dbdomain}"
+#  fi
+#
+#  # For single tenant or container databases
+#  oee_guid=$(echo ${oee_guid} | md5sum | cut -d ' ' -f ${MD5COL})
+#  echo ${oee_guid}:${oee_database}://${oee_hostName}:${oee_port}/${oee_database}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid} 
+#
+#  # For multitenant, we need to add entries for all the pluggable databases.
+#  if [ -f $OUTPUT_DIR/opdb__pdb_summary__$V_FILE_TAG ] ; then
+#    for pdbname in $($GREP -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" $OUTPUT_DIR/opdb__pdb_summary__$V_FILE_TAG | $GREP -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 4)
+#    do
+#      echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
+#      oee_guid=$(echo ${oee_guid}${pdbname}${dbdomain} | md5sum | cut -d ' ' -f ${MD%COL})
+#      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid} 
+#    done
+#  elif [ -f $OUTPUT_DIR/opdb__pdbsopenmode__$V_FILE_TAG ] ; then
+#    for pdbname in $($GREP -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" $OUTPUT_DIR/opdb__pdbsopenmode__$V_FILE_TAG | $GREP -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 3)
+#    do
+#      echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
+#      oee_guid=$(echo ${oee_guid}${pdbname} | md5sum | cut -d ' ' -f ${MD5COL})
+#      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid} 
+#    done
+#  fi
+#}
 
 
 function printUsage() {
@@ -339,7 +343,19 @@ function printUsage() {
   echo "                              NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION."
   echo "                              IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8"
   echo "                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR."
+
+  echo "  Oracle Estate Explorere collection"
+  echo "      --collectOEE            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector."
+  echo "                              NOTE: This requires SQL client version 21 and above, plus Oracle database 11.2 or above."
+  echo "                                    OEE collection will not run if requirements are not met."
   echo
+  echo "      --oeeGroup              Required if --collectOEE is Y.  This is the group name (ex: Dev, Prod, QA, etc) to use for bundling multiple databases togegther within OEE."
+  echo "                              Maximum length of 32 characters."
+  echo "      --oeeRunId              Internal use only.  This is used by DMA automation to handle parallel runs of multiple collections."
+  echo
+  echo " Optional identifier"
+  echo "      --manualUniqueId        Optional.  Allows the end user to create a unique identifier with which to tag the collection. "
+  echo "                              Also used internally by DMA automation."
   echo
   echo " Example:"
   echo
@@ -385,6 +401,7 @@ while (( "$#" )); do
   elif [[ "$1" == "--collectOEE" ]];         then collectOEE="${2}"
   elif [[ "$1" == "--oeeGroup"   ]];         then oeeGroup="${2}"
   elif [[ "$1" == "--oeeRunId"   ]];         then oeeRunId="${2}"
+  elif [[ "$1" == "--dmaAutomation"   ]];    then dmaAutomation="${2}"  # Internal use only
   else
     echo "Unknown parameter ${1}"
     printUsage
@@ -429,13 +446,30 @@ else
   databaseService=$(echo ${connStr} | cut -d '/' -f 5)
 fi
 
+if [[ "${collectOEE}" == "Y" ]] ; then
+  if [[ "${oeeGroup}" == "" ]] ; then
+    echo "ERROR: Parameter --oeeGroup must be specified if --collectOEE is Y."
+    printUsage
+    exit
+  fi
+  if [[ "${oeeRunId}" == "" ]] ; then
+    oeeRunId=$$
+    oeeRunId="${oeeRunId}_$(date +%Y%m%d%H%M%S)"
+  fi
+  if ![[ -f $OEE_DIR/oee_group_extract-SA.sh ]]; then
+    echo "ERROR: Oracle Estate Explorer extraction scripts not found in ${OEE_DIR}".
+    printUsage
+    exit
+  fi
+fi
+
 if [[ "${manualUniqueId}" != "" ]]; then
   manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
 else
   manualUniqueId='NA'
 fi
 
-
+echo "OEE RUN ID = ${oeeRunId}"
 #############################################################################
 #
 #if [[  $# -ne 2  || (  "$2" != "UseDiagnostics" && "$2" != "NoDiagnostics" ) ]]
@@ -514,7 +548,17 @@ if [ $retval -eq 0 ]; then
       exit 255
     fi
     dma_id=$(getDMASourceId ${V_TAG})
-    generate_OEE_config ${dma_id} ${databaseService} ${hostName} ${port} ${collectionUserName} ${collectionUserPass} ${oeeGroup} ${oeeRunId} ${V_TAG}
+    if [[ "${collectOEE}" == "Y" ]]; then
+      oeeCheck=$(oeeCheckConditions "${connStr}")
+      if [[ "${oeeCheck}" == "PASS" ]] ; then
+        oeeGenerateConfig ${dma_id} ${databaseService} ${hostName} ${port} ${collectionUserName} ${collectionUserPass} ${oeeGroup} ${oeeRunId} ${V_TAG}
+        if [[ "${dmaAutomation}" != "Y" ]] ; then
+          oeeRun "${oeeRunId}"
+        fi
+      else
+        echo "Skipping Estate Explorere collection for ${databaseService} ${hostName}"
+      fi
+    fi
     compressOpFiles $(echo ${V_TAG} | sed 's/.csv//g') $dbType
     retval=$?
     if [ $retval -ne 0 ]; then
