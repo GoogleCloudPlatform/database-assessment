@@ -25,7 +25,7 @@ SELECT @PKEY = N'$(pkey)';
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
-/* need to record table permissions in order to determine if we can run certain server level queryies
+/* need to record table permissions in order to determine if we can run certain server level queries
     as some tables are not available in managed instances
 */
 IF Object_id('tempdb..#myPerms') IS NOT NULL
@@ -51,7 +51,7 @@ FROM   #myperms
 WHERE  Lower(entity_name) IN ( 'sys.xp_regread', 'sys.xp_servicecontrol' )
        AND Upper(permission_name) = 'EXECUTE';
 
-/* ------------------------------------------ Inital Setup -----------------------------------------------------*/
+/* ------------------------------------------ Initial Setup -----------------------------------------------------*/
 IF Object_id('tempdb..#RegResult') IS NOT NULL
   DROP TABLE #regresult;
 
@@ -148,7 +148,7 @@ IF (SELECT resultvalue
    AND @TABLE_PERMISSION_COUNT >= 2
   BEGIN
       INSERT #servicesservicestatus
-             (servicestatus) /*Detecting staus of SQL Sever service*/
+             (servicestatus) /*Detecting status of SQL Sever service*/
       EXEC Xp_servicecontrol
         N'QUERYSTATE',
         @SQLSrv
@@ -222,7 +222,7 @@ IF (SELECT resultvalue
    AND @TABLE_PERMISSION_COUNT >= 2
   BEGIN
       INSERT #servicesservicestatus
-             (servicestatus) /*Detecting staus of SQL Agent service*/
+             (servicestatus) /*Detecting status of SQL Agent service*/
       EXEC Xp_servicecontrol
         N'QUERYSTATE',
         @SQLAgent
@@ -297,7 +297,7 @@ BEGIN TRY
         FROM   #regresult) = 1
       BEGIN
           INSERT #servicesservicestatus
-                (servicestatus) /*Detecting staus of SQL Browser Service*/
+                (servicestatus) /*Detecting status of SQL Browser Service*/
           EXEC master.dbo.Xp_servicecontrol
             N'QUERYSTATE',
             N'sqlbrowser'
@@ -366,7 +366,7 @@ BEGIN TRY
       FROM   #regresult) = 1
     BEGIN
         INSERT #servicesservicestatus
-              (servicestatus) /*Detecting staus of Intergration Service*/
+              (servicestatus) /*Detecting status of Integration Service*/
         EXEC master.dbo.Xp_servicecontrol
           N'QUERYSTATE',
           N'sqlbrowser'
@@ -435,7 +435,7 @@ BEGIN TRY
       FROM   #regresult) = 1
     BEGIN
         INSERT #servicesservicestatus
-              (servicestatus) /*Detecting staus of Reporting service*/
+              (servicestatus) /*Detecting status of Reporting service*/
         EXEC master.dbo.Xp_servicecontrol
           N'QUERYSTATE',
           N'sqlbrowser'
@@ -513,7 +513,7 @@ BEGIN TRY
       FROM   #regresult) = 1
     BEGIN
         INSERT #servicesservicestatus
-              (servicestatus) /*Detecting staus of Analysis service*/
+              (servicestatus) /*Detecting status of Analysis service*/
         EXEC master.dbo.Xp_servicecontrol
           N'QUERYSTATE',
           @OLAP
@@ -583,7 +583,7 @@ BEGIN TRY
       FROM   #regresult) = 1
     BEGIN
         INSERT #servicesservicestatus
-              (servicestatus) /*Detecting staus of Full Text Search service*/
+              (servicestatus) /*Detecting status of Full Text Search service*/
         EXEC master.dbo.Xp_servicecontrol
           N'QUERYSTATE',
           @FTS
