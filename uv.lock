@@ -872,8 +872,6 @@ docs = [
     { name = "mkdocs-minify-plugin" },
     { name = "mkdocs-section-index" },
     { name = "mkdocstrings", extra = ["python"] },
-    { name = "pygments" },
-    { name = "pymdown-extensions" },
 ]
 lint = [
     { name = "asyncpg-stubs" },
@@ -931,18 +929,16 @@ dev = [
     { name = "pytest-xdist", specifier = ">=3.6.0" },
 ]
 docs = [
-    { name = "linkchecker", specifier = ">=10.3" },
+    { name = "linkchecker", specifier = ">=10.3.0" },
     { name = "mike", specifier = ">=2.0.0" },
-    { name = "mkdocs-gen-files" },
+    { name = "mkdocs-gen-files", specifier = ">=0.5.0" },
     { name = "mkdocs-glightbox", specifier = ">=0.3.0" },
-    { name = "mkdocs-include-markdown-plugin" },
-    { name = "mkdocs-literate-nav" },
+    { name = "mkdocs-include-markdown-plugin", specifier = ">=6.0.0" },
+    { name = "mkdocs-literate-nav", specifier = ">=0.6.0" },
     { name = "mkdocs-material", extras = ["git", "imaging", "recommended"], specifier = ">=9.5.0" },
-    { name = "mkdocs-minify-plugin" },
-    { name = "mkdocs-section-index" },
-    { name = "mkdocstrings", extras = ["python"] },
-    { name = "pygments", specifier = ">=2.13" },
-    { name = "pymdown-extensions", specifier = ">=10.5" },
+    { name = "mkdocs-minify-plugin", specifier = ">=0.7.0" },
+    { name = "mkdocs-section-index", specifier = ">=0.3.0" },
+    { name = "mkdocstrings", extras = ["python"], specifier = ">=0.24.0" },
 ]
 lint = [
     { name = "asyncpg-stubs" },

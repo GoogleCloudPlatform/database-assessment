@@ -147,18 +147,27 @@ lint = [
 ]
 
 docs = [
-    "mkdocs-include-markdown-plugin",
-    "mkdocs-gen-files",
-    "mkdocs-literate-nav",
-    "mkdocs-section-index",
-    "mkdocstrings[python]",
-    "mkdocs-glightbox>=0.3.0",
+    # Core MkDocs Material (includes mkdocs>=1.6, pymdown-extensions, pygments)
     "mkdocs-material[git,imaging,recommended]>=9.5.0",
-    "mkdocs-minify-plugin",
+
+    # Versioning
     "mike>=2.0.0",
-    "pymdown-extensions>=10.5",
-    "pygments>=2.13",
-    "linkchecker>=10.3",
+
+    # Documentation generation
+    "mkdocstrings[python]>=0.24.0",
+    "mkdocs-gen-files>=0.5.0",
+    "mkdocs-literate-nav>=0.6.0",
+    "mkdocs-section-index>=0.3.0",
+
+    # Content plugins
+    "mkdocs-include-markdown-plugin>=6.0.0",
+    "mkdocs-glightbox>=0.3.0",
+
+    # Optimization
+    "mkdocs-minify-plugin>=0.7.0",
+
+    # Validation
+    "linkchecker>=10.3.0",
 ]
 
 build = [
