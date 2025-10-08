@@ -45,9 +45,13 @@ jobs:
         with:
             # Fetch all tags
             fetch-depth: 0
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install ${{ env.STABLE_PYTHON_VERSION }}
+
       - name: Building & Package Collector
         run: make clean && make build-collector
       - uses: actions/upload-artifact@v4
@@ -67,11 +71,14 @@ jobs:
         # Fetch all tags
         fetch-depth: 0
 
-    - name: Install Hatch
-      run: pip install --upgrade hatch hatch-pip-compile
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+
+    - name: Set up Python
+      run: uv python install ${{ env.STABLE_PYTHON_VERSION }}
 
     - name: Build
-      run: hatch build
+      run: uv build
 
     - uses: actions/upload-artifact@v4
       with:
@@ -142,13 +149,18 @@ jobs:
     - name: Clone PyApp
       run: git clone --depth 1 --branch $PYAPP_VERSION https://github.com/ofek/pyapp $PYAPP_REPO
 
+<<<<<<< HEAD
     - name: Set up Python ${{ env.STABLE_PYTHON_VERSION }}
       uses: actions/setup-python@v6
       with:
         python-version: ${{ env.STABLE_PYTHON_VERSION }}
+=======
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+>>>>>>> b3f4df8 (feat: migrate from Hatch to UV for dependency management)
 
-    - name: Install Hatch
-      run: pip install -U hatch hatch-pip-compile
+    - name: Set up Python ${{ env.STABLE_PYTHON_VERSION }}
+      run: uv python install ${{ env.STABLE_PYTHON_VERSION }}
 
     - name: Install Rust toolchain
       if: ${{ !matrix.job.cross }}
@@ -169,7 +181,7 @@ jobs:
         rustup -V
         rustc -V
         cargo -V
-        hatch --version
+        uv --version
 
     - uses: actions/download-artifact@v5
       with:
@@ -180,7 +192,7 @@ jobs:
     - name: Build Binary
       working-directory: ${{ github.workspace }}
       run: |-
-        current_version=$(hatch version)
+        current_version=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
         PYAPP_PROJECT_PATH="${{ github.workspace }}/dist/dma-${current_version}-py3-none-any.whl" hatch -v build -t binary
 
     - name: Rename
