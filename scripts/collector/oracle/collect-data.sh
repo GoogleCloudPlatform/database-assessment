@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+## # !/usr/bin/env bash
 
 # Copyright 2024 Google LLC
 #
@@ -16,7 +16,6 @@
 
 . ./dma_print_pass_fail.sh
 . ./dma_oee.sh
-. ./check_release.sh
 
 ### Setup directories needed for execution
 #############################################################################
@@ -282,44 +281,6 @@ function getDMASourceId() {
 }
 
 
-#function oeeGenerateConfig() {
-#  oee_guid="${1}"
-#  oee_database="${2}"
-#  oee_hostName="${3}"
-#  oee_port="${4}"
-#  oee_user="${5}"
-#  oee_pass="${6}"
-#  oee_group="${7}"
-#  oee_runid="${8}"
-#  V_FILE_TAG="${9}"
-# 
-#  dbdomain=$(grep db_domain $OUTPUT_DIR/opdb__dbparameters__$V_FILE_TAG | cut -d '|' -f 5 | uniq | head -1)
-#  if [ "${dbdomain}" != "" ]; then
-#    dbdomain=".${dbdomain}"
-#  fi
-#
-#  # For single tenant or container databases
-#  oee_guid=$(echo ${oee_guid} | md5sum | cut -d ' ' -f ${MD5COL})
-#  echo ${oee_guid}:${oee_database}://${oee_hostName}:${oee_port}/${oee_database}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid} 
-#
-#  # For multitenant, we need to add entries for all the pluggable databases.
-#  if [ -f $OUTPUT_DIR/opdb__pdb_summary__$V_FILE_TAG ] ; then
-#    for pdbname in $($GREP -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" $OUTPUT_DIR/opdb__pdb_summary__$V_FILE_TAG | $GREP -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 4)
-#    do
-#      echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
-#      oee_guid=$(echo ${oee_guid}${pdbname}${dbdomain} | md5sum | cut -d ' ' -f ${MD%COL})
-#      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid} 
-#    done
-#  elif [ -f $OUTPUT_DIR/opdb__pdbsopenmode__$V_FILE_TAG ] ; then
-#    for pdbname in $($GREP -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" $OUTPUT_DIR/opdb__pdbsopenmode__$V_FILE_TAG | $GREP -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 3)
-#    do
-#      echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
-#      oee_guid=$(echo ${oee_guid}${pdbname} | md5sum | cut -d ' ' -f ${MD5COL})
-#      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid} 
-#    done
-#  fi
-#}
-
 
 function printUsage() {
   echo " Usage:"
@@ -456,7 +417,7 @@ if [[ "${collectOEE}" == "Y" ]] ; then
     oeeRunId=$$
     oeeRunId="${oeeRunId}_$(date +%Y%m%d%H%M%S)"
   fi
-  if ![[ -f $OEE_DIR/oee_group_extract-SA.sh ]]; then
+  if [[ ! -f $OEE_DIR/oee_group_extract-SA.sh ]]; then
     echo "ERROR: Oracle Estate Explorer extraction scripts not found in ${OEE_DIR}".
     printUsage
     exit

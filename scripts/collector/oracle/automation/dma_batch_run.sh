@@ -5,7 +5,7 @@
 # Note that collection files can be large for databases with large number of objects,
 # so ensure there is plenty of disk space available before increasing maxParallel.
 # This script expects to run in bash shell, but should work in ksh.
-. ./dma_print_pass_fail.sh
+. ../dma_print_pass_fail.sh
 MAXPARALLEL=5
 CONFIGFILE=dma_db_list.csv
 RUNID=$(date +%Y%m%d%H%M%S)
@@ -49,7 +49,7 @@ function batchRun() {
     do
       echo sleeping for 10 secs while waiting on collections:
       #ps | grep collect-data.sh | grep -v grep
-      ps | grep collect-data.sh | grep -v grep | cut -d '@' -f 2-
+      ps -ef | grep collect-data.sh | grep -v grep | cut -d '@' -f 2- | sort
 
       sleep 10
     done

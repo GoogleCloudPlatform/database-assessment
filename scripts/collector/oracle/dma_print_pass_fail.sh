@@ -53,3 +53,17 @@ function print_summary() {
   echo
   echo
 }
+
+function print_warning() {
+  echo
+  echo
+  echo "#       #     #    ######  #    # ### #    #  #####"
+  echo "#       #    # #   #     # ##   #  #  ##   # #     #"
+  echo "#       #   #   #  #     # # #  #  #  # #  # #      "
+  echo "#       #  #     # ######  #  # #  #  #  # # #  ####"
+  echo "#   #   #  ####### #   #   #   ##  #  #   ## #     #"
+  echo " # # # #   #     # #    #  #    #  #  #    # #     #"
+  echo "  #   #    #     # #     # #    # ### #    #  #####"
+  echo
+  echo
+}

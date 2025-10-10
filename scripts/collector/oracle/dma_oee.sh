@@ -83,3 +83,94 @@ function oeeRun() {
 }
 
 
+# OEE Requires SQL*Plus version 12.1 or higher
+function oeeCheckSQLPlusRelease {
+  RETVAL="FAIL"
+  SQLCLIENT=$(sqlplus -s /nolog <<EOF
+  prompt &_SQLPLUS_RELEASE
+  exit;
+EOF
+  )
+  if [[ "${SQLCLIENT}" == *"SP2-"* ]]; then
+    RETVAL="FAIL: ${SQLCLIENT}"
+  else
+    SQLCLIENTVER=$(echo "${SQLCLIENT}" | cut -c 1-2)
+    if [[ "${SQLCLIENTVER}" -ge 12 ]] 
+    then 
+      RETVAL="PASS"
+    else
+      RETVAL="FAIL: ${SQLCLIENT}"  
+    fi
+  fi
+  echo "${RETVAL}"
+}
+
+
+# OEE Requires database 10g or higher
+function oeeCheckDbVersion {
+  connectString="$1"
+  RETVAL="FAIL"
+
+  dbVer=$(
+${SQLPLUS} -s /nolog << EOF
+SET DEFINE OFF
+connect ${connectString}
+@${SQL_DIR}/op_set_sql_env.sql
+set pagesize 0 lines 400 feedback off verify off heading off echo off timing off time off
+WITH mj AS (
+SELECT substr(version, 1, INSTR(version, '.', 1, 2)-1) AS version
+FROM v\$instance)
+SELECT 'CONNECTED|' || 
+       SUBSTR(version, 1, INSTR(version, '.')-1) || '|' || -- Major 
+       SUBSTR(version, INSTR(version, '.')+1)              -- Minor
+FROM mj;
+exit;
+EOF
+)
+  if [[ "${dbVer}" == "CONNECTED"* ]] ; then
+    dbMajor=$(echo "${dbVer}" | cut -d '|' -f 2)
+    dbMinor=$(echo "${dbVer}" | cut -d '|' -f 3)
+
+    if [[ ${dbMajor} -gt 10 ]] ; then
+        RETVAL="PASS"
+    else 
+      if [[ ${dbMajor} -eq 10 ]] ; then
+        if [[ ${dbMinor} -ge 2 ]] ; then
+          RETVAL="PASS"
+        fi
+      fi
+    fi
+  else 
+    RETVAL="FAIL: ${dbVer}"
+  fi
+  echo ${RETVAL}
+}
+
+
+# Check that all conditions are correct for running OEE
+function oeeCheckConditions {
+  connectString="${1}"
+  connectDest=$(echo "${connectString}" | cut -d '@' -f 2)
+  RETVAL="FAIL"
+  DBV="N/A"
+
+  if [[ -f $OEE_DIR/oee_group_extract-SA.sh ]] ; then
+      
+    SPR=$(oeeCheckSQLPlusRelease)
+    
+    if [[ "${SPR}" == "PASS" ]] ; then
+      DBV=$(oeeCheckDbVersion ${connectString})
+      if [[ "${DBV}" == "PASS" ]]; then
+          RETVAL="PASS"
+      fi
+    fi  
+  fi
+  if [[ "${RETVAL}" != "PASS" ]] ; then 
+    echo "Failure testing connection ${connectDest}" 
+    echo "SQLPlus Release   ${SPR}"
+    echo "Database Version  ${DBV}"
+  else
+    echo "${RETVAL}"
+  fi
+}
+
