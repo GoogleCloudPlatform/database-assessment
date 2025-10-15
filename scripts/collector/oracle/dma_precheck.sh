@@ -7,6 +7,11 @@ MINDAYS=7
 LOGNAME=dma_precheck_sysdba_$(date +%Y%m%d%H%M%S).log
 STATSSRCCOL=4
 OEEDIR="$(pwd)/oee"
+configfilelinecount=0
+
+function cleanSpace() {
+  return $(echo "${1}" | tr -d '\t' | tr -d ' ')
+}
 
 
 function sectionSeparator() {
@@ -172,8 +177,8 @@ function precheckConfigUniqueId() {
   unqiuevals=()
   echo "Checking configuration file for unique IDs..."
 
-  linecount=$(cat "${CONFIGFILE}" | tr -d ' ' | ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -v '^$' | wc -l | tr -d ' ')
-  uniquecount=$(cat "${CONFIGFILE}" | tr -d ' ' | ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -v '^$' | sort | uniq -c | wc -l | tr -d ' ')
+  linecount=$(cat "${CONFIGFILE}" | tr -d ' ' | tr -d '\t' | ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -v '^$' | wc -l | tr -d ' ')
+  uniquecount=$(cat "${CONFIGFILE}" | tr -d ' ' | tr -d '\t' | ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -v '^$' | sort | uniq -c | wc -l | tr -d ' ')
   
   if [[ ${linecount} -ne ${uniquecount} ]] ; then
     echo "FAILED : Only $uniquecount out of out of $linecount entries are unique."
@@ -195,47 +200,46 @@ function precheckConfigFileFormat() {
   sectionSeparator
 
   echo "Checking configuration file format..."
-  line=0
+  lineno=0
   failcount=0
-  for y in $(cat "${CONFIGFILE}" | tr -d ' ' ); do 
-    line=$(( $line + 1 ))
-    if [[ $(( $line % 100 )) -eq 0 ]]; then echo "..Checking line ${line}"; fi
-    x=$(echo "${y}" | ${GREP} -v '^#' | ${GREP} -v '^$')
-    if [[ "${x}" != "" ]]; then
-      paramCount=$( echo "${x}" | awk -F ',' '{print  NF}' )
-      sysUser=$(echo $x | cut -d ',' -f 1)
-      user=$(echo $x | cut -d ',' -f 2)
-      db=$(echo $x | cut -d ',' -f 3)
-      statssrc=$(echo $x | cut -d ',' -f 4)
-      statswindow=$(echo $x | cut -d ',' -f 5)
-      dmaid=$(echo $x | cut -d ',' -f 6 | tr -d '\n' | tr  -c 'a-zA-Z0-9' '_')
+
+  while IFS=, read -r sysUser user db statssrc statswindow dmaid oee_flag oee_group || [[ -n "$line" ]]; do
+    lineno=$(( ${lineno} + 1 ))
+    [[ ${lineno} -gt ${configfilelinecount} ]] && break   # Break out if we have read all the lines.
+  
+    # Skip comments and empty lines
+    sysUser=$(echo "${sysUser}" | tr -d ' ')
+    [[ "${sysUser}" =~ ^# ]] || [[ -z "${sysUser}" ]] && continue
+
+    if [[ $(( ${lineno} % 100 )) -eq 0 ]]; then echo "..Checking line ${line}"; fi
+
+    if [[ "${sysUser}" != "" ]]; then
+       dmaid=$(echo "${dmaid}" | tr -d '\n' | tr  -c 'a-zA-Z0-9' '_')
 
       if [[ "${statssrc}" != "AWR" ]] && [[ "${statssrc}" != "STATSPACK" ]] && [[ "${statssrc}" != "NONE" ]] && [[ "${statssrc}" != "NOSTATS" ]]; then
-        echo "FAILED : Invalid entry ${statssrc} for Stats Source on line $line.  Must be one of (AWR, STATSPACK, NONE, NOSTATS)."
+        echo "FAILED : Invalid entry ${statssrc} for Stats Source on line ${lineno}.  Must be one of (AWR, STATSPACK, NONE, NOSTATS)."
         failcount=$(( $failcount + 1 ))
       fi
 
       if ( [[ "${statssrc}" = "AWR" ]]  ||  [[ "${statssrc}" = "STATSPACK" ]] )  && ( [[ "${statswindow}" != "7" ]] && [[ "{$statswindow}" != "30" ]] ) ; then
-        echo "FAILED : Invalid entry ${statswindow} for Stats Window on line $line. Must be one of (7, 30)."
+        echo "FAILED : Invalid entry ${statswindow} for Stats Window on line ${lineno}. Must be one of (7, 30)."
         failcount=$(( $failcount + 1 ))
       fi  
 
       # Check parameters for OEE if given
-      if [[ $paramCount -gt 6 ]] ; then
-        oee_flag=$(echo $x | cut -d ',' -f 7 | tr -d '\n')
-        oee_group=$(echo $x | cut -d ',' -f 8 | tr -d '\n' | tr -c 'a-zA-Z0-9' '_')
+      if [[ "${oee_flag}" != ""  ]] ; then
         if [[ "${oee_flag}" != "Y" ]] && [[ "${oee_flag}" != "N" ]] ; then
-          echo "FAILED : Invalid entry ${oee_flag} for OEE Flag on line $line. Must be one of (Y, N)."
+          echo "FAILED : Invalid entry ${oee_flag} for OEE Flag on line ${lineno}. Must be one of (Y, N)."
           failcount=$(( $failcount + 1 ))
         fi
 
         if [[ "${oee_flag}" = "Y" ]] && [[ ! -f ${OEEDIR}/oee_group_extract-SA.sh ]] ; then
-            echo "FAILED : OEE collection is specified on line ${line} but the OEE collection files are not installed in ${OEEDIR}.  Either install OEE to the specified location or set this flag to N in the configuration file."
+            echo "FAILED : OEE collection is specified on line ${lineno} but the OEE collection files are not installed in ${OEEDIR}.  Either install OEE to the specified location or set this flag to N in the configuration file."
             failcount=$(( $failcount + 1 ))
         fi              
       fi
     fi     
-  done 
+  done < <( sed 's/ //g;s/\t//g' "$CONFIGFILE")
 
   if [[ $failcount -eq 0 ]]; then
     echo "SUCCESS : Configuration file format check."
@@ -267,7 +271,7 @@ function checkStats() {
     dbconn VARCHAR2(100) := '${2}';
   BEGIN
     IF statsSrc = 'NONE' or statsSrc = 'NOSTATS' THEN
-      retval := 'NONE : NO PERFORMANCE STATISTICS WILL BE COLLECTED';
+      retval := 'NONE : ' || rpad(substr(dbconn,1,40),40) || ' NO PERFORMANCE STATISTICS WILL BE COLLECTED';
     ELSIF statsSrc = 'AWR' THEN
       BEGIN
         SELECT count(1) INTO cnt FROM all_views WHERE view_name LIKE '%_HIST_SNAPSHOT';
@@ -277,11 +281,11 @@ function checkStats() {
           sqlStr := 'SELECT  EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) FROM dba_hist_snapshot WHERE begin_interval_time < trunc(sysdate)';
           EXECUTE IMMEDIATE sqlStr INTO numdays;
           IF numdays > 0 THEN
-            sqlStr := REPLACE('SELECT CASE WHEN EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(dbconn,1,40),40, ~ ~) || ~ AWR        START ~ || to_char( min(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1),4) || ~  #DAYS ~, EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) )
+            sqlStr := REPLACE('SELECT CASE WHEN EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40, ~ ~) || ~ AWR        START ~ || to_char( min(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1),4) || ~  #DAYS ~, EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) )
             , (count(1) / EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) )
             FROM dba_hist_snapshot
             WHERE begin_interval_time <= trunc(sysdate)', '~', chr(39));
-            EXECUTE IMMEDIATE sqlStr INTO retval, numdays, snapsperday USING mindays;
+            EXECUTE IMMEDIATE sqlStr INTO retval, numdays, snapsperday USING mindays, dbconn;
             retval := retval || LPAD(numdays, 4) || '  SnapsPerDay ' || round(snapsperday) ;
           END IF;
           IF numdays < mindays THEN
@@ -304,11 +308,11 @@ function checkStats() {
         EXECUTE IMMEDIATE sqlStr INTO numdays, numsnaps USING mindays;
         numdays:=NVL(numdays,0);
         IF numdays > 0 THEN
-          sqlStr := REPLACE('SELECT CASE WHEN trunc(max(snap_time) -min(snap_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(dbconn,1,40),40) || ~ STATSPACK  START ~ || to_char(min(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1), 4) || ~  #DAYS ~ , to_char(trunc(max(snap_time) -min(snap_time) )) , count(1) / (max(snap_time) -min(snap_time) )
+          sqlStr := REPLACE('SELECT CASE WHEN trunc(max(snap_time) -min(snap_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40) || ~ STATSPACK  START ~ || to_char(min(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1), 4) || ~  #DAYS ~ , to_char(trunc(max(snap_time) -min(snap_time) )) , count(1) / (max(snap_time) -min(snap_time) )
           FROM PERFSTAT.STATS\$SNAPSHOT
           WHERE snap_time <= (sysdate)
           AND snap_time >= trunc(sysdate - :mindays)', '~', chr(39));
-          EXECUTE IMMEDIATE sqlStr INTO retval, numdays, snapsperday USING mindays, mindays;
+          EXECUTE IMMEDIATE sqlStr INTO retval, numdays, snapsperday USING mindays, dbconn, mindays;
           retval := retval || LPAD(numdays,4) || '  SnapsPerDay ' || ROUND(snapsperday);
         ELSE
           IF numsnaps <= 1 OR numdays <= 1 THEN retval := 'FAILED : ' || rpad(substr(dbconn,1,40),40) || ' Not enough snapshots to collect performance data.  Either collect more snapshots or disable stats collection for this database.';
@@ -351,10 +355,11 @@ function precheckStats() {
   while IFS=, read -r sysUser user db statssrc statswindow dmaid oee_flag oee_group || [[ -n "$line" ]]; do
     lineno=$(( $lineno + 1 ))
     # Skip comments and empty lines
-    [[ $lineno -gt $line ]] && break   # Break out if the last line of the config file is a comment or empty
+    [[ $lineno -gt $configfilelinecount ]] && break   # Break out if the last line of the config file is a comment or empty
   
     # Skip comments and empty lines
-    [[ "$sysUser" =~ ^# ]] || [[ -z "$sysUser" ]] && continue
+    sysUser=$(echo "${sysUser}" | tr -d ' ')
+    [[ "${sysUser}" =~ ^# ]] || [[ -z "${sysUser}" ]] && continue
     username=$(echo "${user}" | cut -d '/' -f 1)
     echo  "...Checking available performance statistics on database ${db} user ${username} for ${statssrc}"
     retcd=$(checkStats "${user}" "${db}" "${statssrc}" "${statswindow}") 
@@ -372,7 +377,7 @@ function precheckStats() {
         fi
       fi
     fi
-  done < "$CONFIGFILE"
+  done < <( sed 's/ //g;s/\t//g' "$CONFIGFILE")
 
   # for x in $(cat "${CONFIGFILE}" | ${GREP} -v '^#' | ${GREP} -v '^$'); do
   #   user=$(echo "${x}" | cut -d ',' -f 2 | tr -d "'")
@@ -456,9 +461,11 @@ function precheckSysdba() {
 
   while IFS=, read -r sysUser user db statssrc statswindow dmaid oee_flag oee_group || [[ -n "$line" ]]; do
      lineno=$(( $lineno + 1 ))
+
+    [[ $lineno -gt $configfilelinecount ]] && break   # Break out if the last line of the config file is a comment or empty
+    sysUser=$(echo "${sysUser}" | tr -d ' ')
     # Skip comments and empty lines
-    [[ $lineno -gt $line ]] && break   # Break out if the last line of the config file is a comment or empty
-    [[ "$sysUser" =~ ^# ]] || [[ -z "$sysUser" ]] && continue
+    [[ "${sysUser}" =~ ^# ]] || [[ -z "${sysUser}" ]] && continue
     if [[ "${sysUser}" = "" ]] || [[ "${sysUser}" = "NONE" ]] ; then
       echo " : SUCCESS"
       successes+=("SKIPPED : ${db}")
@@ -476,7 +483,7 @@ function precheckSysdba() {
         errors+=("FAILED : ${db}")
       fi
     fi
-  done < "$CONFIGFILE"
+  done < <( sed 's/ //g;s/\t//g' "$CONFIGFILE")
 
 
   # for x in $(cat "${CONFIGFILE}" | ${GREP} -v '^#' | ${GREP} -v '^$'); do
@@ -549,10 +556,11 @@ function precheckUser() {
   errors=()
 
   while IFS=, read -r sysUser user db statssrc statswindow dmaid oee_flag oee_group || [[ -n "$line" ]]; do
-     lineno=$(( $lineno + 1 ))
+     lineno=$(( ${lineno} + 1 ))
     # Skip comments and empty lines
-    [[ $lineno -gt $line ]] && break   # Break out if the last line of the config file is a comment or empty
-    [[ "$sysUser" =~ ^# ]] || [[ -z "$sysUser" ]] && continue
+    [[ $lineno -gt $configfilelinecount ]] && break   # Break out if the last line of the config file is a comment or empty
+    sysUser=$(echo "${sysUser}" | tr -d ' ')
+    [[ "${sysUser}" =~ ^# ]] || [[ -z "${sysUser}" ]] && continue
     username=$(echo ${user} | cut -d '/' -f 1)
     echo -n "...Testing DMA user connection for user ${username} to database ${db}"
     retcd=$(checkConnection "${user}" "${db}" )
@@ -567,7 +575,7 @@ function precheckUser() {
       echo
     fi
 
-  done < "$CONFIGFILE"
+  done < <( sed 's/ //g;s/\t//g' "$CONFIGFILE")
 
   # for x in $(cat "${CONFIGFILE}" | ${GREP} -v '^#' | ${GREP} -v '^$'); do
   #   user=$(echo $x | cut -d ',' -f 2)
@@ -648,7 +656,7 @@ function runAllChecks() {
 
 ### Validate input
 
-if [[ $(($# & 1)) == 1 ]]; then
+if [[ $(($# & 1)) == 1 ]] || [[ $# == 0 ]] ; then
   echo "Invalid number of parameters "
   #printUsage
   exit
@@ -665,5 +673,11 @@ while (( "$#" )); do
   shift 2
 done
 
-runAllChecks 
+if [ -f "${CONFIGFILE}" ]; then 
+  configfilelinecount=$(wc -l <"${CONFIGFILE}")
+  echo "Checking ${configfilelinecount} entries..."
+  runAllChecks 
+else
+  echo "File not found : ${CONFIGFILE}"
+fi
 

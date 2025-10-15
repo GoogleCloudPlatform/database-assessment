@@ -23,9 +23,14 @@ OpVersion="4.3.44"
 dbmajor=""
 dbdomain=""
 
+if [[ "${LANG}" = "" ]]; then LANG=C
+fi
+
+# Force LANG and LOCALE to C UTF8
+export LANG=$(locale -a | grep -i -e "^c.utf8" -e "^c.utf-8" | sort | head -1)
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
-export LANG=C
-export LANG=${LOCALE}.UTF-8
+#export LANG=C
+#export LANG=${LOCALE}.UTF-8
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 SQLPLUS=sqlplus
@@ -51,6 +56,9 @@ if [ "$(uname)" = "HP-UX" ]; then
   if [ -f /usr/local/bin/md5 ]; then
     MD5SUM=/usr/local/bin/md5
     MD5COL=4
+  else if [ -f /usr/bin/csum ]; then
+    MD5SUM="/usr/bin/csum -h MD5"
+    MD5COL=1
   fi
 fi
 
@@ -152,21 +160,21 @@ function cleanupOpOutput() {
   do
     if [ -f $outfile ] ; then
       if [ $(uname) = "SunOS" ]; then
-        sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
+        ${SED} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
         cp sed_${V_FILE_TAG}.tmp ${outfile}
         rm sed_${V_FILE_TAG}.tmp
       else
         if [ $(uname) = "AIX" ]; then
-          sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
+          ${SED} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
           cp sed_${V_FILE_TAG}.tmp ${outfile}
           rm sed_${V_FILE_TAG}.tmp
         else
           if [ "$(uname)" = "HP-UX" ]; then
-            sed  's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
+            ${SED} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
             cp sed_${V_FILE_TAG}.tmp ${outfile}
             rm sed_${V_FILE_TAG}.tmp
           else
-            sed -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d' ${outfile} > sed_${V_FILE_TAG}.tmp
+            ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d' ${outfile} > sed_${V_FILE_TAG}.tmp
             cp sed_${V_FILE_TAG}.tmp ${outfile}
             rm sed_${V_FILE_TAG}.tmp
           fi
@@ -425,7 +433,17 @@ if [[ "${collectOEE}" == "Y" ]] ; then
 fi
 
 if [[ "${manualUniqueId}" != "" ]]; then
-  manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+  CASE "$(uname)" in
+    Darwin | Linux)
+          manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | ${SED} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+          ;;
+    HP-UX)
+          manualUniqueId=$(echo "${manualUniqueId}" | tr -c '[:alnum:]\n' '-' |  sed 's/^-//; s/-$//' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+          ;;
+    AIX)
+          manualUniqueId=$(echo "${manualUniqueId}" | iconv -f $(locale charmap) -t UTF-8 | tr -c '[:alnum:]\n' '-' |  sed 's/^-//; s/-$//' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+          ;;
+    esac
 else
   manualUniqueId='NA'
 fi
@@ -490,16 +508,16 @@ if [ $retval -eq 0 ]; then
     executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS} "${manualUniqueId}" $statsWindow
     retval=$?
     if [ $retval -ne 0 ]; then
-      createErrorLog  $(echo ${V_TAG} | sed 's/.csv//g')
-      compressOpFiles $(echo ${V_TAG} | sed 's/.csv//g')
+      createErrorLog  $(echo ${V_TAG} | ${SED} 's/.csv//g')
+      compressOpFiles $(echo ${V_TAG} | ${SED} 's/.csv//g')
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${LOG_DIR}"
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Exiting...."
       exit 255
     fi
-    createErrorLog  $(echo ${V_TAG} | sed 's/.csv//g')
-    cleanupOpOutput $(echo ${V_TAG} | sed 's/.csv//g')
+    createErrorLog  $(echo ${V_TAG} | ${SED} 's/.csv//g')
+    cleanupOpOutput $(echo ${V_TAG} | ${SED} 's/.csv//g')
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -520,7 +538,7 @@ if [ $retval -eq 0 ]; then
         echo "Skipping Estate Explorere collection for ${databaseService} ${hostName}"
       fi
     fi
-    compressOpFiles $(echo ${V_TAG} | sed 's/.csv//g') $dbType
+    compressOpFiles $(echo ${V_TAG} | ${SED} 's/.csv//g') $dbType
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"

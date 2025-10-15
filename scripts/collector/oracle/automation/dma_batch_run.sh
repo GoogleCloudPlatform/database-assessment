@@ -22,7 +22,7 @@ function batchRun() {
     dmaid=$(echo $x | cut -d ',' -f 6 | tr -d '\n' | tr  -c 'a-zA-Z0-9' '_')
     oee_flag=$(echo $x | cut -d ',' -f 7)
     oee_group=$(echo $x | cut -d ',' -f 8 | tr -d '\n' | tr -c 'a-zA-Z0-9' '_')
-    logname=$(echo $db | tr -d '\n' | tr  -c 'a-zA-Z0-9' '_')
+    logname=$(echo $db | tr -d '\n' | tr  '[:punct:]' '[_*]')
     if [ "${statssrc}" = "NONE" ]
     then
       statsparam=""
@@ -127,7 +127,7 @@ function printUsage() {
 
 ### Validate input
 
-if [[ $(($# & 1)) == 1 ]] ;
+if [[ $(($# & 1)) == 1 ]] || [ $# == 0 ]  ;
 then
   echo "Invalid number of parameters "
   printUsage
@@ -151,9 +151,13 @@ while (( "$#" )); do
   shift 2
 done
 
+if [ -f "${CONFIGFILE}" ] ; then
 batchRun
 
-if [ -d ../oee ]
-then
-  runOee
+  if [ -d ../oee ] 
+  then
+    runOee
+  fi
+else
+  echo "File not found : ${CONFIGFILE}"
 fi
