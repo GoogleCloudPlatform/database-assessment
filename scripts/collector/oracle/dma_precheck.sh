@@ -8,11 +8,7 @@ LOGNAME=dma_precheck_sysdba_$(date +%Y%m%d%H%M%S).log
 STATSSRCCOL=4
 OEEDIR="$(pwd)/oee"
 configfilelinecount=0
-
-function cleanSpace() {
-  return $(echo "${1}" | tr -d '\t' | tr -d ' ')
-}
-
+TABCHAR=$(printf '\t')
 
 function sectionSeparator() {
 
@@ -177,16 +173,16 @@ function precheckConfigUniqueId() {
   unqiuevals=()
   echo "Checking configuration file for unique IDs..."
 
-  linecount=$(cat "${CONFIGFILE}" | tr -d ' ' | tr -d '\t' | ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -v '^$' | wc -l | tr -d ' ')
-  uniquecount=$(cat "${CONFIGFILE}" | tr -d ' ' | tr -d '\t' | ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -v '^$' | sort | uniq -c | wc -l | tr -d ' ')
+  linecount=$(cat "${CONFIGFILE}" | tr -d ' ' | tr -d "${TABCHAR}" | ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -v '^$' | wc -l | tr -d ' ')
+  uniquecount=$(cat "${CONFIGFILE}" | tr -d ' ' | tr -d "${TABCHAR}" | ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -v '^$' | sort | uniq -c | wc -l | tr -d ' ')
   
   if [[ ${linecount} -ne ${uniquecount} ]] ; then
-    echo "FAILED : Only $uniquecount out of out of $linecount entries are unique."
+    echo "FAILED : Only $uniquecount out of out of $linecount IDs are unique."
     echo "         These Ids appear more than once in the configuration file : "
     echo "Occurrances Value"
     echo "----------- ------------------------------"
-    cat "${CONFIGFILE}" | ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -v '^$' | sort | uniq -c | ${GREP} -v ' 1 ' | ${SED} 's/^ *//g;s/ /\t\t\t/g' | awk -F ' ' '{printf "%11s %s", $1, $2}'
-    # awk -F, '!/^#/ && !/^$/ && $7 {a[$7]++} END {for (k in a) if (a[k]>1) print a[k], k}' automation/dma_db_lab_nostats.csv
+    #cat "${CONFIGFILE}" | ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -v '^$' | sort | uniq -c | ${GREP} -v ' 1 ' | ${SED} 's/^ *//g' | ${SED} "s/ /${TABCHAR}${TABCHAR}${TABCHAR}/g" | awk '{printf "%11s %s", $1, $2}'
+    tr -d ' ' < "${CONFIGFILE}" | tr -d "${TABCHAR}" |  ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -v '^$' | sort | uniq -c | ${GREP} -v ' 1 '  | awk '{printf "%11s %s", $1, $2}'
     return 1
   else 
     echo "SUCCESS : All databases have unique ids where specified."
@@ -212,7 +208,6 @@ function precheckConfigFileFormat() {
     [[ "${sysUser}" =~ ^# ]] || [[ -z "${sysUser}" ]] && continue
 
     if [[ $(( ${lineno} % 100 )) -eq 0 ]]; then echo "..Checking line ${line}"; fi
-
     if [[ "${sysUser}" != "" ]]; then
        dmaid=$(echo "${dmaid}" | tr -d '\n' | tr  -c 'a-zA-Z0-9' '_')
 
@@ -239,7 +234,7 @@ function precheckConfigFileFormat() {
         fi              
       fi
     fi     
-  done < <( sed 's/ //g;s/\t//g' "$CONFIGFILE")
+  done < <( ${SED} "s/ //g;s/${TABCHAR}//g" "$CONFIGFILE"  )
 
   if [[ $failcount -eq 0 ]]; then
     echo "SUCCESS : Configuration file format check."
@@ -346,6 +341,7 @@ function precheckStats() {
   sectionSeparator
 
   echo "Checking for performance stats ..."
+  echo
   retval=0
   lineno=0
   successes=()
@@ -377,33 +373,11 @@ function precheckStats() {
         fi
       fi
     fi
-  done < <( sed 's/ //g;s/\t//g' "$CONFIGFILE")
-
-  # for x in $(cat "${CONFIGFILE}" | ${GREP} -v '^#' | ${GREP} -v '^$'); do
-  #   user=$(echo "${x}" | cut -d ',' -f 2 | tr -d "'")
-  #   username=$(echo "${user}" | cut -d '/' -f 1)
-  #   db=$(echo $x | cut -d ',' -f 3)
-  #   statssrc=$(echo $x | cut -d ',' -f 4)
-  #   statswindow=$(echo $x | cut -d ',' -f 5)
-  #   echo  "...Checking available performance statistics on database ${db} user ${username} for ${statssrc}"
-  #   retcd=$(checkStats "${user}" "${db}" "${statssrc}" "${statswindow}") 
-  #   success=$(echo "${retcd}" | ${GREP} -e SUCCESS -e NONE -e WARNING | cut -d ' ' -f 1)
-  #   if [ "${success}" = "SUCCESS" ]; then
-  #     successes+=("${retcd}")
-  #   else
-  #     if [ "${success}" = "NONE" ]; then
-  #       none+=("${retcd}")
-  #     else
-  #       if [ "${success}" = "WARNING" ]; then
-  #         warnings+=("${retcd}") 
-  #       else 
-  #         errors+=("${retcd}")
-  #       fi
-  #     fi
-  #   fi
-  # done 
+  done < <( ${SED} "s/ //g;s/${TABCHAR}//g" "$CONFIGFILE"  )
 
   retcd=${#successes[@]}
+  echo
+  echo "Results : "
   if [ $retcd -gt 0 ]; then
     echo
     echo SUCCESS:  These databases have at least ${statswindow} calendar days of performance statistics available:
@@ -483,7 +457,7 @@ function precheckSysdba() {
         errors+=("FAILED : ${db}")
       fi
     fi
-  done < <( sed 's/ //g;s/\t//g' "$CONFIGFILE")
+  done < <( ${SED} "s/ //g;s/${TABCHAR}//g" "$CONFIGFILE"  )
 
 
   # for x in $(cat "${CONFIGFILE}" | ${GREP} -v '^#' | ${GREP} -v '^$'); do
@@ -575,7 +549,7 @@ function precheckUser() {
       echo
     fi
 
-  done < <( sed 's/ //g;s/\t//g' "$CONFIGFILE")
+  done < <( ${SED} "s/ //g;s/${TABCHAR}//g" "$CONFIGFILE"  )
 
   # for x in $(cat "${CONFIGFILE}" | ${GREP} -v '^#' | ${GREP} -v '^$'); do
   #   user=$(echo $x | cut -d ',' -f 2)
@@ -626,6 +600,7 @@ function runAllChecks() {
   echo
   echo "Starting DMA prechecks..."
   echo
+  sectionSeparator
   precheckOS
   retval=$?
   if [[ $retval -eq 0 ]]; then precheckConfigFileFormat; retval=$?; fi
@@ -675,7 +650,8 @@ done
 
 if [ -f "${CONFIGFILE}" ]; then 
   configfilelinecount=$(wc -l <"${CONFIGFILE}")
-  echo "Checking ${configfilelinecount} entries..."
+  echo
+  echo "Checking ${configfilelinecount} entries in file ${CONFIGFILE}..."
   runAllChecks 
 else
   echo "File not found : ${CONFIGFILE}"

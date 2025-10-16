@@ -23,14 +23,10 @@ OpVersion="4.3.44"
 dbmajor=""
 dbdomain=""
 
-if [[ "${LANG}" = "" ]]; then LANG=C
-fi
-
 # Force LANG and LOCALE to C UTF8
+export LOCALE=C
 export LANG=$(locale -a | grep -i -e "^c.utf8" -e "^c.utf-8" | sort | head -1)
-LOCALE=$(echo $LANG | cut -d '.' -f 1)
-#export LANG=C
-#export LANG=${LOCALE}.UTF-8
+
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 SQLPLUS=sqlplus
@@ -57,8 +53,9 @@ if [ "$(uname)" = "HP-UX" ]; then
     MD5SUM=/usr/local/bin/md5
     MD5COL=4
   else if [ -f /usr/bin/csum ]; then
-    MD5SUM="/usr/bin/csum -h MD5"
-    MD5COL=1
+      MD5SUM="/usr/bin/csum -h MD5"
+      MD5COL=1
+    fi
   fi
 fi
 
@@ -351,7 +348,7 @@ oeeGroup="NONE"
 oeeRunId=$(date +%Ym%d%H%M%S)
 
 if [[ $(($# & 1)) == 1 ]] ; then
-  echo "Invalid number of parameters "
+  echo "Invalid number of parameters : $# $@"
   printUsage
   exit
 fi
@@ -432,15 +429,18 @@ if [[ "${collectOEE}" == "Y" ]] ; then
   fi
 fi
 
-if [[ "${manualUniqueId}" != "" ]]; then
-  CASE "$(uname)" in
-    Darwin | Linux)
+if [[ "${manualUniqueId}" != "" ]] ; then
+  case "$(uname)" in
+    "Solaris" )
           manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | ${SED} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
           ;;
-    HP-UX)
-          manualUniqueId=$(echo "${manualUniqueId}" | tr -c '[:alnum:]\n' '-' |  sed 's/^-//; s/-$//' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+    ( "Darwin" | "Linux" )
+          manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | ${SED} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100) 
+          ;; 
+    "HP-UX" )
+          manualUniqueId=$(echo "${manualUniqueId}" | tr -c '[:alnum:]\n' '-' |  sed 's/^-//; s/-$//' | tr '[:upper:]' '[:lower:]' | cut -c 1-100) 
           ;;
-    AIX)
+    "AIX" )
           manualUniqueId=$(echo "${manualUniqueId}" | iconv -f $(locale charmap) -t UTF-8 | tr -c '[:alnum:]\n' '-' |  sed 's/^-//; s/-$//' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
           ;;
     esac
@@ -448,7 +448,6 @@ else
   manualUniqueId='NA'
 fi
 
-echo "OEE RUN ID = ${oeeRunId}"
 #############################################################################
 #
 #if [[  $# -ne 2  || (  "$2" != "UseDiagnostics" && "$2" != "NoDiagnostics" ) ]]
