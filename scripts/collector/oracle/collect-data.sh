@@ -1,5 +1,5 @@
-## # !/usr/bin/env bash
-
+#!/bin/bash
+set -e
 # Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License").
@@ -19,7 +19,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.44"
+dma_version="4.3.44"
 dbmajor=""
 dbdomain=""
 
@@ -28,152 +28,154 @@ export LOCALE=C
 export LANG=$(locale -a | grep -i -e "^c.utf8" -e "^c.utf-8" | sort | head -1)
 
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-SQLPLUS=sqlplus
-OUTPUT_DIR=${SCRIPT_DIR}/output; export OUTPUT_DIR
-SQLOUTPUT_DIR=${OUTPUT_DIR}; export SQLOUTPUT_DIR
-ORACLE_PATH=${SCRIPT_DIR}; export ORACLE_PATH
-TMP_DIR=${SCRIPT_DIR}/tmp
-LOG_DIR=${SCRIPT_DIR}/log
-SQL_DIR=${SCRIPT_DIR}/sql
-OEE_DIR=${SCRIPT_DIR}/oee
+script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+sql_plus=sqlplus
+output_dir=${script_dir}/output; export output_dir
+sql_output_dir=${output_dir}; export sql_output_dir
+oracle_path=${script_dir}; export oracle_path
+tmp_dir=${script_dir}/tmp
+log_dir=${script_dir}/log
+sql_dir=${script_dir}/sql
+oee_dir=${script_dir}/oee
 
-GREP=$(which grep)
-SED=$(which sed)
-MD5SUM=$(which md5sum 2>/dev/null)
-MD5COL=1
+grep_cmd=$(which grep)
+sed_cmd=$(which sed)
+md5_cmd=$(which md5sum 2>/dev/null)
+md5_col=1
 
 if [ "$(uname)" = "SunOS" ]; then
-  GREP=/usr/xpg4/bin/grep
-  SED=/usr/xpg4/bin/sed
+  grep_cmd=/usr/xpg4/bin/grep
+  sed_cmd=/usr/xpg4/bin/sed
 fi
 
 if [ "$(uname)" = "HP-UX" ]; then
   if [ -f /usr/local/bin/md5 ]; then
-    MD5SUM=/usr/local/bin/md5
-    MD5COL=4
+    md5_cmd=/usr/local/bin/md5
+    md5_col=4
   else if [ -f /usr/bin/csum ]; then
-      MD5SUM="/usr/bin/csum -h MD5"
-      MD5COL=1
+      md5_cmd="/usr/bin/csum -h md5_val"
+      md5_col=1
     fi
   fi
 fi
 
-ZIP=$(which zip 2>/dev/null)
-if [ "${ZIP}" = "" ]; then
-  GZIP=$(which gzip 2>/dev/null)
+zip_cmd=$(which zip 2>/dev/null)
+if [ "${zip_cmd}" = "" ]; then
+  gzip_cmd=$(which gzip 2>/dev/null)
 fi
 
-if [ ! -d ${LOG_DIR} ]; then
-  mkdir -p ${LOG_DIR}
+if [ ! -d ${log_dir} ]; then
+  mkdir -p ${log_dir}
 fi
-if [ ! -d ${OUTPUT_DIR} ]; then
-  mkdir -p ${OUTPUT_DIR}
+if [ ! -d ${output_dir} ]; then
+  mkdir -p ${output_dir}
 fi
 
 # Check if running on Windows Subsystem for Linux
-ISWIN=$(uname -a | grep -i microsoft |wc -l)
-if [ ${ISWIN} -eq 1 ]; then
-  SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
-  SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
-  SQLPLUS=sqlplus.exe
+is_windows=$(uname -a | grep -i microsoft |wc -l)
+if [ ${is_windows} -eq 1 ]; then
+  sql_dir=$(wslpath -a -w ${script_dir})/sql
+  sql_output_dir=$(wslpath -a -w ${sql_output_dir})
+  sql_plus=sqlplus.exe
 fi
 
 # Check if running on Cygwin
-ISCYG=$(uname -a | grep Cygwin | wc -l)
-if [ ${ISCYG} -eq 1 ]; then
-  SQL_DIR=$(cygpath -w ${SCRIPT_DIR})/sql
-  SQLOUTPUT_DIR=$(cygpath -w ${SQLOUTPUT_DIR})
-  SQLPLUS=sqlplus.exe
+is_cygwin=$(uname -a | grep Cygwin | wc -l)
+if [ ${is_cygwin} -eq 1 ]; then
+  sql_dir=$(cygpath -w ${script_dir})/sql
+  sql_output_dir=$(cygpath -w ${sql_output_dir})
+  sql_plus=sqlplus.exe
 fi
 
 ### Import logging & helper functions
 #############################################################################
 
-function checkVersion() {
-  connectString="$1"
-  OpVersion=$2
+function check_version() {
+  local connect_string="$1"
+  local dma_version=$2
 
-  if ! [ -x "$(command -v ${SQLPLUS})" ]; then
-    echo "Could not find ${SQLPLUS} command. Source in environment and try again"
+  if ! [[ -x "$(command -v ${sql_plus})" ]]; then
+    echo "Could not find ${sql_plus} command. Source in environment and try again"
     echo "Exiting..."
     exit 1
   fi
 
-  ${SQLPLUS} -s /nolog << EOF
+  ${sql_plus} -s /nolog << EOF
 SET DEFINE OFF
-connect ${connectString}
-@${SQL_DIR}/op_set_sql_env.sql
+connect ${connect_string}
+@${sql_dir}/dma_set_sql_env.sql
 set pagesize 0 lines 400 feedback off verify off heading off echo off timing off time off
 column vname new_value v_name noprint
 select min(object_name) as vname from dba_objects where object_name in ('V\$INSTANCE', 'GV\$INSTANCE');
-select 'DMAFILETAG~'|| i.version||'|'||substr(replace(i.version,'.',''),0,3)||'_'||'${OpVersion}_'||i.host_name||'_'||d.name||'_'||i.instance_name||'_'||to_char(sysdate,'MMDDRRHH24MISS')||'~'
+select 'DMAFILETAG~'|| i.version||'|'||substr(replace(i.version,'.',''),0,3)||'_'||'${dma_version}_'||i.host_name||'_'||d.name||'_'||i.instance_name||'_'||to_char(sysdate,'MMDDRRHH24MISS')||'~'
 from ( SELECT case when version like '9%' then '0' || version else version end as version, host_name, instance_name FROM &&v_name WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v\$database d;
 exit;
 EOF
 }
 
-function executeOP() {
-  connectString="$1"
-  OpVersion=$2
-  DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
-  manualUniqueId="${4}"
-  statsWindow=${5}
+function execute_dma() {
+  local connect_string="$1"
+  local dma_version=$2
+  local DiagPack=$(echo $3 | tr [[:upper:]] [[:lower:]])
+  local manualUniqueId="${4}"
+  local statsWindow=${5}
 
-  if ! [ -x "$(command -v ${SQLPLUS})" ]; then
-    echo "Could not find ${SQLPLUS} command. Source in environment and try again"
+  if ! [ -x "$(command -v ${sql_plus})" ]; then
+    echo "Could not find ${sql_plus} command. Source in environment and try again"
     echo "Exiting..."
     exit 1
   fi
 
 
-  ${SQLPLUS} -s /nolog << EOF
+  ${sql_plus} -s /nolog << EOF
 SET DEFINE OFF
-connect ${connectString}
-@${SQL_DIR}/op_collect.sql ${OpVersion} ${SQL_DIR} ${DiagPack} ${V_TAG} ${SQLOUTPUT_DIR} "${manualUniqueId}" ${statsWindow}
+connect ${connect_string}
+@${sql_dir}/dma_collect.sql ${dma_version} ${sql_dir} ${DiagPack} ${V_TAG} ${sql_output_dir} "${manualUniqueId}" ${statsWindow}
 exit;
 EOF
 
 }
 
-function createErrorLog() {
-  V_FILE_TAG=$1
+function create_error_log() {
+  local v_file_tag=$1
   echo "Checking for errors..."
-  $GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+  $grep_cmd -E 'SP2-|ORA-' ${output_dir}/opdb__*${v_file_tag}.csv | $grep_cmd -v opatch > ${log_dir}/opdb__${v_file_tag}_errors.log
   retval=$?
-  if [ ! -f  ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ]; then
+  if [ ! -f  ${log_dir}/opdb__${v_file_tag}_errors.log ]; then
     echo "Error creating error log.  Exiting..."
     return $retval
   fi
-  if [ -f  ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv ]; then
-    $GREP 'sys.dbms_qopatch.get_opatch_lsinventory' ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv >> ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+  if [ -f  ${output_dir}/opdb__opatch*${v_file_tag}.csv ]; then
+    $grep_cmd 'sys.dbms_qopatch.get_opatch_lsinventory' ${output_dir}/opdb__opatch*${v_file_tag}.csv >> ${log_dir}/opdb__${v_file_tag}_errors.log
   fi
 }
 
-function cleanupOpOutput() {
-  V_FILE_TAG=$1
+
+# Strip out extranneous spaces in the output.
+function cleanup_dma_output() {
+  local v_file_tag=$1
   echo "Preparing files for compression."
-  for outfile in  ${OUTPUT_DIR}/opdb*${V_FILE_TAG}.csv
+  for outfile in  ${output_dir}/opdb*${v_file_tag}.csv
   do
     if [ -f $outfile ] ; then
       if [ $(uname) = "SunOS" ]; then
-        ${SED} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
-        cp sed_${V_FILE_TAG}.tmp ${outfile}
-        rm sed_${V_FILE_TAG}.tmp
+        ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${v_file_tag}.tmp
+        cp sed_${v_file_tag}.tmp ${outfile}
+        rm sed_${v_file_tag}.tmp
       else
         if [ $(uname) = "AIX" ]; then
-          ${SED} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
-          cp sed_${V_FILE_TAG}.tmp ${outfile}
-          rm sed_${V_FILE_TAG}.tmp
+          ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${v_file_tag}.tmp
+          cp sed_${v_file_tag}.tmp ${outfile}
+          rm sed_${v_file_tag}.tmp
         else
           if [ "$(uname)" = "HP-UX" ]; then
-            ${SED} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
-            cp sed_${V_FILE_TAG}.tmp ${outfile}
-            rm sed_${V_FILE_TAG}.tmp
+            ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${v_file_tag}.tmp
+            cp sed_${v_file_tag}.tmp ${outfile}
+            rm sed_${v_file_tag}.tmp
           else
-            ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d' ${outfile} > sed_${V_FILE_TAG}.tmp
-            cp sed_${V_FILE_TAG}.tmp ${outfile}
-            rm sed_${V_FILE_TAG}.tmp
+            ${sed_cmd} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d' ${outfile} > sed_${v_file_tag}.tmp
+            cp sed_${v_file_tag}.tmp ${outfile}
+            rm sed_${v_file_tag}.tmp
           fi
         fi
       fi
@@ -181,78 +183,87 @@ function cleanupOpOutput() {
   done
 }
 
-function compressOpFiles() {
-  V_FILE_TAG=$1
-  DBTYPE=$2
-  V_ERR_TAG=""
+
+function compress_dma_files() {
+  local v_file_tag=$1
+  local db_type=$2
+  local v_err_tag=""
+  local err_cnt
+  local -i retval
+  local tar_file
+  local zip~file
+
   echo ""
-  echo "Archiving output files with tag ${V_FILE_TAG}"
-  CURRENT_WORKING_DIR=$(pwd)
-  cp ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
+  echo "Archiving output files with tag ${v_file_tag}"
+
+  current_working_dir=$(pwd)
+  cp ${log_dir}/opdb__${v_file_tag}_errors.log ${output_dir}/opdb__${v_file_tag}_errors.log
   if [ -f VERSION.txt ]; then
-    cp VERSION.txt ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
+    cp VERSION.txt ${output_dir}/opdb__${v_file_tag}_version.txt
   else
-    echo "No Version file found" >  ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
+    echo "No Version file found" >  ${output_dir}/opdb__${v_file_tag}_version.txt
   fi
-  ERRCNT=$(wc -l < ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log)
-  if [ ! -f ${OUTPUT_DIR}/opdb__eoj__${V_FILE_TAG}.csv ] ; then
-    ERRCNT=$((${ERRCNT} + 1))
+
+  err_cnt=$(wc -l < ${output_dir}/opdb__${v_file_tag}_errors.log)
+  if [ ! -f ${output_dir}/opdb__eoj__${v_file_tag}.csv ] ; then
+    err_cnt=$((${err_cnt} + 1))
     echo "End of job marker file not found.  Data collection did not complete."
   fi
-  if [[ ${ERRCNT} -ne 0 ]]; then
-    V_ERR_TAG="_ERROR"
+  if [[ ${err_cnt} -ne 0 ]]; then
+    v_err_tag="_ERROR"
     retval=1
     echo "Errors reported during collection:"
-    cat ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
+    cat ${output_dir}/opdb__${v_file_tag}_errors.log
     echo " "
     echo "Please rerun the extract after correcting the error condition."
   fi
 
-  TARFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tar
-  ZIPFILE=opdb_oracle_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.zip
+  tar_file=opdb_oracle_${DIAGPACKACCESS}__${v_file_tag}${v_err_tag}.tar
+  zip_file=opdb_oracle_${DIAGPACKACCESS}__${v_file_tag}${v_err_tag}.zip
 
-  locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
+  locale > ${output_dir}/opdb__${v_file_tag}_locale.txt
 
-  echo "dbmajor = ${dbmajor}"  >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
-  echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
+  echo "dbmajor = ${dbmajor}"  >> ${output_dir}/opdb__defines__${v_file_tag}.csv
+  echo "ZIP_FILE: " ${zip_file} >> ${output_dir}/opdb__defines__${v_file_tag}.csv
 
-  cd ${OUTPUT_DIR}
-  if [ -f opdb__manifest__${V_FILE_TAG}.txt ]; then
-    rm opdb__manifest__${V_FILE_TAG}.txt
+  cd ${output_dir}
+  if [ -f opdb__manifest__${v_file_tag}.txt ]; then
+    rm opdb__manifest__${v_file_tag}.txt
   fi
 
-  # Skip creating the manifest file if the platform does not have MD5SUM installed
-  for file in $(ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt)
+  # Skip creating the manifest file if the platform does not have md5_cmd installed
+  for file in $(ls -1  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt)
   do
-    if [ -f "$MD5SUM" ] ; then
-      MD5=$(${MD5SUM} $file | cut -d ' ' -f ${MD5COL})
+    if [ -f "${md5_cmd}" ] ; then
+      md5_val=$(${md5_cmd} $file | cut -d ' ' -f ${md5_col})
     else
-      MD5="N/A"
+      md5_val="N/A"
     fi
-    echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
+    echo "${db_type}|${md5_val}|${file}"  >> opdb__manifest__${v_file_tag}.txt
   done
 
-  if [ ! "${ZIP}" = "" ]; then
-    $ZIP $ZIPFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
-    OUTFILE=$ZIPFILE
+  if [ ! "${zip_cmd}" = "" ]; then
+    ${zip_cmd} ${zip_file}  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt
+    OUTFILE=${zip_file}
   else
-    tar cvf $TARFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
-    $GZIP $TARFILE
-    OUTFILE=${TARFILE}.gz
+    tar cvf "${tar_file}"  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt
+    $gzip_cmd "${tar_file}"
+    OUTFILE="${tar_file}".gz
   fi
 
   if [ -f $OUTFILE ]; then
-    rm  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
+    rm  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt
   fi
 
-  cd ${CURRENT_WORKING_DIR}
+  cd ${current_working_dir}
   echo ""
   echo "Step completed."
   echo ""
-  return $retval
+  return ${retval}
 }
 
-function getVersion() {
+function get_version() {
+  local githash
   if [ -f VERSION.txt ]; then
     githash=$(cat VERSION.txt | cut -d '(' -f 2 | tr -d ')' )
   else
@@ -261,7 +272,7 @@ function getVersion() {
   echo "$githash"
 }
 
-function printExtractorVersion() {
+function print_extractor_version() {
   if [ "$1" == "NONE" ]; then
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -281,13 +292,13 @@ function printExtractorVersion() {
 }
 
 
-function getDMASourceId() {
-  echo $(grep v_dma_source_id ${OUTPUT_DIR}/opdb__defines__${1} | cut -d '=' -f 2 | tr -d ' ')
+function get_dma_source_id() {
+  echo $(${grep_cmd} v_dma_source_id ${output_dir}/opdb__defines__${1} | cut -d '=' -f 2 | tr -d ' ')
 }
 
 
 
-function printUsage() {
+function print_usage() {
   echo " Usage:"
   echo "  Parameters"
   echo ""
@@ -349,7 +360,7 @@ oeeRunId=$(date +%Ym%d%H%M%S)
 
 if [[ $(($# & 1)) == 1 ]] ; then
   echo "Invalid number of parameters : $# $@"
-  printUsage
+  print_usage
   exit
 fi
 
@@ -370,7 +381,7 @@ while (( "$#" )); do
   elif [[ "$1" == "--dmaAutomation"   ]];    then dmaAutomation="${2}"  # Internal use only
   else
     echo "Unknown parameter ${1}"
-    printUsage
+    print_usage
     exit
   fi
   shift 2
@@ -399,7 +410,7 @@ if [[ "${connStr}" == "" ]] ; then
     echo Got Connection ${connStr}
   else
     echo "Connection information incomplete"
-    printUsage
+    print_usage
     exit
   fi
 else
@@ -415,16 +426,16 @@ fi
 if [[ "${collectOEE}" == "Y" ]] ; then
   if [[ "${oeeGroup}" == "" ]] ; then
     echo "ERROR: Parameter --oeeGroup must be specified if --collectOEE is Y."
-    printUsage
+    print_usage
     exit
   fi
   if [[ "${oeeRunId}" == "" ]] ; then
     oeeRunId=$$
     oeeRunId="${oeeRunId}_$(date +%Y%m%d%H%M%S)"
   fi
-  if [[ ! -f $OEE_DIR/oee_group_extract-SA.sh ]]; then
-    echo "ERROR: Oracle Estate Explorer extraction scripts not found in ${OEE_DIR}".
-    printUsage
+  if [[ ! -f $oee_dir/oee_group_extract-SA.sh ]]; then
+    echo "ERROR: Oracle Estate Explorer extraction scripts not found in ${oee_dir}".
+    print_usage
     exit
   fi
 fi
@@ -432,10 +443,10 @@ fi
 if [[ "${manualUniqueId}" != "" ]] ; then
   case "$(uname)" in
     "Solaris" )
-          manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | ${SED} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+          manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | ${sed_cmd} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
           ;;
     ( "Darwin" | "Linux" )
-          manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | ${SED} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100) 
+          manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | ${sed_cmd} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100) 
           ;; 
     "HP-UX" )
           manualUniqueId=$(echo "${manualUniqueId}" | tr -c '[:alnum:]\n' '-' |  sed 's/^-//; s/-$//' | tr '[:upper:]' '[:lower:]' | cut -c 1-100) 
@@ -450,43 +461,29 @@ fi
 
 #############################################################################
 #
-#if [[  $# -ne 2  || (  "$2" != "UseDiagnostics" && "$2" != "NoDiagnostics" ) ]]
-# then
-#  echo
-#  echo "You must indicate whether or not to use the Diagnostics Pack views."
-#  echo "If this database is licensed to use the Diagnostics pack:"
-#  echo "  $0 $1 UseDiagnostics"
-#  echo " "
-#  echo "If this database is NOT licensed to use the Diagnostics pack:"
-#  echo "  $0 $1 NoDiagnostics"
-#  echo " "
-#  exit 1
-#fi
-
 # MAIN
 #############################################################################
 
-connectString="${connStr}"
-sqlcmd_result=$(checkVersion "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | cut -d '~' -f 2)
+connect_string="${connStr}"
+sqlcmd_result=$(check_version "${connect_string}" "${dma_version}" | $grep_cmd DMAFILETAG | cut -d '~' -f 2)
 if [[ "${sqlcmd_result}" = "" ]]; then
-  echo "Unable to connect to the target database using ${connectString}.  Please verify the connection information and target database status."
+  echo "Unable to connect to the target database using ${connect_string}.  Please verify the connection information and target database status."
   exit 255
 fi
 
 retval=$?
 
-# DIAGPACKACCESS="$2"
 
-extractorVersion="$(getVersion)"
+extractorVersion="$(get_version)"
 
 echo ""
 echo "==================================================================================="
-echo "Database Migration Assessment Database Assessment Collector Version ${OpVersion}"
-printExtractorVersion "${extractorVersion}"
+echo "Database Migration Assessment Database Assessment Collector Version ${dma_version}"
+print_extractor_version "${extractorVersion}"
 echo "==================================================================================="
 
 if [ $retval -eq 0 ]; then
-  if [ "$(echo ${sqlcmd_result} | $GREP -E '(ORA-|SP2-)')" != "" ]; then
+  if [ "$(echo ${sqlcmd_result} | $grep_cmd -E '(ORA-|SP2-)')" != "" ]; then
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo "Database version check returned error ${sqlcmd_result}"
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -504,28 +501,28 @@ if [ $retval -eq 0 ]; then
       fi
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    executeOP "${connectString}" ${OpVersion} ${DIAGPACKACCESS} "${manualUniqueId}" $statsWindow
+    execute_dma "${connect_string}" ${dma_version} ${DIAGPACKACCESS} "${manualUniqueId}" $statsWindow
     retval=$?
     if [ $retval -ne 0 ]; then
-      createErrorLog  $(echo ${V_TAG} | ${SED} 's/.csv//g')
-      compressOpFiles $(echo ${V_TAG} | ${SED} 's/.csv//g')
+      create_error_log  $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
+      compress_dma_files $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${LOG_DIR}"
+      echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${log_dir}"
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Exiting...."
       exit 255
     fi
-    createErrorLog  $(echo ${V_TAG} | ${SED} 's/.csv//g')
-    cleanupOpOutput $(echo ${V_TAG} | ${SED} 's/.csv//g')
+    create_error_log  $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
+    cleanup_dma_output $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Database Migration Assessment data sanitation reported an error. Please check the error log in directory ${OUTPUT_DIR}"
+      echo "Database Migration Assessment data sanitation reported an error. Please check the error log in directory ${output_dir}"
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Exiting...."
       exit 255
     fi
-    dma_id=$(getDMASourceId ${V_TAG})
+    dma_id=$(get_dma_source_id ${V_TAG})
     if [[ "${collectOEE}" == "Y" ]]; then
       oeeCheck=$(oeeCheckConditions "${connStr}")
       if [[ "${oeeCheck}" == "PASS" ]] ; then
@@ -537,7 +534,7 @@ if [ $retval -eq 0 ]; then
         echo "Skipping Estate Explorere collection for ${databaseService} ${hostName}"
       fi
     fi
-    compressOpFiles $(echo ${V_TAG} | ${SED} 's/.csv//g') $dbType
+    compress_dma_files $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g') $dbType
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -548,10 +545,10 @@ if [ $retval -eq 0 ]; then
     echo ""
     echo "==================================================================================="
     echo "Database Migration Assessment Database Assessment Collector completed."
-    echo "Data collection located at ${OUTPUT_DIR}/${OUTFILE}"
+    echo "Data collection located at ${output_dir}/${OUTFILE}"
     echo "==================================================================================="
     echo ""
-    printExtractorVersion "${extractorVersion}"
+    print_extractor_version "${extractorVersion}"
     exit 0
   fi
 else
