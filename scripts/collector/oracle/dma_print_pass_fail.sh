@@ -67,3 +67,12 @@ function print_warning() {
   echo
   echo
 }
+
+function print_separator() {
+  echo
+  echo
+  echo ==========================================
+  echo ==========================================
+  echo
+}
+

@@ -10,15 +10,6 @@ OEEDIR="$(pwd)/oee"
 configfilelinecount=0
 TABCHAR=$(printf '\t')
 
-function sectionSeparator() {
-
-  echo
-  echo
-  echo ==========================================
-  echo ==========================================
-  echo
-}
-
 # Check that all required OS commands are available.
 function precheckOS() {
   FNAME="${FUNCNAME[0]}"
@@ -169,7 +160,7 @@ function precheckOS() {
 # Verify that any manual identifiers specified are unique within the configuration file.
 function precheckConfigUniqueId() {
   FNAME="${FUNCNAME[0]}"
-  sectionSeparator
+  print_separator
   unqiuevals=()
   echo "Checking configuration file for unique IDs..."
 
@@ -193,7 +184,7 @@ function precheckConfigUniqueId() {
 # Verify we can process the configuration file.
 function precheckConfigFileFormat() {
   FNAME="${FUNCNAME[0]}"
-  sectionSeparator
+  print_separator
 
   echo "Checking configuration file format..."
   lineno=0
@@ -338,7 +329,7 @@ EOF
 # Loop through the databases given and check that the stats requested are available.
 function precheckStats() {
   FNAME="${FUNCNAME[0]}"
-  sectionSeparator
+  print_separator
 
   echo "Checking for performance stats ..."
   echo
@@ -426,7 +417,7 @@ EOF
 # Loop through the databases given an verify we can connect as SYSDBA.
 function precheckSysdba() {
   FNAME="${FUNCNAME[0]}"
-  sectionSeparator
+  print_separator
   echo "Checking SYSDBA connections where needed..."
   echo 
   successes=()
@@ -522,7 +513,7 @@ EOF
 # Verify the DMA user is able to connect to the target databases.
 function precheckUser() {
   FNAME="${FUNCNAME[0]}"
-  sectionSeparator
+  print_separator
   echo "Checking DMA user connections ..."
   echo
   lineno=0
@@ -600,7 +591,7 @@ function runAllChecks() {
   echo
   echo "Starting DMA prechecks..."
   echo
-  sectionSeparator
+  print_separator
   precheckOS
   retval=$?
   if [[ $retval -eq 0 ]]; then precheckConfigFileFormat; retval=$?; fi
@@ -609,7 +600,7 @@ function runAllChecks() {
   if [[ $retval -eq 0 ]]; then precheckUser; retval=$?; fi
   if [[ $retval -eq 0 ]]; then precheckStats; retval=$?; fi
 
-  sectionSeparator
+  print_separator
 
   print_complete  
   if [[ $retval -eq 0 ]]; then 

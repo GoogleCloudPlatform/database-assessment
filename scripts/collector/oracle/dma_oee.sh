@@ -43,12 +43,11 @@ function oeeGenerateConfig() {
 
 function oeeDedupDriverFiles() {
   RUNID="${1}"
-  cd oee
-  echo "RunID = ${RUNID}"
+  echo Looking for driver files in $(pwd)
   for fname in $(ls -1 *driverfile.${RUNID})
   do
     echo Processing file ${fname}
-    newName=$(echo ${fname} | rev |  cut -d '.' -f 2- | rev)
+    newName=$(echo ${fname} |  ${AWK} -F '.'  '{OFS="."; for (i = 1; i <= NF - 1; i++) { printf "%s%s", $i, (i < (NF - 1) ? OFS : "\n")}  }')
     sort -u ${fname} > ${newName}
     ./oee_group_extract-SA.sh ${newName} <<EOF
 2
@@ -62,7 +61,7 @@ function oeePackageZips() {
   do
     if [ -f ${zipname}.zip ] ; then
       echo Moving OEE file ${zipname}.zip to DMA output directory.
-      mv ${zipname}.zip ../output/${zipname}.zip
+      mv ${zipname}.zip ../${output_dir}/${zipname}.zip
     else
       echo Error: Could not locate output file ${zipfile}.zip !!
     fi
