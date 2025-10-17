@@ -1,3 +1,4 @@
+#!/bin/bash
 # Use this script to execute the dma collector in parallel via the list in dma_db_list.csv.
 # The format of dma_db_list.csv is described in the header of that file.
 # maxParallel controls how many DMA collectors can run at one time.
@@ -7,6 +8,8 @@
 # This script expects to run in bash shell, but should work in ksh.
 . ./dma_print_pass_fail.sh
 . ./dma_oee.sh
+
+# GLobal vars
 max_parallel=4
 config_file=dma_db_list.csv
 run_id=$(date +%Y%m%d%H%M%S)
@@ -16,16 +19,9 @@ oee_dir=oee
 output_dir=output
 
 
-#TODO: This is for Solaris only
-if [ "$(uname)" = "Solaris" ] ; then
-  AWK=/usr/xpg4/bin/awk
-else 
-  AWK=$(which awk 2>/dev/null)
-fi
-
 
 function count_children() {
-  num_children=$(ps -ef | grep "${this_pid}.log" | grep -v grep | wc -l)
+  num_children=$(ps -ef | grep "collect-data.sh" | grep -v grep | wc -l)
   echo ${num_children}  
 }
 
@@ -67,18 +63,19 @@ function batchRun() {
     fi
   
     # Run a collection in the background, capturing screen output to a log file.
-    time ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}" --collectOEE "${oee_flag}" --oeeGroup "${oee_group}" --oeeRunId "${run_id}" --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_$$.log" &
+    time ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}" --collectOEE "${oee_flag}" --oeeGroup "${oee_group}" --oee_runId "${run_id}" --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_$$.log" &
 
     # Wait a couple of seconds before starting another collection.
     sleep 2
 
     # Do not run another collection if there are too many running already
     echo "There are $(count_children) of ${max_parallel} processes running"
-    while [[ count_children -ge "${max_parallel}" ]] ; do
-      echo "Sleeping for 10 secs while waiting on child processes."
+    while [[ $(count_children) -ge ${max_parallel} ]] ; do
 
-      ps -ef | grep "${this_pid}.log" | grep -v grep
-
+      echo
+      echo "Sleeping for 10 secs while waiting on child processes:"
+      ps -ef | grep "collect-data.sh" | grep -v grep | cut -d '@' -f 2- | cut -d ' ' -f 1
+      echo
       sleep 10
     done
   done < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | grep -v '^#' | grep -v '^$' )  2>&1 | tee "${dma_log_name}"
@@ -106,8 +103,8 @@ function batchRun() {
 
 
 function run_oee() {
-  oeeDedupDriverFiles "${run_id}" "{$oee_dir}"
-  if [ $? -eq 0 ]; then oeePackageZips "${run_id}" "${oee_dir}"
+  oee_dedup_driver_files "${run_id}" "{$oee_dir}"
+  if [ $? -eq 0 ]; then oee_package_zips "${run_id}" "${oee_dir}"
   else print_fail
   fi
 
@@ -132,50 +129,68 @@ function print_usage() {
   echo ""
 }
 
-### Validate input
 
-if [[ $(($# & 1)) == 1 ]] || [[ $# == 0 ]]  ;
-then
-  echo "Invalid number of parameters "
-  print_usage
-  exit
-fi
-
-while (( "$#" )); do
-  if [[ "$1" == "--maxParallel" ]];
-  then
-    max_parallel="${2}"
-  else
-    if [[ "$1" == "--configFile" ]];
-    then
-      config_file="${2}"
+function main() {
+  # The default awk in Solaris does not support the functionality required.  Need the alternative at /usr/xpg4/bin/awk.
+  if [ "$(uname)" = "SunOS" ] ; then
+    if [[ -f /usr/xpg4/bin/awk ]]; then
+      AWK=/usr/xpg4/bin/awk
     else
-      echo "Unknown parameter ${1}"
-      printUsage
-      exit
+      echo "Solaris requires compatible version of awk at /usr/xpg4/bin/awk.  Please install awk and retry'."
+      exit 1
     fi
+  else 
+    AWK=$(which awk 2>/dev/null)
   fi
-  shift 2
-done
-
-if [[ -f "${config_file}" ]] ; then
-  batchRun
-  retval=$?
-
-  oee_count=$(wc -l < <(ls -1 "${oee_dir}"  | grep "driverfile.${run_id}"))
-  if [[ -d ${oee_dir} ]] && [[ "${oee_count}" -gt 0 ]]
+  
+  ### Validate input
+  
+  if [[ $(($# & 1)) == 1 ]] || [[ $# == 0 ]]  ;
   then
-    echo "Running Oracle Estate Explorer for ${oee_count} groups."
-    cd oee
-    run_oee
-    print_complete
+    echo "Invalid number of parameters $# : $@ "
+    print_usage
+    exit
+  fi
+  
+  while (( "$#" )); do
+    if [[ "$1" == "--maxParallel" ]];
+    then
+      max_parallel="${2}"
+    else
+      if [[ "$1" == "--configFile" ]];
+      then
+        config_file="${2}"
+      else
+        echo "Unknown parameter ${1}"
+        printUsage
+        exit
+      fi
+    fi
+    shift 2
+  done
+  
+  if [[ -f "${config_file}" ]] ; then
+    batchRun
+    retval=$?
+  
+    oee_count=$(wc -l < <(ls -1 "${oee_dir}"  | grep "driverfile.${run_id}"))
+    if [[ -d ${oee_dir} ]] && [[ "${oee_count}" -gt 0 ]]
+    then
+      echo "Running Oracle Estate Explorer for ${oee_count} groups."
+      cd oee
+      run_oee
+      print_complete
+    else
+      print_complete
+    fi
+    if [[ "${retval}" -ne 0 ]]; then
+      print_separator
+      echo "One or more collections encountered errors.  Please review the logs, remediate the errors and rerun the failed collection(s)."
+    fi
   else
-    print_complete
+    echo "File not found : ${config_file}"
   fi
-  if [[ "${retval}" -ne 0 ]]; then
-    print_separator
-    echo "One or more collections encountered errors.  Please review the logs, remediate the errors and rerun the failed collection(s)."
-  fi
-else
-  echo "File not found : ${config_file}"
-fi
+}
+
+main "$@"
+

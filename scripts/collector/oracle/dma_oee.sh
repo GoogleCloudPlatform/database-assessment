@@ -1,50 +1,50 @@
 #
-# Helper functions for Oracle Estate Explorer integration
+# Helper functions for Oracle Estate Explorer integration.  This script is not directly executable.
 #
 
-function oeeGenerateConfig() {
-  oee_guid="${1}"
-  oee_database="${2}"
-  oee_hostName="${3}"
-  oee_port="${4}"
-  oee_user="${5}"
-  oee_pass="${6}"
-  oee_group="${7}" 
-  oee_runid="${8}"
-  V_FILE_TAG="${9}"
+function oee_generate_config() {
+  local oee_guid="${1}"
+  local oee_database="${2}"
+  local oee_hostName="${3}"
+  local oee_port="${4}"
+  local oee_user="${5}"
+  local oee_pass="${6}"
+  local oee_group="${7}" 
+  local oee_runid="${8}"
+  local v_file_tag="${9}"
     
-  dbdomain=$(grep db_domain $OUTPUT_DIR/opdb__dbparameters__$V_FILE_TAG | cut -d '|' -f 5 | uniq | head -1)
+  dbdomain=$(grep db_domain $output_dir/opdb__dbparameters__$v_file_tag | cut -d '|' -f 5 | uniq | head -1)
   if [ "${dbdomain}" != "" ]; then
     dbdomain=".${dbdomain}"
   fi
     
   # For single tenant or container databases
-  oee_guid=$(echo ${oee_guid} | ${MD5SUM} | cut -d ' ' -f ${MD5COL})
-  echo ${oee_guid}:${oee_database}://${oee_hostName}:${oee_port}/${oee_database}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid}
+  oee_guid=$(echo ${oee_guid} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
+  echo ${oee_guid}:${oee_database}://${oee_hostName}:${oee_port}/${oee_database}:${oee_user}:${oee_pass} >> ${oee_dir}/mpack_DMA${oee_group}.driverfile.${oee_runid}
     
   # For multitenant, we need to add entries for all the pluggable databases.
-  if [ -f $OUTPUT_DIR/opdb__pdb_summary__$V_FILE_TAG ] ; then
-    for pdbname in $($GREP -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" $OUTPUT_DIR/opdb__pdb_summary__$V_FILE_TAG | $GREP -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 4)
+  if [ -f $output_dir/opdb__pdb_summary__$v_file_tag ] ; then
+    for pdbname in $(${grep_cmd} -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" $output_dir/opdb__pdb_summary__$v_file_tag | ${grep_cmd} -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 4)
     do
       echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
-      oee_guid=$(echo ${oee_guid}${pdbname}${dbdomain} | ${MD5SUM} | cut -d ' ' -f ${MD%COL})
-      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid}
+      oee_guid=$(echo ${oee_guid}${pdbname}${dbdomain} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
+      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${oee_dir}/mpack_DMA${oee_group}.driverfile.${oee_runid}
     done
-  elif [ -f $OUTPUT_DIR/opdb__pdbsopenmode__$V_FILE_TAG ] ; then
-    for pdbname in $($GREP -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" $OUTPUT_DIR/opdb__pdbsopenmode__$V_FILE_TAG | $GREP -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 3)
+  elif [ -f $output_dir/opdb__pdbsopenmode__$v_file_tag ] ; then
+    for pdbname in $(${grep_cmd} -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" $output_dir/opdb__pdbsopenmode__$v_file_tag | ${grep_cmd} -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 3)
     do
       echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
-      oee_guid=$(echo ${oee_guid}${pdbname} | ${MD5SUM} | cut -d ' ' -f ${MD5COL})
-      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${OEE_DIR}/mpack_DMA${oee_group}.driverfile.${oee_runid}
+      oee_guid=$(echo ${oee_guid}${pdbname} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
+      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${oee_dir}/mpack_DMA${oee_group}.driverfile.${oee_runid}
     done
   fi  
 }   
 
 
-function oeeDedupDriverFiles() {
-  RUNID="${1}"
+function oee_dedup_driver_files() {
+  local oee_runid="${1}"
   echo Looking for driver files in $(pwd)
-  for fname in $(ls -1 *driverfile.${RUNID})
+  for fname in $(ls -1 *driverfile.${oee_runid})
   do
     echo Processing file ${fname}
     newName=$(echo ${fname} |  ${AWK} -F '.'  '{OFS="."; for (i = 1; i <= NF - 1; i++) { printf "%s%s", $i, (i < (NF - 1) ? OFS : "\n")}  }')
@@ -55,9 +55,9 @@ EOF
   done
 }
 
-function oeePackageZips() {
-  RUNID="${1}"
-  for zipname in $(ls -1 *driverfile.${RUNID} | cut -d '_' -f 2- | cut -d '.' -f 1 )
+function oee_package_zips() {
+  local oee_runid="${1}"
+  for zipname in $(ls -1 *driverfile.${oee_runid} | cut -d '_' -f 2- | cut -d '.' -f 1 )
   do
     if [ -f ${zipname}.zip ] ; then
       echo Moving OEE file ${zipname}.zip to DMA output directory.
@@ -68,11 +68,11 @@ function oeePackageZips() {
   done
 }
 
-function oeeRun() {
-  RUNID="${1}"
-  echo RUNID = "${RUNID}"
-  oeeDedupDriverFiles "${RUNID}"
-  if [ $? -eq 0 ]; then oeePackageZips "${RUNID}"
+function oee_run() {
+  local oee_runid="${1}"
+  echo oee_runid = "${oee_runid}"
+  oee_dedup_driver_files "${oee_runid}"
+  if [ $? -eq 0 ]; then oee_package_zips "${oee_runid}"
   else print_fail
   fi
 
@@ -83,38 +83,38 @@ function oeeRun() {
 
 
 # OEE Requires SQL*Plus version 12.1 or higher
-function oeeCheckSQLPlusRelease {
-  RETVAL="FAIL"
-  SQLCLIENT=$(sqlplus -s /nolog <<EOF
+function oee_check_sqlplus_release {
+  local retval="FAIL"
+  sql_client=$(${sql_plus} -s /nolog <<EOF
   prompt &_SQLPLUS_RELEASE
   exit;
 EOF
   )
-  if [[ "${SQLCLIENT}" == *"SP2-"* ]]; then
-    RETVAL="FAIL: ${SQLCLIENT}"
+  if [[ "${sql_client}" == *"SP2-"* ]]; then
+    retval="FAIL: ${sql_client}"
   else
-    SQLCLIENTVER=$(echo "${SQLCLIENT}" | cut -c 1-2)
-    if [[ "${SQLCLIENTVER}" -ge 12 ]] 
+    sqlclientver=$(echo "${sql_client}" | cut -c 1-2)
+    if [[ "${sqlclientver}" -ge 12 ]] 
     then 
-      RETVAL="PASS"
+      retval="PASS"
     else
-      RETVAL="FAIL: ${SQLCLIENT}"  
+      retval="FAIL: ${sql_client}"  
     fi
   fi
-  echo "${RETVAL}"
+  echo "${retval}"
 }
 
 
 # OEE Requires database 10g or higher
-function oeeCheckDbVersion {
+function oee_check_db_version {
   connectString="$1"
   RETVAL="FAIL"
 
   dbVer=$(
-${SQLPLUS} -s /nolog << EOF
+${sql_plus} -s /nolog << EOF
 SET DEFINE OFF
 connect ${connectString}
-@${SQL_DIR}/op_set_sql_env.sql
+@${sql_dir}/dma_set_sql_env.sql
 set pagesize 0 lines 400 feedback off verify off heading off echo off timing off time off
 WITH mj AS (
 SELECT substr(version, 1, INSTR(version, '.', 1, 2)-1) AS version
@@ -147,18 +147,18 @@ EOF
 
 
 # Check that all conditions are correct for running OEE
-function oeeCheckConditions {
+function oee_check_conditions {
   connectString="${1}"
   connectDest=$(echo "${connectString}" | cut -d '@' -f 2)
   RETVAL="FAIL"
   DBV="N/A"
 
-  if [[ -f $OEE_DIR/oee_group_extract-SA.sh ]] ; then
+  if [[ -f $oee_dir/oee_group_extract-SA.sh ]] ; then
       
-    SPR=$(oeeCheckSQLPlusRelease)
+    SPR=$(oee_check_sqlplus_release)
     
     if [[ "${SPR}" == "PASS" ]] ; then
-      DBV=$(oeeCheckDbVersion ${connectString})
+      DBV=$(oee_check_db_version ${connectString})
       if [[ "${DBV}" == "PASS" ]]; then
           RETVAL="PASS"
       fi
