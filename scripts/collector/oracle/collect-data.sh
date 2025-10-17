@@ -50,10 +50,6 @@ oeeGroup="NONE"
 oee_runId=$(date +%Ym%d%H%M%S)
 extractor_version=""
 
-# Force LANG and LOCALE to C UTF8
-export LOCALE=C
-export LANG=$(locale -a | grep -i -e "^c.utf8" -e "^c.utf-8" | sort | head -1)
-
 
 # Define global variables that define how/what executables to use based on the platform on which we are running.
 function init_variables() {
@@ -121,6 +117,11 @@ function init_variables() {
   fi
 
   extractor_version="$(get_version)"
+
+  # Force LANG and LOCALE to C UTF8
+  export LOCALE=C
+  export LANG=$(locale -a | grep -i -e "^c.utf8" -e "^c.utf-8" | sort | head -1)
+
 }
 
 
