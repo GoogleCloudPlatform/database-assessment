@@ -17,8 +17,8 @@ tab_char=$(printf '\t')
 this_pid=$$
 oee_dir=oee
 output_dir=output
-
-
+sql_dir=sql
+dma_log_name=DMA_BATCH_RUN_$(date +%Y%m%d%H%M%S).log
 
 function count_children() {
   num_children=$(ps -ef | grep "collect-data.sh" | grep -v grep | wc -l)
@@ -29,7 +29,6 @@ function count_children() {
 function batchRun() {
   local -i lineno=0
   local -i err_cnt=0
-  local dma_log_name=DMA_BATCH_RUN_$(date +%Y%m%d%H%M%S).log
   local -i line_cnt=$(wc -l < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | grep -v '^#' | grep -v '^$' )) 
   echo "Found ${line_cnt} lines in config file"
 
@@ -63,7 +62,7 @@ function batchRun() {
     fi
   
     # Run a collection in the background, capturing screen output to a log file.
-    time ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}" --collectOEE "${oee_flag}" --oeeGroup "${oee_group}" --oee_runId "${run_id}" --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_$$.log" &
+    time ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}" --collectOEE "${oee_flag}" --oeeGroup "${oee_group}" --oee_runId "${run_id}" --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_${this_pid}.log" &
 
     # Wait a couple of seconds before starting another collection.
     sleep 2
@@ -80,13 +79,21 @@ function batchRun() {
     done
   done < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | grep -v '^#' | grep -v '^$' )  2>&1 | tee "${dma_log_name}"
 
+  echo "Waiting for remaining child processes to complete."
+  wait
+  echo "All child processes complete."
 
   echo "================================================================================================"
   echo "================================================================================================"
-  echo "Output files created:"
-  ls -1 ${output_dir}/*.zip
-
+  echo "Output files are in ${pwd}/${output_dir}"
+  echo
   err_cnt=$(ls -1 ${output_dir}/*ERROR.zip 2>/dev/null | wc -l)
+  oee_errors=$(grep -h -A 5 "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log)
+  if [[ ${err_cnt} -eq 0 ]] && [[ -z "${oee_errors}" ]] ; then
+    #print_complete
+    return 0
+  fi
+
   if [ ${err_cnt} -ne 0 ]
   then
     echo "================================================================================================"
@@ -95,22 +102,17 @@ function batchRun() {
     echo "These collections encountered errors.  Check the log file for errors and re-try the collections after correcting the cause:"
     ls -1 ${output_dir}/*ERROR.zip
     echo
-  else
-    print_complete
-  fi
-  return ${err_cnt}
-}
-
-
-function run_oee() {
-  oee_dedup_driver_files "${run_id}" "{$oee_dir}"
-  if [ $? -eq 0 ]; then oee_package_zips "${run_id}" "${oee_dir}"
-  else print_fail
   fi
 
-  if [ $? -eq 0 ]; then print_complete
-  else print_fail
+  if [[ ! -z "${oee_errors}" ]] ; then
+    print_separator
+    echo "Failed to collect Oracle Estate Explorer data :"
+    echo "${oee_errors}"
+    echo
+    print_fail
   fi
+
+  return 1
 }
 
 
@@ -162,7 +164,7 @@ function main() {
         config_file="${2}"
       else
         echo "Unknown parameter ${1}"
-        printUsage
+        print_usage
         exit
       fi
     fi
@@ -173,17 +175,20 @@ function main() {
     batchRun
     retval=$?
   
-    oee_count=$(wc -l < <(ls -1 "${oee_dir}"  | grep "driverfile.${run_id}"))
-    if [[ -d ${oee_dir} ]] && [[ "${oee_count}" -gt 0 ]]
-    then
-      echo "Running Oracle Estate Explorer for ${oee_count} groups."
-      cd oee
-      run_oee
-      print_complete
+    if [[ ${retval} -eq 0 ]] ; then
+      oee_file_count=$(wc -l < <(ls -1 "${oee_dir}"  | grep "driverfile.${run_id}"))
+      if [[ -d ${oee_dir} ]] && [[ ${oee_file_count} -gt 0 ]]; then
+          echo "Running Oracle Estate Explorer for ${oee_count} groups."
+          cd "${oee_dir}"
+          oee_run "${run_id}" | tee "${dma_log_name}"
+          oee_errors=$(grep "Database extract failures" "${dma_log_name}" | cut -d ':' -f 2 | tr -d ' ')
+          if [[ ${oee_errors} -ne 0 ]] ; then
+            print_fail
+          fi
+      else
+        print_complete
+      fi
     else
-      print_complete
-    fi
-    if [[ "${retval}" -ne 0 ]]; then
       print_separator
       echo "One or more collections encountered errors.  Please review the logs, remediate the errors and rerun the failed collection(s)."
     fi

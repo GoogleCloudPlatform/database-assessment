@@ -83,7 +83,7 @@ EOF
       sqlplus "${sysUser}${db} as sysdba" @sql/setup/grants_wrapper.sql << EOF
 ${user}
 ${awr_flag}
-${oracleee}
+${oee_flag}
 EOF
       retcd=$?
     fi

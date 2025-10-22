@@ -41,9 +41,10 @@ function oee_generate_config() {
 }   
 
 
-function oee_dedup_driver_files() {
+function oee_run_standalone_extract() {
   local oee_runid="${1}"
   echo Looking for driver files in $(pwd)
+
   for fname in $(ls -1 *driverfile.${oee_runid})
   do
     echo Processing file ${fname}
@@ -54,6 +55,7 @@ function oee_dedup_driver_files() {
 EOF
   done
 }
+
 
 function oee_package_zips() {
   local oee_runid="${1}"
@@ -68,16 +70,22 @@ function oee_package_zips() {
   done
 }
 
+
 function oee_run() {
   local oee_runid="${1}"
-  echo oee_runid = "${oee_runid}"
-  oee_dedup_driver_files "${oee_runid}"
-  if [ $? -eq 0 ]; then oee_package_zips "${oee_runid}"
-  else print_fail
+
+  oee_run_standalone_extract "${oee_runid}"
+
+  if [ $? -eq 0 ]; then 
+    oee_package_zips "${oee_runid}"
+  else 
+    return 1
   fi
 
-  if [ $? -eq 0 ]; then print_complete
-  else print_fail
+  if [ $? -eq 0 ]; then 
+    return 0
+  else 
+    return 1
   fi
 }
 
@@ -85,7 +93,7 @@ function oee_run() {
 # OEE Requires SQL*Plus version 12.1 or higher
 function oee_check_sqlplus_release {
   local retval="FAIL"
-  sql_client=$(${sql_plus} -s /nolog <<EOF
+  sql_client=$(sqlplus -s /nolog <<EOF
   prompt &_SQLPLUS_RELEASE
   exit;
 EOF
@@ -111,7 +119,7 @@ function oee_check_db_version {
   RETVAL="FAIL"
 
   dbVer=$(
-${sql_plus} -s /nolog << EOF
+sqlplus -s /nolog << EOF
 SET DEFINE OFF
 connect ${connectString}
 @${sql_dir}/dma_set_sql_env.sql
@@ -146,28 +154,47 @@ EOF
 }
 
 
+# Check the platform on which the script is running.
+# Fail on all platforms other than officially supported.
+function oee_check_platform() {
+  local PLT=$(uname)
+  local ret_val="FAIL"
+  case "${PLT}" in
+    "Linux" ) 
+      ret_val="PASS"
+      ;;
+    "Darwin" ) 
+      ret_val="PASS"
+      ;;
+    * )
+      ret_val="FAIL due to unsupported platform ${PLT}"
+  esac
+  echo "${ret_val}"
+}
+
 # Check that all conditions are correct for running OEE
 function oee_check_conditions {
-  connectString="${1}"
-  connectDest=$(echo "${connectString}" | cut -d '@' -f 2)
-  RETVAL="FAIL"
-  DBV="N/A"
+  local connectString="${1}"
+  local connectDest=$(echo "${connectString}" | cut -d '@' -f 2)
+  local RETVAL="FAIL"
+  local DBV="N/A"
 
   if [[ -f $oee_dir/oee_group_extract-SA.sh ]] ; then
       
+    PLT="$(oee_check_platform)"
     SPR=$(oee_check_sqlplus_release)
+    DBV="$(oee_check_db_version ${connectString})"
     
-    if [[ "${SPR}" == "PASS" ]] ; then
-      DBV=$(oee_check_db_version ${connectString})
-      if [[ "${DBV}" == "PASS" ]]; then
-          RETVAL="PASS"
-      fi
+    if [[ "${SPR}" == "PASS" ]] && [[ "${DBV}" == "PASS" ]] && [[ "${PLT}" == "PASS" ]]; then
+      RETVAL="PASS"
     fi  
   fi
+
   if [[ "${RETVAL}" != "PASS" ]] ; then 
     echo "Failure testing connection ${connectDest}" 
     echo "SQLPlus Release   ${SPR}"
     echo "Database Version  ${DBV}"
+    echo "Platform          ${PLT}"
   else
     echo "${RETVAL}"
   fi

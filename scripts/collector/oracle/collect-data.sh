@@ -456,9 +456,13 @@ function parse_parameters() {
       oee_runId="${oee_runId}_$(date +%Y%m%d%H%M%S)"
     fi
     if [[ ! -f $oee_dir/oee_group_extract-SA.sh ]]; then
+      echo
       echo "ERROR: Oracle Estate Explorer extraction scripts not found in ${oee_dir}".
-      print_usage
-      exit
+      echo "Skipping collection for database ${databaseService}".
+      echo "Either install Oracle Estate Explorer files or disable OEE collection for this database and retry the collection."
+      echo
+      print_fail
+      exit 1
     fi
   fi
   
@@ -558,9 +562,19 @@ if [[ $retval -eq 0 ]];then
         oee_generate_config ${dma_id} ${databaseService} ${hostName} ${port} ${collectionUserName} ${collectionUserPass} ${oeeGroup} ${oee_runId} ${V_TAG}
         if [[ "${dmaAutomation}" != "Y" ]] ; then
           oee_run "${oee_runId}"
+          oee_ret_val=$?
+          if [[ ${oee_ret_val} -eq 1 ]]; then
+            print_warning
+            echo
+            echo "Oracle Estate Explorer collection encountered errors.  Collection may be missing some data."
+            echo
+          fi
         fi
       else
-        echo "Skipping Estate Explorer collection for ${databaseService} ${hostName} due to ${oeeCheck}"
+        echo
+        echo "Skipping Estate Explorer collection for ${databaseService} ${hostName} due to "
+        echo "${oeeCheck}"
+        echo
       fi
     fi
     compress_dma_files $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g') $dbType

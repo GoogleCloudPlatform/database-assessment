@@ -9,6 +9,7 @@ STATSSRCCOL=4
 OEEDIR="$(pwd)/oee"
 configfilelinecount=0
 TABCHAR=$(printf '\t')
+oee_entries=0
 
 # Check that all required OS commands are available.
 function precheckOS() {
@@ -157,6 +158,25 @@ function precheckOS() {
 }
 
 
+# Check the platform on which the script is running.
+# Fail on all platforms other than officially supported.
+function oee_check_platform() {
+  local PLT=$(uname)
+  local ret_val="FAIL"
+  case "${PLT}" in
+    "Linux" )
+      ret_val="PASS"
+      ;;
+    "Darwin" )
+      ret_val="FAIL"
+      ;;
+    * )
+      ret_val="FAIL due to unsupported platform ${PLT}.  Oracle Estate Explorer collector is not compatible with the operating system on this machine.  Either disable OEE collection in the configuration file or execute these scripts on a supported platform."
+  esac
+  echo "${ret_val}"
+}
+
+
 # Verify that any manual identifiers specified are unique within the configuration file.
 function precheckConfigUniqueId() {
   FNAME="${FUNCNAME[0]}"
@@ -177,6 +197,26 @@ function precheckConfigUniqueId() {
     return 1
   else 
     echo "SUCCESS : All databases have unique ids where specified."
+  fi
+}
+
+
+# Verify we are on a supported platform for OEE collection
+function precheck_oee_platform() {
+  FNAME="${FUNCNAME[0]}"
+  print_separator
+
+  echo "Checking Oracle Estate Explorer supported platforms..."
+
+  local ret_val=""
+  ret_val="$(oee_check_platform)"
+
+  echo "${ret_val}"
+
+  if [[ "${ret_val}" == "PASS" ]]; then
+    return 0
+  else 
+    return 1
   fi
 }
 
@@ -217,6 +257,10 @@ function precheckConfigFileFormat() {
         if [[ "${oee_flag}" != "Y" ]] && [[ "${oee_flag}" != "N" ]] ; then
           echo "FAILED : Invalid entry ${oee_flag} for OEE Flag on line ${lineno}. Must be one of (Y, N)."
           failcount=$(( $failcount + 1 ))
+        fi
+
+        if [[ "${oee_flag}" == "Y" ]] ; then
+          oee_entries=1
         fi
 
         if [[ "${oee_flag}" = "Y" ]] && [[ ! -f ${OEEDIR}/oee_group_extract-SA.sh ]] ; then
@@ -599,6 +643,7 @@ function runAllChecks() {
   if [[ $retval -eq 0 ]]; then precheckSysdba; retval=$?; fi
   if [[ $retval -eq 0 ]]; then precheckUser; retval=$?; fi
   if [[ $retval -eq 0 ]]; then precheckStats; retval=$?; fi
+  if [[ $retval -eq 0 ]] && [[ $oee_entries -eq 1 ]] ; then precheck_oee_platform; retval=$?; fi
 
   print_separator
 
@@ -620,11 +665,27 @@ function runAllChecks() {
 }
 
 
+function print_usage() {
+  echo
+  echo " Usage:"
+  echo "  Parameters"
+  echo ""
+  echo "  --configFile                Name of file containing a list of database connections and runtime options to verify.  (Required)"
+  echo "                              File format is described in the header of the sample file in dma_db_list.csv. "
+  echo
+  echo " Example:"
+  echo      
+  echo
+  echo "  ./dma_precheck.sh --connectionFile dma_db_list.csv"
+
+}
+
+
 ### Validate input
 
 if [[ $(($# & 1)) == 1 ]] || [[ $# == 0 ]] ; then
   echo "Invalid number of parameters "
-  #printUsage
+  print_usage
   exit
 fi
 
@@ -633,15 +694,21 @@ while (( "$#" )); do
     CONFIGFILE="${2}"
   else
     echo "Unknown parameter ${1}"
-    #printUsage
+    print_usage
     exit
   fi
   shift 2
 done
 
+if [ -z "${CONFIGFILE}" ]; then
+  echo "Error : Must specify a connection configuration file to run the precheck."
+  print_usage
+  echo
+  exit
+fi
+
 if [ -f "${CONFIGFILE}" ]; then 
   configfilelinecount=$(wc -l <"${CONFIGFILE}")
-  echo
   echo "Checking ${configfilelinecount} entries in file ${CONFIGFILE}..."
   runAllChecks 
 else
