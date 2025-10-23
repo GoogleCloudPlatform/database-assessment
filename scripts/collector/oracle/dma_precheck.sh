@@ -23,7 +23,7 @@ function precheckOS() {
   THISSHELL=${SHELL}
   SCRIPTCOMMAND=${BASH_SOURCE[0]}
 
-  AWK=$(which awk 2>/dev/null)
+  awk_cmd=$(which awk 2>/dev/null)
   CUT=$(which cut 2>/dev/null)
   DIRNAME=$(which dirname 2>/dev/null)
   GREP=$(which grep 2>/dev/null)
@@ -56,7 +56,7 @@ function precheckOS() {
     SCRIPTCOMMAND="${.sh.file}"
   fi
 
-  if [ "${AWK}" = "" ]; then
+  if [ "${awk_cmd}" = "" ]; then
     echo "FAILED : Missing command awk, please install this utility or update the path to include it."
     FAIL=$(($FAIL + 1))
   fi
@@ -168,7 +168,7 @@ function oee_check_platform() {
       ret_val="PASS"
       ;;
     "Darwin" )
-      ret_val="FAIL"
+      ret_val="PASS"
       ;;
     * )
       ret_val="FAIL due to unsupported platform ${PLT}.  Oracle Estate Explorer collector is not compatible with the operating system on this machine.  Either disable OEE collection in the configuration file or execute these scripts on a supported platform."
@@ -279,6 +279,7 @@ function precheckConfigFileFormat() {
 
 
 # Connect to the specified database and verify that the DMA user has access to the stats tables requested and that sufficient stats history is available.
+# We do not check for permissions on all tables/views required, just assume that if the grants script was run we have have everything we need.
 function checkStats() {
   FNAME="${FUNCNAME[0]}"
   FNAME='checkStats'
@@ -494,29 +495,6 @@ function precheckSysdba() {
     fi
   done < <( ${SED} "s/ //g;s/${TABCHAR}//g" "$CONFIGFILE"  )
 
-
-  # for x in $(cat "${CONFIGFILE}" | ${GREP} -v '^#' | ${GREP} -v '^$'); do
-  #   sys=$(echo $x | cut -d ',' -f 1)
-  #   db=$(echo $x | cut -d ',' -f 3)
-  #   if [[ "${sys}" = "" ]] || [[ "${sys}" = "NONE" ]] ; then
-  #     echo " : SUCCESS"
-  #     successes+=("SKIPPED : ${db}")
-  #   else
-  #     echo -n "...Testing SYSDBA connection to database ${db}"
-  #     retcd=$(checkSysdbaConnection "${sys}" "${db}" )
-  #     success=$(echo "${retcd}" | ${GREP} SUCCESS)
-  #     if [ "${success}" = "SUCCESS" ]; then
-  #       echo " : SUCCESS"
-  #       successes+=("SUCCESS : ${db}")
-  #     else
-  #       echo " : FAILED"
-  #       echo "${retcd}"
-  #       echo
-  #       errors+=("FAILED : ${db}")
-  #     fi
-  # fi
-  # done 
-
   PASS=${#successes[@]}
   FAIL=${#errors[@]}
 
@@ -585,24 +563,6 @@ function precheckUser() {
     fi
 
   done < <( ${SED} "s/ //g;s/${TABCHAR}//g" "$CONFIGFILE"  )
-
-  # for x in $(cat "${CONFIGFILE}" | ${GREP} -v '^#' | ${GREP} -v '^$'); do
-  #   user=$(echo $x | cut -d ',' -f 2)
-  #   username=$(echo ${user} | cut -d '/' -f 1)
-  #   db=$(echo $x | cut -d ',' -f 3)
-  #   echo -n "...Testing DMA user connection for user ${username} to database ${db}"
-  #   retcd=$(checkConnection "${user}" "${db}" )
-  #   success=$(echo "${retcd}" | ${GREP} SUCCESS)
-  #   if [ "${success}" = "SUCCESS" ]; then
-  #     echo " : SUCCESS"
-  #     successes+=("SUCCESS : ${db}" )
-  #   else
-  #     echo " : FAILED"
-  #     echo "${retcd}"
-  #     errors+=("${retcd} ${db}")
-  #     echo
-  #   fi
-  # done 
 
   echo
   echo
