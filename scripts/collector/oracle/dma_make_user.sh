@@ -40,20 +40,20 @@ function print_status() {
 
 
 function make_user() {
-  while IFS=, read -r sysUser user db statssrc statswindow dmaid oee_flag oee_group || [[ -n "$line" ]]; do
-    pass=$(echo ${user} | cut -d '/' -f 2)
-    user=$(echo ${user} | cut -d ',' -f 2 | cut -d '/' -f 1)
+  while IFS=, read -r sys_user dma_user db stats_source stats_window dma_id oee_flag oee_group || [[ -n "$line" ]]; do
+    pass=$(echo ${dma_user} | cut -d '/' -f 2)
+    user=$(echo ${dma_user} | cut -d ',' -f 2 | cut -d '/' -f 1)
 
-    echo "Processing user ${user} for database ${db}"
-    statssrc=$(echo "$statsrc}" | tr '[a-z]' '[A-Z]')
-    if [[ "${statssrc}" = "AWR" ]]
+    echo "Processing user ${dma_user} for database ${db}"
+    stats_source=$(echo "$statsrc}" | tr '[a-z]' '[A-Z]')
+    if [[ "${stats_source}" = "AWR" ]]
     then
       awr_flag='Y'
     else
       awr_flag='N'
     fi
-    retcd=-1
-    sqlplus "${sysUser}${db} as sysdba" << EOF
+    ret_cd=-1
+    sqlplus "${sys_user}${db} as sysdba" << EOF
 SET ECHO ON
 SET SERVEROUTPUT ON SIZE 50000;
 WHENEVER SQLERROR EXIT FAILURE;
@@ -61,35 +61,35 @@ DECLARE cnt NUMBER;
 BEGIN
   SELECT count(1) INTO cnt
   FROM dba_users
-  WHERE username = '${user}';
+  WHERE username = '${dma_user}';
   IF cnt = 0 THEN
-    EXECUTE IMMEDIATE 'CREATE USER "${user}" IDENTIFIED BY "${pass}"';
-    DBMS_OUTPUT.PUT_LINE ('Created user "${user}" ');
+    EXECUTE IMMEDIATE 'CREATE USER "${dma_user}" IDENTIFIED BY "${pass}"';
+    DBMS_OUTPUT.PUT_LINE ('Created user "${dma_user}" ');
   ELSE
-    DBMS_OUTPUT.PUT_LINE('User "${user}" exists.');
-    EXECUTE IMMEDIATE 'ALTER USER "${user}" IDENTIFIED BY "${pass}"';
+    DBMS_OUTPUT.PUT_LINE('User "${dma_user}" exists.');
+    EXECUTE IMMEDIATE 'ALTER USER "${dma_user}" IDENTIFIED BY "${pass}"';
   END IF;
 END;
 /
 l
-GRANT CONNECT, CREATE SESSION to "${user}";
-GRANT SELECT ON V_\$DATABASE to "${user}";
+GRANT CONNECT, CREATE SESSION to "${dma_user}";
+GRANT SELECT ON V_\$DATABASE to "${dma_user}";
 exit
 EOF
 
-    retcd=$?
-    if [[ ${retcd} -eq 0 ]]
+    ret_cd=$?
+    if [[ ${ret_cd} -eq 0 ]]
     then
-      sqlplus "${sysUser}${db} as sysdba" @sql/setup/grants_wrapper.sql << EOF
-${user}
+      sqlplus "${sys_user}${db} as sysdba" @sql/setup/grants_wrapper.sql << EOF
+${dma_user}
 ${awr_flag}
 ${oee_flag}
 EOF
-      retcd=$?
+      ret_cd=$?
     fi
-    if [[ ${retcd} -ne 0 ]]
+    if [[ ${ret_cd} -ne 0 ]]
     then
-      echo "DMA:Error creating user ${user} in database ${db}."
+      echo "DMA:Error creating user ${dma_user} in database ${db}."
       echo "Please verify the username/password and connection information."
     fi
   done < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | grep -v '^#' | grep -v '^$' )  2>&1 | tee "${dma_log_name}"

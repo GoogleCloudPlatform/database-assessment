@@ -78,7 +78,7 @@ function batchRun() {
       echo
       sleep 10
     done
-  done < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | grep -v '^#' | grep -v '^$' )  #  2>&1 | tee "${dma_log_name}"
+  done < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | grep -v '^#' | grep -v '^$' )  
 
   echo "Waiting for remaining child processes to complete."
   wait

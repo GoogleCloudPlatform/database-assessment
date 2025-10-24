@@ -3,147 +3,146 @@
 . ./dma_print_pass_fail.sh
 
 # TODO Put standardized success / fail into array and print final results.
-MINDAYS=7
-LOGNAME=dma_precheck_sysdba_$(date +%Y%m%d%H%M%S).log
-STATSSRCCOL=4
-OEEDIR="$(pwd)/oee"
-configfilelinecount=0
 TABCHAR=$(printf '\t')
+configfilelinecount=0
+dma_log_name=dma_precheck_sysdba_$(date +%Y%m%d%H%M%S).log
+min_days=7
+oee_dir="$(pwd)/oee"
 oee_entries=0
+stats_src_col=4
+configuration_file=""
 
 # Check that all required OS commands are available.
 function precheckOS() {
-  FNAME="${FUNCNAME[0]}"
+  fname="${FUNCNAME[0]}"
   echo
   echo Checking for availability of all operating system commands and utilities required for the DMA collector.
 
-  FAIL=0
+  fail_count=0
 
   # Defaults for Linux
-  THISSHELL=${SHELL}
-  SCRIPTCOMMAND=${BASH_SOURCE[0]}
+  this_shell=${SHELL}
+  script_command=${BASH_SOURCE[0]}
 
   awk_cmd=$(which awk 2>/dev/null)
-  CUT=$(which cut 2>/dev/null)
-  DIRNAME=$(which dirname 2>/dev/null)
-  GREP=$(which grep 2>/dev/null)
-  GZIP=$(which gzip 2>/dev/null)
-  ICONV=$(which iconv 2>/dev/null)
-  MD5SUM=$(which md5sum 2>/dev/null)
-  PRINTF=$(which printf 2>/dev/null)
-  SED=$(which sed 2>/dev/null)
-  SQLPLUS=$(which sqlplus)
-  TAR=$(which tar 2>/dev/null)
-  TR=$(which tr 2>/dev/null)
-  UNAME=$(which uname 2>/dev/null)
-  ZIP=$(which zip 2>/dev/null)
+  cut_cmd=$(which cut 2>/dev/null)
+  dir_name_cmd=$(which dirname 2>/dev/null)
+  grep_cmd=$(which grep 2>/dev/null)
+  gzip_cmd=$(which gzip 2>/dev/null)
+  iconv_cmd=$(which iconv 2>/dev/null)
+  md5sum_cmd=$(which md5sum 2>/dev/null)
+  printf_cmd=$(which printf 2>/dev/null)
+  sed_cmd=$(which sed 2>/dev/null)
+  sqlplus_cmd=$(which sqlplus)
+  tar_cmd=$(which tar 2>/dev/null)
+  tr_cmd=$(which tr 2>/dev/null)
+  uname_cmd=$(which uname 2>/dev/null)
+  zip_cmd=$(which zip 2>/dev/null)
 
   # Override for Solaris
   if [[ "$(uname)" = "SunOS" ]]; then
-    GREP=/usr/xpg4/bin/grep
-    SED=/usr/xpg4/bin/sed
+    grep_cmd=/usr/xpg4/bin/grep
+    sed_cmd=/usr/xpg4/bin/sed
   fi
 
   # Override for HP-UX
   if [[ "$(uname)" = "HP-UX" ]]; then
     if [[ -f /usr/local/bin/md5 ]]; then
-      MD5SUM=/usr/local/bin/md5
+      md5sum_cmd=/usr/local/bin/md5
     fi
   fi
 
   # If BASH_SOURCE is null, assume we are in ksh
-  if [[ "${SCRIPTCOMMAND}" = "" ]]; then
-    SCRIPTCOMMAND="${.sh.file}"
+  if [[ "${script_command}" = "" ]]; then
+    script_command="${.sh.file}"
   fi
 
   if [[ "${awk_cmd}" = "" ]]; then
     echo "FAILED : Missing command awk, please install this utility or update the path to include it."
-    FAIL=$(($FAIL + 1))
+    fail_count=$(($fail_count + 1))
   fi
 
-  if [[ "${CUT}" = "" ]]; then
+  if [[ "${cut_cmd}" = "" ]]; then
     echo "FAILED : Missing command cut, please install this utility or update the path to include it."
-    FAIL=$(($FAIL + 1))
+    fail_count=$(($fail_count + 1))
   fi
 
-  if [[ "${DIRNAME}" = "" ]]; then
+  if [[ "${dir_name_cmd}" = "" ]]; then
     echo "FAILED : Missing command dirname, please install this utility or update the path to include it."
-    FAIL=$(($FAIL + 1))
+    fail_count=$(($fail_count + 1))
   fi
 
-  if [[ "${GREP}" = "" ]]; then
+  if [[ "${grep_cmd}" = "" ]]; then
     echo "FAILED : Missing command grep, please install this utility or update the path to include it."
-    FAIL=$(($FAIL + 1))
+    fail_count=$(($fail_count + 1))
   fi
 
-  if [[ "${MD5SUM}" = "" ]]; then
+  if [[ "${md5sum_cmd}" = "" ]]; then
     echo "FAILED : Missing command md5sum, please install this utility or update the path to include it."
-    FAIL=$(($FAIL + 1))
+    fail_count=$(($fail_count + 1))
   fi
 
-  if [[ "${PRINTF}" = "" ]]; then
+  if [[ "${printf_cmd}" = "" ]]; then
     echo "FAILED : Missing command printf, please install this utility or update the path to include it."
-    FAIL=$(($FAIL + 1))
+    fail_count=$(($fail_count + 1))
   fi
 
-  if [[ "${SED}" = "" ]]; then
+  if [[ "${sed_cmd}" = "" ]]; then
     echo "FAILED : Missing command sed, please install this utility or update the path to include it."
-    FAIL=$(($FAIL + 1))
+    fail_count=$(($fail_count + 1))
   fi
 
-  if [[ "${ICONV}" = "" ]]; then
+  if [[ "${iconv_cmd}" = "" ]]; then
     echo "FAILED : Missing command iconv, please install this utility or update the path to include it."
-    FAIL=$(($FAIL + 1))
+    fail_count=$(($fail_count + 1))
   fi
 
-  if [[ "${TR}" = "" ]]; then
+  if [[ "${tr_cmd}" = "" ]]; then
     echo "FAILED : Missing command tr, please install this utility or update the path to include it."
-    FAIL=$(($FAIL + 1))
+    fail_count=$(($fail_count + 1))
   fi
 
-  if [[ "${UNAME}" = "" ]]; then
+  if [[ "${uname_cmd}" = "" ]]; then
     echo "FAILED : Missing command uname, please install this utility or update the path to include it."
-    FAIL=$(($FAIL + 1))
+    fail_count=$(($fail_count + 1))
   fi
 
   # Check for either zip or (gzip and tar)
-  if [[ "${ZIP}" = "" ]]; then
-    if [[ "${GZIP}" = "" ]]; then
+  if [[ "${zip_cmd}" = "" ]]; then
+    if [[ "${gzip_cmd}" = "" ]]; then
       echo "FAILED : There is no zip or gzip available."
-      FAIL=$(($FAIL + 1))
+      fail_count=$(($fail_count + 1))
     else
-      if [[ "${TAR}" = "" ]]; then
+      if [[ "${tar_cmd}" = "" ]]; then
         echo "FAILED : There is no zip available.  Found gzip but no tar. If the system does not have zip installed, it must have tar and gzip."
-        FAIL=$(($FAIL + 1))
+        fail_count=$(($fail_count + 1))
       else
         echo "NOTICE : There is no zip available, so we will use tar and gzip."
       fi
     fi
   fi
 
-  # Check for SQLPLUS client
+  # Check for sqlplus_cmd client
   # Check if running on Windows Subsystem for Linux
-  ISWIN=$(uname -a | ${GREP} -i microsoft -c )
-  if [[ ${ISWIN} -eq 1 ]]; then
-    SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
-    SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
-    SQLPLUS=$(which sqlplus.exe 2>/dev/null)
+  if [[ $(uname -a | ${grep_cmd} -i microsoft -c ) -eq 1 ]]; then
+    sql_dir=$(wslpath -a -w ${sql_dir})/sql
+    sql_output_dir=$(wslpath -a -w ${sql_output_dir})
+    sqlplus_cmd=$(which sqlplus.exe 2>/dev/null)
   fi
 
   # Check if running on Cygwin
-  ISCYG=$(uname -a | ${GREP} -i -c cygwin )
-  if [[ ${ISCYG} -eq 1 ]]; then
-    SQL_DIR=$(cygpath -w ${SCRIPT_DIR})/sql
-    SQLOUTPUT_DIR=$(cygpath -w ${SQLOUTPUT_DIR})
-    SQLPLUS=$(which sqlplus.exe 2>/dev/null)
+  if [[ $(uname -a | ${grep_cmd} -i -c cygwin ) -eq 1 ]]; then
+    sql_dir=$(cygpath -w ${sql_dir})/sql
+    sql_output_dir=$(cygpath -w ${sql_output_dir})
+    sqlplus_cmd=$(which sqlplus.exe 2>/dev/null)
   fi
 
-  if [[ "${SQLPLUS}" = "" ]]; then
+  if [[ "${sqlplus_cmd}" = "" ]]; then
     echo "FAILED : SQL*Plus not found on this machine.  Ensure sqlplus is installed and in the path."
-    FAIL=$(($FAIL + 1))
+    fail_count=$(($fail_count + 1))
   fi
 
-  if [[ ${FAIL} -eq 0 ]]; then
+  if [[ ${fail_count} -eq 0 ]]; then
     echo
     echo "SUCCESS : All required operating system commands are available."
     echo
@@ -151,7 +150,7 @@ function precheckOS() {
     return 0
   else
     echo
-    echo "FAILED : Operating system precheck Failed $FAIL tests".
+    echo "FAILED : Operating system precheck Failed $fail_count tests".
     echo "         Address the issues above and retry."
     return 1
   fi
@@ -162,16 +161,13 @@ function precheckOS() {
 # Fail on all platforms other than officially supported.
 function oee_check_platform() {
   local PLT=$(uname)
-  local ret_val="FAIL"
+  local ret_val="fail_count"
   case "${PLT}" in
     "Linux" )
       ret_val="PASS"
       ;;
-    "Darwin" )
-      ret_val="PASS"
-      ;;
     * )
-      ret_val="FAIL due to unsupported platform ${PLT}.  Oracle Estate Explorer collector is not compatible with the operating system on this machine.  Either disable OEE collection in the configuration file or execute these scripts on a supported platform."
+      ret_val="fail_count due to unsupported platform ${PLT}.  Oracle Estate Explorer collector is not compatible with the operating system on this machine.  Either disable OEE collection in the configuration file or execute these scripts on a supported platform."
   esac
   echo "${ret_val}"
 }
@@ -179,21 +175,20 @@ function oee_check_platform() {
 
 # Verify that any manual identifiers specified are unique within the configuration file.
 function precheckConfigUniqueId() {
-  FNAME="${FUNCNAME[0]}"
+  fname="${FUNCNAME[0]}"
   print_separator
   unqiuevals=()
   echo "Checking configuration file for unique IDs..."
 
-  linecount=$(cat "${CONFIGFILE}" | tr -d ' ' | tr -d "${TABCHAR}" | ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -c -v '^$' | wc -l | tr -d ' ')
-  uniquecount=$(cat "${CONFIGFILE}" | tr -d ' ' | tr -d "${TABCHAR}" | ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -c -v '^$' | sort | uniq -c | wc -l | tr -d ' ')
+  linecount=$(cat "${configuration_file}" | tr -d ' ' | tr -d "${TABCHAR}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' | cut -d ',' -f 6 | ${grep_cmd} -c -v '^$' | wc -l | tr -d ' ')
+  uniquecount=$(cat "${configuration_file}" | tr -d ' ' | tr -d "${TABCHAR}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' | cut -d ',' -f 6 | ${grep_cmd} -c -v '^$' | sort | uniq -c | wc -l | tr -d ' ')
   
   if [[ ${linecount} -ne ${uniquecount} ]] ; then
     echo "FAILED : Only $uniquecount out of out of $linecount IDs are unique."
     echo "         These Ids appear more than once in the configuration file : "
     echo "Occurrances Value"
     echo "----------- ------------------------------"
-    #cat "${CONFIGFILE}" | ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -v '^$' | sort | uniq -c | ${GREP} -v ' 1 ' | ${SED} 's/^ *//g' | ${SED} "s/ /${TABCHAR}${TABCHAR}${TABCHAR}/g" | awk '{printf "%11s %s", $1, $2}'
-    tr -d ' ' < "${CONFIGFILE}" | tr -d "${TABCHAR}" |  ${GREP} -v '^#' | ${GREP} -v '^$' | cut -d ',' -f 6 | ${GREP} -v '^$' | sort | uniq -c | ${GREP} -v ' 1 '  | awk '{printf "%11s %s", $1, $2}'
+    tr -d ' ' < "${configuration_file}" | tr -d "${TABCHAR}" |  ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' | cut -d ',' -f 6 | ${grep_cmd} -v '^$' | sort | uniq -c | ${grep_cmd} -v ' 1 '  | awk '{printf "%11s %s", $1, $2}'
     return 1
   else 
     echo "SUCCESS : All databases have unique ids where specified."
@@ -203,7 +198,7 @@ function precheckConfigUniqueId() {
 
 # Verify we are on a supported platform for OEE collection
 function precheck_oee_platform() {
-  FNAME="${FUNCNAME[0]}"
+  fname="${FUNCNAME[0]}"
   print_separator
 
   echo "Checking Oracle Estate Explorer supported platforms..."
@@ -223,7 +218,7 @@ function precheck_oee_platform() {
 
 # Verify we can process the configuration file.
 function precheckConfigFileFormat() {
-  FNAME="${FUNCNAME[0]}"
+  fname="${FUNCNAME[0]}"
   print_separator
 
   echo "Checking configuration file format..."
@@ -263,13 +258,13 @@ function precheckConfigFileFormat() {
           oee_entries=1
         fi
 
-        if [[ "${oee_flag}" = "Y" ]] && [[ ! -f ${OEEDIR}/oee_group_extract-SA.sh ]] ; then
-            echo "FAILED : OEE collection is specified on line ${lineno} but the OEE collection files are not installed in ${OEEDIR}.  Either install OEE to the specified location or set this flag to N in the configuration file."
+        if [[ "${oee_flag}" = "Y" ]] && [[ ! -f ${oee_dir}/oee_group_extract-SA.sh ]] ; then
+            echo "FAILED : OEE collection is specified on line ${lineno} but the OEE collection files are not installed in ${oee_dir}.  Either install OEE to the specified location or set this flag to N in the configuration file."
             failcount=$(( $failcount + 1 ))
         fi              
       fi
     fi     
-  done < <( ${SED} "s/ //g;s/${TABCHAR}//g" "$CONFIGFILE"  )
+  done < <( ${sed_cmd} "s/ //g;s/${TABCHAR}//g" "$configuration_file"  )
 
   if [[ $failcount -eq 0 ]]; then
     echo "SUCCESS : Configuration file format check."
@@ -281,9 +276,9 @@ function precheckConfigFileFormat() {
 # Connect to the specified database and verify that the DMA user has access to the stats tables requested and that sufficient stats history is available.
 # We do not check for permissions on all tables/views required, just assume that if the grants script was run we have have everything we need.
 function checkStats() {
-  FNAME="${FUNCNAME[0]}"
-  FNAME='checkStats'
-  ${SQLPLUS} -S  -L /nolog  << EOF
+  fname="${FUNCNAME[0]}"
+  fname='checkStats'
+  ${sqlplus_cmd} -S  -L /nolog  << EOF
   connect ${1}${2}
   set heading off
   set feedback off
@@ -309,14 +304,14 @@ function checkStats() {
         IF nvl(cnt,0) < 1 THEN
           retval := 'FAILED : ' || rpad(substr(dbconn,1,40),40) || ' User has no permissions to select from the AWR tables.  Please execute the grants_wrapper.sql script for this user.';
         ELSE
-          sqlStr := 'SELECT  EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) FROM dba_hist_snapshot WHERE begin_interval_time < trunc(sysdate)';
-          EXECUTE IMMEDIATE sqlStr INTO numdays;
+          sqlStr := 'SELECT  EXtr_cmdACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) FROM dba_hist_snapshot WHERE begin_interval_time < trunc(sysdate)';
+          EXEcut_cmdE IMMEDIATE sqlStr INTO numdays;
           IF numdays > 0 THEN
-            sqlStr := REPLACE('SELECT CASE WHEN EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40, ~ ~) || ~ AWR        START ~ || to_char( min(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1),4) || ~  #DAYS ~, EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) )
-            , (count(1) / EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) )
+            sqlStr := REPLACE('SELECT CASE WHEN EXtr_cmdACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40, ~ ~) || ~ AWR        Star_cmdT ~ || to_char( min(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1),4) || ~  #DAYS ~, EXtr_cmdACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) )
+            , (count(1) / EXtr_cmdACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) )
             FROM dba_hist_snapshot
             WHERE begin_interval_time <= trunc(sysdate)', '~', chr(39));
-            EXECUTE IMMEDIATE sqlStr INTO retval, numdays, snapsperday USING mindays, dbconn;
+            EXEcut_cmdE IMMEDIATE sqlStr INTO retval, numdays, snapsperday USING mindays, dbconn;
             retval := retval || LPAD(numdays, 4) || '  SnapsPerDay ' || round(snapsperday) ;
           END IF;
           IF numdays < mindays THEN
@@ -336,14 +331,14 @@ function checkStats() {
 
       IF cnt = 8 THEN
         sqlStr := 'SELECT NVL((max(snap_time) -min(snap_time)),0) , COUNT(1) FROM PERFSTAT.STATS\$SNAPSHOT WHERE snap_time <= (sysdate) AND snap_time >= trunc(sysdate - :mindays)';
-        EXECUTE IMMEDIATE sqlStr INTO numdays, numsnaps USING mindays;
+        EXEcut_cmdE IMMEDIATE sqlStr INTO numdays, numsnaps USING mindays;
         numdays:=NVL(numdays,0);
         IF numdays > 0 THEN
-          sqlStr := REPLACE('SELECT CASE WHEN trunc(max(snap_time) -min(snap_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40) || ~ STATSPACK  START ~ || to_char(min(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1), 4) || ~  #DAYS ~ , to_char(trunc(max(snap_time) -min(snap_time) )) , count(1) / (max(snap_time) -min(snap_time) )
+          sqlStr := REPLACE('SELECT CASE WHEN trunc(max(snap_time) -min(snap_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40) || ~ STATSPACK  Star_cmdT ~ || to_char(min(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1), 4) || ~  #DAYS ~ , to_char(trunc(max(snap_time) -min(snap_time) )) , count(1) / (max(snap_time) -min(snap_time) )
           FROM PERFSTAT.STATS\$SNAPSHOT
           WHERE snap_time <= (sysdate)
           AND snap_time >= trunc(sysdate - :mindays)', '~', chr(39));
-          EXECUTE IMMEDIATE sqlStr INTO retval, numdays, snapsperday USING mindays, dbconn, mindays;
+          EXEcut_cmdE IMMEDIATE sqlStr INTO retval, numdays, snapsperday USING mindays, dbconn, mindays;
           retval := retval || LPAD(numdays,4) || '  SnapsPerDay ' || ROUND(snapsperday);
         ELSE
           IF numsnaps <= 1 OR numdays <= 1 THEN retval := 'FAILED : ' || rpad(substr(dbconn,1,40),40) || ' Not enough snapshots to collect performance data.  Either collect more snapshots or disable stats collection for this database.';
@@ -373,7 +368,7 @@ EOF
 
 # Loop through the databases given and check that the stats requested are available.
 function precheckStats() {
-  FNAME="${FUNCNAME[0]}"
+  fname="${FUNCNAME[0]}"
   print_separator
 
   echo "Checking for performance stats ..."
@@ -395,7 +390,7 @@ function precheckStats() {
     username=$(echo "${user}" | cut -d '/' -f 1)
     echo  "...Checking available performance statistics on database ${db} user ${username} for ${statssrc}"
     retcd=$(checkStats "${user}" "${db}" "${statssrc}" "${statswindow}") 
-    success=$(echo "${retcd}" | ${GREP} -e SUCCESS -e NONE -e WARNING | cut -d ' ' -f 1)
+    success=$(echo "${retcd}" | ${grep_cmd} -e SUCCESS -e NONE -e WARNING | cut -d ' ' -f 1)
     if [[ "${success}" = "SUCCESS" ]]; then
       successes+=("${retcd}")
     else
@@ -409,7 +404,7 @@ function precheckStats() {
         fi
       fi
     fi
-  done < <( ${SED} "s/ //g;s/${TABCHAR}//g" "$CONFIGFILE"  )
+  done < <( ${sed_cmd} "s/ //g;s/${TABCHAR}//g" "$configuration_file"  )
 
   retcd=${#successes[@]}
   echo
@@ -461,7 +456,7 @@ EOF
 
 # Loop through the databases given an verify we can connect as SYSDBA.
 function precheckSysdba() {
-  FNAME="${FUNCNAME[0]}"
+  fname="${FUNCNAME[0]}"
   print_separator
   echo "Checking SYSDBA connections where needed..."
   echo 
@@ -482,7 +477,7 @@ function precheckSysdba() {
     else
       echo -n "...Testing SYSDBA connection to database ${db}"
       retcd=$(checkSysdbaConnection "${sysUser}" "${db}" )
-      success=$(echo "${retcd}" | ${GREP} SUCCESS)
+      success=$(echo "${retcd}" | ${grep_cmd} SUCCESS)
       if [[ "${success}" = "SUCCESS" ]]; then
         echo " : SUCCESS"
         successes+=("SUCCESS : ${db}")
@@ -493,10 +488,10 @@ function precheckSysdba() {
         errors+=("FAILED : ${db}")
       fi
     fi
-  done < <( ${SED} "s/ //g;s/${TABCHAR}//g" "$CONFIGFILE"  )
+  done < <( ${sed_cmd} "s/ //g;s/${TABCHAR}//g" "$configuration_file"  )
 
   PASS=${#successes[@]}
-  FAIL=${#errors[@]}
+  fail_count=${#errors[@]}
 
   echo
   echo "RESULTS:"
@@ -506,7 +501,7 @@ function precheckSysdba() {
     printf '%s\n' "${successes[@]}"
   fi
 
-  if [[ ${FAIL} -gt 0 ]]; then
+  if [[ ${fail_count} -gt 0 ]]; then
     echo
     echo "SYSDBA FAILED CONNECTIONS:"
     printf '%s\n' "${errors[@]}"
@@ -522,7 +517,7 @@ function precheckSysdba() {
 
 # Check that the DMA user is able to connect to the given database.
 function checkConnection() {
-  FNAME="${FUNCNAME[0]}"
+  fname="${FUNCNAME[0]}"
   sqlplus -s -L "${1}${2} " << EOF
   set heading off
   set feedback off
@@ -534,7 +529,7 @@ EOF
 
 # Verify the DMA user is able to connect to the target databases.
 function precheckUser() {
-  FNAME="${FUNCNAME[0]}"
+  fname="${FUNCNAME[0]}"
   print_separator
   echo "Checking DMA user connections ..."
   echo
@@ -551,7 +546,7 @@ function precheckUser() {
     username=$(echo ${user} | cut -d '/' -f 1)
     echo -n "...Testing DMA user connection for user ${username} to database ${db}"
     retcd=$(checkConnection "${user}" "${db}" )
-    success=$(echo "${retcd}" | ${GREP} SUCCESS)
+    success=$(echo "${retcd}" | ${grep_cmd} SUCCESS)
     if [[ "${success}" = "SUCCESS" ]]; then
       echo " : SUCCESS"
       successes+=("SUCCESS : ${db}" )
@@ -562,7 +557,7 @@ function precheckUser() {
       echo
     fi
 
-  done < <( ${SED} "s/ //g;s/${TABCHAR}//g" "$CONFIGFILE"  )
+  done < <( ${sed_cmd} "s/ //g;s/${TABCHAR}//g" "$configuration_file"  )
 
   echo
   echo
@@ -651,7 +646,7 @@ fi
 
 while (( "$#" )); do
   if [[ "$1" == "--configFile" ]]; then
-    CONFIGFILE="${2}"
+    configuration_file="${2}"
   else
     echo "Unknown parameter ${1}"
     print_usage
@@ -660,18 +655,18 @@ while (( "$#" )); do
   shift 2
 done
 
-if [[ -z "${CONFIGFILE}" ]]; then
+if [[ -z "${configuration_file}" ]]; then
   echo "Error : Must specify a connection configuration file to run the precheck."
   print_usage
   echo
   exit
 fi
 
-if [[ -f "${CONFIGFILE}" ]]; then 
-  configfilelinecount=$(wc -l <"${CONFIGFILE}")
-  echo "Checking ${configfilelinecount} entries in file ${CONFIGFILE}..."
+if [[ -f "${configuration_file}" ]]; then 
+  configfilelinecount=$(wc -l <"${configuration_file}")
+  echo "Checking ${configfilelinecount} entries in file ${configuration_file}..."
   runAllChecks 
 else
-  echo "File not found : ${CONFIGFILE}"
+  echo "File not found : ${configuration_file}"
 fi
 

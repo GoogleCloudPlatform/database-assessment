@@ -5,7 +5,7 @@
 function oee_generate_config() {
   local oee_guid="${1}"
   local oee_database="${2}"
-  local oee_hostName="${3}"
+  local oee_host_name="${3}"
   local oee_port="${4}"
   local oee_user="${5}"
   local oee_pass="${6}"
@@ -24,7 +24,7 @@ function oee_generate_config() {
     
   # For single tenant or container databases
   oee_guid=$(echo ${oee_guid} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
-  echo ${oee_guid}:${oee_database}://${oee_hostName}:${oee_port}/${oee_database}:${oee_user}:${oee_pass} >> ${driver_file_name}
+  echo ${oee_guid}:${oee_database}://${oee_host_name}:${oee_port}/${oee_database}:${oee_user}:${oee_pass} >> ${driver_file_name}
     
   # For multitenant, we need to add entries for all the pluggable databases.
   if [[ -f ${output_dir}/opdb__pdb_summary__${v_file_tag} ]] ; then
@@ -32,14 +32,14 @@ function oee_generate_config() {
     do
       echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
       oee_guid=$(echo ${oee_guid}${pdbname}${dbdomain} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
-      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${driver_file_name}
+      echo ${oee_guid}:${pdbname}://${oee_host_name}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${driver_file_name}
     done
   elif [[ -f ${output_dir}/opdb__pdbsopenmode__${v_file_tag} ]] ; then
     for pdbname in $(${grep_cmd} -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" ${output_dir}/opdb__pdbsopenmode__${v_file_tag} | ${grep_cmd} -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 3)
     do
       echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
       oee_guid=$(echo ${oee_guid}${pdbname} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
-      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${driver_file_name}
+      echo ${oee_guid}:${pdbname}://${oee_host_name}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${driver_file_name}
     done
   fi  
 
@@ -122,13 +122,13 @@ EOF
 
 # OEE Requires database 10g or higher
 function oee_check_db_version {
-  connectString="$1"
-  RETVAL="FAIL"
+  connection_string="$1"
+  ret_val="FAIL"
 
   dbVer=$(
 sqlplus -s /nolog << EOF
 SET DEFINE OFF
-connect ${connectString}
+connect ${connection_string}
 @${sql_dir}/dma_set_sql_env.sql
 set pagesize 0 lines 400 feedback off verify off heading off echo off timing off time off
 WITH mj AS (
@@ -146,64 +146,62 @@ EOF
     dbMinor=$(echo "${dbVer}" | cut -d '|' -f 3)
 
     if [[ ${dbMajor} -gt 10 ]] ; then
-        RETVAL="PASS"
+        ret_val="PASS"
     else 
       if [[ ${dbMajor} -eq 10 ]] ; then
         if [[ ${dbMinor} -ge 2 ]] ; then
-          RETVAL="PASS"
+          ret_val="PASS"
         fi
       fi
     fi
   else 
-    RETVAL="FAIL: ${dbVer}"
+    ret_val="FAIL: ${dbVer}"
   fi
-  echo ${RETVAL}
+  echo ${ret_val}
 }
 
 
 # Check the platform on which the script is running.
 # Fail on all platforms other than officially supported.
 function oee_check_platform() {
-  local PLT=$(uname)
+  local platform=$(uname)
   local ret_val="FAIL"
-  case "${PLT}" in
+  case "${platform}" in
     "Linux" ) 
       ret_val="PASS"
       ;;
-    "Darwin" ) 
-      ret_val="PASS"
-      ;;
     * )
-      ret_val="FAIL due to unsupported platform ${PLT}"
+      ret_val="FAIL due to unsupported platform ${platform}"
   esac
   echo "${ret_val}"
 }
 
 # Check that all conditions are correct for running OEE
 function oee_check_conditions {
-  local connectString="${1}"
-  local connectDest=$(echo "${connectString}" | cut -d '@' -f 2)
-  local RETVAL="FAIL"
-  local DBV="N/A"
+  local connection_string="${1}"
+  local connection_destination=$(echo "${connection_string}" | cut -d '@' -f 2)
+  local ret_val="FAIL"
+  local database_version="N/A"
+  local sqlplus_version=""
 
   if [[ -f $oee_dir/oee_group_extract-SA.sh ]] ; then
       
-    PLT="$(oee_check_platform)"
-    SPR=$(oee_check_sqlplus_release)
-    DBV="$(oee_check_db_version ${connectString})"
+    platform="$(oee_check_platform)"
+    sqlplus_version=$(oee_check_sqlplus_release)
+    database_version="$(oee_check_db_version ${connection_string})"
     
-    if [[ "${SPR}" == "PASS" ]] && [[ "${DBV}" == "PASS" ]] && [[ "${PLT}" == "PASS" ]]; then
-      RETVAL="PASS"
+    if [[ "${sqlplus_version}" == "PASS" ]] && [[ "${database_version}" == "PASS" ]] && [[ "${platform}" == "PASS" ]]; then
+      ret_val="PASS"
     fi  
   fi
 
-  if [[ "${RETVAL}" != "PASS" ]] ; then 
-    echo "Failure testing connection ${connectDest}" 
-    echo "SQLPlus Release   ${SPR}"
-    echo "Database Version  ${DBV}"
-    echo "Platform          ${PLT}"
+  if [[ "${ret_val}" != "PASS" ]] ; then 
+    echo "Failure testing connection ${connection_destination}" 
+    echo "SQLPlus Release   ${sqlplus_version}"
+    echo "Database Version  ${database_version}"
+    echo "Platform          ${platform}"
   else
-    echo "${RETVAL}"
+    echo "${ret_val}"
   fi
 }
 
