@@ -46,9 +46,10 @@ connStr=""
 manualUniqueId=""
 statsWindow=30
 collectOEE="Y"
-oeeGroup="NONE"
-oee_runId=$(date +%Ym%d%H%M%S)
+oeeGroup="DEFAULT-$$"
+oee_runId=$(date +%Y%m%d%H%M%S)
 extractor_version=""
+dmaAutomation="N"
 
 
 # Define global variables that define how/what executables to use based on the platform on which we are running.
@@ -63,6 +64,7 @@ function init_variables() {
   sql_dir=${script_dir}/sql
   oee_dir=${script_dir}/oee
 
+  awk_cmd=$(which awk 2>/dev/null)
   grep_cmd=$(which grep)
   sed_cmd=$(which sed)
   md5_cmd=$(which md5sum 2>/dev/null)
@@ -76,8 +78,13 @@ function init_variables() {
 
   # Now handle platform-specific commands and variables.
   if [[ "$(uname)" = "SunOS" ]];then
+    awk_cmd=/usr/xpg4/bin/awk
     grep_cmd=/usr/xpg4/bin/grep
     sed_cmd=/usr/xpg4/bin/sed
+    if [[ ! -f /usr/xpg4/bin/awk ]]; then
+      echo "Solaris requires compatible version of awk at /usr/xpg4/bin/awk.  Please install awk and retry'."
+      exit 1
+    fi
   fi
 
   if [[ "$(uname)" = "HP-UX" ]];then
@@ -357,7 +364,7 @@ function print_usage() {
   echo "                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR."
 
   echo "  Oracle Estate Explorere collection"
-  echo "      --collectOEE            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector."
+  echo "      --collectOEE            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector.  Default is Y."
   echo "                              NOTE: This requires SQL client version 21 and above, plus Oracle database 11.2 or above."
   echo "                                    OEE collection will not run if requirements are not met."
   echo
@@ -502,102 +509,126 @@ function check_db_connection() {
 #############################################################################
 
 function main() {
-echo ""
-echo "==================================================================================="
-echo "Database Migration Assessment Database Assessment Collector Version ${dma_version}"
-print_extractor_version "${extractor_version}"
-echo "==================================================================================="
+  final_status="COMPLETE"
+  echo ""
+  echo "==================================================================================="
+  echo "Database Migration Assessment Database Assessment Collector Version ${dma_version}"
+  print_extractor_version "${extractor_version}"
+  echo "==================================================================================="
 
-init_variables
-parse_parameters "$@"
+  init_variables
+  parse_parameters "$@"
 
-check_db_connection
-retval=$?
+  check_db_connection
+  retval=$?
 
 
-if [[ $retval -eq 0 ]];then
-  if [[ "$(echo ${sqlcmd_result} | $grep_cmd -E '(ORA-|SP2-)')" != "" ]];then
-    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    echo "Database version check returned error ${sqlcmd_result}"
-    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    echo "Exiting...."
-    exit 255
-  else
-    echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
-    dbmajor=$((echo ${sqlcmd_result} | cut -d '|' -f1)  |cut -d '.' -f 1)
-    if [[ "${dbmajor}" = "10" ]];then
-      echo "Oracle 10 support is experimental."
+  if [[ $retval -eq 0 ]];then
+    if [[ "$(echo ${sqlcmd_result} | $grep_cmd -E '(ORA-|SP2-)')" != "" ]];then
+      print_failure
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo "Database version check returned error ${sqlcmd_result}"
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo "Exiting...."
+      exit 255
     else
-      if [[ "${dbmajor}" = "09" ]];then
-        echo "Oracle 9 support is experimental."
-        DIAGPACKACCESS="NoDiagnostics"
-      fi
-    fi
-    V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    execute_dma "${connect_string}" ${dma_version} ${DIAGPACKACCESS} "${manualUniqueId}" $statsWindow
-    retval=$?
-    if [[ $retval -ne 0 ]];then
-      create_error_log  $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
-      compress_dma_files $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
-      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${log_dir}"
-      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Exiting...."
-      exit 255
-    fi
-    create_error_log  $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
-    cleanup_dma_output $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
-    retval=$?
-    if [[ $retval -ne 0 ]];then
-      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Database Migration Assessment data sanitation reported an error. Please check the error log in directory ${output_dir}"
-      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Exiting...."
-      exit 255
-    fi
-    dma_id=$(get_dma_source_id ${V_TAG})
-    if [[ "${collectOEE}" == "Y" ]]; then
-      oeeCheck=$(oee_check_conditions "${connStr}")
-      if [[ "${oeeCheck}" == "PASS" ]] ; then
-        oee_generate_config ${dma_id} ${databaseService} ${hostName} ${port} ${collectionUserName} ${collectionUserPass} ${oeeGroup} ${oee_runId} ${V_TAG}
-        if [[ "${dmaAutomation}" != "Y" ]] ; then
-          oee_run "${oee_runId}"
-          oee_ret_val=$?
-          if [[ ${oee_ret_val} -eq 1 ]]; then
-            print_warning
-            echo
-            echo "Oracle Estate Explorer collection encountered errors.  Collection may be missing some data."
-            echo
-          fi
-        fi
+      echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
+      dbmajor=$((echo ${sqlcmd_result} | cut -d '|' -f1)  |cut -d '.' -f 1)
+      if [[ "${dbmajor}" = "10" ]];then
+        echo "Oracle 10 support is experimental."
       else
-        echo
-        echo "Skipping Estate Explorer collection for ${databaseService} ${hostName} due to "
-        echo "${oeeCheck}"
-        echo
+        if [[ "${dbmajor}" = "09" ]];then
+          echo "Oracle 9 support is experimental."
+          DIAGPACKACCESS="NoDiagnostics"
+        fi
       fi
+      V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
+      execute_dma "${connect_string}" ${dma_version} ${DIAGPACKACCESS} "${manualUniqueId}" $statsWindow
+      retval=$?
+      if [[ $retval -ne 0 ]];then
+        create_error_log  $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
+        compress_dma_files $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
+        print_failure
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${log_dir}"
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Exiting...."
+        exit 255
+      fi
+      create_error_log  $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
+      cleanup_dma_output $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
+      retval=$?
+      if [[ $retval -ne 0 ]];then
+        print_failure
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Database Migration Assessment data sanitation reported an error. Please check the error log in directory ${output_dir}"
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Exiting...."
+        exit 255
+      fi
+      dma_id=$(get_dma_source_id ${V_TAG})
+      if [[ "${collectOEE}" == "Y" ]]; then
+        oeeCheck=$(oee_check_conditions "${connStr}")
+        if [[ "${oeeCheck}" == "PASS" ]] ; then
+          echo Generating OEE driver file
+          oee_generate_config ${dma_id} ${databaseService} ${hostName} ${port} ${collectionUserName} ${collectionUserPass} ${oeeGroup} ${oee_runId} ${V_TAG}
+          if [[ "${dmaAutomation}" != "Y" ]] ; then
+            echo Running OEE
+            cd oee
+            oee_run "${oee_runId}"
+            cd ..
+            oee_ret_val=$?
+            if [[ ${oee_ret_val} -eq 1 ]]; then
+              final_status="WARNING"
+              print_warning
+              echo
+              echo "Oracle Estate Explorer collection encountered errors.  Collection may be missing some data."
+              echo
+            fi
+          fi
+        else
+          final_status="WARNING"
+          echo
+          echo "Skipping Estate Explorer collection for ${databaseService} ${hostName} due to "
+          echo "${oeeCheck}"
+          echo
+        fi
+      fi
+      compress_dma_files $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g') $dbType
+      retval=$?
+      if [[ $retval -ne 0 ]];then
+        print_failure
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Database Migration Assessment data file archive encountered a problem.  Exiting...."
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        exit 255
+      fi
+      echo ""
+      echo "==================================================================================="
+      echo "Database Migration Assessment Database Assessment Collector completed."
+      echo "Data collection located at ${output_dir}/${OUTFILE}"
+      echo "==================================================================================="
+      echo ""
+      print_extractor_version "${extractor_version}"
+      if [[ "${dmaAutomation}" != "Y" ]] ; then
+        case "${final_status}" in
+          WARNING )
+             print_warning
+             ;;
+          FAILURE )
+             print_failure
+             ;;
+          * )
+             print_complete
+             ;;
+        esac
+      fi
+      exit 0
     fi
-    compress_dma_files $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g') $dbType
-    retval=$?
-    if [[ $retval -ne 0 ]];then
-      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Database Migration Assessment data file archive encountered a problem.  Exiting...."
-      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      exit 255
-    fi
-    echo ""
-    echo "==================================================================================="
-    echo "Database Migration Assessment Database Assessment Collector completed."
-    echo "Data collection located at ${output_dir}/${OUTFILE}"
-    echo "==================================================================================="
-    echo ""
-    print_extractor_version "${extractor_version}"
-    exit 0
+  else
+    echo "Error executing SQL*Plus"
+    exit 255
   fi
-else
-  echo "Error executing SQL*Plus"
-  exit 255
-fi
 }
 
 main "$@"

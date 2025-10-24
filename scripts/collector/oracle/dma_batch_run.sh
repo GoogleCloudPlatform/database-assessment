@@ -9,15 +9,16 @@
 . ./dma_print_pass_fail.sh
 . ./dma_oee.sh
 
-# GLobal vars
+# Global vars
 max_parallel=4
 config_file=dma_db_list.csv
 run_id=$(date +%Y%m%d%H%M%S)
 tab_char=$(printf '\t')
 this_pid=$$
-oee_dir=oee
-output_dir=output
-sql_dir=sql
+script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+oee_dir=${script_dir}/oee
+output_dir=${script_dir}/output; export output_dir
+sql_dir=${script_dir}/sql
 dma_log_name=DMA_BATCH_RUN_$(date +%Y%m%d%H%M%S).log
 
 function count_children() {
@@ -58,7 +59,7 @@ function batchRun() {
     fi
 
     if [[ "${oee_group}" = "" ]] ; then
-      oee_group="NONE"
+      oee_group="DEFAULT"
     fi
   
     # Run a collection in the background, capturing screen output to a log file.
@@ -77,7 +78,7 @@ function batchRun() {
       echo
       sleep 10
     done
-  done < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | grep -v '^#' | grep -v '^$' )  2>&1 | tee "${dma_log_name}"
+  done < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | grep -v '^#' | grep -v '^$' )  #  2>&1 | tee "${dma_log_name}"
 
   echo "Waiting for remaining child processes to complete."
   wait
@@ -85,7 +86,8 @@ function batchRun() {
 
   echo "================================================================================================"
   echo "================================================================================================"
-  echo "Output files are in ${pwd}/${output_dir}"
+  #echo "Output files are in ${pwd}/${output_dir}"
+  echo "Output files are in ${output_dir}"
   echo
   err_cnt=$(ls -1 ${output_dir}/*ERROR.zip 2>/dev/null | wc -l)
   oee_errors=$(grep -h -A 5 "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log)
@@ -94,7 +96,7 @@ function batchRun() {
     return 0
   fi
 
-  if [ ${err_cnt} -ne 0 ]
+  if [[ ${err_cnt} -ne 0 ]]
   then
     echo "================================================================================================"
     echo "================================================================================================"
@@ -134,15 +136,15 @@ function print_usage() {
 
 function main() {
   # The default awk in Solaris does not support the functionality required.  Need the alternative at /usr/xpg4/bin/awk.
-  if [ "$(uname)" = "SunOS" ] ; then
+  if [[ "$(uname)" = "SunOS" ]] ; then
     if [[ -f /usr/xpg4/bin/awk ]]; then
-      AWK=/usr/xpg4/bin/awk
+      awk_cmd=/usr/xpg4/bin/awk
     else
       echo "Solaris requires compatible version of awk at /usr/xpg4/bin/awk.  Please install awk and retry'."
       exit 1
     fi
   else 
-    AWK=$(which awk 2>/dev/null)
+    awk_cmd=$(which awk 2>/dev/null)
   fi
   
   ### Validate input
@@ -178,12 +180,18 @@ function main() {
     if [[ ${retval} -eq 0 ]] ; then
       oee_file_count=$(wc -l < <(ls -1 "${oee_dir}"  | grep "driverfile.${run_id}"))
       if [[ -d ${oee_dir} ]] && [[ ${oee_file_count} -gt 0 ]]; then
-          echo "Running Oracle Estate Explorer for ${oee_count} groups."
+          echo "Running Oracle Estate Explorer for ${oee_file_count} groups."
           cd "${oee_dir}"
-          oee_run "${run_id}" | tee "${dma_log_name}"
-          oee_errors=$(grep "Database extract failures" "${dma_log_name}" | cut -d ':' -f 2 | tr -d ' ')
-          if [[ ${oee_errors} -ne 0 ]] ; then
+          oee_run "${run_id}" 2>&1 | tee "OEE_${dma_log_name}"
+          echo "Checking log file OEE_${dma_log_name} for OEE failures}"
+
+          for oee_fail_number in  $(grep "Database extract failures" "OEE_${dma_log_name}" | cut -d ':' -f 2 | tr -d ' '); do
+            oee_fail_count=$(( ${oee_fail_count}  + ${oee_fail_number} ))
+          done
+          if [[ ${oee_fail_count} -ne 0 ]] ; then
             print_fail
+          else
+            print_complete
           fi
       else
         print_complete
@@ -197,5 +205,5 @@ function main() {
   fi
 }
 
-main "$@"
+main "$@" 2>&1 | tee "${dma_log_name}"
 

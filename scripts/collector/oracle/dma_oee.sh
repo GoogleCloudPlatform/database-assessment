@@ -12,43 +12,47 @@ function oee_generate_config() {
   local oee_group="${7}" 
   local oee_runid="${8}"
   local v_file_tag="${9}"
+
+  local driver_file_name="${oee_dir}/mpack_DMA-OEE-${oee_group}.driverfile.${oee_runid}"
+
+  echo "Generating driver file ${driver_file_name}"
     
-  dbdomain=$(grep db_domain $output_dir/opdb__dbparameters__$v_file_tag | cut -d '|' -f 5 | uniq | head -1)
-  if [ "${dbdomain}" != "" ]; then
+  dbdomain=$(grep db_domain ${output_dir}/opdb__dbparameters__${v_file_tag} | cut -d '|' -f 5 | uniq | head -1)
+  if [[ "${dbdomain}" != "" ]]; then
     dbdomain=".${dbdomain}"
   fi
     
   # For single tenant or container databases
   oee_guid=$(echo ${oee_guid} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
-  echo ${oee_guid}:${oee_database}://${oee_hostName}:${oee_port}/${oee_database}:${oee_user}:${oee_pass} >> ${oee_dir}/mpack_DMA${oee_group}.driverfile.${oee_runid}
+  echo ${oee_guid}:${oee_database}://${oee_hostName}:${oee_port}/${oee_database}:${oee_user}:${oee_pass} >> ${driver_file_name}
     
   # For multitenant, we need to add entries for all the pluggable databases.
-  if [ -f $output_dir/opdb__pdb_summary__$v_file_tag ] ; then
-    for pdbname in $(${grep_cmd} -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" $output_dir/opdb__pdb_summary__$v_file_tag | ${grep_cmd} -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 4)
+  if [[ -f ${output_dir}/opdb__pdb_summary__${v_file_tag} ]] ; then
+    for pdbname in $(${grep_cmd} -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" ${output_dir}/opdb__pdb_summary__${v_file_tag} | ${grep_cmd} -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 4)
     do
       echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
       oee_guid=$(echo ${oee_guid}${pdbname}${dbdomain} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
-      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${oee_dir}/mpack_DMA${oee_group}.driverfile.${oee_runid}
+      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${driver_file_name}
     done
-  elif [ -f $output_dir/opdb__pdbsopenmode__$v_file_tag ] ; then
-    for pdbname in $(${grep_cmd} -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" $output_dir/opdb__pdbsopenmode__$v_file_tag | ${grep_cmd} -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 3)
+  elif [[ -f ${output_dir}/opdb__pdbsopenmode__${v_file_tag} ]] ; then
+    for pdbname in $(${grep_cmd} -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" ${output_dir}/opdb__pdbsopenmode__${v_file_tag} | ${grep_cmd} -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 3)
     do
       echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
       oee_guid=$(echo ${oee_guid}${pdbname} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
-      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${oee_dir}/mpack_DMA${oee_group}.driverfile.${oee_runid}
+      echo ${oee_guid}:${pdbname}://${oee_hostName}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${driver_file_name}
     done
   fi  
+
 }   
 
 
 function oee_run_standalone_extract() {
   local oee_runid="${1}"
-  echo Looking for driver files in $(pwd)
 
-  for fname in $(ls -1 *driverfile.${oee_runid})
+  for fname in *driverfile.${oee_runid} 
   do
     echo Processing file ${fname}
-    newName=$(echo ${fname} |  ${AWK} -F '.'  '{OFS="."; for (i = 1; i <= NF - 1; i++) { printf "%s%s", $i, (i < (NF - 1) ? OFS : "\n")}  }')
+    newName=$(echo ${fname} |  ${awk_cmd} -F '.'  '{OFS="."; for (i = 1; i <= NF - 1; i++) { printf "%s%s", $i, (i < (NF - 1) ? OFS : "\n")}  }')
     sort -u ${fname} > ${newName}
     ./oee_group_extract-SA.sh ${newName} <<EOF
 2
@@ -59,13 +63,16 @@ EOF
 
 function oee_package_zips() {
   local oee_runid="${1}"
-  for zipname in $(ls -1 *driverfile.${oee_runid} | cut -d '_' -f 2- | cut -d '.' -f 1 )
+
+  for zipname in *driverfile.${oee_runid} 
   do
-    if [ -f ${zipname}.zip ] ; then
-      echo Moving OEE file ${zipname}.zip to DMA output directory.
-      mv ${zipname}.zip ../${output_dir}/${zipname}.zip
+    zipname=$(echo ${zipname} | cut -d '_' -f 2- | cut -d '.' -f 1 ).zip
+    if [[ -f ${zipname} ]] ; then
+      echo Moving OEE file ${zipname} to DMA output directory.
+      pwd
+      mv ${zipname} ${output_dir}/${zipname}
     else
-      echo Error: Could not locate output file ${zipfile}.zip !!
+      echo Error: Could not locate output file ${zipname} !!
     fi
   done
 }
@@ -76,13 +83,13 @@ function oee_run() {
 
   oee_run_standalone_extract "${oee_runid}"
 
-  if [ $? -eq 0 ]; then 
+  if [[ $? -eq 0 ]]; then 
     oee_package_zips "${oee_runid}"
   else 
     return 1
   fi
 
-  if [ $? -eq 0 ]; then 
+  if [[ $? -eq 0 ]]; then 
     return 0
   else 
     return 1

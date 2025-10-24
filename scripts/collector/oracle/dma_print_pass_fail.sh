@@ -1,4 +1,5 @@
 function print_fail() {
+  echo :FAILURE: 
   echo
   echo
   echo "#######    #    ### #       #     # ######  #######"
