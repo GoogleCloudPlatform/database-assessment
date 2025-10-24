@@ -39,80 +39,80 @@ function precheckOS() {
   ZIP=$(which zip 2>/dev/null)
 
   # Override for Solaris
-  if [[ "$(uname)" = "SunOS" ]; then
+  if [[ "$(uname)" = "SunOS" ]]; then
     GREP=/usr/xpg4/bin/grep
     SED=/usr/xpg4/bin/sed
   fi
 
   # Override for HP-UX
-  if [[ "$(uname)" = "HP-UX" ]; then
-    if [[ -f /usr/local/bin/md5 ]; then
+  if [[ "$(uname)" = "HP-UX" ]]; then
+    if [[ -f /usr/local/bin/md5 ]]; then
       MD5SUM=/usr/local/bin/md5
     fi
   fi
 
   # If BASH_SOURCE is null, assume we are in ksh
-  if [[ "${SCRIPTCOMMAND}" = "" ]; then
+  if [[ "${SCRIPTCOMMAND}" = "" ]]; then
     SCRIPTCOMMAND="${.sh.file}"
   fi
 
-  if [[ "${awk_cmd}" = "" ]; then
+  if [[ "${awk_cmd}" = "" ]]; then
     echo "FAILED : Missing command awk, please install this utility or update the path to include it."
     FAIL=$(($FAIL + 1))
   fi
 
-  if [[ "${CUT}" = "" ]; then
+  if [[ "${CUT}" = "" ]]; then
     echo "FAILED : Missing command cut, please install this utility or update the path to include it."
     FAIL=$(($FAIL + 1))
   fi
 
-  if [[ "${DIRNAME}" = "" ]; then
+  if [[ "${DIRNAME}" = "" ]]; then
     echo "FAILED : Missing command dirname, please install this utility or update the path to include it."
     FAIL=$(($FAIL + 1))
   fi
 
-  if [[ "${GREP}" = "" ]; then
+  if [[ "${GREP}" = "" ]]; then
     echo "FAILED : Missing command grep, please install this utility or update the path to include it."
     FAIL=$(($FAIL + 1))
   fi
 
-  if [[ "${MD5SUM}" = "" ]; then
+  if [[ "${MD5SUM}" = "" ]]; then
     echo "FAILED : Missing command md5sum, please install this utility or update the path to include it."
     FAIL=$(($FAIL + 1))
   fi
 
-  if [[ "${PRINTF}" = "" ]; then
+  if [[ "${PRINTF}" = "" ]]; then
     echo "FAILED : Missing command printf, please install this utility or update the path to include it."
     FAIL=$(($FAIL + 1))
   fi
 
-  if [[ "${SED}" = "" ]; then
+  if [[ "${SED}" = "" ]]; then
     echo "FAILED : Missing command sed, please install this utility or update the path to include it."
     FAIL=$(($FAIL + 1))
   fi
 
-  if [[ "${ICONV}" = "" ]; then
+  if [[ "${ICONV}" = "" ]]; then
     echo "FAILED : Missing command iconv, please install this utility or update the path to include it."
     FAIL=$(($FAIL + 1))
   fi
 
-  if [[ "${TR}" = "" ]; then
+  if [[ "${TR}" = "" ]]; then
     echo "FAILED : Missing command tr, please install this utility or update the path to include it."
     FAIL=$(($FAIL + 1))
   fi
 
-  if [[ "${UNAME}" = "" ]; then
+  if [[ "${UNAME}" = "" ]]; then
     echo "FAILED : Missing command uname, please install this utility or update the path to include it."
     FAIL=$(($FAIL + 1))
   fi
 
   # Check for either zip or (gzip and tar)
-  if [[ "${ZIP}" = "" ]; then
-    if [[ "${GZIP}" = "" ]; then
+  if [[ "${ZIP}" = "" ]]; then
+    if [[ "${GZIP}" = "" ]]; then
       echo "FAILED : There is no zip or gzip available."
       FAIL=$(($FAIL + 1))
     else
-      if [[ "${TAR}" = "" ]; then
+      if [[ "${TAR}" = "" ]]; then
         echo "FAILED : There is no zip available.  Found gzip but no tar. If the system does not have zip installed, it must have tar and gzip."
         FAIL=$(($FAIL + 1))
       else
@@ -124,7 +124,7 @@ function precheckOS() {
   # Check for SQLPLUS client
   # Check if running on Windows Subsystem for Linux
   ISWIN=$(uname -a | ${GREP} -i microsoft -c )
-  if [[ ${ISWIN} -eq 1 ]; then
+  if [[ ${ISWIN} -eq 1 ]]; then
     SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
     SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
     SQLPLUS=$(which sqlplus.exe 2>/dev/null)
@@ -132,18 +132,18 @@ function precheckOS() {
 
   # Check if running on Cygwin
   ISCYG=$(uname -a | ${GREP} -i -c cygwin )
-  if [[ ${ISCYG} -eq 1 ]; then
+  if [[ ${ISCYG} -eq 1 ]]; then
     SQL_DIR=$(cygpath -w ${SCRIPT_DIR})/sql
     SQLOUTPUT_DIR=$(cygpath -w ${SQLOUTPUT_DIR})
     SQLPLUS=$(which sqlplus.exe 2>/dev/null)
   fi
 
-  if [[ "${SQLPLUS}" = "" ]; then
+  if [[ "${SQLPLUS}" = "" ]]; then
     echo "FAILED : SQL*Plus not found on this machine.  Ensure sqlplus is installed and in the path."
     FAIL=$(($FAIL + 1))
   fi
 
-  if [[ ${FAIL} -eq 0 ]; then
+  if [[ ${FAIL} -eq 0 ]]; then
     echo
     echo "SUCCESS : All required operating system commands are available."
     echo
@@ -396,13 +396,13 @@ function precheckStats() {
     echo  "...Checking available performance statistics on database ${db} user ${username} for ${statssrc}"
     retcd=$(checkStats "${user}" "${db}" "${statssrc}" "${statswindow}") 
     success=$(echo "${retcd}" | ${GREP} -e SUCCESS -e NONE -e WARNING | cut -d ' ' -f 1)
-    if [[ "${success}" = "SUCCESS" ]; then
+    if [[ "${success}" = "SUCCESS" ]]; then
       successes+=("${retcd}")
     else
-      if [[ "${success}" = "NONE" ]; then
+      if [[ "${success}" = "NONE" ]]; then
         none+=("${retcd}")
       else
-        if [[ "${success}" = "WARNING" ]; then
+        if [[ "${success}" = "WARNING" ]]; then
           warnings+=("${retcd}") 
         else 
           errors+=("${retcd}")
@@ -414,21 +414,21 @@ function precheckStats() {
   retcd=${#successes[@]}
   echo
   echo "Results : "
-  if [[ $retcd -gt 0 ]; then
+  if [[ $retcd -gt 0 ]]; then
     echo
     echo SUCCESS:  These databases have at least ${statswindow} calendar days of performance statistics available:
     printf '%s\n' "${successes[@]}"
   fi
 
   retcd=${#none[@]}
-  if [[ $retcd -gt 0 ]; then
+  if [[ $retcd -gt 0 ]]; then
     echo
     echo These databases will not have performance stats collected as the parameter NONE or NOSTATS was given in the configuration file.
     printf '%s\n' "${none[@]}"
   fi
 
   retcd=${#warnings[@]}
-  if [[ $retcd -gt 0 ]; then
+  if [[ $retcd -gt 0 ]]; then
     echo
     echo These databases do not have the minimum days of stats or snapsshot frequency requested.  Data will still be collected but performance metrics may be incomplete.
     printf '%s\n' "${warnings[@]}"
@@ -436,7 +436,7 @@ function precheckStats() {
   fi
 
   retcd=${#errors[@]}
-  if [[ $retcd -gt 0 ]; then
+  if [[ $retcd -gt 0 ]]; then
     echo
     echo FAILED:  These databases did not pass for the below reasons :
     printf '%s\n' "${errors[@]}"
@@ -483,7 +483,7 @@ function precheckSysdba() {
       echo -n "...Testing SYSDBA connection to database ${db}"
       retcd=$(checkSysdbaConnection "${sysUser}" "${db}" )
       success=$(echo "${retcd}" | ${GREP} SUCCESS)
-      if [[ "${success}" = "SUCCESS" ]; then
+      if [[ "${success}" = "SUCCESS" ]]; then
         echo " : SUCCESS"
         successes+=("SUCCESS : ${db}")
       else
@@ -500,13 +500,13 @@ function precheckSysdba() {
 
   echo
   echo "RESULTS:"
-  if [[ ${PASS} -gt 0 ]; then
+  if [[ ${PASS} -gt 0 ]]; then
     echo
     echo "SUCCESSFUL SYSDBA CONNECTIONS:"
     printf '%s\n' "${successes[@]}"
   fi
 
-  if [[ ${FAIL} -gt 0 ]; then
+  if [[ ${FAIL} -gt 0 ]]; then
     echo
     echo "SYSDBA FAILED CONNECTIONS:"
     printf '%s\n' "${errors[@]}"
@@ -552,7 +552,7 @@ function precheckUser() {
     echo -n "...Testing DMA user connection for user ${username} to database ${db}"
     retcd=$(checkConnection "${user}" "${db}" )
     success=$(echo "${retcd}" | ${GREP} SUCCESS)
-    if [[ "${success}" = "SUCCESS" ]; then
+    if [[ "${success}" = "SUCCESS" ]]; then
       echo " : SUCCESS"
       successes+=("SUCCESS : ${db}" )
     else
@@ -571,7 +571,7 @@ function precheckUser() {
   printf '%s\n' "${successes[@]}"
 
   retcd=${#errors[@]}
-  if [[ $retcd -gt 0 ]; then
+  if [[ $retcd -gt 0 ]]; then
     echo
     echo "Overall result:"
     echo
@@ -660,14 +660,14 @@ while (( "$#" )); do
   shift 2
 done
 
-if [[ -z "${CONFIGFILE}" ]; then
+if [[ -z "${CONFIGFILE}" ]]; then
   echo "Error : Must specify a connection configuration file to run the precheck."
   print_usage
   echo
   exit
 fi
 
-if [[ -f "${CONFIGFILE}" ]; then 
+if [[ -f "${CONFIGFILE}" ]]; then 
   configfilelinecount=$(wc -l <"${CONFIGFILE}")
   echo "Checking ${configfilelinecount} entries in file ${CONFIGFILE}..."
   runAllChecks 
