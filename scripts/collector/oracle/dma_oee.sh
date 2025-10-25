@@ -125,7 +125,7 @@ function oee_check_db_version {
   connection_string="$1"
   ret_val="FAIL"
 
-  dbVer=$(
+  db_version=$(
 sqlplus -s /nolog << EOF
 SET DEFINE OFF
 connect ${connection_string}
@@ -141,21 +141,21 @@ FROM mj;
 exit;
 EOF
 )
-  if [[ "${dbVer}" == "CONNECTED"* ]] ; then
-    dbMajor=$(echo "${dbVer}" | cut -d '|' -f 2)
-    dbMinor=$(echo "${dbVer}" | cut -d '|' -f 3)
+  if [[ "${db_version}" == "CONNECTED"* ]] ; then
+    db_version_major=$(echo "${db_version}" | cut -d '|' -f 2)
+    db_version_minor=$(echo "${db_version}" | cut -d '|' -f 3)
 
-    if [[ ${dbMajor} -gt 10 ]] ; then
+    if [[ ${db_version_major} -gt 10 ]] ; then
         ret_val="PASS"
     else 
-      if [[ ${dbMajor} -eq 10 ]] ; then
-        if [[ ${dbMinor} -ge 2 ]] ; then
+      if [[ ${db_version_major} -eq 10 ]] ; then
+        if [[ ${db_version_minor} -ge 2 ]] ; then
           ret_val="PASS"
         fi
       fi
     fi
   else 
-    ret_val="FAIL: ${dbVer}"
+    ret_val="FAIL: ${db_version}"
   fi
   echo ${ret_val}
 }

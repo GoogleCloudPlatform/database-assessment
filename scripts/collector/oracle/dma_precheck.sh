@@ -304,14 +304,14 @@ function checkStats() {
         IF nvl(cnt,0) < 1 THEN
           retval := 'FAILED : ' || rpad(substr(dbconn,1,40),40) || ' User has no permissions to select from the AWR tables.  Please execute the grants_wrapper.sql script for this user.';
         ELSE
-          sqlStr := 'SELECT  EXtr_cmdACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) FROM dba_hist_snapshot WHERE begin_interval_time < trunc(sysdate)';
-          EXEcut_cmdE IMMEDIATE sqlStr INTO numdays;
+          sqlStr := 'SELECT  EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) FROM dba_hist_snapshot WHERE begin_interval_time < trunc(sysdate)';
+          EXECUTE IMMEDIATE sqlStr INTO numdays;
           IF numdays > 0 THEN
-            sqlStr := REPLACE('SELECT CASE WHEN EXtr_cmdACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40, ~ ~) || ~ AWR        Star_cmdT ~ || to_char( min(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1),4) || ~  #DAYS ~, EXtr_cmdACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) )
-            , (count(1) / EXtr_cmdACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) )
+            sqlStr := REPLACE('SELECT CASE WHEN EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40, ~ ~) || ~ AWR        Star_cmdT ~ || to_char( min(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1),4) || ~  #DAYS ~, EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) )
+            , (count(1) / EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) )
             FROM dba_hist_snapshot
             WHERE begin_interval_time <= trunc(sysdate)', '~', chr(39));
-            EXEcut_cmdE IMMEDIATE sqlStr INTO retval, numdays, snapsperday USING mindays, dbconn;
+            EXECUTE IMMEDIATE sqlStr INTO retval, numdays, snapsperday USING mindays, dbconn;
             retval := retval || LPAD(numdays, 4) || '  SnapsPerDay ' || round(snapsperday) ;
           END IF;
           IF numdays < mindays THEN
@@ -331,14 +331,14 @@ function checkStats() {
 
       IF cnt = 8 THEN
         sqlStr := 'SELECT NVL((max(snap_time) -min(snap_time)),0) , COUNT(1) FROM PERFSTAT.STATS\$SNAPSHOT WHERE snap_time <= (sysdate) AND snap_time >= trunc(sysdate - :mindays)';
-        EXEcut_cmdE IMMEDIATE sqlStr INTO numdays, numsnaps USING mindays;
+        EXECUTE IMMEDIATE sqlStr INTO numdays, numsnaps USING mindays;
         numdays:=NVL(numdays,0);
         IF numdays > 0 THEN
           sqlStr := REPLACE('SELECT CASE WHEN trunc(max(snap_time) -min(snap_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40) || ~ STATSPACK  Star_cmdT ~ || to_char(min(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1), 4) || ~  #DAYS ~ , to_char(trunc(max(snap_time) -min(snap_time) )) , count(1) / (max(snap_time) -min(snap_time) )
           FROM PERFSTAT.STATS\$SNAPSHOT
           WHERE snap_time <= (sysdate)
           AND snap_time >= trunc(sysdate - :mindays)', '~', chr(39));
-          EXEcut_cmdE IMMEDIATE sqlStr INTO retval, numdays, snapsperday USING mindays, dbconn, mindays;
+          EXECUTE IMMEDIATE sqlStr INTO retval, numdays, snapsperday USING mindays, dbconn, mindays;
           retval := retval || LPAD(numdays,4) || '  SnapsPerDay ' || ROUND(snapsperday);
         ELSE
           IF numsnaps <= 1 OR numdays <= 1 THEN retval := 'FAILED : ' || rpad(substr(dbconn,1,40),40) || ' Not enough snapshots to collect performance data.  Either collect more snapshots or disable stats collection for this database.';

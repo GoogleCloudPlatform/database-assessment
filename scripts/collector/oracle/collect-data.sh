@@ -42,7 +42,7 @@ collection_user_name=""
 collection_user_pass=""
 database_type=""
 stats_source=""
-connStr=""
+connection_string=""
 manual_unique_id=""
 stats_window=30
 collect_oee="Y"
@@ -342,34 +342,34 @@ function print_usage() {
   echo ""
   echo "  Connection definition must one of:"
   echo "      {"
-  echo "        --connection_string       Oracle EasyConnect string formatted as {user}/{password}@//{db host}:{listener port}/{service name}"
+  echo "        --connectionStr       Oracle EasyConnect string formatted as {user}/{password}@//{db host}:{listener port}/{service name}"
   echo "       or"
-  echo "        --host_name            Database server host name"
+  echo "        --hostName            Database server host name"
   echo "        --port                Database Listener port"
-  echo "        --database_service     Database service name"
-  echo "        --collection_user_name  Database user name"
-  echo "        --collection_user_pass  Database password"
+  echo "        --databaseService     Database service name"
+  echo "        --collectionUserName  Database user name"
+  echo "        --collectionUserPass  Database password"
   echo "      }"
   echo "  Performance statistics source"
-  echo "      --stats_source              Required. Must be one of AWR, STATSPACK, NONE.   When using STATSPACK, see note about --stats_window parameter below."
+  echo "      --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.   When using STATSPACK, see note about --stats_window parameter below."
   echo ""
   echo "  Performance statistics window"
-  echo "      --stats_window           Optional. Number of days of performance stats to collect.  Must be one of 7, 30.  Default is 30."
+  echo "      --statsWindow           Optional. Number of days of performance stats to collect.  Must be one of 7, 30.  Default is 30."
   echo "                              NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION."
   echo "                              IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8"
   echo "                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR."
 
   echo "  Oracle Estate Explorere collection"
-  echo "      --collect_oee            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector.  Default is Y."
+  echo "      --collectOee            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector.  Default is Y."
   echo "                              NOTE: This requires SQL client version 21 and above, plus Oracle database 11.2 or above."
   echo "                                    OEE collection will not run if requirements are not met."
   echo
-  echo "      --oee_group_name              Required if --collect_oee is Y.  This is the group name (ex: Dev, Prod, QA, etc) to use for bundling multiple databases togegther within OEE."
+  echo "      --oeeGroup              Required if --collect_oee is Y.  This is the group name (ex: Dev, Prod, QA, etc) to use for bundling multiple databases togegther within OEE."
   echo "                              Maximum length of 32 characters."
-  echo "      --oee_run_id             Internal use only.  This is used by DMA automation to handle parallel runs of multiple collections."
+  echo "      --oee_runId             Internal use only.  This is used by DMA automation to handle parallel runs of multiple collections."
   echo
   echo " Optional identifier"
-  echo "      --manual_unique_id        Optional.  Allows the end user to create a unique identifier with which to tag the collection. "
+  echo "      --manualUniqueId        Optional.  Allows the end user to create a unique identifier with which to tag the collection. "
   echo "                              Also used internally by DMA automation."
   echo
   echo " Example:"
@@ -397,7 +397,7 @@ function parse_parameters() {
     elif [[ "$1" == "--collectionUserPass" ]]; then collection_user_pass="${2}"
     elif [[ "$1" == "--dbType" ]];             then database_type=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
     elif [[ "$1" == "--statsSrc" ]];           then stats_source=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
-    elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
+    elif [[ "$1" == "--connectionStr" ]];      then connection_string="${2}"
     elif [[ "$1" == "--manualUniqueId" ]];     then manual_unique_id="${2}"
     elif [[ "$1" == "--statsWindow" ]];        then stats_window="${2}"
     elif [[ "$1" == "--collectOEE" ]];         then collect_oee="${2}"
@@ -429,10 +429,10 @@ function parse_parameters() {
     stats_window=30
   fi
   
-  if [[ "${connStr}" == "" ]] ; then
+  if [[ "${connection_string}" == "" ]] ; then
     if [[ "${host_name}" != "" && "${port}" != "" && "${database_service}" != "" && "${collection_user_name}" != "" && "${collection_user_pass}" != "" ]] ; then
-      connStr="${collection_user_name}/${collection_user_pass}@//${host_name}:${port}/${database_service}"
-      echo Got Connection ${connStr}
+      connection_string="${collection_user_name}/${collection_user_pass}@//${host_name}:${port}/${database_service}"
+      echo Got Connection ${connection_string}
     else
       echo "Connection information incomplete"
       print_usage
@@ -440,12 +440,12 @@ function parse_parameters() {
     fi
   else
     # Parse the EZ connect string to get the user/pass for OEE
-    collection_user_name=$(echo ${connStr} | cut -d '/' -f 1)
-    collection_user_pass=$(echo ${connStr} | cut -d '/' -f 2 | cut -d '@' -f 1)
-    hostPort=$(echo ${connStr} | cut -d '/' -f 4)
-    host_name=$(echo ${hostPort} | cut -d ':' -f 1)
-    port=$(echo ${hostPort} | cut -d ':' -f 2)
-    database_service=$(echo ${connStr} | cut -d '/' -f 5)
+    collection_user_name=$(echo ${connection_string} | cut -d '/' -f 1)
+    collection_user_pass=$(echo ${connection_string} | cut -d '/' -f 2 | cut -d '@' -f 1)
+    host_and_port=$(echo ${connection_string} | cut -d '/' -f 4)
+    host_name=$(echo ${host_and_port} | cut -d ':' -f 1)
+    port=$(echo ${host_and_port} | cut -d ':' -f 2)
+    database_service=$(echo ${connection_string} | cut -d '/' -f 5)
   fi
   
   if [[ "${collect_oee}" == "Y" ]] ; then
@@ -491,7 +491,7 @@ function parse_parameters() {
 
 
 function check_db_connection() {
-  connect_string="${connStr}"
+  connect_string="${connection_string}"
   sqlcmd_result=$(check_version "${connect_string}" "${dma_version}" | $grep_cmd DMAFILETAG | cut -d '~' -f 2)
   if [[ "${sqlcmd_result}" = "" ]]; then
     echo "Unable to connect to the target database using ${connect_string}.  Please verify the connection information and target database status."
@@ -564,8 +564,8 @@ function main() {
       fi
       dma_id=$(get_dma_source_id ${v_tag})
       if [[ "${collect_oee}" == "Y" ]]; then
-        oeeCheck=$(oee_check_conditions "${connStr}")
-        if [[ "${oeeCheck}" == "PASS" ]] ; then
+        oee_check_results=$(oee_check_conditions "${connection_string}")
+        if [[ "${oee_check_results}" == "PASS" ]] ; then
           echo Generating OEE driver file
           oee_generate_config ${dma_id} ${database_service} ${host_name} ${port} ${collection_user_name} ${collection_user_pass} ${oee_group_name} ${oee_run_id} ${v_tag}
           if [[ "${dma_automation_flag}" != "Y" ]] ; then
@@ -586,7 +586,7 @@ function main() {
           final_status="WARNING"
           echo
           echo "Skipping Estate Explorer collection for ${database_service} ${host_name} due to "
-          echo "${oeeCheck}"
+          echo "${oee_check_results}"
           echo
         fi
       fi
