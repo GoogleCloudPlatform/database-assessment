@@ -78,7 +78,7 @@ jobs:
         run: hatch run +py=${{ inputs.python-version }} test:no-cov
 
       - if: ${{ inputs.coverage }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
             name: coverage-xml
             path: coverage.xml
