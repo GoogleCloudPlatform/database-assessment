@@ -54,7 +54,7 @@ jobs:
 
       - name: Building & Package Collector
         run: make clean && make build-collector
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
             name: collections
             path: dist/*.zip
@@ -80,7 +80,7 @@ jobs:
     - name: Build
       run: uv build
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: wheels
         path: dist/*
@@ -165,7 +165,7 @@ jobs:
       run: sudo apt-get install --yes musl musl-dev musl-tools
 
     - name: Download wheel artifact
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v6
       with:
         name: wheels
         path: dist/
@@ -206,7 +206,7 @@ jobs:
       run: ./${{ matrix.job.artifact }} --version
 
     - name: Upload binary artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: binary-${{ matrix.job.artifact }}
         path: ${{ matrix.job.artifact }}
@@ -222,7 +222,7 @@ jobs:
     permissions:
      contents: write
     steps:
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         path: dist
         merge-multiple: true
