@@ -50,7 +50,7 @@ jobs:
           python-version: "3.12"
       - name: Building & Package Collector
         run: make clean && make build-collector
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
             name: collections
             path: dist/*.zip
@@ -73,7 +73,7 @@ jobs:
     - name: Build
       run: hatch build
 
-    - uses: actions/upload-artifact@v4
+    - uses: actions/upload-artifact@v5
       with:
         name: wheels
         path: dist/*
@@ -189,7 +189,7 @@ jobs:
         mv dist/binary/dma* dist/binary/dma-${{ matrix.job.release_suffix }}
 
     - name: Upload built binary package
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: binaries-${{ matrix.job.release_suffix }}
         path: dist/binary/*
