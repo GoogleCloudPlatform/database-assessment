@@ -6,12 +6,13 @@
 # TODO Put standardized success / fail into array and print final results.
 TABCHAR=$(printf '\t')
 configfilelinecount=0
-dma_log_name=dma_precheck_sysdba_$(date +%Y%m%d%H%M%S).log
+dma_log_name=dma_precheck_$(date +%Y%m%d%H%M%S).log
 min_days=7
 oee_dir="$(pwd)/oee"
 oee_entries=0
 stats_src_col=4
 configuration_file=""
+verify_user="Y"
 
 # Check that all required OS commands are available.
 function precheckOS() {
@@ -593,8 +594,10 @@ function runAllChecks() {
   if [[ $retval -eq 0 ]]; then precheckConfigFileFormat; retval=$?; fi
   if [[ $retval -eq 0 ]]; then precheckConfigUniqueId ; retval=$?; fi
   if [[ $retval -eq 0 ]]; then precheckSysdba; retval=$?; fi
-  if [[ $retval -eq 0 ]]; then precheckUser; retval=$?; fi
-  if [[ $retval -eq 0 ]]; then precheckStats; retval=$?; fi
+  if [[ "${verify_user}" = "Y" ]]; then
+    if [[ $retval -eq 0 ]]; then precheckUser; retval=$?; fi
+    if [[ $retval -eq 0 ]]; then precheckStats; retval=$?; fi
+  fi
   if [[ $retval -eq 0 ]] && [[ $oee_entries -eq 1 ]] ; then precheck_oee_platform; retval=$?; fi
 
   print_separator
@@ -622,48 +625,73 @@ function print_usage() {
   echo " Usage:"
   echo "  Parameters"
   echo ""
-  echo "  --configFile                Name of file containing a list of database connections and runtime options to verify.  (Required)"
+  echo "  --configFile                Required.  Name of file containing a list of database connections and runtime options to verify."
   echo "                              File format is described in the header of the sample file in dma_db_list.csv. "
+  echo
+  echo "  --verifyUser                Optional.  Check only sysdba connectivity, skipping user connection check.  Use this to verify the"
+  echo "                              sysdba user can connect before creating or modifing the collection user.  Default is Y."
   echo
   echo " Example:"
   echo      
+  echo " Verify the sysdba user connection information is correct:"
+  echo      
+  echo "  ./dma_precheck.sh --connectionFile dma_db_list.csv --verifyUser N"
+  echo      
+  echo      
+  echo " then, after running the dma_make_user.sh script, verify the user connection information as well:"
   echo
   echo "  ./dma_precheck.sh --connectionFile dma_db_list.csv"
 
 }
 
-
 ### Validate input
 
-if [[ $(($# & 1)) == 1 ]] || [[ $# == 0 ]] ; then
-  echo "Invalid number of parameters "
-  print_usage
-  exit
-fi
-
-while (( "$#" )); do
-  if [[ "$1" == "--configFile" ]]; then
-    configuration_file="${2}"
-  else
-    echo "Unknown parameter ${1}"
+function parse_parameters() {
+  if [[ $# == 0 ]] ; then
+    echo "Invalid number of parameters : $# $@"
     print_usage
     exit
   fi
-  shift 2
-done
+  
+  while (( "$#" )); do
+    echo "Cecking $1"
+    if   [[ "$1" == "--configFile" ]];           then configuration_file="${2}"
+    elif [[ "$1" == "--verifyUser" ]];           then verify_user=$(echo "${2}" | tr '[:lower:]' '[:upper:]')
+    else
+      echo "Unknown parameter ${1}"
+      print_usage
+      exit 1
+    fi
+    shift 2
+  done
 
-if [[ -z "${configuration_file}" ]]; then
-  echo "Error : Must specify a connection configuration file to run the precheck."
-  print_usage
-  echo
-  exit
-fi
+  if [[ -z "${configuration_file}" ]]; then
+    echo "Error : Must specify a connection configuration file to run the precheck."
+    print_usage
+    echo
+    exit 1
+  fi
 
-if [[ -f "${configuration_file}" ]]; then 
-  configfilelinecount=$(wc -l <"${configuration_file}")
-  echo "Checking ${configfilelinecount} entries in file ${configuration_file}..."
-  runAllChecks 
-else
-  echo "File not found : ${configuration_file}"
-fi
+  if [[ "${verify_user}" != "Y" ]] && [[ "${verify_user}" != "N" ]] ; then
+    echo "Error : Parameter --verifyUser must be Y or N."
+    print_usage
+    echo
+    exit 1
+  fi  
+}
+
+
+function main() {
+  parse_parameters "$@"
+
+  if [[ -f "${configuration_file}" ]]; then 
+    configfilelinecount=$(wc -l <"${configuration_file}")
+    echo "Checking ${configfilelinecount} entries in file ${configuration_file}..."
+    runAllChecks 
+  else
+    echo "File not found : ${configuration_file}"
+  fi
+}
+
+main "$@" | tee ${dma_log_name}
 
