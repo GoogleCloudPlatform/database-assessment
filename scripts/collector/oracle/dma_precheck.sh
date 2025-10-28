@@ -4,7 +4,7 @@
 . ./dma_oee.sh
 
 # TODO Put standardized success / fail into array and print final results.
-TABCHAR=$(printf '\t')
+tab_char=$(printf '\t')
 configfilelinecount=0
 dma_log_name=dma_precheck_$(date +%Y%m%d%H%M%S).log
 min_days=7
@@ -178,15 +178,15 @@ function precheckConfigUniqueId() {
   unqiuevals=()
   echo "Checking configuration file for unique IDs..."
 
-  linecount=$(cat "${configuration_file}" | tr -d ' ' | tr -d "${TABCHAR}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' | cut -d ',' -f 6 | ${grep_cmd} -c -v '^$' | wc -l | tr -d ' ')
-  uniquecount=$(cat "${configuration_file}" | tr -d ' ' | tr -d "${TABCHAR}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' | cut -d ',' -f 6 | ${grep_cmd} -c -v '^$' | sort | uniq -c | wc -l | tr -d ' ')
+  linecount=$(cat "${configuration_file}" | tr -d ' ' | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' | cut -d ',' -f 6 | ${grep_cmd} -c -v '^$' | wc -l | tr -d ' ')
+  uniquecount=$(cat "${configuration_file}" | tr -d ' ' | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' | cut -d ',' -f 6 | ${grep_cmd} -c -v '^$' | sort | uniq -c | wc -l | tr -d ' ')
   
   if [[ ${linecount} -ne ${uniquecount} ]] ; then
     echo "FAILED : Only $uniquecount out of out of $linecount IDs are unique."
     echo "         These Ids appear more than once in the configuration file : "
     echo "Occurrances Value"
     echo "----------- ------------------------------"
-    tr -d ' ' < "${configuration_file}" | tr -d "${TABCHAR}" |  ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' | cut -d ',' -f 6 | ${grep_cmd} -v '^$' | sort | uniq -c | ${grep_cmd} -v ' 1 '  | awk '{printf "%11s %s", $1, $2}'
+    tr -d ' ' < "${configuration_file}" | tr -d "${tab_char}" |  ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' | cut -d ',' -f 6 | ${grep_cmd} -v '^$' | sort | uniq -c | ${grep_cmd} -v ' 1 '  | awk '{printf "%11s %s", $1, $2}'
     return 1
   else 
     echo "SUCCESS : All databases have unique ids where specified."
@@ -262,7 +262,8 @@ function precheckConfigFileFormat() {
         fi              
       fi
     fi     
-  done < <( ${sed_cmd} "s/ //g;s/${TABCHAR}//g" "$configuration_file"  )
+  done < <( tr -d ' ' < "${configuration_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )
+#  done < <( ${sed_cmd} "s/ //g;s/${tab_char}//g" "$configuration_file"  )
 
   if [[ $failcount -eq 0 ]]; then
     echo "SUCCESS : Configuration file format check."
@@ -402,7 +403,8 @@ function precheckStats() {
         fi
       fi
     fi
-  done < <( ${sed_cmd} "s/ //g;s/${TABCHAR}//g" "$configuration_file"  )
+#  done < <( ${sed_cmd} "s/ //g;s/${tab_char}//g" "$configuration_file"  )
+  done < <( tr -d ' ' < "${configuration_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )
 
   retcd=${#successes[@]}
   echo
@@ -463,7 +465,7 @@ function precheckSysdba() {
   lineno=0
 
   while IFS=, read -r sysUser user db statssrc statswindow dmaid oee_flag oee_group || [[ -n "$line" ]]; do
-     lineno=$(( $lineno + 1 ))
+    lineno=$(( $lineno + 1 ))
 
     [[ $lineno -gt $configfilelinecount ]] && break   # Break out if the last line of the config file is a comment or empty
     sysUser=$(echo "${sysUser}" | tr -d ' ')
@@ -486,14 +488,15 @@ function precheckSysdba() {
         errors+=("FAILED : ${db}")
       fi
     fi
-  done < <( ${sed_cmd} "s/ //g;s/${TABCHAR}//g" "$configuration_file"  )
+#  done < <( ${sed_cmd} "s/ //g;s/${tab_char}//g" "$configuration_file"  )
+  done < <( tr -d ' ' < "${configuration_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )
 
-  PASS=${#successes[@]}
+  pass_count=${#successes[@]}
   fail_count=${#errors[@]}
 
   echo
   echo "RESULTS:"
-  if [[ ${PASS} -gt 0 ]]; then
+  if [[ ${pass_count} -gt 0 ]]; then
     echo
     echo "SUCCESSFUL SYSDBA CONNECTIONS:"
     printf '%s\n' "${successes[@]}"
@@ -555,7 +558,8 @@ function precheckUser() {
       echo
     fi
 
-  done < <( ${sed_cmd} "s/ //g;s/${TABCHAR}//g" "$configuration_file"  )
+#  done < <( ${sed_cmd} "s/ //g;s/${tab_char}//g" "$configuration_file"  )
+  done < <( tr -d ' ' < "${configuration_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )
 
   echo
   echo
@@ -654,7 +658,6 @@ function parse_parameters() {
   fi
   
   while (( "$#" )); do
-    echo "Cecking $1"
     if   [[ "$1" == "--configFile" ]];           then configuration_file="${2}"
     elif [[ "$1" == "--verifyUser" ]];           then verify_user=$(echo "${2}" | tr '[:lower:]' '[:upper:]')
     else
@@ -685,7 +688,7 @@ function main() {
   parse_parameters "$@"
 
   if [[ -f "${configuration_file}" ]]; then 
-    configfilelinecount=$(wc -l <"${configuration_file}")
+    configfilelinecount=$(wc -l < <( tr -d ' ' < "${configuration_file}" | tr -d "${tab_char}" | grep -v '^#' | grep -v '^$' ))
     echo "Checking ${configfilelinecount} entries in file ${configuration_file}..."
     runAllChecks 
   else
