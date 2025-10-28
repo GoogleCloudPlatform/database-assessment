@@ -77,15 +77,34 @@ function init_variables() {
   fi
 
   # Now handle platform-specific commands and variables.
-  if [[ "$(uname)" = "SunOS" ]];then
+  if [[ "$(uname)" = "SunOS" ]]; then
     awk_cmd=/usr/xpg4/bin/awk
-    grep_cmd=/usr/xpg4/bin/grep
     sed_cmd=/usr/xpg4/bin/sed
-    if [[ ! -f /usr/xpg4/bin/awk ]]; then
-      echo "Solaris requires compatible version of awk at /usr/xpg4/bin/awk.  Please install awk and retry'."
+    if [[ ! -f ${awk_cmd} ]]; then
+      echo "Solaris requires compatible version of awk at ${awk_cmd}.  Please install awk and retry'."
+      exit 1
+    fi
+    if [[ ! -f ${sed_cmd} ]]; then
+      echo "Solaris requires compatible version of sed at ${sed_cmd}.  Please install sed and retry'."
       exit 1
     fi
   fi
+
+  # The default grep command in Solaris does not support the functionality required.  Need the GNU version at /usr/bin/ggrep or /usr/sfw/bin/ggrep.
+  if [[ "$(uname)" = "SunOS" ]] ; then
+    if [[ -f /usr/bin/ggrep ]]; then
+      grep_cmd=/usr/bin/ggrep
+    else if [[ -f /usr/sfw/bin/ggrep ]]; then
+           grep_cmd=/usr/sfw/bin/ggrep
+         else
+           echo "Solaris requires 'ggrep' (GNU grep) installed in either /usr/bin/ggrep or /usr/sfw/bin/ggrep'. Please install "
+           exit 1
+         fi
+    fi
+  else
+    grep_cmd=$(which grep 2>/dev/null)
+  fi
+
 
   if [[ "$(uname)" = "HP-UX" ]];then
     if [[ -f /usr/local/bin/md5 ]];then
@@ -99,7 +118,7 @@ function init_variables() {
   fi
 
   # Check if running on Windows Subsystem for Linux
-  is_windows=$(uname -a | grep -i microsoft |wc -l)
+  is_windows=$(uname -a | ${grep_cmd} -i microsoft |wc -l)
   if [[ ${is_windows} -eq 1 ]];then
     sql_dir=$(wslpath -a -w ${script_dir})/sql
     sql_output_dir=$(wslpath -a -w ${sql_output_dir})
@@ -107,7 +126,7 @@ function init_variables() {
   fi
 
   # Check if running on Cygwin
-  is_cygwin=$(uname -a | grep Cygwin | wc -l)
+  is_cygwin=$(uname -a | ${grep_cmd} Cygwin | wc -l)
   if [[ ${is_cygwin} -eq 1 ]];then
     sql_dir=$(cygpath -w ${script_dir})/sql
     sql_output_dir=$(cygpath -w ${sql_output_dir})
@@ -127,7 +146,7 @@ function init_variables() {
 
   # Force LANG and LOCALE to C UTF8
   export LOCALE=C
-  export LANG=$(locale -a | grep -i -e "^c.utf8" -e "^c.utf-8" | sort | head -1)
+  export LANG=$(locale -a | ${grep_cmd} -i -e "^c.utf8" -e "^c.utf-8" | sort | head -1)
 
 }
 
@@ -181,14 +200,14 @@ EOF
 function create_error_log() {
   local v_file_tag=$1
   echo "Checking for errors..."
-  $grep_cmd -E 'SP2-|ORA-' ${output_dir}/opdb__*${v_file_tag}.csv | $grep_cmd -v opatch > ${log_dir}/opdb__${v_file_tag}_errors.log
+  ${grep_cmd} -E 'SP2-|ORA-' ${output_dir}/opdb__*${v_file_tag}.csv | ${grep_cmd} -v opatch > ${log_dir}/opdb__${v_file_tag}_errors.log
   retval=$?
   if [[ ! -f  ${log_dir}/opdb__${v_file_tag}_errors.log ]];then
     echo "Error creating error log.  Exiting..."
     return $retval
   fi
   if [[ -f  ${output_dir}/opdb__opatch*${v_file_tag}.csv ]];then
-    $grep_cmd 'sys.dbms_qopatch.get_opatch_lsinventory' ${output_dir}/opdb__opatch*${v_file_tag}.csv >> ${log_dir}/opdb__${v_file_tag}_errors.log
+    ${grep_cmd} 'sys.dbms_qopatch.get_opatch_lsinventory' ${output_dir}/opdb__opatch*${v_file_tag}.csv >> ${log_dir}/opdb__${v_file_tag}_errors.log
   fi
 }
 
@@ -492,7 +511,7 @@ function parse_parameters() {
 
 function check_db_connection() {
   connect_string="${connection_string}"
-  sqlcmd_result=$(check_version "${connect_string}" "${dma_version}" | $grep_cmd DMAFILETAG | cut -d '~' -f 2)
+  sqlcmd_result=$(check_version "${connect_string}" "${dma_version}" | ${grep_cmd} DMAFILETAG | cut -d '~' -f 2)
   if [[ "${sqlcmd_result}" = "" ]]; then
     echo "Unable to connect to the target database using ${connect_string}.  Please verify the connection information and target database status."
     exit 255
@@ -520,7 +539,7 @@ function main() {
 
 
   if [[ $retval -eq 0 ]];then
-    if [[ "$(echo ${sqlcmd_result} | $grep_cmd -E '(ORA-|SP2-)')" != "" ]];then
+    if [[ "$(echo ${sqlcmd_result} | ${grep_cmd} -E '(ORA-|SP2-)')" != "" ]];then
       print_failure
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Database version check returned error ${sqlcmd_result}"

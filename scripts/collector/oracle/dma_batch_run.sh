@@ -21,8 +21,42 @@ output_dir=${script_dir}/output; export output_dir
 sql_dir=${script_dir}/sql
 dma_log_name=DMA_BATCH_RUN_$(date +%Y%m%d%H%M%S).log
 
+# Now handle platform-specific commands and variables.
+# The default grep command in Solaris does not support the functionality required.  Need the alternative at /usr/xpg4/bin/awk.
+if [[ "$(uname)" = "SunOS" ]]; then
+  awk_cmd=/usr/xpg4/bin/awk
+  sed_cmd=/usr/xpg4/bin/sed
+  if [[ ! -f ${awk_cmd} ]]; then
+    echo "Solaris requires compatible version of awk at ${awk_cmd}.  Please install awk and retry'."
+    exit 1
+  fi
+  if [[ ! -f ${sed_cmd} ]]; then
+    echo "Solaris requires compatible version of sed at ${sed_cmd}.  Please install sed and retry'."
+    exit 1
+  fi
+else
+  awk_cmd=$(which awk 2>/dev/null)
+  sed_cmd=$(which sed 2>/dev/null)
+fi
+
+# The default grep command in Solaris does not support the functionality required.  Need the GNU version at /usr/bin/ggrep or /usr/sfw/bin/ggrep.
+if [[ "$(uname)" = "SunOS" ]] ; then
+  if [[ -f /usr/bin/ggrep ]]; then
+    grep_cmd=/usr/bin/ggrep
+  else if [[ -f /usr/sfw/bin/ggrep ]]; then
+         grep_cmd=/usr/sfw/bin/ggrep
+       else
+         echo "Solaris requires 'ggrep' (GNU grep) installed in either /usr/bin/ggrep or /usr/sfw/bin/ggrep'. Please install "
+         exit 1
+       fi
+  fi
+else
+  grep_cmd=$(which grep 2>/dev/null)
+fi
+
+  
 function count_children() {
-  num_children=$(ps -ef | grep "collect-data.sh" | grep -v grep | wc -l)
+  num_children=$(ps -ef | ${grep_cmd} "collect-data.sh" | ${grep_cmd} -v grep | wc -l)
   echo ${num_children}  
 }
 
@@ -30,7 +64,7 @@ function count_children() {
 function batchRun() {
   local -i lineno=0
   local -i err_cnt=0
-  local -i line_cnt=$(wc -l < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | grep -v '^#' | grep -v '^$' )) 
+  local -i line_cnt=$(wc -l < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )) 
   echo "Found ${line_cnt} lines in config file"
 
   while IFS=, read -r sysUser user db statssrc statswindow dmaid oee_flag oee_group || [[ -n "$line" ]]; do
@@ -74,11 +108,11 @@ function batchRun() {
 
       echo
       echo "Sleeping for 10 secs while waiting on child processes:"
-      ps -ef | grep "collect-data.sh" | grep -v grep | cut -d '@' -f 2- | cut -d ' ' -f 1
+      ps -ef | ${grep_cmd} "collect-data.sh" | ${grep_cmd} -v grep | cut -d '@' -f 2- | cut -d ' ' -f 1
       echo
       sleep 10
     done
-  done < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | grep -v '^#' | grep -v '^$' )  
+  done < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )  
 
   echo "Waiting for remaining child processes to complete."
   wait
@@ -90,7 +124,7 @@ function batchRun() {
   echo "Output files are in ${output_dir}"
   echo
   err_cnt=$(ls -1 ${output_dir}/*ERROR.zip 2>/dev/null | wc -l)
-  oee_errors=$(grep -h -A 5 "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log)
+  oee_errors=$(${grep_cmd} -h -A 5 "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log)
   if [[ ${err_cnt} -eq 0 ]] && [[ -z "${oee_errors}" ]] ; then
     #print_complete
     return 0
@@ -135,18 +169,6 @@ function print_usage() {
 
 
 function main() {
-  # The default awk in Solaris does not support the functionality required.  Need the alternative at /usr/xpg4/bin/awk.
-  if [[ "$(uname)" = "SunOS" ]] ; then
-    if [[ -f /usr/xpg4/bin/awk ]]; then
-      awk_cmd=/usr/xpg4/bin/awk
-    else
-      echo "Solaris requires compatible version of awk at /usr/xpg4/bin/awk.  Please install awk and retry'."
-      exit 1
-    fi
-  else 
-    awk_cmd=$(which awk 2>/dev/null)
-  fi
-  
   ### Validate input
   
   if [[ $(($# & 1)) == 1 ]] || [[ $# == 0 ]]  ;
@@ -178,14 +200,14 @@ function main() {
     retval=$?
   
     if [[ ${retval} -eq 0 ]] ; then
-      oee_file_count=$(wc -l < <(ls -1 "${oee_dir}"  | grep "driverfile.${run_id}"))
+      oee_file_count=$(wc -l < <(ls -1 "${oee_dir}"  | ${grep_cmd} "driverfile.${run_id}"))
       if [[ -d ${oee_dir} ]] && [[ ${oee_file_count} -gt 0 ]]; then
           echo "Running Oracle Estate Explorer for ${oee_file_count} groups."
           cd "${oee_dir}"
           oee_run "${run_id}" 2>&1 | tee "OEE_${dma_log_name}"
           echo "Checking log file OEE_${dma_log_name} for OEE failures}"
 
-          for oee_fail_number in  $(grep "Database extract failures" "OEE_${dma_log_name}" | cut -d ':' -f 2 | tr -d ' '); do
+          for oee_fail_number in  $(${grep_cmd} "Database extract failures" "OEE_${dma_log_name}" | cut -d ':' -f 2 | tr -d ' '); do
             oee_fail_count=$(( ${oee_fail_count}  + ${oee_fail_number} ))
           done
           if [[ ${oee_fail_count} -ne 0 ]] ; then

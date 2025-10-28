@@ -171,10 +171,11 @@ function oee_check_platform() {
       ret_val="PASS"
       ;;
     * )
-      ret_val="FAIL due to unsupported platform ${platform}"
+      ret_val="FAIL due to unsupported platform ${PLT}.  Oracle Estate Explorer collector is not compatible with the operating system on this machine.  Either disable OEE collection in the configuration file or execute these scripts on a supported platform."
   esac
   echo "${ret_val}"
 }
+
 
 # Check that all conditions are correct for running OEE
 function oee_check_conditions {

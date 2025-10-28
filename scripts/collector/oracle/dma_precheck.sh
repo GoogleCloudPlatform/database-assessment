@@ -1,6 +1,7 @@
 # This script will verify that all the OS commands and utilities are available prior to running the DMA collector.
 # Assumes that at least 'which' is available.
 . ./dma_print_pass_fail.sh
+. ./dma_oee.sh
 
 # TODO Put standardized success / fail into array and print final results.
 TABCHAR=$(printf '\t')
@@ -41,8 +42,16 @@ function precheckOS() {
 
   # Override for Solaris
   if [[ "$(uname)" = "SunOS" ]]; then
-    grep_cmd=/usr/xpg4/bin/grep
     sed_cmd=/usr/xpg4/bin/sed
+ 
+    if [[ -f /usr/bin/ggrep ]]; then
+      grep_cmd=/usr/bin/ggrep
+    else if [[ -f /usr/sfw/bin/ggrep ]]; then
+           grep_cmd=/usr/sfw/bin/ggrep
+         else
+           grep_cmd=""
+         fi 
+    fi 
   fi
 
   # Override for HP-UX
@@ -73,7 +82,11 @@ function precheckOS() {
   fi
 
   if [[ "${grep_cmd}" = "" ]]; then
-    echo "FAILED : Missing command grep, please install this utility or update the path to include it."
+    if [[ "$(uname)" = "SunOS" ]] ; then
+      echo "FAILED : Solaris requires 'ggrep' (GNU grep) installed in either /usr/bin/ggrep or /usr/sfw/bin/ggrep. Please install to continue."
+    else
+      echo "FAILED : Missing command grep, please install this utility or update the path to include it."
+    fi
     fail_count=$(($fail_count + 1))
   fi
 
@@ -124,7 +137,7 @@ function precheckOS() {
 
   # Check for sqlplus_cmd client
   # Check if running on Windows Subsystem for Linux
-  if [[ $(uname -a | ${grep_cmd} -i microsoft -c ) -eq 1 ]]; then
+  if [[ $(uname -a | ${grep_cmd} -i -c microsoft ) -eq 1 ]]; then
     sql_dir=$(wslpath -a -w ${sql_dir})/sql
     sql_output_dir=$(wslpath -a -w ${sql_output_dir})
     sqlplus_cmd=$(which sqlplus.exe 2>/dev/null)
@@ -157,20 +170,20 @@ function precheckOS() {
 }
 
 
-# Check the platform on which the script is running.
-# Fail on all platforms other than officially supported.
-function oee_check_platform() {
-  local PLT=$(uname)
-  local ret_val="fail_count"
-  case "${PLT}" in
-    "Linux" )
-      ret_val="PASS"
-      ;;
-    * )
-      ret_val="fail_count due to unsupported platform ${PLT}.  Oracle Estate Explorer collector is not compatible with the operating system on this machine.  Either disable OEE collection in the configuration file or execute these scripts on a supported platform."
-  esac
-  echo "${ret_val}"
-}
+## Check the platform on which the script is running.
+## Fail on all platforms other than officially supported.
+#function oee_check_platform() {
+#  local PLT=$(uname)
+#  local ret_val="fail_count"
+#  case "${PLT}" in
+#    "Linux" )
+#      ret_val="PASS"
+#      ;;
+#    * )
+#      ret_val="fail_count due to unsupported platform ${PLT}.  Oracle Estate Explorer collector is not compatible with the operating system on this machine.  Either disable OEE collection in the configuration file or execute these scripts on a supported platform."
+#  esac
+#  echo "${ret_val}"
+#}
 
 
 # Verify that any manual identifiers specified are unique within the configuration file.

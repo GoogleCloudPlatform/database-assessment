@@ -15,10 +15,25 @@ fail_count=0
 fail_entries=
 tab_char=$(printf '\t')
 
+# The default grep command in Solaris does not support the functionality required.  Need the GNU version at /usr/bin/ggrep or /usr/sfw/bin/ggrep.
+if [[ "$(uname)" = "SunOS" ]] ; then
+  if [[ -f /usr/bin/ggrep ]]; then
+    grep_cmd=/usr/bin/ggrep
+  else if [[ -f /usr/sfw/bin/ggrep ]]; then
+         grep_cmd=/usr/sfw/bin/ggrep
+       else
+         echo "Solaris requires 'ggrep' (GNU grep) installed in either /usr/bin/ggrep or /usr/sfw/bin/ggrep'. Please install "
+         exit 1
+       fi
+  end if
+else
+  grep_cmd=$(which grep 2>/dev/null)
+fi
+
 
 function print_status() {
-  fail_count=$(grep "DMA:Error creating user" "${dma_log_name}" | wc -l)
-  fail_entries=$(grep "DMA:Error creating user"  "${dma_log_name}" | cut -d ' ' -f 7)
+  fail_count=$(${grep_cmd} "DMA:Error creating user" "${dma_log_name}" | wc -l)
+  fail_entries=$(${grep_cmd} "DMA:Error creating user"  "${dma_log_name}" | cut -d ' ' -f 7)
 
   if [[ "${fail_count}" -gt 0 ]]; then
     echo
