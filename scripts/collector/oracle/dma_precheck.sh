@@ -170,22 +170,6 @@ function precheckOS() {
 }
 
 
-## Check the platform on which the script is running.
-## Fail on all platforms other than officially supported.
-#function oee_check_platform() {
-#  local PLT=$(uname)
-#  local ret_val="fail_count"
-#  case "${PLT}" in
-#    "Linux" )
-#      ret_val="PASS"
-#      ;;
-#    * )
-#      ret_val="fail_count due to unsupported platform ${PLT}.  Oracle Estate Explorer collector is not compatible with the operating system on this machine.  Either disable OEE collection in the configuration file or execute these scripts on a supported platform."
-#  esac
-#  echo "${ret_val}"
-#}
-
-
 # Verify that any manual identifiers specified are unique within the configuration file.
 function precheckConfigUniqueId() {
   fname="${FUNCNAME[0]}"
