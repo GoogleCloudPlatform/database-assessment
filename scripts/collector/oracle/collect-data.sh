@@ -463,7 +463,6 @@ function parse_parameters() {
   if [[ "${connection_string}" == "" ]] ; then
     if [[ "${host_name}" != "" && "${port}" != "" && "${database_service}" != "" && "${collection_user_name}" != "" && "${collection_user_pass}" != "" ]] ; then
       connection_string="${collection_user_name}/${collection_user_pass}@//${host_name}:${port}/${database_service}"
-      echo Got Connection ${connection_string}
     else
       echo "Connection information incomplete"
       print_usage
