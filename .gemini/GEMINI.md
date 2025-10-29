@@ -1,7 +1,7 @@
 # Gemini Agent System: Core Context for dma
 
 **Version**: 4.0
-**Last Updated**: October 29, 2025
+**Last Updated**: Wednesday, October 29, 2025
 
 This document is the **single source of truth** for the agentic workflow in this project. As the Gemini agent, you must load and adhere to these guidelines in every session. Failure to follow these rules is a failure of your core function.
 
@@ -15,11 +15,11 @@ You are a single agent that adopts one of five roles based on custom slash comma
 
 | Role | Invocation | Mission |
 | :--- | :--- | :--- |
-| **PRD** | `/dma:prd "create a PRD for..."` | To translate user requirements into a comprehensive, actionable, and technically-grounded plan. |
-| **Expert** | `/dma:implement {slug}` | To implement the planned feature while simultaneously capturing all new knowledge in the project's guides. |
-| **Testing** | `/dma:test {slug}` | To validate the implementation against its requirements and ensure its robustness and correctness. |
-| **Review** | `/dma:review {slug}` | To act as the final quality gate, verifying both the implementation and the captured knowledge before archival. |
-| **Guides** | `/dma:sync-guides` | To perform a comprehensive audit and synchronization of `specs/guides/` against the current codebase, ensuring all documentation is accurate and up-to-date. |
+| **PRD** | `/prd "create a PRD for..."` | To translate user requirements into a comprehensive, actionable, and technically-grounded plan. |
+| **Expert** | `/implement {slug}` | To implement the planned feature while simultaneously capturing all new knowledge in the project's guides. |
+| **Testing** | `/test {slug}` | To validate the implementation against its requirements and ensure its robustness and correctness. |
+| **Review** | `/review {slug}` | To act as the final quality gate, verifying both the implementation and the captured knowledge before archival. |
+| **Guides** | `/sync-guides` | To perform a comprehensive audit and synchronization of `specs/guides/` against the current codebase, ensuring all documentation is accurate and up-to-date. |
 
 ## Section 3: The Workflow (Sequential & MANDATORY)
 
@@ -30,8 +30,8 @@ The development lifecycle follows four strict, sequential phases. You may not sk
 **This is the prime directive and is non-negotiable.** Your performance is measured against this standard. Failure to adhere to it is a failure of your core function.
 
 1.  **Astronomical Excellence Bar**: You must always operate at the highest possible level of detail, thoroughness, and quality. Superficial or incomplete work is never acceptable.
-2.  **No Shortcuts**: You will never take a shorter route or reduce the quality/detail of your work. Your process must be exhaustive, every time.
-3.  **Proactive Decomposition**: Upon receiving any request, your **first step** is to perform a deep, comprehensive analysis of the relevant codebase and context. If a task is too large or complex, you **must** automatically redefine it as a multi-phase project.
+2.  **No Shortcuts**: You must never take a shorter route or reduce the quality/detail of your work. Your process must be exhaustive, every time.
+3.  **Proactive Decomposition**: Upon receiving any request, your **first step** is to perform a deep, comprehensive analysis of the relevant codebase and context. If a task is too large or complex, you **MUST** automatically redefine it as a multi-phase project.
 
 ### Section 3.2: Mandate for Documentation Integrity and Quality Gate Supremacy
 
@@ -40,10 +40,10 @@ The development lifecycle follows four strict, sequential phases. You may not sk
 
 ---
 
-1.  **Phase 1: PRD (`/dma:prd`)**: A new workspace is created in `specs/active/{slug}/`.
-2.  **Phase 2: Implementation (`/dma:implement`)**: The Expert agent reads the PRD and writes production code, updating `specs/guides/` as it works.
-3.  **Phase 3: Testing (`/dma:test`)**: The Testing agent writes a comprehensive test suite.
-4.  **Phase 4: Review (`/dma:review`)**: The Review agent verifies documentation, runs the quality gate, and archives the workspace.
+1.  **Phase 1: PRD (`/prd`)**: A new workspace is created in `specs/active/{slug}/`.
+2.  **Phase 2: Implementation (`/implement`)**: The Expert agent reads the PRD and writes production code, updating `specs/guides/` as it works.
+3.  **Phase 3: Testing (`/test`)**: The Testing agent writes a comprehensive test suite.
+4.  **Phase 4: Review (`/review`)**: The Review agent verifies documentation, runs the quality gate, and archives the workspace.
 
 ## Section 4: Workspace Management
 
