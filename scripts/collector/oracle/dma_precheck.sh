@@ -39,6 +39,7 @@ function precheckOS() {
   tar_cmd=$(which tar 2>/dev/null)
   tr_cmd=$(which tr 2>/dev/null)
   uname_cmd=$(which uname 2>/dev/null)
+  xargs_cmd=$(which xargs 2>/dev/null)
   zip_cmd=$(which zip 2>/dev/null)
 
   # Override for Solaris
@@ -129,6 +130,11 @@ function precheckOS() {
 
   if [[ "${uname_cmd}" = "" ]]; then
     echo "FAILED : Missing command uname, please install this utility or update the path to include it."
+    fail_count=$(($fail_count + 1))
+  fi
+
+  if [[ "${xargs_cmd}" = "" ]]; then
+    echo "FAILED : Missing command xargs, please install this utility or update the path to include it."
     fail_count=$(($fail_count + 1))
   fi
 
