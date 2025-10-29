@@ -62,6 +62,17 @@ function precheckOS() {
     fi
   fi
 
+  if [[ "$(uname)" = "AIX" ]];then
+    if [[ -f /usr/local/bin/md5 ]];then
+      md5sum_cmd=/usr/local/bin/md5
+      md5_col=4
+    else if [[ -f /usr/bin/csum ]];then
+        md5sum_cmd="/usr/bin/csum -h MD5"
+        md5_col=1
+      fi
+    fi
+  fi
+
   # If BASH_SOURCE is null, assume we are in ksh
   if [[ "${script_command}" = "" ]]; then
     script_command="${.sh.file}"

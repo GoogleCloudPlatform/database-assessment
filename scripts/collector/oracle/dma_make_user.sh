@@ -57,10 +57,10 @@ function print_status() {
 function make_user() {
   while IFS=, read -r sys_user dma_user db stats_source stats_window dma_id oee_flag oee_group || [[ -n "$line" ]]; do
     pass=$(echo ${dma_user} | cut -d '/' -f 2)
-    user=$(echo ${dma_user} | cut -d ',' -f 2 | cut -d '/' -f 1)
+    user=$(echo ${dma_user} | cut -d '/' -f 1)
 
-    echo "Processing user ${dma_user} for database ${db}"
-    stats_source=$(echo "$statsrc}" | tr '[a-z]' '[A-Z]')
+    echo "Processing user ${user} for database ${db}"
+    stats_source=$(echo "${stats_source}" | tr '[a-z]' '[A-Z]')
     if [[ "${stats_source}" = "AWR" ]]
     then
       awr_flag='Y'
@@ -76,19 +76,19 @@ DECLARE cnt NUMBER;
 BEGIN
   SELECT count(1) INTO cnt
   FROM dba_users
-  WHERE username = '${dma_user}';
+  WHERE username = '${user}';
   IF cnt = 0 THEN
-    EXECUTE IMMEDIATE 'CREATE USER "${dma_user}" IDENTIFIED BY "${pass}"';
-    DBMS_OUTPUT.PUT_LINE ('Created user "${dma_user}" ');
+    EXECUTE IMMEDIATE 'CREATE USER "${user}" IDENTIFIED BY "${pass}"';
+    DBMS_OUTPUT.PUT_LINE ('Created user "${user}" ');
   ELSE
-    DBMS_OUTPUT.PUT_LINE('User "${dma_user}" exists.');
-    EXECUTE IMMEDIATE 'ALTER USER "${dma_user}" IDENTIFIED BY "${pass}"';
+    DBMS_OUTPUT.PUT_LINE('User "${user}" exists.');
+    EXECUTE IMMEDIATE 'ALTER USER "${user}" IDENTIFIED BY "${pass}"';
   END IF;
 END;
 /
 l
-GRANT CONNECT, CREATE SESSION to "${dma_user}";
-GRANT SELECT ON V_\$DATABASE to "${dma_user}";
+GRANT CONNECT, CREATE SESSION to "${user}";
+GRANT SELECT ON V_\$DATABASE to "${user}";
 exit
 EOF
 
@@ -96,7 +96,7 @@ EOF
     if [[ ${ret_cd} -eq 0 ]]
     then
       sqlplus "${sys_user}${db} as sysdba" @sql/setup/grants_wrapper.sql << EOF
-${dma_user}
+${user}
 ${awr_flag}
 ${oee_flag}
 EOF
@@ -104,7 +104,7 @@ EOF
     fi
     if [[ ${ret_cd} -ne 0 ]]
     then
-      echo "DMA:Error creating user ${dma_user} in database ${db}."
+      echo "DMA:Error creating user ${user} in database ${db}."
       echo "Please verify the username/password and connection information."
     fi
   done < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | grep -v '^#' | grep -v '^$' )  2>&1 | tee "${dma_log_name}"
