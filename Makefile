@@ -59,8 +59,7 @@ install: destroy clean                              ## Install the project, depe
 	@echo "${INFO} Starting fresh installation..."
 	@uv python pin 3.12 >/dev/null 2>&1
 	@uv venv >/dev/null 2>&1
-	@uv sync --all-extras --dev
-	@uv run pre-commit install
+	@uv sync --all-extras --dev 
 	@echo "${OK} Installation complete! 🎉"
 
 .PHONY: upgrade
@@ -246,8 +245,8 @@ test:                                               ## Run the tests
 
 .PHONY: test-all-pythons
 test-all-pythons:                                   ## Run the tests against all Python versions
-	@echo "=> Running test cases for Python 3.9-3.13"
-	@for version in 3.9 3.10 3.11 3.12 3.13; do \
+	@echo "=> Running test cases for Python 3.10-3.13"
+	@for version in 3.10 3.11 3.12 3.13; do \
 		echo "=> Testing with Python $$version"; \
 		uv run --python $$version pytest -n 2 --cov; \
 	done

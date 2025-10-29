@@ -144,39 +144,3 @@ def import_string(dotted_path: str) -> Any:
     except AttributeError as e:
         msg = "Module '%s' does not define a '%s' attribute/class"
         raise ImportError(msg, module_path, class_name) from e
-
-
-# the `anext` built in does exists in python < 3.10.  This is a simple implementation that is used only in 3.8 and 3.9
-
-
-class NoValue:
-    """A fake "Empty class"""
-
-
-async def anext_(iterable: Any, default: Any = NoValue, *args: Any) -> Any:  # pragma: nocover
-    """Return the next item from an async iterator.
-
-    Args:
-        iterable: An async iterable.
-        default: An optional default value to return if the iterable is empty.
-        *args: The remaining args
-    Return:
-        The next value of the iterable.
-
-    Raises:
-        TypeError: The iterable given is not async.
-
-    This function will return the next value form an async iterable. If the
-    iterable is empty the StopAsyncIteration will be propagated. However, if
-    a default value is given as a second argument the exception is silenced and
-    the default value is returned instead.
-    """
-    has_default = bool(not isinstance(default, NoValue))
-    try:
-        return await iterable.__anext__()
-
-    except StopAsyncIteration as exc:
-        if has_default:
-            return default
-
-        raise StopAsyncIteration from exc

@@ -5,7 +5,7 @@
 ## Language & Version
 
 - **Language**: Python
-- **Version**: >=3.9
+- **Version**: >=3.10
 
 ## Formatting
 

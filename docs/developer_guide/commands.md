@@ -118,7 +118,7 @@ uv run pytest -n 2 --cov
 ```
 
 ### `make test-all-pythons`
-Runs tests against all supported Python versions (3.9, 3.10, 3.11, 3.12, 3.13).
+Runs tests against all supported Python versions (3.10, 3.11, 3.12, 3.13).
 
 **Usage:**
 ```bash

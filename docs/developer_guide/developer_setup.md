@@ -4,7 +4,7 @@ To begin local development, clone the [GoogleCloudPlatform/database-assessment](
 
 ## Prerequisites
 
-- **Python 3.9+** (UV will manage Python versions for you)
+- **Python 3.10+** (UV will manage Python versions for you)
 - **Git** for version control
 - **UV** package manager (installed automatically via `make install-uv`)
 
