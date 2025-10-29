@@ -32,7 +32,7 @@
 --\o
 
 \o output/opdb__pg_bg_writer_stats_:VTAG.csv
-\i sql/bg_writer_stats.sql
+\i sql/:VPGVERSION/bg_writer_stats.sql
 \o
 
 \o output/opdb__pg_database_details_:VTAG.csv
@@ -56,7 +56,7 @@
 \o
 
 \o output/opdb__pg_replication_stats_:VTAG.csv
-\i sql/replication_stats.sql
+\i sql/:VPGVERSION/replication_stats.sql
 \o
 
 \o output/opdb__pg_settings_:VTAG.csv
