@@ -1,5 +1,3 @@
-#!/bin/bash
-#
 # This script will parse the contents of the dma_db_list.csv file
 # and create the specified users for DMA collection in the
 # specified databases.  Output is written to a log file.

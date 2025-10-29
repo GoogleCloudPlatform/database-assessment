@@ -1,4 +1,3 @@
-#!/bin/bash
 # Use this script to execute the dma collector in parallel via the list in dma_db_list.csv.
 # The format of dma_db_list.csv is described in the header of that file.
 # maxParallel controls how many DMA collectors can run at one time.
