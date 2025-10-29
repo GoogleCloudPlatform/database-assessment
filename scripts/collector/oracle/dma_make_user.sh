@@ -25,7 +25,7 @@ if [[ "$(uname)" = "SunOS" ]] ; then
          echo "Solaris requires 'ggrep' (GNU grep) installed in either /usr/bin/ggrep or /usr/sfw/bin/ggrep'. Please install "
          exit 1
        fi
-  end if
+  fi
 else
   grep_cmd=$(which grep 2>/dev/null)
 fi

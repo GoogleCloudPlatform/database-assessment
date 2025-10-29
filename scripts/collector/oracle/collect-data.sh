@@ -108,14 +108,26 @@ function init_variables() {
 
   if [[ "$(uname)" = "HP-UX" ]];then
     if [[ -f /usr/local/bin/md5 ]];then
-      md5_cmd=/usr/local/bin/md5
+      md5sum_cmd=/usr/local/bin/md5
       md5_col=4
     else if [[ -f /usr/bin/csum ]];then
-        md5_cmd="/usr/bin/csum -h md5_val"
+        md5sum_cmd="/usr/bin/csum -h MD5"
         md5_col=1
       fi
     fi
   fi
+
+  if [[ "$(uname)" = "AIX" ]];then
+    if [[ -f /usr/local/bin/md5 ]];then
+      md5sum_cmd=/usr/local/bin/md5
+      md5_col=4
+    else if [[ -f /usr/bin/csum ]];then
+        md5sum_cmd="/usr/bin/csum -h MD5"
+        md5_col=1
+      fi
+    fi
+  fi
+
 
   # Check if running on Windows Subsystem for Linux
   is_windows=$(uname -a | ${grep_cmd} -i microsoft |wc -l)
