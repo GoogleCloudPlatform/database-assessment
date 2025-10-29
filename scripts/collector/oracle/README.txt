@@ -123,7 +123,7 @@ for analysis by Database Migration Assessment.
           ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc STATSPACK
 
 
-        If Statspack has less than 30 days of data, limit collection to the last 7 days using the paramter --statsWindow:
+        If Statspack has less than 30 days of data, limit collection to the last 7 days using the parameter --statsWindow:
 
           ./collect-data.sh --connectionStr 'MyUser/MyPassword@//dbhost.company.com:1521/MyDbName.company.com' --statsSrc STATSPACK --statsWindow 7
          or

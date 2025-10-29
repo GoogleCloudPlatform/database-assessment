@@ -36,7 +36,7 @@
     Whether to explicitly request credentials to collect data from the VM hosting the DB if the current users credentials are not sufficient.
     Note the script will attempt to collect VM specs using the current users regardless. (default:false)
 .PARAMETER useWindowsAuthentication
-    Specifies if the loging to the database will utilize the current Windows Authenticated User or the supplied username / password for SQL Authentication (default:false)
+    Specifies if the logging to the database will utilize the current Windows Authenticated User or the supplied username / password for SQL Authentication (default:false)
 .PARAMETER outputDirectory
     User specified output directory if desired to be different from the $PSScriptRoot default
 .EXAMPLE
@@ -68,7 +68,7 @@ $powerShellVersion = $PSVersionTable.PSVersion.Major
 $foldername = ""
 $totalErrorCount = 0
 
-# Pull the windows version so that we can know wether or not to skip perfmon collection or not
+# Pull the windows version so that we can know whether or not to skip perfmon collection or not
 $windowsOSVersion = [Environment]::OSVersion.Version
 $checkWindowsOSVersion = [Environment]::OSVersion.Version -ge (new-object 'Version' 6,2)
 
@@ -648,7 +648,7 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Remove special character
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 
 # Define the Line Feed character (`n) to force Unix-style line endings
-$LF = "`n" 
+$LF = "`n"
 
 # Use Get-ChildItem to safely iterate through files
 foreach ($file in Get-ChildItem -Path $foldername\*.csv -ErrorAction Stop) {
@@ -676,7 +676,7 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv -ErrorAction Stop) {
             if (-not $firstLine) {
                 $writer.Write($LF)
             }
-            
+
             # Write the raw, cleaned line content
             $writer.Write($cleanLine)
             $firstLine = $false
@@ -705,7 +705,7 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv -ErrorAction Stop) {
         Remove-Item $inputFile -Force -ErrorAction Stop
         # Rename the temporary file to the original filename
         Rename-Item $tempFile -NewName $file.Name -Force -ErrorAction Stop
-        
+
         WriteLog -logLocation $foldername\$logFile -logMessage "          $($file.Name) successfully processed..." -logOperation "BOTH"
     }
     catch {

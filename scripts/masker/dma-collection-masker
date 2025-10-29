@@ -381,7 +381,7 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
 
         collections = _find_collections_to_process(input_dir)
         if len(collections) == 0:
-            logger.info("No collections found in location %s", str(input_dir))
+            logger.info("No collections found in location %s", input_dir)
             logger.info("Exiting...")
             sys.exit(1)
 
@@ -434,7 +434,7 @@ def _metadata_from_filename(collection_file: Path) -> FileMetadata:
     try:
         meta_values = collection_file.stem.split("__", maxsplit=2)[-1].split("_")[1:6]
         meta_values[0] = str(parse_version(meta_values[0]))  # type: ignore[call-overload]
-        meta_values.append("_".join(meta_values[1:3] + [meta_values[4]]))  # pkey
+        meta_values.append("_".join([*meta_values[1:3], meta_values[4]]))  # pkey
         meta_values.append("_".join(meta_values[1:5]))  # collection_key
         metadata = FileMetadata(*meta_values)
     except (ValueError, IndexError, TypeError) as e:

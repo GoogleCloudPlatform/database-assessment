@@ -61,7 +61,7 @@ Operating System Versions:
                 GRANT VIEW ANY PERFORMANCE DEFINITION TO [username];
                 GRANT VIEW ANY SECURITY DEFINITION TO [username];
 
-            For Azure SQL Database the follwing permissions are also granted:
+            For Azure SQL Database the following permissions are also granted:
                 ALTER SERVER ROLE ##MS_DefinitionReader## ADD MEMBER [username];
                 ALTER SERVER ROLE ##MS_SecurityDefinitionReader## ADD MEMBER [username];
                 ALTER SERVER ROLE ##MS_ServerStateReader## ADD MEMBER [username];
