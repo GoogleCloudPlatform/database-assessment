@@ -21,8 +21,8 @@ prompt PKEY|CON_ID|HH|COMMAND_TYPE|CNT|AVG_BUFFER_GETS|AVG_ELASPED_TIME|AVG_ROWS
 WITH vcmdtype AS(
 SELECT :v_pkey AS pkey,
        'N/A'                       AS con_id,
-       TO_CHAR(sn.snap_time, 'hh24')     AS hh24,
-       ss.command_type,
+       TO_CHAR(snap_time, 'hh24')     AS hh24,
+       command_type, 
        COUNT(1)                          AS cnt,
        ROUND(AVG(delta_buffer_gets))           AS avg_buffer_gets,
        ROUND(AVG(delta_elapsed_time))          AS avg_elapsed_time,
@@ -34,8 +34,10 @@ SELECT :v_pkey AS pkey,
        ROUND(AVG(delta_application_wait_time)) AS avg_apwait,
        ROUND(AVG(delta_concurrency_wait_time)) AS avg_ccwait,
        ROUND(AVG(delta_plsql_exec_time))       AS avg_plsexec_time,
-       aa.name                           AS command_name
-FROM
+       name                                    AS command_name
+FROM 
+( SELECT ss.*, aa.name, sn.snap_time, sn.startup_time, sn.lag_startup_time 
+  FROM
 (
 select snap_id, dbid, instance_number, text_subset, old_hash_value, command_type, force_matching_signature, sql_id,
 s.executions,
@@ -160,15 +162,20 @@ s.executions,
       0) AS delta_java_exec_time
 From STATS$SQL_SUMMARY s
      ) ss
-    JOIN stats$snapshot sn
+    JOIN ( SELECT dbid, instance_number, snap_id, snap_time, startup_time, lag(startup_time) OVER (PARTITION BY dbid, instance_number ORDER BY snap_time) AS lag_startup_time 
+	   FROM stats$snapshot 
+	   WHERE snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
+	   AND dbid = &&v_statsDBID
+         ) sn
       ON     ss.dbid = sn.dbid
          AND ss.snap_id = sn.snap_id
          AND ss.instance_number = sn.instance_number
     LEFT OUTER join audit_actions aa
                  ON ss.command_type = aa.action
-WHERE sn.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
+                 )
+    WHERE startup_time = lag_startup_time
 GROUP BY :v_pkey,
-          'N/A' , TO_CHAR(sn.snap_time, 'hh24'),  ss.command_type, aa.name
+          'N/A' , TO_CHAR(snap_time, 'hh24'),  command_type, name
 )
 SELECT pkey , con_id AS sp_con_id, hh24 , command_type , cnt , avg_buffer_gets , avg_elapsed_time ,
        avg_rows_processed , avg_executions , avg_cpu_time , avg_iowait , avg_clwait ,

@@ -57,7 +57,9 @@ WITH v_osstat_all
                        OVER (
                        PARTITION BY s.dbid, s.instance_number, osname.STAT_NAME
                        ORDER BY s.snap_id),
-                    0), 0) AS delta_value
+                    0), 0) AS delta_value,
+                    snap.startup_time,
+                    LAG(snap.startup_time) OVER (PARTITION BY snap.dbid, snap.instance_number, s.osstat_id ORDER BY snap.snap_time) AS lag_startup_time
                     FROM STATS$OSSTAT s
                          inner join STATS$SNAPSHOT snap
                          ON s.snap_id = snap.snap_id
@@ -65,8 +67,9 @@ WITH v_osstat_all
                          AND s.dbid = snap.dbid
                          inner join STATS$OSSTATNAME osname
                          ON s.osstat_id = osname.osstat_id
-                    WHERE snap.snap_time BETWEEN (SELECT max(snap_time) FROM  STATS$SNAPSHOT WHERE snap_time < '&&v_min_snaptime'  ) AND '&&v_max_snaptime'
-                    AND s.dbid = '&&v_dbid') os ) ,
+                    WHERE snap.snap_time BETWEEN  '&&v_min_snaptime' AND '&&v_max_snaptime'
+                    AND s.dbid = '&&v_statsDBID') os
+              WHERE startup_time = lag_startup_time) ,
 vossummary AS (
 SELECT :v_pkey AS pkey,
        dbid,

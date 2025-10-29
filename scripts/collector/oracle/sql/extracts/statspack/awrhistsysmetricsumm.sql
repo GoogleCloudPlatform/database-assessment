@@ -50,7 +50,9 @@ SELECT :v_pkey AS pkey,
        --hsm.AVERAGE+(2* CASE WHEN ( standard_deviation > (.999999999999999999999999999) AND standard_deviation < 1 )
        --                      AND ( MINVAL = 0 AND AVERAGE = MAXVAL )  then 0 else standard_deviation end ) "PERC95",
        AVG(value) OVER (PARTITION BY hsm.dbid, hsm.instance_number,  TO_CHAR(dhsnap.snap_time, 'hh24')  , hsm.name) + (2 * STDDEV (value)  OVER (PARTITION BY hsm.dbid, hsm.instance_number,  TO_CHAR(dhsnap.snap_time, 'hh24')  , hsm.name)) AS "PERC95",
-       NULL                                   "PERC100"
+       NULL                                   "PERC100",
+       startup_time,
+       lag_startup_time
 FROM (
       SELECT s.snap_id, s.dbid, s.instance_number, s.name, s.value,
              NVL(
@@ -61,12 +63,16 @@ FROM (
                        0),
                 0) AS delta_value
        FROM perfstat.stats$sysstat s )   hsm
-       INNER JOIN stats$snapshot dhsnap
+       INNER JOIN (SELECT dbid, instance_number, snap_id, snap_time, startup_time, 
+	                  lag(startup_time) OVER (PARTITION BY dbid, instance_number ORDER BY snap_time) AS lag_startup_time
+                   FROM stats$snapshot
+		   WHERE snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
+		   AND dbid = &&v_statsDBID
+                  ) dhsnap
                ON hsm.snap_id = dhsnap.snap_id
                   AND hsm.instance_number = dhsnap.instance_number
                   AND hsm.dbid = dhsnap.dbid
-WHERE  dhsnap.snap_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
-AND hsm.dbid = &&v_dbid),
+     ),
 vsysmetricsummperhour as (
     SELECT pkey,
        hsm.dbid,
@@ -91,6 +97,7 @@ vsysmetricsummperhour as (
        ROUND(PERCENTILE_CONT(0)
          within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC100"
     FROM vsysmetricsumm hsm
+    WHERE startup_time = lag_startup_time
     GROUP  BY pkey,
             hsm.dbid,
             hsm.instance_number,

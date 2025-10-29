@@ -16,4 +16,5 @@
 -- This file intentionally has no extraction SQL.
 spool &outputdir/opdb__eoj__&v_tag
 prompt END_OF_DMA_COLLECTION
+prompt &p_end_of_job_summary
 spool off

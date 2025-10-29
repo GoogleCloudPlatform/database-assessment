@@ -24,7 +24,7 @@ SELECT :v_pkey AS pkey,
        round(sum(output_bytes)/1024/1024) AS mbytes_out,
        :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM v$rman_backup_job_details a
-WHERE start_time >= trunc(sysdate) - '&&dtrange'
+WHERE start_time >= trunc(sysdate) - '&&dtrange' 
 GROUP BY trunc(start_time), input_type, &v_a_con_id
 ;
 spool off
