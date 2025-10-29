@@ -1,0 +1,1 @@
+../postgres/db-machine-specs.sh

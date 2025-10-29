@@ -113,11 +113,11 @@ class CollectionExtractor(BaseWorkflow):
         table.add_row("Collection Summary")
         self.console.print(table)
         if self.db_type == "POSTGRES":
-            from dma.collector.workflows.collection_extractor._postgres import print_summary_postgres  # noqa: PLC0415
+            from dma.collector.workflows.collection_extractor._postgres import print_summary_postgres
 
             print_summary_postgres(console=self.console, local_db=self.local_db, manager=self.canonical_query_manager)
         elif self.db_type == "MYSQL":
-            from dma.collector.workflows.collection_extractor._mysql import print_summary_mysql  # noqa: PLC0415
+            from dma.collector.workflows.collection_extractor._mysql import print_summary_mysql
 
             print_summary_mysql(console=self.console, local_db=self.local_db, manager=self.canonical_query_manager)
         else:

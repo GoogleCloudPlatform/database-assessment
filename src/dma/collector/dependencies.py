@@ -50,9 +50,9 @@ def provide_collection_query_manager(
         raise ApplicationError(msg)
     rdbms_type = dialect.name
     if rdbms_type == "postgresql":
-        from psycopg.rows import dict_row  # noqa: PLC0415
+        from psycopg.rows import dict_row
 
-        from dma.collector.query_managers.postgres import PostgresCollectionQueryManager  # noqa: PLC0415
+        from dma.collector.query_managers.postgres import PostgresCollectionQueryManager
 
         raw_connection.driver_connection.row_factory = dict_row
         query_manager: CollectionQueryManager = PostgresCollectionQueryManager(
@@ -62,7 +62,7 @@ def provide_collection_query_manager(
             execution_id=execution_id,
         )
     elif rdbms_type == "mysql":
-        from dma.collector.query_managers.mysql import MySQLCollectionQueryManager  # noqa: PLC0415
+        from dma.collector.query_managers.mysql import MySQLCollectionQueryManager
 
         query_manager = MySQLCollectionQueryManager(
             connection=raw_connection.driver_connection,
@@ -71,7 +71,7 @@ def provide_collection_query_manager(
             execution_id=execution_id,
         )
     elif rdbms_type == "oracle":
-        from dma.collector.query_managers.oracle import OracleCollectionQueryManager  # noqa: PLC0415
+        from dma.collector.query_managers.oracle import OracleCollectionQueryManager
 
         query_manager = OracleCollectionQueryManager(
             connection=raw_connection.driver_connection,
@@ -80,7 +80,7 @@ def provide_collection_query_manager(
             execution_id=execution_id,
         )
     elif rdbms_type == "mssql":
-        from dma.collector.query_managers.mssql import SQLServerCollectionQueryManager  # noqa: PLC0415
+        from dma.collector.query_managers.mssql import SQLServerCollectionQueryManager
 
         query_manager = SQLServerCollectionQueryManager(
             connection=raw_connection.driver_connection,

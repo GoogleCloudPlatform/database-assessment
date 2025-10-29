@@ -83,6 +83,7 @@ server = ["litestar[structlog,jinja]>=2.7.0", "litestar-granian>=0.2.3"]
 
 [project.scripts]
 dma = "dma.cli.main:app"
+collector_cli = "collector_cli.__main__:main"
 
 ######################
 # Build & Versioning #
@@ -95,6 +96,8 @@ requires = ["hatchling"]
 [tool.hatch.metadata]
 # direct dependency references, e.g `pip @ git+https://github.com/pypa/pip.git@master`
 allow-direct-references = true
+
+packages = ["dma", "collector_cli"]
 
 [tool.hatch.build]
 dev-mode-dirs = ["src/"]
@@ -248,14 +251,14 @@ replace = '$op_version = "{new_version}"'
 strict-imports = false
 
 [tool.codespell]
-ignore-words-list = "alog,astroid,iif,Americanas"
+ignore-words-list = "alog,astroid,iif,Americanas,tempDate"
 skip = 'pdm.lock,package-lock.json,uv.lock,*.ps1'
 
 [tool.pyright]
 autoSearchPaths = false
 exclude = ["docs/**/*.py", "tests/**/*.py", "scripts/**/*.py"]
 extraPaths = []                                                # Include paths from PYTHONPATH env var and .env definition
-include = ["src/dma", "tests"]
+include = ["src/dma", "src/collector_cli", "tests"]
 pythonVersion = "3.9"
 reportMissingImports = "information"
 reportMissingTypeStubs = "information"
@@ -267,7 +270,7 @@ useLibraryCodeForTypes = true
 
 [tool.mypy]
 disallow_untyped_defs = false
-files = ["src/dma", "tests"]
+files = ["src/dma", "src/collector_cli", "tests"]
 follow_imports = "normal"     # "silent" for not following
 ignore_missing_imports = true
 pretty = true
@@ -389,13 +392,14 @@ lint.ignore = [
     "DOC502",  # Raised exception missing from docstring
     "A005",    # module shadows builtin
     "DOC402",  # Yield missing from docstring
+    "PLC0415"  # Import should be at the top of the file
 ]
 lint.select = ["ALL"]
 # Allow unused variables when underscore-prefixed.
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 preview = true                                                    # preview features & checks, use with caution
 src = ["src", "tests/", "scripts/", "docs/", "notebooks/"]
-target-version = "py39"
+target-version = "py310"
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

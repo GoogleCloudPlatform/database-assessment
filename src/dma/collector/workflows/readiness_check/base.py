@@ -90,7 +90,7 @@ class ReadinessCheck:
         """Execute postgres assessments"""
         if self.src_info.db_type == "POSTGRES":
             # lazy loaded to help with circular import issues
-            from dma.collector.workflows.readiness_check._postgres.main import (  # noqa: PLC0415
+            from dma.collector.workflows.readiness_check._postgres.main import (
                 PostgresReadinessCheckExecutor,
             )
 
@@ -101,7 +101,7 @@ class ReadinessCheck:
             self.executor.execute()
         elif self.src_info.db_type == "MYSQL":
             # lazy loaded to help with circular import issues
-            from dma.collector.workflows.readiness_check._mysql.main import (  # noqa: PLC0415
+            from dma.collector.workflows.readiness_check._mysql.main import (
                 MySQLReadinessCheckExecutor,
             )
 

@@ -1,0 +1,18 @@
+{# Macro that quotes a value for psql CSV output #}
+{% macro script_col(value) -%}
+    chr(34) || {{ value }} || chr(34)
+{%- endmacro %}
+
+{# Macro that is a no-op for the python target #}
+{% macro python_col(value) -%}
+    {{ value }}
+{%- endmacro %}
+
+{# The primary macro that the templates will call #}
+{% macro col(value) -%}
+    {% if target == 'script' %}
+        {{ script_col(value) }}
+    {% else %}
+        {{ python_col(value) }}
+    {% endif %}
+{%- endmacro %}

@@ -16,12 +16,13 @@ from __future__ import annotations
 import inspect
 import os
 import sys
+from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from functools import partial
 from importlib import import_module
 from importlib.util import find_spec
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, TypeVar, cast, overload
 
 import anyio
 from typing_extensions import ParamSpec

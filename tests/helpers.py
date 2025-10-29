@@ -14,9 +14,10 @@
 from __future__ import annotations
 
 import inspect
+from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from functools import partial
-from typing import TYPE_CHECKING, Callable, TypeVar, cast, overload
+from typing import TYPE_CHECKING, TypeVar, cast, overload
 
 import anyio
 from typing_extensions import ParamSpec
