@@ -189,3 +189,5 @@ src/dma/templates/*
 .npmrc
 # vscode
 # .vscode
+specs/active/
+specs/archive/

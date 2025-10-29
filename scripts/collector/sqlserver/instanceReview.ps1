@@ -648,7 +648,7 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Remove special character
 $utf8NoBom = New-Object System.Text.UTF8Encoding $false
 
 # Define the Line Feed character (`n) to force Unix-style line endings
-$LF = "`n" 
+$LF = "`n"
 
 # Use Get-ChildItem to safely iterate through files
 foreach ($file in Get-ChildItem -Path $foldername\*.csv -ErrorAction Stop) {
@@ -676,7 +676,7 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv -ErrorAction Stop) {
             if (-not $firstLine) {
                 $writer.Write($LF)
             }
-            
+
             # Write the raw, cleaned line content
             $writer.Write($cleanLine)
             $firstLine = $false
@@ -705,7 +705,7 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv -ErrorAction Stop) {
         Remove-Item $inputFile -Force -ErrorAction Stop
         # Rename the temporary file to the original filename
         Rename-Item $tempFile -NewName $file.Name -Force -ErrorAction Stop
-        
+
         WriteLog -logLocation $foldername\$logFile -logMessage "          $($file.Name) successfully processed..." -logOperation "BOTH"
     }
     catch {
