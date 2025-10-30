@@ -124,7 +124,7 @@ function batchRun() {
   echo
   err_cnt=$(ls -1 ${output_dir}/*ERROR.zip 2>/dev/null | wc -l)
   # oee_errors=$(${grep_cmd} -h -A 5 "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log)
-  oee_errors=$(grep -n "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log | cut -d: -f1 | xargs -n1 -I {} awk "NR>={}-0 && NR<={}+5" DMA_COLLECT_DATA_*_${this_pid}.log)
+  oee_errors=$(grep -n "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log | cut -d: -f1 | xargs -n1 awk "NR>={}-0 && NR<={}+5" DMA_COLLECT_DATA_*_${this_pid}.log)
 
   if [[ ${err_cnt} -eq 0 ]] && [[ -z "${oee_errors}" ]] ; then
     #print_complete
