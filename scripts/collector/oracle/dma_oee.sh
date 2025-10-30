@@ -100,7 +100,7 @@ function oee_run() {
 # OEE Requires SQL*Plus version 12.1 or higher
 function oee_check_sqlplus_release {
   local retval="FAIL"
-  sql_client=$(sqlplus -s /nolog <<EOF
+  sql_client=$(${sqlplus_cmd} -s /nolog <<EOF
   prompt &_SQLPLUS_RELEASE
   exit;
 EOF
@@ -126,7 +126,7 @@ function oee_check_db_version {
   ret_val="FAIL"
 
   db_version=$(
-sqlplus -s /nolog << EOF
+${sqlplus_cmd} -s /nolog << EOF
 SET DEFINE OFF
 connect ${connection_string}
 @${sql_dir}/dma_set_sql_env.sql
@@ -168,7 +168,11 @@ function oee_check_platform() {
   local ret_val="FAIL"
   case "${platform}" in
     "Linux" ) 
-      ret_val="PASS"
+      if [[ $(uname -a) =~ "microsoft" ]]; then 
+        ret_val="FAIL due to unsupported platform WSL.  Oracle Estate Explorer collector is not compatible with the operating system on this machine.  Either disable OEE collection in the configuration file or execute these scripts on a supported platform."
+      else
+        ret_val="PASS"
+      fi
       ;;
     * )
       ret_val="FAIL due to unsupported platform ${platform}.  Oracle Estate Explorer collector is not compatible with the operating system on this machine.  Either disable OEE collection in the configuration file or execute these scripts on a supported platform."

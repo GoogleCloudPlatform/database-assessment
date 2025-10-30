@@ -25,7 +25,7 @@ function precheckOS() {
   # Defaults for Linux
   this_shell=${SHELL}
   script_command=${BASH_SOURCE[0]}
-
+  script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
   awk_cmd=$(which awk 2>/dev/null)
   cut_cmd=$(which cut 2>/dev/null)
   dir_name_cmd=$(which dirname 2>/dev/null)
@@ -156,15 +156,13 @@ function precheckOS() {
   # Check for sqlplus_cmd client
   # Check if running on Windows Subsystem for Linux
   if [[ $(uname -a | ${grep_cmd} -i -c microsoft ) -eq 1 ]]; then
-    sql_dir=$(wslpath -a -w ${sql_dir})/sql
-    sql_output_dir=$(wslpath -a -w ${sql_output_dir})
+    sql_dir=$(wslpath -a -w ${script_dir})/sql
     sqlplus_cmd=$(which sqlplus.exe 2>/dev/null)
   fi
 
   # Check if running on Cygwin
   if [[ $(uname -a | ${grep_cmd} -i -c cygwin ) -eq 1 ]]; then
-    sql_dir=$(cygpath -w ${sql_dir})/sql
-    sql_output_dir=$(cygpath -w ${sql_output_dir})
+    sql_dir=$(cygpath -w ${script_dir})/sql
     sqlplus_cmd=$(which sqlplus.exe 2>/dev/null)
   fi
 
@@ -461,7 +459,7 @@ function precheckStats() {
 
 # Verify we can connect as SYSDBA role
 function checkSysdbaConnection() {
-  sqlplus -s -L /nolog << EOF
+  ${sqlplus_cmd} -s -L /nolog << EOF
   connect ${1}${2} as sysdba
   set heading off
   set feedback off
@@ -495,7 +493,7 @@ function precheckSysdba() {
       echo -n "...Testing SYSDBA connection to database ${db}"
       retcd=$(checkSysdbaConnection "${sysUser}" "${db}" )
       success=$(echo "${retcd}" | ${grep_cmd} SUCCESS)
-      if [[ "${success}" = "SUCCESS" ]]; then
+      if [[ "${success}" =~ "SUCCESS" ]]; then
         echo " : SUCCESS"
         successes+=("SUCCESS : ${db}")
       else
@@ -536,7 +534,7 @@ function precheckSysdba() {
 # Check that the DMA user is able to connect to the given database.
 function checkConnection() {
   fname="${FUNCNAME[0]}"
-  sqlplus -s -L "${1}${2} " << EOF
+  ${sqlplus_cmd} -s -L "${1}${2} " << EOF
   set heading off
   set feedback off
   set trimout on
@@ -565,7 +563,7 @@ function precheckUser() {
     echo -n "...Testing DMA user connection for user ${username} to database ${db}"
     retcd=$(checkConnection "${user}" "${db}" )
     success=$(echo "${retcd}" | ${grep_cmd} SUCCESS)
-    if [[ "${success}" = "SUCCESS" ]]; then
+    if [[ "${success}" =~ "SUCCESS" ]]; then
       echo " : SUCCESS"
       successes+=("SUCCESS : ${db}" )
     else

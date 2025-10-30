@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License").
@@ -21,7 +23,7 @@ dma_version="4.3.44"
 dbmajor=""
 dbdomain=""
 script_dir=""
-sql_plus=""
+sqlplus_cmd=""
 output_dir=""
 sql_output_dir=""
 oracle_path=""
@@ -53,7 +55,7 @@ dma_automation_flag="N"
 # Define global variables that define how/what executables to use based on the platform on which we are running.
 function init_variables() {
   script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-  sql_plus=sqlplus
+  sqlplus_cmd=sqlplus
   output_dir=${script_dir}/output; export output_dir
   sql_output_dir=${output_dir}; export sql_output_dir
   oracle_path=${script_dir}; export oracle_path
@@ -132,15 +134,15 @@ function init_variables() {
   if [[ ${is_windows} -eq 1 ]];then
     sql_dir=$(wslpath -a -w ${script_dir})/sql
     sql_output_dir=$(wslpath -a -w ${sql_output_dir})
-    sql_plus=sqlplus.exe
+    sqlplus_cmd=sqlplus.exe
   fi
 
   # Check if running on Cygwin
-  is_cygwin=$(uname -a | ${grep_cmd} Cygwin | wc -l)
+  is_cygwin=$(uname -a | ${grep_cmd}  -i cygwin | wc -l)
   if [[ ${is_cygwin} -eq 1 ]];then
     sql_dir=$(cygpath -w ${script_dir})/sql
     sql_output_dir=$(cygpath -w ${sql_output_dir})
-    sql_plus=sqlplus.exe
+    sqlplus_cmd=sqlplus.exe
   fi
 
   ### Setup directories needed for execution
@@ -165,13 +167,13 @@ function check_version() {
   local connect_string="$1"
   local dma_version=$2
 
-  if ! [[ -x "$(command -v ${sql_plus})" ]]; then
-    echo "Could not find ${sql_plus} command. Source in environment and try again"
+  if ! [[ -x "$(command -v ${sqlplus_cmd})" ]]; then
+    echo "Could not find ${sqlplus_cmd} command. Source in environment and try again"
     echo "Exiting..."
     exit 1
   fi
 
-  ${sql_plus} -s /nolog << EOF
+  ${sqlplus_cmd} -s /nolog << EOF
 SET DEFINE OFF
 connect ${connect_string}
 @${sql_dir}/dma_set_sql_env.sql
@@ -191,14 +193,14 @@ function execute_dma() {
   local manual_unique_id="${4}"
   local stats_window=${5}
 
-  if ! [[ -x "$(command -v ${sql_plus})" ]];then
-    echo "Could not find ${sql_plus} command. Source in environment and try again"
+  if ! [[ -x "$(command -v ${sqlplus_cmd})" ]];then
+    echo "Could not find ${sqlplus_cmd} command. Source in environment and try again"
     echo "Exiting..."
     exit 1
   fi
 
 
-  ${sql_plus} -s /nolog << EOF
+  ${sqlplus_cmd} -s /nolog << EOF
 SET DEFINE OFF
 connect ${connect_string}
 @${sql_dir}/dma_collect.sql ${dma_version} ${sql_dir} ${DiagPack} ${v_tag} ${sql_output_dir} "${manual_unique_id}" ${stats_window}
