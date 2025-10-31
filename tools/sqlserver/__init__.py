@@ -6,11 +6,6 @@ from tools.sqlserver.database import DatabaseConfig, SQLServerDatabase
 from tools.sqlserver.health import HealthChecker, HealthStatus, SystemHealth
 
 __all__ = [
-    # CLI commands
-    "connect_group",
-    "database_group",
-    "health_command",
-    # Core classes
     "ConnectionConfig",
     "ConnectionTester",
     "DatabaseConfig",
@@ -19,4 +14,7 @@ __all__ = [
     "HealthStatus",
     "SQLServerDatabase",
     "SystemHealth",
+    "connect_group",
+    "database_group",
+    "health_command",
 ]

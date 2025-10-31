@@ -33,11 +33,11 @@ Imports are automatically organized by `ruff`'s isort integration. The configura
 
 ## Naming Conventions
 
--   **Modules**: `snake_case`
--   **Classes**: `PascalCase`
--   **Functions**: `snake_case`
--   **Variables**: `snake_case`
--   **Constants**: `UPPER_SNAKE_CASE`
+- **Modules**: `snake_case`
+- **Classes**: `PascalCase`
+- **Functions**: `snake_case`
+- **Variables**: `snake_case`
+- **Constants**: `UPPER_SNAKE_CASE`
 
 ## Documentation
 
