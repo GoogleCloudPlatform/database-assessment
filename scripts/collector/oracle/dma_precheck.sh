@@ -3,7 +3,6 @@
 . ./dma_print_pass_fail.sh
 . ./dma_oee.sh
 
-# TODO Put standardized success / fail into array and print final results.
 tab_char=$(printf '\t')
 configfilelinecount=0
 dma_log_name=dma_precheck_$(date +%Y%m%d%H%M%S).log

@@ -4,7 +4,6 @@
 # We limit this in case there are multiple databases on the same host.
 # Note that collection files can be large for databases with large number of objects,
 # so ensure there is plenty of disk space available before increasing maxParallel.
-# This script expects to run in bash shell, but should work in ksh.
 . ./dma_print_pass_fail.sh
 . ./dma_oee.sh
 
