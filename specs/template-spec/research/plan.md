@@ -6,7 +6,7 @@
 
 1. [Question 1]
 2. [Question 2]
-3. [Question 3]
+3. ...
 
 ## Internal Guide Findings
 
@@ -29,16 +29,7 @@
 - **Purpose**: [Why we need this library]
 - **Version**: [Recommended version]
 - **Documentation**: [Link or Context7 findings]
-- **Key Features**: [Relevant features]
 - **Integration Notes**: [How to integrate]
-
-## Modern Practices Research
-
-### Pattern: [Pattern Name]
-
-- **Source**: [WebSearch findings]
-- **Applicability**: [How it applies to this project]
-- **Tradeoffs**: [Pros and cons]
 
 ## Architectural Decisions
 
@@ -51,19 +42,6 @@
 **Decision**: [Chosen option]
 
 **Rationale**: [Why this option was chosen]
-
-**Consensus**: [If zen.consensus was used, summarize findings]
-
-### Decision 2: [Decision Topic]
-
-[Same structure as Decision 1]
-
-## Implementation Considerations
-
-- **Performance**: [Performance considerations]
-- **Security**: [Security considerations]
-- **Scalability**: [Scalability considerations]
-- **Maintainability**: [Maintainability considerations]
 
 ## References
 

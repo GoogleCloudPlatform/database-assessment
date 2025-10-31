@@ -30,7 +30,7 @@ class StandardScriptBuilder:
 
         self.env = Environment(
             loader=FileSystemLoader([str(template_path), str(macros_path)]),
-            autoescape=False,
+            autoescape=True,
             trim_blocks=True,
             lstrip_blocks=True,
         )
@@ -52,9 +52,7 @@ class StandardScriptBuilder:
 
         # Render all templates into the temporary build directory
         for template_name in self.env.list_templates(extensions=[".j2"]):
-            if template_name.startswith(f"scripts/{self.database_type}/") or template_name.startswith(
-                f"sql/src/sources/{self.database_type}/"
-            ):
+            if template_name.startswith((f"scripts/{self.database_type}/", f"sql/src/sources/{self.database_type}/")):
                 template = self.env.get_template(template_name)
                 rendered_content = template.render(context)
 

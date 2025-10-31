@@ -21,7 +21,7 @@ class SqlServerPackageBuilder:
 
         self.env = Environment(
             loader=FileSystemLoader([str(template_path), str(macros_path)]),
-            autoescape=False,
+            autoescape=True,
             trim_blocks=True,
             lstrip_blocks=True,
         )
@@ -42,7 +42,7 @@ class SqlServerPackageBuilder:
 
         # Render all templates into the temporary build directory
         for template_name in self.env.list_templates(extensions=[".j2"]):
-            if template_name.startswith("scripts/sqlserver/") or template_name.startswith("sql/src/sources/mssql/"):
+            if template_name.startswith(("scripts/sqlserver/", "sql/src/sources/mssql/")):
                 template = self.env.get_template(template_name)
                 rendered_content = template.render(context)
 
@@ -54,7 +54,7 @@ class SqlServerPackageBuilder:
                 output_filename.write_text(rendered_content)
 
                 # Make shell/batch/powershell scripts executable if applicable
-                if output_filename.suffix in [".sh", ".bat", ".ps1"]:
+                if output_filename.suffix in {".sh", ".bat", ".ps1"}:
                     output_filename.chmod(0o755)
 
         # Create output directory within the package

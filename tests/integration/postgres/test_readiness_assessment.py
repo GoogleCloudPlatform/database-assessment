@@ -44,13 +44,13 @@ PASS: Final = "PASS"
 
 
 def test_pglogical(
-    sync_engine: Engine,
+    postgres_sync_engine: Engine,
     runner: CliRunner,
     tmp_path: Path,
 ) -> None:
-    with sync_engine.begin() as conn:
+    with postgres_sync_engine.begin() as conn:
         conn.execute(text(dedent("""create extension if not exists pglogical;""")))
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    url = urlparse(str(postgres_sync_engine.url.render_as_string(hide_password=False)))
     result = runner.invoke(
         app,
         [
@@ -82,13 +82,13 @@ def test_pglogical(
 
 
 def test_privileges_success(
-    sync_engine: Engine,
+    postgres_sync_engine: Engine,
     runner: CliRunner,
     tmp_path: Path,
 ) -> None:
     test_user = "testuser"
     test_passwd = "testpasswd"
-    with sync_engine.begin() as conn:
+    with postgres_sync_engine.begin() as conn:
         # setup test user.
         conn.execute(text(dedent(f"create user {test_user} WITH PASSWORD '{test_passwd}';")))
 
@@ -100,7 +100,7 @@ def test_privileges_success(
         ]
         for cmd in grant_privilege_cmds:
             conn.execute(text(cmd))
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    url = urlparse(str(postgres_sync_engine.url.render_as_string(hide_password=False)))
 
     result = runner.invoke(
         app,
@@ -124,7 +124,7 @@ def test_privileges_success(
         ],
     )
     # cleanup.
-    with sync_engine.begin() as conn:
+    with postgres_sync_engine.begin() as conn:
         conn.execute(text("DROP OWNED BY testuser; DROP USER testuser;"))
     assert result.exit_code == 0
     with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
@@ -136,17 +136,17 @@ def test_privileges_success(
 
 
 def test_privileges_failure(
-    sync_engine: Engine,
+    postgres_sync_engine: Engine,
     runner: CliRunner,
     tmp_path: Path,
 ) -> None:
     test_user = "testuser"
     test_passwd = "testpasswd"
-    with sync_engine.begin() as conn:
+    with postgres_sync_engine.begin() as conn:
         # setup test user.
         conn.execute(text(dedent(f"create user {test_user} WITH PASSWORD '{test_passwd}';")))
         conn.execute(text(dedent("""create extension if not exists pglogical;""")))
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    url = urlparse(str(postgres_sync_engine.url.render_as_string(hide_password=False)))
     result = runner.invoke(
         app,
         [
@@ -170,9 +170,8 @@ def test_privileges_failure(
     )
 
     # Cleanup.
-    with sync_engine.begin() as conn:
+    with postgres_sync_engine.begin() as conn:
         conn.execute(text("DROP OWNED BY testuser; DROP USER testuser;"))
-
     assert result.exit_code == 0
     with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
         rows = local_db.sql(
@@ -183,11 +182,11 @@ def test_privileges_failure(
 
 
 def test_wal_level(
-    sync_engine: Engine,
+    postgres_sync_engine: Engine,
     runner: CliRunner,
     tmp_path: Path,
 ) -> None:
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    url = urlparse(str(postgres_sync_engine.url.render_as_string(hide_password=False)))
     result = runner.invoke(
         app,
         [
@@ -219,11 +218,11 @@ def test_wal_level(
 
 
 def test_pg_version(
-    sync_engine: Engine,
+    postgres_sync_engine: Engine,
     runner: CliRunner,
     tmp_path: Path,
 ):
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    url = urlparse(str(postgres_sync_engine.url.render_as_string(hide_password=False)))
     result = runner.invoke(
         app,
         [
@@ -246,7 +245,7 @@ def test_pg_version(
         ],
     )
     assert result.exit_code == 0
-    with sync_engine.begin() as conn:
+    with postgres_sync_engine.begin() as conn:
         res = conn.execute(text("SHOW server_version_num;"))
         pg_version = res.fetchone()
         pg_major_version = 0
@@ -267,11 +266,11 @@ def test_pg_version(
 
 
 def test_pg_source_settings(
-    sync_engine: Engine,
+    postgres_sync_engine: Engine,
     runner: CliRunner,
     tmp_path: Path,
 ):
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    url = urlparse(str(postgres_sync_engine.url.render_as_string(hide_password=False)))
     result = runner.invoke(
         app,
         [
@@ -327,13 +326,13 @@ def test_pg_source_settings(
 
 
 def test_tables_without_pk(
-    sync_engine: Engine,
+    postgres_sync_engine: Engine,
     runner: CliRunner,
     tmp_path: Path,
 ):
-    with sync_engine.begin() as conn:
+    with postgres_sync_engine.begin() as conn:
         conn.execute(text("CREATE TABLE test_table (id INTEGER, data text);"))
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    url = urlparse(str(postgres_sync_engine.url.render_as_string(hide_password=False)))
     result = runner.invoke(
         app,
         [

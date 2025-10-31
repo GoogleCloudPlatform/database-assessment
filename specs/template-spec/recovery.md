@@ -11,7 +11,7 @@
 
 - ✓ [Completed item 1]
 - ✓ [Completed item 2]
-- ✓ [Completed item 3]
+- ✓ ...
 
 ## Current Blockers
 
@@ -21,25 +21,19 @@
 
 1. [Next immediate step]
 2. [Following step]
-3. [Final step in current phase]
-
-## Key Decisions Made
-
-- **Decision 1**: [Rationale]
-- **Decision 2**: [Rationale]
+3. ...
 
 ## Files Modified
 
 - [file1.ext]
 - [file2.ext]
-- [file3.ext]
+- ...
 
 ## Commands to Resume Work
 
 ```bash
 # Check current status
 git status
-git diff
 
 # Resume implementation
 /implement [slug]
@@ -50,7 +44,3 @@ git diff
 # Or resume review
 /review [slug]
 ```
-
-## Session Context
-
-[Any important context needed to resume work]

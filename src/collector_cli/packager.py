@@ -120,6 +120,6 @@ class CollectorPackager:
         for db_type in ["oracle", "sqlserver", "postgres", "mysql"]:
             try:
                 results[db_type] = self.package_collector(db_type)
-            except Exception as e:
+            except OSError as e:
                 results[db_type] = {"database_type": db_type, "error": str(e)}
         return results

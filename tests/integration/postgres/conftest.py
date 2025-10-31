@@ -15,9 +15,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from textwrap import dedent
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from click.testing import CliRunner
@@ -39,203 +40,58 @@ def runner() -> CliRunner:
     return CliRunner()
 
 
-@pytest.fixture(scope="session")
-def postgres17_sync_engine(
-    postgres_docker_ip: str,
-    postgres_user: str,
-    postgres_password: str,
-    postgres_database: str,
-    postgres17_port: int,
-    postgres17_service: None,
-) -> Generator[Engine, None, None]:
-    """Postgresql instance for end-to-end testing."""
-    yield create_engine(
-        URL(
-            drivername="postgresql+psycopg",
-            username=postgres_user,
-            password=postgres_password,
-            host=postgres_docker_ip,
-            port=postgres17_port,
-            database=postgres_database,
-            query={},  # type: ignore[arg-type]
-        ),
-        poolclass=NullPool,
-    )
-
-
-@pytest.fixture(scope="session")
-def postgres16_sync_engine(
-    postgres_docker_ip: str,
-    postgres_user: str,
-    postgres_password: str,
-    postgres_database: str,
-    postgres16_port,
-    postgres16_service: None,
-) -> Generator[Engine, None, None]:
-    """Postgresql instance for end-to-end testing."""
-    yield create_engine(
-        URL(
-            drivername="postgresql+psycopg",
-            username=postgres_user,
-            password=postgres_password,
-            host=postgres_docker_ip,
-            port=postgres16_port,
-            database=postgres_database,
-            query={},  # type: ignore[arg-type]
-        ),
-        poolclass=NullPool,
-    )
-
-
-@pytest.fixture(scope="session")
-def postgres15_sync_engine(
-    postgres_docker_ip: str,
-    postgres_user: str,
-    postgres_password: str,
-    postgres_database: str,
-    postgres15_port,
-    postgres15_service: None,
-) -> Generator[Engine, None, None]:
-    """Postgresql instance for end-to-end testing."""
-    yield create_engine(
-        URL(
-            drivername="postgresql+psycopg",
-            username=postgres_user,
-            password=postgres_password,
-            host=postgres_docker_ip,
-            port=postgres15_port,
-            database=postgres_database,
-            query={},  # type: ignore[arg-type]
-        ),
-        poolclass=NullPool,
-    )
-
-
-@pytest.fixture(scope="session")
-def postgres14_sync_engine(
-    postgres_docker_ip: str,
-    postgres_user: str,
-    postgres_password: str,
-    postgres_database: str,
-    postgres14_port,
-    postgres14_service: None,
-) -> Generator[Engine, None, None]:
-    """Postgresql instance for end-to-end testing."""
-    yield create_engine(
-        URL(
-            drivername="postgresql+psycopg",
-            username=postgres_user,
-            password=postgres_password,
-            host=postgres_docker_ip,
-            port=postgres14_port,
-            database=postgres_database,
-            query={},  # type: ignore[arg-type]
-        ),
-        poolclass=NullPool,
-    )
-
-
-@pytest.fixture(scope="session")
-def postgres13_sync_engine(
-    postgres_docker_ip: str,
-    postgres_user: str,
-    postgres_password: str,
-    postgres_database: str,
-    postgres13_port,
-    postgres13_service: None,
-) -> Generator[Engine, None, None]:
-    """Postgresql instance for end-to-end testing."""
-    yield create_engine(
-        URL(
-            drivername="postgresql+psycopg",
-            username=postgres_user,
-            password=postgres_password,
-            host=postgres_docker_ip,
-            port=postgres13_port,
-            database=postgres_database,
-            query={},  # type: ignore[arg-type]
-        ),
-        poolclass=NullPool,
-    )
-
-
-@pytest.fixture(scope="session")
-def postgres12_sync_engine(
-    postgres_docker_ip: str,
-    postgres_user: str,
-    postgres_password: str,
-    postgres_database: str,
-    postgres12_port,
-    postgres12_service: None,
-) -> Generator[Engine, None, None]:
-    """Postgresql instance for end-to-end testing."""
-    yield create_engine(
-        URL(
-            drivername="postgresql+psycopg",
-            username=postgres_user,
-            password=postgres_password,
-            host=postgres_docker_ip,
-            port=postgres12_port,
-            database=postgres_database,
-            query={},  # type: ignore[arg-type]
-        ),
-        poolclass=NullPool,
-    )
-
-
-@pytest.fixture(scope="session")
-def postgres_docker_compose_files() -> list[Path]:
-    return [Path(Path(__file__).parent / "docker-compose.yml")]
-
-
 @pytest.fixture(
     scope="session",
     params=[
-        pytest.param(
-            "postgres12_sync_engine",
-            marks=[
-                pytest.mark.postgres,
-            ],
-        ),
-        pytest.param(
-            "postgres13_sync_engine",
-            marks=[
-                pytest.mark.postgres,
-            ],
-        ),
-        pytest.param(
-            "postgres14_sync_engine",
-            marks=[
-                pytest.mark.postgres,
-            ],
-        ),
-        pytest.param(
-            "postgres15_sync_engine",
-            marks=[
-                pytest.mark.postgres,
-            ],
-        ),
-        pytest.param(
-            "postgres16_sync_engine",
-            marks=[
-                pytest.mark.postgres,
-            ],
-        ),
-        pytest.param(
-            "postgres17_sync_engine",
-            marks=[
-                pytest.mark.postgres,
-            ],
-        ),
+        "postgres:12-alpine",
+        "postgres:13-alpine",
+        "postgres:14-alpine",
+        "postgres:15-alpine",
+        "postgres:16-alpine",
+        "postgres:17-alpine",
+        "postgres:18-alpine",
     ],
 )
-def sync_engine(request: FixtureRequest) -> Generator[Engine, None, None]:
-    yield cast("Engine", request.getfixturevalue(request.param))
+def sync_engine(
+    database_container: Callable[..., dict[str, Any]], request: FixtureRequest, free_tcp_port_factory: Callable[[], int]
+) -> Generator[Engine, None, None]:
+    """Postgresql instance for end-to-end testing."""
+    from tools.postgres.health import HealthChecker
 
+    def health_check() -> bool:
+        """Checks if the postgres container is healthy."""
+        checker = HealthChecker()
+        health = checker.check_connectivity(host_port=host_port)
+        return health.status == "healthy"
 
-@pytest.fixture(scope="session")
-def _seed_postgres_database(sync_engine: Engine) -> None:
-    with sync_engine.begin() as conn:
+    host_port = free_tcp_port_factory()
+    db_details = database_container(
+        image=request.param,
+        name=f"postgres-test-{request.param.replace(':', '-')}",
+        host_port=host_port,
+        container_port=5432,
+        env={
+            "POSTGRES_PASSWORD": "super-secret",
+            "POSTGRES_USER": "postgres",
+            "POSTGRES_DB": "postgres",
+        },
+        health_check=health_check,
+    )
+
+    engine = create_engine(
+        URL(
+            drivername="postgresql+psycopg",
+            username=db_details["env"]["POSTGRES_USER"],
+            password=db_details["env"]["POSTGRES_PASSWORD"],
+            host="localhost",
+            port=db_details["host_port"],
+            database=db_details["env"]["POSTGRES_DB"],
+            query={},
+        ),
+        poolclass=NullPool,
+    )
+
+    with engine.begin() as conn:
         conn.execute(text(dedent("""create extension if not exists pg_stat_statements;""")))
         driver_connection = conn._dbapi_connection
         assert driver_connection is not None
@@ -244,3 +100,5 @@ def _seed_postgres_database(sync_engine: Engine) -> None:
             cursor.execute(f.read())
         with Path(Path(__file__).parent / "northwind_data.sql").open(encoding="utf-8") as f:
             cursor.execute(f.read())
+
+    yield engine

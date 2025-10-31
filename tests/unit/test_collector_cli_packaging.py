@@ -6,7 +6,11 @@ import pytest
 from jinja2 import ChoiceLoader, Environment, FileSystemLoader
 
 from collector_cli.packager import CollectorPackager
-from collector_cli.packaging import OracleScriptRenderer, SqlServerPackageBuilder, StandardScriptBuilder
+from collector_cli.packaging import (
+    OracleScriptRenderer,
+    SqlServerPackageBuilder,
+    StandardScriptBuilder,
+)
 
 # Define paths relative to the test file
 TEST_TEMPLATES_DIR = Path(__file__).parent.parent.parent / "src" / "collector_cli" / "templates"

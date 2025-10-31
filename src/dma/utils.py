@@ -16,19 +16,20 @@ from __future__ import annotations
 import inspect
 import os
 import sys
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from functools import partial
 from importlib import import_module
 from importlib.util import find_spec
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, TypeVar, cast, overload
+from types import ModuleType, TracebackType
+from typing import TYPE_CHECKING, Any, cast, overload
 
 import anyio
-from typing_extensions import ParamSpec
+from typing_extensions import ParamSpec, TypeVar
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable
+    from collections.abc import Awaitable, Callable
     from types import ModuleType, TracebackType
 
 T = TypeVar("T")

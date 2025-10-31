@@ -5,74 +5,51 @@
 
 ## Overview
 
-[1-2 paragraphs describing what this feature does and why it's needed]
+[Detailed description of the feature, its purpose, and the value it provides.]
 
 ## Problem Statement
 
-[Describe the problem this feature solves]
+[What problem is this feature solving?]
 
 ## Acceptance Criteria
 
-- [ ] Criterion 1: [Specific, measurable criterion]
-- [ ] Criterion 2: [Specific, measurable criterion]
-- [ ] Criterion 3: [Specific, measurable criterion]
+- [ ] Criterion 1: [Specific, measurable, and testable]
+- [ ] Criterion 2: [Specific, measurable, and testable]
+- [ ] ...
 
 ## Technical Design
 
 ### Affected Components
 
-- Modules: [List affected modules]
-- Services: [List affected services]
-- Dependencies: [List new or updated dependencies]
+- [ ] List of modules, classes, and functions that will be modified or created.
+- [ ] ...
 
 ### Implementation Approach
 
-[High-level description of how this will be implemented]
+[High-level description of the implementation plan. Include details about the algorithms, data structures, and design patterns that will be used.]
 
-### API Changes
+### API Design (if applicable)
 
-[If applicable, describe any API changes]
-
-### Type Signatures
-
-[If applicable, show expected type signatures]
-
-```python
-def new_function(param: Type) -> ReturnType:
-    """Brief description."""
-    pass
-```
+[Description of any changes to the CLI or server API.]
 
 ## Testing Strategy
 
 ### Unit Tests
 
-[Describe unit test approach]
-
-- Test file: `tests/unit/test_[feature].py`
-- Coverage target: [%]
+- [ ] List of unit tests to be written.
+- [ ] ...
 
 ### Integration Tests
 
-[Describe integration test approach]
-
-- Test file: `tests/integration/test_[feature].py`
-- Test scenarios: [List key scenarios]
+- [ ] List of integration tests to be written.
+- [ ] ...
 
 ## Risks & Constraints
 
-- **Risk 1**: [Description and mitigation]
-- **Risk 2**: [Description and mitigation]
-
-## Timeline Estimate
-
-- Planning: [X days]
-- Implementation: [Y days]
-- Testing: [Z days]
-- Total: [Total days]
+- [ ] Potential risks and how they will be mitigated.
+- [ ] ...
 
 ## References
 
-- Architecture: specs/guides/architecture.md
-- Testing: specs/guides/testing.md
-- Research: specs/active/[slug]/research/plan.md
+- [ ] Links to relevant documentation, issues, or other resources.
+- [ ] ...

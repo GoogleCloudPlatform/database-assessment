@@ -55,7 +55,7 @@ def package_scripts(database: str | None, output_dir: str | None, version: str |
                 console.print(f"[dim]Created: {result['package_path']}[/dim]")
             elif "error" in result:
                 console.print(f"[bold red]Error: {result['error']}[/bold red]")
-        except Exception as e:
+        except click.ClickException as e:
             console.print(f"[bold red]An unexpected error occurred: {e}[/bold red]")
     else:
         console.print("[green]✓[/green] Packaging all collector scripts")

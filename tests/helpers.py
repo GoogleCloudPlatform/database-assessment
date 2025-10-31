@@ -14,12 +14,21 @@
 from __future__ import annotations
 
 import inspect
+from collections.abc import Awaitable, Callable
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from functools import partial
-from typing import TYPE_CHECKING, TypeVar, cast, overload
+from types import TracebackType
+from typing import TYPE_CHECKING, cast, overload
 
 import anyio
-from typing_extensions import ParamSpec
+from typing_extensions import ParamSpec, TypeVar
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from types import TracebackType
+
+T = TypeVar("T")
+P = ParamSpec("P")
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable

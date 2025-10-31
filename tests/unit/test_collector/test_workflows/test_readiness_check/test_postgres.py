@@ -45,8 +45,7 @@ def _dummy_postgres_readiness_executor(
 ) -> PostgresReadinessCheckExecutor:
     rc = ReadinessCheck(
         local_db=local_db,
-        src_info=SourceInfo("POSTGRES", "test_user", "test_passwd", "dummy_host", 0),
-        database="dummy",
+        src_info=SourceInfo("POSTGRES", "test_user", "test_passwd", "dummy_host", 0, "dummy"),
         console=get_console(),
         collection_identifier=None,
     )

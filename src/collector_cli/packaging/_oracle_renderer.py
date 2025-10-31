@@ -10,7 +10,7 @@ from jinja2 import Environment, FileSystemLoader
 class OracleScriptRenderer:
     """Renders Oracle SQL*Plus scripts, emulating DEFINE and @include behavior."""
 
-    def __init__(self, template_path: Path, macros_path: Path):
+    def __init__(self, template_path: Path, macros_path: Path) -> None:
         """Initialize the renderer."""
         self.env = Environment(
             loader=FileSystemLoader([str(template_path), str(template_path / "sql"), str(macros_path)]),
@@ -70,5 +70,4 @@ class OracleScriptRenderer:
             resolved_include_name = self.env.from_string(include_name).render(self.context)
             return self._render_recursive(resolved_include_name)
 
-        final_content = self.include_pattern.sub(render_include, processed_content)
-        return final_content
+        return self.include_pattern.sub(render_include, processed_content)

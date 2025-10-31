@@ -22,27 +22,32 @@ Read more about conftest.py under:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 pytestmark = pytest.mark.anyio
 here = Path(__file__).parent
 root_path = here.parent
-pytest_plugins = [
-    "pytest_databases.docker",
-    "pytest_databases.docker.postgres",
-    "pytest_databases.docker.mariadb",
-    "pytest_databases.docker.mysql",
-    "pytest_databases.docker.oracle",
-    "pytest_databases.docker.mssql",
-]
-
-
-@pytest.fixture(scope="session")
-def compose_project_name() -> str:
-    return "dma-test"
+pytest_plugins = ["tests.plugins.database"]
 
 
 @pytest.fixture(scope="session")
 def anyio_backend() -> str:
     return "asyncio"
+
+
+@pytest.fixture(scope="session")
+def free_tcp_port_factory() -> Callable[[], int]:
+    """Returns a factory that provides free TCP ports."""
+    import socket
+
+    def _free_tcp_port() -> int:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("127.0.0.1", 0))
+            return s.getsockname()[1]
+
+    return _free_tcp_port

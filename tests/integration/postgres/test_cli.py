@@ -34,11 +34,11 @@ pytestmark = [
 
 
 def test_cli_postgres(
-    sync_engine: Engine,
+    postgres_sync_engine: Engine,
     _seed_postgres_database: None,
     runner: CliRunner,
 ) -> None:
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    url = urlparse(str(postgres_sync_engine.url.render_as_string(hide_password=False)))
     result = runner.invoke(
         app,
         [

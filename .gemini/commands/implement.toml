@@ -11,68 +11,19 @@ You are the Expert Agent for the dma project. Your purpose is to execute the imp
 2.  **Research Implementation Details**: Before writing code, consult `.gemini/GEMINI.md` for quality standards, `specs/guides/` for patterns, and use `mcp__context7` for external library documentation.
 
 3.  **Implement with Quality Standards**: Write production-quality code that adheres to the standards in `.gemini/GEMINI.md`. This includes:
-    *   Adhere to the `Service-Repository` pattern.
-    *   `partially typed`.
-    *   All code must pass `make lint`.
-    *   All new logic must be accompanied by tests. The test suite must pass (`make test`).
-    *   Follow the established `custom exception classes`.
+    *   Language & Version: `Python >=3.10`
+    *   Primary Framework: `Litestar`
+    *   Architectural Pattern: Adhere to the `Service-Repository` pattern.
+    *   Typing: `partially typed`.
+    *   Style & Formatting: All code must pass `make lint`.
+    *   Testing: All new logic must be accompanied by tests. The test suite must pass (`make test`).
+    *   Error Handling: Follow the established `custom exception classes`.
 
-4.  **Use Advanced Tools for Complex Work**:
-    *   Use `mcp__zen__debug` for systematic debugging.
-    *   Use `mcp__zen__thinkdeep` for complex architectural decisions.
-    *   Use `mcp__zen__analyze` for code quality and performance analysis.
+4.  **Local Testing**: As you implement, run relevant tests (`make test`) to verify your changes.
 
-5.  **Local Testing**: As you implement, run relevant tests (`make test`) to verify your changes.
+5.  **Update Progress**: Continuously update `tasks.md` and `recovery.md` to reflect the current state of the implementation.
 
-6.  **Update Progress**: Continuously update `tasks.md` and `recovery.md` to reflect the current state of the implementation.
-
-7.  **Auto-Invoke Testing Agent (MANDATORY)**: After your implementation is complete and passes local checks, you **MUST** invoke the Testing agent as a sub-task.
-
-8.  **Auto-Invoke Docs & Vision Agent (MANDATORY)**: After the Testing agent succeeds, you **MUST** invoke the Docs & Vision agent as a sub-task.
-
-**Your Task is Complete ONLY When Sub-Agents Succeed**: You are not done when you finish writing code. You are done when the entire automated workflow is complete and the workspace has been archived.
-
----
-
-**Sub-Agent Orchestration Workflow**:
-
-```
-
-┌─────────────────────────────────────────────────────────────┐
-│                   EXPERT AGENT (YOU)                         │
-│                                                              │
-│  Phase 1: Implementation                                    │
-│  ├─ Read Plan                                              │
-│  ├─ Research                                               │
-│  ├─ Write Code                                             │
-│  ├─ Local Testing                                          │
-│  └─ Update Progress                                        │
-│                                                              │
-│  Phase 2: Auto-Invoke Testing Agent                        │
-│  Phase 3: Auto-Invoke Docs & Vision Agent                  │
-│                                                              │
-│  Complete: Workspace archived, knowledge captured          │
-└─────────────────────────────────────────────────────────────┘
-
-```
-
-**How to Invoke Sub-Agents**:
-
-```python
-# After implementation complete
-Task(
-    description="Run comprehensive testing phase",
-    prompt="Execute testing agent workflow for specs/active/{{slug}}",
-    subagent_type="testing"
-)
-
-# After testing complete
-Task(
-    description="Run docs, quality gate, and archival",
-    prompt="Execute Docs & Vision agent 5-phase workflow for specs/active/{{slug}}",
-    subagent_type="docs-vision"
-)
-```
+6.  **Completion**: Once the implementation is complete and passes local checks, notify the user that the implementation phase is complete and the testing phase can begin.
 
 ---
 
@@ -83,9 +34,6 @@ Task(
 - [ ] **Local Tests Pass**: Relevant tests pass
 - [ ] **Linting Clean**: `make lint` passes with zero errors
 - [ ] **Progress Tracked**: tasks.md and recovery.md updated
-- [ ] **Sub-Agents Invoked**: Testing and Docs & Vision agents invoked
-- [ ] **Sub-Agents Complete**: Both sub-agents report success
-- [ ] **Workspace Archived**: Workspace moved to specs/archive/
 
 Begin execution of the plan for the specified slug.
 """

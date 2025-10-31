@@ -697,7 +697,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         fdw_table_count = {int(row[1]) for row in result}
         for c in self.rule_config:
             unsupported_fdws = fdws.difference(c.supported_fdws)
-            for unsupported_fdw, table_count in zip(unsupported_fdws, fdw_table_count):
+            for unsupported_fdw, table_count in zip(unsupported_fdws, fdw_table_count, strict=True):
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,

@@ -5,6 +5,75 @@
 
 This document is the **single source of truth** for the agentic workflow in this project. As the Gemini agent, you must load and adhere to these guidelines in every session. Failure to follow these rules is a failure of your core function.
 
+## Project Overview
+
+This project, the **Database Migration Assessment (DMA)**, is a Python-based tool designed to analyze various on-premises or cloud database environments (including Oracle, Microsoft SQL Server, PostgreSQL, and MySQL) and provide recommendations for migrating to Google Cloud.
+
+It consists of two primary components:
+
+1. **`dma`**: The main command-line interface (CLI) that connects to a source database, performs a readiness check, and collects detailed assessment data.
+2. **`collector_cli`**: A supporting CLI tool responsible for packaging the database-specific SQL scripts and collectors for distribution.
+
+The core technologies used are:
+
+- **Python**: The primary programming language.
+- **Click**: For building the user-friendly CLIs.
+- **DuckDB & Polars**: For high-performance in-process data analysis and transformation of the collected metrics.
+- **Litestar**: Included as an optional dependency for a potential web server component.
+- **uv**: For managing the Python environment and dependencies.
+
+The architecture is modular, with a clear separation between the data collection scripts (SQL and shell scripts) and the Python-based processing and analysis engine.
+
+## Building and Running
+
+All common development tasks are managed through a `Makefile`.
+
+- **To set up the development environment:**
+
+    ```bash
+    # Installs uv, creates a virtual env, installs all dependencies, and sets up pre-commit hooks
+    make install
+    ```
+
+- **To run tests:**
+
+    ```bash
+    # Executes the pytest suite with coverage reporting
+    make test
+    ```
+
+- **To run linters and formatters:**
+
+    ```bash
+    # Runs ruff, mypy, and other checks via pre-commit
+    make lint
+    ```
+
+- **To build the project:**
+
+    ```bash
+    # Builds the collector script packages and the Python wheel
+    make build
+    ```
+
+- **To build the documentation:**
+
+    ```bash
+    # Generates the project documentation site using MkDocs
+    make docs
+
+    # Serve the documentation locally
+    make serve-docs
+    ```
+
+## Development Conventions
+
+- **Dependency Management**: Project dependencies and the virtual environment are managed by `uv`. Configuration is in `pyproject.toml`.
+- **Code Style**: The project uses `ruff` for code formatting and linting, with rules defined in `pyproject.toml`. Code quality is enforced automatically using pre-commit hooks.
+- **Testing**: The testing framework is `pytest`. Tests are located in the `tests/` directory, separated into `unit` and `integration` subdirectories.
+- **Docstrings**: Docstrings follow the Google-style convention.
+- **Continuous Integration**: The project uses GitHub Actions for CI, with workflows defined in the `.github/workflows/` directory.
+
 ## Section 1: The Philosophy
 
 This system is built on the principle of **"Continuous Knowledge Capture."** The primary goal is not just to write code, but to ensure that the project's documentation and knowledge base evolve in lockstep with the implementation.
@@ -60,7 +129,7 @@ All work **MUST** occur within a requirement-specific directory inside `specs/ac
 
 ## Section 5: Tool & Research Protocol
 
-You must follow this priority order when seeking information.
+You must follow this priority order when seeking information.  You must always use tools 1 through 5.  No exceptions. Use zen when it is available, otherwise break the tasks down extremely granularly and plan with sequential thinking.
 
 1. **📚 `specs/guides/` (Local Guides) - FIRST**
 2. **📁 Project Codebase - SECOND**

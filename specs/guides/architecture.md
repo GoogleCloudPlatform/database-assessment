@@ -1,50 +1,49 @@
 # Architecture Guide: dma
 
-**Last Updated**: 2025-10-29
+**Last Updated**: Thursday, October 31, 2025
 
 ## Overview
 
-dma is built using a Service-Repository pattern.
+The `dma` project is a data-intensive Python application designed for database migration assessment. It features a command-line interface (CLI) for data collection and a web server component for serving an API, built on the Litestar framework. The architecture is designed to be modular and extensible, supporting multiple database dialects.
 
 ## Project Structure
 
+The project follows a standard `src` layout:
+
 ```
-src/dma/
-├── cli/
-├── collector/
-│   ├── query_managers/
-│   ├── sql/
-│   ├── util/
-│   └── workflows/
-├── lib/
-│   └── db/
-│       └── adapters/
-├── __about__.py
-├── __init__.py
-├── __main__.py
-├── py.typed
-├── types.py
-└── utils.py
+collector/
+├── src/
+│   ├── collector_cli/  # Source for the collector packaging CLI
+│   └── dma/            # Main application source code
+│       ├── cli/        # Main CLI application logic
+│       ├── collector/  # Data collection logic
+│       └── lib/        # Core libraries and business logic
+├── tests/
+│   ├── unit/
+│   └── integration/
+├── docs/
+└── scripts/
+    └── collector/      # Shell scripts for data collection
 ```
 
 ## Core Components
 
-*   **`cli`**: Command-line interface using Click.
-*   **`collector`**: Core logic for collecting data from databases.
-    *   **`query_managers`**: Manages database queries for different database vendors.
-    *   **`workflows`**: Defines the steps for data collection.
-*   **`lib`**: Shared library code.
-    *   **`db`**: Database abstraction layer.
-        *   **`adapters`**: Adapters for different database drivers.
+-   **`dma.cli`**: The main entry point for the application's command-line interface, built using `click`.
+-   **`dma.collector`**: Contains the core logic for connecting to databases and executing assessment queries. It is designed to be database-agnostic where possible.
+-   **`dma.lib`**: Contains foundational code, including database connection management, data transformation logic, and core data structures.
+-   **`collector_cli`**: A secondary CLI application responsible for packaging the collector scripts for different database targets.
+-   **`scripts/collector`**: Contains the raw SQL queries and shell scripts used for data collection, organized by database dialect (Oracle, Postgres, etc.).
 
 ## Design Patterns
 
-*   **Adapter Pattern**: Used for database and external service integration.
-*   **Service-Repository Pattern**: The intended architecture for data access.
+-   **Service-Repository**: The application separates the high-level business logic (services) from the data access logic (repositories). `aiosql` is used to manage SQL queries in a repository-like pattern, keeping SQL separate from the Python code.
+-   **Adapter Pattern**: The collector uses an adapter-like pattern to support different database dialects. Each dialect has its own set of collection scripts and potentially custom connection logic.
+-   **Dependency Injection**: The Litestar web server component makes use of dependency injection for managing resources like database connections.
 
 ## Data Flow
 
-1.  The `cli` initiates a data collection `workflow`.
-2.  The `workflow` uses a `query_manager` to execute SQL queries.
-3.  The `query_manager` uses a `db` adapter to connect to the database.
-4.  Data is collected and stored for analysis.
+1.  A user invokes the `dma` CLI or the collector scripts directly.
+2.  The collector connects to the target database using the appropriate driver.
+3.  SQL queries from the `scripts/collector` directory are executed against the database.
+4.  The raw data is collected, processed, and transformed using `polars` and `duckdb`.
+5.  The final assessment report is generated.

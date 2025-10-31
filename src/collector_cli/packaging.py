@@ -5,6 +5,7 @@ database collector script packages.
 """
 
 import shutil
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -45,7 +46,7 @@ class CollectorPackager:
             return self._build_oracle()
         if database_type == "sqlserver":
             return self._build_sqlserver()
-        if database_type in ["postgres", "mysql"]:
+        if database_type in {"postgres", "mysql"}:
             return self._build_standard(database_type)
 
         msg = f"Unsupported database type: {database_type}"
@@ -126,6 +127,6 @@ class CollectorPackager:
         for db_type in ["oracle", "sqlserver", "postgres", "mysql"]:
             try:
                 results[db_type] = self.package_collector(db_type)
-            except Exception as e:
+            except OSError as e:
                 results[db_type] = {"database_type": db_type, "error": str(e)}
         return results

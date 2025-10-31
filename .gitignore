@@ -17,6 +17,7 @@ eggs/
 .eggs/
 lib/
 !resources/lib
+!tools/lib
 !src/**/*/lib
 lib64/
 parts/
@@ -148,6 +149,12 @@ src/dma/_version.py
 
 # App specifics
 invoke.yml
+
+# Gemini Agent System
+specs/active/
+specs/archive/
+!specs/active/.gitkeep
+!specs/archive/.gitkeep
 sample/datacollection/*/*.log
 sample/datacollection/*/*.csv
 sample/datacollection/*.log

@@ -125,7 +125,6 @@ dev = [
     "pytest-sugar",
     "pytest-click",
     "pytest-xdist>=3.6.0",
-    "pytest-databases<=0.10.0",
 ]
 
 lint = [
@@ -440,7 +439,7 @@ ban-relative-imports = "all"
     "PLC2701",
     "FA102",
 ]
-# temp
+"tools/**/*.py" = ["S607"]
 "src/dma/lib/db/adapters/*.py" = ["ANN001", "ANN201", "ANN204", "PLR6301"]
 
 # copyright
