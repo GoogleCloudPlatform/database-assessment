@@ -57,14 +57,14 @@ WHERE o.username is null
 and NOT  (referenced_owner  ='SYS' and referenced_name = 'STANDARD') 
 )
 SELECT 
-       :v_pkey AS pkey,
-       src.owner, 
-       src.name, 
-       src.type, 
-       count(1) as cnt, 
-       listagg(src.refobj, ', ') within group (order by src.refobj) as dependencies,
-       :v_dma_source_id AS dma_source_id, 
-       :v_manual_unique_id AS dma_manual_id
+       :v_pkey || '|' || --pkey
+       src.owner,
+       src.name,
+       src.type,
+       count(1) || '|' || --cnt
+       listagg(src.refobj, ', ') within group (order by src.refobj) || '|' || -dependencies
+       :v_dma_source_id || '|' || --dma_source_id,
+       :v_manual_unique_id  --dma_manual_id
 from src
 WHERE src.type != 'JAVA CLASS'
 group by src.owner, src.NAME, src.TYPE

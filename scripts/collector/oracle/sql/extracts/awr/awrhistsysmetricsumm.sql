@@ -29,12 +29,9 @@ SELECT :v_pkey AS pkey,
        MINVAL                                min_value,
        MAXVAL                                max_value,
        null                                  sum_value,
-       null                                  "PERC50",
-       null                                  "PERC75",
-       null                                  "PERC90",
        -- Handle cases where STANDARD_DEVIATION is displayed as NULL but when compared is > .9 repeating but less than 1.
        -- Oberved in 11.2 and 19.3.  Seems to occur when MINVAL < AVERAGE = MAXVAL for 'User Limit %' and 'Session Limit %' metrics.
-       -- In most such cases, STARNDARD_DEVIATION = 0, so that is what we will do here.
+       -- In most such cases, STANDARD_DEVIATION = 0, so that is what we will do here.
        hsm.AVERAGE+(2* CASE WHEN ( standard_deviation > (.999999999999999999999999999) AND standard_deviation < 1 )
                              AND ( MINVAL = 0 AND AVERAGE = MAXVAL )  then 0 else standard_deviation end ) "PERC95",
        MAXVAL                                 "PERC100"
@@ -58,16 +55,8 @@ vsysmetricsummperhour as (
        ROUND(MIN(hsm.PERC95))                           min_value,
        ROUND(MAX(hsm.PERC95))                           max_value,
        ROUND(SUM(hsm.PERC95))                           sum_value,
-       ROUND(PERCENTILE_CONT(0.5)
-         within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC50",
-       ROUND(PERCENTILE_CONT(0.25)
-         within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC75",
-       ROUND(PERCENTILE_CONT(0.10)
-         within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC90",
-       ROUND(PERCENTILE_CONT(0.05)
-         within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC95",
-       ROUND(PERCENTILE_CONT(0)
-         within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC100"
+       ROUND(PERCENTILE_CONT(0.05) within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC95",
+       ROUND(PERCENTILE_CONT(0) within GROUP (ORDER BY hsm.PERC95 DESC)) AS "PERC100"
     FROM vsysmetricsumm AS hsm
     GROUP  BY pkey,
             hsm.dbid,
@@ -78,7 +67,7 @@ vsysmetricsummperhour as (
 )
 SELECT pkey , dbid , instance_number , hour , metric_name ,
        metric_unit , avg_value , mode_value , median_value , min_value , max_value ,
-	   sum_value , PERC50 , PERC75 , PERC90 , PERC95 , PERC100,
+	   sum_value , PERC95 , PERC100,
 	       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
 FROM vsysmetricsummperhour;
 

@@ -26,15 +26,15 @@ SELECT :v_pkey AS pkey,
        database_status,
        instance_role
 FROM   gv$instance )
-SELECT pkey, 
-       inst_id, 
-       instance_name, 
-       host_name,
-       version, 
-       status, 
-       database_status, 
-       instance_role,
-       :v_dma_source_id AS dma_source_id, 
-       :v_manual_unique_id AS dma_manual_id
+SELECT pkey || '|' || 
+       inst_id || '|' || 
+       instance_name || '|' || 
+       host_name || '|' || 
+       version || '|' || 
+       status || '|' || 
+       database_status || '|' || 
+       instance_role || '|' || 
+       :v_dma_source_id || '|' || --dma_source_id,
+       :v_manual_unique_id --dma_manual_id
 FROM vdbinst;
 

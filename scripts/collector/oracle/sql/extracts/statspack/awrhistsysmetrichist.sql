@@ -62,21 +62,21 @@ ORDER  BY hsm.dbid,
           hsm.instance_number,
           hsm.name,
           TO_CHAR(dhsnap.snap_time, 'hh24'))
-SELECT pkey , 
-       dbid , 
-       instance_number , 
-       hour , 
-       metric_name ,
-       metric_unit , 
-       avg_value , 
-       mode_value , 
-       median_value , 
-       min_value , 
-       max_value ,
-       sum_value , 
-       percentile_95 , 
-       :v_dma_source_id AS dma_source_id, 
-       :v_manual_unique_id AS dma_manual_id
+SELECT pkey  || '|' ||  
+       dbid  || '|' ||  
+       instance_number  || '|' ||  
+       hour  || '|' ||  
+       metric_name  || '|' || 
+       metric_unit  || '|' ||  
+       avg_value  || '|' ||  
+       mode_value  || '|' ||  
+       median_value  || '|' ||  
+       min_value  || '|' ||  
+       max_value  || '|' || 
+       sum_value  || '|' ||  
+       percentile_95  || '|' ||  
+       :v_dma_source_id || '|' || --dma_source_id
+       :v_manual_unique_id --dma_manual_id
 FROM vsysmetric;
 
 

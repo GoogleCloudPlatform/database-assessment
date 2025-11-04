@@ -28,15 +28,15 @@ SELECT :v_pkey AS pkey,
        isdefault
 FROM   gv$system_parameter a
 ORDER  BY 2,3 )
-SELECT pkey,
-       inst_id,
-       con_id,
-       name,
-       value,
-       default_value,
-       isdefault,
-       :v_dma_source_id AS dma_source_id, 
-       :v_manual_unique_id AS dma_manual_id
+SELECT pkey || '|' || 
+       inst_id || '|' || 
+       con_id || '|' || 
+       name || '|' || 
+       value || '|' || 
+       default_value || '|' || 
+       isdefault || '|' || 
+       :v_dma_source_id || '|' || --dma_source_id 
+       :v_manual_unique_id --dma_manual_id
 FROM vparam;
 
 

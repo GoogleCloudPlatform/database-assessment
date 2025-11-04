@@ -159,36 +159,41 @@ SELECT pkey,
        ROUND(sm_write_mb_delta_value_P100 + lg_write_mb_delta_value_P100) total_writes_mb_P100,
        ROUND(sm_write_rq_delta_value_P100 + lg_write_rq_delta_value_P100) total_write_req_P100
 FROM vperciof)
-SELECT pkey , dbid , instance_number , hour , function_name ,
-       sm_read_mb_delta_value_P95 ,
-       sm_write_mb_delta_value_P95 ,
-       sm_read_rq_delta_value_P95 ,
-       sm_write_rq_delta_value_P95 ,
-       lg_read_mb_delta_value_P95 ,
-       lg_write_mb_delta_value_P95 ,
-       lg_read_rq_delta_value_P95 ,
-       lg_write_rq_delta_value_P95 ,
-       no_iowait_delta_value_P95 ,
-       tot_watime_delta_value_P95 ,
-       total_reads_mb_P95 ,
-       total_reads_req_P95 ,
-       total_writes_mb_P95 ,
-       total_write_req_P95,
-       sm_read_mb_delta_value_P100 ,
-       sm_write_mb_delta_value_P100 ,
-       sm_read_rq_delta_value_P100 ,
-       sm_write_rq_delta_value_P100 ,
-       lg_read_mb_delta_value_P100 ,
-       lg_write_mb_delta_value_P100 ,
-       lg_read_rq_delta_value_P100 ,
-       lg_write_rq_delta_value_P100 ,
-       no_iowait_delta_value_P100 ,
-       tot_watime_delta_value_P100 ,
-       total_reads_mb_P100 ,
-       total_reads_req_P100 ,
-       total_writes_mb_P100 ,
-       total_write_req_P100,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+SELECT pkey  || '|' || 
+       dbid  || '|' || 
+       instance_number  || '|' || 
+       hour  || '|' || 
+       function_name  || '|' ||
+       sm_read_mb_delta_value_P95  || '|' ||
+       sm_write_mb_delta_value_P95  || '|' ||
+       sm_read_rq_delta_value_P95  || '|' ||
+       sm_write_rq_delta_value_P95  || '|' ||
+       lg_read_mb_delta_value_P95  || '|' ||
+       lg_write_mb_delta_value_P95  || '|' ||
+       lg_read_rq_delta_value_P95  || '|' ||
+       lg_write_rq_delta_value_P95  || '|' ||
+       no_iowait_delta_value_P95  || '|' ||
+       tot_watime_delta_value_P95  || '|' ||
+       total_reads_mb_P95  || '|' ||
+       total_reads_req_P95  || '|' ||
+       total_writes_mb_P95  || '|' ||
+       total_write_req_P95 || '|' ||
+       sm_read_mb_delta_value_P100  || '|' ||
+       sm_write_mb_delta_value_P100  || '|' ||
+       sm_read_rq_delta_value_P100  || '|' ||
+       sm_write_rq_delta_value_P100  || '|' ||
+       lg_read_mb_delta_value_P100  || '|' ||
+       lg_write_mb_delta_value_P100  || '|' ||
+       lg_read_rq_delta_value_P100  || '|' ||
+       lg_write_rq_delta_value_P100  || '|' ||
+       no_iowait_delta_value_P100  || '|' ||
+       tot_watime_delta_value_P100  || '|' ||
+       total_reads_mb_P100  || '|' ||
+       total_reads_req_P100  || '|' ||
+       total_writes_mb_P100  || '|' ||
+       total_write_req_P100 || '|' ||
+       :v_dma_source_id || '|' || --dma_source_id 
+       :v_manual_unique_id --dma_manual_id
 FROM viof;
 
 

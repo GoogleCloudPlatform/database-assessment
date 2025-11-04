@@ -443,109 +443,109 @@ nncols AS (
         table_name
 )
 SELECT
-    :v_pkey AS pkey,
+    :v_pkey || '|' || -- pkey 
     -- Objects
-    vobj.con_id,
-    vobj.owner,
-    vobj.object_name,
-    vobj.object_type,
-    vobj.status,
+    vobj.con_id || '|' || 
+    vobj.owner || '|' || 
+    vobj.object_name || '|' || 
+    vobj.object_type || '|' || 
+    vobj.status || '|' || 
     -- Tables
-    ti.partitioned,
-    ti.iot_type,
-    ti.nested,
-    ti.temporary,
-    ti.secondary,
-    ti.clustered_table,
-    ti.object_table,
-    ti.xml_table,
-    CASE WHEN ext.table_name IS NOT NULL THEN 'Y' ELSE 'N' END AS is_external_table,
-    p.partitioning_type,
-    p.subpartitioning_type,
-    p.partition_count,
-    sp.cnt AS subpartition_count,
+    ti.partitioned || '|' || 
+    ti.iot_type || '|' || 
+    ti.nested || '|' || 
+    ti.temporary || '|' || 
+    ti.secondary || '|' || 
+    ti.clustered_table || '|' || 
+    ti.object_table || '|' || 
+    ti.xml_table || '|' || 
+    CASE WHEN ext.table_name IS NOT NULL THEN 'Y' ELSE 'N' END || '|' || -- is_external_table 
+    p.partitioning_type || '|' || 
+    p.subpartitioning_type || '|' || 
+    p.partition_count || '|' || 
+    sp.cnt || '|' || -- subpartition_count 
     -- Mviews
-    mv.updatable,
-    mv.rewrite_enabled,
-    mv.refresh_mode,
-    mv.refresh_method,
-    mv.fast_refreshable,
-    mv.compile_state,
+    mv.updatable || '|' || 
+    mv.rewrite_enabled || '|' || 
+    mv.refresh_mode || '|' || 
+    mv.refresh_method || '|' || 
+    mv.fast_refreshable || '|' || 
+    mv.compile_state || '|' || 
     -- Column types
-    ct.ANYDATA_COL_COUNT,
-    ct.BFILE_COL_COUNT,
-    ct.BINARY_DOUBLE_COL_COUNT,
-    ct.BINARY_FLOAT_COL_COUNT,
-    ct.BLOB_COL_COUNT,
-    ct.CFILE_COL_COUNT,
-    ct.CHAR_COL_COUNT,
-    ct.CLOB_COL_COUNT,
-    ct.DATE_COL_COUNT,
-    ct.FLOAT_COL_COUNT,
-    ct.INTERVAL_DAY_TO_SECOND_COL_COU,
-    ct.INTERVAL_YEAR_TO_MONTH_COL_COU,
-    ct.JSON_COL_COUNT,
-    ct.LONG_RAW_COL_COUNT,
-    ct.LONG_COL_COUNT,
-    ct.MLSLABEL_COL_COUNT,
-    ct.NCHAR_VARYING_COL_COUNT,
-    ct.NCHAR_COL_COUNT,
-    ct.NCLOB_COL_COUNT,
-    ct.NUMBER_COL_COUNT,
-    ct.NVARCHAR2_COL_COUNT,
-    ct.RAW_COL_COUNT,
-    ct.ROWID_COL_COUNT,
-    ct.SPATIAL_COL_COUNT,
-    ct.TIME_WITH_TIME_ZONE_COL_COUNT,
-    ct.TIME_COL_COUNT,
-    ct.TIMESTAMP_WITH_LOCAL_TIME_Z_CO,
-    ct.TIMESTAMP_WITH_TIME_ZONE_COL_C,
-    ct.TIMESTAMP_COL_COUNT,
-    ct.UROWID_COL_COUNT,
-    ct.VARCHAR_COL_COUNT,
-    ct.VARCHAR2_COL_COUNT,
-    ct.XMLTYPE_COL_COUNT,
-    ct.UNDEFINED_COL_COUNT,
-    ct.USER_DEFINED_COL_COUNT,
+    ct.ANYDATA_COL_COUNT || '|' || 
+    ct.BFILE_COL_COUNT || '|' || 
+    ct.BINARY_DOUBLE_COL_COUNT || '|' || 
+    ct.BINARY_FLOAT_COL_COUNT || '|' || 
+    ct.BLOB_COL_COUNT || '|' || 
+    ct.CFILE_COL_COUNT || '|' || 
+    ct.CHAR_COL_COUNT || '|' || 
+    ct.CLOB_COL_COUNT || '|' || 
+    ct.DATE_COL_COUNT || '|' || 
+    ct.FLOAT_COL_COUNT || '|' || 
+    ct.INTERVAL_DAY_TO_SECOND_COL_COU || '|' || 
+    ct.INTERVAL_YEAR_TO_MONTH_COL_COU || '|' || 
+    ct.JSON_COL_COUNT || '|' || 
+    ct.LONG_RAW_COL_COUNT || '|' || 
+    ct.LONG_COL_COUNT || '|' || 
+    ct.MLSLABEL_COL_COUNT || '|' || 
+    ct.NCHAR_VARYING_COL_COUNT || '|' || 
+    ct.NCHAR_COL_COUNT || '|' || 
+    ct.NCLOB_COL_COUNT || '|' || 
+    ct.NUMBER_COL_COUNT || '|' || 
+    ct.NVARCHAR2_COL_COUNT || '|' || 
+    ct.RAW_COL_COUNT || '|' || 
+    ct.ROWID_COL_COUNT || '|' || 
+    ct.SPATIAL_COL_COUNT || '|' || 
+    ct.TIME_WITH_TIME_ZONE_COL_COUNT || '|' || 
+    ct.TIME_COL_COUNT || '|' || 
+    ct.TIMESTAMP_WITH_LOCAL_TIME_Z_CO || '|' || 
+    ct.TIMESTAMP_WITH_TIME_ZONE_COL_C || '|' || 
+    ct.TIMESTAMP_COL_COUNT || '|' || 
+    ct.UROWID_COL_COUNT || '|' || 
+    ct.VARCHAR_COL_COUNT || '|' || 
+    ct.VARCHAR2_COL_COUNT || '|' || 
+    ct.XMLTYPE_COL_COUNT || '|' || 
+    ct.UNDEFINED_COL_COUNT || '|' || 
+    ct.USER_DEFINED_COL_COUNT || '|' || 
     -- Source code
-    vsrc.sum_nr_lines,
-    vsrc.sum_nr_lines_w_utl,
-    vsrc.sum_nr_lines_w_dbms,
-    vsrc.count_exec_im,
-    vsrc.count_dbms_sql,
-    vsrc.sum_nr_lines_w_dbms_utl,
-    vsrc.trigger_type,
-    vsrc.triggering_event,
-    vsrc.base_object_type,
+    vsrc.sum_nr_lines || '|' || 
+    vsrc.sum_nr_lines_w_utl || '|' || 
+    vsrc.sum_nr_lines_w_dbms || '|' || 
+    vsrc.count_exec_im || '|' || 
+    vsrc.count_dbms_sql || '|' || 
+    vsrc.sum_nr_lines_w_dbms_utl || '|' || 
+    vsrc.trigger_type || '|' || 
+    vsrc.triggering_event || '|' || 
+    vsrc.base_object_type || '|' || 
     -- Indexs
-    vi.index_type,
-    vi.uniqueness AS index_uniqueness,
-    vi.compression AS index_compression,
-    vi.partitioned AS index_partitioned,
-    vi.temporary AS index_temporary,
-    vi.secondary AS index_secondary,
-    vi.visibility AS index_visibility,
-    vi.join_index AS index_join_index,
-    vi.custom_index_type AS index_custom_index_type,
-    vi.table_name AS index_table_name,
-    vs.segment_mb,
-    vs.segments_in_system_ts,
+    vi.index_type || '|' || 
+    vi.uniqueness || '|' || -- index_uniqueness 
+    vi.compression || '|' || -- index_compression 
+    vi.partitioned || '|' || -- index_partitioned 
+    vi.temporary || '|' || -- index_temporary 
+    vi.secondary || '|' || -- index_secondary 
+    vi.visibility || '|' || -- index_visibility 
+    vi.join_index || '|' || -- index_join_index 
+    vi.custom_index_type || '|' || -- index_custom_index_type 
+    vi.table_name || '|' || -- index_table_name 
+    vs.segment_mb || '|' || 
+    vs.segments_in_system_ts || '|' || 
     -- Constraints
-    vtabcons.pk AS primary_key_count,
-    vtabcons.uk AS unique_cons_count,
+    vtabcons.pk || '|' || -- primary_key_count 
+    vtabcons.uk || '|' || -- unique_cons_count 
     /* Attempt to aproximate number of check constraints that are more than just 'NOT NULL' by
        subtracting the number of non-nullable columns from the number of check constraints.
        Multicolumn primary keys will throw this off, so we use a floor of zero.  */
-    GREATEST(vtabcons.ck - (NVL(nncols.nn_count, 0) - NVL(vtabcons.pk, 0)), 0) AS check_cons_count,
-    vtabcons.ri AS foreign_key_cons_count,
-    vtabcons.vwck AS view_check_cons_count,
-    vtabcons.vwro AS view_read_only_count,
-    vtabcons.hashexpr AS hash_expr_count,
-    vtabcons.refcolcons,
-    vtabcons.suplog AS supplemental_logging_count,
-    nncols.nn_count AS nnull_cons_count,
-    :v_dma_source_id AS dma_source_id,
-    :v_manual_unique_id AS dma_manual_id
+    GREATEST(vtabcons.ck - (NVL(nncols.nn_count, 0) - NVL(vtabcons.pk, 0)), 0) || '|' || -- check_cons_count 
+    vtabcons.ri || '|' || -- foreign_key_cons_count 
+    vtabcons.vwck || '|' || -- view_check_cons_count 
+    vtabcons.vwro || '|' || -- view_read_only_count 
+    vtabcons.hashexpr || '|' || -- hash_expr_count 
+    vtabcons.refcolcons || '|' || 
+    vtabcons.suplog || '|' || -- supplemental_logging_count 
+    nncols.nn_count || '|' || -- nnull_cons_count 
+    :v_dma_source_id || '|' || -- dma_source_id 
+    :v_manual_unique_id  -- dma_manual_id
 FROM vobj
 LEFT OUTER JOIN tblinfo ti
              ON ti.owner = vobj.owner

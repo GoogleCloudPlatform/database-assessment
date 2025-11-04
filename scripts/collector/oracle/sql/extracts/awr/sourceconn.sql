@@ -43,17 +43,17 @@ group by :v_pkey,
        has.module,
        &s_machine.,
        scmd.command_name)
-SELECT pkey , 
-       dbid ,
-       instance_number , 
-       hour , 
-       program ,
-       module , 
-       machine , 
-       command_name , 
-       cnt,
-       :v_dma_source_id AS dma_source_id, 
-       :v_manual_unique_id AS dma_manual_id
+SELECT pkey  || '|' ||  
+       dbid  || '|' || 
+       instance_number  || '|' ||  
+       hour  || '|' ||  
+       program  || '|' || 
+       module  || '|' ||  
+       machine  || '|' ||  
+       command_name  || '|' ||  
+       cnt || '|' || 
+       :v_dma_source_id || '|' || --dma_source_id
+       :v_manual_unique_id --dma_manual_id
 FROM vsrcconn
 order by hour;
 

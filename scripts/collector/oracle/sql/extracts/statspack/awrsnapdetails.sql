@@ -72,23 +72,23 @@ GROUP BY :v_pkey,
          instance_number,
          hour
 )
-SELECT pkey,
-       dbid,
-       instance_number,
-       hour,
-       min_snap_id,
-       max_snap_id,
-       min_begin_interval_time,
-       max_begin_interval_time,
-       cnt,
-       sum_snaps_diff_secs,
-       avg_snaps_diff_secs,
-       median_snaps_diff_secs,
-       mode_snaps_diff_secs,
-       min_snaps_diff_secs,
-       max_snaps_diff_secs,
-       :v_dma_source_id AS dma_source_id,
-       :v_manual_unique_id AS dma_manual_id
+SELECT pkey || '|' || 
+       dbid || '|' || 
+       instance_number || '|' || 
+       hour || '|' || 
+       min_snap_id || '|' || 
+       max_snap_id || '|' || 
+       min_begin_interval_time || '|' || 
+       max_begin_interval_time || '|' || 
+       cnt || '|' || 
+       sum_snaps_diff_secs || '|' || 
+       avg_snaps_diff_secs || '|' || 
+       median_snaps_diff_secs || '|' || 
+       mode_snaps_diff_secs || '|' || 
+       min_snaps_diff_secs || '|' || 
+       max_snaps_diff_secs || '|' || 
+       :v_dma_source_id || '|' || --dma_source_id
+       :v_manual_unique_id --dma_manual_id
 FROM vawrsnap;
 
 

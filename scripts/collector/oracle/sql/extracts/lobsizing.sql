@@ -90,40 +90,41 @@ WHERE
 @sql/extracts/exclude_schemas.sql
     )
 )
-SELECT  :v_pkey AS pkey,
-       con_id,
-       owner,
-       table_name,
-       table_num_rows,
-       table_seg_created,
-       partitioned,
-       column_name,
-       data_type,
-       table_partition_name,
-       table_partition_seg_created,
-       partition_num_rows,
-       lob_partition_name,
-       lob_partition_seg_created,
-       subpartition_count,
-       table_subpartition_name,
-       table_subpartition_created,
-       subpartition_num_rows,
-       lob_subpartition_name,
-       lob_subpartition_seg_created,
-       lob_seg_name,
-       seg_name,
-       seg_partition_name,
-       LOB_COMPRESSION,
-       LOB_PARTITION_COMPRESSION,
-       LOB_SUBPARTITION_COMPRESSION,
-       LOB_DEDUPLICATION,
-       LOB_PARTITION_DEDUPLICATION,
-       LOB_SUBPARTITION_DEDUPLICATION,
-       seg_bytes,
-       table_avg_lob_bytes,
-       partition_avg_lob_bytes,
-       subpartition_avg_lob_bytes,
-       :v_dma_source_id AS dma_source_id, :v_manual_unique_id AS dma_manual_id
+SELECT  :v_pkey || '|' || --pkey 
+       con_id || '|' || 
+       owner || '|' || 
+       table_name || '|' || 
+       table_num_rows || '|' || 
+       table_seg_created || '|' || 
+       partitioned || '|' || 
+       column_name || '|' || 
+       data_type || '|' || 
+       table_partition_name || '|' || 
+       table_partition_seg_created || '|' || 
+       partition_num_rows || '|' || 
+       lob_partition_name || '|' || 
+       lob_partition_seg_created || '|' || 
+       subpartition_count || '|' || 
+       table_subpartition_name || '|' || 
+       table_subpartition_created || '|' || 
+       subpartition_num_rows || '|' || 
+       lob_subpartition_name || '|' || 
+       lob_subpartition_seg_created || '|' || 
+       lob_seg_name || '|' || 
+       seg_name || '|' || 
+       seg_partition_name || '|' || 
+       LOB_COMPRESSION || '|' || 
+       LOB_PARTITION_COMPRESSION || '|' || 
+       LOB_SUBPARTITION_COMPRESSION || '|' || 
+       LOB_DEDUPLICATION || '|' || 
+       LOB_PARTITION_DEDUPLICATION || '|' || 
+       LOB_SUBPARTITION_DEDUPLICATION || '|' || 
+       seg_bytes || '|' || 
+       table_avg_lob_bytes || '|' || 
+       partition_avg_lob_bytes || '|' || 
+       subpartition_avg_lob_bytes || '|' || 
+       :v_dma_source_id || '|' || --dma_source_id
+       :v_manual_unique_id --dma_manual_id
 FROM lobdata;
 
 

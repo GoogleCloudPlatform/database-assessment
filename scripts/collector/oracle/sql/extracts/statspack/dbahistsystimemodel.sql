@@ -66,20 +66,20 @@ GROUP BY
       hour,
       stat_name
 )
-SELECT pkey, 
-       dbid, 
-       instance_number, 
-       hour, 
-       stat_name, 
-       cnt,
-       avg_value, 
-       mode_value, 
-       median_value, 
-       min_value,
-       max_value,
-       sum_value, 
-       percentile_95,
-       :v_dma_source_id AS dma_source_id, 
-       :v_manual_unique_id AS dma_manual_id
+SELECT pkey || '|' || 
+       dbid || '|' || 
+       instance_number || '|' || 
+       hour || '|' || 
+       stat_name || '|' || 
+       cnt || '|' ||
+       avg_value || '|' || 
+       mode_value || '|' || 
+       median_value || '|' || 
+       min_value || '|' ||
+       max_value || '|' ||
+       sum_value || '|' || 
+       percentile_95 || '|' ||
+       :v_dma_source_id || '|' || --dma_source_id 
+       :v_manual_unique_id --dma_manual_id
 FROM vtimemodel;
 

@@ -170,10 +170,24 @@ WHERE sn.snap_time BETWEEN :v_min_snaptime AND :v_max_snaptime
 GROUP BY :v_pkey,
           'N/A' , TO_CHAR(sn.snap_time, 'hh24'),  ss.command_type, aa.name
 )
-SELECT pkey , con_id AS sp_con_id, hh24 , command_type , cnt , avg_buffer_gets , avg_elapsed_time ,
-       avg_rows_processed , avg_executions , avg_cpu_time , avg_iowait , avg_clwait ,
-       avg_apwait , avg_ccwait , avg_plsexec_time, command_name,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+SELECT pkey  || '|' ||  
+       con_id AS sp_con_id || '|' ||  
+       hh24  || '|' ||  
+       command_type  || '|' ||  
+       cnt  || '|' ||  
+       avg_buffer_gets  || '|' ||  
+       avg_elapsed_time  || '|' || 
+       avg_rows_processed  || '|' ||  
+       avg_executions  || '|' ||  
+       avg_cpu_time  || '|' ||  
+       avg_iowait  || '|' ||  
+       avg_clwait  || '|' || 
+       avg_apwait  || '|' ||  
+       avg_ccwait  || '|' ||  
+       avg_plsexec_time || '|' ||  
+       command_name || '|' || 
+       :v_dma_source_id || '|' || --dma_source_id, 
+       :v_manual_unique_id --dma_manual_id
 FROM vcmdtype;
 
 

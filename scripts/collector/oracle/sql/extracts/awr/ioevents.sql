@@ -85,20 +85,20 @@ SELECT pkey,
        ROUND(tot_tout_delta_value_peak) tot_tout_delta_value_peak,
        ROUND(time_wa_us_delta_value_peak) time_wa_us_delta_value_peak
 FROM vpercev)
-SELECT pkey , 
-       dbid , 
-       instance_number , 
-       hour , 
-       wait_class , 
-       event_name ,
-       tot_waits_delta_value_P95 ,
-       tot_tout_delta_value_P95 ,
-       time_wa_us_delta_value_peak,
-       tot_waits_delta_value_peak ,
-       tot_tout_delta_value_peak ,
-       time_wa_us_delta_value_peak,
-       :v_dma_source_id AS dma_source_id, 
-       :v_manual_unique_id AS dma_manual_id
+SELECT pkey  || '|' ||  
+       dbid  || '|' ||  
+       instance_number  || '|' ||  
+       hour  || '|' ||  
+       wait_class  || '|' ||  
+       event_name  || '|' || 
+       tot_waits_delta_value_P95  || '|' || 
+       tot_tout_delta_value_P95  || '|' || 
+       time_wa_us_delta_value_peak || '|' || 
+       tot_waits_delta_value_peak  || '|' || 
+       tot_tout_delta_value_peak  || '|' || 
+       time_wa_us_delta_value_peak || '|' || 
+       :v_dma_source_id || '|' || --dma_source_id
+       :v_manual_unique_id dwi--AS dma_manual_id
 FROM vfev;
 
 

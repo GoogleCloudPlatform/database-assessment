@@ -190,13 +190,38 @@ AND b.dbid = :v_dbid
 GROUP BY :v_pkey,
        b.dbid, b.instance_number, &s_force_matching_sig.
 ORDER BY elapsed_time_total DESC)
-SELECT pkey , con_id AS sp_con_id , dbid , instance_number , force_matching_signature , sql_id ,
-       total_executions , total_px_servers_execs , elapsed_time_total , disk_reads_total ,
-       physical_read_bytes_total , physical_write_bytes_total , io_offload_elig_bytes_total , io_interconnect_bytes_total ,
-       optimized_physical_reads_total , cell_uncompressed_bytes_total , io_offload_return_bytes_total , direct_writes_total ,
-       perc_exec_finished , avg_rows , avg_disk_reads , avg_buffer_gets , avg_cpu_time_us , avg_elapsed_us , avg_iowait_us ,
-       avg_clwait_us , avg_apwait_us , avg_ccwait_us , avg_plsexec_us , avg_javexec_us,
-       :v_dma_source_id AS DMA_SOURCE_ID, :v_manual_unique_id AS DMA_MANUAL_ID
+SELECT pkey  || '|' ||
+       con_id AS sp_con_id  || '|' ||
+       dbid  || '|' ||
+       instance_number  || '|' ||
+       force_matching_signature  || '|' ||
+       sql_id  || '|' ||
+       total_executions  || '|' ||
+       total_px_servers_execs  || '|' ||
+       elapsed_time_total  || '|' ||
+       disk_reads_total  || '|' ||
+       physical_read_bytes_total  || '|' ||
+       physical_write_bytes_total  || '|' ||
+       io_offload_elig_bytes_total  || '|' ||
+       io_interconnect_bytes_total  || '|' ||
+       optimized_physical_reads_total  || '|' ||
+       cell_uncompressed_bytes_total  || '|' ||
+       io_offload_return_bytes_total  || '|' ||
+       direct_writes_total  || '|' ||
+       perc_exec_finished  || '|' ||
+       avg_rows  || '|' ||
+       avg_disk_reads  || '|' ||
+       avg_buffer_gets  || '|' ||
+       avg_cpu_time_us  || '|' ||
+       avg_elapsed_us  || '|' ||
+       avg_iowait_us  || '|' ||
+       avg_clwait_us  || '|' ||
+       avg_apwait_us  || '|' ||
+       avg_ccwait_us  || '|' ||
+       avg_plsexec_us  || '|' ||
+       avg_javexec_us || '|' ||
+       :v_dma_source_id || '|' || --dma_source_id 
+       :v_manual_unique_id --dma_manual_id
 FROM vsqlstat
 WHERE rownum < 300;
 

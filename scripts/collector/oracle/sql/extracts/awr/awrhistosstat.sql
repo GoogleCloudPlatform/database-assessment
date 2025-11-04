@@ -78,23 +78,23 @@ GROUP  BY :v_pkey,
           instance_number,
           hh24,
           stat_name)
-SELECT pkey , 
-       dbid , 
-       instance_number , 
-       hh24 , 
-       stat_name , 
-       hh24_total_secs ,
-       cumulative_value , 
-       avg_value , 
-       mode_value , 
-       median_value , 
-       percentile_95 , 
-       averaged_peak ,
-       min_value , 
-       max_value , 
-       sum_value , 
-       count,
-       :v_dma_source_id AS dma_source_id, 
-       :v_manual_unique_id AS dma_manual_id
+SELECT pkey  || '|' ||  
+       dbid  || '|' ||  
+       instance_number  || '|' ||  
+       hh24  || '|' ||  
+       stat_name  || '|' ||  
+       hh24_total_secs  || '|' || 
+       cumulative_value  || '|' ||  
+       avg_value  || '|' ||  
+       mode_value  || '|' ||  
+       median_value  || '|' ||  
+       percentile_95  || '|' ||  
+       averaged_peak  || '|' || 
+       min_value  || '|' ||  
+       max_value  || '|' ||  
+       sum_value  || '|' ||  
+       count || '|' || 
+       :v_dma_source_id || '|' || --dma_source_id  
+       :v_manual_unique_id --dma_manual_id
 FROM vossummary;
 

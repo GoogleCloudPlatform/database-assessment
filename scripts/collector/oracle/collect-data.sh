@@ -16,7 +16,7 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="5.0.0"
+DMAVersion="5.0.0"
 dbmajor=""
 
 LOCALE=$(echo $LANG | cut -d '.' -f 1)
@@ -445,7 +445,7 @@ if [ $retval -eq 0 ]; then
       exit 255
     fi
     createErrorLog  $(echo ${V_TAG} | sed 's/.csv//g')
-    cleanupOpOutput $(echo ${V_TAG} | sed 's/.csv//g')
+    #cleanupOpOutput $(echo ${V_TAG} | sed 's/.csv//g')
     retval=$?
     if [ $retval -ne 0 ]; then
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"

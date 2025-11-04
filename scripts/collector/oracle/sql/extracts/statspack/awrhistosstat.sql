@@ -66,7 +66,6 @@ vossummary AS (
                       ROUND(STATS_MODE(delta_value))    mode_value,
                       ROUND(MEDIAN(delta_value))        median_value,
                       ROUND(AVG(percentile_95))         percentile_95,
-                      --ROUND(AVG(peak))                  averaged_peak,
                       ROUND(MIN(delta_value))           min_value,
                       ROUND(MAX(delta_value))           max_value,
                       ROUND(SUM(delta_value))           sum_value,
@@ -78,24 +77,23 @@ vossummary AS (
                         hh24,
                         stat_name
 )
-SELECT pkey, 
-       dbid, 
-       instance_number, 
-       hh24, 
-       stat_name, 
-       hh24_total_secs ,
-       cumulative_value, 
-       avg_value, 
-       mode_value, 
-       median_value, 
-       percentile_95, 
---       averaged_peak,
-       min_value, 
-       max_value, 
-       sum_value, 
-       count,
-       :v_dma_source_id AS dma_source_id, 
-       :v_manual_unique_id AS dma_manual_id
+SELECT pkey || '|' ||  
+       dbid || '|' ||  
+       instance_number || '|' ||  
+       hh24 || '|' ||  
+       stat_name || '|' ||  
+       hh24_total_secs  || '|' || 
+       cumulative_value || '|' ||  
+       avg_value || '|' ||  
+       mode_value || '|' ||  
+       median_value || '|' ||  
+       percentile_95 || '|' ||  
+       min_value || '|' ||  
+       max_value || '|' ||  
+       sum_value || '|' ||  
+       count || '|' || 
+       :v_dma_source_id || '|' || --dma_source_id
+       :v_manual_unique_id --dma_manual_id
 FROM vossummary;
 
 

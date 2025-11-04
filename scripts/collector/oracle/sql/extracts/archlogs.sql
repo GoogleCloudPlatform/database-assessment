@@ -16,15 +16,15 @@
 exec dbms_application_info.set_action('archlogs');
 
 
-SELECT :v_pkey AS pkey,
-       TRUNC(first_Time) AS log_start_date,
-       TO_CHAR(first_time, 'HH24') AS hour,
-       thread# AS thread_num,
+SELECT :v_pkey || '|' || --pkey
+       TRUNC(first_Time) || '|' || --log_start_date
+       TO_CHAR(first_time, 'HH24') || '|' || --hour
+       thread# || '|' || --thread_num
        dest_id,
-       COUNT(1) AS cnt,
-       ROUND(SUM(blocks * block_size)/1024/1024) AS mbytes,
-       :v_dma_source_id AS dma_source_id, 
-       :v_manual_unique_id AS dma_manual_id
+       COUNT(1) || '|' || --cnt
+       ROUND(SUM(blocks * block_size)/1024/1024) || '|' || --mbytes
+       :v_dma_source_id || '|' || --dma_source_id
+       :v_manual_unique_id  --dma_manual_id
 FROM gv$archived_log
 WHERE first_time >= TRUNC(sysdate) - :v_statsWindow
 GROUP BY TRUNC(first_time), thread#, TO_CHAR(first_time, 'HH24'), dest_id

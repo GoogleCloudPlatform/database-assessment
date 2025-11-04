@@ -68,41 +68,41 @@ SELECT :v_pkey                                                                  
        (SELECT &s_db_unique_name. as db_unique_name FROM v$database)                                                           AS db_unique_name,
        (SELECT count(distinct destination) FROM gv$archive_dest WHERE status = 'VALID' AND target = 'STANDBY')                 AS dg_standby_count
 FROM   dual)
-SELECT pkey, 
-       dbid, 
-       db_name, 
-       cdb, 
-       db_version, 
-       db_fullversion, 
-       log_mode, 
-       force_logging,
-       rac_dbinstances, 
-       characterset, 
-       platform_name, 
-       startup_time, 
-       user_schemas,
-       buffer_cache_mb, 
-       shared_pool_mb, 
-       total_pga_allocated_mb, 
-       db_size_allocated_gb, 
-       db_size_in_use_gb,
-       db_long_size_gb, 
-       dg_database_role, 
-       dg_protection_mode, 
-       dg_protection_level,
-       db_size_temp_allocated_gb, 
-       db_size_redo_allocated_gb,
-       CASE WHEN &s_db_container_col. = 'N/A' THEN ebs_owner ELSE NULL END AS ebs_owner, 
-       CASE WHEN &s_db_container_col. = 'N/A' THEN siebel_owner ELSE NULL END AS siebel_owner, 
-       CASE WHEN &s_db_container_col. = 'N/A' THEN psft_owner ELSE NULL END AS psft_owner, 
-       rds_flag, 
-       oci_autonomous_flag, 
-       dbms_cloud_pkg_installed,
-       CASE WHEN &s_db_container_col. = 'N/A' THEN apex_installed ELSE NULL END AS apex_installed, 
-       CASE WHEN &s_db_container_col. = 'N/A' THEN sap_owner ELSE NULL END AS sap_owner, 
-       db_unique_name, 
-       dg_standby_count,
-       :v_dma_source_id AS dma_source_id, 
-       :v_manual_unique_id AS dma_manual_id
+SELECT pkey || '|' || 
+       dbid || '|' || 
+       db_name || '|' || 
+       cdb || '|' || 
+       db_version || '|' || 
+       db_fullversion || '|' || 
+       log_mode || '|' || 
+       force_logging || '|' || 
+       rac_dbinstances || '|' || 
+       characterset || '|' || 
+       platform_name || '|' || 
+       startup_time || '|' || 
+       user_schemas || '|' || 
+       buffer_cache_mb || '|' || 
+       shared_pool_mb || '|' || 
+       total_pga_allocated_mb || '|' || 
+       db_size_allocated_gb || '|' || 
+       db_size_in_use_gb || '|' || 
+       db_long_size_gb || '|' || 
+       dg_database_role || '|' || 
+       dg_protection_mode || '|' || 
+       dg_protection_level || '|' || 
+       db_size_temp_allocated_gb || '|' || 
+       db_size_redo_allocated_gb || '|' || 
+       CASE WHEN &s_db_container_col. = 'N/A' THEN ebs_owner ELSE NULL END || '|' || --ebs_owner 
+       CASE WHEN &s_db_container_col. = 'N/A' THEN siebel_owner ELSE NULL END || '|' || --siebel_owner 
+       CASE WHEN &s_db_container_col. = 'N/A' THEN psft_owner ELSE NULL END || '|' || --psft_owner 
+       rds_flag || '|' || 
+       oci_autonomous_flag || '|' || 
+       dbms_cloud_pkg_installed || '|' || 
+       CASE WHEN &s_db_container_col. = 'N/A' THEN apex_installed ELSE NULL END || '|' || --apex_installed 
+       CASE WHEN &s_db_container_col. = 'N/A' THEN sap_owner ELSE NULL END || '|' || --sap_owner 
+       db_unique_name || '|' || 
+       dg_standby_count || '|' || 
+       :v_dma_source_id || '|' || --dma_source_id 
+       :v_manual_unique_id --dma_manual_id
 FROM vdbsummary 
 ;
