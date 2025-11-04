@@ -26,7 +26,7 @@ define colspr = '|'
 exec dbms_application_info.set_action('DB MIGRATION ASSESSMENT');
 
 -- Set the environment to a known state, overriding any custom configuration.
-@@op_set_sql_env.sql
+@@dma_set_sql_env.sql
 set headsep off
 set trimspool on
 set lines 32000
@@ -296,7 +296,7 @@ BEGIN
   :lv_tblprefix := 'dba';
   :lv_is_container := 0;
   :lv_editionable_col := '''N/A''';
-  :lv_tenancy := 'op_collect_tenancy_single.sql';
+  :lv_tenancy := 'dma_collect_tenancy_single.sql';
   :lv_db_container_col := '''N/A''';
   :lv_cdb_join_cond := 'AND 1=1';
   :lv_pdb_join_cond := 'AND 1=1';
@@ -309,7 +309,7 @@ BEGIN
     IF cnt > 0 THEN
       :lv_tblprefix := 'cdb' ;
       :lv_is_container := 1;
-      :lv_tenancy := 'op_collect_tenancy_multi.sql';
+      :lv_tenancy := 'dma_collect_tenancy_multi.sql';
       :lv_db_container_col := 'cdb';
       :lv_cdb_join_cond := 'AND 1=1';
       :lv_pdb_join_cond := 'AND con_id = p.con_id';
@@ -610,7 +610,7 @@ BEGIN
 
          -- If we have access to STATSPACK, use STATSPACK as the source of performance metrics
  	 IF cnt = 8 THEN
-           --:v_stats_prompt := 'op_collect_statspack.sql';
+           --:v_stats_prompt := 'dma_collect_statspack.sql';
            :v_stats_prompt := 'prompt_statspack.sql';
            :v_statssrc := 'statspack';
            l_tab_name := 'STATS$SNAPSHOT';

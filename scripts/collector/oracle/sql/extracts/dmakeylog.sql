@@ -13,29 +13,29 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-exec dbms_application_info.set_action('opkeylog');
+exec dbms_application_info.set_action('dmakeylog');
 
-WITH vop AS (
+WITH vdma AS (
 SELECT :v_pkey AS pkey,
-       :v_dmaVersion opscriptversion,
+       :v_dmaVersion dmascriptversion,
        :v_dbversion db_version,
        :v_host hostname,
        :v_dbname db_name,
        :v_instance instance_name,
        :v_hora collection_time,
        :v_dbid db_id,
-       null "CMNT"
+       null cmnt
 FROM dual)
 SELECT pkey || '|' || 
-       opscriptversion || '|' || 
+       dmascriptversion || '|' || 
        db_version || '|' || 
        hostname || '|' || 
        db_name || '|' || 
        instance_name || '|' || 
        collection_time || '|' || 
        db_id || '|' || 
-       CMNT || '|' || 
+       cmnt || '|' || 
        :v_dma_source_id || '|' || --dma_source_id 
        :v_manual_unique_id --dma_manual_id
-FROM vop;
+FROM vdma;
 

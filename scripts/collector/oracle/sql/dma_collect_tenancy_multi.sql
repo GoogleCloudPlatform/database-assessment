@@ -13,7 +13,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-spool &outputdir./opdb__pdb_summary__&s_tag.
+spool &outputdir./dma__pdb_summary__&s_tag.
 prompt PKEY|DBID|PDB_ID|PDB_NAME|STATUS|LOGGING|CON_ID|CON_UID|EBS_OWNER|SIEBEL_OWNER|PSFT_OWNER|RDS_FLAG|OCI_AUTONOMOUS_FLAG|DBMS_CLOUD_PKG_INSTALLED|APEX_INSTALLED|SAP_OWNER|SGA_ALLOCATED_BYTES|PGA_USED_BYTES|PGA_ALLOCATED_BYTES|PGA_MAX_BYTES|OPEN_MODE|TOTL_GB|DMA_SOURCE_ID|DMA_MANUAL_ID
 @sql/extracts/pdb_summary.sql
 spool off

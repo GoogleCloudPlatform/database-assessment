@@ -86,7 +86,7 @@ fi
 
 function checkVersion {
 connectString="$1"
-OpVersion=$2
+DMAVersion=$2
 
 if ! [ -x "$(command -v ${SQLPLUS})" ]; then
   echo "Could not find ${SQLPLUS} command. Source in environment and try again"
@@ -97,11 +97,11 @@ fi
 ${SQLPLUS} -s /nolog << EOF
 SET DEFINE OFF
 connect ${connectString}
-@${SQL_DIR}/op_set_sql_env.sql
+@${SQL_DIR}/dma_set_sql_env.sql
 set pagesize 0 lines 400 feedback off verify off heading off echo off timing off time off
 column vname new_value v_name noprint
 select min(object_name) as vname from dba_objects where object_name in ('V\$INSTANCE', 'GV\$INSTANCE');
-select 'DMAFILETAG~'|| i.version||'|'||substr(replace(i.version,'.',''),0,3)||'_'||'${OpVersion}_'||i.host_name||'_'||d.name||'_'||i.instance_name||'_'||to_char(sysdate,'MMDDRRHH24MISS')||'~'
+select 'DMAFILETAG~'|| i.version||'|'||substr(replace(i.version,'.',''),0,3)||'_'||'${DMAVersion}_'||i.host_name||'_'||d.name||'_'||i.instance_name||'_'||to_char(sysdate,'MMDDRRHH24MISS')||'~'
 from ( SELECT case when version like '9%' then '0' || version else version end as version, host_name, instance_name FROM &&v_name WHERE instance_number = (SELECT min(instance_number) FROM &&v_name) ) i, v\$database d;
 exit;
 EOF
@@ -109,7 +109,7 @@ EOF
 
 function executeOP {
 connectString="$1"
-OpVersion=$2
+DMAVersion=$2
 StatsSrc=$(echo $3 | tr [[:upper:]] [[:lower:]])
 manualUniqueId="${4}"
 statsWindow=${5}
@@ -124,7 +124,7 @@ fi
 ${SQLPLUS} -s /nolog << EOF
 SET DEFINE OFF
 connect ${connectString}
-@${SQL_DIR}/op_collect.sql ${OpVersion} sql ${StatsSrc} ${V_TAG} output "${manualUniqueId}" ${statsWindow}
+@${SQL_DIR}/dma_collect.sql ${DMAVersion} sql ${StatsSrc} ${V_TAG} output "${manualUniqueId}" ${statsWindow}
 exit;
 EOF
 
@@ -133,21 +133,21 @@ EOF
 function createErrorLog {
 V_FILE_TAG=$1
 echo "Checking for errors..."
-$GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/opdb__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+$GREP -E 'SP2-|ORA-' ${OUTPUT_DIR}/dma__*${V_FILE_TAG}.csv | $GREP -v opatch > ${LOG_DIR}/dma__${V_FILE_TAG}_errors.log
 retval=$?
-if [ ! -f  ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ]; then
+if [ ! -f  ${LOG_DIR}/dma__${V_FILE_TAG}_errors.log ]; then
   echo "Error creating error log.  Exiting..."
   return $retval
 fi
-if [ -f  ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv ]; then
-  $GREP 'sys.dbms_qopatch.get_opatch_lsinventory' ${OUTPUT_DIR}/opdb__opatch*${V_FILE_TAG}.csv >> ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
+if [ -f  ${OUTPUT_DIR}/dma__opatch*${V_FILE_TAG}.csv ]; then
+  $GREP 'sys.dbms_qopatch.get_opatch_lsinventory' ${OUTPUT_DIR}/dma__opatch*${V_FILE_TAG}.csv >> ${LOG_DIR}/dma__${V_FILE_TAG}_errors.log
 fi
 }
 
 function cleanupOpOutput  {
 V_FILE_TAG=$1
 echo "Preparing files for compression."
-for outfile in  ${OUTPUT_DIR}/opdb*${V_FILE_TAG}.csv
+for outfile in  ${OUTPUT_DIR}/dma*${V_FILE_TAG}.csv
 do
  if [ -f $outfile ] ; then
   if [ $(uname) = "SunOS" ]
@@ -183,64 +183,64 @@ V_ERR_TAG=""
 echo ""
 echo "Archiving output files with tag ${V_FILE_TAG}"
 CURRENT_WORKING_DIR=$(pwd)
-cp ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
+cp ${LOG_DIR}/dma__${V_FILE_TAG}_errors.log ${OUTPUT_DIR}/dma__${V_FILE_TAG}_errors.log
 if [ -f VERSION.txt ]; then
-  cp VERSION.txt ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
+  cp VERSION.txt ${OUTPUT_DIR}/dma__${V_FILE_TAG}_version.txt
 else
-  echo "No Version file found" >  ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
+  echo "No Version file found" >  ${OUTPUT_DIR}/dma__${V_FILE_TAG}_version.txt
 fi
-ERRCNT=$(wc -l < ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log)
-if [ ! -f ${OUTPUT_DIR}/opdb__eoj__${V_FILE_TAG}.csv ] ; then
+ERRCNT=$(wc -l < ${OUTPUT_DIR}/dma__${V_FILE_TAG}_errors.log)
+if [ ! -f ${OUTPUT_DIR}/dma__eoj__${V_FILE_TAG}.csv ] ; then
 	ERRCNT=$((${ERRCNT} + 1))
-	echo "End of job marker file not found.  Data collection did not complete." >> ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
+	echo "End of job marker file not found.  Data collection did not complete." >> ${OUTPUT_DIR}/dma__${V_FILE_TAG}_errors.log
 fi
 if [[ ${ERRCNT} -ne 0 ]]
 then
   V_ERR_TAG="_ERROR"
   retval=1
   echo "Errors reported during collection:"
-  cat ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
+  cat ${OUTPUT_DIR}/dma__${V_FILE_TAG}_errors.log
   echo " "
   echo "Please rerun the extract after correcting the error condition."
 fi
 
-TARFILE=opdb_oracle_${STATSSOURCE}__${V_FILE_TAG}${V_ERR_TAG}.tar
-ZIPFILE=opdb_oracle_${STATSSOURCE}__${V_FILE_TAG}${V_ERR_TAG}.zip
+TARFILE=dma_oracle_${STATSSOURCE}__${V_FILE_TAG}${V_ERR_TAG}.tar
+ZIPFILE=dma_oracle_${STATSSOURCE}__${V_FILE_TAG}${V_ERR_TAG}.zip
 
-locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
+locale > ${OUTPUT_DIR}/dma__${V_FILE_TAG}_locale.txt
 
-echo "dbmajor = ${dbmajor}"  >> ${OUTPUT_DIR}/opdb__collector_runtime_env__${V_FILE_TAG}.csv
-echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__collector_runtime_env__${V_FILE_TAG}.csv
+echo "dbmajor = ${dbmajor}"  >> ${OUTPUT_DIR}/dma__collector_runtime_env__${V_FILE_TAG}.csv
+echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/dma__collector_runtime_env__${V_FILE_TAG}.csv
 
 cd ${OUTPUT_DIR}
-if [ -f opdb__manifest__${V_FILE_TAG}.txt ];
+if [ -f dma__manifest__${V_FILE_TAG}.txt ];
 then
-  rm opdb__manifest__${V_FILE_TAG}.txt
+  rm dma__manifest__${V_FILE_TAG}.txt
 fi
 
 # Skip creating the manifest file if the platform does not have MD5SUM installed
-for file in $(ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt)
+for file in $(ls -1  dma*${V_FILE_TAG}.csv dma*${V_FILE_TAG}*.log dma*${V_FILE_TAG}*.txt)
 do
  if [ -f "$MD5SUM" ] ; then
    MD5=$(${MD5SUM} $file | cut -d ' ' -f ${MD5COL})
  else MD5="N/A"
  fi
- echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
+ echo "${DBTYPE}|${MD5}|${file}"  >> dma__manifest__${V_FILE_TAG}.txt
 done
 
 if [ ! "${ZIP}" = "" ]
 then
-  $ZIP $ZIPFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
+  $ZIP $ZIPFILE  dma*${V_FILE_TAG}.csv dma*${V_FILE_TAG}*.log dma*${V_FILE_TAG}*.txt
   OUTFILE=$ZIPFILE
 else
-  tar cvf $TARFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
+  tar cvf $TARFILE  dma*${V_FILE_TAG}.csv dma*${V_FILE_TAG}*.log dma*${V_FILE_TAG}*.txt
   $GZIP $TARFILE
   OUTFILE=${TARFILE}.gz
 fi
 
 if [ -f $OUTFILE ]
 then
-  rm  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
+  rm  dma*${V_FILE_TAG}.csv dma*${V_FILE_TAG}*.log dma*${V_FILE_TAG}*.txt
 fi
 
 cd ${CURRENT_WORKING_DIR}
@@ -391,7 +391,7 @@ statsWindow=30
 #############################################################################
 
 connectString="${connStr}"
-sqlcmd_result=$(checkVersion "${connectString}" "${OpVersion}" | $GREP DMAFILETAG | cut -d '~' -f 2)
+sqlcmd_result=$(checkVersion "${connectString}" "${DMAVersion}" | $GREP DMAFILETAG | cut -d '~' -f 2)
 if [[ "${sqlcmd_result}" = "" ]];
 then
   echo "Unable to connect to the target database using ${connectString}.  Please verify the connection information and target database status."
@@ -406,7 +406,7 @@ extractorVersion="$(getVersion)"
 
 echo ""
 echo "==================================================================================="
-echo "Database Migration Assessment Database Assessment Collector Version ${OpVersion}"
+echo "Database Migration Assessment Database Assessment Collector Version ${DMAVersion}"
 printExtractorVersion "${extractorVersion}"
 echo "==================================================================================="
 
@@ -433,7 +433,7 @@ if [ $retval -eq 0 ]; then
       fi
     fi
     V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-    executeOP "${connectString}" ${OpVersion} ${STATSSOURCE} "${manualUniqueId}" $statsWindow
+    executeOP "${connectString}" ${DMAVersion} ${STATSSOURCE} "${manualUniqueId}" $statsWindow
     retval=$?
     if [ $retval -ne 0 ]; then
       createErrorLog  $(echo ${V_TAG} | sed 's/.csv//g')
