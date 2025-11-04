@@ -1,8 +1,8 @@
-# Create a user for Collection
+# Create a user for Collection > docs/user_guide/shell_scripts/oracle/permissions.md
 
-The collection scripts can be executed with any DBA account. Alternatively, create a new user with the minimum privileges required.
-The included script sql/setup/grants_wrapper.sql will grant the privileges listed below.
-Please see the Database User Scripts page for information on how to create the user.
+ The collection scripts can be executed with any DBA account. Alternatively, create a new user with the minimum privileges required.
+ The included script sql/setup/grants_wrapper.sql will grant the privileges listed below.
+ Please see the Database User Scripts page for information on how to create the user.
 
 ## Permissions Required
 
@@ -134,3 +134,76 @@ The following permissions are required for the script execution:
       SELECT ON SYS.V_$TEMP_SPACE_HEADER
       SELECT ON SYS.V_$VERSION
       SELECT ON SYSTEM.LOGSTDBY$SKIP_SUPPORT
+
+
+The following permissions are required for Oracle Estate Explorer if enabled:
+
+      EXECUTE ON SYS.DBMS_LOB
+      SELECT ON SYS.DBA_ALL_TABLES
+      SELECT ON SYS.DBA_DATA_FILES
+      SELECT ON SYS.DBA_DB_LINKS
+      SELECT ON SYS.DBA_DEPENDENCIES
+      SELECT ON SYS.DBA_DIRECTORIES
+      SELECT ON SYS.DBA_ENCRYPTED_COLUMNS
+      SELECT ON SYS.DBA_EXTERNAL_TABLES
+      SELECT ON SYS.DBA_FREE_SPACE
+      SELECT ON SYS.DBA_HIGH_WATER_MARK_STATISTICS
+      SELECT ON SYS.DBA_HIST_ACTIVE_SESS_HISTORY
+      SELECT ON SYS.DBA_HIST_CON_SYSMETRIC_SUMM
+      SELECT ON SYS.DBA_HIST_CON_SYSSTAT
+      SELECT ON SYS.DBA_HIST_CON_SYS_TIME_MODEL
+      SELECT ON SYS.DBA_HIST_DATABASE_INSTANCE
+      SELECT ON SYS.DBA_HIST_OSSTAT
+      SELECT ON SYS.DBA_HIST_SNAPSHOT
+      SELECT ON SYS.DBA_HIST_SYSMETRIC_SUMMARY
+      SELECT ON SYS.DBA_HIST_SYSSTAT
+      SELECT ON SYS.DBA_HIST_SYS_TIME_MODEL
+      SELECT ON SYS.DBA_ILMOBJECTS
+      SELECT ON SYS.DBA_LIBRARIES
+      SELECT ON SYS.DBA_LOBS
+      SELECT ON SYS.DBA_OBJECTS
+      SELECT ON SYS.DBA_PROFILES
+      SELECT ON SYS.DBA_REGISTRY
+      SELECT ON SYS.DBA_ROLES
+      SELECT ON SYS.DBA_ROLE_PRIVS
+      SELECT ON SYS.DBA_SCHEDULER_JOBS
+      SELECT ON SYS.DBA_SCHEDULER_PROGRAMS
+      SELECT ON SYS.DBA_TABLES
+      SELECT ON SYS.DBA_TAB_COLS
+      SELECT ON SYS.DBA_TAB_COLUMNS
+      SELECT ON SYS.DBA_USERS
+      SELECT ON SYS.DBA_XML_SCHEMAS
+      SELECT ON SYS.DBA_XML_TABLES
+      SELECT ON SYS.DBA_XML_TAB_COLS
+      SELECT ON SYS.GV$ARCHIVED_LOG
+      SELECT ON SYS.GV$CELL_STATE
+      SELECT ON SYS.GV$INSTANCE
+      SELECT ON SYS.GV$PDBS
+      SELECT ON SYS.GV$SESSION
+      SELECT ON SYS.GV$SESSION_CONNECT_INFO
+      SELECT ON SYS.GV_$ARCHIVED_LOG
+      SELECT ON SYS.GV_$CELL_STATE
+      SELECT ON SYS.GV_$DATABASE
+      SELECT ON SYS.GV_$INSTANCE
+      SELECT ON SYS.GV_$PDBS
+      SELECT ON SYS.GV_$PGASTAT
+      SELECT ON SYS.GV_$SESSION
+      SELECT ON SYS.GV_$SESSION_CONNECT_INFO
+      SELECT ON SYS.GV_$SGASTAT
+      SELECT ON SYS.RESOURCE_VIEW
+      SELECT ON SYS.TRUSTED_SERVERS
+      SELECT ON SYS.V_$BLOCK_CHANGE_TRACKING
+      SELECT ON SYS.V_$CON_SYSSTAT
+      SELECT ON SYS.V_$DATABASE
+      SELECT ON SYS.V_$EVENT_NAME
+      SELECT ON SYS.V_$INSTANCE
+      SELECT ON SYS.V_$NLS_PARAMETERS
+      SELECT ON SYS.V_$PARAMETER
+      SELECT ON SYS.V_$PDBS
+      SELECT ON SYS.V_$PGASTAT
+      SELECT ON SYS.V_$RSRCPDBMETRIC_HISTORY
+      SELECT ON SYS.V_$SGASTAT
+      SELECT ON SYS.V_$SQL
+      SELECT ON SYS.V_$SQL_PLAN
+      SELECT ON SYS.V_$SYSSTAT
+      SELECT ON SYS.V_$SYSTEM_EVENT
