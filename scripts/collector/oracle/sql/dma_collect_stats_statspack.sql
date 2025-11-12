@@ -38,12 +38,6 @@ prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|METRIC_NAME|METRIC_UNIT|AVG_VALUE|MODE_VAL
 spool off
 
 
--- spool &outputdir./dma__awrhistsysmetricsumm__&s_tag.
--- prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|METRIC_NAME|METRIC_UNIT|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|MIN_VALUE|MAX_VALUE|SUM_VALUE|PERC50|PERC75|PERC90|PERCENTILE_95|DMA_SOURCE_ID|DMA_MANUAL_ID
--- @sql/extracts/statspack/awrhistsysmetricsumm.sql
--- spool off
-
-
 spool &outputdir./dma__dbahistsysstat__&s_tag.
 prompt PKEY|DBID|INSTANCE_NUMBER|HOUR|STAT_NAME|CNT|AVG_VALUE|MODE_VALUE|MEDIAN_VALUE|MIN_VALUE|MAX_VALUE|SUM_VALUE|PERCENTILE_95|DMA_SOURCE_ID|DMA_MANUAL_ID
 @sql/extracts/statspack/dbahistsysstat.sql
