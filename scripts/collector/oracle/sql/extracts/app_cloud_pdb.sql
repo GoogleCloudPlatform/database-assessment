@@ -1,6 +1,6 @@
-define cdbjoin = "AND 1=1"
-spool &outputdir/opdb__app_cloud__&v_tag
-WITH app_cloud as  (
+define cdbjoin = "AND con_id = p.con_id"
+spool &outputdir/opdb__app_cloud_pdb_&v_tag
+WITH app_cloud as ( 
 SELECT
 @&EXTRACTSDIR/app_schemas.sql
 FROM DUAL
