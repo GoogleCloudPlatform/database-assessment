@@ -39,7 +39,7 @@ jobs:
     runs-on: ${{ inputs.os }}
     timeout-minutes: ${{ inputs.timeout }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - if: ${{ inputs.os == 'ubuntu-latest' }}
         name:  Install Microsoft ODBC Drivers & Free additional space
@@ -58,7 +58,7 @@ jobs:
           && sudo apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
 
       - name: Set up Python ${{ inputs.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ inputs.python-version }}
 
@@ -78,7 +78,7 @@ jobs:
         run: hatch run +py=${{ inputs.python-version }} test:no-cov
 
       - if: ${{ inputs.coverage }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
             name: coverage-xml
             path: coverage.xml
