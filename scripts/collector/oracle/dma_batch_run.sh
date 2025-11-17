@@ -54,7 +54,7 @@ fi
 
   
 function count_children() {
-  num_children=$(ps -ef | ${grep_cmd} "collect-data.sh" | ${grep_cmd} -v grep | wc -l)
+  num_children=$(ps -ef | ${grep_cmd} "DMA_COLLECT_DATA" | ${grep_cmd} -v grep | wc -l )
   echo ${num_children}  
 }
 
@@ -63,7 +63,7 @@ function batchRun() {
   local -i lineno=0
   local -i err_cnt=0
   local -i line_cnt=$(wc -l < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )) 
-  echo "Found ${line_cnt} lines in config file"
+  echo "Processing${line_cnt} entries in configuration file ${config_file}"
 
   while IFS=, read -r sysUser user db statssrc statswindow dmaid oee_flag oee_group || [[ -n "$line" ]]; do
     lineno=$(( ${lineno} + 1 ))
@@ -95,18 +95,16 @@ function batchRun() {
     fi
   
     # Run a collection in the background, capturing screen output to a log file.
-    time ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}" --collectOEE "${oee_flag}" --oeeGroup "${oee_group}" --oee_runId "${run_id}" --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_${this_pid}.log" &
+    ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}" --collectOEE "${oee_flag}" --oeeGroup "${oee_group}" --oee_runId "${run_id}" --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_${this_pid}.log" &
 
     # Wait a couple of seconds before starting another collection.
     sleep 2
 
     # Do not run another collection if there are too many running already
-    echo "There are $(count_children) of ${max_parallel} processes running"
     while [[ $(count_children) -ge ${max_parallel} ]] ; do
 
       echo
-      echo "Sleeping for 10 secs while waiting on child processes:"
-      ps -ef | ${grep_cmd} "collect-data.sh" | ${grep_cmd} -v grep | cut -d '@' -f 2- | cut -d ' ' -f 1
+      echo "Sleeping for 10 secs while waiting on child processes"
       echo
       sleep 10
     done
