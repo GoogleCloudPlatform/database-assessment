@@ -63,7 +63,7 @@ function batchRun() {
   local -i lineno=0
   local -i err_cnt=0
   local -i line_cnt=$(wc -l < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )) 
-  echo "Processing${line_cnt} entries in configuration file ${config_file}"
+  echo "Processing ${line_cnt} entries in configuration file ${config_file}"
 
   while IFS=, read -r sysUser user db statssrc statswindow dmaid oee_flag oee_group || [[ -n "$line" ]]; do
     lineno=$(( ${lineno} + 1 ))
