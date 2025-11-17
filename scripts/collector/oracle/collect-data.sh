@@ -388,17 +388,18 @@ function print_usage() {
   echo "                              IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8"
   echo "                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR."
 
-  echo "  Oracle Estate Explorere collection"
-  echo "      --collectOee            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector.  Default is Y."
-  echo "                              NOTE: This requires SQL client version 21 and above, plus Oracle database 11.2 or above."
-  echo "                                    OEE collection will not run if requirements are not met."
-  echo
-  echo "      --oeeGroup              Required if --collect_oee is Y.  This is the group name (ex: Dev, Prod, QA, etc) to use for bundling multiple databases togegther within OEE."
-  echo "                              Maximum length of 32 characters."
-  echo "      --oee_runId             Internal use only.  This is used by DMA automation to handle parallel runs of multiple collections."
-  echo
-  echo " Optional identifier"
-  echo "      --manualUniqueId        Optional.  Allows the end user to create a unique identifier with which to tag the collection. "
+# RESERVED FOR FUTURE USE
+#  echo "  Oracle Estate Explorer collection"
+#  echo "      --collectOee            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector.  Default is Y."
+#  echo "                              NOTE: This requires SQL client version 21 and above, plus Oracle database 11.2 or above."
+#  echo "                                    OEE collection will not run if requirements are not met."
+#  echo
+#  echo "      --oeeGroup              Required if --collect_oee is Y.  This is the group name (ex: Dev, Prod, QA, etc) to use for bundling multiple databases togegther within OEE."
+#  echo "                              Maximum length of 32 characters."
+#  echo "      --oee_runId             Internal use only.  This is used by DMA automation to handle parallel runs of multiple collections."
+#  echo
+#  echo " Optional identifier"
+#  echo "      --manualUniqueId        Optional.  Allows the end user to create a unique identifier with which to tag the collection. "
   echo "                              Also used internally by DMA automation."
   echo
   echo " Example:"
@@ -427,11 +428,11 @@ function parse_parameters() {
     elif [[ "$1" == "--dbType" ]];             then database_type=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
     elif [[ "$1" == "--statsSrc" ]];           then stats_source=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
     elif [[ "$1" == "--connectionStr" ]];      then connection_string="${2}"
-    elif [[ "$1" == "--manualUniqueId" ]];     then manual_unique_id="${2}"
     elif [[ "$1" == "--statsWindow" ]];        then stats_window="${2}"
-    elif [[ "$1" == "--collectOEE" ]];         then collect_oee="${2}"
-    elif [[ "$1" == "--oeeGroup"   ]];         then oee_group_name="${2}"
-    elif [[ "$1" == "--oee_runId"   ]];        then oee_run_id="${2}"
+#    elif [[ "$1" == "--manualUniqueId" ]];     then manual_unique_id="${2}"
+#    elif [[ "$1" == "--collectOEE" ]];         then collect_oee="${2}"
+#    elif [[ "$1" == "--oeeGroup"   ]];         then oee_group_name="${2}"
+#    elif [[ "$1" == "--oee_runId"   ]];        then oee_run_id="${2}"
     elif [[ "$1" == "--dmaAutomation"   ]];    then dma_automation_flag="${2}"  # Internal use only
     else
       echo "Unknown parameter ${1}"
