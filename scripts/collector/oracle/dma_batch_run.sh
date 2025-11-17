@@ -116,20 +116,16 @@ function batchRun() {
 
   echo "================================================================================================"
   echo "================================================================================================"
-  #echo "Output files are in ${pwd}/${output_dir}"
   echo "Output files are in ${output_dir}"
   echo
   err_cnt=$(ls -1 ${output_dir}/*ERROR.zip 2>/dev/null | wc -l)
-  # oee_errors=$(${grep_cmd} -h -A 5 "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log)
-  oee_errors=$(grep -n "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log | cut -d: -f1 | xargs -n1 awk "NR>={}-0 && NR<={}+5" DMA_COLLECT_DATA_*_${this_pid}.log)
+  oee_err_cnt=$(grep -n "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log | wc -l ) 
 
-  if [[ ${err_cnt} -eq 0 ]] && [[ -z "${oee_errors}" ]] ; then
-    #print_complete
+  if [[ ${err_cnt} -eq 0 ]] && [[ ${oee_err_cnt} -eq 0 ]] ; then
     return 0
   fi
 
-  if [[ ${err_cnt} -ne 0 ]]
-  then
+  if [[ ${err_cnt} -ne 0 ]] ; then
     echo "================================================================================================"
     echo "================================================================================================"
     print_fail
@@ -138,10 +134,10 @@ function batchRun() {
     echo
   fi
 
-  if [[ ! -z "${oee_errors}" ]] ; then
+  if [[ ${oee_err_cnt} -ne 0 ]] ; then
     print_separator
     echo "Failed to collect Oracle Estate Explorer data :"
-    echo "${oee_errors}"
+    grep -n "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log | cut -d ':' -f1 | xargs -n1 awk "NR>={}-0 && NR<={}+5" DMA_COLLECT_DATA_*_${this_pid}.log
     echo
     print_fail
   fi
