@@ -24,7 +24,6 @@ set echo off
 prompt "Please enter the database local username (or CDB username) to receive all required grants. "
 accept dbusername     char prompt "Enter exactly as defined in the database, upper/lower case must match: "
 accept usediagnostics char default 'Y' prompt "Please enter Y or N to allow or disallow use of the Tuning and Diagnostic Pack (AWR/ASH) data (Y) "
-accept oracleee       char default 'Y' prompt "Please enter Y or N to grant privileges required for Oracle Estate Explorer collection (Y) " 
 
 prompt " "
 prompt "Processing user &&dbusername"
@@ -40,6 +39,7 @@ END;
 /
 
 
+DEFINE oracleee = "N"
 set serveroutput on size 50000
 set termout on
 set lines 200
