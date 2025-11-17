@@ -222,7 +222,7 @@ function create_error_log() {
 }
 
 
-# Strip out extranneous spaces in the output.
+# Strip out extraneous spaces in the output.
 function cleanup_dma_output() {
   local v_file_tag=$1
   echo "Preparing files for compression."
