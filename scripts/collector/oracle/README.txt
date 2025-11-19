@@ -191,7 +191,7 @@ for analysis by Database Migration Assessment.
 
     Execute automated DMA collection by running the dma_batch_run.sh script.  It can execute collections in parallel via the --maxParallel parameter.  Set this to 1 to disable parallel collection.
     The default is 4.  Note that this controls the number of DMA collections running at one time, not the parallelism of the queries in the database.  Each running collection consumes some disk space 
-    for temporary files as the data is extracted.  Very high settings for --maxParallel will consume a lot of space.  The example below shows a limit of two collections runnig at once.
+    for temporary files as the data is extracted.  Very high settings for --maxParallel may consume a lot of space.  The example below shows a limit of two collections running at once.
 
       ./dma_batch_run.sh --configFile dma_db_list.csv --maxParallel 2
 
