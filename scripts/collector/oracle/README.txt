@@ -26,19 +26,44 @@ for analysis by Database Migration Assessment.
     ----------------------
     The collection script depends on the following to be available on the machine from which it is run:
     bash shell
-    cat
-    cut
-    dirname
-    grep
-    locale
-    mkdir
-    sed
-    sqlplus
-    tar
-    tr
-    which
-    zip or gzip
 
+    awk
+    cat
+    cp
+    cut
+    date
+    dirname
+    grep (ggrep on Solaris)
+    gzip
+    head
+    iconv
+    locale
+    ls
+    md5sum (md5 or csum on HP/UX)
+    mkdir
+    mv
+    ps
+    pwd
+    rm
+    sed
+    sleep
+    sort
+    sqlplus
+    tail
+    tar
+    tee
+    time
+    tr
+    uname
+    uniq
+    wait
+    wc
+    which
+    xargs
+    zip
+
+    cygpath (Windows only, if using Cygwin)
+    wslpath (Windows only, if using WSL)
 
 2. Preparation
 --------------
@@ -144,15 +169,43 @@ for analysis by Database Migration Assessment.
                CDB databases, you must connect to the container database.  Running this from within a
                pluggable database will not collect the proper data.
 
+4. Automation
+-------------
+    If you wish to automate setup and collection from multiple databases, edit the file dma_db_list.csv with connection information and options for each database, one entry per line.
+    The file header describes the file format and provides examples.
 
-4. Results
+    Verify the congfiguration file is valid and the sysdba connection information is correct by executing the precheck script with the --verifyUser N option.
+      ./dma_precheck.sh --configFile dma_db_list.csv --verifyUser N
+
+    Address any errors reported before continuing.
+
+    If you are creating a new database user or modifying an existing user for DMA collection, execute the dma_make_user.sh script to create or modify the user(s) specified in the configuration file.
+      ./dma_make_user.sh --configFile dma_db_list.csv
+
+    If any errors are encountered, address the issue before continuing to the next step.  The dma_make_user.sh script can be run multiple times if needed.  
+
+    Verify the user connection and privilege information by re-running the dma_precheck.sh script without the --verifyUser parameter.  This will verify the user can connect.
+      ./dma_precheck.sh --configFile dma_db_list.csv 
+
+    Address any errors reported before continuing.
+
+    Execute automated DMA collection by running the dma_batch_run.sh script.  It can execute collections in parallel via the --maxParallel parameter.  Set this to 1 to disable parallel collection.
+    The default is 4.  Note that this controls the number of DMA collections running at one time, not the parallelism of the queries in the database.  Each running collection consumes some disk space 
+    for temporary files as the data is extracted.  Very high settings for --maxParallel may consume a lot of space.  The example below shows a limit of two collections running at once.
+
+      ./dma_batch_run.sh --configFile dma_db_list.csv --maxParallel 2
+
+    Collections run via dma_batch_run.sh will automatically create log files for each collection, as the terminal will intermingle the output of all threads.
+    
+
+5. Results
 ----------
 
     An archive of the extracted results will be created in the directory collector/output.
     The full path and file name will be displayed on completion.
 
 
-5. License
+6. License
 ------------
 
 Copyright 2024 Google LLC

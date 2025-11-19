@@ -203,7 +203,7 @@ BEGIN
   :lv_tblprefix := 'dba';
   :lv_is_container := 0;
   :lv_editionable_col := '''N/A''';
-  :lv_do_pluggable := 'op_collect_nopluggable_info.sql';
+  :lv_do_pluggable := 'dma_collect_nopluggable_info.sql';
   :lv_db_container_col := '''N/A''';
 
   SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner ='SYS' AND table_name = 'V_$DATABASE' AND column_name = 'CDB';
@@ -212,7 +212,7 @@ BEGIN
     IF cnt > 0 THEN
       :lv_tblprefix := 'cdb' ;
       :lv_is_container := 1;
-      :lv_do_pluggable := 'op_collect_pluggable_info.sql';
+      :lv_do_pluggable := 'dma_collect_pluggable_info.sql';
       :lv_db_container_col := 'cdb';
     END IF;
   END IF;
