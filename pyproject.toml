@@ -112,7 +112,7 @@ managed = true
 package = true
 
 [dependency-groups]
-dev = [ 
+dev = [
     { include-group = "lint" }, { include-group = "test" }, { include-group = "docs" }
 ]
 test = [
@@ -129,7 +129,7 @@ test = [
     "pytest-sugar",
     "pytest-click",
     "pytest-xdist>=3.6.0",
-    "pytest-databases<=0.10.0", 
+    "pytest-databases<=0.10.0",
 ]
 lint = [
     "mypy>=1.13.0",
