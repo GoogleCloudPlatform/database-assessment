@@ -112,8 +112,10 @@ managed = true
 package = true
 
 [dependency-groups]
-dev = [
-    # Test dependencies
+dev = [ 
+    { include-group = "lint" }, { include-group = "test" }, { include-group = "docs" }
+]
+test = [
     "psycopg[binary]",
     "pymysql",
     "pymssql",
@@ -127,11 +129,8 @@ dev = [
     "pytest-sugar",
     "pytest-click",
     "pytest-xdist>=3.6.0",
-    "pytest-databases<=0.10.0",
-    # CLI database browser
-    "harlequin",
+    "pytest-databases<=0.10.0", 
 ]
-
 lint = [
     "mypy>=1.13.0",
     "ruff>=0.14.0",
