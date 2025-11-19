@@ -240,7 +240,7 @@ lint:                                               ## Run pre-commit hooks; inc
 .PHONY: test
 test:                                               ## Run the tests
 	@echo "=> Running test cases"
-	@uv run pytest -n 2 --cov
+	@uv run pytest -n 2 --dist loadgroup --cov
 	@echo "=> Tests complete"
 
 .PHONY: test-all-pythons
@@ -248,6 +248,6 @@ test-all-pythons:                                   ## Run the tests against all
 	@echo "=> Running test cases for Python 3.9-3.13"
 	@for version in 3.9 3.10 3.11 3.12 3.13; do \
 		echo "=> Testing with Python $$version"; \
-		uv run --python $$version pytest -n 2 --cov; \
+		uv run --python $$version pytest -n 2 --dist loadgroup --cov; \
 	done
 	@echo "=> Tests complete"
