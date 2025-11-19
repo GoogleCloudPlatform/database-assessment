@@ -205,20 +205,20 @@ pre-release:                                        ## Bump the version and crea
 # docs        #
 ###############
 .PHONY: doc-privs
-doc-privs:   ## Extract the list of privileges required from code and create the documentation
-	cat > docs/user_guide/shell_scripts/oracle/permissions.md <<EOF
-	# Create a user for Collection
-
-	 The collection scripts can be executed with any DBA account. Alternatively, create a new user with the minimum privileges required.
-	 The included script sql/setup/grants_wrapper.sql will grant the privileges listed below.
-	 Please see the Database User Scripts page for information on how to create the user.
-
-	## Permissions Required
-
-	The following permissions are required for the script execution:
-
-	 EOF
-	 grep "rectype_(" scripts/collector/oracle/sql/setup/grants_wrapper.sql | grep -v FUNCTION | sed "s/rectype_(//g;s/),//g;s/)//g;s/'//g;s/,/ ON /1;s/,/./g" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	## Extract the list of privileges required from code and create the documentation
+doc-privs:
+	@echo "# Create a user for Collection > docs/user_guide/shell_scripts/oracle/permissions.md" > docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo "" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo " The collection scripts can be executed with any DBA account. Alternatively, create a new user with the minimum privileges required." >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo " The included script sql/setup/grants_wrapper.sql will grant the privileges listed below." >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo " Please see the Database User Scripts page for information on how to create the user." >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo "" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo "## Permissions Required" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo "" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo "The following permissions are required for the script execution:" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo "" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@grep -e "Granting privs for Oracle Estate Explorer" -e "rectype_(" scripts/collector/oracle/sql/setup/grants_wrapper.sql | grep -v FUNCTION | sed "s/rectype_(//g;s/),//g;s/)//g;s/'//g;s/,/ ON /1;s/,/./g" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@sed -i "" 's/    dbms_output.put_line(Granting privs for Oracle Estate Explorer;/\n\nThe following permissions are required for Oracle Estate Explorer if enabled:\n/g' docs/user_guide/shell_scripts/oracle/permissions.md
 
 .PHONY: serve-docs
 serve-docs:                                         ## Serve documentation locally
