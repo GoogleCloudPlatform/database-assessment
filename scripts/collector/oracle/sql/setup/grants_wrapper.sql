@@ -73,7 +73,7 @@ DECLARE
     v_infosep           VARCHAR2(100) := rpad('-', 100, '-');
     v_errsep            VARCHAR2(100) := rpad('!', 100, '!');
 
- 
+
     PROCEDURE list_pdbs
     IS
       TYPE c_pdb_list_type IS REF CURSOR;
@@ -125,7 +125,7 @@ DECLARE
       ELSE
          dbms_output.put_line('This database is not multitenant.');
       END IF;
- 
+
       FOR x IN p_priv_list.first..p_priv_list.last LOOP
          v_table_priv  :=  p_priv_list(x).objpriv;
          v_table_owner :=  p_priv_list(x).objowner;
@@ -143,7 +143,7 @@ DECLARE
              v_sql := 'GRANT ' || v_table_priv || ' ON ' || v_table_owner || '.' || v_table_name || ' TO "&dbusername" ' || v_container_all ;
              dbms_output.put_line(v_sql || ';' );
              EXECUTE IMMEDIATE v_sql;
-             EXCEPTION 
+             EXCEPTION
                WHEN LOCAL_OBJECT THEN
                  dbms_output.put_line('ERROR: --------------------------------------------------------------------------------------------');
                  dbms_output.put_line('ERROR:  Unable to grant privileges to an object that is not created in the root container database.');
@@ -161,7 +161,7 @@ DECLARE
            END IF;
          END;
       END LOOP;
- 
+
       IF v_container_cnt > 0 THEN
            v_sql := 'ALTER USER  "&dbusername"  SET CONTAINER_DATA=ALL CONTAINER = CURRENT';
            dbms_output.put_line(v_sql || ';' );

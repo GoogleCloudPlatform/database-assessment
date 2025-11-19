@@ -60,7 +60,6 @@ install: destroy clean                              ## Install the project, depe
 	@uv python pin 3.12 >/dev/null 2>&1
 	@uv venv >/dev/null 2>&1
 	@uv sync --all-extras --dev
-	@uv run pre-commit install
 	@echo "${OK} Installation complete! 🎉"
 
 .PHONY: upgrade

@@ -1,6 +1,6 @@
 define cdbjoin = "AND con_id = p.con_id"
 spool &outputdir/opdb__app_cloud_pdb_&v_tag
-WITH app_cloud as ( 
+WITH app_cloud as (
 SELECT
 @&EXTRACTSDIR/app_schemas.sql
 FROM DUAL
@@ -23,4 +23,3 @@ UNION
 SELECT 'DBMS_CLOUD_PKG_INSTALLED: ' || dbms_cloud_pkg_installed
 FROM app_cloud;
 spool off
-
