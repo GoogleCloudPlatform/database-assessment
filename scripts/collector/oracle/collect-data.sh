@@ -429,7 +429,7 @@ function parse_parameters() {
     elif [[ "$1" == "--statsSrc" ]];           then stats_source=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
     elif [[ "$1" == "--connectionStr" ]];      then connection_string="${2}"
     elif [[ "$1" == "--statsWindow" ]];        then stats_window="${2}"
-#    elif [[ "$1" == "--manualUniqueId" ]];     then manual_unique_id="${2}"
+    elif [[ "$1" == "--manualUniqueId" ]];     then manual_unique_id="${2}"
 #    elif [[ "$1" == "--collectOEE" ]];         then collect_oee="${2}"
 #    elif [[ "$1" == "--oeeGroup"   ]];         then oee_group_name="${2}"
 #    elif [[ "$1" == "--oee_runId"   ]];        then oee_run_id="${2}"
