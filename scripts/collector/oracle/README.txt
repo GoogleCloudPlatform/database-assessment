@@ -148,7 +148,7 @@ for analysis by Database Migration Assessment.
           ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc STATSPACK
 
 
-        If Statspack has less than 30 days of data, limit collection to the last 7 days using the paramter --statsWindow:
+        If Statspack has less than 30 days of data, limit collection to the last 7 days using the parameter --statsWindow:
 
           ./collect-data.sh --connectionStr 'MyUser/MyPassword@//dbhost.company.com:1521/MyDbName.company.com' --statsSrc STATSPACK --statsWindow 7
          or
@@ -174,7 +174,7 @@ for analysis by Database Migration Assessment.
     If you wish to automate setup and collection from multiple databases, edit the file dma_db_list.csv with connection information and options for each database, one entry per line.
     The file header describes the file format and provides examples.
 
-    Verify the congfiguration file is valid and the sysdba connection information is correct by executing the precheck script with the --verifyUser N option.
+    Verify the configuration file is valid and the sysdba connection information is correct by executing the precheck script with the --verifyUser N option.
       ./dma_precheck.sh --configFile dma_db_list.csv --verifyUser N
 
     Address any errors reported before continuing.
@@ -182,21 +182,21 @@ for analysis by Database Migration Assessment.
     If you are creating a new database user or modifying an existing user for DMA collection, execute the dma_make_user.sh script to create or modify the user(s) specified in the configuration file.
       ./dma_make_user.sh --configFile dma_db_list.csv
 
-    If any errors are encountered, address the issue before continuing to the next step.  The dma_make_user.sh script can be run multiple times if needed.  
+    If any errors are encountered, address the issue before continuing to the next step.  The dma_make_user.sh script can be run multiple times if needed.
 
     Verify the user connection and privilege information by re-running the dma_precheck.sh script without the --verifyUser parameter.  This will verify the user can connect.
-      ./dma_precheck.sh --configFile dma_db_list.csv 
+      ./dma_precheck.sh --configFile dma_db_list.csv
 
     Address any errors reported before continuing.
 
     Execute automated DMA collection by running the dma_batch_run.sh script.  It can execute collections in parallel via the --maxParallel parameter.  Set this to 1 to disable parallel collection.
-    The default is 4.  Note that this controls the number of DMA collections running at one time, not the parallelism of the queries in the database.  Each running collection consumes some disk space 
+    The default is 4.  Note that this controls the number of DMA collections running at one time, not the parallelism of the queries in the database.  Each running collection consumes some disk space
     for temporary files as the data is extracted.  Very high settings for --maxParallel may consume a lot of space.  The example below shows a limit of two collections running at once.
 
       ./dma_batch_run.sh --configFile dma_db_list.csv --maxParallel 2
 
     Collections run via dma_batch_run.sh will automatically create log files for each collection, as the terminal will intermingle the output of all threads.
-    
+
 
 5. Results
 ----------

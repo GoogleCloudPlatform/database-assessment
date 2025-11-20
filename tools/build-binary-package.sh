@@ -41,4 +41,3 @@ hatch dep show requirements --project-only > dist/requirements.txt
 hatch dep show requirements -p  -f postgres -f server >> dist/requirements.txt
 echo "$(realpath dist/dma-${current_version}-py3-none-any.whl)" >> dist/requirements.txt
 cd dist/.scratch && cargo build --release  &&  cd -
-

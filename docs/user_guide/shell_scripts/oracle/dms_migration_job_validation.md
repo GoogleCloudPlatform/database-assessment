@@ -4,16 +4,16 @@ The Database Migration Service: Migration Job Validation Report (Oracle to Postg
 
 ## Purpose
 
-The script checks various aspects of an Oracle database against the [requirements](https://cloud.google.com/database-migration/docs/oracle-to-postgresql/configure-source-database) and [known limitations and recommendations](https://cloud.google.com/database-migration/docs/oracle-to-postgresql/known-limitations) for migrating data to PostgreSQL using DMS. 
+The script checks various aspects of an Oracle database against the [requirements](https://cloud.google.com/database-migration/docs/oracle-to-postgresql/configure-source-database) and [known limitations and recommendations](https://cloud.google.com/database-migration/docs/oracle-to-postgresql/known-limitations) for migrating data to PostgreSQL using DMS.
 
-Most of the checks are performed in DMS itself when a Migration Job is validated by running a test before starting the job. Some of the checks the script performs are not currently checked within DMS. 
+Most of the checks are performed in DMS itself when a Migration Job is validated by running a test before starting the job. Some of the checks the script performs are not currently checked within DMS.
 
 The benefit of abstracting these checks into this SQL script and running it *before* initiating a DMS Migration Job are twofold:
 
 1. Speed: the only requirements are access to the source Oracle database
 2. Scale: the script can be executed across the full set of in scope databases and results collated
 
-This can help to proactively address problems ensuring a smoother migration process. 
+This can help to proactively address problems ensuring a smoother migration process.
 
 > The scope of the validation is limited to a DMS Migration Job which is used to migrate table data only. This script is not designed to check for potential errors during procedural code conversion in a DMS Conversion Workspace. Additionally, as it only connects to the source database, no validation of the target database is performed.
 
@@ -35,15 +35,15 @@ The SQL script performs the following checks:
 * **Tables without primary keys:** Verifies tables have primary keys in the schema(s) to be migrated
 * **Oracle Label Security (OLS):** Verifies if OLS is in use (ORACLE LABEL SECURITY OPTION ENABLED ONLY)
 * **Unsupported data types with NOT NULL constraints:** Verifies unsupported data types with `NOT NULL` constraints in the schema(s) to be migrated
-* **Unsupported data types without NOT NULL constraints:** Verifies unsupported data types without `NOT NULL` constraints in the schema(s) to be migrated 
+* **Unsupported data types without NOT NULL constraints:** Verifies unsupported data types without `NOT NULL` constraints in the schema(s) to be migrated
 * **Count of tables to be migrated:** Verifies the count of all tables in the schema(s) to be migrated
 * **Global temporary tables:** Verifies global temporary tables in the schema(s) to be migrated
-* **DBMS_JOB or DBMS_SCHEDULER jobs:** Verifies `DBMS_JOB` or `DBMS_SCHEDULER` jobs in the schema(s) to be migrated 
-* **Materialized views:** Verifies materialized views in the schema(s) to be migrated 
-* **Sequences:** Verifies sequences in the schema(s) to be migrated 
-* **XMLType tables:** Verifies `XMLType` tables in the schema(s) to be migrated 
-* **Object tables:** Verifies Object tables in the schema(s) to be migrated 
-* **Namespace clashes:** Verifies table and constraint namespace clashes in the schema(s) to be migrated 
+* **DBMS_JOB or DBMS_SCHEDULER jobs:** Verifies `DBMS_JOB` or `DBMS_SCHEDULER` jobs in the schema(s) to be migrated
+* **Materialized views:** Verifies materialized views in the schema(s) to be migrated
+* **Sequences:** Verifies sequences in the schema(s) to be migrated
+* **XMLType tables:** Verifies `XMLType` tables in the schema(s) to be migrated
+* **Object tables:** Verifies Object tables in the schema(s) to be migrated
+* **Namespace clashes:** Verifies table and constraint namespace clashes in the schema(s) to be migrated
 * **LogMiner: table and column name lengths:** Verifies Logminer 30 character table and column name lengths in the schema(s) to be migrated
 
 ## Output
@@ -126,20 +126,20 @@ SQL> @dms_migration_job_validator.sql
 The script prompts for the following information:
 
 ```
-Enter the names of the schema(s) to be migrated (csv) (default=ALL non-Oracle) : 
+Enter the names of the schema(s) to be migrated (csv) (default=ALL non-Oracle) :
 Enter the username used in the source Oracle connection profile                :
 Enter the PDB name (multitenant databases only) (default=None)                 :
-Enter the format for the generated report (TEXT or HTML, default=HTML)         : 
+Enter the format for the generated report (TEXT or HTML, default=HTML)         :
 ```
 To accept the default value press enter.
 
 An example set of inputs against a multitenant database:
 
 ```
-Enter the names of the schema(s) to be migrated (csv) (default=ALL non-Oracle) : APP1,APP2,APP3 
+Enter the names of the schema(s) to be migrated (csv) (default=ALL non-Oracle) : APP1,APP2,APP3
 Enter the username used in the source Oracle connection profile                : C##DMS_USER
 Enter the PDB name (multitenant databases only) (default=None)                 : MYPDB
-Enter the format for the generated report (TEXT or HTML, default=HTML)         : 
+Enter the format for the generated report (TEXT or HTML, default=HTML)         :
 ```
 
 The report is generated in the current working directory.

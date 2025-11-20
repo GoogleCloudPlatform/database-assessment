@@ -23,4 +23,3 @@ UNION
 SELECT 'DBMS_CLOUD_PKG_INSTALLED: ' || dbms_cloud_pkg_installed
 FROM app_cloud;
 spool off
-

@@ -1,5 +1,5 @@
 function print_fail() {
-  echo :FAILURE: 
+  echo :FAILURE:
   echo
   echo
   echo "#######    #    ### #       #     # ######  #######"
@@ -76,4 +76,3 @@ function print_separator() {
   echo ==========================================
   echo
 }
-

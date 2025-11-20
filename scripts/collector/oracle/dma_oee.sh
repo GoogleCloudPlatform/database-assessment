@@ -9,23 +9,23 @@ function oee_generate_config() {
   local oee_port="${4}"
   local oee_user="${5}"
   local oee_pass="${6}"
-  local oee_group="${7}" 
+  local oee_group="${7}"
   local oee_runid="${8}"
   local v_file_tag="${9}"
 
   local driver_file_name="${oee_dir}/mpack_DMA-OEE-${oee_group}.driverfile.${oee_runid}"
 
   echo "Generating driver file ${driver_file_name}"
-    
+
   dbdomain=$(grep db_domain ${output_dir}/opdb__dbparameters__${v_file_tag} | cut -d '|' -f 5 | uniq | head -1)
   if [[ "${dbdomain}" != "" ]]; then
     dbdomain=".${dbdomain}"
   fi
-    
+
   # For single tenant or container databases
   oee_guid=$(echo ${oee_guid} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
   echo ${oee_guid}:${oee_database}://${oee_host_name}:${oee_port}/${oee_database}:${oee_user}:${oee_pass} >> ${driver_file_name}
-    
+
   # For multitenant, we need to add entries for all the pluggable databases.
   if [[ -f ${output_dir}/opdb__pdb_summary__${v_file_tag} ]] ; then
     for pdbname in $(${grep_cmd} -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" ${output_dir}/opdb__pdb_summary__${v_file_tag} | ${grep_cmd} -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 4)
@@ -41,15 +41,15 @@ function oee_generate_config() {
       oee_guid=$(echo ${oee_guid}${pdbname} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
       echo ${oee_guid}:${pdbname}://${oee_host_name}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${driver_file_name}
     done
-  fi  
+  fi
 
-}   
+}
 
 
 function oee_run_standalone_extract() {
   local oee_runid="${1}"
 
-  for fname in *driverfile.${oee_runid} 
+  for fname in *driverfile.${oee_runid}
   do
     echo Processing file ${fname}
     newName=$(echo ${fname} |  ${awk_cmd} -F '.'  '{OFS="."; for (i = 1; i <= NF - 1; i++) { printf "%s%s", $i, (i < (NF - 1) ? OFS : "\n")}  }')
@@ -64,7 +64,7 @@ EOF
 function oee_package_zips() {
   local oee_runid="${1}"
 
-  for zipname in *driverfile.${oee_runid} 
+  for zipname in *driverfile.${oee_runid}
   do
     zipname=$(echo ${zipname} | cut -d '_' -f 2- | cut -d '.' -f 1 ).zip
     if [[ -f ${zipname} ]] ; then
@@ -83,15 +83,15 @@ function oee_run() {
 
   oee_run_standalone_extract "${oee_runid}"
 
-  if [[ $? -eq 0 ]]; then 
+  if [[ $? -eq 0 ]]; then
     oee_package_zips "${oee_runid}"
-  else 
+  else
     return 1
   fi
 
-  if [[ $? -eq 0 ]]; then 
+  if [[ $? -eq 0 ]]; then
     return 0
-  else 
+  else
     return 1
   fi
 }
@@ -109,11 +109,11 @@ EOF
     retval="FAIL: ${sql_client}"
   else
     sqlclientver=$(echo "${sql_client}" | cut -c 1-2)
-    if [[ "${sqlclientver}" -ge 12 ]] 
-    then 
+    if [[ "${sqlclientver}" -ge 12 ]]
+    then
       retval="PASS"
     else
-      retval="FAIL: ${sql_client}"  
+      retval="FAIL: ${sql_client}"
     fi
   fi
   echo "${retval}"
@@ -134,8 +134,8 @@ set pagesize 0 lines 400 feedback off verify off heading off echo off timing off
 WITH mj AS (
 SELECT substr(version, 1, INSTR(version, '.', 1, 2)-1) AS version
 FROM v\$instance)
-SELECT 'CONNECTED|' || 
-       SUBSTR(version, 1, INSTR(version, '.')-1) || '|' || -- Major 
+SELECT 'CONNECTED|' ||
+       SUBSTR(version, 1, INSTR(version, '.')-1) || '|' || -- Major
        SUBSTR(version, INSTR(version, '.')+1)              -- Minor
 FROM mj;
 exit;
@@ -147,14 +147,14 @@ EOF
 
     if [[ ${db_version_major} -gt 10 ]] ; then
         ret_val="PASS"
-    else 
+    else
       if [[ ${db_version_major} -eq 10 ]] ; then
         if [[ ${db_version_minor} -ge 2 ]] ; then
           ret_val="PASS"
         fi
       fi
     fi
-  else 
+  else
     ret_val="FAIL: ${db_version}"
   fi
   echo ${ret_val}
@@ -167,8 +167,8 @@ function oee_check_platform() {
   local platform=$(uname)
   local ret_val="FAIL"
   case "${platform}" in
-    "Linux" ) 
-      if [[ $(uname -a) =~ "microsoft" ]]; then 
+    "Linux" )
+      if [[ $(uname -a) =~ "microsoft" ]]; then
         ret_val="FAIL due to unsupported platform WSL.  Oracle Estate Explorer collector is not compatible with the operating system on this machine.  Either disable OEE collection in the configuration file or execute these scripts on a supported platform."
       else
         ret_val="PASS"
@@ -190,18 +190,18 @@ function oee_check_conditions {
   local sqlplus_version=""
 
   if [[ -f $oee_dir/oee_group_extract-SA.sh ]] ; then
-      
+
     platform="$(oee_check_platform)"
     sqlplus_version=$(oee_check_sqlplus_release)
     database_version="$(oee_check_db_version ${connection_string})"
-    
+
     if [[ "${sqlplus_version}" == "PASS" ]] && [[ "${database_version}" == "PASS" ]] && [[ "${platform}" == "PASS" ]]; then
       ret_val="PASS"
-    fi  
+    fi
   fi
 
-  if [[ "${ret_val}" != "PASS" ]] ; then 
-    echo "Failure testing connection ${connection_destination}" 
+  if [[ "${ret_val}" != "PASS" ]] ; then
+    echo "Failure testing connection ${connection_destination}"
     echo "SQLPlus Release   ${sqlplus_version}"
     echo "Database Version  ${database_version}"
     echo "Platform          ${platform}"
@@ -209,4 +209,3 @@ function oee_check_conditions {
     echo "${ret_val}"
   fi
 }
-

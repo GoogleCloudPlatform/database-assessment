@@ -52,17 +52,17 @@ else
   grep_cmd=$(which grep 2>/dev/null)
 fi
 
-  
+
 function count_children() {
   num_children=$(ps -ef | ${grep_cmd} "DMA_COLLECT_DATA" | ${grep_cmd} -v grep | wc -l )
-  echo ${num_children}  
+  echo ${num_children}
 }
 
 
 function batchRun() {
   local -i lineno=0
   local -i err_cnt=0
-  local -i line_cnt=$(wc -l < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )) 
+  local -i line_cnt=$(wc -l < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' ))
   echo "Processing ${line_cnt} entries in configuration file ${config_file}"
 
   while IFS=, read -r sysUser user db statssrc statswindow dmaid oee_flag oee_group || [[ -n "$line" ]]; do
@@ -86,7 +86,7 @@ function batchRun() {
 
 # RESERVED FOR FUTURE USE
     oee_flag="N"
-#    if [[ "${oee_flag}" = "" ]] ; then 
+#    if [[ "${oee_flag}" = "" ]] ; then
 #      oee_flag="N"
 #    else
 #      oee_flag=$(echo "${oee_flag}" | tr '[a-z]' '[A-Z]')
@@ -95,7 +95,7 @@ function batchRun() {
 #    if [[ "${oee_group}" = "" ]] ; then
 #      oee_group="DEFAULT"
 #    fi
-#  
+#
     # Run a collection in the background, capturing screen output to a log file.
     ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}" --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_${this_pid}.log" &
 # RESERVED FOR FUTURE USE
@@ -112,7 +112,7 @@ function batchRun() {
       echo
       sleep 10
     done
-  done < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )  
+  done < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )
 
   echo "Waiting for remaining child processes to complete."
   wait
@@ -126,7 +126,7 @@ function batchRun() {
 
 # RESERVED FOR FUTURE USE
   oee_err_cnt=0
-#  oee_err_cnt=$(grep -n "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log | wc -l ) 
+#  oee_err_cnt=$(grep -n "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log | wc -l )
 
   if [[ ${err_cnt} -eq 0 ]] && [[ ${oee_err_cnt} -eq 0 ]] ; then
     return 0
@@ -171,14 +171,14 @@ function print_usage() {
 
 function main() {
   ### Validate input
-  
+
   if [[ $(($# & 1)) == 1 ]] || [[ $# == 0 ]]  ;
   then
     echo "Invalid number of parameters $# : $@ "
     print_usage
     exit
   fi
-  
+
   while (( "$#" )); do
     if [[ "$1" == "--maxParallel" ]];
     then
@@ -195,11 +195,11 @@ function main() {
     fi
     shift 2
   done
-  
+
   if [[ -f "${config_file}" ]] ; then
     batchRun
     retval=$?
-  
+
     if [[ ${retval} -eq 0 ]] ; then
       print_complete
 # RESERVED FOR FUTURE USE
@@ -231,4 +231,3 @@ function main() {
 }
 
 main "$@" 2>&1 | tee "${dma_log_name}"
-

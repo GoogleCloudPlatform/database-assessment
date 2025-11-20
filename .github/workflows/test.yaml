@@ -57,25 +57,26 @@ jobs:
           && sudo rm -rf /var/cache/apt/* \
           && sudo apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
 
-      - name: Set up Python ${{ inputs.python-version }}
-        uses: actions/setup-python@v6
-        with:
-          python-version: ${{ inputs.python-version }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
 
-      - name: Install Hatch
-        run: pip install --upgrade hatch hatch-pip-compile
+      - name: Set up Python ${{ inputs.python-version }}
+        run: uv python install ${{ inputs.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev --locked
 
       - if: ${{ inputs.coverage }}
         name: Lint
-        run: hatch run lint:check
+        run: uv run pre-commit run --all-files
 
       - if: ${{ inputs.coverage }}
         name: Run tests with coverage tracking
-        run: hatch run +py=${{ inputs.python-version }} test:cov
+        run: uv run pytest --cov --cov-report=xml
 
       - if: ${{ !inputs.coverage }}
         name: Run tests without tracking coverage
-        run: hatch run +py=${{ inputs.python-version }} test:no-cov
+        run: uv run pytest
 
       - if: ${{ inputs.coverage }}
         uses: actions/upload-artifact@v5

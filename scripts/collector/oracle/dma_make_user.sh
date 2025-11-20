@@ -44,7 +44,7 @@ function print_status() {
       echo "${fe}"
     done
     echo
-    echo "Please address the errors enountered and retry."
+    echo "Please address the errors encountered and retry."
     echo
   else
     print_complete
@@ -119,7 +119,7 @@ function main() {
     printUsage
     exit
   fi
-  
+
   while (( "$#" )); do
     if [[ "$1" == "--configFile" ]];
     then

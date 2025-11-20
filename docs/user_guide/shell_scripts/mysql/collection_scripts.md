@@ -1,7 +1,7 @@
 # Gather workload metadata
 
 !!! note
-    For MySQL homogenous migrations, please upload the collections files to Google Migration Center
+    For MySQL homogeneous migrations, please upload the collections files to Google Migration Center
 !!!
 
 The workload collection supports MySQL 5.6 and newer. Older versions of MySQL are not currently supported.  MariaDB is also not currently supported with this version of the script.

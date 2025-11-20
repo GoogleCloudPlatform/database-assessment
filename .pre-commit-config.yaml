@@ -11,34 +11,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-exclude: "^docs/conf.py"
+
+default_language_version:
+  python: "3"
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
-      - id: trailing-whitespace
-      - id: check-added-large-files
       - id: check-ast
+      - id: check-case-conflict
       - id: check-json
       - id: check-merge-conflict
+      - id: check-toml
       - id: check-xml
       - id: check-yaml
-        args: ["--unsafe"] # needed for !! tags in mkdocs.yml
+        args: ["--unsafe"]  # needed for !! tags in mkdocs.yml
       - id: debug-statements
       - id: end-of-file-fixer
       - id: mixed-line-ending
-        args: ["--fix=auto"] # replace 'auto' with 'lf' to enforce Linux/Mac line endings or 'crlf' for Windows
+        args: ["--fix=lf"]
+      - id: trailing-whitespace
 
-  # Ruff replaces black, flake8, autoflake and isort
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: "v0.11.1" # make sure this is always consistent with hatch configs
+    rev: "v0.14.5"
     hooks:
       - id: ruff
-        args: [--config, ./pyproject.toml]
+        args: ["--fix"]
+      - id: ruff-format
 
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v4.0.0-alpha.8
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
     hooks:
-      - id: prettier
-        exclude: templates|migrations|scripts|docs|dist|.venv|public
+      - id: codespell
+        additional_dependencies:
+          - tomli
