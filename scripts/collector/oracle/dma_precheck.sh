@@ -322,7 +322,7 @@ function checkStats() {
           sqlStr := 'SELECT  EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) FROM dba_hist_snapshot WHERE begin_interval_time < trunc(sysdate)';
           EXECUTE IMMEDIATE sqlStr INTO numdays;
           IF numdays > 0 THEN
-            sqlStr := REPLACE('SELECT CASE WHEN EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40, ~ ~) || ~ AWR        Star_cmdT ~ || to_char( min(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1),4) || ~  #DAYS ~, EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) )
+            sqlStr := REPLACE('SELECT CASE WHEN EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40, ~ ~) || ~ AWR        START ~ || to_char( min(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1),4) || ~  #DAYS ~, EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) )
             , (count(1) / EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) )
             FROM dba_hist_snapshot
             WHERE begin_interval_time <= trunc(sysdate)', '~', chr(39));
@@ -349,7 +349,7 @@ function checkStats() {
         EXECUTE IMMEDIATE sqlStr INTO numdays, numsnaps USING mindays;
         numdays:=NVL(numdays,0);
         IF numdays > 0 THEN
-          sqlStr := REPLACE('SELECT CASE WHEN trunc(max(snap_time) -min(snap_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40) || ~ STATSPACK  Star_cmdT ~ || to_char(min(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1), 4) || ~  #DAYS ~ , to_char(trunc(max(snap_time) -min(snap_time) )) , count(1) / (max(snap_time) -min(snap_time) )
+          sqlStr := REPLACE('SELECT CASE WHEN trunc(max(snap_time) -min(snap_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40) || ~ STATSPACK  START ~ || to_char(min(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1), 4) || ~  #DAYS ~ , to_char(trunc(max(snap_time) -min(snap_time) )) , count(1) / (max(snap_time) -min(snap_time) )
           FROM PERFSTAT.STATS\$SNAPSHOT
           WHERE snap_time <= (sysdate)
           AND snap_time >= trunc(sysdate - :mindays)', '~', chr(39));
