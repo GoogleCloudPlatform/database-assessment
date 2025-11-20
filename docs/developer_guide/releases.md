@@ -307,7 +307,7 @@ uv pip install dist/dma-*.whl
 
 ## Additional Resources
 
-- [GitHub Actions Release Workflow](../../.github/workflows/release.yaml)
+- [GitHub Actions Release Workflow](https://github.com/GoogleCloudPlatform/database-assessment/blob/main/.github/workflows/release.yaml)
 - [Semantic Versioning](https://semver.org/)
 - [UV Documentation](https://github.com/astral-sh/uv)
 - [PyApp Documentation](https://github.com/ofek/pyapp)
