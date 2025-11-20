@@ -47,7 +47,7 @@ jobs:
             fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v4
+        uses: astral-sh/setup-uv@v7
 
       - name: Set up Python
         run: uv python install ${{ env.STABLE_PYTHON_VERSION }}
@@ -72,7 +72,7 @@ jobs:
         fetch-depth: 0
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v4
+      uses: astral-sh/setup-uv@v7
 
     - name: Set up Python
       run: uv python install ${{ env.STABLE_PYTHON_VERSION }}
@@ -144,7 +144,7 @@ jobs:
       run: git clone --depth 1 --branch ${{ env.PYAPP_VERSION }} https://github.com/ofek/pyapp ${{ env.PYAPP_REPO }}
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v4
+      uses: astral-sh/setup-uv@v7
 
     - name: Set up Python
       run: uv python install ${{ env.STABLE_PYTHON_VERSION }}
