@@ -8,7 +8,7 @@ license = { text = "Apache-2.0" }
 name = "dma"
 readme = "README.md"
 requires-python = ">=3.9"
-version = "4.3.44"
+version = "4.3.45"
 
 # keywords for easier look-up on PyPI
 authors = [
@@ -181,7 +181,7 @@ build = [
 allow_dirty = true
 commit = false
 commit_args = "-S --no-verify"
-current_version = "4.3.44"
+current_version = "4.3.45"
 ignore_missing_files = false
 ignore_missing_version = false
 message = "chore(release): bump to v{new_version}"

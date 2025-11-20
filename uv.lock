@@ -1007,7 +1007,7 @@ wheels = [
 
 [[package]]
 name = "dma"
-version = "4.3.44"
+version = "4.3.45"
 source = { editable = "." }
 dependencies = [
     { name = "aiosql" },
