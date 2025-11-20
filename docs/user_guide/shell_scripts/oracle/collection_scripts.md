@@ -42,17 +42,21 @@ create the user as a common user in the root container. The Dma_collector does n
 running in individual pluggable databases.
 
 For non-CDB databases:
+
 ```shell
 sqlplus "sys/password@//hostname:port/dbservicename as sysdba"
 SQL> create user DMA_COLLECTOR identified by password;
 SQL> grant connect, create session to DMA_COLLECTOR;
 ```
+
 For multitenant databases:
+
 ```shell
 sqlplus "sys/password@//hostname:port/dbservicename as sysdba"
 SQL> create user C##DMA_COLLECTOR identified by password;
 SQL> grant connect, create session to C##DMA_COLLECTOR;
 ```
+
 Navigate to the sql/setup directory and execute grants_wrapper.sql as a user with SYSDBA privileges.
 You will be prompted for the name of a database user
 (Note that input is case-sensitive and must match the username created above) to be granted
@@ -61,12 +65,15 @@ You will also be prompted whether or not to allow access to the AWR data.
 Access will be granted to Statspack tables if they are present.
 
 For non-CDB databases:
+
 ```shell
 SQL> @grants_wrapper.sql
 SQL> Please enter the DB Local Username(Or CDB Username) to receive all required grants: DMA_COLLECTOR
 SQL> Please enter Y or N to allow or disallow use of the Tuning and Diagnostic Pack (AWR) data (Y) Y
 ```
+
 For multitenant databases:
+
 ```shell
 SQL> @grants_wrapper.sql
 SQL> Please enter the DB Local Username(Or CDB Username) to receive all required grants: C##DMA_COLLECTOR
@@ -77,13 +84,14 @@ The grant_wrapper script will grant privileges required and will output a list o
 
 Launch the collection script: (Note that the parameter names have changed from earlier versions of the collector)
 
-- NOTES: 
-  - If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
-  - If you are licensed for the Oracle Diagnostic pack, specify AWR for the --statsSrc parameter.
-  - If you are NOT licensed for the Oracle Diagnostics pack, specify STATSPACK for the --statsSrc parameter.
-  - If you do not want to collect performance data, specife NONE for the --statsSrc parameter. This will block the ability to provide sizing and pricing estimates.
+- NOTES:
+    - If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
+    - If you are licensed for the Oracle Diagnostic pack, specify AWR for the --statsSrc parameter.
+    - If you are NOT licensed for the Oracle Diagnostics pack, specify STATSPACK for the --statsSrc parameter.
+    - If you do not want to collect performance data, specife NONE for the --statsSrc parameter. This will block the ability to provide sizing and pricing estimates.
 
-  - Parameters
+    - Parameters
+
 ```
  Connection definition must one of:
     {
@@ -96,7 +104,7 @@ Launch the collection script: (Note that the parameter names have changed from e
        --collectionUserPass  Database password
     }
  Performance statistics source
-     --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.  
+     --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.
                              When using STATSPACK, see note about --statsWindow parameter below.
                              When using AWR, ensure you are licensed for the Oracle Diagnostics Pack.
  Performance statistics window
@@ -110,7 +118,6 @@ Launch the collection script: (Note that the parameter names have changed from e
   Ex:
     ./collect-data.sh --connectionStr /@mywalletalias --statsSrc AWR
 ```
-
 
 To use the licensed Oracle Diagnostic pack AWR/ASH data:
 
@@ -151,6 +158,7 @@ or
 Collections can be run as SYS if needed by setting ORACLE_SID and running on the database host:
 
 To use the licensed Oracle Diagnostic pack AWR/ASH data:
+
 ```shell
 ./collect-data.sh --connectionStr '/ as sysdba' --statsSrc AWR
 ```

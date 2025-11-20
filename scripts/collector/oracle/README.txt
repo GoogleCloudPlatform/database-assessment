@@ -67,7 +67,7 @@ for analysis by Database Migration Assessment.
     This utility can collect database performance information from either the AWR/ASH views, or from STATSPACK.
     Use of the AWR/ASH views requires that you have a license from Oracle for the Diagnostics Pack.
     Note that the AWR/ASH tables and views are installed and enabled by default on Enterprise versions of Oracle,
-    so their existance is not necessarily indicative of a license.  
+    so their existence is not necessarily indicative of a license.
     If you are unsure of your license status, use STATSPACK for performance data collection.
 
 2. Preparation
@@ -130,7 +130,7 @@ for analysis by Database Migration Assessment.
              --collectionUserPass  Database password.
            }
        Performance statistics source
-           --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.   
+           --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.
                                    When using STATSPACK, see note about --statsWindow parameter below.
                                    When using AWR, ensure you are licensed for the Oracle Diagnostics Pack.
        Performance statistics window
