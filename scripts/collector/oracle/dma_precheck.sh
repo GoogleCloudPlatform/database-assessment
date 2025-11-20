@@ -419,7 +419,6 @@ function precheckStats() {
         fi
       fi
     fi
-#  done < <( ${sed_cmd} "s/ //g;s/${tab_char}//g" "$configuration_file"  )
   done < <( tr -d ' ' < "${configuration_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )
 
   retcd=${#successes[@]}
@@ -427,7 +426,7 @@ function precheckStats() {
   echo "Results : "
   if [[ $retcd -gt 0 ]]; then
     echo
-    echo SUCCESS:  These databases have at least ${statswindow} calendar days of performance statistics available:
+    echo SUCCESS:  These databases have performance statistics available:
     printf '%s\n' "${successes[@]}"
   fi
 
