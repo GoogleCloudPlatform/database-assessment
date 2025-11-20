@@ -23,5 +23,5 @@ from dma.cli.main import app
 
 def test_readiness_check() -> None:
     runner = CliRunner()
-    result = runner.invoke(app, ["readiness-check"])
+    result = runner.invoke(app, ["readiness-check", "--help"])
     assert result.exit_code == 0

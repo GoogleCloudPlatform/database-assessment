@@ -240,10 +240,16 @@ do
     ${SED} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
     cp sed_${V_FILE_TAG}.tmp ${outfile}
     rm sed_${V_FILE_TAG}.tmp
-  else
-	  ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 s/[a-z]/\U&/g' ${outfile} > sed_${V_FILE_TAG}.tmp
+  else if [ "$(uname)" = "Darwin" ]
+  then
+    ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/' ${outfile} > sed_${V_FILE_TAG}.tmp
     cp sed_${V_FILE_TAG}.tmp ${outfile}
     rm sed_${V_FILE_TAG}.tmp
+  else
+    ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 s/[a-z]/\U&/g' ${outfile} > sed_${V_FILE_TAG}.tmp
+    cp sed_${V_FILE_TAG}.tmp ${outfile}
+    rm sed_${V_FILE_TAG}.tmp
+  fi
   fi
   fi
   fi
@@ -379,7 +385,7 @@ echo
 echo "  VM collection definition (optional):"
 echo "        --vmUserName          Username on the VM the Database is running on."
 echo "                              Must be supplied to collect hardware configuration of the database server if"
-echo "                              the collection script is not run dirctly on the database server."
+echo "                              the collection script is not run directly on the database server."
 echo "        --extraSSHArg         Extra args to be passed as is to ssh. Can be specified multiple times."
 echo
 echo " Example:"

@@ -21,8 +21,8 @@ SET LANGUAGE us_english;
 DECLARE @PKEY AS VARCHAR(256)
 DECLARE @CLOUDTYPE AS VARCHAR(256)
 DECLARE @PRODUCT_VERSION AS INTEGER
-DECLARE @TABLE_PERMISSION_COUNT AS INTEGER
-DECLARE @ROW_COUNT_VAR AS INTEGER
+DECLARE @TABLE_PERMISSION_COUNT AS BIGINT
+DECLARE @ROW_COUNT_VAR AS BIGINT
 DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
 DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 DECLARE @ERROR_NUMBER AS INT
@@ -90,7 +90,7 @@ FROM fn_my_permissions('msdb.dbo.sysjobs', 'OBJECT')
 WHERE permission_name = 'SELECT' and subentity_name ='';
 
 --DB Mail
-SELECT @TABLE_PERMISSION_COUNT = COUNT(*)
+SELECT @TABLE_PERMISSION_COUNT = COUNT_BIG(*)
 FROM #myPerms
 WHERE LOWER(entity_name) IN ('dbo.sysmail_profile','dbo.sysmail_profileaccount','dbo.sysmail_account','dbo.sysmail_server')
     AND UPPER(permission_name) = 'SELECT';
@@ -236,7 +236,7 @@ ELSE
 BEGIN
     IF @PRODUCT_VERSION >= 15
     BEGIN
-        SELECT @ROW_COUNT_VAR = count(*)
+        SELECT @ROW_COUNT_VAR = COUNT_BIG(*)
         from sys.server_memory_optimized_hybrid_buffer_pool_configuration;
         IF @ROW_COUNT_VAR = 0
         BEGIN
@@ -271,7 +271,7 @@ BEGIN
 END;
 
 --log shipping enabled
-SELECT @TABLE_PERMISSION_COUNT = COUNT(*)
+SELECT @TABLE_PERMISSION_COUNT = COUNT_BIG(*)
 FROM #myPerms
 WHERE LOWER(entity_name) in ('dbo.log_shipping_primary_databases','dbo.log_shipping_secondary_databases') and UPPER(permission_name) = 'SELECT';
 IF @TABLE_PERMISSION_COUNT >= 2 AND @CLOUDTYPE = 'NONE'
@@ -515,10 +515,10 @@ INSERT INTO #FeaturesEnabled
 SELECT
     'BULK_INSERT',
     CASE
-            WHEN count(p.permission_name) > 0 THEN '1'
+            WHEN COUNT_BIG(p.permission_name) > 0 THEN '1'
             ELSE '0'
         END,
-    CONVERT(int,count(p.permission_name))
+    CONVERT(bigint,COUNT_BIG(p.permission_name))
 FROM fn_my_permissions(NULL, 'SERVER') p
 WHERE permission_name like '%ADMINISTER BULK OPERATIONS%';
 
@@ -528,10 +528,10 @@ BEGIN TRY
             SELECT
                 ''CountServiceBrokerEndpoints'',
                 CASE
-                    WHEN count(*) > 0 THEN ''1''
+                    WHEN COUNT_BIG(*) > 0 THEN ''1''
                     ELSE ''0''
                 END,
-                CONVERT(int, count(*))
+                CONVERT(bigint, COUNT_BIG(*))
             FROM sys.service_broker_endpoints');
 END TRY
 BEGIN CATCH
@@ -545,10 +545,10 @@ BEGIN TRY
             SELECT
                 ''CountTSQLEndpoints'',
                 CASE
-                    WHEN count(*) > 0 THEN ''1''
+                    WHEN COUNT_BIG(*) > 0 THEN ''1''
                     ELSE ''0''
                 END,
-                CONVERT(int, count(*))
+                CONVERT(BIGINT, COUNT_BIG(*))
             FROM sys.tcp_endpoints
             WHERE endpoint_id > 65535');
 END TRY
@@ -719,8 +719,8 @@ ELSE
 BEGIN
     exec('INSERT INTO #FeaturesEnabled
     SELECT ''IsLinkedServersUsed'',
-            count(*),
-            count(*)
+            CONVERT(NVARCHAR(255), COUNT_BIG(*)),
+            CONVERT(NVARCHAR(255), COUNT_BIG(*))
     FROM sys.servers
     WHERE is_linked = 1');
 END

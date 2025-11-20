@@ -36,7 +36,7 @@
     Whether to explicitly request credentials to collect data from the VM hosting the DB if the current users credentials are not sufficient.
     Note the script will attempt to collect VM specs using the current users regardless. (default:false)
 .PARAMETER useWindowsAuthentication
-    Specifies if the loging to the database will utilize the current Windows Authenticated User or the supplied username / password for SQL Authentication (default:false)
+    Specifies if the logging to the database will utilize the current Windows Authenticated User or the supplied username / password for SQL Authentication (default:false)
 .PARAMETER outputDirectory
     User specified output directory if desired to be different from the $PSScriptRoot default
 .EXAMPLE
@@ -68,7 +68,7 @@ $powerShellVersion = $PSVersionTable.PSVersion.Major
 $foldername = ""
 $totalErrorCount = 0
 
-# Pull the windows version so that we can know wether or not to skip perfmon collection or not
+# Pull the windows version so that we can know whether or not to skip perfmon collection or not
 $windowsOSVersion = [Environment]::OSVersion.Version
 $checkWindowsOSVersion = [Environment]::OSVersion.Version -ge (new-object 'Version' 6,2)
 
@@ -169,6 +169,17 @@ if ($sqlcmdVersion -lt $requiredVersion) {
     }
 }
 
+if ($(Get-Location).Path -ne $PSScriptRoot) {
+    $currentTimestamp = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
+    Write-Host "$currentTimestamp   Script Location: $PSScriptRoot"
+    $currentTimestamp = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
+    Write-Host "$currentTimestamp   Running script from directory: $(Get-Location)"
+	$originalLocation = $(Get-Location).Path
+	Push-Location -Path $PSScriptRoot
+    $currentTimestamp = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
+    Write-Host "$currentTimestamp   Changing Directory for script execution to $PSScriptRoot ....."
+}
+
 if ([string]::IsNullorEmpty($serverName)) {
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
     Exit 1
@@ -252,7 +263,7 @@ $validSQLInstanceVersionCheckValues = $splitValidInstanceVerisionCheckObj | ForE
 $isValidSQLInstanceVersion = $validSQLInstanceVersionCheckValues[0]
 $isCloudOrLinuxHost = $validSQLInstanceVersionCheckValues[1]
 
-$op_version = "4.3.43"
+$op_version = "4.3.44"
 
 if ([string]($isValidSQLInstanceVersion) -eq "N") {
     Write-Host "#############################################################"
@@ -627,13 +638,81 @@ else {
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Remove special characters and UTF8 BOM from extracted files..." -logOperation "BOTH"
-foreach ($file in Get-ChildItem -Path $foldername\*.csv) {
-    $inputFile = Split-Path -Leaf $file
-    #((Get-Content -Path $foldername\$inputFile) -join "`n") + "`n" | Set-Content -NoNewLine -Encoding utf8 -Force -Path $foldername\$inputFile
-    ((Get-Content -Path $foldername\$inputFile) -join "`n") + "`n" | Set-Content -Encoding utf8 -Force -Path $foldername\$inputFile
-    $utf8 = New-Object System.Text.UTF8Encoding $false
-    $fileContent = Get-Content $foldername\$inputFile -Raw
-    Set-Content -Value $utf8.GetBytes($fileContent) -Encoding Byte -Path $foldername\$inputFile -Force
+
+# This portion of the script re-writes the original logic to handle large CSV files efficiently by using
+# a streaming (chunked) approach with a temporary file, preventing high memory usage
+# caused by loading the entire file content into a single string or byte array.
+
+# Define the UTF8 encoding without the Byte Order Mark (BOM)
+# This matches the result of the original $utf8 = New-Object System.Text.UTF8Encoding $false
+$utf8NoBom = New-Object System.Text.UTF8Encoding $false
+
+# Define the Line Feed character (`n) to force Unix-style line endings
+$LF = "`n"
+
+# Use Get-ChildItem to safely iterate through files
+foreach ($file in Get-ChildItem -Path $foldername\*.csv -ErrorAction Stop) {
+    $inputFile = $file.FullName
+    $tempFile = "$inputFile.tmp"
+    WriteLog -logLocation $foldername\$logFile -logMessage "     Processing $($file.Name)..." -logOperation "BOTH"
+
+    # Step 1: Stream the normalized content to a temporary file
+    $writer = $null
+    try {
+        # Open the temporary file for writing using the specific UTF8-No-BOM encoding
+        # This keeps only a small buffer of the file content in memory at any time.
+        $writer = New-Object System.IO.StreamWriter -ArgumentList $tempFile, $false, $utf8NoBom
+
+        # Read the content line by line (Get-Content is streaming by default when not using -Raw)
+        $lines = Get-Content -Path $inputFile
+
+        $firstLine = $true
+        foreach ($line in $lines) {
+            # Explicitly remove any Carriage Return characters (`r) to ensure strict LF-only line endings,
+            $cleanLine = $line.Replace("`r", "")
+
+            # The original -join "`n" puts a LF *between* every line.
+            # We simulate this by prepending LF to every line after the first.
+            if (-not $firstLine) {
+                $writer.Write($LF)
+            }
+
+            # Write the raw, cleaned line content
+            $writer.Write($cleanLine)
+            $firstLine = $false
+        }
+
+        # The original code added a final trailing line feed: + "`n"
+        if (-not $firstLine) {
+            $writer.Write($LF)
+        }
+    }
+    catch {
+        WriteLog -logLocation $foldername\$logFile -logMessage "          Error processing file $($file.Name): $($_.Exception.Message)" -logOperation "BOTH"
+        continue
+    }
+    finally {
+        # IMPORTANT: Always close the StreamWriter to flush the buffer and release the file lock
+        if ($writer) {
+            $writer.Close()
+            $writer.Dispose()
+        }
+    }
+
+    # Step 2: Replace the original file with the temporary file
+    try {
+        # Delete the original file
+        Remove-Item $inputFile -Force -ErrorAction Stop
+        # Rename the temporary file to the original filename
+        Rename-Item $tempFile -NewName $file.Name -Force -ErrorAction Stop
+
+        WriteLog -logLocation $foldername\$logFile -logMessage "          $($file.Name) successfully processed..." -logOperation "BOTH"
+    }
+    catch {
+        WriteLog -logLocation $foldername\$logFile -logMessage "          Failed to replace the original file $($file.Name). Temp file may remain. Error: $($_.Exception.Message)" -logOperation "BOTH"
+        # Clean up the temp file if the rename failed
+        Remove-Item $tempFile -ErrorAction SilentlyContinue
+    }
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Creating the manifest..." -logOperation "BOTH"
@@ -724,6 +803,13 @@ else {
     WriteLog -logLocation $foldername\$logFile -logMessage "Please manually zip the files in $foldername and" -logOperation "MESSAGE"
     WriteLog -logLocation $foldername\$logFile -logMessage "return to Google to complete assessment" -logOperation "MESSAGE"
     WriteLog -logLocation $foldername\$logFile -logMessage "Collection Complete..." -logOperation "MESSAGE"
+}
+
+if (-not ([string]::IsNullOrEmpty($originalLocation)) -and ($originalLocation -ne $PSScriptRoot)) {
+    ### Navigating back to the original directory location
+    $currentTimestamp = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
+    Write-Host "$currentTimestamp   Changing directory back to: $originalLocation"
+    Pop-Location
 }
 
 Exit 0

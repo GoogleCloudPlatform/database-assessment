@@ -21,10 +21,6 @@ ERROR := $(shell printf "$(RED)✖$(NC)")
 .EXPORT_ALL_VARIABLES:
 MAKEFLAGS += --no-print-directory
 
-USING_NPM             = $(shell python3 -c "if __import__('pathlib').Path('package-lock.json').exists(): print('yes')")
-ENV_PREFIX		        =.venv/bin/
-VENV_EXISTS           =	$(shell python3 -c "if __import__('pathlib').Path('.venv/bin/activate').exists(): print('yes')")
-NODE_MODULES_EXISTS		=	$(shell python3 -c "if __import__('pathlib').Path('node_modules').exists(): print('yes')")
 BUILD_DIR             =dist
 SRC_DIR               =src
 COLLECTOR_SRC_DIR     =scripts/collector
@@ -52,40 +48,27 @@ help:                                               ## Display this help text fo
 # =============================================================================
 # Developer Utils
 # =============================================================================
-install-pipx: 										## Install pipx
-	@python3 -m pip install --upgrade --user pipx
+.PHONY: install-uv
+install-uv:                                         ## Install latest version of uv
+	@echo "${INFO} Installing uv..."
+	@curl -LsSf https://astral.sh/uv/install.sh | sh >/dev/null 2>&1
+	@echo "${OK} UV installed successfully"
 
-install-hatch: 										## Install Hatch, UV, and Ruff
-	@sh ./tools/install-hatch.sh
-
-configure-hatch: 										## Configure Hatch defaults
-	@hatch config set dirs.env.virtual .direnv
-	@hatch config set dirs.env.pip-compile .direnv
-
-upgrade-hatch: 										## Update Hatch, UV, and Ruff
-	@hatch self update
-
-install: 										## Install the project and all dependencies
-	@if [ "$(VENV_EXISTS)" ]; then echo "=> Removing existing virtual environment"; $(MAKE) destroy-venv; fi
-	@$(MAKE) clean
-	@if [ "$(NODE_MODULES_EXISTS)" ]; then echo "=> Removing existing node modules"; $(MAKE) destroy-node_modules; fi
-	@if ! hatch --version > /dev/null; then echo '=> Installing `hatch`'; $(MAKE) install-hatch ; fi
-	@echo "=> Creating Python environments..."
-	@$(MAKE) configure-hatch
-	@hatch env create local
-	@if [ "$(USING_NPM)" ]; then echo "=> Installing NPM packages..."; hatch run local:python3 scripts/pre-build.py --install-packages && hatch run local:npm config set fund false; fi
-	@echo "=> Install complete! Note: If you want to re-install re-run 'make install'"
-
+.PHONY: install
+install: destroy clean                              ## Install the project, dependencies, and pre-commit
+	@echo "${INFO} Starting fresh installation..."
+	@uv python pin 3.12 >/dev/null 2>&1
+	@uv venv >/dev/null 2>&1
+	@uv sync --all-extras --dev
+	@echo "${OK} Installation complete! 🎉"
 
 .PHONY: upgrade
-upgrade:       										## Upgrade all dependencies to the latest stable versions
-	@echo "=> Updating all dependencies"
-	@echo "=> Python Dependencies Updated"
-	@if [ "$(USING_NPM)" ]; then hatch run local:npm upgrade --latest; fi
-	@echo "=> Node Dependencies Updated"
-	@hatch run lint:pre-commit autoupdate
-	@echo "=> Updated Pre-commit"
-	@$(MAKE) install
+upgrade:                                            ## Upgrade all dependencies to latest stable versions
+	@echo "${INFO} Updating all dependencies... 🔄"
+	@uv lock --upgrade
+	@echo "${OK} Dependencies updated 🔄"
+	@uv run pre-commit autoupdate
+	@echo "${OK} Updated Pre-commit hooks 🔄"
 
 
 .PHONY: clean
@@ -101,20 +84,16 @@ clean:                                              ## Cleanup temporary build a
 	@find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1
 	@echo "${OK} Working directory cleaned"
 
-deep-clean: clean destroy-venv destroy-node_modules							## Clean everything up
-	@hatch python remove all
-	@echo "=> Hatch environments pruned and python installations trimmed"
+deep-clean: clean destroy                           ## Clean everything up
 	@uv cache clean
 	@echo "=> UV Cache cleaned successfully"
 
-destroy-venv: 											## Destroy the virtual environment
-	@hatch env prune
-	@hatch env remove lint
-	@rm -Rf .venv
-	@rm -Rf .direnv
-
-destroy-node_modules: 											## Destroy the node environment
-	@rm -rf node_modules .astro
+.PHONY: destroy
+destroy:                                            ## Destroy the virtual environment
+	@echo "${INFO} Destroying virtual environment... 🗑️"
+	@uv run pre-commit clean >/dev/null 2>&1 || true
+	@rm -rf .venv
+	@echo "${OK} Virtual environment destroyed 🗑️"
 
 
 .PHONY: build-collector
@@ -199,12 +178,10 @@ package-collector:
 	@cd $(BASE_DIR)/$(BUILD_DIR)/collector/postgres; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-postgres.zip  *
 
 .PHONY: build
-build: clean        ## Build and package the collectors
+build: clean                                        ## Build and package the collectors and wheel
 	@$(MAKE) build-collector
-	@echo "=> Building assets..."
-	@if [ "$(USING_NPM)" ]; then echo "=> Building assets..."; hatch run local:python3 scripts/pre-build.py --build-assets; fi
 	@echo "=> Building package..."
-	@hatch build
+	@uv build
 	@echo "=> Package build complete..."
 
 .PHONY: build-all
@@ -216,58 +193,61 @@ build-all: clean			## Build collector, wheel, and standalone collector binary
 
 
 .PHONY: pre-release
-pre-release:       ## bump the version and create the release tag
-	make docs
-	make clean
-	hatch run local:bump2version $(increment)
-	head .bumpversion.cfg | grep ^current_version
-	make build
+pre-release:                                        ## Bump the version and create the release tag
+	@make docs
+	@make clean
+	@uv run bump-my-version bump $(increment)
+	@uv run bump-my-version show current_version
+	@make build
 
 ###############
 # docs        #
 ###############
 .PHONY: doc-privs
-doc-privs:   ## Extract the list of privileges required from code and create the documentation
-	cat > docs/user_guide/shell_scripts/oracle/permissions.md <<EOF
-	# Create a user for Collection
-
-	 The collection scripts can be executed with any DBA account. Alternatively, create a new user with the minimum privileges required.
-	 The included script sql/setup/grants_wrapper.sql will grant the privileges listed below.
-	 Please see the Database User Scripts page for information on how to create the user.
-
-	## Permissions Required
-
-	The following permissions are required for the script execution:
-
-	 EOF
-	 grep "rectype_(" scripts/collector/oracle/sql/setup/grants_wrapper.sql | grep -v FUNCTION | sed "s/rectype_(//g;s/),//g;s/)//g;s/'//g;s/,/ ON /1;s/,/./g" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	## Extract the list of privileges required from code and create the documentation
+doc-privs:
+	@echo "# Create a user for Collection > docs/user_guide/shell_scripts/oracle/permissions.md" > docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo "" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo " The collection scripts can be executed with any DBA account. Alternatively, create a new user with the minimum privileges required." >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo " The included script sql/setup/grants_wrapper.sql will grant the privileges listed below." >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo " Please see the Database User Scripts page for information on how to create the user." >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo "" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo "## Permissions Required" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo "" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo "The following permissions are required for the script execution:" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@echo "" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@grep -e "Granting privs for Oracle Estate Explorer" -e "rectype_(" scripts/collector/oracle/sql/setup/grants_wrapper.sql | grep -v FUNCTION | sed "s/rectype_(//g;s/),//g;s/)//g;s/'//g;s/,/ ON /1;s/,/./g" >> docs/user_guide/shell_scripts/oracle/permissions.md
+	@sed -i "" 's/    dbms_output.put_line(Granting privs for Oracle Estate Explorer;/\n\nThe following permissions are required for Oracle Estate Explorer if enabled:\n/g' docs/user_guide/shell_scripts/oracle/permissions.md
 
 .PHONY: serve-docs
-serve-docs:       ## Serve HTML documentation
-	@hatch run docs:serve
+serve-docs:                                         ## Serve documentation locally
+	@uv run mkdocs serve
 
 .PHONY: docs
-docs:       ## generate HTML documentation and serve it to the browser
-	@hatch run docs:build
+docs:                                               ## Generate HTML documentation
+	@uv run mkdocs build
 
 
 # =============================================================================
 # Tests, Linting, Coverage
 # =============================================================================
 .PHONY: lint
-lint: 												## Runs pre-commit hooks; includes ruff linting, codespell, black
+lint:                                               ## Run pre-commit hooks; includes ruff linting, codespell
 	@echo "=> Running pre-commit process"
-	@hatch run lint:fix
+	@uv run pre-commit run --all-files
 	@echo "=> Pre-commit complete"
 
 .PHONY: test
-test:  												## Run the tests
+test:                                               ## Run the tests
 	@echo "=> Running test cases"
-	@hatch run +py="3.12" test:cov
+	@uv run pytest -n 2 --dist loadgroup --cov
 	@echo "=> Tests complete"
 
 .PHONY: test-all-pythons
-test-all-pythons:  												## Run the tests against all python versions
-	@echo "=> Running test cases"
-	@hatch run test:cov
+test-all-pythons:                                   ## Run the tests against all Python versions
+	@echo "=> Running test cases for Python 3.9-3.13"
+	@for version in 3.9 3.10 3.11 3.12 3.13; do \
+		echo "=> Testing with Python $$version"; \
+		uv run --python $$version pytest -n 2 --dist loadgroup --cov; \
+	done
 	@echo "=> Tests complete"

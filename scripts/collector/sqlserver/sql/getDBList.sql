@@ -42,7 +42,7 @@ WHERE name NOT IN ('master','model','msdb','distribution','reportserver', 'repor
     AND is_read_only = 0
     AND HAS_DBACCESS(name) = @HASDBACCESS;
 END;
-/* Execute the following statment to get the databases to run against */
+/* Execute the following statement to get the databases to run against */
 IF @CLOUDTYPE = 'AZURE' AND @HASDBACCESS = '1'
 BEGIN
     SELECT name

@@ -41,7 +41,7 @@ prompt
 prompt Initializing Database Migration Assessment Collector...
 prompt
 set termout &TERMOUTOFF
-@@op_collect_init.sql
+@@dma_collect_init.sql
 set termout on
 prompt
 prompt Initialization completed.
@@ -52,6 +52,7 @@ prompt Collecting Database Migration Assessment data...
 prompt
 
 set termout &TERMOUTOFF
+@&EXTRACTSDIR/app_cloud.sql
 @&EXTRACTSDIR/defines.sql
 @&EXTRACTSDIR/archlogs.sql
 @&EXTRACTSDIR/users.sql
@@ -74,7 +75,7 @@ set termout &TERMOUTOFF
 @&EXTRACTSDIR/indextypes.sql
 @&EXTRACTSDIR/indextypedtl.sql
 @&EXTRACTSDIR/mviewtypes.sql
-@&EXTRACTSDIR/opkeylog.sql
+@&EXTRACTSDIR/dmakeylog.sql
 @&EXTRACTSDIR/sourcecode.sql
 @&EXTRACTSDIR/dtlsourcecode.sql
 @&EXTRACTSDIR/tablesnopk.sql
@@ -85,7 +86,7 @@ set termout &TERMOUTOFF
 @&EXTRACTSDIR/usedspacedetails.sql
 @&EXTRACTSDIR/usrsegatt.sql
 @&SQLDIR/&v_dopluggable
-@&SQLDIR/op_collect_&v_dodiagnostics
+@&SQLDIR/dma_collect_&v_dodiagnostics
 @&EXTRACTSDIR/lobsizing.sql
 --@&EXTRACTSDIR/opatch.sql
 @&EXTRACTSDIR/eoj.sql

@@ -120,7 +120,7 @@ try {
 	# Primary MAC Address
 	$csvData.PrimaryMAC = (Get-WmiObject Win32_NetworkAdapter @params | Where-Object {$_.PhysicalAdapter -eq $true} | Sort-Object -Property Index | Select-Object -First 1).MACAddress
 
-	# Comma seperated IP addresses
+	# Comma separated IP addresses
 	$csvData.IPAddresses = (Get-WmiObject Win32_NetworkAdapterConfiguration @params | Where-Object {$_.IPEnabled -eq $true}  | Select-Object -ExpandProperty IPAddress) -join ','
 
 	# Writing to csv.

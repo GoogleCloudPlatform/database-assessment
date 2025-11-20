@@ -1,33 +1,87 @@
 site_name: Database Migration Assessment
+site_url: https://googlecloudplatform.github.io/database-assessment/
 repo_url: https://github.com/GoogleCloudPlatform/database-assessment
-edit_uri: ./edit/main/docs
+repo_name: GoogleCloudPlatform/database-assessment
+edit_uri: edit/main/docs
 
 theme:
-  name: "material"
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - content.code.annotation
+    - content.code.copy
+  language: en
+  palette:
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to dark mode
+      primary: teal
+      accent: purple
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to light mode
+      primary: teal
+      accent: lime
+
 markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
   - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.mark
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
 plugins:
-  - search
-  - mkdocstrings
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
   - minify:
       minify_html: true
       minify_js: true
       minify_css: true
+      htmlmin_opts:
+        remove_comments: true
 
 nav:
   - Home: index.md
-  - Oracle Data Collection:
-      - Data Collection: user_guide/shell_scripts/oracle/collection_scripts.md
-      - Permissions Required: user_guide/shell_scripts/oracle/permissions.md
-      - Database User Scripts: user_guide/shell_scripts/oracle/db_user_create.md
-      - Collection Masking: user_guide/shell_scripts/oracle/collection_masker.md
-  - Microsoft SQL Server Data Collection:
-      - Data Collection: user_guide/shell_scripts/sqlserver/collection_scripts.md
-      - Database User Scripts: user_guide/shell_scripts/sqlserver/db_user_create.md
-  - Postgres Data Collection:
-      - Data Collection: user_guide/shell_scripts/postgres/collection_scripts.md
-  - MySQL Data Collection:
-      - Data Collection: user_guide/shell_scripts/mysql/collection_scripts.md
+  - Collection Scripts:
+    - Oracle Data Collection:
+        - Data Collection: user_guide/shell_scripts/oracle/collection_scripts.md
+        - Permissions Required: user_guide/shell_scripts/oracle/permissions.md
+        - Database User Scripts: user_guide/shell_scripts/oracle/db_user_create.md
+        - Collection Masking: user_guide/shell_scripts/oracle/collection_masker.md
+        - DMS Migration Job Validation: user_guide/shell_scripts/oracle/dms_migration_job_validation.md
+    - Microsoft SQL Server Data Collection:
+        - Data Collection: user_guide/shell_scripts/sqlserver/collection_scripts.md
+        - Database User Scripts: user_guide/shell_scripts/sqlserver/db_user_create.md
+    - Postgres Data Collection:
+        - Data Collection: user_guide/shell_scripts/postgres/collection_scripts.md
+    - MySQL Data Collection:
+        - Data Collection: user_guide/shell_scripts/mysql/collection_scripts.md
+  - Readiness Check Utility:
+      - Overview: user_guide/readiness_check/overview.md
+      - Installation: user_guide/readiness_check/package-installation.md
   - Developers:
       - Developer Setup: developer_guide/developer_setup.md
       - Commands: developer_guide/commands.md

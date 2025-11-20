@@ -49,7 +49,7 @@ CREATE TABLE #serverProperties
     property_value nvarchar(1024)
 );
 
-/* need to record table permissions in order to determine if we can run certain serverprops queryies
+/* need to record table permissions in order to determine if we can run certain serverprops queries
     as some tables are not available in managed instances
 */
 IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL
@@ -194,21 +194,27 @@ UNION ALL
         from sys.resource_governor_configuration
         WHERE is_enabled = 1
     ) gov_enabled;
-WITH
-    BUFFER_POOL_SIZE
-    AS
-    (
-        SELECT database_id AS DatabaseID
-		, DB_NAME(database_id) AS DatabaseName
-		, COUNT(file_id) * 8 / 1024.0 AS BufferSizeInMB
-        FROM sys.dm_os_buffer_descriptors
-        GROUP BY DB_NAME(database_id)
-		,database_id
-    )
-INSERT INTO #serverProperties
-SELECT 'total_buffer_size_in_mb'
-	, SUM(BufferSizeInMB)
-FROM BUFFER_POOL_SIZE;
+
+WITH BUFFER_POOL_SIZE AS (
+    SELECT
+        (COUNT_BIG (*) * 8192) / 1024 / 1024 AS cached_pages_count,
+        CASE database_id
+        WHEN 32767 THEN
+            'ResourceDb'
+        ELSE
+            db_name (database_id)
+        END AS database_name
+    FROM
+        sys.dm_os_buffer_descriptors
+    GROUP BY
+        DB_NAME (database_id),
+        database_id)
+    INSERT INTO #serverProperties
+    SELECT
+        'total_buffer_size_in_mb',
+        CAST(SUM(cached_pages_count) AS NVARCHAR (255))
+    FROM
+        BUFFER_POOL_SIZE;
 
 /* Certain clouds do not allow access to certain tables so we need to catch the table does not exist error and default the setting */
 IF @CLOUDTYPE = 'AZURE'
@@ -268,7 +274,7 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'', ''UNKNOWN''');
     exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(NVARCHAR(255), committed_kb/1024) FROM sys.dm_os_sys_info');
     exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(NVARCHAR(255), committed_target_kb/1024) FROM sys.dm_os_sys_info');
-    /* Derive total OS memory by choosing the max Target Node Memory for Azure SQL Database because regualr dm_os views are not available */
+    /* Derive total OS memory by choosing the max Target Node Memory for Azure SQL Database because regular dm_os views are not available */
     exec('INSERT INTO #serverProperties SELECT ''TotalOSMemoryMB'', max(cntr_value)/1024 from sys.dm_os_performance_counters where UPPER(object_name) like ''%MEMORY NODE%'' and counter_name = ''Target Node Memory (KB)''')
     exec('INSERT INTO #serverProperties SELECT ''TotalSQLServerCommittedMemoryMB'', CONVERT(NVARCHAR(255), committed_target_kb/1024) FROM sys.dm_os_sys_info')
     exec('INSERT INTO #serverProperties SELECT ''AvailableOSMemoryMB'', CONVERT(varchar, 0)')
@@ -346,8 +352,8 @@ BEGIN
         exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(NVARCHAR(255),SERVERPROPERTY(''ProductLevel'')),1,1024), ''UNKNOWN'') ');
         exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',''UNKNOWN''');
         exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024)');
-        exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(NVARCHAR(255), 0) /* Parameter defaulted because its not avaliable in this version */');
-        exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(NVARCHAR(255), 0) /* Parameter defaulted because its not avaliable in this version */');
+        exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(NVARCHAR(255), 0) /* Parameter defaulted because its not available in this version */');
+        exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(NVARCHAR(255), 0) /* Parameter defaulted because its not available in this version */');
     END;
     IF @PRODUCT_VERSION >= 13
     BEGIN

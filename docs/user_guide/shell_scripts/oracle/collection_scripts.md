@@ -141,7 +141,7 @@ or
 ./collect-data.sh --collectionUserName MyUser --collectionUserPass MyPassword --hostName dbhost.company.com --port 1521 --databaseService MyDbName.company.com --statsSrc STATSPACK
 
 
-If Statspack has less than 30 days of data, limit collection to the last 7 days using the paramter --statsWindow:
+If Statspack has less than 30 days of data, limit collection to the last 7 days using the parameter --statsWindow:
 
 ./collect-data.sh --connectionStr MyUser/MyPassword@//dbhost.company.com:1521/MyDbName.company.com --statsSrc STATSPACK --statsWindow 7
 or
