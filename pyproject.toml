@@ -113,7 +113,7 @@ package = true
 
 [dependency-groups]
 dev = [
-    { include-group = "lint" }, { include-group = "test" }, { include-group = "docs" }
+    "bump-my-version",{ include-group = "lint" }, { include-group = "test" }, { include-group = "docs" }
 ]
 test = [
     "psycopg[binary]",
@@ -180,7 +180,7 @@ build = [
 [tool.bumpversion]
 allow_dirty = true
 commit = false
-commit_args = "--no-verify"
+commit_args = "-S --no-verify"
 current_version = "4.3.44"
 ignore_missing_files = false
 ignore_missing_version = false
@@ -218,8 +218,8 @@ replace = '__version__ = "{new_version}"'
 
 [[tool.bumpversion.files]]
 filename = "scripts/collector/oracle/collect-data.sh"
-search = 'OpVersion="{current_version}"'
-replace = 'OpVersion="{new_version}"'
+search = 'dma_version="{current_version}"'
+replace = 'dma_version="{new_version}"'
 
 [[tool.bumpversion.files]]
 filename = "scripts/collector/mysql/collect-data.sh"

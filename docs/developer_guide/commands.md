@@ -5,22 +5,27 @@ All commands should be run from the project root directory.
 ## Environment Management
 
 ### `make install-uv`
+
 Installs the latest version of UV package manager.
 
 **Usage:**
+
 ```bash
 make install-uv
 ```
 
 ### `make install`
+
 Creates a fresh virtual environment and installs all dependencies (development, testing, linting, and documentation).
 
 **Usage:**
+
 ```bash
 make install
 ```
 
 **What it does:**
+
 - Destroys any existing virtual environment
 - Pins Python to version 3.12
 - Creates `.venv/` virtual environment
@@ -28,21 +33,26 @@ make install
 - Installs pre-commit hooks
 
 ### `make upgrade`
+
 Upgrades all dependencies to their latest stable versions and updates pre-commit hooks.
 
 **Usage:**
+
 ```bash
 make upgrade
 ```
 
 **What it does:**
+
 - Updates `uv.lock` with latest dependency versions
 - Updates pre-commit hook versions
 
 ### `make destroy`
+
 Removes the virtual environment completely.
 
 **Usage:**
+
 ```bash
 make destroy
 ```
@@ -50,54 +60,66 @@ make destroy
 ## Building
 
 ### `make build-collector`
+
 Builds database collection script packages (ZIP files) for all supported databases.
 
 **Usage:**
+
 ```bash
 make build-collector
 ```
 
 **Output:** Creates ZIP files in `dist/`:
+
 - `db-migration-assessment-collection-scripts-oracle.zip`
 - `db-migration-assessment-collection-scripts-sqlserver.zip`
 - `db-migration-assessment-collection-scripts-mysql.zip`
 - `db-migration-assessment-collection-scripts-postgres.zip`
 
 ### `make build`
+
 Builds both collection script packages and the Python wheel.
 
 **Usage:**
+
 ```bash
 make build
 ```
 
 **What it does:**
+
 - Runs `make build-collector`
 - Runs `uv build` to create wheel and sdist
 
 **Output:** Creates in `dist/`:
+
 - Collection script ZIP files
 - `dma-{version}-py3-none-any.whl`
 - `dma-{version}.tar.gz`
 
 ### `make clean`
+
 Removes all build artifacts, test files, and temporary files.
 
 **Usage:**
+
 ```bash
 make clean
 ```
 
 **What it removes:**
+
 - `dist/`, `build/`, `.eggs/`
 - `*.egg-info`, `*.pyc`, `__pycache__/`
 - `.pytest_cache`, `.ruff_cache`, `.mypy_cache`
 - `.coverage`, `coverage.xml`, `htmlcov/`
 
 ### `make deep-clean`
+
 Performs a deep clean including virtual environment and UV cache.
 
 **Usage:**
+
 ```bash
 make deep-clean
 ```
@@ -105,22 +127,27 @@ make deep-clean
 ## Testing
 
 ### `make test`
+
 Runs the full test suite with coverage reporting (Python 3.12).
 
 **Usage:**
+
 ```bash
 make test
 ```
 
 **Equivalent to:**
+
 ```bash
 uv run pytest -n 2 --cov
 ```
 
 ### `make test-all-pythons`
+
 Runs tests against all supported Python versions (3.9, 3.10, 3.11, 3.12, 3.13).
 
 **Usage:**
+
 ```bash
 make test-all-pythons
 ```
@@ -146,14 +173,17 @@ uv run pytest --no-cov
 ## Linting and Code Quality
 
 ### `make lint`
+
 Runs all pre-commit hooks including ruff linting, formatting, and codespell.
 
 **Usage:**
+
 ```bash
 make lint
 ```
 
 **What it runs:**
+
 - Python AST validation
 - TOML/YAML/JSON validation
 - Ruff linting and formatting
@@ -183,9 +213,11 @@ uv run codespell
 ## Documentation
 
 ### `make docs`
+
 Generates HTML documentation from Markdown files.
 
 **Usage:**
+
 ```bash
 make docs
 ```
@@ -193,9 +225,11 @@ make docs
 **Output:** Creates documentation in `site/`
 
 ### `make serve-docs`
+
 Builds and serves documentation locally with auto-reload.
 
 **Usage:**
+
 ```bash
 make serve-docs
 ```
@@ -203,9 +237,11 @@ make serve-docs
 **Access:** Opens at `http://localhost:8000`
 
 ### `make doc-privs`
+
 Extracts Oracle privilege requirements from code and updates documentation.
 
 **Usage:**
+
 ```bash
 make doc-privs
 ```
@@ -214,28 +250,32 @@ make doc-privs
 
 ## Version Management
 
-### `make pre-release`
+### `make release`
+
 Bumps the version number, updates all version references, and builds release artifacts.
 
 **Usage:**
+
 ```bash
 # Bump patch version (e.g., 4.3.44 → 4.3.45)
-make pre-release increment=patch
+make release bump=patch
 
 # Bump minor version (e.g., 4.3.44 → 4.4.0)
-make pre-release increment=minor
+make release bump=minor
 
 # Bump major version (e.g., 4.3.44 → 5.0.0)
-make pre-release increment=major
+make release bump=major
 ```
 
 **What it does:**
+
 1. Generates documentation
 2. Cleans build artifacts
 3. Bumps version in all files using `bump-my-version`
 4. Builds collection scripts and wheel
 
 **Files updated:**
+
 - `pyproject.toml`
 - `uv.lock`
 - `scripts/masker/dma-collection-masker`
@@ -357,5 +397,5 @@ uv sync --locked
 | Build everything | `make build` |
 | Clean artifacts | `make clean` |
 | Serve docs | `make serve-docs` |
-| Bump version | `make pre-release increment=patch` |
+| Bump version | `make release bump=patch` |
 | Run CLI | `uv run dma --help` |
