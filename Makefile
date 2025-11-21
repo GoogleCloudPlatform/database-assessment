@@ -192,13 +192,15 @@ build-all: clean			## Build collector, wheel, and standalone collector binary
 	@echo "=> Package build complete..."
 
 
-.PHONY: pre-release
-pre-release:                                        ## Bump the version and create the release tag
+.PHONY: release
+release:                                           ## Bump version and create release tag
+	@echo "${INFO} Preparing for release... 📦"
 	@make docs
 	@make clean
-	@uv run bump-my-version bump $(increment)
+	@uv lock --upgrade-package dma >/dev/null 2>&1
+	@uv run bump-my-version bump $(bump)
 	@uv run bump-my-version show current_version
-	@make build
+	@echo "${OK} Release complete 🎉"
 
 ###############
 # docs        #
