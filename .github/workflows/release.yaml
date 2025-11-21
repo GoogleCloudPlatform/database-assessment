@@ -41,7 +41,7 @@ jobs:
     name: Package collections scripts for release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
             # Fetch all tags
             fetch-depth: 0
@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         # Fetch all tags
         fetch-depth: 0
@@ -136,7 +136,7 @@ jobs:
       PYAPP_PROJECT_FEATURES: "oracle,postgres,mssql,mysql,server"
     steps:
     - name: Checkout code
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
