@@ -52,17 +52,17 @@ else
   grep_cmd=$(which grep 2>/dev/null)
 fi
 
-
+  
 function count_children() {
   num_children=$(ps -ef | ${grep_cmd} "DMA_COLLECT_DATA" | ${grep_cmd} -v grep | wc -l )
-  echo ${num_children}
+  echo ${num_children}  
 }
 
 
 function batchRun() {
   local -i lineno=0
   local -i err_cnt=0
-  local -i line_cnt=$(wc -l < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' ))
+  local -i line_cnt=$(wc -l < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )) 
   echo "Processing ${line_cnt} entries in configuration file ${config_file}"
 
   while IFS=, read -r sysUser user db statssrc statswindow dmaid oee_flag oee_group || [[ -n "$line" ]]; do
@@ -84,22 +84,19 @@ function batchRun() {
       dmaid="N/A"
     fi
 
-# RESERVED FOR FUTURE USE
     oee_flag="N"
-#    if [[ "${oee_flag}" = "" ]] ; then
-#      oee_flag="N"
-#    else
-#      oee_flag=$(echo "${oee_flag}" | tr '[a-z]' '[A-Z]')
-#    fi
-#
-#    if [[ "${oee_group}" = "" ]] ; then
-#      oee_group="DEFAULT"
-#    fi
-#
+    if [[ "${oee_flag}" = "" ]] ; then 
+      oee_flag="N"
+    else
+      oee_flag=$(echo "${oee_flag}" | tr '[a-z]' '[A-Z]')
+    fi
+
+    if [[ "${oee_group}" = "" ]] ; then
+      oee_group="DEFAULT"
+    fi
+  
     # Run a collection in the background, capturing screen output to a log file.
-    ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}" --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_${this_pid}.log" &
-# RESERVED FOR FUTURE USE
-#    ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}" --collectOEE "${oee_flag}" --oeeGroup "${oee_group}" --oee_runId "${run_id}" --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_${this_pid}.log" &
+    ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}" --collectOEE "${oee_flag}" --oeeGroup "${oee_group}" --oeeRunId "${run_id}" --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_${this_pid}.log" &
 
     # Wait a couple of seconds before starting another collection.
     sleep 2
@@ -112,7 +109,7 @@ function batchRun() {
       echo
       sleep 10
     done
-  done < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )
+  done < <( tr -d ' ' < "${config_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )  
 
   echo "Waiting for remaining child processes to complete."
   wait
@@ -124,9 +121,7 @@ function batchRun() {
   echo
   err_cnt=$(ls -1 ${output_dir}/*ERROR.zip 2>/dev/null | wc -l)
 
-# RESERVED FOR FUTURE USE
-  oee_err_cnt=0
-#  oee_err_cnt=$(grep -n "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log | wc -l )
+  oee_err_cnt=$(grep -n "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log | wc -l ) 
 
   if [[ ${err_cnt} -eq 0 ]] && [[ ${oee_err_cnt} -eq 0 ]] ; then
     return 0
@@ -171,14 +166,14 @@ function print_usage() {
 
 function main() {
   ### Validate input
-
+  
   if [[ $(($# & 1)) == 1 ]] || [[ $# == 0 ]]  ;
   then
     echo "Invalid number of parameters $# : $@ "
     print_usage
     exit
   fi
-
+  
   while (( "$#" )); do
     if [[ "$1" == "--maxParallel" ]];
     then
@@ -195,32 +190,31 @@ function main() {
     fi
     shift 2
   done
-
+  
   if [[ -f "${config_file}" ]] ; then
     batchRun
     retval=$?
-
+  
     if [[ ${retval} -eq 0 ]] ; then
       print_complete
-# RESERVED FOR FUTURE USE
-#      oee_file_count=$(wc -l < <(ls -1 "${oee_dir}"  | ${grep_cmd} "driverfile.${run_id}"))
-#      if [[ -d ${oee_dir} ]] && [[ ${oee_file_count} -gt 0 ]]; then
-#          echo "Running Oracle Estate Explorer for ${oee_file_count} groups."
-#          cd "${oee_dir}"
-#          oee_run "${run_id}" 2>&1 | tee "OEE_${dma_log_name}"
-#          echo "Checking log file OEE_${dma_log_name} for OEE failures}"
-#
-#          for oee_fail_number in  $(${grep_cmd} "Database extract failures" "OEE_${dma_log_name}" | cut -d ':' -f 2 | tr -d ' '); do
-#            oee_fail_count=$(( ${oee_fail_count}  + ${oee_fail_number} ))
-#          done
-#          if [[ ${oee_fail_count} -ne 0 ]] ; then
-#            print_fail
-#          else
-#            print_complete
-#          fi
-#      else
-#        print_complete
-#      fi
+      oee_file_count=$(wc -l < <(ls -1 "${oee_dir}"  | ${grep_cmd} "driverfile.${run_id}"))
+      if [[ -d ${oee_dir} ]] && [[ ${oee_file_count} -gt 0 ]]; then
+          echo "Running Oracle Estate Explorer for ${oee_file_count} groups."
+          cd "${oee_dir}"
+          oee_run "${run_id}" 2>&1 | tee "OEE_${dma_log_name}"
+          echo "Checking log file OEE_${dma_log_name} for OEE failures}"
+
+          for oee_fail_number in  $(${grep_cmd} "Database extract failures" "OEE_${dma_log_name}" | cut -d ':' -f 2 | tr -d ' '); do
+            oee_fail_count=$(( ${oee_fail_count}  + ${oee_fail_number} ))
+          done
+          if [[ ${oee_fail_count} -ne 0 ]] ; then
+            print_fail
+          else
+            print_complete
+          fi
+      else
+        print_complete
+      fi
     else
       print_separator
       echo "One or more collections encountered errors.  Please review the logs, remediate the errors and rerun the failed collection(s)."
@@ -231,3 +225,4 @@ function main() {
 }
 
 main "$@" 2>&1 | tee "${dma_log_name}"
+

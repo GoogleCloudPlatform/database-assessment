@@ -17,7 +17,7 @@
 . ./dma_oee.sh
 
 # Global variables and constants
-dma_version="4.3.45"
+dma_version="4.3.44"
 dbmajor=""
 dbdomain=""
 script_dir=""
@@ -388,26 +388,25 @@ function print_usage() {
   echo "                              IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8"
   echo "                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR."
 
-# RESERVED FOR FUTURE USE
-#  echo "  Oracle Estate Explorer collection"
-#  echo "      --collectOee            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector.  Default is Y."
-#  echo "                              NOTE: This requires SQL client version 21 and above, plus Oracle database 11.2 or above."
-#  echo "                                    OEE collection will not run if requirements are not met."
-#  echo
-#  echo "      --oeeGroup              Required if --collect_oee is Y.  This is the group name (ex: Dev, Prod, QA, etc) to use for bundling multiple databases togegther within OEE."
-#  echo "                              Maximum length of 32 characters."
-#  echo "      --oee_runId             Internal use only.  This is used by DMA automation to handle parallel runs of multiple collections."
-#  echo
-#  echo " Optional identifier"
-#  echo "      --manualUniqueId        Optional.  Allows the end user to create a unique identifier with which to tag the collection. "
+  echo "  Oracle Estate Explorer collection"
+  echo "      --collectOee            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector.  Default is Y."
+  echo "                              NOTE: This requires SQL client version 21 and above, plus Oracle database 11.2 or above."
+  echo "                                    OEE collection will not run if requirements are not met."
+  echo
+  echo "      --oeeGroup              Required if --collect_oee is Y.  This is the group name (ex: Dev, Prod, QA, etc) to use for bundling multiple databases togegther within OEE."
+  echo "                              Maximum length of 32 characters."
+  echo "      --oeeRunId              Internal use only.  This is used by DMA automation to handle parallel runs of multiple collections."
+  echo
+  echo " Optional identifier"
+  echo "      --manualUniqueId        Optional.  Allows the end user to create a unique identifier with which to tag the collection. "
   echo "                              Also used internally by DMA automation."
   echo
   echo " Example:"
   echo
   echo
-  echo "  ./collect-data.sh --connection_string {user}/{password}@//{db host}:{listener port}/{service name} --stats_source AWR"
+  echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR"
   echo " or"
-  echo "  ./collect-data.sh --collection_user_name {user} --collection_user_pass {password} --host_name {db host} --port {listener port} --database_service {service name} --stats_source AWR"
+  echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR"
 
 }
 ### Validate input
@@ -418,7 +417,7 @@ function parse_parameters() {
     print_usage
     exit
   fi
-
+  
   while (( "$#" )); do
     if   [[ "$1" == "--hostName" ]];           then host_name="${2}"
     elif [[ "$1" == "--port" ]];               then port="${2}"
@@ -430,9 +429,9 @@ function parse_parameters() {
     elif [[ "$1" == "--connectionStr" ]];      then connection_string="${2}"
     elif [[ "$1" == "--statsWindow" ]];        then stats_window="${2}"
     elif [[ "$1" == "--manualUniqueId" ]];     then manual_unique_id="${2}"
-#    elif [[ "$1" == "--collectOEE" ]];         then collect_oee="${2}"
-#    elif [[ "$1" == "--oeeGroup"   ]];         then oee_group_name="${2}"
-#    elif [[ "$1" == "--oee_runId"   ]];        then oee_run_id="${2}"
+    elif [[ "$1" == "--collectOEE" ]];         then collect_oee="${2}"
+    elif [[ "$1" == "--oeeGroup"   ]];         then oee_group_name="${2}"
+    elif [[ "$1" == "--oeeRunId"   ]];         then oee_run_id="${2}"
     elif [[ "$1" == "--dmaAutomation"   ]];    then dma_automation_flag="${2}"  # Internal use only
     else
       echo "Unknown parameter ${1}"
@@ -441,11 +440,11 @@ function parse_parameters() {
     fi
     shift 2
   done
-
+  
   if [[ "${database_type}" != "oracle" ]] ; then
     database_type="oracle"
   fi
-
+  
   if [[ "${stats_source}" = "awr" ]]; then
     diag_pack_access="UseDiagnostics"
   elif [[ "${stats_source}" = "statspack" ]] ; then
@@ -454,11 +453,11 @@ function parse_parameters() {
     echo No performance data will be collected.
     diag_pack_access="nostatspack"
   fi
-
+  
   if [[ ${stats_window} -ne 30 ]] && [[ ${stats_window} -ne 7 ]] ; then
     stats_window=30
   fi
-
+  
   if [[ "${connection_string}" == "" ]] ; then
     if [[ "${host_name}" != "" && "${port}" != "" && "${database_service}" != "" && "${collection_user_name}" != "" && "${collection_user_pass}" != "" ]] ; then
       connection_string="${collection_user_name}/${collection_user_pass}@//${host_name}:${port}/${database_service}"
@@ -476,7 +475,7 @@ function parse_parameters() {
     port=$(echo ${host_and_port} | cut -d ':' -f 2)
     database_service=$(echo ${connection_string} | cut -d '/' -f 5)
   fi
-
+  
   if [[ "${collect_oee}" == "Y" ]] ; then
     if [[ "${oee_group_name}" == "" ]] ; then
       echo "ERROR: Parameter --oee_group_name must be specified if --collect_oee is Y."
@@ -497,17 +496,17 @@ function parse_parameters() {
       exit 1
     fi
   fi
-
+  
   if [[ "${manual_unique_id}" != "" ]] ; then
     case "$(uname)" in
       "Solaris" )
             manual_unique_id=$(echo "${manual_unique_id}" | iconv -t ascii//TRANSLIT | ${sed_cmd} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
             ;;
       ( "Darwin" | "Linux" )
-            manual_unique_id=$(echo "${manual_unique_id}" | iconv -t ascii//TRANSLIT | ${sed_cmd} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
-            ;;
+            manual_unique_id=$(echo "${manual_unique_id}" | iconv -t ascii//TRANSLIT | ${sed_cmd} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100) 
+            ;; 
       "HP-UX" )
-            manual_unique_id=$(echo "${manual_unique_id}" | tr -c '[:alnum:]\n' '-' |  sed 's/^-//; s/-$//' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+            manual_unique_id=$(echo "${manual_unique_id}" | tr -c '[:alnum:]\n' '-' |  sed 's/^-//; s/-$//' | tr '[:upper:]' '[:lower:]' | cut -c 1-100) 
             ;;
       "AIX" )
             manual_unique_id=$(echo "${manual_unique_id}" | iconv -f $(locale charmap) -t UTF-8 | tr -c '[:alnum:]\n' '-' |  sed 's/^-//; s/-$//' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
@@ -526,7 +525,7 @@ function check_db_connection() {
     echo "Unable to connect to the target database using ${connect_string}.  Please verify the connection information and target database status."
     exit 255
   fi
-}
+} 
 
 #############################################################################
 #
@@ -550,7 +549,7 @@ function main() {
 
   if [[ $retval -eq 0 ]];then
     if [[ "$(echo ${sqlcmd_result} | ${grep_cmd} -E '(ORA-|SP2-)')" != "" ]];then
-      print_failure
+      print_fail
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Database version check returned error ${sqlcmd_result}"
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -573,7 +572,7 @@ function main() {
       if [[ $retval -ne 0 ]];then
         create_error_log  $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
         compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
-        print_failure
+        print_fail
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${log_dir}"
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -584,7 +583,7 @@ function main() {
       cleanup_dma_output $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
       retval=$?
       if [[ $retval -ne 0 ]];then
-        print_failure
+        print_fail
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo "Database Migration Assessment data sanitation reported an error. Please check the error log in directory ${output_dir}"
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -622,7 +621,7 @@ function main() {
       compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g') $database_type
       retval=$?
       if [[ $retval -ne 0 ]];then
-        print_failure
+        print_fail
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo "Database Migration Assessment data file archive encountered a problem.  Exiting...."
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -641,7 +640,7 @@ function main() {
              print_warning
              ;;
           FAILURE )
-             print_failure
+             print_fail
              ;;
           * )
              print_complete
@@ -657,3 +656,4 @@ function main() {
 }
 
 main "$@"
+
