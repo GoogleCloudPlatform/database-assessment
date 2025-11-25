@@ -28,8 +28,6 @@ SELECT
 FROM
     &v_tblprefix._triggers a
 WHERE
-    --TRIM(base_object_type) IN ( 'DATABASE', 'SCHEMA' )
-    --AND
     status = 'ENABLED'
     AND ( owner NOT LIKE 'APEX_%')
     AND ( owner NOT IN ('FLOWS_FILES', 'GSMADMIN_INTERNAL', 'XDB', 'WMSYS', 'LBACSYS', 'MDSYS'))
