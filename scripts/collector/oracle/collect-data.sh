@@ -417,7 +417,7 @@ function parse_parameters() {
     print_usage
     exit
   fi
-  
+
   while (( "$#" )); do
     if   [[ "$1" == "--hostName" ]];           then host_name="${2}"
     elif [[ "$1" == "--port" ]];               then port="${2}"
@@ -440,11 +440,11 @@ function parse_parameters() {
     fi
     shift 2
   done
-  
+
   if [[ "${database_type}" != "oracle" ]] ; then
     database_type="oracle"
   fi
-  
+
   if [[ "${stats_source}" = "awr" ]]; then
     diag_pack_access="UseDiagnostics"
   elif [[ "${stats_source}" = "statspack" ]] ; then
@@ -453,11 +453,11 @@ function parse_parameters() {
     echo No performance data will be collected.
     diag_pack_access="nostatspack"
   fi
-  
+
   if [[ ${stats_window} -ne 30 ]] && [[ ${stats_window} -ne 7 ]] ; then
     stats_window=30
   fi
-  
+
   if [[ "${connection_string}" == "" ]] ; then
     if [[ "${host_name}" != "" && "${port}" != "" && "${database_service}" != "" && "${collection_user_name}" != "" && "${collection_user_pass}" != "" ]] ; then
       connection_string="${collection_user_name}/${collection_user_pass}@//${host_name}:${port}/${database_service}"
@@ -475,10 +475,10 @@ function parse_parameters() {
     port=$(echo ${host_and_port} | cut -d ':' -f 2)
     database_service=$(echo ${connection_string} | cut -d '/' -f 5)
   fi
-  
+
   if [[ "${collect_oee}" == "Y" ]] ; then
     if [[ "${oee_group_name}" == "" ]] ; then
-      echo "ERROR: Parameter --oee_group_name must be specified if --collect_oee is Y."
+      echo "ERROR: Parameter --oeeGroup must be specified if --collectOEE is Y."
       print_usage
       exit
     fi
@@ -496,17 +496,17 @@ function parse_parameters() {
       exit 1
     fi
   fi
-  
+
   if [[ "${manual_unique_id}" != "" ]] ; then
     case "$(uname)" in
       "Solaris" )
             manual_unique_id=$(echo "${manual_unique_id}" | iconv -t ascii//TRANSLIT | ${sed_cmd} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
             ;;
       ( "Darwin" | "Linux" )
-            manual_unique_id=$(echo "${manual_unique_id}" | iconv -t ascii//TRANSLIT | ${sed_cmd} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100) 
-            ;; 
+            manual_unique_id=$(echo "${manual_unique_id}" | iconv -t ascii//TRANSLIT | ${sed_cmd} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+            ;;
       "HP-UX" )
-            manual_unique_id=$(echo "${manual_unique_id}" | tr -c '[:alnum:]\n' '-' |  sed 's/^-//; s/-$//' | tr '[:upper:]' '[:lower:]' | cut -c 1-100) 
+            manual_unique_id=$(echo "${manual_unique_id}" | tr -c '[:alnum:]\n' '-' |  sed 's/^-//; s/-$//' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
             ;;
       "AIX" )
             manual_unique_id=$(echo "${manual_unique_id}" | iconv -f $(locale charmap) -t UTF-8 | tr -c '[:alnum:]\n' '-' |  sed 's/^-//; s/-$//' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
@@ -525,7 +525,7 @@ function check_db_connection() {
     echo "Unable to connect to the target database using ${connect_string}.  Please verify the connection information and target database status."
     exit 255
   fi
-} 
+}
 
 #############################################################################
 #
@@ -656,4 +656,3 @@ function main() {
 }
 
 main "$@"
-
