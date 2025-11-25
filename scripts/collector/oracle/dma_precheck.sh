@@ -259,23 +259,22 @@ function precheckConfigFileFormat() {
         failcount=$(( $failcount + 1 ))
       fi  
 
-# RESERVED FOR FUTURE USE
-#      # Check parameters for OEE if given
-#      if [[ "${oee_flag}" != ""  ]] ; then
-#        if [[ "${oee_flag}" != "Y" ]] && [[ "${oee_flag}" != "N" ]] ; then
-#          echo "FAILED : Invalid entry ${oee_flag} for OEE Flag on line ${lineno}. Must be one of (Y, N)."
-#          failcount=$(( $failcount + 1 ))
-#        fi
-#
-#        if [[ "${oee_flag}" == "Y" ]] ; then
-#          oee_entries=1
-#        fi
-#
-#        if [[ "${oee_flag}" = "Y" ]] && [[ ! -f ${oee_dir}/oee_group_extract-SA.sh ]] ; then
-#            echo "FAILED : OEE collection is specified on line ${lineno} but the OEE collection files are not installed in ${oee_dir}.  Either install OEE to the specified location or set this flag to N in the configuration file."
-#            failcount=$(( $failcount + 1 ))
-#        fi              
-#      fi
+      # Check parameters for OEE if given
+      if [[ "${oee_flag}" != ""  ]] ; then
+        if [[ "${oee_flag}" != "Y" ]] && [[ "${oee_flag}" != "N" ]] ; then
+          echo "FAILED : Invalid entry ${oee_flag} for OEE Flag on line ${lineno}. Must be one of (Y, N)."
+          failcount=$(( $failcount + 1 ))
+        fi
+
+        if [[ "${oee_flag}" == "Y" ]] ; then
+          oee_entries=1
+        fi
+
+        if [[ "${oee_flag}" = "Y" ]] && [[ ! -f ${oee_dir}/oee_group_extract-SA.sh ]] ; then
+            echo "FAILED : OEE collection is specified on line ${lineno} but the OEE collection files are not installed in ${oee_dir}.  Either install OEE to the specified location or set this flag to N in the configuration file."
+            failcount=$(( $failcount + 1 ))
+        fi              
+      fi
 
     fi     
   done < <( tr -d ' ' < "${configuration_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )
@@ -618,8 +617,7 @@ function runAllChecks() {
     if [[ $retval -eq 0 ]]; then precheckUser; retval=$?; fi
     if [[ $retval -eq 0 ]]; then precheckStats; retval=$?; fi
   fi
-# RESERVED FOR FUTURE USE
-#  if [[ $retval -eq 0 ]] && [[ $oee_entries -eq 1 ]] ; then precheck_oee_platform; retval=$?; fi
+  if [[ $retval -eq 0 ]] && [[ $oee_entries -eq 1 ]] ; then precheck_oee_platform; retval=$?; fi
 
   print_separator
 
