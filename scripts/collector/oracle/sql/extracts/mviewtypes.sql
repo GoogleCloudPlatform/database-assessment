@@ -20,12 +20,11 @@ COLUMN REFRESH_MODE FORMAT A20
 COLUMN FAST_REFRESHABLE FORMAT A20
 COLUMN COMPILE_STATE FORMAT A20
 spool &outputdir/opdb__mviewtypes__&v_tag
-prompt PKEY|CON_ID|OWNER|MVIEW_NAME|UPDATABLE|REWRITE_ENABLED|REFRESH_MODE|REFRESH_METHOD|FAST_REFRESHABLE|COMPILE_STATE|DMA_SOURCE_ID|DMA_MANUAL_ID
+prompt PKEY|CON_ID|OWNER|UPDATABLE|REWRITE_ENABLED|REFRESH_MODE|REFRESH_METHOD|FAST_REFRESHABLE|COMPILE_STATE|DMA_SOURCE_ID|DMA_MANUAL_ID
 WITH mvinfo AS (
 SELECT
     &v_a_con_id AS con_id,
     a.owner,
-    a.mview_name,
     a.updatable,
     a.rewrite_enabled,
     a.refresh_mode,
@@ -40,7 +39,6 @@ WHERE a.owner NOT IN (
 SELECT :v_pkey AS pkey,
        con_id,
        owner,
-       mview_name,
        updatable,
        rewrite_enabled,
        refresh_mode,
