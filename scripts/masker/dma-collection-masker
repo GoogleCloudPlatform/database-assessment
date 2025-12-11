@@ -160,7 +160,7 @@ DATA_MASK_CONFIG = [
     DataMaskRule(
         mask_type=DataMaskTypes.DMA_SOURCE_ID,
         table_name="*",
-        column_position=-2,
+        column_position=-2, # dma_source_id - not accurate for all MSSQL files. (TableList, UserConnections)
         missing_ok=False,
         fake_function=fake.dma_source_id,
     ),
@@ -353,6 +353,202 @@ DATA_MASK_CONFIG = [
         missing_ok=True,
         fake_function=fake.hostname,
     ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DATABASE_NAME,
+        table_name="ColumnDatatypes",
+        column_position=1,   # database_name
+        missing_ok=True,
+        fake_function=fake.database_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="ColumnDatatypes",
+        column_position=2,  # schema_name
+        missing_ok=True,
+        fake_function=fake.user_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="ColumnDatatypes",
+        column_position=3, # table_name
+        missing_ok=True,
+        fake_function=fake.user_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.HOST_NAME,
+        table_name="CompInstalled",
+        column_position=1, # physical_server_name
+        missing_ok=True,
+        fake_function=fake.hostname,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.INSTANCE_NAME,
+        table_name="CompInstalled",
+        column_position=2, # sql_instance_name
+        missing_ok=True,
+        fake_function=fake.instance_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DATABASE_NAME,
+        table_name="DatabaseLevelBlockFeatures",
+        column_position=1, # database_name
+        missing_ok=True,
+        fake_function=fake.database_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.HOST_NAME,
+        table_name="DbClusterNodes",
+        column_position=1, # node_name
+        missing_ok=True,
+        fake_function=fake.hostname,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.HOST_NAME,
+        table_name="DbMachineSpecs",
+        column_position=3, # MachineName
+        missing_ok=True,
+        fake_function=fake.hostname,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DATABASE_NAME,
+        table_name="DbSizes",
+        column_position=1, # database_name
+        missing_ok=True,
+        fake_function=fake.database_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DATABASE_NAME,
+        table_name="IndexList",
+        column_position=1, # database_name
+        missing_ok=True,
+        fake_function=fake.database_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="IndexList",
+        column_position=2, # schema_name
+        missing_ok=True,
+        fake_function=fake.user_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="IndexList",
+        column_position=3, # table_name
+        missing_ok=True,
+        fake_function=fake.user_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="IndexList",
+        column_position=4, # index_name
+        missing_ok=True,
+        fake_function=fake.user_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="IndexList",
+        column_position=4, # index_name
+        missing_ok=True,
+        fake_function=fake.user_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DATABASE_NAME,
+        table_name="ObjectList",
+        column_position=1, # database_name
+        missing_ok=True,
+        fake_function=fake.database_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="ObjectList",
+        column_position=2, # schema_name
+        missing_ok=True,
+        fake_function=fake.user_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="ObjectList",
+        column_position=3, # object_name
+        missing_ok=True,
+        fake_function=fake.user_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="ObjectList",
+        column_position=8, # associated_table_name
+        missing_ok=True,
+        fake_function=fake.user_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DATABASE_NAME,
+        table_name="TableList",
+        column_position=1, # database_name
+        missing_ok=True,
+        fake_function=fake.database_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="TableList",
+        column_position=2, # schema_name
+        missing_ok=True,
+        fake_function=fake.user_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="TableList",
+        column_position=3, # table_name
+        missing_ok=True,
+        fake_function=fake.user_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="TableList",
+        column_position=17, # dma_source_id
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DATABASE_NAME,
+        table_name="UserConnections",
+        column_position=1, # database_name
+        missing_ok=True,
+        fake_function=fake.database_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.HOST_NAME,
+        table_name="UserConnections",
+        column_position=2, # host_name
+        missing_ok=True,
+        fake_function=fake.hostname,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="UserConnections",
+        column_position=5, # login_name
+        missing_ok=True,
+        fake_function=fake.user_name
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.HOST_NAME,
+        table_name="UserConnections",
+        column_position=14, # nt_domain
+        missing_ok=False,
+        fake_function=fake.hostname,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="UserConnections",
+        column_position=15, # nt_user_name
+        missing_ok=False,
+        fake_function=fake.user_name,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="UserConnections",
+        column_position=18, # dma_source_id
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
 ]
 
 
@@ -473,8 +669,9 @@ def _find_collections_to_process(search_path: Path) -> List[Path]:
     file_list = (
         set(search_path.glob("opdb_oracle_*.zip"))
         .union(set(search_path.glob("opdb_oracle_*.gz")))
+        .union(set(search_path.glob("opdb_mssql_*.zip")))
         .difference(
-            set(search_path.glob("opdb_oracle_*ERROR.zip")).union(set(search_path.glob("opdb_oracle_*ERROR.gz")))
+            set(search_path.glob("opdb_oracle_*ERROR.zip")).union(set(search_path.glob("opdb_oracle_*ERROR.gz"))).union(set(search_path.glob("opdb_mssql_*ERROR.zip")))
         )
     )
     return list(file_list)
@@ -557,7 +754,7 @@ def _generate_identity_map_from_rule(
     with collection_file.open(mode="r", encoding="utf-8") as f:
         data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
         for rn, row in enumerate(data_to_mask):
-            if rn > 0:
+          if (rn > 0) & (len(row)) > 0:
                 # Get the value from column to mask
                 all_values.append(row[column_position])
     unique_values = list(dict.fromkeys(all_values))
@@ -593,7 +790,7 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
         if Version(collection_metadata.script_version) < Version("4.3.15") and rule.column_position < -2:
             column_position += 2
         for rn, row in enumerate(data_to_mask):
-            if rn > 0:
+            if (rn > 0)  & (len(row) > 0):
                 row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
             temp_file.writerow(row)
         shutil.move(t.name, collection_file)
@@ -627,6 +824,7 @@ def _package_collection(
     )
     with zf.ZipFile(archive_file, "w", compression=zf.ZIP_DEFLATED, compresslevel=9) as f:
         for matched_file in matched_files:
+          if "opdb__perfMonLog__create" not in str(matched_file):
             masked_file = _mask_file_collection_key(matched_file)
             identity_map[matched_file.name] = masked_file.name
             f.write(matched_file, f"{masked_file.stem}{masked_file.suffix}")
