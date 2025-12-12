@@ -159,9 +159,128 @@ DATA_MASK_CONFIG = [
     ),
     DataMaskRule(
         mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="*",
-        column_position=-2, # dma_source_id - not accurate for all MSSQL files. (TableList, UserConnections)
+        table_name="CompInstalled",
+        column_position=-2, # dma_source_id 
         missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="ServerProps",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="BlockFeatures",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="LinkedSrvrs",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="DbSizes",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="DbClusterNodes",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="ObjectList",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="ColumnDatatypes",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="PerfMonData",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="DbccTrace",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="DiskVolInfo",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="DbServerFlags",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="DbServerConfig",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="DmvPerfmon",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="TranLogBkupCountByHourByDay",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="TranLogBkupSizeByHourByDay",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.DMA_SOURCE_ID,
+        table_name="DatabaseLevelBlockFeatures",
+        column_position=-2, # dma_source_id 
+        missing_ok=False,
+        fake_function=fake.dma_source_id,
+    ),
+    DataMaskRule(
+        mask_type=DataMaskTypes.HOST_NAME,
+        table_name="DbMachineSpecs",
+        column_position=1, # dma_source_id
+        missing_ok=True,
         fake_function=fake.dma_source_id,
     ),
     DataMaskRule(
