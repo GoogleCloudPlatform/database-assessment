@@ -55,7 +55,7 @@ jobs:
 
       - name: Building & Package Collector
         run: make clean && make build-collector
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
             name: collections
             path: dist/*.zip
@@ -81,7 +81,7 @@ jobs:
     - name: Build
       run: uv build
 
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       with:
         name: wheels
         path: dist/*
@@ -215,7 +215,7 @@ jobs:
       run: ./${{ matrix.job.artifact }} --version
 
     - name: Upload binary artifact
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: binary-${{ matrix.job.artifact }}
         path: ${{ matrix.job.artifact }}
