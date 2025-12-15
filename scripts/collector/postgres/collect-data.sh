@@ -519,9 +519,11 @@ if [ $retval -eq 0 ]; then
 
     if [ "$DBTYPE" == "postgres" ]; then
       PGVER=$(echo $dbmajor | cut -c 1-2)
-      if [[ $PGVER -gt 13 ]] && [[ $PGVER -lt 17 ]] ; then
+      echo "PGVER detected = ${PGVER}"  >> ${OUTPUT_DIR}/opdb__defines__${V_TAG}
+      if [[ ${PGVER} -gt 13 ]] && [[ ${PGVER} -lt 17 ]] ; then
         PGVER="base"
       fi
+      echo "PGVER used = ${PGVER}"  >> ${OUTPUT_DIR}/opdb__defines__${V_TAG}
       executeOPPg "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g') "${manualUniqueId}" "${PGVER}" "${allDbs}"
       retval=$?
     fi
