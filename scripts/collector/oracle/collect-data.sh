@@ -388,12 +388,12 @@ function print_usage() {
   echo "                              IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8"
   echo "                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR."
 
-  echo "  Oracle Estate Explorer collection"
-  echo "      --collectOee            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector.  Default is Y."
+  echo "  Oracle Estate Explorer collection.  (Optional functionality, not require for DMA to run.  Must be downloaded sparately from Oracle.)
+  echo "      --collectOee            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector.  Default is N."
   echo "                              NOTE: This requires SQL client version 21 and above, plus Oracle database 11.2 or above."
   echo "                                    OEE collection will not run if requirements are not met."
   echo
-  echo "      --oeeGroup              Required if --collect_oee is Y.  This is the group name (ex: Dev, Prod, QA, etc) to use for bundling multiple databases togegther within OEE."
+  echo "      --oeeGroup              Required if --collectOEE is Y.  This is the group name (ex: Dev, Prod, QA, etc) to use for bundling multiple databases togegther within OEE."
   echo "                              Maximum length of 32 characters."
   echo "      --oeeRunId              Internal use only.  This is used by DMA automation to handle parallel runs of multiple collections."
   echo

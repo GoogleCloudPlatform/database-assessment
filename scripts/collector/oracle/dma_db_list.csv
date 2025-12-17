@@ -7,13 +7,18 @@
 # Field 3 = Connection details for the database in Easy Connect format.
 # Field 4 = Source for performance stats (Must be one of AWR, STATSPACK, NOSTATS).
 # Field 5 = Number of days of statistics to collect. (Must be one of 7 or 30) 
- 
-# The first example below demonstrates how to connect to a non-container database and use STATSPACK performance data.
-# The second example demonstrates how to create a common user for a container database and use AWR/ASH data for performance stats.  
-# The third example demonstrates how to connect to a non-container database and skip collection of performance data.
+# Field 6 = Optional. Unique identifier for this database, up to 30 characters, no spaces or punctuation other than underscore.  Optional, but must be unique if specified.
+# Field 7 = Optional. Flag to indicate whether to run Oracle Estate Explorer (if available) collection on this database.  Default is N.
+# Field 8 = Optional. Group name to use for this database within Oracle Estate Explorer,  up to 30 characters, no spaces or punctuation.
+# NOTE THAT ORACLE ESTATE EXPLORER MUST BE DOWNLOADED SEPARATELY FROM ORACLE.  It is optional and not required for DMA collector to run.
 
-# SYS,USER,DB_CONN,STATS_SRC,NUMDAYS
-sys/Secret-123,DMACOLLECTOR/DMA-123,@//prod1.example.com:1521/ORDR,STATSPACK,7
-sys/Secret-234,C##DMACOLLECTOR/DMA-123,@//prod2.example.com:1521/INVT,AWR,7
-sys/Secret-234,C##DMACOLLECTOR/DMA-123,@//qa.example.com:1521/QADB,NOSTATS,7
+# The first example below demonstrates how to connect to a non-container database and use STATSPACK performance data. Unique identifier is "prodSales", Oracle Estate Explorer will be collected and this database will be in group "PROD"
+# The second example demonstrates how to create a common user for a container database and use AWR/ASH data for performance stats. Unique identifier is "prodInventory", Oracle Estate Explorer will be collected and this database will be in group "PROD"
+# The third example demonstrates how to connect to a non-container database and skip collection of performance data. Unique identifier is "qa1", Oracle Estate Explorer will be collected and this database will be in group "QA"
+# The fourth example demonstrates how to connect to a non-container database and skip collection of performance data. No unique identifier is defined and Oracle Estate Explorer will not be run on this database.
 
+# SYS,USER,DB_CONN,STATS_SRC,NUMDAYS,UINIQUE_ID,ENABLE_OEE,OEE_GROUP_NAME
+sys/Secret-123,DMACOLLECTOR/DMA-123,@//prod1.example.com:1521/ORDR,STATSPACK,7,prodSales,Y,PROD
+sys/Secret-234,C##DMACOLLECTOR/DMA-123,@//prod2.example.com:1521/INVT,AWR,7,prodInventory,Y,PROD
+sys/Secret-234,C##DMACOLLECTOR/DMA-123,@//qa.example.com:1521/QADB,NONE,7,qa1,Y,QA
+sys/Secret-123,C##DMACOLLECTOR/DMA-123,@//dev.example.com:1521/DEVDB,NONE
