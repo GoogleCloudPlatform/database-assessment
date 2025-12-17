@@ -74,7 +74,7 @@ for analysis by Database Migration Assessment.
 
     c) If the extract will be run by a user that does not have SYSDBA privilege, connect to the database
        as a user with SYSDBA privileges and create the user if needed.  If this is a multi-tenant database,
-       create the user as a common user in the root container. The Dma_collector does not currently support
+       create the user as a common user in the root container. The DMA collector does not currently support
        running in individual pluggable databases.
 
        For non-CDB databases:
@@ -174,7 +174,7 @@ for analysis by Database Migration Assessment.
     If you wish to automate setup and collection from multiple databases, edit the file dma_db_list.csv with connection information and options for each database, one entry per line.
     The file header describes the file format and provides examples.
 
-    Verify the congfiguration file is valid and the sysdba connection information is correct by executing the precheck script with the --verifyUser N option.
+    Verify the configuration file is valid and the sysdba connection information is correct by executing the precheck script with the --verifyUser N option.
       ./dma_precheck.sh --configFile dma_db_list.csv --verifyUser N
 
     Address any errors reported before continuing.
@@ -184,14 +184,14 @@ for analysis by Database Migration Assessment.
 
     If any errors are encountered, address the issue before continuing to the next step.  The dma_make_user.sh script can be run multiple times if needed.  
 
-    Verify the user connection and privilege information by re-running the dma_precheck.sh script without the --verifyUser parameter.  This will verify the user can connect.
-      ./dma_precheck.sh --configFile dma_db_list.csv 
+    Verify the user connection and privilege information by re-running the dma_precheck.sh script with the --verifyUser Y option, or just exclude the --verifyUser parameter as the default is Y.  This will verify the user can connect.
+      ./dma_precheck.sh --configFile dma_db_list.csv  --verifyUser Y
 
     Address any errors reported before continuing.
 
     Execute automated DMA collection by running the dma_batch_run.sh script.  It can execute collections in parallel via the --maxParallel parameter.  Set this to 1 to disable parallel collection.
     The default is 4.  Note that this controls the number of DMA collections running at one time, not the parallelism of the queries in the database.  Each running collection consumes some disk space 
-    for temporary files as the data is extracted.  Very high settings for --maxParallel will consume a lot of space.  The example below shows a limit of two collections runnig at once.
+    for temporary files as the data is extracted.  Very high settings for --maxParallel may consume a lot of space.  The example below shows a limit of two collections runnig at once.
 
       ./dma_batch_run.sh --configFile dma_db_list.csv --maxParallel 2
 
