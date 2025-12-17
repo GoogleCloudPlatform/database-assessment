@@ -44,15 +44,15 @@ function precheckOS() {
   # Override for Solaris
   if [[ "$(uname)" = "SunOS" ]]; then
     sed_cmd=/usr/xpg4/bin/sed
- 
+
     if [[ -f /usr/bin/ggrep ]]; then
       grep_cmd=/usr/bin/ggrep
     else if [[ -f /usr/sfw/bin/ggrep ]]; then
            grep_cmd=/usr/sfw/bin/ggrep
          else
            grep_cmd=""
-         fi 
-    fi 
+         fi
+    fi
   fi
 
   # Override for HP-UX
@@ -194,15 +194,15 @@ function precheckConfigUniqueId() {
 
   linecount=$(cat "${configuration_file}" | tr -d ' ' | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' | cut -d ',' -f 6 | ${grep_cmd} -c -v '^$' | wc -l | tr -d ' ')
   uniquecount=$(cat "${configuration_file}" | tr -d ' ' | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' | cut -d ',' -f 6 | ${grep_cmd} -c -v '^$' | sort | uniq -c | wc -l | tr -d ' ')
-  
+
   if [[ ${linecount} -ne ${uniquecount} ]] ; then
     echo "FAILED : Only $uniquecount out of out of $linecount IDs are unique."
     echo "         These Ids appear more than once in the configuration file : "
-    echo "Occurrances Value"
+    echo "Occurrences Value"
     echo "----------- ------------------------------"
     tr -d ' ' < "${configuration_file}" | tr -d "${tab_char}" |  ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' | cut -d ',' -f 6 | ${grep_cmd} -v '^$' | sort | uniq -c | ${grep_cmd} -v ' 1 '  | awk '{printf "%11s %s", $1, $2}'
     return 1
-  else 
+  else
     echo "SUCCESS : All databases have unique ids where specified."
   fi
 }
@@ -222,7 +222,7 @@ function precheck_oee_platform() {
 
   if [[ "${ret_val}" == "PASS" ]]; then
     return 0
-  else 
+  else
     return 1
   fi
 }
@@ -240,7 +240,7 @@ function precheckConfigFileFormat() {
   while IFS=, read -r sysUser user db statssrc statswindow dmaid oee_flag oee_group || [[ -n "$line" ]]; do
     lineno=$(( ${lineno} + 1 ))
     [[ ${lineno} -gt ${configfilelinecount} ]] && break   # Break out if we have read all the lines.
-  
+
     # Skip comments and empty lines
     sysUser=$(echo "${sysUser}" | tr -d ' ')
     [[ "${sysUser}" =~ ^# ]] || [[ -z "${sysUser}" ]] && continue
@@ -257,7 +257,7 @@ function precheckConfigFileFormat() {
       if ( [[ "${statssrc}" = "AWR" ]]  ||  [[ "${statssrc}" = "STATSPACK" ]] )  && ( [[ "${statswindow}" != "7" ]] && [[ "{$statswindow}" != "30" ]] ) ; then
         echo "FAILED : Invalid entry ${statswindow} for Stats Window on line ${lineno}. Must be one of (7, 30)."
         failcount=$(( $failcount + 1 ))
-      fi  
+      fi
 
       # Check parameters for OEE if given
       if [[ "${oee_flag}" != ""  ]] ; then
@@ -273,10 +273,10 @@ function precheckConfigFileFormat() {
         if [[ "${oee_flag}" = "Y" ]] && [[ ! -f ${oee_dir}/oee_group_extract-SA.sh ]] ; then
             echo "FAILED : OEE collection is specified on line ${lineno} but the OEE collection files are not installed in ${oee_dir}.  Either install OEE to the specified location or set this flag to N in the configuration file."
             failcount=$(( $failcount + 1 ))
-        fi              
+        fi
       fi
 
-    fi     
+    fi
   done < <( tr -d ' ' < "${configuration_file}" | tr -d "${tab_char}" | ${grep_cmd} -v '^#' | ${grep_cmd} -v '^$' )
 #  done < <( ${sed_cmd} "s/ //g;s/${tab_char}//g" "$configuration_file"  )
 
@@ -321,7 +321,7 @@ function checkStats() {
           sqlStr := 'SELECT  EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) FROM dba_hist_snapshot WHERE begin_interval_time < trunc(sysdate)';
           EXECUTE IMMEDIATE sqlStr INTO numdays;
           IF numdays > 0 THEN
-            sqlStr := REPLACE('SELECT CASE WHEN EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40, ~ ~) || ~ AWR        Star_cmdT ~ || to_char( min(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1),4) || ~  #DAYS ~, EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) )
+            sqlStr := REPLACE('SELECT CASE WHEN EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40, ~ ~) || ~ AWR        START ~ || to_char( min(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(begin_interval_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1),4) || ~  #DAYS ~, EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) )
             , (count(1) / EXTRACT (DAY FROM max(begin_interval_time) - min(begin_interval_time) ) )
             FROM dba_hist_snapshot
             WHERE begin_interval_time <= trunc(sysdate)', '~', chr(39));
@@ -348,7 +348,7 @@ function checkStats() {
         EXECUTE IMMEDIATE sqlStr INTO numdays, numsnaps USING mindays;
         numdays:=NVL(numdays,0);
         IF numdays > 0 THEN
-          sqlStr := REPLACE('SELECT CASE WHEN trunc(max(snap_time) -min(snap_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40) || ~ STATSPACK  Star_cmdT ~ || to_char(min(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1), 4) || ~  #DAYS ~ , to_char(trunc(max(snap_time) -min(snap_time) )) , count(1) / (max(snap_time) -min(snap_time) )
+          sqlStr := REPLACE('SELECT CASE WHEN trunc(max(snap_time) -min(snap_time) ) >= :mindays THEN ~SUCCESS : ~ ELSE ~WARNING : ~ END || rpad(substr(:dbconn,1,40),40) || ~ STATSPACK  START ~ || to_char(min(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  END ~ || to_char(max(snap_time), ~YYYY-MM-DD HH24:MI~) || ~  #SNAPS ~ || LPAD(count(1), 4) || ~  #DAYS ~ , to_char(trunc(max(snap_time) -min(snap_time) )) , count(1) / (max(snap_time) -min(snap_time) )
           FROM PERFSTAT.STATS\$SNAPSHOT
           WHERE snap_time <= (sysdate)
           AND snap_time >= trunc(sysdate - :mindays)', '~', chr(39));
@@ -371,7 +371,7 @@ function checkStats() {
     ELSE
       retval := 'ERROR : ' || dbconn || ' Unrecognized value "' || statsSrc || '" in configuration file.';
     END IF;
-    if retval is null then retval := 'UNKNOWN return condition for ' || dbconn; 
+    if retval is null then retval := 'UNKNOWN return condition for ' || dbconn;
     end if;
     dbms_output.put_line(retval);
   END;
@@ -397,13 +397,13 @@ function precheckStats() {
     lineno=$(( $lineno + 1 ))
     # Skip comments and empty lines
     [[ $lineno -gt $configfilelinecount ]] && break   # Break out if the last line of the config file is a comment or empty
-  
+
     # Skip comments and empty lines
     sysUser=$(echo "${sysUser}" | tr -d ' ')
     [[ "${sysUser}" =~ ^# ]] || [[ -z "${sysUser}" ]] && continue
     username=$(echo "${user}" | cut -d '/' -f 1)
     echo  "...Checking available performance statistics on database ${db} user ${username} for ${statssrc}"
-    retcd=$(checkStats "${user}" "${db}" "${statssrc}" "${statswindow}") 
+    retcd=$(checkStats "${user}" "${db}" "${statssrc}" "${statswindow}")
     success=$(echo "${retcd}" | ${grep_cmd} -e SUCCESS -e NONE -e WARNING | cut -d ' ' -f 1)
     if [[ "${success}" = "SUCCESS" ]]; then
       successes+=("${retcd}")
@@ -412,8 +412,8 @@ function precheckStats() {
         none+=("${retcd}")
       else
         if [[ "${success}" = "WARNING" ]]; then
-          warnings+=("${retcd}") 
-        else 
+          warnings+=("${retcd}")
+        else
           errors+=("${retcd}")
         fi
       fi
@@ -426,7 +426,7 @@ function precheckStats() {
   echo "Results : "
   if [[ $retcd -gt 0 ]]; then
     echo
-    echo SUCCESS:  These databases have at least ${statswindow} calendar days of performance statistics available:
+    echo SUCCESS:  These databases have performance statistics available:
     printf '%s\n' "${successes[@]}"
   fi
 
@@ -474,7 +474,7 @@ function precheckSysdba() {
   fname="${FUNCNAME[0]}"
   print_separator
   echo "Checking SYSDBA connections where needed..."
-  echo 
+  echo
   successes=()
   errors=()
   lineno=0
@@ -603,7 +603,7 @@ function precheckUser() {
 
 
 function runAllChecks() {
- 
+
   echo
   echo "Starting DMA prechecks..."
   echo
@@ -621,8 +621,8 @@ function runAllChecks() {
 
   print_separator
 
-  print_complete  
-  if [[ $retval -eq 0 ]]; then 
+  print_complete
+  if [[ $retval -eq 0 ]]; then
     print_pass
     echo "All tests complete.  You may proceed with DMA collection."
     echo
@@ -634,7 +634,7 @@ function runAllChecks() {
       print_fail
       echo "Address the failures above and retry. "
       echo
-    fi  
+    fi
   fi
 }
 
@@ -648,15 +648,15 @@ function print_usage() {
   echo "                              File format is described in the header of the sample file in dma_db_list.csv. "
   echo
   echo "  --verifyUser                Optional.  Check only sysdba connectivity, skipping user connection check.  Use this to verify the"
-  echo "                              sysdba user can connect before creating or modifing the collection user.  Default is Y."
+  echo "                              sysdba user can connect before creating or modifying the collection user.  Default is Y."
   echo
   echo " Example:"
-  echo      
+  echo
   echo " Verify the sysdba user connection information is correct:"
-  echo      
+  echo
   echo "  ./dma_precheck.sh --connectionFile dma_db_list.csv --verifyUser N"
-  echo      
-  echo      
+  echo
+  echo
   echo " then, after running the dma_make_user.sh script, verify the user connection information as well:"
   echo
   echo "  ./dma_precheck.sh --connectionFile dma_db_list.csv"
@@ -671,7 +671,7 @@ function parse_parameters() {
     print_usage
     exit
   fi
-  
+
   while (( "$#" )); do
     if   [[ "$1" == "--configFile" ]];           then configuration_file="${2}"
     elif [[ "$1" == "--verifyUser" ]];           then verify_user=$(echo "${2}" | tr '[:lower:]' '[:upper:]')
@@ -695,21 +695,20 @@ function parse_parameters() {
     print_usage
     echo
     exit 1
-  fi  
+  fi
 }
 
 
 function main() {
   parse_parameters "$@"
 
-  if [[ -f "${configuration_file}" ]]; then 
+  if [[ -f "${configuration_file}" ]]; then
     configfilelinecount=$(wc -l < <( tr -d ' ' < "${configuration_file}" | tr -d "${tab_char}" | grep -v '^#' | grep -v '^$' ))
     echo "Checking ${configfilelinecount} entries in file ${configuration_file}..."
-    runAllChecks 
+    runAllChecks
   else
     echo "File not found : ${configuration_file}"
   fi
 }
 
 main "$@" | tee ${dma_log_name}
-
