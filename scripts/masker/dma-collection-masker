@@ -64,6 +64,7 @@ class FileMetadata:
     date_time: str
     pkey: str
     collection_key: str
+    database_type: str
 
 
 class DMAFaker:
@@ -153,516 +154,107 @@ class DataMaskTypes(Flag):
     DATABASE_NAME = auto()
 
 
-DATA_MASK_CONFIG = [
+DATA_MASK_CONFIG_MSSQL = [
+    DataMaskRule( mask_type=DataMaskTypes.PKEY, table_name="*", column_position=0, missing_ok=False, fake_function=fake.pkey),
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="BlockFeatures",               column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="ColumnDatatypes",             column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="CompInstalled",               column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="DatabaseLevelBlockFeatures",  column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="DbClusterNodes",              column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="DbMachineSpecs",              column_position=  1, missing_ok=True,  fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="DbServerConfig",              column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="DbServerFlags",               column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="DbSizes",                     column_position=  4, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="DbccTrace",                   column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="DiskVolInfo",                 column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="DmvPerfmon",                  column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="IndexList",                   column_position= 18, missing_ok=True,  fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="LinkedSrvrs",                 column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="ObjectList",                  column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="PerfCounter",                 column_position= 25, missing_ok=True,  fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="PerfMonData",                 column_position= 25, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="ServerProps",                 column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="TableList",                   column_position= 17, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="TranLogBkupCountByHourByDay", column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="TranLogBkupSizeByHourByDay",  column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="UserConnections",             column_position= 18, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
+    # Columns other than dma_source_id
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="ColumnDatatypes",             column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="ColumnDatatypes",             column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="ColumnDatatypes",             column_position= 3,  missing_ok=True,  fake_function=fake.user_name,),        # table_name
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="CompInstalled",               column_position= 1,  missing_ok=True,  fake_function=fake.hostname,),         # physical_server_name
+    DataMaskRule( mask_type=DataMaskTypes.INSTANCE_NAME, table_name="CompInstalled",               column_position= 2,  missing_ok=True,  fake_function=fake.instance_name,),    # sql_instance_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="DatabaseLevelBlockFeatures",  column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="DbClusterNodes",              column_position= 1,  missing_ok=True,  fake_function=fake.hostname,),         # node_name
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="DbMachineSpecs",              column_position= 3,  missing_ok=True,  fake_function=fake.hostname,),         # MachineName
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="DbSizes",                     column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="IndexList",                   column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="IndexList",                   column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="IndexList",                   column_position= 3,  missing_ok=True,  fake_function=fake.user_name,),        # table_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="IndexList",                   column_position= 4,  missing_ok=True,  fake_function=fake.user_name,),        # index_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="LinkedSrvrs",                 column_position= 1,  missing_ok=False, fake_function=fake.database_name,),    # name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="LinkedSrvrs",                 column_position= 4,  missing_ok=False, fake_function=fake.database_name,),    # data_source
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="ObjectList",                  column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="ObjectList",                  column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="ObjectList",                  column_position= 3,  missing_ok=True,  fake_function=fake.user_name,),        # object_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="ObjectList",                  column_position= 8,  missing_ok=True,  fake_function=fake.user_name,),        # associated_table_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="PerfCounter",                 column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="TableList",                   column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="TableList",                   column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="TableList",                   column_position= 3,  missing_ok=True,  fake_function=fake.user_name,),        # table_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="UserConnections",             column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="UserConnections",             column_position= 3,  missing_ok=True,  fake_function=fake.hostname,),         # host_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="UserConnections",             column_position= 4,  missing_ok=True,  fake_function=fake.user_name),         # program_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="UserConnections",             column_position= 5,  missing_ok=True,  fake_function=fake.user_name),         # login_name
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="UserConnections",             column_position=14,  missing_ok=False, fake_function=fake.hostname,),         # nt_domain          
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="UserConnections",             column_position=15,  missing_ok=False, fake_function=fake.user_name,),        # nt_user_name
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="TmpServerProps",              column_position= 2,  missing_ok=False, fake_function=fake.hostname,),         # Special for ServerPrps entries
+]    
+
+DATA_MASK_CONFIG_ORACLE = [
     DataMaskRule(
         mask_type=DataMaskTypes.PKEY, table_name="*", column_position=0, missing_ok=False, fake_function=fake.pkey
     ),
     DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="CompInstalled",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="ServerProps",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="BlockFeatures",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="LinkedSrvrs",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="DbSizes",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="DbClusterNodes",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="ObjectList",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="ColumnDatatypes",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="PerfMonData",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="DbccTrace",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="DiskVolInfo",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="DbServerFlags",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="DbServerConfig",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="DmvPerfmon",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="TranLogBkupCountByHourByDay",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="TranLogBkupSizeByHourByDay",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="DatabaseLevelBlockFeatures",
-        column_position=-2, # dma_source_id 
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.HOST_NAME,
-        table_name="DbMachineSpecs",
-        column_position=1, # dma_source_id
-        missing_ok=True,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="columntypes",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="compressbytype",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="datatypes",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="dbobjectnames",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="dbobjects",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="dtlsourcecode",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="exttab",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="indextypedtl",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="indextypes",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="lobsizing",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="mviewtypes",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="sourcecode",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="tableconstraints",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="tablesnopk",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="tabletypedtl",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="tabletypes",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="triggers",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="usedspacedetails",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="usrsegatt",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="users",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.INSTANCE_NAME,
-        table_name="dbinstances",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.instance_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.HOST_NAME,
-        table_name="dbinstances",
-        column_position=3,
-        missing_ok=True,
-        fake_function=fake.hostname,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DATABASE_NAME,
-        table_name="dbsummary",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.database_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DATABASE_NAME,
-        table_name="dbsummary",
-        column_position=-3,
-        missing_ok=True,
-        fake_function=fake.database_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DATABASE_NAME,
-        table_name="pdbsinfo",
-        column_position=3,
-        missing_ok=True,
-        fake_function=fake.database_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DATABASE_NAME,
-        table_name="pdbsopenmode",
-        column_position=2,
-        missing_ok=True,
-        fake_function=fake.database_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.HOST_NAME,
-        table_name="sourceconn",
-        column_position=6,
-        missing_ok=True,
-        fake_function=fake.hostname,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DATABASE_NAME,
-        table_name="ColumnDatatypes",
-        column_position=1,   # database_name
-        missing_ok=True,
-        fake_function=fake.database_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="ColumnDatatypes",
-        column_position=2,  # schema_name
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="ColumnDatatypes",
-        column_position=3, # table_name
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.HOST_NAME,
-        table_name="CompInstalled",
-        column_position=1, # physical_server_name
-        missing_ok=True,
-        fake_function=fake.hostname,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.INSTANCE_NAME,
-        table_name="CompInstalled",
-        column_position=2, # sql_instance_name
-        missing_ok=True,
-        fake_function=fake.instance_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DATABASE_NAME,
-        table_name="DatabaseLevelBlockFeatures",
-        column_position=1, # database_name
-        missing_ok=True,
-        fake_function=fake.database_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.HOST_NAME,
-        table_name="DbClusterNodes",
-        column_position=1, # node_name
-        missing_ok=True,
-        fake_function=fake.hostname,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.HOST_NAME,
-        table_name="DbMachineSpecs",
-        column_position=3, # MachineName
-        missing_ok=True,
-        fake_function=fake.hostname,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DATABASE_NAME,
-        table_name="DbSizes",
-        column_position=1, # database_name
-        missing_ok=True,
-        fake_function=fake.database_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DATABASE_NAME,
-        table_name="IndexList",
-        column_position=1, # database_name
-        missing_ok=True,
-        fake_function=fake.database_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="IndexList",
-        column_position=2, # schema_name
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="IndexList",
-        column_position=3, # table_name
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="IndexList",
-        column_position=4, # index_name
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DATABASE_NAME,
-        table_name="ObjectList",
-        column_position=1, # database_name
-        missing_ok=True,
-        fake_function=fake.database_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="ObjectList",
-        column_position=2, # schema_name
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="ObjectList",
-        column_position=3, # object_name
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="ObjectList",
-        column_position=8, # associated_table_name
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DATABASE_NAME,
-        table_name="TableList",
-        column_position=1, # database_name
-        missing_ok=True,
-        fake_function=fake.database_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="TableList",
-        column_position=2, # schema_name
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="TableList",
-        column_position=3, # table_name
-        missing_ok=True,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="TableList",
-        column_position=17, # dma_source_id
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DATABASE_NAME,
-        table_name="UserConnections",
-        column_position=1, # database_name
-        missing_ok=True,
-        fake_function=fake.database_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.HOST_NAME,
-        table_name="UserConnections",
-        column_position=2, # host_name
-        missing_ok=True,
-        fake_function=fake.hostname,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="UserConnections",
-        column_position=5, # login_name
-        missing_ok=True,
-        fake_function=fake.user_name
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.HOST_NAME,
-        table_name="UserConnections",
-        column_position=14, # nt_domain
-        missing_ok=False,
-        fake_function=fake.hostname,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.SCHEMA_NAME,
-        table_name="UserConnections",
-        column_position=15, # nt_user_name
-        missing_ok=False,
-        fake_function=fake.user_name,
-    ),
-    DataMaskRule(
-        mask_type=DataMaskTypes.DMA_SOURCE_ID,
-        table_name="UserConnections",
-        column_position=18, # dma_source_id
-        missing_ok=False,
-        fake_function=fake.dma_source_id,
-    ),
-]
+        mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="*", column_position=-2, missing_ok=False, fake_function=fake.dma_source_id
+    ),
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="columntypes",      column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="compressbytype",   column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="datatypes",        column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="dbobjectnames",    column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="dbobjects",        column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="dtlsourcecode",    column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="exttab",           column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="indextypedtl",     column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="indextypes",       column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="lobsizing",        column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="mviewtypes",       column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="sourcecode",       column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="tableconstraints", column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="tablesnopk",       column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="tabletypedtl",     column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="tabletypes",       column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="triggers",         column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="usedspacedetails", column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="usrsegatt",        column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
 
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="dbobjectnames",    column_position= 3, missing_ok=True, fake_function=fake.user_name,),     # object_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="dtlsourcecode",    column_position= 3, missing_ok=True, fake_function=fake.user_name,),     # object_name
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="opkeylog",         column_position= 3, missing_ok=True, fake_function=fake.hostname,),      # host_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="opkeylog",         column_position= 4, missing_ok=True, fake_function=fake.database_name,), # db_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="opkeylog",         column_position= 6, missing_ok=True, fake_function=fake.database_name,), # instance_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="users",            column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # username
+    DataMaskRule( mask_type=DataMaskTypes.INSTANCE_NAME, table_name="dbinstances",      column_position= 2, missing_ok=True, fake_function=fake.instance_name,), # instance_name
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="dbinstances",      column_position= 3, missing_ok=True, fake_function=fake.hostname,),      # host_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="dbsummary",        column_position= 2, missing_ok=True, fake_function=fake.database_name,), # db_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="dbsummary",        column_position=-3, missing_ok=True, fake_function=fake.database_name,), # db_unique_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="pdbsinfo",         column_position= 3, missing_ok=True, fake_function=fake.database_name,), # pdb_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="pdbsopenmode",     column_position= 2, missing_ok=True, fake_function=fake.database_name,), # name
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="sourceconn",       column_position= 4, missing_ok=True, fake_function=fake.hostname,),      # program
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="sourceconn",       column_position= 5, missing_ok=True, fake_function=fake.hostname,),      # module_name
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="sourceconn",       column_position= 6, missing_ok=True, fake_function=fake.hostname,),      # machine_name
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="DbMachineSpecs",   column_position= 3, missing_ok=True, fake_function=fake.hostname,),      # MachineName
+]
 
 class ApplicationError(Exception):
     """Application Error
@@ -699,6 +291,15 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
             fake.set_collection_key_from_date_time(collection_metadata.date_time)
             identity_map: dict[str, str] = {collection_metadata.pkey: fake.pkey()}
             _extract_collection(collection, work_dir)
+            if collection_metadata.database_type == 'mssql':
+                DATA_MASK_CONFIG = DATA_MASK_CONFIG_MSSQL
+            elif collection_metadata.database_type == 'oracle':
+                DATA_MASK_CONFIG = DATA_MASK_CONFIG_ORACLE 
+                # Add code here to split the MachineName and ServerName rows from opdb__ServerProps
+            else:
+                msg = f"Unmapped database type {collection_metadata.database_type}."
+                raise ApplicationError(msg)
+
             for rule in DATA_MASK_CONFIG:
                 if rule.mask_type == DataMaskTypes.DMA_SOURCE_ID and Version(
                     collection_metadata.script_version
@@ -709,6 +310,9 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
                     for collection_file in collection_files:  # type: ignore[attr-defined]
                         identity_map = _generate_identity_map_from_rule(rule, collection_file, identity_map)
                         _apply_identity_map_to_file(rule, collection_file, identity_map)
+
+            # Add code here to remerge opdb__ServerProps
+
             logger.info("Completed work on %s", collection.stem)
             _collection_key_file, _new_collection_archive = _package_collection(
                 collection, identity_map, work_dir, output_path
@@ -744,6 +348,7 @@ def _metadata_from_filename(collection_file: Path) -> FileMetadata:
         meta_values[0] = str(parse_version(meta_values[0]))  # type: ignore[call-overload]
         meta_values.append("_".join([*meta_values[1:3], meta_values[4]]))  # pkey
         meta_values.append("_".join(meta_values[1:5]))  # collection_key
+        meta_values.append(collection_file.stem.split(sep="_")[1]) # database_type
         metadata = FileMetadata(*meta_values)
     except (ValueError, IndexError, TypeError) as e:
         msg = f"Could not determine metadata from file {collection_file.stem}"
@@ -866,7 +471,7 @@ def _generate_identity_map_from_rule(
     with collection_file.open(mode="r", encoding="utf-8") as f:
         data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
         for rn, row in enumerate(data_to_mask):
-          if (rn > 0) & (len(row) > 0):
+          if (rn > 0) and (len(row) > 0):
                 # Get the value from column to mask
                 all_values.append(row[column_position])
     unique_values = list(dict.fromkeys(all_values))
@@ -902,10 +507,32 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
         if Version(collection_metadata.script_version) < Version("4.3.15") and rule.column_position < -2:
             column_position += 2
         for rn, row in enumerate(data_to_mask):
-            if (rn > 0)  & (len(row) > 0):
+            if (rn > 0)  and (len(row) > 0):
                 row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
             temp_file.writerow(row)
         shutil.move(t.name, collection_file)
+
+
+def _rewrite_mssql_collector_log(logfile_name: Path, zipfile_name: str) -> None :
+    """Rewrites the collector log file to include only the masked zipfile name.
+
+    Args:
+        logfile_name (Path): The name of the mssql collector log file.
+        zipfile_name (str): The name of the output zip file.
+    """
+    with open(logfile_name, "w") as newlog:
+      newlog.write(f"[00/00/00 00:00:00]   Zipping Output to {zipfile_name} ...\n")
+
+def _rewrite_oracle_collector_log(logfile_name: Path, zipfile_name: str) -> None :
+    """Rewrites the collector log file to include only the masked zipfile name.
+
+    Args:
+        logfile_name (Path): The name of the mssql collector log file.
+        zipfile_name (str): The name of the output zip file.
+    """
+    with open(logfile_name, "w") as newlog:
+      newlog.write(f"ZIPFILE:  {zipfile_name}\n")
+
 
 
 def _package_collection(
@@ -936,10 +563,20 @@ def _package_collection(
     )
     with zf.ZipFile(archive_file, "w", compression=zf.ZIP_DEFLATED, compresslevel=9) as f:
         for matched_file in matched_files:
-          if "opdb__perfMonLog__create" not in str(matched_file):
+          # Exclude the Permon log fileq
+          if "opdb__perfMonLog_" not in str(matched_file):
             masked_file = _mask_file_collection_key(matched_file)
             identity_map[matched_file.name] = masked_file.name
-            f.write(matched_file, f"{masked_file.stem}{masked_file.suffix}")
+
+            if ("opdb_mssql_collectorLog" in str(matched_file)):
+              _rewrite_mssql_collector_log(matched_file, masked_collection_file.stem + ".zip")
+
+            if ("opdb__defines" in str(matched_file)):
+              _rewrite_oracle_collector_log(matched_file, masked_collection_file.stem + ".zip")
+
+            if (( "opdb_mssql_sqlErrorlog" not in str(matched_file)) and ("opdb__manifest" not in str(matched_file))): 
+              f.write(matched_file, f"{masked_file.stem}{masked_file.suffix}")
+
     with key_file.open(mode="w", encoding="utf-8") as f:
         f.write(
             f"Use this file to map the masked values to the original values in collection {archive_file.stem}.zip\n"
