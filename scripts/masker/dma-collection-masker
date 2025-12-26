@@ -28,6 +28,7 @@ from enum import Flag, auto
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Any, Dict, List, Tuple
+from collections import Counter
 
 from packaging.version import Version
 from packaging.version import parse as parse_version
@@ -53,6 +54,7 @@ class DataMaskRule:
     column_position: int
     missing_ok: bool
     fake_function: Any
+    row_filter : str = None
 
 
 @dataclass
@@ -139,7 +141,10 @@ class DMAFaker:
         return f"{self.hostname()}_{self.instance_name()}_{self._dbid}"
 
     def user_name(self) -> str:
-        return f"USER_{self._letters(length=4)}{self._digits(length=2)}".upper()
+        return f"USER_{self._letters(length=6)}{self._digits(length=3)}".upper()
+    
+    def object_name(self) -> str:
+        return f"USER_{self._letters(length=12)}{self._digits(length=3)}".upper()
 
 
 fake = DMAFaker()
@@ -152,6 +157,7 @@ class DataMaskTypes(Flag):
     INSTANCE_NAME = auto()
     HOST_NAME = auto()
     DATABASE_NAME = auto()
+    OBJECT_NAME = auto()
 
 
 DATA_MASK_CONFIG_MSSQL = [
@@ -181,7 +187,7 @@ DATA_MASK_CONFIG_MSSQL = [
     # Columns other than dma_source_id
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="ColumnDatatypes",             column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="ColumnDatatypes",             column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="ColumnDatatypes",             column_position= 3,  missing_ok=True,  fake_function=fake.user_name,),        # table_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="ColumnDatatypes",             column_position= 3,  missing_ok=True,  fake_function=fake.object_name,),      # table_name
     DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="CompInstalled",               column_position= 1,  missing_ok=True,  fake_function=fake.hostname,),         # physical_server_name
     DataMaskRule( mask_type=DataMaskTypes.INSTANCE_NAME, table_name="CompInstalled",               column_position= 2,  missing_ok=True,  fake_function=fake.instance_name,),    # sql_instance_name
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="DatabaseLevelBlockFeatures",  column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
@@ -190,25 +196,26 @@ DATA_MASK_CONFIG_MSSQL = [
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="DbSizes",                     column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="IndexList",                   column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="IndexList",                   column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="IndexList",                   column_position= 3,  missing_ok=True,  fake_function=fake.user_name,),        # table_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="IndexList",                   column_position= 4,  missing_ok=True,  fake_function=fake.user_name,),        # index_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="IndexList",                   column_position= 3,  missing_ok=True,  fake_function=fake.object_name,),      # table_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="IndexList",                   column_position= 4,  missing_ok=True,  fake_function=fake.object_name,),      # index_name
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="LinkedSrvrs",                 column_position= 1,  missing_ok=False, fake_function=fake.database_name,),    # name
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="LinkedSrvrs",                 column_position= 4,  missing_ok=False, fake_function=fake.database_name,),    # data_source
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="ObjectList",                  column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="ObjectList",                  column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="ObjectList",                  column_position= 3,  missing_ok=True,  fake_function=fake.user_name,),        # object_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="ObjectList",                  column_position= 8,  missing_ok=True,  fake_function=fake.user_name,),        # associated_table_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="ObjectList",                  column_position= 3,  missing_ok=True,  fake_function=fake.object_name,),      # object_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="ObjectList",                  column_position= 8,  missing_ok=True,  fake_function=fake.object_name,),      # associated_table_name
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="PerfCounter",                 column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="TableList",                   column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="TableList",                   column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="TableList",                   column_position= 3,  missing_ok=True,  fake_function=fake.user_name,),        # table_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="TableList",                   column_position= 3,  missing_ok=True,  fake_function=fake.object_name,),      # table_name
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="UserConnections",             column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
     DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="UserConnections",             column_position= 3,  missing_ok=True,  fake_function=fake.hostname,),         # host_name
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="UserConnections",             column_position= 4,  missing_ok=True,  fake_function=fake.user_name),         # program_name
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="UserConnections",             column_position= 5,  missing_ok=True,  fake_function=fake.user_name),         # login_name
     DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="UserConnections",             column_position=14,  missing_ok=False, fake_function=fake.hostname,),         # nt_domain          
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="UserConnections",             column_position=15,  missing_ok=False, fake_function=fake.user_name,),        # nt_user_name
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="TmpServerProps",              column_position= 2,  missing_ok=False, fake_function=fake.hostname,),         # Special for ServerPrps entries
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="ServerProps",                 column_position= 2,  missing_ok=False, fake_function=fake.hostname, row_filter="ServerName"),         # Special for ServerPrps entries
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="ServerProps",                 column_position= 2,  missing_ok=False, fake_function=fake.hostname, row_filter="MachineName"),        # Special for ServerPrps entries
 ]    
 
 DATA_MASK_CONFIG_ORACLE = [
@@ -238,8 +245,8 @@ DATA_MASK_CONFIG_ORACLE = [
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="usedspacedetails", column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="usrsegatt",        column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
 
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="dbobjectnames",    column_position= 3, missing_ok=True, fake_function=fake.user_name,),     # object_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="dtlsourcecode",    column_position= 3, missing_ok=True, fake_function=fake.user_name,),     # object_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="dbobjectnames",    column_position= 3, missing_ok=True, fake_function=fake.object_name,),     # object_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="dtlsourcecode",    column_position= 3, missing_ok=True, fake_function=fake.object_name,),     # object_name
     DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="opkeylog",         column_position= 3, missing_ok=True, fake_function=fake.hostname,),      # host_name
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="opkeylog",         column_position= 4, missing_ok=True, fake_function=fake.database_name,), # db_name
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="opkeylog",         column_position= 6, missing_ok=True, fake_function=fake.database_name,), # instance_name
@@ -295,7 +302,6 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
                 DATA_MASK_CONFIG = DATA_MASK_CONFIG_MSSQL
             elif collection_metadata.database_type == 'oracle':
                 DATA_MASK_CONFIG = DATA_MASK_CONFIG_ORACLE 
-                # Add code here to split the MachineName and ServerName rows from opdb__ServerProps
             else:
                 msg = f"Unmapped database type {collection_metadata.database_type}."
                 raise ApplicationError(msg)
@@ -308,10 +314,16 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
                 collection_files = _find_files_referenced_by_rule(rule, work_dir)
                 if collection_files:
                     for collection_file in collection_files:  # type: ignore[attr-defined]
-                        identity_map = _generate_identity_map_from_rule(rule, collection_file, identity_map)
-                        _apply_identity_map_to_file(rule, collection_file, identity_map)
+                        while True:
+                          identity_map = _generate_identity_map_from_rule(rule, collection_file, existing_identity_map=identity_map)
+                          duplicate_masks = _check_for_duplicate_values(existing_identity_map=identity_map)
+                          if len(duplicate_masks) == 0:
+                              break
+                          logger.info(F"Found %s duplicate mask values, reprocessing file...", len(duplicate_masks))
+                          for dup_val in duplicate_masks:
+                              identity_map.pop(dup_val, None)
 
-            # Add code here to remerge opdb__ServerProps
+                        _apply_identity_map_to_file(rule, collection_file, identity_map)
 
             logger.info("Completed work on %s", collection.stem)
             _collection_key_file, _new_collection_archive = _package_collection(
@@ -441,6 +453,30 @@ def _find_files_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> Pat
     return None
 
 
+def _check_for_duplicate_values(
+    existing_identity_map: Dict[str, str] ,
+) -> Dict[str, str]:
+    """
+    Check the dictionary for duplicate values in case there was a collision on the randomizer.
+    
+    This function finds any values assigned to more than one key and returns the set.
+
+    Args:
+        existing_identity_map ([Dict[str, str]]): Pass in an existing identity map.
+
+    Returns:
+        Dict[str, str]: A dictionary of keys with duplicate values.
+    """
+
+    duplicate_count = Counter(existing_identity_map.values())
+
+    duplicate_masks = {k: v for k, v in existing_identity_map.items() if duplicate_count[v] > 1}
+    if len(duplicate_masks) > 0:
+        logger.info(f"Duplicate masking values detected : %s", duplicate_masks)
+    return duplicate_masks
+
+
+
 def _generate_identity_map_from_rule(
     rule: DataMaskRule,
     collection_file: Path,
@@ -472,8 +508,15 @@ def _generate_identity_map_from_rule(
         data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
         for rn, row in enumerate(data_to_mask):
           if (rn > 0) and (len(row) > 0):
+                if (rule.mask_type == DataMaskTypes.DATABASE_NAME):
+                    if (row[column_position] in ( 'master', 'model', 'msdb', 'tempdb') ):
+                        continue
                 # Get the value from column to mask
-                all_values.append(row[column_position])
+                if rule.row_filter is None:
+                    all_values.append(row[column_position])
+                elif rule.row_filter in row:
+                    all_values.append(row[column_position])
+
     unique_values = list(dict.fromkeys(all_values))
     return {
         value: existing_identity_map.get(
@@ -508,7 +551,12 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
             column_position += 2
         for rn, row in enumerate(data_to_mask):
             if (rn > 0)  and (len(row) > 0):
-                row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
+                if not ((rule.mask_type == DataMaskTypes.DATABASE_NAME) and (row[column_position] in ( 'master', 'model', 'msdb', 'tempdb') )):
+                    if rule.row_filter is None:
+                        row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
+                    elif rule.row_filter in row:
+                        row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
+                  
             temp_file.writerow(row)
         shutil.move(t.name, collection_file)
 
