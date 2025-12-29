@@ -428,8 +428,7 @@ def _exclude_owner_from_masking(owner_name: str) -> bool:
 
     if owner_name is None:
         return False
-
-    if (owner_name in oracle_schemas_to_skip) or ( owner_name.startswith(("APEX_", "FLOWS_","OPS$"))):
+    elif (owner_name in oracle_schemas_to_skip) or ( owner_name.startswith(("APEX_", "FLOWS_","OPS$"))):
         return True
     else:
         return False
