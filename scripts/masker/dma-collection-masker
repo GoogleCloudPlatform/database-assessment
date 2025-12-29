@@ -435,7 +435,7 @@ def _exclude_owner_from_masking(owner_name: str) -> bool:
         return False
 
 
-def _generate_and_apply_identity_map(identity_map, rule, collection_files):
+def _generate_and_apply_identity_map(identity_map: dict[str, str], rule: DataMaskRule, collection_files: Path) -> dict[str, str]:
     for collection_file in collection_files:  # type: ignore[attr-defined]
         while True:
             identity_map = _generate_identity_map_from_rule(rule, collection_file, existing_identity_map=identity_map)
