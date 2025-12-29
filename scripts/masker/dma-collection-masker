@@ -416,14 +416,14 @@ class ApplicationError(Exception):
     Raised when any error occurs with the masking process.
     """
 
-def _exclude_owner_from_masking(owner_name: str) -> Boolean:
+def _exclude_owner_from_masking(owner_name: str) -> bool:
     """
     Certain built-in schemas are filtered out in ETL, so we need exclude them from masking.
 
     :param owner_name: The name of the owner/schema being checked
     :type owner_name: str
     :return: Returns TRUE if the owner/schema should be excluded from masking.
-    :rtype: Boolean
+    :rtype: bool
     """
 
     if owner_name is None:
@@ -432,7 +432,7 @@ def _exclude_owner_from_masking(owner_name: str) -> Boolean:
     if owner_name in oracle_schemas_to_skip:
         return True
 
-    if owner_name.startswith("APEX_") or owner_name.startswith("FLOWS_") or owner_name.startswith("OPS$"):
+    if owner_name.startswith(("APEX_", "FLOWS_","OPS$")):
         return True
 
     return False
@@ -482,13 +482,13 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
                 if collection_files:
                     for collection_file in collection_files:  # type: ignore[attr-defined]
                         while True:
-                          identity_map = _generate_identity_map_from_rule(rule, collection_file, existing_identity_map=identity_map)
-                          duplicate_masks = _check_for_duplicate_values(existing_identity_map=identity_map)
-                          if len(duplicate_masks) == 0:
-                              break
-                          logger.info(F"Found %s duplicate mask values, reprocessing file...", len(duplicate_masks))
-                          for dup_val in duplicate_masks:
-                              identity_map.pop(dup_val, None)
+                            identity_map = _generate_identity_map_from_rule(rule, collection_file, existing_identity_map=identity_map)
+                            duplicate_masks = _check_for_duplicate_values(existing_identity_map=identity_map)
+                            if len(duplicate_masks) == 0:
+                                break
+                            logger.info(F"Found %s duplicate mask values, reprocessing file...", len(duplicate_masks))
+                            for dup_val in duplicate_masks:
+                                identity_map.pop(dup_val, None)
 
                         _apply_identity_map_to_file(rule, collection_file, identity_map)
 
@@ -674,13 +674,11 @@ def _generate_identity_map_from_rule(
     with collection_file.open(mode="r", encoding="utf-8") as f:
         data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
         for rn, row in enumerate(data_to_mask):
-          if (rn > 0) and (len(row) > 0):
-                if (rule.mask_type == DataMaskTypes.DATABASE_NAME):
-                    if (row[column_position] in ( 'master', 'model', 'msdb', 'tempdb', 'PDB$SEEED', 'CDB$ROOT') ):
-                        continue
-                if (rule.mask_type == DataMaskTypes.SCHEMA_NAME):
-                    if _exclude_owner_from_masking(row[column_position]):
-                        continue
+            if (rn > 0) and (len(row) > 0):
+                if (rule.mask_type == DataMaskTypes.DATABASE_NAME) and (row[column_position] in ( 'master', 'model', 'msdb', 'tempdb', 'PDB$SEEED', 'CDB$ROOT')) :
+                    continue
+                if (rule.mask_type == DataMaskTypes.SCHEMA_NAME) and (_exclude_owner_from_masking(row[column_position])):
+                    continue
                 # Get the value from column to mask
                 if (rule.row_filter is None) or (len(rule.row_filter)==0):
                     all_values.append(row[column_position])
@@ -720,17 +718,13 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
         if Version(collection_metadata.script_version) < Version("4.3.15") and rule.column_position < -2:
             column_position += 2
         for rn, row in enumerate(data_to_mask):
-            if (rn > 0)  and (len(row) > 0):
-                if not ((rule.mask_type == DataMaskTypes.DATABASE_NAME) and (row[column_position] in ( 'master', 'model', 'msdb', 'tempdb', 'PDB$SEED', 'CDB$ROOT') )):
-                    if (rule.row_filter is None) or (len(rule.row_filter) == 0):
-                        if row[column_position].startswith("BIN$"):
-                            prefix="BIN$"
-                        else:
-                            prefix=""
-                        if not _exclude_owner_from_masking(row[column_position]):
-                            row[column_position] = prefix + identity_map.get(row[column_position], "~~UNMAPPED~~")
-                    elif any(check_val in rule.row_filter for check_val in row):
-                        row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
+            if (rn > 0)  and (len(row) > 0) and not ((rule.mask_type == DataMaskTypes.DATABASE_NAME) and (row[column_position] in ( 'master', 'model', 'msdb', 'tempdb', 'PDB$SEED', 'CDB$ROOT') )):
+                if (rule.row_filter is None) or (len(rule.row_filter) == 0):
+                    prefix = "BIN$" if row[column_position].startswith("BIN$") else ""
+                    if not _exclude_owner_from_masking(row[column_position]):
+                        row[column_position] = prefix + identity_map.get(row[column_position], "~~UNMAPPED~~")
+                elif any(check_val in rule.row_filter for check_val in row):
+                    row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
                   
             temp_file.writerow(row)
         shutil.move(t.name, collection_file)
@@ -756,8 +750,8 @@ def _rewrite_oracle_collector_log(logfile_name: Path, zipfile_name: str) -> None
         zipfile_name (str): The name of the output zip file.
     """
     with open(logfile_name, "w") as newlog:
-      newlog.write(f"NOTE: DMA_MASKER applied, request original logfile for troubleshooting.\n")
-      newlog.write(f"ZIPFILE:  {zipfile_name}\n")
+        newlog.write(f"NOTE: DMA_MASKER applied, request original logfile for troubleshooting.\n")
+        newlog.write(f"ZIPFILE:  {zipfile_name}\n")
 
 
 
@@ -789,19 +783,19 @@ def _package_collection(
     )
     with zf.ZipFile(archive_file, "w", compression=zf.ZIP_DEFLATED, compresslevel=9) as f:
         for matched_file in matched_files:
-          # Exclude the Permon log fileq
-          if "opdb__perfMonLog_" not in str(matched_file):
-            masked_file = _mask_file_collection_key(matched_file)
-            identity_map[matched_file.name] = masked_file.name
+            # Exclude the Permon log fileq
+            if "opdb__perfMonLog_" not in str(matched_file):
+                masked_file = _mask_file_collection_key(matched_file)
+                identity_map[matched_file.name] = masked_file.name
 
-            if ("opdb_mssql_collectorLog" in str(matched_file)):
-              _rewrite_mssql_collector_log(matched_file, masked_collection_file.stem + ".zip")
+                if ("opdb_mssql_collectorLog" in str(matched_file)):
+                    _rewrite_mssql_collector_log(matched_file, masked_collection_file.stem + ".zip")
 
-            if ("opdb__defines" in str(matched_file)):
-              _rewrite_oracle_collector_log(matched_file, masked_collection_file.stem + ".zip")
+                if ("opdb__defines" in str(matched_file)):
+                    _rewrite_oracle_collector_log(matched_file, masked_collection_file.stem + ".zip")
 
-            if (( "opdb_mssql_sqlErrorlog" not in str(matched_file)) and ("opdb__manifest" not in str(matched_file))): 
-              f.write(matched_file, f"{masked_file.stem}{masked_file.suffix}")
+                if (( "opdb_mssql_sqlErrorlog" not in str(matched_file)) and ("opdb__manifest" not in str(matched_file))): 
+                    f.write(matched_file, f"{masked_file.stem}{masked_file.suffix}")
 
     with key_file.open(mode="w", encoding="utf-8") as f:
         f.write(
