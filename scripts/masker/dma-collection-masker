@@ -429,13 +429,25 @@ def _exclude_owner_from_masking(owner_name: str) -> bool:
     if owner_name is None:
         return False
 
-    if owner_name in oracle_schemas_to_skip:
+    if (owner_name in oracle_schemas_to_skip) or ( owner_name.startswith(("APEX_", "FLOWS_","OPS$"))):
         return True
+    else:
+        return False
 
-    if owner_name.startswith(("APEX_", "FLOWS_","OPS$")):
-        return True
 
-    return False
+def _generate_and_apply_identity_map(identity_map, rule, collection_files):
+    for collection_file in collection_files:  # type: ignore[attr-defined]
+        while True:
+            identity_map = _generate_identity_map_from_rule(rule, collection_file, existing_identity_map=identity_map)
+            duplicate_masks = _check_for_duplicate_values(existing_identity_map=identity_map)
+            if len(duplicate_masks) == 0:
+                break
+            logger.info(F"Found %s duplicate mask values, reprocessing file...", len(duplicate_masks))
+            for dup_val in duplicate_masks:
+                identity_map.pop(dup_val, None)
+
+        _apply_identity_map_to_file(rule, collection_file, identity_map)
+    return identity_map
 
 def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -> None:
     """Run Masker.
@@ -466,31 +478,21 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
             identity_map: dict[str, str] = {collection_metadata.pkey: fake.pkey()}
             _extract_collection(collection, work_dir)
             if collection_metadata.database_type == 'mssql':
-                DATA_MASK_CONFIG = DATA_MASK_CONFIG_MSSQL
+                data_mask_config = DATA_MASK_CONFIG_MSSQL
             elif collection_metadata.database_type == 'oracle':
-                DATA_MASK_CONFIG = DATA_MASK_CONFIG_ORACLE 
+                data_mask_config = DATA_MASK_CONFIG_ORACLE 
             else:
                 msg = f"Unmapped database type {collection_metadata.database_type}."
                 raise ApplicationError(msg)
 
-            for rule in DATA_MASK_CONFIG:
+            for rule in data_mask_config:
                 if rule.mask_type == DataMaskTypes.DMA_SOURCE_ID and Version(
                     collection_metadata.script_version
                 ) < Version("4.3.15"):
                     continue
                 collection_files = _find_files_referenced_by_rule(rule, work_dir)
                 if collection_files:
-                    for collection_file in collection_files:  # type: ignore[attr-defined]
-                        while True:
-                            identity_map = _generate_identity_map_from_rule(rule, collection_file, existing_identity_map=identity_map)
-                            duplicate_masks = _check_for_duplicate_values(existing_identity_map=identity_map)
-                            if len(duplicate_masks) == 0:
-                                break
-                            logger.info(F"Found %s duplicate mask values, reprocessing file...", len(duplicate_masks))
-                            for dup_val in duplicate_masks:
-                                identity_map.pop(dup_val, None)
-
-                        _apply_identity_map_to_file(rule, collection_file, identity_map)
+                    identity_map = _generate_and_apply_identity_map(identity_map, rule, collection_files)
 
             logger.info("Completed work on %s", collection.stem)
             _collection_key_file, _new_collection_archive = _package_collection(
@@ -737,7 +739,7 @@ def _rewrite_mssql_collector_log(logfile_name: Path, zipfile_name: str) -> None 
         logfile_name (Path): The name of the mssql collector log file.
         zipfile_name (str): The name of the output zip file.
     """
-    with open(logfile_name, "w") as newlog:
+    with open(logfile_name, "w", encoding="utf-8") as newlog:
         newlog.write(f"[00/00/00 00:00:00]   DMA_MASKER applied, request original logfile for troubleshooting.\n")
         newlog.write(f"[00/00/00 00:00:00]   Zipping Output to {zipfile_name} ...\n")
 
@@ -749,7 +751,7 @@ def _rewrite_oracle_collector_log(logfile_name: Path, zipfile_name: str) -> None
         logfile_name (Path): The name of the mssql collector log file.
         zipfile_name (str): The name of the output zip file.
     """
-    with open(logfile_name, "w") as newlog:
+    with open(logfile_name, "w", encoding="utf-8") as newlog:
         newlog.write(f"NOTE: DMA_MASKER applied, request original logfile for troubleshooting.\n")
         newlog.write(f"ZIPFILE:  {zipfile_name}\n")
 
