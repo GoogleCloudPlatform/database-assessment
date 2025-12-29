@@ -23,7 +23,7 @@ import string
 import sys
 import tarfile
 import zipfile as zf
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Flag, auto
 from pathlib import Path
 from tempfile import NamedTemporaryFile, TemporaryDirectory
@@ -54,7 +54,7 @@ class DataMaskRule:
     column_position: int
     missing_ok: bool
     fake_function: Any
-    row_filter : str = None
+    row_filter: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -144,8 +144,10 @@ class DMAFaker:
         return f"USER_{self._letters(length=6)}{self._digits(length=3)}".upper()
     
     def object_name(self) -> str:
-        return f"USER_{self._letters(length=12)}{self._digits(length=3)}".upper()
+        return f"OBJ_{self._letters(length=12)}{self._digits(length=3)}".upper()
 
+    def parameter_value(self) -> str:
+        return f"PARAM_{self._letters(length=12)}{self._digits(length=3)}".upper()
 
 fake = DMAFaker()
 
@@ -158,6 +160,132 @@ class DataMaskTypes(Flag):
     HOST_NAME = auto()
     DATABASE_NAME = auto()
     OBJECT_NAME = auto()
+    PARAMETER_VALUE = auto()
+
+oracle_params_to_mask: List[str] = [
+    'cdb_cluster_name',
+    'dg_broker_config_file1',
+    'dg_broker_config_file2',
+    'diagnostic_dest',
+    'background_dump_dest',
+    'user_dump_dest',
+    'core_dump_dest',
+    'audit_file_dest',
+    'db_name',
+    'db_unique_name',
+    'db_domain',
+    'instance_name',
+    'dispatchers',
+    'local_listener',
+    'remote_listener',
+    'connection_brokers',
+    'log_archive_config',
+    'db_create_file_dest',
+    'db_create_online_log_dest_1',
+    'db_recovery_file_dest',
+    'undo_tablespace',
+    'log_archive_dest_3',
+    'log_archive_dest_4',
+    'service_names',
+    'control_files',
+    'log_archive_dest_1',
+    'spfile',
+    'db_domain',
+    'spfile',
+    'service_names',
+    'control_files',
+    'log_archive_dest_1',
+    'log_archive_dest_3',
+    'log_archive_dest_4',
+    'log_archive_config',
+    'db_create_file_dest',
+    'db_create_online_log_dest_1',
+    'db_recovery_file_dest',
+    'undo_tablespace',
+    'db_domain',
+    'instance_name',
+    'dispatchers',
+    'local_listener',
+    'remote_listener',
+    'connection_brokers',
+    'background_dump_dest',
+    'user_dump_dest',
+    'core_dump_dest',
+    'audit_file_dest',
+    'db_name',
+    'db_unique_name',
+    'dg_broker_config_file1',
+    'dg_broker_config_file2',
+    'diagnostic_dest',
+    'cdb_cluster_name',
+    'db_domain'
+]
+
+oracle_schemas_to_skip: List[str] = [
+    'ANONYMOUS',
+    'APPQOSSYS',
+    'AUDSYS',
+    'AURORA$JIS$UTILITY$',
+    'AURORA$ORB$UNAUTHENTICATED',
+    'CSMIG',
+    'CTXSYS',
+    'CTXSYS',
+    'DBA_ADM',
+    'DBMS_PRIVILEGE_CAPTURE',
+    'DBSFWUSER',
+    'DBSNMP',
+    'DIP',
+    'DMSYS',
+    'DVF',
+    'DVSYS',
+    'EXFSYS',
+    'GSMADMIN_INTERNAL',
+    'GSMCATUSER',
+    'GSMUSER',
+    'LBACSYS',
+    'MDDATA',
+    'MDSYS',
+    'MGDSYS',
+    'MGMT_VIEW',
+    'MGMT_VIEW',
+    'MTMSYS',
+    'ODM',
+    'ODM_MTR',
+    'OJVMSYS',
+    'OLAPSYS',
+    'ORACLE_OCM',
+    'ORDDATA',
+    'ORDPLUGINS',
+    'ORDSYS',
+    'OSE$HTTP$ADMIN',
+    'OUTLN',
+    'OWBSYS',
+    'OWBSYS_AUDIT',
+    'PERFSTAT',
+    'SDE',
+    'SI_INFORMTN_SCHEMA',
+    'SPATIAL_CSW_ADMIN_USR',
+    'SPATIAL_WFS_ADMIN_USR',
+    'SQLTXADMIN',
+    'SQLTXPLAIN',
+    'STRMADMIN',
+    'SYS',
+    'SYSBACKUP',
+    'SYSDG',
+    'SYSKM',
+    'SYSMAN',
+    'SYSTEM',
+    'TRACESRV',
+    'TSMSYS',
+    'WEBSYS',
+    'WKPROXY',
+    'WKSYS',
+    'WK_PROXY',
+    'WK_TEST',
+    'WMSYS',
+    'XDB',
+    'XS$NULL'
+]
 
 
 DATA_MASK_CONFIG_MSSQL = [
@@ -214,8 +342,8 @@ DATA_MASK_CONFIG_MSSQL = [
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="UserConnections",             column_position= 5,  missing_ok=True,  fake_function=fake.user_name),         # login_name
     DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="UserConnections",             column_position=14,  missing_ok=False, fake_function=fake.hostname,),         # nt_domain          
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="UserConnections",             column_position=15,  missing_ok=False, fake_function=fake.user_name,),        # nt_user_name
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="ServerProps",                 column_position= 2,  missing_ok=False, fake_function=fake.hostname, row_filter="ServerName"),         # Special for ServerPrps entries
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="ServerProps",                 column_position= 2,  missing_ok=False, fake_function=fake.hostname, row_filter="MachineName"),        # Special for ServerPrps entries
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="ServerProps",                 column_position= 2,  missing_ok=False, fake_function=fake.hostname, row_filter=["ServerName"]),         # Special for ServerPrps entries
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="ServerProps",                 column_position= 2,  missing_ok=False, fake_function=fake.hostname, row_filter=["MachineName"]),        # Special for ServerPrps entries
 ]    
 
 DATA_MASK_CONFIG_ORACLE = [
@@ -230,6 +358,7 @@ DATA_MASK_CONFIG_ORACLE = [
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="datatypes",        column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="dbobjectnames",    column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="dbobjects",        column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="dblinks",          column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="dtlsourcecode",    column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="exttab",           column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="indextypedtl",     column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
@@ -245,23 +374,41 @@ DATA_MASK_CONFIG_ORACLE = [
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="usedspacedetails", column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="usrsegatt",        column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # owner
 
-    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="dbobjectnames",    column_position= 3, missing_ok=True, fake_function=fake.object_name,),     # object_name
-    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="dtlsourcecode",    column_position= 3, missing_ok=True, fake_function=fake.object_name,),     # object_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="columntypes",      column_position= 3,  missing_ok=True, fake_function=fake.object_name,),  # table_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="dbobjectnames",    column_position= 3,  missing_ok=True, fake_function=fake.object_name,),  # object_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="dtlsourcecode",    column_position= 3,  missing_ok=True, fake_function=fake.object_name,),  # object_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="indextypedtl",     column_position= 12, missing_ok=True, fake_function=fake.object_name,),  # table_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="indextypedtl",     column_position= 13, missing_ok=True, fake_function=fake.object_name,),  # index_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="lobsizing",        column_position= 3,  missing_ok=True, fake_function=fake.object_name,),  # table_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="lobsizing",        column_position= 7,  missing_ok=True, fake_function=fake.object_name,),  # column_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="lobsizing",        column_position= 9,  missing_ok=True, fake_function=fake.object_name,),  # table_partition_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="lobsizing",        column_position= 12, missing_ok=True, fake_function=fake.object_name,),  # lob_partition_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="lobsizing",        column_position= 15, missing_ok=True, fake_function=fake.object_name,),  # table_subpartition_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="lobsizing",        column_position= 18, missing_ok=True, fake_function=fake.object_name,),  # lob_subpartition_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="lobsizing",        column_position= 20, missing_ok=True, fake_function=fake.object_name,),  # lob_segment_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="lobsizing",        column_position= 21, missing_ok=True, fake_function=fake.object_name,),  # segment_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="lobsizing",        column_position= 22, missing_ok=True, fake_function=fake.object_name,),  # segment_partition_name
+
     DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="opkeylog",         column_position= 3, missing_ok=True, fake_function=fake.hostname,),      # host_name
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="opkeylog",         column_position= 4, missing_ok=True, fake_function=fake.database_name,), # db_name
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="opkeylog",         column_position= 6, missing_ok=True, fake_function=fake.database_name,), # instance_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="opkeylog",         column_position= 5, missing_ok=True, fake_function=fake.database_name,), # instance_name
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="users",            column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # username
     DataMaskRule( mask_type=DataMaskTypes.INSTANCE_NAME, table_name="dbinstances",      column_position= 2, missing_ok=True, fake_function=fake.instance_name,), # instance_name
     DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="dbinstances",      column_position= 3, missing_ok=True, fake_function=fake.hostname,),      # host_name
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="dbsummary",        column_position= 2, missing_ok=True, fake_function=fake.database_name,), # db_name
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="dbsummary",        column_position=-3, missing_ok=True, fake_function=fake.database_name,), # db_unique_name
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="pdbsinfo",         column_position= 3, missing_ok=True, fake_function=fake.database_name,), # pdb_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="pdbsinfo",         column_position= 3, missing_ok=True, fake_function=fake.database_name, row_filter=["CDB$ROOT"]), # pdb_name
     DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="pdbsopenmode",     column_position= 2, missing_ok=True, fake_function=fake.database_name,), # name
     DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="sourceconn",       column_position= 4, missing_ok=True, fake_function=fake.hostname,),      # program
     DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="sourceconn",       column_position= 5, missing_ok=True, fake_function=fake.hostname,),      # module_name
     DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="sourceconn",       column_position= 6, missing_ok=True, fake_function=fake.hostname,),      # machine_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="tableconstraints", column_position= 3, missing_ok=True, fake_function=fake.object_name,),   # table_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="tabletypedtl",     column_position= 3, missing_ok=True, fake_function=fake.object_name,),   # table_name
     DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="DbMachineSpecs",   column_position= 3, missing_ok=True, fake_function=fake.hostname,),      # MachineName
+    DataMaskRule( mask_type=DataMaskTypes.PARAMETER_VALUE, table_name="dbparameters",   column_position= 4, missing_ok=True, fake_function=fake.parameter_value, row_filter=oracle_params_to_mask),   # value
+    DataMaskRule( mask_type=DataMaskTypes.PARAMETER_VALUE, table_name="dbparameters",   column_position= 5, missing_ok=True, fake_function=fake.parameter_value, row_filter=oracle_params_to_mask),   # default_value
 ]
+
 
 class ApplicationError(Exception):
     """Application Error
@@ -269,6 +416,26 @@ class ApplicationError(Exception):
     Raised when any error occurs with the masking process.
     """
 
+def _exclude_owner_from_masking(owner_name: str) -> Boolean:
+    """
+    Certain built-in schemas are filtered out in ETL, so we need exclude them from masking.
+
+    :param owner_name: The name of the owner/schema being checked
+    :type owner_name: str
+    :return: Returns TRUE if the owner/schema should be excluded from masking.
+    :rtype: Boolean
+    """
+
+    if owner_name is None:
+        return False
+
+    if owner_name in oracle_schemas_to_skip:
+        return True
+
+    if owner_name.startswith("APEX_") or owner_name.startswith("FLOWS_") or owner_name.startswith("OPS$"):
+        return True
+
+    return False
 
 def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -> None:
     """Run Masker.
@@ -509,12 +676,15 @@ def _generate_identity_map_from_rule(
         for rn, row in enumerate(data_to_mask):
           if (rn > 0) and (len(row) > 0):
                 if (rule.mask_type == DataMaskTypes.DATABASE_NAME):
-                    if (row[column_position] in ( 'master', 'model', 'msdb', 'tempdb') ):
+                    if (row[column_position] in ( 'master', 'model', 'msdb', 'tempdb', 'PDB$SEEED', 'CDB$ROOT') ):
+                        continue
+                if (rule.mask_type == DataMaskTypes.SCHEMA_NAME):
+                    if _exclude_owner_from_masking(row[column_position]):
                         continue
                 # Get the value from column to mask
-                if rule.row_filter is None:
+                if (rule.row_filter is None) or (len(rule.row_filter)==0):
                     all_values.append(row[column_position])
-                elif rule.row_filter in row:
+                elif any(check_val in rule.row_filter for check_val in row):
                     all_values.append(row[column_position])
 
     unique_values = list(dict.fromkeys(all_values))
@@ -551,10 +721,15 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
             column_position += 2
         for rn, row in enumerate(data_to_mask):
             if (rn > 0)  and (len(row) > 0):
-                if not ((rule.mask_type == DataMaskTypes.DATABASE_NAME) and (row[column_position] in ( 'master', 'model', 'msdb', 'tempdb') )):
-                    if rule.row_filter is None:
-                        row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
-                    elif rule.row_filter in row:
+                if not ((rule.mask_type == DataMaskTypes.DATABASE_NAME) and (row[column_position] in ( 'master', 'model', 'msdb', 'tempdb', 'PDB$SEED', 'CDB$ROOT') )):
+                    if (rule.row_filter is None) or (len(rule.row_filter) == 0):
+                        if row[column_position].startswith("BIN$"):
+                            prefix="BIN$"
+                        else:
+                            prefix=""
+                        if not _exclude_owner_from_masking(row[column_position]):
+                            row[column_position] = prefix + identity_map.get(row[column_position], "~~UNMAPPED~~")
+                    elif any(check_val in rule.row_filter for check_val in row):
                         row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
                   
             temp_file.writerow(row)
@@ -569,7 +744,9 @@ def _rewrite_mssql_collector_log(logfile_name: Path, zipfile_name: str) -> None 
         zipfile_name (str): The name of the output zip file.
     """
     with open(logfile_name, "w") as newlog:
+      newlog.write(f"[00/00/00 00:00:00]   DMA_MASKER applied, request original logfile for troubleshooting.\n")
       newlog.write(f"[00/00/00 00:00:00]   Zipping Output to {zipfile_name} ...\n")
+
 
 def _rewrite_oracle_collector_log(logfile_name: Path, zipfile_name: str) -> None :
     """Rewrites the collector log file to include only the masked zipfile name.
@@ -579,6 +756,7 @@ def _rewrite_oracle_collector_log(logfile_name: Path, zipfile_name: str) -> None
         zipfile_name (str): The name of the output zip file.
     """
     with open(logfile_name, "w") as newlog:
+      newlog.write(f"NOTE: DMA_MASKER applied, request original logfile for troubleshooting.\n")
       newlog.write(f"ZIPFILE:  {zipfile_name}\n")
 
 
