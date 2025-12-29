@@ -675,7 +675,7 @@ def _generate_identity_map_from_rule(
         data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
         for rn, row in enumerate(data_to_mask):
             if (rn > 0) and (len(row) > 0):
-                if (rule.mask_type == DataMaskTypes.DATABASE_NAME) and (row[column_position] in ( 'master', 'model', 'msdb', 'tempdb', 'PDB$SEEED', 'CDB$ROOT')) :
+                if (rule.mask_type == DataMaskTypes.DATABASE_NAME) and (row[column_position] in { 'master', 'model', 'msdb', 'tempdb', 'PDB$SEEED', 'CDB$ROOT' }) :
                     continue
                 if (rule.mask_type == DataMaskTypes.SCHEMA_NAME) and (_exclude_owner_from_masking(row[column_position])):
                     continue
@@ -718,7 +718,7 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
         if Version(collection_metadata.script_version) < Version("4.3.15") and rule.column_position < -2:
             column_position += 2
         for rn, row in enumerate(data_to_mask):
-            if (rn > 0)  and (len(row) > 0) and not ((rule.mask_type == DataMaskTypes.DATABASE_NAME) and (row[column_position] in ( 'master', 'model', 'msdb', 'tempdb', 'PDB$SEED', 'CDB$ROOT') )):
+            if (rn > 0)  and (len(row) > 0) and not ((rule.mask_type == DataMaskTypes.DATABASE_NAME) and (row[column_position] in { 'master', 'model', 'msdb', 'tempdb', 'PDB$SEED', 'CDB$ROOT'} )):
                 if (rule.row_filter is None) or (len(rule.row_filter) == 0):
                     prefix = "BIN$" if row[column_position].startswith("BIN$") else ""
                     if not _exclude_owner_from_masking(row[column_position]):
@@ -738,8 +738,8 @@ def _rewrite_mssql_collector_log(logfile_name: Path, zipfile_name: str) -> None 
         zipfile_name (str): The name of the output zip file.
     """
     with open(logfile_name, "w") as newlog:
-      newlog.write(f"[00/00/00 00:00:00]   DMA_MASKER applied, request original logfile for troubleshooting.\n")
-      newlog.write(f"[00/00/00 00:00:00]   Zipping Output to {zipfile_name} ...\n")
+        newlog.write(f"[00/00/00 00:00:00]   DMA_MASKER applied, request original logfile for troubleshooting.\n")
+        newlog.write(f"[00/00/00 00:00:00]   Zipping Output to {zipfile_name} ...\n")
 
 
 def _rewrite_oracle_collector_log(logfile_name: Path, zipfile_name: str) -> None :
