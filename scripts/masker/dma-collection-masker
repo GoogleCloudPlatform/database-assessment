@@ -142,7 +142,7 @@ class DMAFaker:
 
     def user_name(self) -> str:
         return f"USER_{self._letters(length=6)}{self._digits(length=3)}".upper()
-    
+
     def object_name(self) -> str:
         return f"OBJ_{self._letters(length=12)}{self._digits(length=3)}".upper()
 
@@ -340,11 +340,11 @@ DATA_MASK_CONFIG_MSSQL = [
     DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="UserConnections",             column_position= 3,  missing_ok=True,  fake_function=fake.hostname,),         # host_name
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="UserConnections",             column_position= 4,  missing_ok=True,  fake_function=fake.user_name),         # program_name
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="UserConnections",             column_position= 5,  missing_ok=True,  fake_function=fake.user_name),         # login_name
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="UserConnections",             column_position=14,  missing_ok=False, fake_function=fake.hostname,),         # nt_domain          
+    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="UserConnections",             column_position=14,  missing_ok=False, fake_function=fake.hostname,),         # nt_domain
     DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="UserConnections",             column_position=15,  missing_ok=False, fake_function=fake.user_name,),        # nt_user_name
     DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="ServerProps",                 column_position= 2,  missing_ok=False, fake_function=fake.hostname, row_filter=["ServerName"]),         # Special for ServerPrps entries
     DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="ServerProps",                 column_position= 2,  missing_ok=False, fake_function=fake.hostname, row_filter=["MachineName"]),        # Special for ServerPrps entries
-]    
+]
 
 DATA_MASK_CONFIG_ORACLE = [
     DataMaskRule(
@@ -474,7 +474,7 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
             if collection_metadata.database_type == 'mssql':
                 data_mask_config = DATA_MASK_CONFIG_MSSQL
             elif collection_metadata.database_type == 'oracle':
-                data_mask_config = DATA_MASK_CONFIG_ORACLE 
+                data_mask_config = DATA_MASK_CONFIG_ORACLE
             else:
                 msg = f"Unmapped database type {collection_metadata.database_type}."
                 raise ApplicationError(msg)
@@ -621,7 +621,7 @@ def _check_for_duplicate_values(
 ) -> Dict[str, str]:
     """
     Check the dictionary for duplicate values in case there was a collision on the randomizer.
-    
+
     This function finds any values assigned to more than one key and returns the set.
 
     Args:
@@ -721,7 +721,7 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
                         row[column_position] = prefix + identity_map.get(row[column_position], "~~UNMAPPED~~")
                 elif any(check_val in rule.row_filter for check_val in row):
                     row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
-                  
+
             temp_file.writerow(row)
         shutil.move(t.name, collection_file)
 
@@ -790,7 +790,7 @@ def _package_collection(
                 if ("opdb__defines" in str(matched_file)):
                     _rewrite_oracle_collector_log(matched_file, masked_collection_file.stem + ".zip")
 
-                if (( "opdb_mssql_sqlErrorlog" not in str(matched_file)) and ("opdb__manifest" not in str(matched_file))): 
+                if (( "opdb_mssql_sqlErrorlog" not in str(matched_file)) and ("opdb__manifest" not in str(matched_file))):
                     f.write(matched_file, f"{masked_file.stem}{masked_file.suffix}")
 
     with key_file.open(mode="w", encoding="utf-8") as f:
