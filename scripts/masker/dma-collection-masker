@@ -426,12 +426,7 @@ def _exclude_owner_from_masking(owner_name: str) -> bool:
     :rtype: bool
     """
 
-    if owner_name is None:
-        return False
-    elif (owner_name in oracle_schemas_to_skip) or ( owner_name.startswith(("APEX_", "FLOWS_","OPS$"))):
-        return True
-    else:
-        return False
+    return (owner_name is not None) and ((owner_name in oracle_schemas_to_skip) or ( owner_name.startswith(("APEX_", "FLOWS_","OPS$"))))
 
 
 def _generate_and_apply_identity_map(identity_map: dict[str, str], rule: DataMaskRule, collection_files: Path) -> dict[str, str]:
