@@ -816,7 +816,6 @@ def _generate_identity_map_from_rule(
                 value,
                 rule.fake_function(value)
                 )
-            # logger.info(f"Added %s: %s", value, retval[value])    
         else:
             retval[value] = existing_identity_map.get(
                 value,
