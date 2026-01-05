@@ -205,7 +205,7 @@ class DMAFaker:
         self._collection_key: str
         self._date_time: str
         self._dbid: str = self._digits(length=10)
-        self._host_name: str 
+        self._host_name: str
 
     def _letters(self, length: int) -> str:
         return "".join(random.choices(string.ascii_lowercase, k=length))
@@ -256,9 +256,9 @@ class DMAFaker:
 
     def parameter_value(self) -> str:
         return f"PARAM_{self._letters(length=12)}{self._digits(length=3)}".upper()
-    
+
     def determ_host_name(self, input_hostname: str) -> str:
-        lower32 = int.from_bytes(hashlib.md5(string=input_hostname.encode('utf-8'), usedforsecurity=False).digest()[:4],'little') 
+        lower32 = int.from_bytes(hashlib.md5(string=input_hostname.encode('utf-8'), usedforsecurity=False).digest()[:4],'little')
         retval = ""
         prefix=self.hostname_prefixes[lower32 & 7]
         lower32 >>= 3
@@ -810,7 +810,6 @@ def _generate_identity_map_from_rule(
 
     retval = {}
     for value in unique_values:
-        
         if rule.mask_type == DataMaskTypes.DETERM_HOST_NAME:
             retval[value] = existing_identity_map.get(
                 value,
