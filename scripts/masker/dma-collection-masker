@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import logging
 import random
 import shutil
@@ -72,7 +73,114 @@ class FileMetadata:
 class DMAFaker:
     """Fake data provider to provide masked values"""
 
+    wordlist: List[str] = [
+        "abacus", "abbey", "ability", "absence", "academy", "account", "ace", "ache", "acid", "acre",
+        "act", "action", "activity", "actor", "adapter", "addiction", "addition", "address", "adjective", "adjustment",
+        "administration", "admiration", "admission", "advance", "advantage", "adventure", "advertisement", "advice", "affect", "affidavit",
+        "affiliate", "age", "agency", "agenda", "agent", "agreement", "agriculture", "aid", "aim", "air",
+        "aircraft", "airline", "airport", "aisle", "alarm", "alert", "algebra", "alien", "alignment", "alley",
+        "alliance", "alligator", "allocation", "allowance", "ally", "alphabet", "alteration", "alternative", "ambassador", "ambition",
+        "ambulance", "amendment", "amount", "analogy", "analysis", "analyst", "ancestor", "anchor", "angle", "animal",
+        "animation", "ankle", "anniversary", "announcement", "annoyance", "annual", "anomaly", "answer", "ant", "anthem",
+        "antibody", "anticipation", "antigen", "antique", "anxiety", "apartment", "apology", "app", "appeal", "appearance",
+        "appendix", "appetite", "apple", "appliance", "application", "appointment", "appreciation", "approach", "approval", "apron",
+        "aptitude", "aquarium", "arbitration", "arc", "arch", "architect", "architecture", "archive", "area", "arena",
+        "argument", "arm", "armament", "armchair", "armor", "army", "aroma", "array", "arrest", "arrival",
+        "arrow", "art", "artery", "article", "artifact", "artist", "ascension", "ash", "aspect", "asphalt",
+        "assembly", "assertion", "assessment", "asset", "assignment", "assistance", "assistant", "associate", "association", "assumption",
+        "assurance", "asylum", "athlete", "atmosphere", "atom", "attack", "attempt", "attendance", "attention", "attitude",
+        "attorney", "attraction", "attribute", "auction", "audience", "audit", "auditorium", "aunt", "aura", "authority",
+        "auto", "autonomy", "autumn", "avenue", "average", "aviation", "avoidance", "award", "awareness", "away",
+        "awe", "back", "background", "backing", "bacteria", "bad", "badge", "bag", "baggage", "bail",
+        "bait", "baker", "balance", "balcony", "bald", "ball", "ballet", "balloon", "ballot", "band",
+        "bank", "banker", "banner", "bar", "barbarian", "barber", "bargain", "bark", "barley", "barn",
+        "barrel", "barrier", "base", "baseball", "basement", "basin", "basis", "basket", "basketball", "bat",
+        "bathroom", "bathtub", "battery", "bay", "beach", "bead", "beam", "bean", "bear", "beard",
+        "beast", "beauty", "bed", "bee", "beef", "beer", "beetle", "beginning", "behalf", "behavior",
+        "being", "belief", "bell", "belt", "bench", "bend", "beneath", "benefit", "berry", "bet",
+        "beverage", "bias", "bicycle", "bid", "big", "bike", "bill", "bin", "binder", "bingo",
+        "biography", "biology", "bird", "birthday", "bit", "bitter", "black", "blackboard", "blade", "blame",
+        "blank", "blanket", "blast", "blaze", "blend", "blessing", "blind", "blindness", "blink", "block",
+        "blockade", "bloom", "blossom", "blue", "bluff", "board", "boardroom", "boat", "bog", "boiler",
+        "bold", "bond", "bone", "bonfire", "bonus", "book", "bookcase", "booking", "boom", "boost",
+        "boot", "border", "bore", "boredom", "borrower", "boss", "botany", "bottle", "bottom", "boulder",
+        "bounce", "boundary", "bow", "bowl", "bowling", "box", "boycott", "brace", "bracket", "brain",
+        "brake", "branch", "brand", "brass", "bravery", "bread", "break", "breakfast", "breath", "breeze",
+        "brick", "bride", "bridge", "brief", "briefcase", "brilliance", "brink", "broadcast", "brochure", "broker",
+        "bronze", "brother", "brow", "brown", "brush", "brute", "bubble", "bucket", "budget", "buffet",
+        "bug", "buggy", "build", "building", "bulb", "bulk", "bunch", "bundle", "bunker", "burden",
+        "bureau", "burial", "burn", "burner", "burst", "bus", "bush", "business", "businessman", "butter",
+        "button", "buy", "buyer", "cabin", "cabinet", "cable", "cafe", "cage", "cake", "calc",
+        "calculation", "calculator", "calendar", "calf", "call", "calm", "camel", "camera", "camp", "campaign",
+        "campus", "can", "canal", "candle", "candy", "cane", "cannon", "canoe", "canon", "canvas",
+        "cap", "capability", "capacity", "cape", "capital", "capsule", "captain", "car", "caravan", "carbon",
+        "card", "cardboard", "care", "career", "cargo", "carnival", "carpenter", "carpet", "carriage", "carrier",
+        "nausea", "navy", "necklace", "need", "needle", "negotiation", "neighborhood", "nerve", "nest", "net",
+        "network", "news", "newsletter", "newspaper", "niche", "nick", "nickname", "night", "nightmare", "nine",
+        "ninety", "noble", "nobody", "nod", "noise", "nomination", "none", "nonfiction", "noodle", "noon",
+        "norm", "normal", "north", "nose", "nostalgia", "note", "notebook", "notice", "notion", "novel",
+        "novelist", "now", "nuance", "nuclear", "number", "nursery", "nut", "nutrition", "oak", "oar",
+        "oasis", "oath", "oatmeal", "objection", "objective", "obligation", "oboe", "observation", "observer", "obsession",
+        "obstacle", "occasion", "occupation", "ocean", "octagon", "octave", "odd", "odds", "offence", "offer",
+        "office", "officer", "official", "offset", "oil", "old", "olive", "omen", "onion", "online",
+        "only", "opener", "opening", "opera", "operation", "opinion", "opponent", "opportunity", "opposition", "option",
+        "orange", "oration", "orb", "orbit", "orchard", "orchestra", "order", "organic", "organism", "organization",
+        "origin", "ornament", "ostrich", "other", "outcome", "outing", "outlet", "outline", "outlook", "output",
+        "outrage", "outside", "oval", "over", "overcoat", "overdraft", "overload", "overnight", "owl", "pace",
+        "package", "packet", "pad", "paddle", "page", "pain", "paint", "painter", "painting", "pair",
+        "palace", "pale", "palm", "pamphlet", "pan", "panel", "panic", "paper", "parade", "paradise",
+        "paragraph", "parallel", "paralysis", "paramount", "parent", "parish", "park", "parking", "parliament", "parody",
+        "parrot", "part", "partiality", "participant", "participation", "partner", "partnership", "party", "pass", "passage",
+        "passenger", "passion", "passport", "past", "paste", "pastry", "patch", "patent", "path", "patience",
+        "patio", "patrol", "pattern", "pause", "pavement", "paw", "pay", "payment", "peace", "peak",
+        "pear", "pebble", "peculiarity", "pedal", "pedestrian", "peer", "pen", "penalty", "pencil", "pendant",
+        "penguin", "penny", "pension", "people", "pepper", "perception", "percussion", "perfect", "performance", "performer",
+        "perfume", "perimeter", "permission", "permit", "personality", "perspective", "persuasion", "petition", "phantom", "phase",
+        "phenomenon", "philosopher", "philosophy", "phone", "photo", "photographer", "photography", "phrase", "physical", "physician",
+        "physics", "piano", "pick", "picnic", "picture", "pie", "piece", "pigeon", "pile", "pill",
+        "pillar", "pillow", "pilot", "pin", "pinch", "pine", "pink", "pioneer", "pipe", "pirate",
+        "pistol", "pit", "pitch", "pity", "pivot", "pizza", "place", "placement", "plain", "plan",
+        "plane", "planet", "plant", "plaster", "plastic", "plate", "platform", "play", "player", "playground",
+        "plot", "plum", "plumber", "pocket", "poem", "poet", "poetry", "point", "poison", "pole",
+        "police", "policeman", "policy", "politeness", "politics", "poll", "polo", "pond", "pony", "pool",
+        "pop", "popcorn", "pope", "popularity", "population", "porch", "port", "porter", "portion", "portrait",
+        "position", "possibility", "post", "postage", "poster", "pot", "potato", "potential", "pound", "poverty",
+        "powder", "power", "practice", "praise", "precaution", "precision", "prediction", "preference", "prejudice", "premium",
+        "preparation", "presence", "present", "presentation", "preservation", "president", "press", "pressure", "prestige", "presumption",
+        "pretence", "price", "pride", "prime", "print", "printer", "priority", "prison", "privacy", "privilege",
+        "prize", "probability", "probe", "problem", "procedure", "proceeding", "process", "processing", "processor", "prodigy",
+        "producer", "product", "production", "profession", "professor", "profile", "profit", "program", "progress", "project",
+        "projection", "prominence", "promise", "promotion", "prompt", "proof", "propaganda", "property", "proposal", "proprietor",
+        "prose", "prosecution", "prospect", "prosperity", "protection", "protein", "protest", "protocol", "prototype", "proud",
+        "province", "provision", "prudence", "public", "publication", "publicity", "publisher", "pudding", "pull", "pulse",
+        "puny", "pupil", "puppet", "purchase", "pure", "purple", "purpose", "purse", "pursuit", "push",
+        "put", "puzzle", "pyramid", "qualification", "quality", "quantity", "quarter", "quartet", "queen", "quest",
+        "question", "queue", "quilt", "quit", "quiver", "quiz", "quota", "quotation", "quote", "rabbit",
+        "racket", "radar", "radiator", "radio", "raid", "railroad", "rain", "rainbow", "rainfall", "rake",
+        "rally", "ramp", "range", "rank", "rant", "rap", "raspberry", "rat", "rate", "ratio",
+        "ration", "rave", "raw", "ray", "razor", "reach", "reaction", "read", "reader", "reading",
+        "reality", "realm", "reason", "rebel", "recall", "receipt", "receiver", "reception", "recess", "recipe",
+        "recipient", "recognition", "record", "recorder", "recording", "recovery", "recruit", "rectangle", "red", "redemption",
+        "redness", "reduction", "reef", "ref", "reference", "referendum", "reflection", "reform", "refuge", "refund",
+        "refusal", "regard", "regime", "region", "register", "registration", "regret", "regulation", "rehearsal", "rein",
+        "reindeer", "relation", "relationship", "relative", "relaxation", "relay", "release", "relevance", "relief", "reluctance",
+        "remedy", "reminder", "remote", "removal", "rent", "repair", "repeat", "repetition", "replacement", "reply",
+        "report", "reporter", "representation", "representative", "republic", "reputation", "request", "requirement", "rescue", "research",
+        "researcher", "resemblance", "reservation", "reserve", "resident", "resignation", "resistance", "resolution", "resort", "resource",
+        "respect", "respite", "response", "responsibility", "rest", "restaurant", "restoration", "restriction", "result", "resume",
+        "retail", "retailer", "retention", "retirement", "retreat", "return", "reunion", "revenue", "reverse", "review",
+        "revision", "revolution", "revolver", "reward", "rhetoric", "rhythm", "ribbon", "rice", "rider", "ridge",
+        "right", "rigid", "ring", "riot", "rip", "rise", "risk", "ritual", "rival", "river",
+        "road", "roadside", "roast", "robe", "robot", "rock", "rocket", "rod", "role", "roll",
+        "roller", "roof", "room", "root", "rope", "rose", "roster", "rotation", "rotten", "rough",
+        "round", "route", "routine", "row", "rubber", "rubbish", "ruby", "rug", "ruin", "rule",
+        "ruler", "rumor", "run", "runner", "running", "rush", "rust", "sabre", "sack", "sadness",
+        "safe", "safeguard", "safety", "sail", "sailor", "sake", "salad", "salary", "sale", "salmon",
+        "salt", "salute", "sample", "sanction"
+    ]
+
     hostname_prefixes: List[str] = [
+        "db",
         "db",
         "srv",
         "desktop",
@@ -87,8 +195,6 @@ class DMAFaker:
         "com",
         "com",
         "com",
-        "com",
-        "com",
         "biz",
         "info",
         "net",
@@ -99,6 +205,7 @@ class DMAFaker:
         self._collection_key: str
         self._date_time: str
         self._dbid: str = self._digits(length=10)
+        self._host_name: str 
 
     def _letters(self, length: int) -> str:
         return "".join(random.choices(string.ascii_lowercase, k=length))
@@ -118,10 +225,11 @@ class DMAFaker:
     def collection_key(self) -> str:
         return self._collection_key
 
-    def set_collection_key_from_date_time(self, date_time: str) -> None:
+    def set_collection_key_from_date_time(self, date_time: str, host_name: str) -> None:
         if not self._date_time:
             raise ValueError("date_time is not set")
-        self._collection_key = f"{self.hostname()}_{self.database_name()}_{self.instance_name()}_{date_time}"
+        self._host_name = self.determ_host_name(host_name)
+        self._collection_key = f"{self._host_name}_{self.database_name()}_{self.instance_name()}_{date_time}"
 
     def database_name(self) -> str:
         return f"""db-{self._letters(length=8)}""".upper()
@@ -135,10 +243,10 @@ class DMAFaker:
         return f"{prefix}.{domain}"
 
     def pkey(self) -> str:
-        return f"{self.hostname()}_{self.database_name()}_{self.date_time}"
+        return f"{self._host_name}_{self.database_name()}_{self.date_time}"
 
     def dma_source_id(self) -> str:
-        return f"{self.hostname()}_{self.instance_name()}_{self._dbid}"
+        return f"{self._host_name}_{self.instance_name()}_{self._dbid}"
 
     def user_name(self) -> str:
         return f"USER_{self._letters(length=6)}{self._digits(length=3)}".upper()
@@ -148,6 +256,21 @@ class DMAFaker:
 
     def parameter_value(self) -> str:
         return f"PARAM_{self._letters(length=12)}{self._digits(length=3)}".upper()
+    
+    def determ_host_name(self, input_hostname: str) -> str:
+        lower32 = int.from_bytes(hashlib.md5(string=input_hostname.encode('utf-8')).digest()[:4],'little') 
+        retval = ""
+        prefix=self.hostname_prefixes[lower32 & 7]
+        lower32 = lower32 >> 3
+        domain=self.hostname_domains[lower32 & 7]
+        lower32 = lower32 >> 3
+        for i in range(4):
+            thisword = (lower32 & 1023)
+            retval = retval + self.wordlist[thisword]
+            lower32 = lower32 >> 10
+            if i < 3:
+                retval += "-"
+        return prefix + "." + retval + "." + domain
 
 fake = DMAFaker()
 
@@ -161,6 +284,7 @@ class DataMaskTypes(Flag):
     DATABASE_NAME = auto()
     OBJECT_NAME = auto()
     PARAMETER_VALUE = auto()
+    DETERM_HOST_NAME = auto()
 
 oracle_params_to_mask: List[str] = [
     'cdb_cluster_name',
@@ -313,37 +437,37 @@ DATA_MASK_CONFIG_MSSQL = [
     DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="TranLogBkupSizeByHourByDay",  column_position= -2, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
     DataMaskRule( mask_type=DataMaskTypes.DMA_SOURCE_ID, table_name="UserConnections",             column_position= 18, missing_ok=False, fake_function=fake.dma_source_id,),   # dma_source_id
     # Columns other than dma_source_id
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="ColumnDatatypes",             column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="ColumnDatatypes",             column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
-    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="ColumnDatatypes",             column_position= 3,  missing_ok=True,  fake_function=fake.object_name,),      # table_name
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="CompInstalled",               column_position= 1,  missing_ok=True,  fake_function=fake.hostname,),         # physical_server_name
-    DataMaskRule( mask_type=DataMaskTypes.INSTANCE_NAME, table_name="CompInstalled",               column_position= 2,  missing_ok=True,  fake_function=fake.instance_name,),    # sql_instance_name
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="DatabaseLevelBlockFeatures",  column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="DbClusterNodes",              column_position= 1,  missing_ok=True,  fake_function=fake.hostname,),         # node_name
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="DbMachineSpecs",              column_position= 3,  missing_ok=True,  fake_function=fake.hostname,),         # MachineName
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="DbSizes",                     column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="IndexList",                   column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="IndexList",                   column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
-    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="IndexList",                   column_position= 3,  missing_ok=True,  fake_function=fake.object_name,),      # table_name
-    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="IndexList",                   column_position= 4,  missing_ok=True,  fake_function=fake.object_name,),      # index_name
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="LinkedSrvrs",                 column_position= 1,  missing_ok=False, fake_function=fake.database_name,),    # name
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="LinkedSrvrs",                 column_position= 4,  missing_ok=False, fake_function=fake.database_name,),    # data_source
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="ObjectList",                  column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="ObjectList",                  column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
-    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="ObjectList",                  column_position= 3,  missing_ok=True,  fake_function=fake.object_name,),      # object_name
-    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="ObjectList",                  column_position= 8,  missing_ok=True,  fake_function=fake.object_name,),      # associated_table_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="PerfCounter",                 column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="TableList",                   column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="TableList",                   column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
-    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="TableList",                   column_position= 3,  missing_ok=True,  fake_function=fake.object_name,),      # table_name
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="UserConnections",             column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="UserConnections",             column_position= 3,  missing_ok=True,  fake_function=fake.hostname,),         # host_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="UserConnections",             column_position= 4,  missing_ok=True,  fake_function=fake.user_name),         # program_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="UserConnections",             column_position= 5,  missing_ok=True,  fake_function=fake.user_name),         # login_name
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="UserConnections",             column_position=14,  missing_ok=False, fake_function=fake.hostname,),         # nt_domain
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="UserConnections",             column_position=15,  missing_ok=False, fake_function=fake.user_name,),        # nt_user_name
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="ServerProps",                 column_position= 2,  missing_ok=False, fake_function=fake.hostname, row_filter=["ServerName"]),         # Special for ServerPrps entries
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="ServerProps",                 column_position= 2,  missing_ok=False, fake_function=fake.hostname, row_filter=["MachineName"]),        # Special for ServerPrps entries
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="ColumnDatatypes",             column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,      table_name="ColumnDatatypes",             column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,      table_name="ColumnDatatypes",             column_position= 3,  missing_ok=True,  fake_function=fake.object_name,),      # table_name
+    DataMaskRule( mask_type=DataMaskTypes.DETERM_HOST_NAME, table_name="CompInstalled",               column_position= 1,  missing_ok=True,  fake_function=fake.determ_host_name,),         # physical_server_name
+    DataMaskRule( mask_type=DataMaskTypes.INSTANCE_NAME,    table_name="CompInstalled",               column_position= 2,  missing_ok=True,  fake_function=fake.instance_name,),    # sql_instance_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="DatabaseLevelBlockFeatures",  column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.DETERM_HOST_NAME, table_name="DbClusterNodes",              column_position= 1,  missing_ok=True,  fake_function=fake.determ_host_name,),         # node_name
+    DataMaskRule( mask_type=DataMaskTypes.DETERM_HOST_NAME, table_name="DbMachineSpecs",              column_position= 3,  missing_ok=True,  fake_function=fake.determ_host_name,),         # MachineName
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="DbSizes",                     column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="IndexList",                   column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,      table_name="IndexList",                   column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,      table_name="IndexList",                   column_position= 3,  missing_ok=True,  fake_function=fake.object_name,),      # table_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,      table_name="IndexList",                   column_position= 4,  missing_ok=True,  fake_function=fake.object_name,),      # index_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="LinkedSrvrs",                 column_position= 1,  missing_ok=False, fake_function=fake.database_name,),    # name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="LinkedSrvrs",                 column_position= 4,  missing_ok=False, fake_function=fake.database_name,),    # data_source
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="ObjectList",                  column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,      table_name="ObjectList",                  column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,      table_name="ObjectList",                  column_position= 3,  missing_ok=True,  fake_function=fake.object_name,),      # object_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,      table_name="ObjectList",                  column_position= 8,  missing_ok=True,  fake_function=fake.object_name,),      # associated_table_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,      table_name="PerfCounter",                 column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="TableList",                   column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,      table_name="TableList",                   column_position= 2,  missing_ok=True,  fake_function=fake.user_name,),        # schema_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,      table_name="TableList",                   column_position= 3,  missing_ok=True,  fake_function=fake.object_name,),      # table_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="UserConnections",             column_position= 1,  missing_ok=True,  fake_function=fake.database_name,),    # database_name
+    DataMaskRule( mask_type=DataMaskTypes.DETERM_HOST_NAME, table_name="UserConnections",             column_position= 3,  missing_ok=True,  fake_function=fake.determ_host_name,),         # host_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,      table_name="UserConnections",             column_position= 4,  missing_ok=True,  fake_function=fake.user_name),         # program_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,      table_name="UserConnections",             column_position= 5,  missing_ok=True,  fake_function=fake.user_name),         # login_name
+    DataMaskRule( mask_type=DataMaskTypes.DETERM_HOST_NAME, table_name="UserConnections",             column_position=14,  missing_ok=False, fake_function=fake.determ_host_name,),         # nt_domain
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,      table_name="UserConnections",             column_position=15,  missing_ok=False, fake_function=fake.user_name,),        # nt_user_name
+    DataMaskRule( mask_type=DataMaskTypes.DETERM_HOST_NAME, table_name="ServerProps",                 column_position= 2,  missing_ok=False, fake_function=fake.determ_host_name, row_filter=["ServerName"]),         # Special for ServerPrps entries
+    DataMaskRule( mask_type=DataMaskTypes.DETERM_HOST_NAME, table_name="ServerProps",                 column_position= 2,  missing_ok=False, fake_function=fake.determ_host_name, row_filter=["MachineName"]),        # Special for ServerPrps entries
 ]
 
 DATA_MASK_CONFIG_ORACLE = [
@@ -389,24 +513,24 @@ DATA_MASK_CONFIG_ORACLE = [
     DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="lobsizing",        column_position= 21, missing_ok=True, fake_function=fake.object_name,),  # segment_name
     DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="lobsizing",        column_position= 22, missing_ok=True, fake_function=fake.object_name,),  # segment_partition_name
 
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="opkeylog",         column_position= 3, missing_ok=True, fake_function=fake.hostname,),      # host_name
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="opkeylog",         column_position= 4, missing_ok=True, fake_function=fake.database_name,), # db_name
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="opkeylog",         column_position= 5, missing_ok=True, fake_function=fake.database_name,), # instance_name
-    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,   table_name="users",            column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # username
-    DataMaskRule( mask_type=DataMaskTypes.INSTANCE_NAME, table_name="dbinstances",      column_position= 2, missing_ok=True, fake_function=fake.instance_name,), # instance_name
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="dbinstances",      column_position= 3, missing_ok=True, fake_function=fake.hostname,),      # host_name
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="dbsummary",        column_position= 2, missing_ok=True, fake_function=fake.database_name,), # db_name
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="dbsummary",        column_position=-3, missing_ok=True, fake_function=fake.database_name,), # db_unique_name
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="pdbsinfo",         column_position= 3, missing_ok=True, fake_function=fake.database_name, row_filter=["CDB$ROOT"]), # pdb_name
-    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME, table_name="pdbsopenmode",     column_position= 2, missing_ok=True, fake_function=fake.database_name,), # name
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="sourceconn",       column_position= 4, missing_ok=True, fake_function=fake.hostname,),      # program
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="sourceconn",       column_position= 5, missing_ok=True, fake_function=fake.hostname,),      # module_name
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="sourceconn",       column_position= 6, missing_ok=True, fake_function=fake.hostname,),      # machine_name
-    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="tableconstraints", column_position= 3, missing_ok=True, fake_function=fake.object_name,),   # table_name
-    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,   table_name="tabletypedtl",     column_position= 3, missing_ok=True, fake_function=fake.object_name,),   # table_name
-    DataMaskRule( mask_type=DataMaskTypes.HOST_NAME,     table_name="DbMachineSpecs",   column_position= 3, missing_ok=True, fake_function=fake.hostname,),      # MachineName
-    DataMaskRule( mask_type=DataMaskTypes.PARAMETER_VALUE, table_name="dbparameters",   column_position= 4, missing_ok=True, fake_function=fake.parameter_value, row_filter=oracle_params_to_mask),   # value
-    DataMaskRule( mask_type=DataMaskTypes.PARAMETER_VALUE, table_name="dbparameters",   column_position= 5, missing_ok=True, fake_function=fake.parameter_value, row_filter=oracle_params_to_mask),   # default_value
+    DataMaskRule( mask_type=DataMaskTypes.DETERM_HOST_NAME, table_name="opkeylog",         column_position= 3, missing_ok=True, fake_function=fake.determ_host_name,),      # host_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="opkeylog",         column_position= 4, missing_ok=True, fake_function=fake.database_name,), # db_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="opkeylog",         column_position= 5, missing_ok=True, fake_function=fake.database_name,), # instance_name
+    DataMaskRule( mask_type=DataMaskTypes.SCHEMA_NAME,      table_name="users",            column_position= 2, missing_ok=True, fake_function=fake.user_name,),     # username
+    DataMaskRule( mask_type=DataMaskTypes.INSTANCE_NAME,    table_name="dbinstances",      column_position= 2, missing_ok=True, fake_function=fake.instance_name,), # instance_name
+    DataMaskRule( mask_type=DataMaskTypes.DETERM_HOST_NAME, table_name="dbinstances",      column_position= 3, missing_ok=True, fake_function=fake.determ_host_name,),      # host_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="dbsummary",        column_position= 2, missing_ok=True, fake_function=fake.database_name,), # db_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="dbsummary",        column_position=-3, missing_ok=True, fake_function=fake.database_name,), # db_unique_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="pdbsinfo",         column_position= 3, missing_ok=True, fake_function=fake.database_name, row_filter=["CDB$ROOT"]), # pdb_name
+    DataMaskRule( mask_type=DataMaskTypes.DATABASE_NAME,    table_name="pdbsopenmode",     column_position= 2, missing_ok=True, fake_function=fake.database_name,), # name
+    DataMaskRule( mask_type=DataMaskTypes.DETERM_HOST_NAME, table_name="sourceconn",       column_position= 4, missing_ok=True, fake_function=fake.determ_host_name,),      # program
+    DataMaskRule( mask_type=DataMaskTypes.DETERM_HOST_NAME, table_name="sourceconn",       column_position= 5, missing_ok=True, fake_function=fake.determ_host_name,),      # module_name
+    DataMaskRule( mask_type=DataMaskTypes.DETERM_HOST_NAME, table_name="sourceconn",       column_position= 6, missing_ok=True, fake_function=fake.determ_host_name,),      # machine_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,      table_name="tableconstraints", column_position= 3, missing_ok=True, fake_function=fake.object_name,),   # table_name
+    DataMaskRule( mask_type=DataMaskTypes.OBJECT_NAME,      table_name="tabletypedtl",     column_position= 3, missing_ok=True, fake_function=fake.object_name,),   # table_name
+    DataMaskRule( mask_type=DataMaskTypes.DETERM_HOST_NAME, table_name="DbMachineSpecs",   column_position= 3, missing_ok=True, fake_function=fake.determ_host_name,),      # MachineName
+    DataMaskRule( mask_type=DataMaskTypes.PARAMETER_VALUE,  table_name="dbparameters",     column_position= 4, missing_ok=True, fake_function=fake.parameter_value, row_filter=oracle_params_to_mask),   # value
+    DataMaskRule( mask_type=DataMaskTypes.PARAMETER_VALUE,  table_name="dbparameters",     column_position= 5, missing_ok=True, fake_function=fake.parameter_value, row_filter=oracle_params_to_mask),   # default_value
 ]
 
 
@@ -443,6 +567,7 @@ def _generate_and_apply_identity_map(identity_map: dict[str, str], rule: DataMas
         _apply_identity_map_to_file(rule, collection_file, identity_map)
     return identity_map
 
+
 def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -> None:
     """Run Masker.
 
@@ -468,7 +593,7 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
         for collection in collections:
             collection_metadata = _metadata_from_filename(collection)
             fake.date_time = collection_metadata.date_time
-            fake.set_collection_key_from_date_time(collection_metadata.date_time)
+            fake.set_collection_key_from_date_time(collection_metadata.date_time, host_name=collection_metadata.host_name)
             identity_map: dict[str, str] = {collection_metadata.pkey: fake.pkey()}
             _extract_collection(collection, work_dir)
             if collection_metadata.database_type == 'mssql':
@@ -520,11 +645,13 @@ def _metadata_from_filename(collection_file: Path) -> FileMetadata:
     """
     try:
         meta_values = collection_file.stem.split("__", maxsplit=2)[-1].split("_")[1:6]
+        #logger.info(f"meta_values = %s", meta_values)
         meta_values[0] = str(parse_version(meta_values[0]))  # type: ignore[call-overload]
         meta_values.append("_".join([*meta_values[1:3], meta_values[4]]))  # pkey
         meta_values.append("_".join(meta_values[1:5]))  # collection_key
         meta_values.append(collection_file.stem.split(sep="_")[1]) # database_type
         metadata = FileMetadata(*meta_values)
+        #logger.info(f"FileMetaData = {metadata}")
     except (ValueError, IndexError, TypeError) as e:
         msg = f"Could not determine metadata from file {collection_file.stem}"
         raise ApplicationError(msg) from e
@@ -682,14 +809,22 @@ def _generate_identity_map_from_rule(
                     all_values.append(row[column_position])
 
     unique_values = list(dict.fromkeys(all_values))
-    return {
-        value: existing_identity_map.get(
-            value,
-            rule.fake_function(),
-        )
-        for value in unique_values
-    }
 
+    retval = {}
+    for value in unique_values:
+        
+        if rule.mask_type == DataMaskTypes.DETERM_HOST_NAME:
+            retval[value] = existing_identity_map.get(
+                value,
+                rule.fake_function(value)
+                )
+            # logger.info(f"Added %s: %s", value, retval[value])    
+        else:
+            retval[value] = existing_identity_map.get(
+                value,
+                rule.fake_function()
+                )
+    return retval
 
 def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, identity_map: Dict[str, str]) -> None:
     """Apply Identity Map to File.
