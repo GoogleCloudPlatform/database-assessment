@@ -261,13 +261,13 @@ class DMAFaker:
         lower32 = int.from_bytes(hashlib.md5(string=input_hostname.encode('utf-8')).digest()[:4],'little') 
         retval = ""
         prefix=self.hostname_prefixes[lower32 & 7]
-        lower32 = lower32 >> 3
+        lower32 >>= 3
         domain=self.hostname_domains[lower32 & 7]
-        lower32 = lower32 >> 3
+        lower32 >>= 3
         for i in range(4):
             thisword = (lower32 & 1023)
-            retval = retval + self.wordlist[thisword]
-            lower32 = lower32 >> 10
+            retval += self.wordlist[thisword]
+            lower32 >>= 10
             if i < 3:
                 retval += "-"
         return prefix + "." + retval + "." + domain
@@ -645,13 +645,11 @@ def _metadata_from_filename(collection_file: Path) -> FileMetadata:
     """
     try:
         meta_values = collection_file.stem.split("__", maxsplit=2)[-1].split("_")[1:6]
-        #logger.info(f"meta_values = %s", meta_values)
         meta_values[0] = str(parse_version(meta_values[0]))  # type: ignore[call-overload]
         meta_values.append("_".join([*meta_values[1:3], meta_values[4]]))  # pkey
         meta_values.append("_".join(meta_values[1:5]))  # collection_key
         meta_values.append(collection_file.stem.split(sep="_")[1]) # database_type
         metadata = FileMetadata(*meta_values)
-        #logger.info(f"FileMetaData = {metadata}")
     except (ValueError, IndexError, TypeError) as e:
         msg = f"Could not determine metadata from file {collection_file.stem}"
         raise ApplicationError(msg) from e
