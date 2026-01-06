@@ -35,7 +35,7 @@ function print_status() {
 
   if [[ "${fail_count}" -gt 0 ]]; then
     echo
-    print_fail
+    print_failure
     echo
     echo "Failures encountered = ${fail_count}"
     echo "Failures in in:"

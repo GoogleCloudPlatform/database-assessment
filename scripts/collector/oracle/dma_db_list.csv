@@ -2,18 +2,18 @@
 # Use one line per database.
 # Any whitespace will be removed during file parsing.
 # The fields are comma-separated.  DO NOT USE PASSWORDS CONTAINING A COMMA OR OTHER CHARACTERS THAT MAY BE INTERPRETED BY THE SHELL.
-# Please use all uppercase for the DMA collector user name.
 # Field 1 = Username and password for a user with SYSDBA privileges.
 # Field 2 = Username and password to create and use for the DMA collector. Note that the dma_make_user.sh script will create the user if it does not already exist.
 # Field 3 = Connection details for the database in Easy Connect format.
 # Field 4 = Source for performance stats (Must be one of AWR, STATSPACK, NOSTATS).
 # Field 5 = Number of days of statistics to collect. (Must be one of 7 or 30)
+# Field 6 = Unique identifier.  (Optional) User-supplied identifier for this database.  Must be unique if supplied.
 
-# The first example below demonstrates how to connect to a non-container database and use STATSPACK performance data.
-# The second example demonstrates how to create a common user for a container database and use AWR/ASH data for performance stats.
-# The third example demonstrates how to connect to a non-container database and skip collection of performance data.
+# The first example below demonstrates how to connect to a non-container database and use STATSPACK performance data. User-supplied unique identifier of 'prod_order' will be attached to the collection.
+# The second example demonstrates how to create a common user for a container database and use AWR/ASH data for performance stats.  User-supplied unique identifier of 'prod_inventory' will be attached to the collection.
+# The third example demonstrates how to connect to a non-container database and skip collection of performance data. No user-supplied unique identifier.
 
-# SYS,USER,DB_CONN,STATS_SRC,NUMDAYS
-sys/Secret-123,DMACOLLECTOR/DMA-123,@//prod1.example.com:1521/ORDR,STATSPACK,7
-sys/Secret-234,C##DMACOLLECTOR/DMA-123,@//prod2.example.com:1521/INVT,AWR,7
+# SYS,USER,DB_CONN,STATS_SRC,NUMDAYS,DMAID
+sys/Secret-123,DMACOLLECTOR/DMA-123,@//prod1.example.com:1521/ORDR,STATSPACK,7,prod_order
+sys/Secret-234,C##DMACOLLECTOR/DMA-123,@//prod2.example.com:1521/INVT,AWR,7,prod_inventory
 sys/Secret-234,C##DMACOLLECTOR/DMA-123,@//qa.example.com:1521/QADB,NOSTATS,7

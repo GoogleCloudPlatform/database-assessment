@@ -536,3 +536,8 @@ exclude_lines = [
     'class .*\bProtocol\):',
     '@(abc\.)?abstractmethod',
 ]
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true

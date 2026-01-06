@@ -405,7 +405,7 @@ function precheckStats() {
     username=$(echo "${user}" | cut -d '/' -f 1)
     echo  "...Checking available performance statistics on database ${db} user ${username} for ${statssrc}"
     retcd=$(checkStats "${user}" "${db}" "${statssrc}" "${statswindow}")
-    success=$(echo "${retcd}" | ${grep_cmd} -e SUCCESS -e NONE -e WARNING | cut -d ' ' -f 1)
+    success=$(echo "${retcd}" | ${grep_cmd} -e SUCCESS -e NONE -e WARNING -e FAIL | cut -d ' ' -f 1)
     if [[ "${success}" = "SUCCESS" ]]; then
       successes+=("${retcd}")
     else
@@ -632,7 +632,7 @@ function runAllChecks() {
     echo "All tests complete with warnings.  You may proceed with DMA collection, but some data may be missing."
     echo
     else
-      print_fail
+      print_failure
       echo "Address the failures above and retry. "
       echo
     fi

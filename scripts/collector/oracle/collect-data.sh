@@ -387,7 +387,6 @@ function print_usage() {
   echo "                              NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION."
   echo "                              IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8"
   echo "                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR."
-
 # RESERVED FOR FUTURE USE
 #  echo "  Oracle Estate Explorer collection"
 #  echo "      --collectOee            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector.  Default is Y."
@@ -396,10 +395,11 @@ function print_usage() {
 #  echo
 #  echo "      --oeeGroup              Required if --collect_oee is Y.  This is the group name (ex: Dev, Prod, QA, etc) to use for bundling multiple databases togegther within OEE."
 #  echo "                              Maximum length of 32 characters."
-#  echo "      --oee_runId             Internal use only.  This is used by DMA automation to handle parallel runs of multiple collections."
-#  echo
-#  echo " Optional identifier"
-#  echo "      --manualUniqueId        Optional.  Allows the end user to create a unique identifier with which to tag the collection. "
+#  echo "      --oeeRunId              Internal use only.  This is used by DMA automation to handle parallel runs of multiple collections."
+# RESERVED FOR FUTURE USE
+  echo
+  echo " Optional identifier"
+  echo "      --manualUniqueId        Optional.  Allows the end user to create a unique identifier with which to tag the collection. "
   echo "                              Also used internally by DMA automation."
   echo
   echo " Example:"
@@ -430,9 +430,11 @@ function parse_parameters() {
     elif [[ "$1" == "--connectionStr" ]];      then connection_string="${2}"
     elif [[ "$1" == "--statsWindow" ]];        then stats_window="${2}"
     elif [[ "$1" == "--manualUniqueId" ]];     then manual_unique_id="${2}"
+# RESERVED FOR FUTURE USE
 #    elif [[ "$1" == "--collectOEE" ]];         then collect_oee="${2}"
 #    elif [[ "$1" == "--oeeGroup"   ]];         then oee_group_name="${2}"
-#    elif [[ "$1" == "--oee_runId"   ]];        then oee_run_id="${2}"
+#    elif [[ "$1" == "--oeeRunId"   ]];         then oee_run_id="${2}"
+# RESERVED FOR FUTURE USE
     elif [[ "$1" == "--dmaAutomation"   ]];    then dma_automation_flag="${2}"  # Internal use only
     else
       echo "Unknown parameter ${1}"
@@ -477,26 +479,28 @@ function parse_parameters() {
     database_service=$(echo ${connection_string} | cut -d '/' -f 5)
   fi
 
-  if [[ "${collect_oee}" == "Y" ]] ; then
-    if [[ "${oee_group_name}" == "" ]] ; then
-      echo "ERROR: Parameter --oee_group_name must be specified if --collect_oee is Y."
-      print_usage
-      exit
-    fi
-    if [[ "${oee_run_id}" == "" ]] ; then
-      oee_run_id=$$
-      oee_run_id="${oee_run_id}_$(date +%Y%m%d%H%M%S)"
-    fi
-    if [[ ! -f $oee_dir/oee_group_extract-SA.sh ]]; then
-      echo
-      echo "ERROR: Oracle Estate Explorer extraction scripts not found in ${oee_dir}".
-      echo "Skipping collection for database ${database_service}".
-      echo "Either install Oracle Estate Explorer files or disable OEE collection for this database and retry the collection."
-      echo
-      print_fail
-      exit 1
-    fi
-  fi
+# RESERVED FOR FUTURE USE
+#  if [[ "${collect_oee}" == "Y" ]] ; then
+#    if [[ "${oee_group_name}" == "" ]] ; then
+#      echo "ERROR: Parameter --oeeGroup must be specified if --collect_oee is Y."
+#      print_usage
+#      exit
+#    fi
+#    if [[ "${oee_run_id}" == "" ]] ; then
+#      oee_run_id=$$
+#      oee_run_id="${oee_run_id}_$(date +%Y%m%d%H%M%S)"
+#    fi
+#    if [[ ! -f $oee_dir/oee_group_extract-SA.sh ]]; then
+#      echo
+#      echo "ERROR: Oracle Estate Explorer extraction scripts not found in ${oee_dir}".
+#      echo "Skipping collection for database ${database_service}".
+#      echo "Either install Oracle Estate Explorer files or disable OEE collection for this database and retry the collection."
+#      echo
+#      print_fail
+#      exit 1
+#    fi
+#  fi
+# RESERVED FOR FUTURE USE
 
   if [[ "${manual_unique_id}" != "" ]] ; then
     case "$(uname)" in
