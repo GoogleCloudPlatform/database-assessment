@@ -1,4 +1,4 @@
-# This file is provided as a template to be used for simple automation of the DMA collector. 
+# This file is provided as a template to be used for simple automation of the DMA collector.
 # Use one line per database.
 # Any whitepace will be removed during file parsing.
 # The fields are comma-separated.  DO NOT USE PASSWORDS CONTAINING A COMMA OR OTHER CHARACTERS THAT MAY BE INTERPRETED BY THE SHELL.
