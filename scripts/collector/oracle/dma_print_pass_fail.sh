@@ -1,4 +1,4 @@
-function print_fail() {
+function print_failure() {
   echo :FAILURE:
   echo
   echo

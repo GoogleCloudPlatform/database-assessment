@@ -96,7 +96,10 @@ function batchRun() {
     fi
 
     # Run a collection in the background, capturing screen output to a log file.
-    ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}" --collectOEE "${oee_flag}" --oeeGroup "${oee_group}" --oeeRunId "${run_id}" --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_${this_pid}.log" &
+    # RESERVED FOR FUTURE USE
+    # ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}" --collectOEE "${oee_flag}" --oeeGroup "${oee_group}" --oeeRunId "${run_id}" --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_${this_pid}.log" &
+    # RESERVED FOR FUTURE USE
+    ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}"  --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_${this_pid}.log" &
 
     # Wait a couple of seconds before starting another collection.
     sleep 2
@@ -130,7 +133,7 @@ function batchRun() {
   if [[ ${err_cnt} -ne 0 ]] ; then
     echo "================================================================================================"
     echo "================================================================================================"
-    print_fail
+    print_failure
     echo "These collections encountered errors.  Check the log file for errors and re-try the collections after correcting the cause:"
     ls -1 ${output_dir}/*ERROR.zip
     echo
@@ -141,7 +144,7 @@ function batchRun() {
     echo "Failed to collect Oracle Estate Explorer data :"
     grep -n "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log | cut -d ':' -f1 | xargs -n1 awk "NR>={}-0 && NR<={}+5" DMA_COLLECT_DATA_*_${this_pid}.log
     echo
-    print_fail
+    print_failure
   fi
 
   return 1
@@ -208,7 +211,7 @@ function main() {
             oee_fail_count=$(( ${oee_fail_count}  + ${oee_fail_number} ))
           done
           if [[ ${oee_fail_count} -ne 0 ]] ; then
-            print_fail
+            print_failure
           else
             print_complete
           fi

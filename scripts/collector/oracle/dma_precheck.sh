@@ -632,7 +632,7 @@ function runAllChecks() {
     echo "All tests complete with warnings.  You may proceed with DMA collection, but some data may be missing."
     echo
     else
-      print_fail
+      print_failure
       echo "Address the failures above and retry. "
       echo
     fi
