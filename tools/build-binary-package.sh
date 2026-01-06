@@ -14,30 +14,31 @@
 # limitations under the License.
 # shellcheck disable=SC2086
 set -euxo pipefail
-current_version=$(hatch version)
+current_version=$(uv run python -c "from dma.__about__ import __version__; print(__version__)")
 
 
 export HATCH_BUILD_LOCATION="dist"
 export CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_DEBUG="true"
 # export CARGO_BUILD_TARGET="x86_64-unknown-linux-gnu"
 export RUST_BACKTRACE="full"
-export PYAPP_VERSION="v0.27.0"
+export PYAPP_VERSION="v0.29.0"
 export PYAPP_REPO="dist/.scratch"
 export PYAPP_PROJECT_PATH="$(realpath dist/dma-${current_version}-py3-none-any.whl)"
 export PYAPP_PROJECT_NAME="dma"
 export PYAPP_PROJECT_VERSION="${current_version}"
 export PYAPP_PROJECT_DEPENDENCY_FILE="$(realpath dist/requirements.txt)"
 export PYAPP_PYTHON_VERSION="3.12"
-export PYAPP_PROJECT_FEATURES="postgres"
-export PYAPP_DISTRIBUTION_VARIANT="v1"
+export PYAPP_PROJECT_FEATURES="server,postgres"
+export PYAPP_DISTRIBUTION_VARIANT_CPU="v1"
 export PYAPP_UV_ENABLED="true"
 export PYAPP_FULL_ISOLATION="true"
 export PYAPP_DISTRIBUTION_EMBED="true"
 rm -Rf dist/.scratch
 git clone --quiet --depth 1 --branch $PYAPP_VERSION https://github.com/ofek/pyapp dist/.scratch
 
-hatch build
-hatch dep show requirements --project-only > dist/requirements.txt
-hatch dep show requirements -p  -f postgres -f server >> dist/requirements.txt
+uv build
+uv export --frozen --no-dev --no-editable --no-hashes --no-header --no-emit-project --extra postgres --extra server > dist/requirements.txt
 echo "$(realpath dist/dma-${current_version}-py3-none-any.whl)" >> dist/requirements.txt
 cd dist/.scratch && cargo build --release  &&  cd -
+cp dist/.scratch/target/release/pyapp dist/dma
+chmod +x dist/dma

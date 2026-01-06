@@ -22,6 +22,7 @@ on:
 #   pull_request:
 #     branches:
 #     - master
+  workflow_dispatch:
   release:
     types:
       - created
@@ -128,12 +129,14 @@ jobs:
       PYAPP_REPO: pyapp
       PYAPP_VERSION: v0.27.0
       PYAPP_PYTHON_VERSION: "3.12"
+      PYAPP_PROJECT_NAME: "dma"
 
       # CRITICAL: Correct offline configuration (NO PYAPP_UV_ENABLED)
       PYAPP_DISTRIBUTION_EMBED: "true"
       PYAPP_FULL_ISOLATION: "true"
       PYAPP_SKIP_INSTALL: "true"  # Project already embedded
       PYAPP_PROJECT_FEATURES: "oracle,postgres,mssql,mysql,server"
+      PYAPP_DISTRIBUTION_VARIANT_CPU: "v1"
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
@@ -178,10 +181,16 @@ jobs:
         echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
       shell: bash
 
+    - name: Generate requirements.txt
+      run: |
+        uv export --frozen --no-dev --no-editable --no-hashes --no-header --no-emit-project --extra postgres --extra server > dist/requirements.txt
+        echo "${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl" >> dist/requirements.txt
+
     - name: Build PyApp binary
       working-directory: ${{ env.PYAPP_REPO }}
       env:
         PYAPP_PROJECT_PATH: ${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
+        PYAPP_PROJECT_DEPENDENCY_FILE: ${{ github.workspace }}/dist/requirements.txt
       run: cargo build --release --target ${{ matrix.job.target }}
 
     - name: Rename binary (Unix)
