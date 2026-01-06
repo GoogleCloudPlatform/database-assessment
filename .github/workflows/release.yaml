@@ -168,7 +168,7 @@ jobs:
       run: sudo apt-get install --yes musl musl-dev musl-tools
 
     - name: Download wheel artifact
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         name: wheels
         path: dist/
@@ -231,7 +231,7 @@ jobs:
     permissions:
      contents: write
     steps:
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v7
       with:
         path: dist
         merge-multiple: true
