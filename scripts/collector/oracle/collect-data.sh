@@ -17,7 +17,7 @@
 . ./dma_oee.sh
 
 # Global variables and constants
-dma_version="4.3.45"
+dma_version="4.3.44"
 dbmajor=""
 dbdomain=""
 script_dir=""
@@ -387,15 +387,16 @@ function print_usage() {
   echo "                              NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION."
   echo "                              IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8"
   echo "                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR."
-
-  echo "  Oracle Estate Explorer collection"
-  echo "      --collectOee            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector.  Default is Y."
-  echo "                              NOTE: This requires SQL client version 21 and above, plus Oracle database 11.2 or above."
-  echo "                                    OEE collection will not run if requirements are not met."
-  echo
-  echo "      --oeeGroup              Required if --collect_oee is Y.  This is the group name (ex: Dev, Prod, QA, etc) to use for bundling multiple databases togegther within OEE."
-  echo "                              Maximum length of 32 characters."
-  echo "      --oeeRunId              Internal use only.  This is used by DMA automation to handle parallel runs of multiple collections."
+# RESERVED FOR FUTURE USE
+#  echo "  Oracle Estate Explorer collection"
+#  echo "      --collectOee            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector.  Default is Y."
+#  echo "                              NOTE: This requires SQL client version 21 and above, plus Oracle database 11.2 or above."
+#  echo "                                    OEE collection will not run if requirements are not met."
+#  echo
+#  echo "      --oeeGroup              Required if --collect_oee is Y.  This is the group name (ex: Dev, Prod, QA, etc) to use for bundling multiple databases togegther within OEE."
+#  echo "                              Maximum length of 32 characters."
+#  echo "      --oeeRunId              Internal use only.  This is used by DMA automation to handle parallel runs of multiple collections."
+# RESERVED FOR FUTURE USE
   echo
   echo " Optional identifier"
   echo "      --manualUniqueId        Optional.  Allows the end user to create a unique identifier with which to tag the collection. "
@@ -404,9 +405,9 @@ function print_usage() {
   echo " Example:"
   echo
   echo
-  echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR"
+  echo "  ./collect-data.sh --connection_string {user}/{password}@//{db host}:{listener port}/{service name} --stats_source AWR"
   echo " or"
-  echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR"
+  echo "  ./collect-data.sh --collection_user_name {user} --collection_user_pass {password} --host_name {db host} --port {listener port} --database_service {service name} --stats_source AWR"
 
 }
 ### Validate input
@@ -429,9 +430,11 @@ function parse_parameters() {
     elif [[ "$1" == "--connectionStr" ]];      then connection_string="${2}"
     elif [[ "$1" == "--statsWindow" ]];        then stats_window="${2}"
     elif [[ "$1" == "--manualUniqueId" ]];     then manual_unique_id="${2}"
-    elif [[ "$1" == "--collectOEE" ]];         then collect_oee="${2}"
-    elif [[ "$1" == "--oeeGroup"   ]];         then oee_group_name="${2}"
-    elif [[ "$1" == "--oeeRunId"   ]];         then oee_run_id="${2}"
+# RESERVED FOR FUTURE USE
+#    elif [[ "$1" == "--collectOEE" ]];         then collect_oee="${2}"
+#    elif [[ "$1" == "--oeeGroup"   ]];         then oee_group_name="${2}"
+#    elif [[ "$1" == "--oeeRunId"   ]];         then oee_run_id="${2}"
+# RESERVED FOR FUTURE USE
     elif [[ "$1" == "--dmaAutomation"   ]];    then dma_automation_flag="${2}"  # Internal use only
     else
       echo "Unknown parameter ${1}"
@@ -476,26 +479,28 @@ function parse_parameters() {
     database_service=$(echo ${connection_string} | cut -d '/' -f 5)
   fi
 
-  if [[ "${collect_oee}" == "Y" ]] ; then
-    if [[ "${oee_group_name}" == "" ]] ; then
-      echo "ERROR: Parameter --oeeGroup must be specified if --collectOEE is Y."
-      print_usage
-      exit
-    fi
-    if [[ "${oee_run_id}" == "" ]] ; then
-      oee_run_id=$$
-      oee_run_id="${oee_run_id}_$(date +%Y%m%d%H%M%S)"
-    fi
-    if [[ ! -f $oee_dir/oee_group_extract-SA.sh ]]; then
-      echo
-      echo "ERROR: Oracle Estate Explorer extraction scripts not found in ${oee_dir}".
-      echo "Skipping collection for database ${database_service}".
-      echo "Either install Oracle Estate Explorer files or disable OEE collection for this database and retry the collection."
-      echo
-      print_fail
-      exit 1
-    fi
-  fi
+# RESERVED FOR FUTURE USE
+#  if [[ "${collect_oee}" == "Y" ]] ; then
+#    if [[ "${oee_group_name}" == "" ]] ; then
+#      echo "ERROR: Parameter --oeeGroup must be specified if --collect_oee is Y."
+#      print_usage
+#      exit
+#    fi
+#    if [[ "${oee_run_id}" == "" ]] ; then
+#      oee_run_id=$$
+#      oee_run_id="${oee_run_id}_$(date +%Y%m%d%H%M%S)"
+#    fi
+#    if [[ ! -f $oee_dir/oee_group_extract-SA.sh ]]; then
+#      echo
+#      echo "ERROR: Oracle Estate Explorer extraction scripts not found in ${oee_dir}".
+#      echo "Skipping collection for database ${database_service}".
+#      echo "Either install Oracle Estate Explorer files or disable OEE collection for this database and retry the collection."
+#      echo
+#      print_fail
+#      exit 1
+#    fi
+#  fi
+# RESERVED FOR FUTURE USE
 
   if [[ "${manual_unique_id}" != "" ]] ; then
     case "$(uname)" in
@@ -549,7 +554,7 @@ function main() {
 
   if [[ $retval -eq 0 ]];then
     if [[ "$(echo ${sqlcmd_result} | ${grep_cmd} -E '(ORA-|SP2-)')" != "" ]];then
-      print_fail
+      print_failure
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Database version check returned error ${sqlcmd_result}"
       echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -572,7 +577,7 @@ function main() {
       if [[ $retval -ne 0 ]];then
         create_error_log  $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
         compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
-        print_fail
+        print_failure
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${log_dir}"
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -583,7 +588,7 @@ function main() {
       cleanup_dma_output $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
       retval=$?
       if [[ $retval -ne 0 ]];then
-        print_fail
+        print_failure
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo "Database Migration Assessment data sanitation reported an error. Please check the error log in directory ${output_dir}"
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -621,7 +626,7 @@ function main() {
       compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g') $database_type
       retval=$?
       if [[ $retval -ne 0 ]];then
-        print_fail
+        print_failure
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo "Database Migration Assessment data file archive encountered a problem.  Exiting...."
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
@@ -640,7 +645,7 @@ function main() {
              print_warning
              ;;
           FAILURE )
-             print_fail
+             print_failure
              ;;
           * )
              print_complete
