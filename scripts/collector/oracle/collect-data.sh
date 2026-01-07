@@ -525,9 +525,11 @@ function parse_parameters() {
 
 function check_db_connection() {
   connect_string="${connection_string}"
-  sqlcmd_result=$(check_version "${connect_string}" "${dma_version}" | ${grep_cmd} DMAFILETAG | cut -d '~' -f 2)
+  result_string=$(check_version "${connect_string}" "${dma_version}" )
+  sqlcmd_result=$(echo ${result_string} | ${grep_cmd} DMAFILETAG | cut -d '~' -f 2)
   if [[ "${sqlcmd_result}" = "" ]]; then
     echo "Unable to connect to the target database using ${connect_string}.  Please verify the connection information and target database status."
+    echo "Connection attempt returned ${result_string}"
     exit 255
   fi
 }
@@ -596,33 +598,35 @@ function main() {
         exit 255
       fi
       dma_id=$(get_dma_source_id ${v_tag})
-      if [[ "${collect_oee}" == "Y" ]]; then
-        oee_check_results=$(oee_check_conditions "${connection_string}")
-        if [[ "${oee_check_results}" == "PASS" ]] ; then
-          echo Generating OEE driver file
-          oee_generate_config ${dma_id} ${database_service} ${host_name} ${port} ${collection_user_name} ${collection_user_pass} ${oee_group_name} ${oee_run_id} ${v_tag}
-          if [[ "${dma_automation_flag}" != "Y" ]] ; then
-            echo Running OEE
-            cd oee
-            oee_run "${oee_run_id}"
-            cd ..
-            oee_ret_val=$?
-            if [[ ${oee_ret_val} -eq 1 ]]; then
-              final_status="WARNING"
-              print_warning
-              echo
-              echo "Oracle Estate Explorer collection encountered errors.  Collection may be missing some data."
-              echo
-            fi
-          fi
-        else
-          final_status="WARNING"
-          echo
-          echo "Skipping Estate Explorer collection for ${database_service} ${host_name} due to "
-          echo "${oee_check_results}"
-          echo
-        fi
-      fi
+# RESERVED FOR FUTURE USE
+#      if [[ "${collect_oee}" == "Y" ]]; then
+#        oee_check_results=$(oee_check_conditions "${connection_string}")
+#        if [[ "${oee_check_results}" == "PASS" ]] ; then
+#          echo Generating OEE driver file
+#          oee_generate_config ${dma_id} ${database_service} ${host_name} ${port} ${collection_user_name} ${collection_user_pass} ${oee_group_name} ${oee_run_id} ${v_tag}
+#          if [[ "${dma_automation_flag}" != "Y" ]] ; then
+#            echo Running OEE
+#            cd oee
+#            oee_run "${oee_run_id}"
+#            cd ..
+#            oee_ret_val=$?
+#            if [[ ${oee_ret_val} -eq 1 ]]; then
+#              final_status="WARNING"
+#              print_warning
+#              echo
+#              echo "Oracle Estate Explorer collection encountered errors.  Collection may be missing some data."
+#              echo
+#            fi
+#          fi
+#        else
+#          final_status="WARNING"
+#          echo
+#          echo "Skipping Estate Explorer collection for ${database_service} ${host_name} due to "
+#          echo "${oee_check_results}"
+#          echo
+#        fi
+#      fi
+# RESERVED FOR FUTURE USE
       compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g') $database_type
       retval=$?
       if [[ $retval -ne 0 ]];then
