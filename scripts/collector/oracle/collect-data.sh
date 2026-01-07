@@ -38,7 +38,7 @@ port=""
 database_service=""
 collection_user_name=""
 collection_user_pass=""
-database_type=""
+database_type="oracle"
 stats_source=""
 connection_string=""
 manual_unique_id=""
@@ -425,7 +425,6 @@ function parse_parameters() {
     elif [[ "$1" == "--databaseService" ]];    then database_service="${2}"
     elif [[ "$1" == "--collectionUserName" ]]; then collection_user_name="${2}"
     elif [[ "$1" == "--collectionUserPass" ]]; then collection_user_pass="${2}"
-    elif [[ "$1" == "--dbType" ]];             then database_type=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
     elif [[ "$1" == "--statsSrc" ]];           then stats_source=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
     elif [[ "$1" == "--connectionStr" ]];      then connection_string="${2}"
     elif [[ "$1" == "--statsWindow" ]];        then stats_window="${2}"
@@ -443,10 +442,6 @@ function parse_parameters() {
     fi
     shift 2
   done
-
-  if [[ "${database_type}" != "oracle" ]] ; then
-    database_type="oracle"
-  fi
 
   if [[ "${stats_source}" = "awr" ]]; then
     diag_pack_access="UseDiagnostics"
@@ -578,7 +573,7 @@ function main() {
       retval=$?
       if [[ $retval -ne 0 ]];then
         create_error_log  $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
-        compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
+        compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g') ${database_type}
         print_failure
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${log_dir}"
@@ -627,7 +622,7 @@ function main() {
 #        fi
 #      fi
 # RESERVED FOR FUTURE USE
-      compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g') $database_type
+      compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g') ${database_type}
       retval=$?
       if [[ $retval -ne 0 ]];then
         print_failure
