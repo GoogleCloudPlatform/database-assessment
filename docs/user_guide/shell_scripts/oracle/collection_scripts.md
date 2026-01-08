@@ -119,7 +119,7 @@ Launch the collection script: (Note that the parameter names have changed from e
                              IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8
                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR.
  Customer-supplied unique identifier
-     --manualUniqueId        Optional. Descriptive unique identifier for the database being collected.  
+     --manualUniqueId        Optional. Descriptive unique identifier for the database being collected.
                              Do not use the same value for multiple databases.
                              Use no spaces or special characters.
                              Ex: SalesDev, InventoryQA, etc.
