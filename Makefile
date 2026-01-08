@@ -57,6 +57,7 @@ install-uv:                                         ## Install latest version of
 .PHONY: install
 install: destroy clean                              ## Install the project, dependencies, and pre-commit
 	@echo "${INFO} Starting fresh installation..."
+	@./tools/setup-local-env.sh
 	@uv python pin 3.12 >/dev/null 2>&1
 	@uv venv >/dev/null 2>&1
 	@uv sync --all-extras --dev
