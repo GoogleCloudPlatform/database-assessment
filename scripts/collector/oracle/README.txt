@@ -138,6 +138,11 @@ for analysis by Database Migration Assessment.
                                    NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION.
                                    IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8
                                    CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR.
+       Customer-supplied unique identifier
+           --manualUniqueId        Optional. Descriptive unique identifier for the database being collected.
+                                   Do not use the same value for multiple databases.
+                                   Use no spaces or special characters.
+                                   Ex: SalesDev, InventoryQA, etc.
 
       Note: If the password has special characters that may be interpreted by the shell, use the --connectionStr option and enclose the entire connection string in single quotes.
 

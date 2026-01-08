@@ -38,7 +38,7 @@ port=""
 database_service=""
 collection_user_name=""
 collection_user_pass=""
-database_type=""
+database_type="oracle"
 stats_source=""
 connection_string=""
 manual_unique_id=""
@@ -405,9 +405,9 @@ function print_usage() {
   echo " Example:"
   echo
   echo
-  echo "  ./collect-data.sh --connection_string {user}/{password}@//{db host}:{listener port}/{service name} --stats_source AWR"
+  echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR"
   echo " or"
-  echo "  ./collect-data.sh --collection_user_name {user} --collection_user_pass {password} --host_name {db host} --port {listener port} --database_service {service name} --stats_source AWR"
+  echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR"
 
 }
 ### Validate input
@@ -425,7 +425,6 @@ function parse_parameters() {
     elif [[ "$1" == "--databaseService" ]];    then database_service="${2}"
     elif [[ "$1" == "--collectionUserName" ]]; then collection_user_name="${2}"
     elif [[ "$1" == "--collectionUserPass" ]]; then collection_user_pass="${2}"
-    elif [[ "$1" == "--dbType" ]];             then database_type=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
     elif [[ "$1" == "--statsSrc" ]];           then stats_source=$(echo "${2}" | tr '[:upper:]' '[:lower:]')
     elif [[ "$1" == "--connectionStr" ]];      then connection_string="${2}"
     elif [[ "$1" == "--statsWindow" ]];        then stats_window="${2}"
@@ -443,10 +442,6 @@ function parse_parameters() {
     fi
     shift 2
   done
-
-  if [[ "${database_type}" != "oracle" ]] ; then
-    database_type="oracle"
-  fi
 
   if [[ "${stats_source}" = "awr" ]]; then
     diag_pack_access="UseDiagnostics"
@@ -525,9 +520,11 @@ function parse_parameters() {
 
 function check_db_connection() {
   connect_string="${connection_string}"
-  sqlcmd_result=$(check_version "${connect_string}" "${dma_version}" | ${grep_cmd} DMAFILETAG | cut -d '~' -f 2)
+  result_string=$(check_version "${connect_string}" "${dma_version}" )
+  sqlcmd_result=$(echo ${result_string} | ${grep_cmd} DMAFILETAG | cut -d '~' -f 2)
   if [[ "${sqlcmd_result}" = "" ]]; then
     echo "Unable to connect to the target database using ${connect_string}.  Please verify the connection information and target database status."
+    echo "Connection attempt returned ${result_string}"
     exit 255
   fi
 }
@@ -576,7 +573,7 @@ function main() {
       retval=$?
       if [[ $retval -ne 0 ]];then
         create_error_log  $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
-        compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
+        compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g') ${database_type}
         print_failure
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${log_dir}"
@@ -596,34 +593,36 @@ function main() {
         exit 255
       fi
       dma_id=$(get_dma_source_id ${v_tag})
-      if [[ "${collect_oee}" == "Y" ]]; then
-        oee_check_results=$(oee_check_conditions "${connection_string}")
-        if [[ "${oee_check_results}" == "PASS" ]] ; then
-          echo Generating OEE driver file
-          oee_generate_config ${dma_id} ${database_service} ${host_name} ${port} ${collection_user_name} ${collection_user_pass} ${oee_group_name} ${oee_run_id} ${v_tag}
-          if [[ "${dma_automation_flag}" != "Y" ]] ; then
-            echo Running OEE
-            cd oee
-            oee_run "${oee_run_id}"
-            cd ..
-            oee_ret_val=$?
-            if [[ ${oee_ret_val} -eq 1 ]]; then
-              final_status="WARNING"
-              print_warning
-              echo
-              echo "Oracle Estate Explorer collection encountered errors.  Collection may be missing some data."
-              echo
-            fi
-          fi
-        else
-          final_status="WARNING"
-          echo
-          echo "Skipping Estate Explorer collection for ${database_service} ${host_name} due to "
-          echo "${oee_check_results}"
-          echo
-        fi
-      fi
-      compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g') $database_type
+# RESERVED FOR FUTURE USE
+#      if [[ "${collect_oee}" == "Y" ]]; then
+#        oee_check_results=$(oee_check_conditions "${connection_string}")
+#        if [[ "${oee_check_results}" == "PASS" ]] ; then
+#          echo Generating OEE driver file
+#          oee_generate_config ${dma_id} ${database_service} ${host_name} ${port} ${collection_user_name} ${collection_user_pass} ${oee_group_name} ${oee_run_id} ${v_tag}
+#          if [[ "${dma_automation_flag}" != "Y" ]] ; then
+#            echo Running OEE
+#            cd oee
+#            oee_run "${oee_run_id}"
+#            cd ..
+#            oee_ret_val=$?
+#            if [[ ${oee_ret_val} -eq 1 ]]; then
+#              final_status="WARNING"
+#              print_warning
+#              echo
+#              echo "Oracle Estate Explorer collection encountered errors.  Collection may be missing some data."
+#              echo
+#            fi
+#          fi
+#        else
+#          final_status="WARNING"
+#          echo
+#          echo "Skipping Estate Explorer collection for ${database_service} ${host_name} due to "
+#          echo "${oee_check_results}"
+#          echo
+#        fi
+#      fi
+# RESERVED FOR FUTURE USE
+      compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g') ${database_type}
       retval=$?
       if [[ $retval -ne 0 ]];then
         print_failure

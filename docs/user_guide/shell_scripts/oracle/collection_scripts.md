@@ -9,17 +9,23 @@ It depends on the following to be available on the machine from which it is run:
 
 ```shell
 bash shell
+awk
 cat
 cut
 dirname
 grep
+iconv
 locale
+md5sum
 mkdir
+printf
 sed
 sqlplus
 tar
 tr
+uname
 which
+xargs
 zip or gzip
 ```
 
@@ -112,6 +118,11 @@ Launch the collection script: (Note that the parameter names have changed from e
                              NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION.
                              IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8
                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR.
+ Customer-supplied unique identifier
+     --manualUniqueId        Optional. Descriptive unique identifier for the database being collected.
+                             Do not use the same value for multiple databases.
+                             Use no spaces or special characters.
+                             Ex: SalesDev, InventoryQA, etc.
 
 
  NOTE: If using an Oracle auto-login wallet, specify the tns alias as the connection string:
@@ -170,6 +181,39 @@ To use performance data from STATSPACK collection:
 ./collect-data.sh  --connectionStr '/ as sysdba' --statsSrc STATSPACK
 ```
 
+# Automation
+User creation and data collection across many databases can be automated.
+
+    If you wish to automate setup and collection from multiple databases, edit the file dma_db_list.csv with connection information and options for each database, one entry per line.
+    The file header describes the file format and provides examples.
+
+## Automation prechecks and user creation
+    Verify the configuration file is valid and the sysdba connection information is correct by executing the precheck script with the --verifyUser N option.
+      ./dma_precheck.sh --configFile dma_db_list.csv --verifyUser N
+
+    Address any errors reported before continuing.
+
+    If you are creating a new database user or modifying an existing user for DMA collection, execute the dma_make_user.sh script to create or modify the user(s) specified in the configuration file.
+      ./dma_make_user.sh --configFile dma_db_list.csv
+
+    If any errors are encountered, address the issue before continuing to the next step.  The dma_make_user.sh script can be run multiple times if needed.
+
+    Verify the user connection and privilege information by re-running the dma_precheck.sh script without the --verifyUser parameter.  This will verify the user can connect.
+      ./dma_precheck.sh --configFile dma_db_list.csv
+
+    Address any errors reported before continuing.
+
+## Automated data collection
+    Execute automated DMA collection by running the dma_batch_run.sh script.  It can execute collections in parallel via the --maxParallel parameter.  Set this to 1 to disable parallel collection.
+    The default is 4.  Note that this controls the number of DMA collections running at one time, not the parallelism of the queries in the database.  Each running collection consumes some disk space
+    for temporary files as the data is extracted.  Very high settings for --maxParallel may consume a lot of space.  The example below shows a limit of two collections running at once.
+
+      ./dma_batch_run.sh --configFile dma_db_list.csv --maxParallel 2
+
+    Collections run via dma_batch_run.sh will automatically create log files for each collection, as the terminal will intermingle the output of all threads.
+
+
+
 ## Upload Collections
 
-Upon completion, the tool will automatically create an archive of the extracted metrics that can be uploaded into the assessment tool.
+Upon completion, the tool will automatically create an archive of the extracted metrics that can be uploaded into the assessment tool.  Do not modify the file names or contents.
