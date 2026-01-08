@@ -427,6 +427,7 @@ ban-relative-imports = "all"
 ]
 "scripts/post_build.py" = ["ERA001"]
 "scripts/pre_build.py" = ["ERA001"]
+"tools/*.py" = ["INP001", "S404", "T201", "PLR0914", "S310", "ANN001", "ANN201"]
 "tests/**/*" = [
     "PLR2004",
     "S101",
@@ -444,6 +445,9 @@ ban-relative-imports = "all"
 ]
 # temp
 "src/dma/lib/db/adapters/*.py" = ["ANN001", "ANN201", "ANN204", "PLR6301"]
+
+"src/dma/lib/db/__init__.py" = ["RUF067"]
+"src/dma/cli/__init__.py" = ["RUF067"]
 
 # copyright
 "**/*.py" = ["CPY001", 'RUF029']
@@ -536,5 +540,3 @@ exclude_lines = [
     'class .*\bProtocol\):',
     '@(abc\.)?abstractmethod',
 ]
-
-

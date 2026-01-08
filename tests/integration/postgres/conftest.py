@@ -240,7 +240,9 @@ def _seed_postgres_database(sync_engine: Engine) -> None:
         driver_connection = conn._dbapi_connection
         assert driver_connection is not None
         cursor = driver_connection.cursor()
-        with Path(Path(__file__).parent / "northwind_ddl.sql").open(encoding="utf-8") as f:
-            cursor.execute(f.read())
-        with Path(Path(__file__).parent / "northwind_data.sql").open(encoding="utf-8") as f:
-            cursor.execute(f.read())
+        cursor.execute(
+            Path(Path(__file__).parent / "northwind_ddl.sql").read_text(encoding="utf-8")
+        )
+        cursor.execute(
+            Path(Path(__file__).parent / "northwind_data.sql").read_text(encoding="utf-8")
+        )

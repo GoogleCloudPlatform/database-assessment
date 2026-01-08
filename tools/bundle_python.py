@@ -27,7 +27,8 @@ PLATFORMS = {
     "x86_64-pc-windows-msvc": "win_amd64",
 }
 
-def main():
+
+def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--target", required=True, help="Rust target architecture")
     parser.add_argument("--requirements", required=True, help="Path to requirements.txt")
@@ -37,14 +38,14 @@ def main():
     target = args.target
     requirements = Path(args.requirements).resolve()
     output = Path(args.output).resolve()
-    
+
     if target not in URLS:
         print(f"Error: Target {target} not supported.")
         sys.exit(1)
 
     url = URLS[target]
     platform = PLATFORMS.get(target)
-    
+
     print(f"Processing target: {target}")
     print(f"URL: {url}")
     print(f"Platform: {platform}")
@@ -76,16 +77,16 @@ def main():
     # Determine site-packages
     # Typical structure: python/lib/python3.13/site-packages (Unix)
     # python/Lib/site-packages (Windows)
-    
+
     python_root = extract_dir / "python"
     if not python_root.exists():
         # Sometimes it extracts to ./python directly or <archive_name>/python
         # Check what we have
         contents = list(extract_dir.iterdir())
         if len(contents) == 1 and contents[0].is_dir():
-             # Handle nested root if any (though PBS usually extracts 'python')
-             python_root = contents[0]
-    
+            # Handle nested root if any (though PBS usually extracts 'python')
+            python_root = contents[0]
+
     if "windows" in target:
         site_packages = python_root / "Lib" / "site-packages"
     else:
@@ -95,34 +96,40 @@ def main():
     if not site_packages.exists():
         print(f"Error: Could not locate site-packages at {site_packages}")
         # Debug list
-        for root, dirs, files in os.walk(extract_dir):
+        for root, _, _ in os.walk(extract_dir):
             print(root)
         sys.exit(1)
 
     print(f"Installing dependencies to {site_packages}...")
-    
+
     # We use the current python environment to run pip
     # We must use --ignore-installed to ensure we install everything into the target
     # We use --no-deps because requirements.txt from uv export should be fully resolved?
     # No, uv export includes dependencies. But pip install -t might resolve again if we don't say --no-deps.
     # However, if we use --no-deps, we rely 100% on requirements.txt being complete.
     # Given we use 'uv export', it IS complete.
-    
+
     pip_cmd = [
-        sys.executable, "-m", "pip", "install",
-        "-r", str(requirements),
-        "--target", str(site_packages),
-        "--platform", platform,
+        sys.executable,
+        "-m",
+        "pip",
+        "install",
+        "-r",
+        str(requirements),
+        "--target",
+        str(site_packages),
+        "--platform",
+        platform,
         "--only-binary=:all:",
         "--no-deps",
-        "--upgrade"
+        "--upgrade",
     ]
-    
+
     # If the target is same as host, we don't strictly need --platform, but good for consistency.
     # However, `dma` itself is in requirements.txt as a file path.
     # pip install with --platform and local file path might complain if the wheel isn't tagged correctly for that platform?
     # Our wheel is `py3-none-any.whl`, so it should be fine.
-    
+
     print(f"Running: {' '.join(pip_cmd)}")
     subprocess.check_call(pip_cmd)
 
@@ -134,13 +141,14 @@ def main():
             tar.add(python_root, arcname="python")
     elif archive_name.endswith(".zip"):
         with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zipf:
-            for root, dirs, files in os.walk(python_root):
+            for root, _, files in os.walk(python_root):
                 for file in files:
                     file_path = Path(root) / file
                     arcname = file_path.relative_to(python_root.parent)
                     zipf.write(file_path, arcname)
-    
+
     print("Done.")
+
 
 if __name__ == "__main__":
     main()
