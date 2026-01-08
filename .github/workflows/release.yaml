@@ -197,6 +197,10 @@ jobs:
         echo "${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl" >> dist/requirements.txt
         cat dist/requirements.txt
 
+    - name: Set Distribution Source (macOS aarch64)
+      if: matrix.job.target == 'aarch64-apple-darwin'
+      run: echo "PYAPP_DISTRIBUTION_SOURCE=https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-aarch64-apple-darwin-install_only_stripped.tar.gz" >> $GITHUB_ENV
+
     - name: Build PyApp binary (Linux GNU)
       if: contains(matrix.job.target, 'linux-gnu')
       working-directory: ${{ env.PYAPP_REPO }}
