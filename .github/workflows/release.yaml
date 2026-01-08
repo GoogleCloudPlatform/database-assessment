@@ -39,7 +39,7 @@ defaults:
     shell: bash
 
 env:
-  STABLE_PYTHON_VERSION: "3.12"
+  STABLE_PYTHON_VERSION: "3.13"
 
 jobs:
   collection-scripts:
@@ -132,7 +132,7 @@ jobs:
     env:
       PYAPP_REPO: pyapp
       PYAPP_VERSION: v0.29.0
-      PYAPP_PYTHON_VERSION: "3.12"
+      PYAPP_PYTHON_VERSION: "3.13"
       PYAPP_PROJECT_NAME: "dma"
 
       # CRITICAL: Correct offline configuration (NO PYAPP_UV_ENABLED)
