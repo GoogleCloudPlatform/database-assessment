@@ -134,7 +134,6 @@ jobs:
       # CRITICAL: Correct offline configuration (NO PYAPP_UV_ENABLED)
       PYAPP_DISTRIBUTION_EMBED: "true"
       PYAPP_FULL_ISOLATION: "true"
-      PYAPP_SKIP_INSTALL: "true"  # Project already embedded
       PYAPP_PROJECT_FEATURES: "oracle,postgres,mssql,mysql,server"
       PYAPP_DISTRIBUTION_VARIANT_CPU: "v1"
     steps:
