@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
-# Detect if running on Google internal Linux (Rodete)
+# Detect if running on internal Linux (Rodete)
 if grep -q "rodete" /etc/os-release; then
-    echo "Detected Google internal environment (Rodete)."
-    
+    echo "Detected internal environment (Rodete)."
+
     if [ ! -f "uv.toml" ]; then
         echo "Creating uv.toml to force public PyPI index..."
         cat <<EOF > uv.toml
