@@ -127,7 +127,7 @@ jobs:
 
     env:
       PYAPP_REPO: pyapp
-      PYAPP_VERSION: v0.27.0
+      PYAPP_VERSION: v0.29.0
       PYAPP_PYTHON_VERSION: "3.12"
       PYAPP_PROJECT_NAME: "dma"
 
@@ -152,13 +152,23 @@ jobs:
     - name: Set up Python
       run: uv python install ${{ env.STABLE_PYTHON_VERSION }}
 
+    - name: Install Zig
+      if: contains(matrix.job.target, 'linux-gnu')
+      uses: goto-bus-stop/setup-zig@v2
+      with:
+        version: 0.13.0
+
+    - name: Install cargo-zigbuild
+      if: contains(matrix.job.target, 'linux-gnu')
+      run: uv tool install cargo-zigbuild
+
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
       with:
         targets: ${{ matrix.job.target }}
 
     - name: Setup cross-compilation (Linux)
-      if: contains(matrix.job.target, 'linux')
+      if: contains(matrix.job.target, 'linux') && !contains(matrix.job.target, 'linux-gnu')
       uses: taiki-e/setup-cross-toolchain-action@v1
       with:
         target: ${{ matrix.job.target }}
@@ -186,7 +196,16 @@ jobs:
         uv export --frozen --no-dev --no-editable --no-hashes --no-header --no-emit-project --extra postgres --extra server > dist/requirements.txt
         echo "${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl" >> dist/requirements.txt
 
-    - name: Build PyApp binary
+    - name: Build PyApp binary (Linux GNU)
+      if: contains(matrix.job.target, 'linux-gnu')
+      working-directory: ${{ env.PYAPP_REPO }}
+      env:
+        PYAPP_PROJECT_PATH: ${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
+        PYAPP_PROJECT_DEPENDENCY_FILE: ${{ github.workspace }}/dist/requirements.txt
+      run: cargo zigbuild --release --target ${{ matrix.job.target }}.2.17
+
+    - name: Build PyApp binary (Others)
+      if: (!contains(matrix.job.target, 'linux-gnu'))
       working-directory: ${{ env.PYAPP_REPO }}
       env:
         PYAPP_PROJECT_PATH: ${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
