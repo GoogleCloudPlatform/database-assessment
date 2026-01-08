@@ -6,11 +6,11 @@ if grep -q "rodete" /etc/os-release; then
     echo "Detected Google internal environment (Rodete)."
     
     if [ ! -f "uv.toml" ]; then
-        echo "Creating uv.toml for internal package index..."
+        echo "Creating uv.toml to force public PyPI index..."
         cat <<EOF > uv.toml
 [[index]]
-name = "google-internal"
-url = "https://us-python.pkg.dev/artifact-foundry-prod/ah-3p-staging-python/simple/"
+name = "pypi"
+url = "https://pypi.org/simple"
 default = true
 EOF
         echo "uv.toml created."
