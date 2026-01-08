@@ -405,9 +405,9 @@ function print_usage() {
   echo " Example:"
   echo
   echo
-  echo "  ./collect-data.sh --connection_string {user}/{password}@//{db host}:{listener port}/{service name} --stats_source AWR"
+  echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --statsSrc AWR"
   echo " or"
-  echo "  ./collect-data.sh --collection_user_name {user} --collection_user_pass {password} --host_name {db host} --port {listener port} --database_service {service name} --stats_source AWR"
+  echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc AWR"
 
 }
 ### Validate input
