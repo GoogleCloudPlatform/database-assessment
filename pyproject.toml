@@ -537,7 +537,4 @@ exclude_lines = [
     '@(abc\.)?abstractmethod',
 ]
 
-[[tool.uv.index]]
-name = "pypi"
-url = "https://pypi.org/simple"
-default = true
+
