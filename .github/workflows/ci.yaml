@@ -19,6 +19,9 @@ on:
     - main
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   group: test-${{ github.head_ref }}
   cancel-in-progress: true

@@ -26,6 +26,10 @@ on:
   release:
     types:
       - created
+
+permissions:
+  contents: read
+
 concurrency:
   group: build-${{ github.head_ref }}
   cancel-in-progress: true
