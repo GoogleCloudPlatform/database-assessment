@@ -66,10 +66,10 @@ def main() -> None:
     print(f"Extracting to {extract_dir}...")
     if archive_name.endswith(".tar.gz"):
         with tarfile.open(archive_path, "r:gz") as tar:
-            tar.extractall(extract_dir)  # noqa: S202
+            tar.extractall(extract_dir)
     elif archive_name.endswith(".zip"):
         with zipfile.ZipFile(archive_path, "r") as zip_ref:
-            zip_ref.extractall(extract_dir)  # noqa: S202
+            zip_ref.extractall(extract_dir)
     else:
         print("Unknown archive format")
         sys.exit(1)
@@ -138,8 +138,8 @@ def main() -> None:
             tar.add(python_root, arcname="python")
     elif archive_name.endswith(".zip"):
         with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zipf:
-            for root, _, _files in os.walk(python_root):
-                for file in _files:
+            for root, _, files in os.walk(python_root):
+                for file in files:
                     file_path = Path(root) / file
                     arcname = file_path.relative_to(python_root.parent)
                     zipf.write(file_path, arcname)
