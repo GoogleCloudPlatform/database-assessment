@@ -128,10 +128,6 @@ jobs:
           artifact: dma-x86_64-linux-musl
 
         # macOS
-        - target: x86_64-apple-darwin
-          os: macos-latest
-          artifact: dma-x86_64-macos
-
         - target: aarch64-apple-darwin
           os: macos-latest
           artifact: dma-aarch64-macos
