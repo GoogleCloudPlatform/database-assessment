@@ -236,6 +236,12 @@ jobs:
       run: |
         cp ${{ env.PYAPP_REPO }}/target/${{ matrix.job.target }}/release/pyapp.exe ${{ matrix.job.artifact }}
 
+    - name: Test binary offline (Linux musl)
+      if: contains(matrix.job.target, 'linux-musl')
+      run: |
+        # Test in Alpine container
+        docker run --network none -v $(pwd):/app alpine:latest /app/${{ matrix.job.artifact }} --version
+
     - name: Test binary offline (Linux)
       if: contains(matrix.job.target, 'linux') && !contains(matrix.job.target, 'musl') && !contains(matrix.job.target, 'aarch64')
       run: |
