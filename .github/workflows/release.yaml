@@ -208,6 +208,16 @@ jobs:
       if: matrix.job.target == 'x86_64-pc-windows-msvc'
       run: echo "PYAPP_DISTRIBUTION_SOURCE=https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-pc-windows-msvc-install_only_stripped.tar.gz" >> $GITHUB_ENV
 
+    - name: Bundle Python dependencies (Linux x86_64 GNU)
+      if: matrix.job.target == 'x86_64-unknown-linux-gnu'
+      run: |
+        uv run python ../tools/bundle_python.py \
+          --target x86_64-unknown-linux-gnu \
+          --requirements dist/requirements.txt \
+          --output dist/python-dist-x86_64-unknown-linux-gnu.tar.gz
+        echo "PYAPP_DISTRIBUTION_SOURCE=${{ github.workspace }}/dist/python-dist-x86_64-unknown-linux-gnu.tar.gz" >> $GITHUB_ENV
+        echo "PYAPP_SKIP_INSTALL=true" >> $GITHUB_ENV
+
     - name: Build PyApp binary (Linux GNU)
       if: contains(matrix.job.target, 'linux-gnu')
       working-directory: ${{ env.PYAPP_REPO }}
