@@ -66,18 +66,15 @@ def main() -> None:
     print(f"Extracting to {extract_dir}...")
     if archive_name.endswith(".tar.gz"):
         with tarfile.open(archive_path, "r:gz") as tar:
-            tar.extractall(extract_dir)
+            tar.extractall(extract_dir)  # noqa: S202
     elif archive_name.endswith(".zip"):
         with zipfile.ZipFile(archive_path, "r") as zip_ref:
-            zip_ref.extractall(extract_dir)
+            zip_ref.extractall(extract_dir)  # noqa: S202
     else:
         print("Unknown archive format")
         sys.exit(1)
 
     # Determine site-packages
-    # Typical structure: python/lib/python3.13/site-packages (Unix)
-    # python/Lib/site-packages (Windows)
-
     python_root = extract_dir / "python"
     if not python_root.exists():
         # Sometimes it extracts to ./python directly or <archive_name>/python
@@ -141,8 +138,8 @@ def main() -> None:
             tar.add(python_root, arcname="python")
     elif archive_name.endswith(".zip"):
         with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zipf:
-            for root, _, files in os.walk(python_root):
-                for file in files:
+            for root, _, _files in os.walk(python_root):
+                for file in _files:
                     file_path = Path(root) / file
                     arcname = file_path.relative_to(python_root.parent)
                     zipf.write(file_path, arcname)

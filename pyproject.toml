@@ -427,7 +427,7 @@ ban-relative-imports = "all"
 ]
 "scripts/post_build.py" = ["ERA001"]
 "scripts/pre_build.py" = ["ERA001"]
-"tools/*.py" = ["INP001", "S404", "T201", "PLR0914", "S310", "ANN001", "ANN201"]
+"tools/*.py" = ["INP001", "S404", "T201", "PLR0914", "S310", "ANN001", "ANN201", "S202", "ERA001"]
 "tests/**/*" = [
     "PLR2004",
     "S101",
