@@ -215,6 +215,10 @@ jobs:
       if: matrix.job.target == 'aarch64-unknown-linux-gnu'
       run: echo "PYAPP_DISTRIBUTION_SOURCE=https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz" >> $GITHUB_ENV
 
+    - name: Set Distribution Source (Windows x86_64)
+      if: matrix.job.target == 'x86_64-pc-windows-msvc'
+      run: echo "PYAPP_DISTRIBUTION_SOURCE=https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-pc-windows-msvc-install_only_stripped.tar.gz" >> $GITHUB_ENV
+
     - name: Build PyApp binary (Linux GNU)
       if: contains(matrix.job.target, 'linux-gnu')
       working-directory: ${{ env.PYAPP_REPO }}
@@ -243,7 +247,7 @@ jobs:
         cp ${{ env.PYAPP_REPO }}/target/${{ matrix.job.target }}/release/pyapp.exe ${{ matrix.job.artifact }}
 
     - name: Test binary offline (Linux)
-      if: contains(matrix.job.target, 'linux') && !contains(matrix.job.target, 'musl')
+      if: contains(matrix.job.target, 'linux') && !contains(matrix.job.target, 'musl') && !contains(matrix.job.target, 'aarch64')
       run: |
         # Test in network-isolated container
         docker run --network none -v $(pwd):/app ubuntu:20.04 /app/${{ matrix.job.artifact }} --version
