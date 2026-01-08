@@ -146,6 +146,8 @@ jobs:
       PYAPP_FULL_ISOLATION: "true"
       PYAPP_PROJECT_FEATURES: "oracle,postgres,mssql,mysql,server"
       PYAPP_DISTRIBUTION_VARIANT_CPU: "v1"
+      PYAPP_INSTALL_DIR_DMA: "~/.dma"
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
@@ -193,6 +195,9 @@ jobs:
         path: dist/
         merge-multiple: true
 
+    - name: Inspect Wheel Content
+      run: unzip -l dist/*.whl | grep dma/lib || true
+
     - name: Get version
       id: version
       run: |
@@ -218,14 +223,14 @@ jobs:
       if: matrix.job.target == 'x86_64-pc-windows-msvc'
       run: echo "PYAPP_DISTRIBUTION_SOURCE=https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-pc-windows-msvc-install_only_stripped.tar.gz" >> $GITHUB_ENV
 
-    - name: Bundle Python dependencies (Linux x86_64 GNU)
-      if: matrix.job.target == 'x86_64-unknown-linux-gnu'
+    - name: Bundle Python dependencies (Linux GNU)
+      if: contains(matrix.job.target, 'linux-gnu')
       run: |
         uv run python ../tools/bundle_python.py \
-          --target x86_64-unknown-linux-gnu \
+          --target ${{ matrix.job.target }} \
           --requirements dist/requirements.txt \
-          --output dist/python-dist-x86_64-unknown-linux-gnu.tar.gz
-        echo "PYAPP_DISTRIBUTION_SOURCE=${{ github.workspace }}/dist/python-dist-x86_64-unknown-linux-gnu.tar.gz" >> $GITHUB_ENV
+          --output dist/python-dist-${{ matrix.job.target }}.tar.gz
+        echo "PYAPP_DISTRIBUTION_SOURCE=${{ github.workspace }}/dist/python-dist-${{ matrix.job.target }}.tar.gz" >> $GITHUB_ENV
         echo "PYAPP_SKIP_INSTALL=true" >> $GITHUB_ENV
 
     - name: Build PyApp binary (Linux GNU)
@@ -233,7 +238,8 @@ jobs:
       working-directory: ${{ env.PYAPP_REPO }}
       env:
         PYAPP_PROJECT_PATH: ${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
-        PYAPP_PROJECT_DEPENDENCY_FILE: ${{ github.workspace }}/dist/requirements.txt
+        PYAPP_PROJECT_DEPENDENCY_FILE: ""
+        PYAPP_SKIP_INSTALL: "true"
       run: cargo zigbuild --release --target ${{ matrix.job.target }}.2.17
 
     - name: Build PyApp binary (Others)
