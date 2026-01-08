@@ -36,8 +36,10 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
         source_id: str | None = None,
         manual_id: str | None = None,
         queries: Queries = aiosql.from_path(
-            sql_path=f"{_root_path}/collector/sql/sources/postgres", driver_adapter="psycopg"
-        ),
+            sql_path=f"{_root_path}/collector/sql/sources/postgres/",
+            driver_adapter="psycopg",
+            mandatory_parameters=False,
+        )
     ) -> None:
         super().__init__(
             connection=connection, queries=queries, execution_id=execution_id, source_id=source_id, manual_id=manual_id

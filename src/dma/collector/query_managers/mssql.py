@@ -33,10 +33,11 @@ class SQLServerCollectionQueryManager(CollectionQueryManager):
         execution_id: str | None = None,
         source_id: str | None = None,
         manual_id: str | None = None,
-        queries: Queries = aiosql.from_path(
-            sql_path=f"{_root_path}/collector/sql/sources/mssql", driver_adapter="aioodbc"
-        ),
-    ) -> None:
+                queries: Queries = aiosql.from_path(
+                    sql_path=f"{_root_path}/collector/sql/sources/mssql/",
+                    driver_adapter="pymssql",
+                    mandatory_parameters=False,
+                )    ) -> None:
         super().__init__(
             connection=connection, queries=queries, execution_id=execution_id, source_id=source_id, manual_id=manual_id
         )
