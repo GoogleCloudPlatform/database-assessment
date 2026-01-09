@@ -27,6 +27,11 @@ COLLECTOR_SRC_DIR     =scripts/collector
 COLLECTOR_PACKAGE     =db-migration-assessment-collection-scripts
 BASE_DIR              =$(shell pwd)
 
+# If uv.toml exists, assume we need to force public PyPI for pip (used by pre-commit)
+ifneq (,$(wildcard uv.toml))
+export PIP_INDEX_URL=https://pypi.org/simple
+endif
+
 .EXPORT_ALL_VARIABLES:
 
 ifndef VERBOSE
@@ -57,6 +62,7 @@ install-uv:                                         ## Install latest version of
 .PHONY: install
 install: destroy clean                              ## Install the project, dependencies, and pre-commit
 	@echo "${INFO} Starting fresh installation..."
+	@./tools/setup-local-env.sh
 	@uv python pin 3.12 >/dev/null 2>&1
 	@uv venv >/dev/null 2>&1
 	@uv sync --all-extras --dev

@@ -194,3 +194,4 @@ specs/active/
 specs/archive/
 !specs/active/.gitkeep
 !specs/archive/.gitkeep
+uv.toml

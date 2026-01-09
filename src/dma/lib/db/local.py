@@ -36,7 +36,7 @@ def get_duckdb_connection(
         database = ":memory:"
     if working_path is None:
         working_path = Path(tempfile.gettempdir())
-    config = {
+    config: dict[str, str | bool | int | float | list[str]] = {
         "memory_limit": "1GB",
         "temp_directory": str(working_path),
         "worker_threads": 2,

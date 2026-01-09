@@ -16,6 +16,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import aiosql
+from aiosql.adapters.generic import GenericAdapter
 
 from dma.collector.query_managers.base import CollectionQueryManager
 from dma.utils import module_to_os_path
@@ -24,6 +25,8 @@ if TYPE_CHECKING:
     from aiosql.queries import Queries
 
 _root_path = module_to_os_path("dma")
+
+aiosql.register_adapter("oracledb", GenericAdapter)
 
 
 class OracleCollectionQueryManager(CollectionQueryManager):
@@ -34,7 +37,9 @@ class OracleCollectionQueryManager(CollectionQueryManager):
         source_id: str | None = None,
         manual_id: str | None = None,
         queries: Queries = aiosql.from_path(
-            sql_path=f"{_root_path}/collector/sql/sources/oracle", driver_adapter="async_oracledb"
+            sql_path=f"{_root_path}/collector/sql/sources/oracle/",
+            driver_adapter="oracledb",
+            mandatory_parameters=False,
         ),
     ) -> None:
         super().__init__(
