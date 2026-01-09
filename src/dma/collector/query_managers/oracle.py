@@ -19,7 +19,6 @@ import aiosql
 from aiosql.adapters.generic import GenericAdapter
 
 from dma.collector.query_managers.base import CollectionQueryManager
-from dma.lib.exceptions import ApplicationError
 from dma.utils import module_to_os_path
 
 if TYPE_CHECKING:
