@@ -211,22 +211,12 @@ jobs:
         echo "${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl" >> dist/requirements.txt
         cat dist/requirements.txt
 
-    - name: Set Distribution Source (macOS aarch64)
-      if: matrix.job.target == 'aarch64-apple-darwin'
-      run: echo "PYAPP_DISTRIBUTION_SOURCE=https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-aarch64-apple-darwin-install_only_stripped.tar.gz" >> $GITHUB_ENV
 
-    - name: Set Distribution Source (Linux aarch64)
-      if: matrix.job.target == 'aarch64-unknown-linux-gnu'
-      run: echo "PYAPP_DISTRIBUTION_SOURCE=https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz" >> $GITHUB_ENV
 
-    - name: Set Distribution Source (Windows x86_64)
-      if: matrix.job.target == 'x86_64-pc-windows-msvc'
-      run: echo "PYAPP_DISTRIBUTION_SOURCE=https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-pc-windows-msvc-install_only_stripped.tar.gz" >> $GITHUB_ENV
 
-    - name: Bundle Python dependencies (Linux GNU)
-      if: contains(matrix.job.target, 'linux-gnu')
+    - name: Bundle Python dependencies
       run: |
-        uv run python ../tools/bundle_python.py \
+        uv run python tools/bundle_python.py \
           --target ${{ matrix.job.target }} \
           --requirements dist/requirements.txt \
           --output dist/python-dist-${{ matrix.job.target }}.tar.gz
@@ -247,7 +237,8 @@ jobs:
       working-directory: ${{ env.PYAPP_REPO }}
       env:
         PYAPP_PROJECT_PATH: ${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
-        PYAPP_PROJECT_DEPENDENCY_FILE: ${{ github.workspace }}/dist/requirements.txt
+        PYAPP_PROJECT_DEPENDENCY_FILE: ""
+        PYAPP_SKIP_INSTALL: "true"
       run: cargo build --release --target ${{ matrix.job.target }}
 
     - name: Rename binary (Unix)
