@@ -264,6 +264,7 @@ typeCheckingMode = "standard"
 useLibraryCodeForTypes = true
 
 [tool.mypy]
+python_version = "3.10"
 disallow_untyped_defs = false
 files = ["src/dma", "tests"]
 follow_imports = "normal"     # "silent" for not following
