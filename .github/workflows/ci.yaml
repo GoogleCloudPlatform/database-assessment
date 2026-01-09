@@ -215,8 +215,9 @@ jobs:
 
 
     - name: Bundle Python dependencies
+      shell: bash
       run: |
-        uv run python tools/bundle_python.py \
+        uv run tools/bundle_python.py \
           --target ${{ matrix.job.target }} \
           --requirements dist/requirements.txt \
           --output dist/python-dist-${{ matrix.job.target }}.tar.gz

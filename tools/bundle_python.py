@@ -1,4 +1,11 @@
-import argparse
+# /// script
+# dependencies = [
+#   "rich-click",
+#   "rich",
+#   "python-dotenv",
+#   "pip",
+# ]
+# ///
 import os
 import shutil
 import subprocess
@@ -7,6 +14,9 @@ import tarfile
 import urllib.request
 import zipfile
 from pathlib import Path
+
+import rich_click as click
+from rich.console import Console
 
 # Mapping from Rust target to Python Build Standalone URL (Python 3.13.9)
 # Source: build.rs in pyapp 0.29.0
@@ -27,28 +37,28 @@ PLATFORMS = {
     "x86_64-pc-windows-msvc": "win_amd64",
 }
 
+console = Console()
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--target", required=True, help="Rust target architecture")
-    parser.add_argument("--requirements", required=True, help="Path to requirements.txt")
-    parser.add_argument("--output", required=True, help="Output path for the bundled distribution")
-    args = parser.parse_args()
 
-    target = args.target
-    requirements = Path(args.requirements).resolve()
-    output = Path(args.output).resolve()
+@click.command()
+@click.option("--target", required=True, help="Rust target architecture")
+@click.option("--requirements", required=True, help="Path to requirements.txt")
+@click.option("--output", required=True, help="Output path for the bundled distribution")
+def main(target: str, requirements: str, output: str) -> None:
+    """Bundle Python dependencies into a standalone distribution."""
+    requirements_path = Path(requirements).resolve()
+    output_path = Path(output).resolve()
 
     if target not in URLS:
-        print(f"Error: Target {target} not supported.")
+        console.print(f"[bold red]Error:[/bold red] Target {target} not supported.")
         sys.exit(1)
 
     url = URLS[target]
     platform = PLATFORMS.get(target)
 
-    print(f"Processing target: {target}")
-    print(f"URL: {url}")
-    print(f"Platform: {platform}")
+    console.print(f"[bold blue]Processing target:[/bold blue] {target}")
+    console.print(f"[bold blue]URL:[/bold blue] {url}")
+    console.print(f"[bold blue]Platform:[/bold blue] {platform}")
 
     work_dir = Path("build_dist_temp").resolve()
     if work_dir.exists():
@@ -58,12 +68,12 @@ def main() -> None:
     # Download
     archive_name = url.split("/")[-1]
     archive_path = work_dir / archive_name
-    print(f"Downloading {url}...")
+    console.print(f"Downloading {url}...")
     urllib.request.urlretrieve(url, archive_path)
 
     # Extract
     extract_dir = work_dir / "extracted"
-    print(f"Extracting to {extract_dir}...")
+    console.print(f"Extracting to {extract_dir}...")
     if archive_name.endswith(".tar.gz"):
         with tarfile.open(archive_path, "r:gz") as tar:
             tar.extractall(extract_dir)
@@ -71,7 +81,7 @@ def main() -> None:
         with zipfile.ZipFile(archive_path, "r") as zip_ref:
             zip_ref.extractall(extract_dir)
     else:
-        print("Unknown archive format")
+        console.print("[bold red]Unknown archive format[/bold red]")
         sys.exit(1)
 
     # Determine site-packages
@@ -91,13 +101,13 @@ def main() -> None:
         site_packages = python_root / "lib" / "python3.13" / "site-packages"
 
     if not site_packages.exists():
-        print(f"Error: Could not locate site-packages at {site_packages}")
+        console.print(f"[bold red]Error:[/bold red] Could not locate site-packages at {site_packages}")
         # Debug list
         for root, _, _ in os.walk(extract_dir):
-            print(root)
+            console.print(root)
         sys.exit(1)
 
-    print(f"Installing dependencies to {site_packages}...")
+    console.print(f"Installing dependencies to {site_packages}...")
 
     # We use the current python environment to run pip
     # We must use --ignore-installed to ensure we install everything into the target
@@ -112,39 +122,38 @@ def main() -> None:
         "pip",
         "install",
         "-r",
-        str(requirements),
+        str(requirements_path),
         "--target",
         str(site_packages),
         "--platform",
-        platform,
+        str(platform),
         "--only-binary=:all:",
         "--no-deps",
         "--upgrade",
     ]
 
-    # If the target is same as host, we don't strictly need --platform, but good for consistency.
-    # However, `dma` itself is in requirements.txt as a file path.
-    # pip install with --platform and local file path might complain if the wheel isn't tagged correctly for that platform?
-    # Our wheel is `py3-none-any.whl`, so it should be fine.
-
-    print(f"Running: {' '.join(pip_cmd)}")
-    subprocess.check_call(pip_cmd)
+    console.print(f"Running: {' '.join(pip_cmd)}")
+    try:
+        subprocess.check_call(pip_cmd)
+    except subprocess.CalledProcessError as e:
+        console.print(f"[bold red]Error running pip:[/bold red] {e}")
+        sys.exit(1)
 
     # Re-package
-    print(f"Repackaging to {output}...")
+    console.print(f"Repackaging to {output_path}...")
     # Use the same format as input
     if archive_name.endswith(".tar.gz"):
-        with tarfile.open(output, "w:gz") as tar:
+        with tarfile.open(output_path, "w:gz") as tar:
             tar.add(python_root, arcname="python")
     elif archive_name.endswith(".zip"):
-        with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as zipf:
+        with zipfile.ZipFile(output_path, "w", zipfile.ZIP_DEFLATED) as zipf:
             for root, _, files in os.walk(python_root):
                 for file in files:
                     file_path = Path(root) / file
                     arcname = file_path.relative_to(python_root.parent)
                     zipf.write(file_path, arcname)
 
-    print("Done.")
+    console.print("[bold green]Done.[/bold green]")
 
 
 if __name__ == "__main__":
