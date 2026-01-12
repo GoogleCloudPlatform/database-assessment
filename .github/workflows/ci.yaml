@@ -122,11 +122,6 @@ jobs:
           os: ubuntu-latest
           artifact: dma-aarch64-linux-gnu
 
-        # Linux - musl (Alpine, static linking)
-        - target: x86_64-unknown-linux-musl
-          os: ubuntu-latest
-          artifact: dma-x86_64-linux-musl
-
         # macOS
         - target: aarch64-apple-darwin
           os: macos-latest
@@ -183,10 +178,6 @@ jobs:
       uses: taiki-e/setup-cross-toolchain-action@v1
       with:
         target: ${{ matrix.job.target }}
-
-    - name: Install musl tools (musl targets)
-      if: contains(matrix.job.target, 'musl')
-      run: sudo apt-get install --yes musl musl-dev musl-tools
 
     - name: Download wheel artifact
       uses: actions/download-artifact@v7
@@ -252,12 +243,6 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         cp ${{ env.PYAPP_REPO }}/target/${{ matrix.job.target }}/release/pyapp.exe ${{ matrix.job.artifact }}
-
-    - name: Test binary offline (Linux musl)
-      if: contains(matrix.job.target, 'linux-musl')
-      run: |
-        # Test in Alpine container
-        docker run --network none -v $(pwd):/app alpine:latest /app/${{ matrix.job.artifact }} --version
 
     - name: Test binary offline (Linux)
       if: contains(matrix.job.target, 'linux') && !contains(matrix.job.target, 'musl') && !contains(matrix.job.target, 'aarch64')

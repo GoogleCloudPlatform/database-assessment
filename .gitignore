@@ -195,3 +195,4 @@ specs/archive/
 !specs/active/.gitkeep
 !specs/archive/.gitkeep
 uv.toml
+build_dist_temp

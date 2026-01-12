@@ -23,18 +23,16 @@ from rich.console import Console
 URLS = {
     "x86_64-unknown-linux-gnu": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
     "aarch64-unknown-linux-gnu": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz",
-    "x86_64-unknown-linux-musl": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-unknown-linux-musl-install_only_stripped.tar.gz",
     "aarch64-apple-darwin": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-aarch64-apple-darwin-install_only_stripped.tar.gz",
     "x86_64-pc-windows-msvc": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
 }
 
 # Mapping from Rust target to pip platform tag
 PLATFORMS = {
-    "x86_64-unknown-linux-gnu": "manylinux_2_17_x86_64",
-    "aarch64-unknown-linux-gnu": "manylinux_2_17_aarch64",
-    "x86_64-unknown-linux-musl": "musllinux_1_1_x86_64",
-    "aarch64-apple-darwin": "macosx_11_0_arm64",
-    "x86_64-pc-windows-msvc": "win_amd64",
+    "x86_64-unknown-linux-gnu": "x86_64-manylinux_2_28",
+    "aarch64-unknown-linux-gnu": "aarch64-manylinux_2_28",
+    "aarch64-apple-darwin": "aarch64-apple-darwin",
+    "x86_64-pc-windows-msvc": "x86_64-pc-windows-msvc",
 }
 
 console = Console()
@@ -117,20 +115,29 @@ def main(target: str, requirements: str, output: str) -> None:
     # Given we use 'uv export', it IS complete.
 
     pip_cmd = [
-        sys.executable,
-        "-m",
+        "uv",
         "pip",
         "install",
         "-r",
         str(requirements_path),
         "--target",
         str(site_packages),
-        "--platform",
+        "--python-platform",
         str(platform),
+        "--python-version",
+        "3.13",
         "--only-binary=:all:",
         "--no-deps",
         "--upgrade",
     ]
+
+    # Detect if we are running on Google's internal Linux (Rodete)
+    # and force the public PyPI index if so, as the internal mirror may miss packages.
+    try:
+        if Path("/etc/os-release").exists() and "rodete" in Path("/etc/os-release").read_text().lower():
+            pip_cmd.extend(["--index-url", "https://pypi.org/simple"])
+    except Exception:
+        pass
 
     console.print(f"Running: {' '.join(pip_cmd)}")
     try:
