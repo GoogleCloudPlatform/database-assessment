@@ -102,7 +102,6 @@ def test_validate_inputs_with_non_writable_directory(tmp_path):
     [
         ("x86_64-unknown-linux-gnu", True),
         ("aarch64-unknown-linux-gnu", True),
-        ("x86_64-unknown-linux-musl", True),
         ("aarch64-apple-darwin", True),
         ("x86_64-pc-windows-msvc", True),
         ("invalid-target", False),
@@ -133,17 +132,6 @@ def test_find_site_packages_unix(tmp_path):
     site_packages.mkdir(parents=True)
 
     result = bundle_python.find_site_packages(python_root, "x86_64-unknown-linux-gnu")
-
-    assert result == site_packages
-
-
-def test_find_site_packages_musl(tmp_path):
-    """Test finding site-packages on musl platform."""
-    python_root = tmp_path / "python"
-    site_packages = python_root / "lib" / "python3.13" / "site-packages"
-    site_packages.mkdir(parents=True)
-
-    result = bundle_python.find_site_packages(python_root, "x86_64-unknown-linux-musl")
 
     assert result == site_packages
 
@@ -258,7 +246,6 @@ def test_urls_mapping_completeness():
     expected_targets = [
         "x86_64-unknown-linux-gnu",
         "aarch64-unknown-linux-gnu",
-        "x86_64-unknown-linux-musl",
         "aarch64-apple-darwin",
         "x86_64-pc-windows-msvc",
     ]
@@ -273,7 +260,6 @@ def test_platforms_mapping_completeness():
     expected_targets = [
         "x86_64-unknown-linux-gnu",
         "aarch64-unknown-linux-gnu",
-        "x86_64-unknown-linux-musl",
         "aarch64-apple-darwin",
         "x86_64-pc-windows-msvc",
     ]
@@ -285,11 +271,10 @@ def test_platforms_mapping_completeness():
 @pytest.mark.parametrize(
     "target,expected_platform",
     [
-        ("x86_64-unknown-linux-gnu", "manylinux_2_17_x86_64"),
-        ("aarch64-unknown-linux-gnu", "manylinux_2_17_aarch64"),
-        ("x86_64-unknown-linux-musl", "musllinux_1_1_x86_64"),
-        ("aarch64-apple-darwin", "macosx_11_0_arm64"),
-        ("x86_64-pc-windows-msvc", "win_amd64"),
+        ("x86_64-unknown-linux-gnu", "x86_64-manylinux_2_17"),
+        ("aarch64-unknown-linux-gnu", "aarch64-manylinux_2_17"),
+        ("aarch64-apple-darwin", "aarch64-apple-darwin"),
+        ("x86_64-pc-windows-msvc", "x86_64-pc-windows-msvc"),
     ],
 )
 def test_platform_tag_mapping(target, expected_platform):

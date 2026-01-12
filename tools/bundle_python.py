@@ -33,19 +33,17 @@ from rich.console import Console
 URLS = {
     "x86_64-unknown-linux-gnu": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
     "aarch64-unknown-linux-gnu": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz",
-    "x86_64-unknown-linux-musl": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-unknown-linux-musl-install_only_stripped.tar.gz",
     "aarch64-apple-darwin": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-aarch64-apple-darwin-install_only_stripped.tar.gz",
     "x86_64-pc-windows-msvc": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
 }
 
-# Mapping from Rust target to pip platform tag
-# Platform tags follow PEP 425 naming conventions
+# Mapping from Rust target to uv pip --python-platform value
+# These are uv-specific platform identifiers (NOT PEP 425 wheel tags)
 PLATFORMS = {
-    "x86_64-unknown-linux-gnu": "manylinux_2_17_x86_64",  # glibc 2.17+ for RHEL 7/CentOS 7 compatibility
-    "aarch64-unknown-linux-gnu": "manylinux_2_17_aarch64",  # glibc 2.17+ for ARM64 Linux
-    "x86_64-unknown-linux-musl": "musllinux_1_1_x86_64",  # musl 1.1+ for Alpine Linux
-    "aarch64-apple-darwin": "macosx_11_0_arm64",  # macOS 11.0+ (Big Sur) for Apple Silicon
-    "x86_64-pc-windows-msvc": "win_amd64",  # Windows x86_64
+    "x86_64-unknown-linux-gnu": "x86_64-manylinux_2_17",
+    "aarch64-unknown-linux-gnu": "aarch64-manylinux_2_17",
+    "aarch64-apple-darwin": "aarch64-apple-darwin",
+    "x86_64-pc-windows-msvc": "x86_64-pc-windows-msvc",
 }
 
 console = Console()
@@ -92,7 +90,7 @@ def download_with_retry(url: str, dest: Path, max_retries: int = 3) -> None:
             urllib.request.urlretrieve(url, dest)
             # Verify download succeeded
             if dest.exists() and dest.stat().st_size > 0:
-                console.print(f"[green]✓[/] Downloaded {dest.stat().st_size / (1024 * 1024):.1f} MB")
+                console.print(f"[green]OK[/] Downloaded {dest.stat().st_size / (1024 * 1024):.1f} MB")
                 return
             console.print("[yellow]Warning:[/] Downloaded file appears empty, retrying...")
         except urllib.error.URLError as e:
@@ -180,7 +178,7 @@ def main(target: str, requirements: str, output: str, work_dir: str, keep_temp: 
         console.print(f"[blue]Extracting[/] to {extract_dir}...")
         if archive_name.endswith(".tar.gz"):
             with tarfile.open(archive_path, "r:gz") as tar:
-                tar.extractall(extract_dir)
+                tar.extractall(extract_dir, filter="data")
         elif archive_name.endswith(".zip"):
             with zipfile.ZipFile(archive_path, "r") as zip_ref:
                 zip_ref.extractall(extract_dir)
@@ -251,7 +249,7 @@ def main(target: str, requirements: str, output: str, work_dir: str, keep_temp: 
 
         output_size = output_path.stat().st_size / (1024 * 1024)
         console.print()
-        console.print(f"[bold green]✓ Success![/] Created {output_path.name} ({output_size:.1f} MB)")
+        console.print(f"[bold green]Success![/] Created {output_path.name} ({output_size:.1f} MB)")
 
     finally:
         # Clean up work directory unless --keep-temp is specified
