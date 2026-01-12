@@ -133,11 +133,7 @@ jobs:
           artifact: dma-x86_64-windows.exe
 
     env:
-      PYAPP_VERSION: v0.29.0
-      PYAPP_PYTHON_VERSION: "3.13"
-      PYAPP_PROJECT_NAME: "dma"
-      PYAPP_DISTRIBUTION_EMBED: "true"
-      PYAPP_FULL_ISOLATION: "true"
+      STABLE_PYTHON_VERSION: "3.13"
 
     steps:
     - name: Checkout code
@@ -146,7 +142,7 @@ jobs:
         fetch-depth: 0
 
     - name: Clone PyApp
-      run: git clone --depth 1 --branch ${{ env.PYAPP_VERSION }} https://github.com/ofek/pyapp pyapp-src
+      run: git clone --depth 1 --branch v0.29.0 https://github.com/ofek/pyapp pyapp-src
 
     - name: Install uv
       uses: astral-sh/setup-uv@v7
@@ -205,25 +201,30 @@ jobs:
           --target ${{ matrix.job.target }} \
           --requirements dist/requirements.txt \
           --output dist/python-dist-${{ matrix.job.target }}.tar.gz
-        echo "PYAPP_DISTRIBUTION_SOURCE=${{ github.workspace }}/dist/python-dist-${{ matrix.job.target }}.tar.gz" >> $GITHUB_ENV
-        echo "PYAPP_SKIP_INSTALL=true" >> $GITHUB_ENV
+        echo "PYAPP_DISTRIBUTION_SOURCE=../dist/python-dist-${{ matrix.job.target }}.tar.gz" >> $GITHUB_ENV
 
     - name: Build PyApp binary (Linux GNU)
       if: contains(matrix.job.target, 'linux-gnu')
       working-directory: pyapp-src
       env:
-        PYAPP_PROJECT_PATH: ${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
-        PYAPP_PROJECT_DEPENDENCY_FILE: ""
+        PYAPP_PROJECT_NAME: "dma"
+        PYAPP_PROJECT_PATH: ../dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
         PYAPP_SKIP_INSTALL: "true"
-      run: cargo zigbuild --release --target ${{ matrix.job.target }}.2.17
+        PYAPP_DISTRIBUTION_EMBED: "true"
+        PYAPP_FULL_ISOLATION: "true"
+        PYAPP_PYTHON_VERSION: "3.13"
+      run: cargo zigbuild --release --target ${{ matrix.job.target }}.2.28
 
     - name: Build PyApp binary (Others)
       if: (!contains(matrix.job.target, 'linux-gnu'))
       working-directory: pyapp-src
       env:
-        PYAPP_PROJECT_PATH: ${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
-        PYAPP_PROJECT_DEPENDENCY_FILE: ""
+        PYAPP_PROJECT_NAME: "dma"
+        PYAPP_PROJECT_PATH: ../dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
         PYAPP_SKIP_INSTALL: "true"
+        PYAPP_DISTRIBUTION_EMBED: "true"
+        PYAPP_FULL_ISOLATION: "true"
+        PYAPP_PYTHON_VERSION: "3.13"
       run: cargo build --release --target ${{ matrix.job.target }}
 
     - name: Rename binary (Unix)
