@@ -131,12 +131,10 @@ jobs:
       PYAPP_PYTHON_VERSION: "3.13"
       PYAPP_PROJECT_NAME: "dma"
 
-      # CRITICAL: Correct offline configuration (NO PYAPP_UV_ENABLED)
-      PYAPP_DISTRIBUTION_EMBED: "true"
+      # Offline configuration: PYAPP_DISTRIBUTION_PATH (set at runtime) implies embedding
+      # NO PYAPP_UV_ENABLED to ensure fully offline operation
       PYAPP_FULL_ISOLATION: "true"
       PYAPP_PROJECT_FEATURES: "oracle,postgres,mssql,mysql,server"
-      PYAPP_DISTRIBUTION_VARIANT_CPU: "v1"
-      PYAPP_INSTALL_DIR_DMA: "~/.dma"
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
@@ -145,6 +143,51 @@ jobs:
 
     - name: Clone PyApp
       run: git clone --depth 1 --branch ${{ env.PYAPP_VERSION }} https://github.com/ofek/pyapp ${{ env.PYAPP_REPO }}
+
+    - name: Patch PyApp for custom install directory
+      shell: bash
+      working-directory: ${{ env.PYAPP_REPO }}
+      run: |
+        # Patch PyApp to use ~/.dma/runtime/ as default installation directory
+        # instead of ~/.local/share/pyapp/<project>/<dist_id>/<version>/
+        # Users can still override with PYAPP_INSTALL_DIR_DMA environment variable
+        cat > /tmp/install_dir.patch << 'PATCH_EOF'
+        --- a/src/app.rs
+        +++ b/src/app.rs
+        @@ -37,12 +37,11 @@ pub fn initialize() -> Result<()> {
+        +    // DMA: Custom default installation directory
+             let installation_directory = if !install_dir_override.is_empty() {
+                 PathBuf::from(install_dir_override)
+             } else {
+        -        platform_dirs()
+        -            .data_local_dir()
+        -            .join(project_name())
+        -            .join(distribution_id())
+        -            .join(project_version())
+        +        dirs::home_dir()
+        +            .expect("could not find home directory")
+        +            .join(".dma")
+        +            .join("runtime")
+             };
+        PATCH_EOF
+
+        # Apply the patch using sed (more reliable across platforms than git apply)
+        # The `dirs` crate is already a transitive dependency of pyapp
+        if grep -q "platform_dirs()" src/app.rs; then
+          # Find and replace the installation directory block
+          sed -i.bak 's/platform_dirs()\.data_local_dir()\.join(project_name())\.join(distribution_id())\.join(project_version())/dirs::home_dir().expect("could not find home directory").join(".dma").join("runtime")/' src/app.rs
+          # Verify the patch was applied
+          if grep -q '\.join(".dma")' src/app.rs; then
+            echo "✓ Successfully patched installation directory to ~/.dma/runtime/"
+          else
+            echo "✗ Failed to apply installation directory patch"
+            exit 1
+          fi
+        else
+          echo "⚠ PyApp source structure may have changed - checking for alternate patterns..."
+          # Show relevant lines for debugging
+          grep -n "installation_directory" src/app.rs || true
+        fi
 
     - name: Install uv
       uses: astral-sh/setup-uv@v7
@@ -204,7 +247,9 @@ jobs:
           --target ${{ matrix.job.target }} \
           --requirements dist/requirements.txt \
           --output dist/python-dist-${{ matrix.job.target }}.tar.gz
-        echo "PYAPP_DISTRIBUTION_SOURCE=${{ github.workspace }}/dist/python-dist-${{ matrix.job.target }}.tar.gz" >> $GITHUB_ENV
+        # CRITICAL: Use PYAPP_DISTRIBUTION_PATH for local files (not PYAPP_DISTRIBUTION_SOURCE)
+        # PYAPP_DISTRIBUTION_SOURCE expects a URL, PYAPP_DISTRIBUTION_PATH accepts a filesystem path
+        echo "PYAPP_DISTRIBUTION_PATH=${{ github.workspace }}/dist/python-dist-${{ matrix.job.target }}.tar.gz" >> $GITHUB_ENV
         echo "PYAPP_SKIP_INSTALL=true" >> $GITHUB_ENV
 
     - name: Build PyApp binary (Linux GNU)
