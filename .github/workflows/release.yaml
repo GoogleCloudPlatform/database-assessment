@@ -242,6 +242,12 @@ jobs:
         # PYAPP_DISTRIBUTION_SOURCE expects a URL, PYAPP_DISTRIBUTION_PATH accepts a filesystem path
         echo "PYAPP_DISTRIBUTION_PATH=${{ github.workspace }}/dist/python-dist-${{ matrix.job.target }}.tar.gz" >> $GITHUB_ENV
         echo "PYAPP_SKIP_INSTALL=true" >> $GITHUB_ENV
+        # Set the path to Python binary inside the custom distribution
+        if [[ "${{ matrix.job.target }}" == *"windows"* ]]; then
+          echo "PYAPP_DISTRIBUTION_PYTHON_PATH=python/python.exe" >> $GITHUB_ENV
+        else
+          echo "PYAPP_DISTRIBUTION_PYTHON_PATH=python/bin/python3" >> $GITHUB_ENV
+        fi
 
     - name: Build PyApp binary (Linux GNU)
       if: contains(matrix.job.target, 'linux-gnu')
