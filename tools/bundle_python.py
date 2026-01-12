@@ -6,6 +6,7 @@
 #   "pip",
 # ]
 # ///
+import contextlib
 import os
 import shutil
 import subprocess
@@ -131,13 +132,12 @@ def main(target: str, requirements: str, output: str) -> None:
         "--upgrade",
     ]
 
-    # Detect if we are running on Google's internal Linux (Rodete)
+    # Detect if we are on a Google-internal "Rodete" machine
     # and force the public PyPI index if so, as the internal mirror may miss packages.
-    try:
-        if Path("/etc/os-release").exists() and "rodete" in Path("/etc/os-release").read_text().lower():
+    with contextlib.suppress(OSError):
+        os_release = Path("/etc/os-release")
+        if os_release.exists() and "rodete" in os_release.read_text(encoding="utf-8").lower():
             pip_cmd.extend(["--index-url", "https://pypi.org/simple"])
-    except Exception:
-        pass
 
     console.print(f"Running: {' '.join(pip_cmd)}")
     try:
