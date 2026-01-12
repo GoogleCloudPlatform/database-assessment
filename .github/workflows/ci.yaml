@@ -133,7 +133,7 @@ jobs:
           artifact: dma-x86_64-windows.exe
 
     env:
-      PYAPP_REPO: pyapp
+      PYAPP_DIR: pyapp
       PYAPP_VERSION: v0.29.0
       PYAPP_PYTHON_VERSION: "3.13"
       PYAPP_PROJECT_NAME: "dma"
@@ -150,7 +150,7 @@ jobs:
         fetch-depth: 0
 
     - name: Clone PyApp
-      run: git clone --depth 1 --branch ${{ env.PYAPP_VERSION }} https://github.com/ofek/pyapp ${{ env.PYAPP_REPO }}
+      run: git clone --depth 1 --branch ${{ env.PYAPP_VERSION }} https://github.com/ofek/pyapp ${{ env.PYAPP_DIR }}
 
     - name: Install uv
       uses: astral-sh/setup-uv@v7
@@ -217,7 +217,7 @@ jobs:
 
     - name: Build PyApp binary (Linux GNU)
       if: contains(matrix.job.target, 'linux-gnu')
-      working-directory: ${{ env.PYAPP_REPO }}
+      working-directory: ${{ env.PYAPP_DIR }}
       env:
         PYAPP_PROJECT_PATH: ${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
         PYAPP_PROJECT_DEPENDENCY_FILE: ""
@@ -226,7 +226,7 @@ jobs:
 
     - name: Build PyApp binary (Others)
       if: (!contains(matrix.job.target, 'linux-gnu'))
-      working-directory: ${{ env.PYAPP_REPO }}
+      working-directory: ${{ env.PYAPP_DIR }}
       env:
         PYAPP_PROJECT_PATH: ${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
         PYAPP_PROJECT_DEPENDENCY_FILE: ""
@@ -236,13 +236,13 @@ jobs:
     - name: Rename binary (Unix)
       if: runner.os != 'Windows'
       run: |
-        cp ${{ env.PYAPP_REPO }}/target/${{ matrix.job.target }}/release/pyapp ${{ matrix.job.artifact }}
+        cp ${{ env.PYAPP_DIR }}/target/${{ matrix.job.target }}/release/pyapp ${{ matrix.job.artifact }}
         chmod +x ${{ matrix.job.artifact }}
 
     - name: Rename binary (Windows)
       if: runner.os == 'Windows'
       run: |
-        cp ${{ env.PYAPP_REPO }}/target/${{ matrix.job.target }}/release/pyapp.exe ${{ matrix.job.artifact }}
+        cp ${{ env.PYAPP_DIR }}/target/${{ matrix.job.target }}/release/pyapp.exe ${{ matrix.job.artifact }}
 
     - name: Test binary offline (Linux)
       if: contains(matrix.job.target, 'linux') && !contains(matrix.job.target, 'musl') && !contains(matrix.job.target, 'aarch64')
