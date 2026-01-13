@@ -26,6 +26,10 @@ on:
   release:
     types:
       - created
+
+permissions:
+  contents: read
+
 concurrency:
   group: build-${{ github.head_ref }}
   cancel-in-progress: true
@@ -35,7 +39,7 @@ defaults:
     shell: bash
 
 env:
-  STABLE_PYTHON_VERSION: "3.12"
+  STABLE_PYTHON_VERSION: "3.13"
 
 jobs:
   collection-scripts:
@@ -106,16 +110,7 @@ jobs:
           os: ubuntu-latest
           artifact: dma-aarch64-linux-gnu
 
-        # Linux - musl (Alpine, static linking)
-        - target: x86_64-unknown-linux-musl
-          os: ubuntu-latest
-          artifact: dma-x86_64-linux-musl
-
         # macOS
-        - target: x86_64-apple-darwin
-          os: macos-latest
-          artifact: dma-x86_64-macos
-
         - target: aarch64-apple-darwin
           os: macos-latest
           artifact: dma-aarch64-macos
@@ -127,16 +122,14 @@ jobs:
 
     env:
       PYAPP_REPO: pyapp
-      PYAPP_VERSION: v0.27.0
-      PYAPP_PYTHON_VERSION: "3.12"
+      PYAPP_VERSION: v0.29.0
+      PYAPP_PYTHON_VERSION: "3.13"
       PYAPP_PROJECT_NAME: "dma"
 
-      # CRITICAL: Correct offline configuration (NO PYAPP_UV_ENABLED)
-      PYAPP_DISTRIBUTION_EMBED: "true"
+      # Offline configuration: PYAPP_DISTRIBUTION_PATH (set at runtime) implies embedding
+      # NO PYAPP_UV_ENABLED to ensure fully offline operation
       PYAPP_FULL_ISOLATION: "true"
-      PYAPP_SKIP_INSTALL: "true"  # Project already embedded
       PYAPP_PROJECT_FEATURES: "oracle,postgres,mssql,mysql,server"
-      PYAPP_DISTRIBUTION_VARIANT_CPU: "v1"
     steps:
     - name: Checkout code
       uses: actions/checkout@v6
@@ -146,11 +139,66 @@ jobs:
     - name: Clone PyApp
       run: git clone --depth 1 --branch ${{ env.PYAPP_VERSION }} https://github.com/ofek/pyapp ${{ env.PYAPP_REPO }}
 
+    - name: Patch PyApp for custom install directory
+      shell: bash
+      working-directory: ${{ env.PYAPP_REPO }}
+      run: |
+        # Patch PyApp to use ~/.dma/runtime/ as default installation directory
+        # instead of ~/.local/share/pyapp/<project>/<dist_id>/<version>/
+        # Users can still override with PYAPP_INSTALL_DIR_DMA environment variable
+        cat > /tmp/install_dir.patch << 'PATCH_EOF'
+        --- a/src/app.rs
+        +++ b/src/app.rs
+        @@ -37,12 +37,11 @@ pub fn initialize() -> Result<()> {
+        +    // DMA: Custom default installation directory
+             let installation_directory = if !install_dir_override.is_empty() {
+                 PathBuf::from(install_dir_override)
+             } else {
+        -        platform_dirs()
+        -            .data_local_dir()
+        -            .join(project_name())
+        -            .join(distribution_id())
+        -            .join(project_version())
+        +        dirs::home_dir()
+        +            .expect("could not find home directory")
+        +            .join(".dma")
+        +            .join("runtime")
+             };
+        PATCH_EOF
+
+        # Apply the patch using sed (more reliable across platforms than git apply)
+        # The `dirs` crate is already a transitive dependency of pyapp
+        if grep -q "platform_dirs()" src/app.rs; then
+          # Find and replace the installation directory block
+          sed -i.bak 's/platform_dirs()\.data_local_dir()\.join(project_name())\.join(distribution_id())\.join(project_version())/dirs::home_dir().expect("could not find home directory").join(".dma").join("runtime")/' src/app.rs
+          # Verify the patch was applied
+          if grep -q '\.join(".dma")' src/app.rs; then
+            echo "✓ Successfully patched installation directory to ~/.dma/runtime/"
+          else
+            echo "✗ Failed to apply installation directory patch"
+            exit 1
+          fi
+        else
+          echo "⚠ PyApp source structure may have changed - checking for alternate patterns..."
+          # Show relevant lines for debugging
+          grep -n "installation_directory" src/app.rs || true
+        fi
+
     - name: Install uv
       uses: astral-sh/setup-uv@v7
 
     - name: Set up Python
       run: uv python install ${{ env.STABLE_PYTHON_VERSION }}
+
+    - name: Install Zig
+      if: contains(matrix.job.target, 'linux-gnu')
+      uses: goto-bus-stop/setup-zig@v2
+      with:
+        version: 0.13.0
+
+    - name: Install cargo-zigbuild
+      if: contains(matrix.job.target, 'linux-gnu')
+      run: uv tool install cargo-zigbuild
 
     - name: Install Rust toolchain
       uses: dtolnay/rust-toolchain@stable
@@ -158,14 +206,10 @@ jobs:
         targets: ${{ matrix.job.target }}
 
     - name: Setup cross-compilation (Linux)
-      if: contains(matrix.job.target, 'linux')
+      if: contains(matrix.job.target, 'linux') && !contains(matrix.job.target, 'linux-gnu')
       uses: taiki-e/setup-cross-toolchain-action@v1
       with:
         target: ${{ matrix.job.target }}
-
-    - name: Install musl tools (musl targets)
-      if: contains(matrix.job.target, 'musl')
-      run: sudo apt-get install --yes musl musl-dev musl-tools
 
     - name: Download wheel artifact
       uses: actions/download-artifact@v7
@@ -183,14 +227,44 @@ jobs:
 
     - name: Generate requirements.txt
       run: |
-        uv export --frozen --no-dev --no-editable --no-hashes --no-header --no-emit-project --extra postgres --extra server > dist/requirements.txt
+        uv export --no-color --frozen --no-dev --no-editable --no-hashes --no-header --no-emit-project --extra postgres --extra server > dist/requirements.txt
         echo "${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl" >> dist/requirements.txt
+        cat dist/requirements.txt
 
-    - name: Build PyApp binary
+    - name: Bundle Python dependencies
+      shell: bash
+      run: |
+        uv run tools/bundle_python.py \
+          --target ${{ matrix.job.target }} \
+          --requirements dist/requirements.txt \
+          --output dist/python-dist-${{ matrix.job.target }}.tar.gz
+        # CRITICAL: Use PYAPP_DISTRIBUTION_PATH for local files (not PYAPP_DISTRIBUTION_SOURCE)
+        # PYAPP_DISTRIBUTION_SOURCE expects a URL, PYAPP_DISTRIBUTION_PATH accepts a filesystem path
+        echo "PYAPP_DISTRIBUTION_PATH=${{ github.workspace }}/dist/python-dist-${{ matrix.job.target }}.tar.gz" >> $GITHUB_ENV
+        echo "PYAPP_SKIP_INSTALL=true" >> $GITHUB_ENV
+        # Set the path to Python binary inside the custom distribution
+        if [[ "${{ matrix.job.target }}" == *"windows"* ]]; then
+          echo "PYAPP_DISTRIBUTION_PYTHON_PATH=python/python.exe" >> $GITHUB_ENV
+        else
+          echo "PYAPP_DISTRIBUTION_PYTHON_PATH=python/bin/python3" >> $GITHUB_ENV
+        fi
+
+    - name: Build PyApp binary (Linux GNU)
+      if: contains(matrix.job.target, 'linux-gnu')
       working-directory: ${{ env.PYAPP_REPO }}
       env:
         PYAPP_PROJECT_PATH: ${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
-        PYAPP_PROJECT_DEPENDENCY_FILE: ${{ github.workspace }}/dist/requirements.txt
+        PYAPP_PROJECT_DEPENDENCY_FILE: ""
+        PYAPP_SKIP_INSTALL: "true"
+      run: cargo zigbuild --release --target ${{ matrix.job.target }}.2.17
+
+    - name: Build PyApp binary (Others)
+      if: (!contains(matrix.job.target, 'linux-gnu'))
+      working-directory: ${{ env.PYAPP_REPO }}
+      env:
+        PYAPP_PROJECT_PATH: ${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
+        PYAPP_PROJECT_DEPENDENCY_FILE: ""
+        PYAPP_SKIP_INSTALL: "true"
       run: cargo build --release --target ${{ matrix.job.target }}
 
     - name: Rename binary (Unix)
@@ -205,14 +279,14 @@ jobs:
         cp ${{ env.PYAPP_REPO }}/target/${{ matrix.job.target }}/release/pyapp.exe ${{ matrix.job.artifact }}
 
     - name: Test binary offline (Linux)
-      if: contains(matrix.job.target, 'linux') && !contains(matrix.job.target, 'musl')
+      if: contains(matrix.job.target, 'linux') && !contains(matrix.job.target, 'aarch64')
       run: |
         # Test in network-isolated container
-        docker run --network none -v $(pwd):/app ubuntu:20.04 /app/${{ matrix.job.artifact }} --version
+        docker run --network none -v $(pwd):/app ubuntu:20.04 /app/${{ matrix.job.artifact }} --help
 
     - name: Test binary (macOS/Windows)
       if: runner.os != 'Linux'
-      run: ./${{ matrix.job.artifact }} --version
+      run: ./${{ matrix.job.artifact }} --help
 
     - name: Upload binary artifact
       uses: actions/upload-artifact@v6

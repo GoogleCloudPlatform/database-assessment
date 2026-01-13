@@ -15,9 +15,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-!resources/lib
-!src/**/*/lib
 lib64/
 parts/
 sdist/
@@ -194,3 +191,5 @@ specs/active/
 specs/archive/
 !specs/active/.gitkeep
 !specs/archive/.gitkeep
+uv.toml
+build_dist_temp
