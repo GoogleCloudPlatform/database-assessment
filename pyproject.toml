@@ -222,13 +222,13 @@ replace = 'dma_version="{new_version}"'
 
 [[tool.bumpversion.files]]
 filename = "scripts/collector/mysql/collect-data.sh"
-search = 'OpVersion="{current_version}"'
-replace = 'OpVersion="{new_version}"'
+search = 'dma_version="{current_version}"'
+replace = 'dma_version="{new_version}"'
 
 [[tool.bumpversion.files]]
 filename = "scripts/collector/postgres/collect-data.sh"
-search = 'OpVersion="{current_version}"'
-replace = 'OpVersion="{new_version}"'
+search = 'dma_version="{current_version}"'
+replace = 'dma_version="{new_version}"'
 
 [[tool.bumpversion.files]]
 filename = "scripts/collector/sqlserver/instanceReview.ps1"
