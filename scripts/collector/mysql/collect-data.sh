@@ -96,8 +96,8 @@ function init_variables() {
   md5_col=1
 
   if [[ "$(uname)" = "SunOS" ]]; then
-        grep_cmd=/usr/xpg4/bin/grep
-        sed_cmd=/usr/xpg4/bin/sed
+    grep_cmd=/usr/xpg4/bin/grep
+    sed_cmd=/usr/xpg4/bin/sed
   fi
 
   if [[ "$(uname)" = "HP-UX" ]]; then
@@ -216,7 +216,6 @@ EOF
 function create_error_log() {
   local v_file_tag=$1
   echo "Checking for errors..."
-  # MySQL errors are prefixed with "ERROR"
   "${grep_cmd}" -E 'ERROR' "${output_dir}/opdb__stderr_${v_file_tag}.log" > "${log_dir}/opdb__${v_file_tag}_errors.log"
   local retval=$?
   if [[ ! -f  "${log_dir}/opdb__${v_file_tag}_errors.log" ]]; then
@@ -228,14 +227,38 @@ function create_error_log() {
 function cleanup_dma_output() {
   local v_file_tag=$1
   echo "Preparing files for compression."
-  local outfile
-  for outfile in  "${output_dir}"/opdb*"${v_file_tag}".csv; do
-    if [[ -f ${outfile} ]] ; then
-      local tmpfile; tmpfile=$(mktemp)
-      "${sed_cmd}" -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;' "${outfile}" > "${tmpfile}"
-      cp "${tmpfile}" "${outfile}"
-      rm "${tmpfile}"
+  for outfile in  ${output_dir}/opdb*${v_file_tag}.csv
+  do
+  if [[ -f $outfile ]] ; then
+    if [[ $(uname) = "SunOS" ]]
+    then
+      ${sed_cmd}  's/ *\|/\|/g;s/\| */\|/g;/^$/d;/^\+/d;s/^|//g;s/|\r//g'  ${outfile} > sed_${v_file_tag}.tmp
+      cp sed_${v_file_tag}.tmp ${outfile}
+      rm sed_${v_file_tag}.tmp
+    else 
+      if [[ $(uname) = "AIX" ]] ; then
+        ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${v_file_tag}.tmp
+        cp sed_${v_file_tag}.tmp ${outfile}
+        rm sed_${v_file_tag}.tmp
+      else 
+        if [[ "$(uname)" = "HP-UX" ]] ; then
+          ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${v_file_tag}.tmp
+          cp sed_${v_file_tag}.tmp ${outfile}
+          rm sed_${v_file_tag}.tmp
+        else 
+          if [[ "$(uname)" = "Darwin" ]] ; then
+            ${sed_cmd} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/' ${outfile} > sed_${v_file_tag}.tmp
+            cp sed_${v_file_tag}.tmp ${outfile}
+            rm sed_${v_file_tag}.tmp
+          else
+            ${sed_cmd} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 s/[a-z]/\U&/g' ${outfile} > sed_${v_file_tag}.tmp
+            cp sed_${v_file_tag}.tmp ${outfile}
+            rm sed_${v_file_tag}.tmp
+          fi
+        fi
+      fi
     fi
+  fi
   done
 }
 
@@ -271,13 +294,13 @@ function compress_dma_files() {
   echo "MANUAL_ID : ${manual_unique_id}" >> "${output_dir}/opdb__defines__${v_file_tag}.csv"
   echo "zipfile_name: ${zipfile_name}" >> "${output_dir}/opdb__defines__${v_file_tag}.csv"
 
-  cd "${output_dir}" || exit 1
+  cd "${output_dir}"
   if [[ -f "opdb__manifest__${v_file_tag}.txt" ]]; then
     rm "opdb__manifest__${v_file_tag}.txt"
   fi
 
-  local file
-  for file in $(ls -1 opdb*"${v_file_tag}".csv opdb*"${v_file_tag}"*.log opdb*"${v_file_tag}"*.txt); do
+  for file in $(ls -1 opdb*"${v_file_tag}".csv opdb*"${v_file_tag}"*.log opdb*"${v_file_tag}"*.txt)
+  do
     local md5_val; md5_val=$(${md5_cmd} "${file}" | cut -d ' ' -f "${md5_col}")
     echo "${database_type}|${md5_val}|${file}"  >> "opdb__manifest__${v_file_tag}.txt"
   done
@@ -314,9 +337,15 @@ function get_version() {
 function print_extractor_version() {
   if [[ "$1" == "NONE" ]]; then
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo "This appears to be an unsupported version of this code. "
     echo "Please download the latest stable version from "
-    echo "https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-mysql.zip"
+    echo "https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-postgres.zip"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
   else
     echo "Using release version $1"
@@ -343,6 +372,8 @@ function print_usage() {
   echo
   echo "  VM collection definition (optional):"
   echo "        --vmUserName          Username on the VM the Database is running on."
+  echo "                              Must be supplied to collect hardware configuration of the database server if"
+  echo "                              the collection script is not run directly on the database server."
   echo "        --extraSSHArg         Extra args to be passed as is to ssh. Can be specified multiple times."
   echo
   echo " Example:"
@@ -408,7 +439,7 @@ function parse_parameters() {
 }
 
 function check_db_connection() {
-  local sqlcmd_result; sqlcmd_result=$(check_version "${connect_string}" "${dma_version}")
+  local sqlcmd_result=$(check_version "${connect_string}" "${dma_version}")
   local retval=$?
   if [[ ${retval} -ne 0 ]]; then
     echo " "
@@ -418,7 +449,6 @@ function check_db_connection() {
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     exit 255
   fi
-  # Pass result back to main script
   echo "${sqlcmd_result}" | "${grep_cmd}" DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r'
 }
 
@@ -428,11 +458,11 @@ function main() {
   parse_parameters "$@"
   connect_string="${conn_str}"
 
-  local extractorVersion; extractorVersion="$(get_version)"
+  local extractor_version="$(get_version)"
   echo ""
   echo "==================================================================================="
   echo "Database Migration Assessment Database Assessment Collector Version ${dma_version}"
-  print_extractor_version "${extractorVersion}"
+  print_extractor_version "${extractor_version}"
   echo "==================================================================================="
 
   local sqlcmd_result; sqlcmd_result=$(check_db_connection)
@@ -440,34 +470,45 @@ function main() {
 
   if [[ ${retval} -eq 0 ]]; then
     if [[ "$(echo "${sqlcmd_result}" | "${grep_cmd}" -E '(ERROR|FATAL)')" != "" ]]; then
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
       echo "Database version check returned error ${sqlcmd_result}"
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo "Exiting...."
       exit 255
     else
       echo "Your database version is $(echo "${sqlcmd_result}" | cut -d '|' -f1)"
       dbmajor=$(echo "${sqlcmd_result}" | cut -d '|' -f 1 | cut -d '.' -f 1)
-      local V_TAG; V_TAG="$(echo "${sqlcmd_result}" | cut -d '|' -f2).csv"; export V_TAG
+      V_TAG="$(echo "${sqlcmd_result}" | cut -d '|' -f2).csv"; export V_TAG
 
       execute_dma "${connect_string}" "$(echo "${V_TAG}" | "${sed_cmd}" 's/.csv//g')" "${manual_unique_id}"
       retval=$?
       if [[ ${retval} -ne 0 ]]; then
-        create_error_log "$(echo "${V_TAG}" | "${sed_cmd}" 's/.csv//g')"
-        compress_dma_files "$(echo "${V_TAG}" | "${sed_cmd}" 's/.csv//g')"
-        echo "Database Migration Assessment extract reported an error. Please check the error log in directory ${log_dir}"
+        create_error_log  $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
+        compress_dma_files $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${log_dir}"
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Exiting...."
         exit 255
       fi
 
-      create_error_log "$(echo "${V_TAG}" | "${sed_cmd}" 's/.csv//g')"
-      cleanup_dma_output "$(echo "${V_TAG}" | "${sed_cmd}" 's/.csv//g')"
+      create_error_log  $(echo ${V_TAG} | sed 's/.csv//g')
+      cleanup_dma_output $(echo ${V_TAG} | sed 's/.csv//g')
       retval=$?
       if [[ ${retval} -ne 0 ]]; then
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo "Database Migration Assessment data sanitation reported an error. Please check the error log in directory ${output_dir}"
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Exiting...."
         exit 255
       fi
 
-      compress_dma_files "$(echo "${V_TAG}" | "${sed_cmd}" 's/.csv//g')"
+      compress_dma_files $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g') ${host_name}
       retval=$?
       if [[ ${retval} -ne 0 ]]; then
-        echo "Database Migration Assessment data file archive encountered a problem. Exiting...."
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Database Migration Assessment data file archive encountered a problem.  Exiting...."
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         exit 255
       fi
 
@@ -477,7 +518,7 @@ function main() {
       echo "Data collection located at ${output_dir}/${output_file}"
       echo "==================================================================================="
       echo ""
-      print_extractor_version "${extractorVersion}"
+      print_extractor_version "${extractor_version}"
       exit 0
     fi
   else
