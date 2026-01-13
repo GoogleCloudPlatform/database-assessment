@@ -311,7 +311,7 @@ function compress_dma_files() {
   local v_hostname=$2
   local v_err_tag=""
   local retval
- 
+
   echo ""
   echo "Archiving output files with tag ${v_file_tag}"
   local current_working_dir=$(pwd)
