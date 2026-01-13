@@ -48,38 +48,38 @@ zip_cmd=""
 gzip_cmd=""
 
 
-function check_dependencies() {                                                                                                                                                                                                                                                   
-  local dependencies=(                                                                                                                                                                                                                                                            
-    "psql"                                                                                                                                                                                                                                                                        
-    "grep"                                                                                                                                                                                                                                                                        
-    "sed"                                                                                                                                                                                                                                                                         
-    "cut"                                                                                                                                                                                                                                                                         
-    "tr"                                                                                                                                                                                                                                                                          
-    "date"                                                                                                                                                                                                                                                                        
-    "iconv"                                                                                                                                                                                                                                                                       
-    "wc"                                                                                                                                                                                                                                                                          
-    "tar"                                                                                                                                                                                                                                                                         
-    "gzip"                                                                                                                                                                                                                                                                        
-  )                                                                                                                                                                                                                                                                               
-                                                                                                                                                                                                                                                                                  
-  local cmd_not_found=0                                                                                                                                                                                                                                                           
-  for cmd in "${dependencies[@]}"; do                                                                                                                                                                                                                                            
-    if ! command -v "${cmd}" &> /dev/null; then                                                                                                                                                                                                                                  
-      echo "ERROR: Required command '\${cmd}' not found in PATH." >&2                                                                                                                                                                                                             
-      cmd_not_found=1                                                                                                                                                                                                                                                             
-    fi                                                                                                                                                                                                                                                                            
-  done                                                                                                                                                                                                                                                                            
-                                                                                                                                                                                                                                                                                  
-  # Special check for md5sum equivalents used in the script                                                                                                                                                                                                                       
-  if ! command -v "md5sum" &> /dev/null && ! command -v "md5" &> /dev/null && ! command -v "csum" &> /dev/null; then                                                                                                                                                              
-    echo "ERROR: Required command for checksums ('md5sum', 'md5', or 'csum') not found." >&2                                                                                                                                                                                      
-    cmd_not_found=1                                                                                                                                                                                                                                                               
-  fi                                                                                                                                                                                                                                                                              
-                                                                                                                                                                                                                                                                                  
-  if [[ ${cmd_not_found} -eq 1 ]]; then                                                                                                                                                                                                                                          
-    exit 1                                                                                                                                                                                                                                                                        
-  fi                                                                                                                                                                                                                                                                              
-}        
+function check_dependencies() {
+  local dependencies=(
+    "psql"
+    "grep"
+    "sed"
+    "cut"
+    "tr"
+    "date"
+    "iconv"
+    "wc"
+    "tar"
+    "gzip"
+  )
+
+  local cmd_not_found=0
+  for cmd in "${dependencies[@]}"; do
+    if ! command -v "${cmd}" &> /dev/null; then
+      echo "ERROR: Required command '\${cmd}' not found in PATH." >&2
+      cmd_not_found=1
+    fi
+  done
+
+  # Special check for md5sum equivalents used in the script
+  if ! command -v "md5sum" &> /dev/null && ! command -v "md5" &> /dev/null && ! command -v "csum" &> /dev/null; then
+    echo "ERROR: Required command for checksums ('md5sum', 'md5', or 'csum') not found." >&2
+    cmd_not_found=1
+  fi
+
+  if [[ ${cmd_not_found} -eq 1 ]]; then
+    exit 1
+  fi
+}
 
 
 # Define global variables that define how/what executables to use based on the platform on which we are running.
@@ -279,17 +279,17 @@ function cleanup_dma_output() {
       ${sed_cmd}  's/ *\|/\|/g;s/\| */\|/g;/^$/d;/^\+/d;s/^|//g;s/|\r//g'  ${outfile} > sed_${v_file_tag}.tmp
       cp sed_${v_file_tag}.tmp ${outfile}
       rm sed_${v_file_tag}.tmp
-    else 
+    else
       if [[ $(uname) = "AIX" ]] ; then
         ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${v_file_tag}.tmp
         cp sed_${v_file_tag}.tmp ${outfile}
         rm sed_${v_file_tag}.tmp
-      else 
+      else
         if [[ "$(uname)" = "HP-UX" ]] ; then
           ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${v_file_tag}.tmp
           cp sed_${v_file_tag}.tmp ${outfile}
           rm sed_${v_file_tag}.tmp
-        else 
+        else
           if [[ "$(uname)" = "Darwin" ]] ; then
             ${sed_cmd} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/' ${outfile} > sed_${v_file_tag}.tmp
             cp sed_${v_file_tag}.tmp ${outfile}
@@ -542,7 +542,7 @@ function main() {
   init_variables
   parse_parameters "$@"
   connect_string="${conn_str}"
-  
+
 local extractor_version="$(get_version)"
   echo ""
   echo "==================================================================================="
