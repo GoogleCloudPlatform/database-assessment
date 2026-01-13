@@ -53,7 +53,6 @@ function check_dependencies() {
     "wc"
     "tar"
     "gzip"
-#    "getent"
   )
 
   local cmd_not_found=0
@@ -67,6 +66,11 @@ function check_dependencies() {
   # Special check for md5sum equivalents used in the script
   if ! command -v "md5sum" &> /dev/null && ! command -v "md5" &> /dev/null && ! command -v "csum" &> /dev/null; then
     echo "ERROR: Required command for checksums ('md5sum', 'md5', or 'csum') not found."
+    cmd_not_found=1
+  fi
+
+  if ! command -v "getent" $> /dev/null && ! command -v "dscacheutil" &> /dev/null; then
+    echo "ERROR: Required command for host IP lookup ('getent' or 'dscacheutil') not found."
     cmd_not_found=1
   fi
 
@@ -171,9 +175,7 @@ function execute_dma() {
   export SCRIPT_PATH=$(${sql_cmd} --user="${user}" --password="${pass}" -h "${host}" -P "${port}" --force --silent --skip-column-names "${db}" 2>>"${output_dir}/opdb__stderr_${v_file_tag}.log" < "${sql_dir}/_base_path_lookup.sql" | tr -d '\r')
 
   for f in $(ls -1 sql/*.sql | "${grep_cmd}" -v -e "init.sql" -e "_base_path_lookup.sql"); do
-    echo "Processing SQL FILE ${f}"
     local fname=$(echo "${f}" | cut -d '/' -f 2 | cut -d '.' -f 1)
-    echo "Fname = ${fname}"
     ${sql_cmd} --user="${user}" --password="${pass}" -h "${host}" -P "${port}" --force --table "${db}" >"${output_dir}/opdb__mysql_${fname}__${v_file_tag}.csv" 2>>"${output_dir}/opdb__stderr_${v_file_tag}.log"  <<EOF
 SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}';
 SET @DMA_MANUAL_ID='${v_manual_id}';
@@ -203,10 +205,14 @@ EOF
   done
 
   local server_hostname=$(${sql_cmd} --user="${user}" --password="${pass}" -h "${host}" -P "${port}" --force --silent --skip-column-names "${db}" 2>>"${output_dir}/opdb__stderr_${v_file_tag}.log" < "${sql_dir}/hostname.sql" | tr -d '\r')
-  echo "Need server IPs for ${server_hostname}"
-  local server_ips=$(getent hosts "${server_hostname}" | awk '{print $1}' | tr '\n' ',')
+  local server_ips
+  if [[ "$(uname)" == "Darwin" ]]; then
+    server_ips=$(dscacheutil -q host -a name "${server_hostname}" | grep address | awk '{print $2}' | tr '\n' ',')
+  else
+    server_ips=$(getent hosts "${server_hostname}" | awk '{print $1}' | tr '\n' ',')
+  fi
   local host_out="${output_dir}/opdb__mysql_db_host_${v_file_tag}.csv"
-  echo "HOSTNAME|IP_ADDRESSES" > "${hostOut}"
+  echo "HOSTNAME|IP_ADDRESSES" > "${host_out}"
   echo "\"${server_hostname}\"|\"${server_ips}\"" >> "${host_out}"
 
   local specs_out="${output_dir}/opdb__mysql_db_machine_specs_${v_file_tag}.csv"
