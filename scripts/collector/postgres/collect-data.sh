@@ -84,7 +84,7 @@ function check_dependencies() {
 
 # Define global variables that define how/what executables to use based on the platform on which we are running.
 function init_variables() {
-  LOCALE=$(echo $LANG | cut -d '.' -f 1)
+  local LOCALE=$(echo $LANG | cut -d '.' -f 1)
   export LANG=C
   export LANG=${LOCALE}.UTF-8
 
@@ -127,14 +127,14 @@ function init_variables() {
   fi
 
   # Check if running on Windows Subsystem for Linux
-  is_windows=$(uname -a | grep -i microsoft |wc -l)
+  local is_windows=$(uname -a | grep -i microsoft |wc -l)
   if [[ ${is_windows} -eq 1 ]]; then
     sql_dir=$(wslpath -a -w ${script_dir})/sql
     sql_output_dir=$(wslpath -a -w ${sql_output_dir})
   fi
 
   # Check if running on Cygwin
-  is_cygwin=$(uname -a | grep Cygwin | wc -l)
+  local is_cygwin=$(uname -a | grep Cygwin | wc -l)
   if [[ ${is_cygwin} -eq 1 ]]; then
     sql_dir=$(cygpath -w ${script_dir})/sql
     sql_output_dir=$(cygpath -w ${sql_output_dir})
@@ -222,7 +222,7 @@ EOF
     export OLDIFS=$IFS
     IFS=$(echo -en "\n\b")
     echo PGPASSWORD="${pass}" ${sql_cmd}  --user=${user}  -h ${host} -w -p ${port} -d "${db}" -t --no-align
-    dblist=$(PGPASSWORD="${pass}" ${sql_cmd}  --user=${user}  -h ${host} -w -p ${port} -d "${db}" -t --no-align <<EOF
+    local dblist=$(PGPASSWORD="${pass}" ${sql_cmd}  --user=${user}  -h ${host} -w -p ${port} -d "${db}" -t --no-align <<EOF
 SELECT datname FROM pg_database WHERE datname NOT LIKE 'template%' ORDER BY datname;
 EOF
     )
@@ -310,10 +310,11 @@ function compress_dma_files() {
   local v_file_tag=$1
   local v_hostname=$2
   local v_err_tag=""
-
+  lcoal retval
+ 
   echo ""
   echo "Archiving output files with tag ${v_file_tag}"
-  locsl current_working_dir=$(pwd)
+  local current_working_dir=$(pwd)
   cp ${log_dir}/opdb__${v_file_tag}_errors.log ${output_dir}/opdb__${v_file_tag}_errors.log
   if [[ -f VERSION.txt ]]; then
     cp VERSION.txt ${output_dir}/opdb__${v_file_tag}_version.txt
@@ -355,7 +356,7 @@ function compress_dma_files() {
 
   for file in $(ls -1  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt)
   do
-    md5_val=$(${md5_cmd} $file | cut -d ' ' -f ${md5_col})
+    local md5_val=$(${md5_cmd} $file | cut -d ' ' -f ${md5_col})
     echo "${database_type}|${md5_val}|${file}"  >> opdb__manifest__${v_file_tag}.txt
   done
 
@@ -476,10 +477,10 @@ function parse_parameters() {
 
   if [[ "${conn_str}" == "" ]] ; then
     if [[ "${host_name}" != "" && "${port}" != "" && "${collection_user_name}" != "" && "${collection_user_pass}" != "" ]] ; then
-      baseConnStr="${collection_user_name}/${collection_user_pass}@//${host_name}:${port}"
+      local base_conn_str="${collection_user_name}/${collection_user_pass}@//${host_name}:${port}"
       if [[ "${database_service}" != "" ]]; then
-            conn_str="${baseConnStr}/${database_service}"
-      else conn_str="${baseConnStr}"
+            conn_str="${base_conn_str}/${database_service}"
+      else conn_str="${base_conn_str}"
       fi
     else
       echo "Connection information incomplete"
@@ -565,7 +566,7 @@ local extractor_version="$(get_version)"
       dbmajor=$((echo "${sqlcmd_result}" | cut -d '|' -f1)  |cut -d '.' -f 1)
       V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
 
-      PGVER=$(echo $dbmajor | cut -c 1-2)
+      local PGVER=$(echo $dbmajor | cut -c 1-2)
       if [[ $PGVER -gt 13 ]] && [[ $PGVER -lt 17 ]] ; then
         PGVER="base"
       fi
