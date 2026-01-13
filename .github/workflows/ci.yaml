@@ -249,8 +249,8 @@ jobs:
       if: contains(matrix.job.target, 'linux') && !contains(matrix.job.target, 'musl') && !contains(matrix.job.target, 'aarch64')
       run: |
         # Test in network-isolated container
-        docker run --network none -v $(pwd):/app ubuntu:20.04 /app/${{ matrix.job.artifact }} --version
+        docker run --network none -v $(pwd):/app ubuntu:20.04 /app/${{ matrix.job.artifact }} --help
 
     - name: Test binary (macOS/Windows)
       if: runner.os != 'Linux'
-      run: ./${{ matrix.job.artifact }} --version
+      run: ./${{ matrix.job.artifact }} --help
