@@ -235,17 +235,17 @@ function cleanup_dma_output() {
       ${sed_cmd}  's/ *\|/\|/g;s/\| */\|/g;/^$/d;/^\+/d;s/^|//g;s/|\r//g'  ${outfile} > sed_${v_file_tag}.tmp
       cp sed_${v_file_tag}.tmp ${outfile}
       rm sed_${v_file_tag}.tmp
-    else 
+    else
       if [[ $(uname) = "AIX" ]] ; then
         ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${v_file_tag}.tmp
         cp sed_${v_file_tag}.tmp ${outfile}
         rm sed_${v_file_tag}.tmp
-      else 
+      else
         if [[ "$(uname)" = "HP-UX" ]] ; then
           ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${v_file_tag}.tmp
           cp sed_${v_file_tag}.tmp ${outfile}
           rm sed_${v_file_tag}.tmp
-        else 
+        else
           if [[ "$(uname)" = "Darwin" ]] ; then
             ${sed_cmd} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/' ${outfile} > sed_${v_file_tag}.tmp
             cp sed_${v_file_tag}.tmp ${outfile}
