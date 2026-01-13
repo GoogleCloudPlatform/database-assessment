@@ -39,7 +39,11 @@ class CanonicalQueryManager(QueryManager):
         execution_id: str | None = None,
         source_id: str | None = None,
         manual_id: str | None = None,
-        queries: Queries = aiosql.from_path(sql_path=f"{_root_path}/collector/sql/canonical/", driver_adapter="duckdb"),
+        queries: Queries = aiosql.from_path(
+            sql_path=f"{_root_path}/collector/sql/canonical/",
+            driver_adapter="duckdb",
+            mandatory_parameters=False,
+        ),
     ) -> None:
         self.execution_id = execution_id
         self.source_id = source_id

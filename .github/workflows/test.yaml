@@ -30,6 +30,10 @@ on:
         required: false
         type: number
         default: 60
+
+permissions:
+  contents: read
+
 env:
   PYTHONUNBUFFERED: "1"
   FORCE_COLOR: "1"

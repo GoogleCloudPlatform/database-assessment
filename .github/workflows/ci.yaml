@@ -19,6 +19,9 @@ on:
     - main
   pull_request:
 
+permissions:
+  contents: read
+
 concurrency:
   group: test-${{ github.head_ref }}
   cancel-in-progress: true
@@ -26,6 +29,7 @@ concurrency:
 env:
   PYTHONUNBUFFERED: "1"
   FORCE_COLOR: "1"
+  STABLE_PYTHON_VERSION: "3.13"
 
 jobs:
   build-collection-scripts:
@@ -49,7 +53,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     uses: ./.github/workflows/test.yaml
     with:
       coverage: ${{ matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest' }}
@@ -60,7 +64,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [  windows-latest ]
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     uses: ./.github/workflows/test.yaml
     with:
       coverage: ${{ matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest' }}
@@ -76,3 +80,177 @@ jobs:
     with:
       coverage: ${{ matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest' }}
       python-version: ${{ matrix.python-version }}
+
+  build-wheel:
+    name: Build pure Python wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Set up Python
+        run: uv python install ${{ env.STABLE_PYTHON_VERSION }}
+      - name: Build
+        run: uv build
+      - uses: actions/upload-artifact@v6
+        with:
+          name: wheels
+          path: dist/*
+          if-no-files-found: error
+          overwrite: true
+
+  verify-binary-builds:
+    name: Verify binary build for ${{ matrix.job.target }} (${{ matrix.job.os }})
+    runs-on: ${{ matrix.job.os }}
+    needs:
+      - test-linux
+      - test-windows
+      - test-osx
+      - build-wheel
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+        # Linux - GNU libc (manylinux2014 baseline: glibc 2.17+)
+        - target: x86_64-unknown-linux-gnu
+          os: ubuntu-latest
+          artifact: dma-x86_64-linux-gnu
+
+        - target: aarch64-unknown-linux-gnu
+          os: ubuntu-latest
+          artifact: dma-aarch64-linux-gnu
+
+        # macOS
+        - target: aarch64-apple-darwin
+          os: macos-latest
+          artifact: dma-aarch64-macos
+
+        # Windows
+        - target: x86_64-pc-windows-msvc
+          os: windows-latest
+          artifact: dma-x86_64-windows.exe
+
+    env:
+      STABLE_PYTHON_VERSION: "3.13"
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
+    - name: Clone PyApp
+      run: git clone --depth 1 --branch v0.29.0 https://github.com/ofek/pyapp pyapp-src
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+
+    - name: Set up Python
+      run: uv python install ${{ env.STABLE_PYTHON_VERSION }}
+
+    - name: Install Zig
+      if: contains(matrix.job.target, 'linux-gnu')
+      uses: goto-bus-stop/setup-zig@v2
+      with:
+        version: 0.13.0
+
+    - name: Install cargo-zigbuild
+      if: contains(matrix.job.target, 'linux-gnu')
+      run: uv tool install cargo-zigbuild
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.job.target }}
+
+    - name: Setup cross-compilation (Linux)
+      if: contains(matrix.job.target, 'linux') && !contains(matrix.job.target, 'linux-gnu')
+      uses: taiki-e/setup-cross-toolchain-action@v1
+      with:
+        target: ${{ matrix.job.target }}
+
+    - name: Download wheel artifact
+      uses: actions/download-artifact@v7
+      with:
+        name: wheels
+        path: dist/
+        merge-multiple: true
+
+    - name: Inspect Wheel Content
+      run: unzip -l dist/*.whl | grep dma/lib || true
+
+    - name: Get version
+      id: version
+      run: |
+        VERSION=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Generate requirements.txt
+      run: |
+        uv export --no-color --frozen --no-dev --no-editable --no-hashes --no-header --no-emit-project --extra postgres --extra server > dist/requirements.txt
+        echo "dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl" >> dist/requirements.txt
+        cat dist/requirements.txt
+
+    - name: Bundle Python dependencies
+      shell: bash
+      run: |
+        uv run tools/bundle_python.py \
+          --target ${{ matrix.job.target }} \
+          --requirements dist/requirements.txt \
+          --output dist/python-dist-${{ matrix.job.target }}.tar.gz
+        # Use PYAPP_DISTRIBUTION_PATH for local files (not PYAPP_DISTRIBUTION_SOURCE which expects a URL)
+        echo "PYAPP_DISTRIBUTION_PATH=${{ github.workspace }}/dist/python-dist-${{ matrix.job.target }}.tar.gz" >> $GITHUB_ENV
+        # Set the path to Python binary inside the custom distribution
+        if [[ "${{ matrix.job.target }}" == *"windows"* ]]; then
+          echo "PYAPP_DISTRIBUTION_PYTHON_PATH=python/python.exe" >> $GITHUB_ENV
+        else
+          echo "PYAPP_DISTRIBUTION_PYTHON_PATH=python/bin/python3" >> $GITHUB_ENV
+        fi
+
+    - name: Build PyApp binary (Linux GNU)
+      if: contains(matrix.job.target, 'linux-gnu')
+      working-directory: pyapp-src
+      env:
+        PYAPP_PROJECT_NAME: "dma"
+        PYAPP_PROJECT_PATH: ../dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
+        PYAPP_SKIP_INSTALL: "true"
+        PYAPP_DISTRIBUTION_EMBED: "true"
+        PYAPP_FULL_ISOLATION: "true"
+        PYAPP_PYTHON_VERSION: "3.13"
+      run: cargo zigbuild --release --target ${{ matrix.job.target }}.2.28
+
+    - name: Build PyApp binary (Others)
+      if: (!contains(matrix.job.target, 'linux-gnu'))
+      working-directory: pyapp-src
+      env:
+        PYAPP_PROJECT_NAME: "dma"
+        PYAPP_PROJECT_PATH: ../dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
+        PYAPP_SKIP_INSTALL: "true"
+        PYAPP_DISTRIBUTION_EMBED: "true"
+        PYAPP_FULL_ISOLATION: "true"
+        PYAPP_PYTHON_VERSION: "3.13"
+      run: cargo build --release --target ${{ matrix.job.target }}
+
+    - name: Rename binary (Unix)
+      if: runner.os != 'Windows'
+      run: |
+        cp pyapp-src/target/${{ matrix.job.target }}/release/pyapp ${{ matrix.job.artifact }}
+        chmod +x ${{ matrix.job.artifact }}
+
+    - name: Rename binary (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        cp pyapp-src/target/${{ matrix.job.target }}/release/pyapp.exe ${{ matrix.job.artifact }}
+
+    - name: Test binary offline (Linux)
+      if: contains(matrix.job.target, 'linux') && !contains(matrix.job.target, 'musl') && !contains(matrix.job.target, 'aarch64')
+      run: |
+        # Test in network-isolated container
+        docker run --network none -v $(pwd):/app ubuntu:20.04 /app/${{ matrix.job.artifact }} --help
+
+    - name: Test binary (macOS/Windows)
+      if: runner.os != 'Linux'
+      run: ./${{ matrix.job.artifact }} --help
