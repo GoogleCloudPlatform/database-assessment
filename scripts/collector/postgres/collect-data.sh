@@ -310,7 +310,7 @@ function compress_dma_files() {
   local v_file_tag=$1
   local v_hostname=$2
   local v_err_tag=""
-  lcoal retval
+  local retval
  
   echo ""
   echo "Archiving output files with tag ${v_file_tag}"
@@ -520,7 +520,7 @@ function parse_parameters() {
 
 
 function check_db_connection() {
-  echo "Checking connection ${connect_string}"
+  #echo "Checking connection ${connect_string}"
   local sqlcmd_result=$(check_version "${connect_string}" "${dma_version}" )
   local retval=$?
   if [[ $retval -ne 0 ]]; then
@@ -551,7 +551,7 @@ local extractor_version="$(get_version)"
   print_extractor_version "${extractor_version}"
   echo "==================================================================================="
 
-  local sqlcmd_result; sqlcmd_result=$(check_db_connection)
+  local sqlcmd_result=$(check_db_connection)
   local retval=$?
 
   if [[ $retval -eq 0 ]]; then
