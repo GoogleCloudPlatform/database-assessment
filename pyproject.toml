@@ -53,7 +53,7 @@ classifiers = [ # ToDo: Modify according to your needs!
 ]
 # direct dependencies of this package, installed when users `pip install dma` later.
 dependencies = [
-    "duckdb>=1.0.0",
+    "duckdb>=1.4.3",
     "polars[pyarrow]>=0.20.0",
     "aiosql>=9.4",
     "click>=8.1.7",
