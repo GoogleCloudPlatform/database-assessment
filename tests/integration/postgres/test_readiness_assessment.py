@@ -95,7 +95,7 @@ def test_privileges_success(
         conn.execute(text(dedent("""create extension if not exists pglogical;""")))
         grant_privilege_cmds = [
             "GRANT USAGE on SCHEMA pglogical to testuser",
-            "GRANT SELECT on ALL TABLES in SCHEMA pglogical to testuser;"
+            "GRANT SELECT on ALL TABLES in SCHEMA pglogical to testuser;",
             "GRANT SELECT on ALL TABLES in SCHEMA public to testuser;",
         ]
         for cmd in grant_privilege_cmds:
