@@ -77,7 +77,7 @@ function check_dependencies() {
 
 # Define global variables that define how/what executables to use based on the platform on which we are running.
 function init_variables() {
-  LOCALE=$(echo $LANG | cut -d '.' -f 1)
+  local LOCALE=$(echo $LANG | cut -d '.' -f 1)
   export LANG=C
   export LANG=${LOCALE}.UTF-8
 
@@ -120,14 +120,14 @@ function init_variables() {
   fi
 
   # Check if running on Windows Subsystem for Linux
-  is_windows=$(uname -a | grep -i microsoft |wc -l)
+  local is_windows=$(uname -a | grep -i microsoft |wc -l)
   if [[ ${is_windows} -eq 1 ]]; then
     sql_dir=$(wslpath -a -w "${script_dir}")/sql
     sql_output_dir=$(wslpath -a -w "${sql_output_dir}")
   fi
 
   # Check if running on Cygwin
-  is_cygwin=$(uname -a | grep Cygwin | wc -l)
+  local is_cygwin=$(uname -a | grep Cygwin | wc -l)
   if [[ ${is_cygwin} -eq 1 ]]; then
     sql_dir=$(cygpath -w "${script_dir}")/sql
     sql_output_dir=$(cygpath -w "${sql_output_dir}")
@@ -138,13 +138,13 @@ function init_variables() {
 function check_version() {
   local connect_string="$1"
   local dma_version=$2
-  local user; user=$(echo "${connect_string}" | cut -d '/' -f 1)
-  local pass; pass=$(echo "${connect_string}" | cut -d '/' -f 2 | cut -d '@' -f 1)
-  local host; host=$(echo "${connect_string}" | cut -d '/' -f 4 | cut -d ':' -f 1)
-  local port; port=$(echo "${connect_string}" | cut -d ':' -f 2 | cut -d '/' -f 1)
-  local db; db=$(echo "${connect_string}"   | cut -d '/' -f 5)
+  local user=$(echo "${connect_string}" | cut -d '/' -f 1)
+  local pass=$(echo "${connect_string}" | cut -d '/' -f 2 | cut -d '@' -f 1)
+  local host=$(echo "${connect_string}" | cut -d '/' -f 4 | cut -d ':' -f 1)
+  local port=$(echo "${connect_string}" | cut -d ':' -f 2 | cut -d '/' -f 1)
+  local db=$(echo "${connect_string}"   | cut -d '/' -f 5)
 
-  local db_version; db_version=$(${sql_cmd} --user="${user}" --password="${pass}" -h "${host}" -P "${port}" -s "${db}" << EOF
+  local db_version=$(${sql_cmd} --user="${user}" --password="${pass}" -h "${host}" -P "${port}" -s "${db}" << EOF
 SELECT version();
 EOF
 )
@@ -161,18 +161,18 @@ function execute_dma() {
   local connect_string="${1}"
   local v_file_tag="${2}"
   local v_manual_id="${3}"
-  local user; user=$(echo "${connect_string}" | cut -d '/' -f 1)
-  local pass; pass=$(echo "${connect_string}" | cut -d '/' -f 2 | cut -d '@' -f 1)
-  local host; host=$(echo "${connect_string}" | cut -d '/' -f 4 | cut -d ':' -f 1)
-  local port; port=$(echo "${connect_string}" | cut -d ':' -f 2 | cut -d '/' -f 1)
-  local db; db=$(echo "${connect_string}"  | cut -d '/' -f 5)
+  local user=$(echo "${connect_string}" | cut -d '/' -f 1)
+  local pass=$(echo "${connect_string}" | cut -d '/' -f 2 | cut -d '@' -f 1)
+  local host=$(echo "${connect_string}" | cut -d '/' -f 4 | cut -d ':' -f 1)
+  local port=$(echo "${connect_string}" | cut -d ':' -f 2 | cut -d '/' -f 1)
+  local db=$(echo "${connect_string}"  | cut -d '/' -f 5)
 
   export DMA_SOURCE_ID; DMA_SOURCE_ID=$(${sql_cmd} --user="${user}" --password="${pass}" -h "${host}" -P "${port}" --force --silent --skip-column-names "${db}" 2>>"${output_dir}/opdb__stderr_${v_file_tag}.log" < "${sql_dir}/init.sql" | tr -d '\r')
   export SCRIPT_PATH; SCRIPT_PATH=$(${sql_cmd} --user="${user}" --password="${pass}" -h "${host}" -P "${port}" --force --silent --skip-column-names "${db}" 2>>"${output_dir}/opdb__stderr_${v_file_tag}.log" < "${sql_dir}/_base_path_lookup.sql" | tr -d '\r')
 
   for f in $(ls -1 sql/*.sql | "${grep_cmd}" -v -e "init.sql" -e "_base_path_lookup.sql"); do
     echo "Processing SQL FILE ${f}"
-    fname=$(echo "${f}" | cut -d '/' -f 2 | cut -d '.' -f 1)
+    local fname=$(echo "${f}" | cut -d '/' -f 2 | cut -d '.' -f 1)
     echo "Fname = ${fname}"
     ${sql_cmd} --user="${user}" --password="${pass}" -h "${host}" -P "${port}" --force --table "${db}" >"${output_dir}/opdb__mysql_${fname}__${v_file_tag}.csv" 2>>"${output_dir}/opdb__stderr_${v_file_tag}.log"  <<EOF
 SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}';
@@ -182,7 +182,7 @@ source ${f}
 exit
 EOF
     if [[ ! -s "${output_dir}/opdb__mysql_${fname}__${v_file_tag}.csv" ]]; then
-      local hdr; hdr=$(echo "${f}" | cut -d '.' -f 1 | rev | cut -d '/' -f 1 | rev)
+      local hdr=$(echo "${f}" | cut -d '.' -f 1 | rev | cut -d '/' -f 1 | rev)
       cat "${sql_dir}/headers/${hdr}.header" > "${output_dir}/opdb__mysql_${fname}__${v_file_tag}.csv"
     fi
   done
@@ -197,19 +197,19 @@ source ${f}
 exit
 EOF
     if [[ ! -s "${output_dir}/opdb__mysql_${fname}__${v_file_tag}.csv" ]]; then
-      local hdr; hdr=$(echo "${f}" | cut -d '.' -f 1 | rev | cut -d '/' -f 1 | rev)
+      local hdr=$(echo "${f}" | cut -d '.' -f 1 | rev | cut -d '/' -f 1 | rev)
       cat "${sql_dir}/headers/${hdr}.header" > "${output_dir}/opdb__mysql_${fname}__${v_file_tag}.csv"
     fi
   done
 
-  local serverHostname; serverHostname=$(${sql_cmd} --user="${user}" --password="${pass}" -h "${host}" -P "${port}" --force --silent --skip-column-names "${db}" 2>>"${output_dir}/opdb__stderr_${v_file_tag}.log" < "${sql_dir}/hostname.sql" | tr -d '\r')
-   echo "Need server IPs for ${serverHostname}"
-  local serverIPs; serverIPs=$(getent hosts "${serverHostname}" | awk '{print $1}' | tr '\n' ',')
-  local hostOut; hostOut="${output_dir}/opdb__mysql_db_host_${v_file_tag}.csv"
+  local serverHostname=$(${sql_cmd} --user="${user}" --password="${pass}" -h "${host}" -P "${port}" --force --silent --skip-column-names "${db}" 2>>"${output_dir}/opdb__stderr_${v_file_tag}.log" < "${sql_dir}/hostname.sql" | tr -d '\r')
+  echo "Need server IPs for ${serverHostname}"
+  local serverIPs=$(getent hosts "${serverHostname}" | awk '{print $1}' | tr '\n' ',')
+  local hostOut="${output_dir}/opdb__mysql_db_host_${v_file_tag}.csv"
   echo "HOSTNAME|IP_ADDRESSES" > "${hostOut}"
   echo "\"${serverHostname}\"|\"${serverIPs}\"" >> "${hostOut}"
 
-  local specsOut; specsOut="${output_dir}/opdb__mysql_db_machine_specs_${v_file_tag}.csv"
+  local specsOut="${output_dir}/opdb__mysql_db_machine_specs_${v_file_tag}.csv"
   ./db-machine-specs.sh "${host}" "${vm_user_name}" "${v_file_tag}" "${DMA_SOURCE_ID}" "${v_manual_id}" "${specsOut}" "${extra_ssh_args[@]}"
 }
 
@@ -268,14 +268,14 @@ function compress_dma_files() {
   local retval=0
   echo ""
   echo "Archiving output files with tag ${v_file_tag}"
-  local current_working_dir; current_working_dir=$(pwd)
+  local current_working_dir=$(pwd)
   cp "${log_dir}/opdb__${v_file_tag}_errors.log" "${output_dir}/opdb__${v_file_tag}_errors.log"
   if [[ -f VERSION.txt ]]; then
     cp VERSION.txt "${output_dir}/opdb__${v_file_tag}_version.txt"
   else
     echo "No Version file found" >  "${output_dir}/opdb__${v_file_tag}_version.txt"
   fi
-  local error_count; error_count=$(wc -l < "${output_dir}/opdb__${v_file_tag}_errors.log")
+  local error_count=$(wc -l < "${output_dir}/opdb__${v_file_tag}_errors.log")
   if [[ ${error_count} -ne 0 ]]; then
     v_err_tag="_ERROR"
     retval=1
@@ -285,8 +285,8 @@ function compress_dma_files() {
     echo "Please rerun the extract after correcting the error condition."
   fi
 
-  local tarfile_name; tarfile_name="opdb_${database_type}_mysql__${v_file_tag}${v_err_tag}.tar"
-  local zipfile_name; zipfile_name="opdb_${database_type}_mysql__${v_file_tag}${v_err_tag}.zip"
+  local tarfile_name="opdb_${database_type}_mysql__${v_file_tag}${v_err_tag}.tar"
+  local zipfile_name="opdb_${database_type}_mysql__${v_file_tag}${v_err_tag}.zip"
 
   locale > "${output_dir}/opdb__${v_file_tag}_locale.txt"
 
@@ -301,7 +301,7 @@ function compress_dma_files() {
 
   for file in $(ls -1 opdb*"${v_file_tag}".csv opdb*"${v_file_tag}"*.log opdb*"${v_file_tag}"*.txt)
   do
-    local md5_val; md5_val=$(${md5_cmd} "${file}" | cut -d ' ' -f "${md5_col}")
+    local md5_val=$(${md5_cmd} "${file}" | cut -d ' ' -f "${md5_col}")
     echo "${database_type}|${md5_val}|${file}"  >> "opdb__manifest__${v_file_tag}.txt"
   done
 
