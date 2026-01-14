@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 # Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,553 +15,606 @@
 
 ### Setup directories needed for execution
 #############################################################################
-OpVersion="4.3.45"
+
+
+# Global variables and constants
+dma_version="4.3.45"
+all_dbs=""
+collection_user_name=""
+collection_user_pass=""
+conn_str=""
+connect_string=""
+database_service="postgres"
+database_type="postgres"
 dbmajor=""
+extra_ssh_args=()
+host_name=""
+log_dir=""
+manual_unique_id=""
+output_dir=""
+port=""
+script_dir=""
+specs_path=""
+sql_cmd=""
+sql_dir=""
+sql_output_dir=""
+stats_source=""
+tmp_dir=""
+vm_user_name=""
+grep_cmd=""
+sed_cmd=""
+md5_cmd=""
+md5_col=1
+zip_cmd=""
+gzip_cmd=""
 
-LOCALE=$(echo $LANG | cut -d '.' -f 1)
-export LANG=C
-export LANG=${LOCALE}.UTF-8
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-SQLCMD=psql
-OUTPUT_DIR=${SCRIPT_DIR}/output; export OUTPUT_DIR
-SQLOUTPUT_DIR=${OUTPUT_DIR}; export SQLOUTPUT_DIR
-TMP_DIR=${SCRIPT_DIR}/tmp
-LOG_DIR=${SCRIPT_DIR}/log
-SQL_DIR=${SCRIPT_DIR}/sql
-DBTYPE=""
+function check_dependencies() {
+  local dependencies=(
+    "psql"
+    "grep"
+    "sed"
+    "cut"
+    "tr"
+    "date"
+    "iconv"
+    "wc"
+    "tar"
+    "gzip"
+  )
 
-GREP=$(which grep)
-SED=$(which sed)
-MD5SUM=$(which md5sum)
-MD5COL=1
+  local cmd_not_found=0
+  for cmd in "${dependencies[@]}"; do
+    if ! command -v "${cmd}" &> /dev/null; then
+      echo "ERROR: Required command '\${cmd}' not found in PATH." >&2
+      cmd_not_found=1
+    fi
+  done
 
-if [ "$(uname)" = "SunOS" ]
-then
-      GREP=/usr/xpg4/bin/grep
-      SED=/usr/xpg4/bin/sed
-fi
-
-if [ "$(uname)" = "HP-UX" ]; then
-  if [ -f /usr/local/bin/md5 ]; then
-    MD5SUM=/usr/local/bin/md5
-    MD5COL=4
+  # Special check for md5sum equivalents used in the script
+  if ! command -v "md5sum" &> /dev/null && ! command -v "md5" &> /dev/null && ! command -v "csum" &> /dev/null; then
+    echo "ERROR: Required command for checksums ('md5sum', 'md5', or 'csum') not found." >&2
+    cmd_not_found=1
   fi
-fi
 
-ZIP=$(which zip 2>/dev/null)
-if [ "${ZIP}" = "" ]
- then
-  GZIP=$(which gzip 2>/dev/null)
-fi
-
-if [ ! -d ${LOG_DIR} ]; then
-   mkdir -p ${LOG_DIR}
-fi
-if [ ! -d ${OUTPUT_DIR} ]; then
-   mkdir -p ${OUTPUT_DIR}
-fi
-
-
-function checkPlatform {
-
-if [ "$1" == "postgres" ];
-   then SQLCMD=psql
-fi
-
- # Check if running on Windows Subsystem for Linux
- ISWIN=$(uname -a | grep -i microsoft |wc -l)
- if [ ${ISWIN} -eq 1 ]
-    then
-      SQL_DIR=$(wslpath -a -w ${SCRIPT_DIR})/sql
-      SQLOUTPUT_DIR=$(wslpath -a -w ${SQLOUTPUT_DIR})
-
- fi
-
- # Check if running on Cygwin
- ISCYG=$(uname -a | grep Cygwin | wc -l)
- if [ ${ISCYG} -eq 1 ]
-   then
-      SQL_DIR=$(cygpath -w ${SCRIPT_DIR})/sql
-      SQLOUTPUT_DIR=$(cygpath -w ${SQLOUTPUT_DIR})
-      SQLCMD=${SQLCMD}.exe
- fi
+  if [[ ${cmd_not_found} -eq 1 ]]; then
+    exit 1
+  fi
 }
 
-### Import logging & helper functions
-#############################################################################
-function checkVersionPg {
-    connectString="$1"
-    OpVersion=$2
-    user=$(echo ${connectString} | cut -d '/' -f 1)
-    pass=$(echo ${connectString} | cut -d '/' -f 2 | cut -d '@' -f 1)
-    host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
-    port=$(echo ${connectString} | cut -d ':' -f 2 | cut -d '/' -f 1)
-    db=$(echo ${connectString} | cut -d '/' -f 5)
 
-    export PGPASSWORD="${pass}"
-    if ! [ -x "$(command -v ${SQLCMD})" ]; then
-      echo "Could not find ${SQLCMD} command. Source in environment and try again"
-      echo "Exiting..."
-      exit 1
+# Define global variables that define how/what executables to use based on the platform on which we are running.
+function init_variables() {
+  local LOCALE=$(echo $LANG | cut -d '.' -f 1)
+  export LANG=C
+  export LANG=${LOCALE}.UTF-8
+
+  script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+  sql_cmd=psql
+  output_dir=${script_dir}/output; export output_dir
+  sql_output_dir=${output_dir}; export sql_output_dir
+  tmp_dir=${script_dir}/tmp
+  log_dir=${script_dir}/log
+  sql_dir=${script_dir}/sql
+  database_type="postgres"
+
+  grep_cmd=$(which grep)
+  sed_cmd=$(which sed)
+  md5_cmd=$(which md5sum)
+  md5_col=1
+
+  if [[ "$(uname)" = "SunOS" ]]; then
+    grep_cmd=/usr/xpg4/bin/grep
+    sed_cmd=/usr/xpg4/bin/sed
+  fi
+
+  if [[ "$(uname)" = "HP-UX" ]]; then
+    if [[ -f /usr/local/bin/md5 ]]; then
+      md5_cmd=/usr/local/bin/md5
+      md5_col=4
     fi
+  fi
 
-    # SELECT 'DMAFILETAG~' , version();
-    dbVersion=$(PGPASSWORD="$pass" ${SQLCMD} -X --user=$user -h $host -w -p $port -d "${db}" -t --no-align  2>&1 << EOF
+  zip_cmd=$(which zip 2>/dev/null)
+  if [[ "${zip_cmd}" = "" ]]; then
+    gzip_cmd=$(which gzip 2>/dev/null)
+  fi
+
+  if [[ ! -d ${log_dir} ]]; then
+    mkdir -p ${log_dir}
+  fi
+  if [[ ! -d ${output_dir} ]]; then
+    mkdir -p ${output_dir}
+  fi
+
+  # Check if running on Windows Subsystem for Linux
+  local is_windows=$(uname -a | grep -i microsoft |wc -l)
+  if [[ ${is_windows} -eq 1 ]]; then
+    sql_dir=$(wslpath -a -w ${script_dir})/sql
+    sql_output_dir=$(wslpath -a -w ${sql_output_dir})
+  fi
+
+  # Check if running on Cygwin
+  local is_cygwin=$(uname -a | grep Cygwin | wc -l)
+  if [[ ${is_cygwin} -eq 1 ]]; then
+    sql_dir=$(cygpath -w ${script_dir})/sql
+    sql_output_dir=$(cygpath -w ${sql_output_dir})
+    sql_cmd=${sql_cmd}.exe
+  fi
+}
+
+function check_version() {
+  local connect_string="$1"
+  local dma_version=$2
+  local retcd=""
+  local user=$(echo "${connect_string}" | cut -d '/' -f 1)
+  local pass=$(echo "${connect_string}" | cut -d '/' -f 2 | cut -d '@' -f 1)
+  local host=$(echo "${connect_string}" | cut -d '/' -f 4 | cut -d ':' -f 1)
+  local port=$(echo "${connect_string}" | cut -d ':' -f 2 | cut -d '/' -f 1)
+  local db=$(echo "${connect_string}"   | cut -d '/' -f 5)
+
+  export PGPASSWORD="${pass}"
+  if ! [[ -x "$(command -v ${sql_cmd})" ]]; then
+    echo "Could not find ${sql_cmd} command. Source in environment and try again"
+    echo "Exiting..."
+    exit 1
+  fi
+
+  local db_version=$(PGPASSWORD="${pass}" ${sql_cmd} -X --user=${user} -h ${host} -w -p ${port} -d "${db}" -t --no-align  2>&1 << EOF
 SELECT current_setting('server_version_num');
 EOF
 )
-    retcd=$?
-    if [[ $retcd -ne 0 ]]
-    then
-	    echo "Error connecting to the target database ${connectString} ."
-	    echo "Connection attempt returned : ${dbVersion}"
-	    return $retcd
-    fi
+  local retcd=$?
+  if [[ $retcd -ne 0 ]] ; then
+	  echo "Error connecting to the target database ${connect_string} ."
+	  echo "Connection attempt returned : ${db_version}"
+	  return $retcd
+  fi
 
-    echo 'DMAFILETAG~'${dbVersion}'|'${dbVersion}'_'${OpVersion}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
+  echo 'DMAFILETAG~'${db_version}'|'${db_version}'_'${dma_version}'_'${host}'-'${port}'_'${db}'_'${db}'_'$(date +%y%m%d%H%M%S)
 }
 
 
-function executeOPPg {
-connectString="$1"
-OpVersion=$2
-V_FILE_TAG=$3
-V_MANUAL_ID="${4}"
-V_PGVERSION="${5}"
-allDbs="${6}"
-user=$(echo "${connectString}" | cut -d '/' -f 1)
-pass=$(echo "${connectString}" | cut -d '/' -f 2 | cut -d '@' -f 1)
-host=$(echo "${connectString}" | cut -d '/' -f 4 | cut -d ':' -f 1)
-port=$(echo "${connectString}" | cut -d ':' -f 2 | cut -d '/' -f 1)
-db=$(echo "${connectString}" | cut -d '/' -f 5)
+function execute_dma() {
+  local connect_string="${1}"
+  local dma_version="${2}"
+  local v_file_tag="${3}"
+  local v_manual_id="${4}"
+  local v_pgversion="${5}"
+  local all_dbs="${6}"
+  local user=$(echo "${connect_string}" | cut -d '/' -f 1)
+  local pass=$(echo "${connect_string}" | cut -d '/' -f 2 | cut -d '@' -f 1)
+  local host=$(echo "${connect_string}" | cut -d '/' -f 4 | cut -d ':' -f 1)
+  local port=$(echo "${connect_string}" | cut -d ':' -f 2 | cut -d '/' -f 1)
+  local db=$(echo "${connect_string}"  | cut -d '/' -f 5)
 
-if ! [ -x "$(command -v ${SQLCMD})" ]; then
-  echo "Could not find ${SQLCMD} command. Source in environment and try again"
-  echo "Exiting..."
-  exit 1
-fi
+  if ! [[ -x "$(command -v ${sql_cmd})" ]]; then
+    echo "Could not find ${sql_cmd} command. Source in environment and try again"
+    echo "Exiting..."
+    exit 1
+  fi
 
 
-DMA_SOURCE_ID=$(PGPASSWORD="$pass" ${SQLCMD} -X --user=$user  -h $host -w -p $port -d "$db" -t --no-align <<EOF
-SELECT system_identifier FROM pg_control_system();
+  local dma_source_id=$(PGPASSWORD="${pass}" ${sql_cmd} -X --user=${user}  -h ${host} -w -p ${port} -d "${db}" -t --no-align <<EOF
+  SELECT system_identifier FROM pg_control_system();
 EOF
-)
+  )
 
 
-if [[ "${V_MANUAL_ID}" == "" ]]
-then
-	V_MANUAL_ID="NA"
-fi
+  if [[ "${v_manual_id}" == "" ]]
+  then
+    v_manual_id="NA"
+  fi
 
-if [[ "${DMA_SOURCE_ID}" == "" ]]
-then
-	DMA_SOURCE_ID="NA"
-fi
+  if [[ "${dma_source_id}" == "" ]]
+  then
+    dma_source_id="NA"
+  fi
 
-# Only run once per VM, instead of once per DB.
-specsOut="output/opdb__pg_db_machine_specs_${host}.csv"
-if [[ ! -f "${specsOut}" ]] ; then
-      host=$(echo ${connectString} | cut -d '/' -f 4 | cut -d ':' -f 1)
-      ./db-machine-specs.sh "$host" "$vmUserName" "${V_FILE_TAG}" "${DMA_SOURCE_ID}" "${V_MANUAL_ID}" "${specsOut}" "${extraSSHArgs[@]}"
-fi
+  # Only run once per VM, instead of once per DB.
+  local vm_specs_output_file="output/opdb__pg_db_machine_specs_${host}.csv"
+  if [[ ! -f "${vm_specs_output_file}" ]] ; then
+        host=$(echo "${connect_string}" | cut -d '/' -f 4 | cut -d ':' -f 1)
+        ./db-machine-specs.sh "$host" "$vmUserName" "${v_file_tag}" "${dma_source_id}" "${v_manual_id}" "${vm_specs_output_file}" "${extra_ssh_args[@]}"
+  fi
 
-# If allDbs = "Y" loop through all the databases in the instance and create a collection for each one, then exit.
-if [[ "${allDbs}" == "Y" ]] ;
-then
-      export OLDIFS=$IFS
-      IFS=$(echo -en "\n\b")
-      echo PGPASSWORD="${pass}" ${SQLCMD}  --user=$user  -h $host -w -p $port -d "${db}" -t --no-align
-      dblist=$(PGPASSWORD="${pass}" ${SQLCMD}  --user=$user  -h $host -w -p $port -d "${db}" -t --no-align <<EOF
+  # If all_dbs = "Y" loop through all the databases in the instance and create a collection for each one, then exit.
+  if [[ "${all_dbs}" == "Y" ]] ; then
+    export OLDIFS=$IFS
+    IFS=$(echo -en "\n\b")
+    echo PGPASSWORD="${pass}" ${sql_cmd}  --user=${user}  -h ${host} -w -p ${port} -d "${db}" -t --no-align
+    local dblist=$(PGPASSWORD="${pass}" ${sql_cmd}  --user=${user}  -h ${host} -w -p ${port} -d "${db}" -t --no-align <<EOF
 SELECT datname FROM pg_database WHERE datname NOT LIKE 'template%' ORDER BY datname;
 EOF
-)
+    )
 
-      for db in ${dblist}
-	do
-            export DMA_RECURSION=1
-            export IFS=$OLDIFS
-  	    ./collect-data.sh --connectionStr ${user}/${pass}@//${host}:${port}/"${db}"  --manualUniqueId ${V_MANUAL_ID}  --specsPath "$specsOut" --allDbs N
-	done
-        if [ -f ${specsOut} ]; then
-          rm ${specsOut}
-        fi
-	exit
-else
-# If given a database name, create a collection for that one database.
-export PGPASSWORD="$pass"
-${SQLCMD} -X --user=${user} -d "${db}" -h ${host} -w -p ${port}  --no-align --echo-errors 2>output/opdb__stderr_${V_FILE_TAG}.log <<EOF
-\set VTAG ${V_FILE_TAG}
-\set PKEY '\'${V_FILE_TAG}\''
-\set DMA_SOURCE_ID '\'${DMA_SOURCE_ID}\''
-\set DMA_MANUAL_ID '\'${V_MANUAL_ID}\''
-\set VPGVERSION ${V_PGVERSION}
-\i sql/op_collect.sql
+    for db in ${dblist}
+    do
+      export dma_recursion=1
+      export IFS=$OLDIFS
+      ./collect-data.sh --connectionStr ${user}/${pass}@//${host}:${port}/"${db}"  --manualUniqueId ${v_manual_id}  --specsPath "$vm_specs_output_file" --allDbs N
+    done
+    if [[ -f ${vm_specs_output_file} ]]; then
+      rm ${vm_specs_output_file}
+    fi
+    exit
+  else
+  # If given a database name, create a collection for that one database.
+  export PGPASSWORD="$pass"
+  ${sql_cmd} -X --user=${user} -d "${db}" -h ${host} -w -p ${port}  --no-align --echo-errors 2>output/opdb__stderr_${v_file_tag}.log <<EOF
+  \set VTAG ${v_file_tag}
+  \set PKEY '\'${v_file_tag}\''
+  \set DMA_SOURCE_ID '\'${dma_source_id}\''
+  \set DMA_MANUAL_ID '\'${v_manual_id}\''
+  \set VPGVERSION ${v_pgversion}
+  \i sql/op_collect.sql
 EOF
 
-fi
+  fi
 }
 
 
 # Check the output files for error messages
-function createErrorLog {
-V_FILE_TAG=$1
-echo "Checking for errors..."
-if [ "$DBTYPE" == "postgres" ]; then
-$GREP  -i -E 'ERROR:' ${OUTPUT_DIR}/opdb__stderr_${V_FILE_TAG}.log > ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log
-retval=$?
-fi
-if [ ! -f  ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ]; then
-  echo "Error creating error log.  Exiting..."
-  return $retval
-fi
+function create_error_log() {
+  local v_file_tag=$1
+  echo "Checking for errors..."
+  if [[ "$database_type" == "postgres" ]]; then
+    $grep_cmd  -i -E 'ERROR:' ${output_dir}/opdb__stderr_${v_file_tag}.log > ${log_dir}/opdb__${v_file_tag}_errors.log
+    local retval=$?
+  fi
+  if [[ ! -f  ${log_dir}/opdb__${v_file_tag}_errors.log ]]; then
+    echo "Error creating error log.  Exiting..."
+    return $retval
+  fi
 }
 
 
-function cleanupOpOutput  {
-V_FILE_TAG=$1
-echo "Preparing files for compression."
-for outfile in  ${OUTPUT_DIR}/opdb*${V_FILE_TAG}.csv
-do
- if [ -f $outfile ] ; then
-  if [ $(uname) = "SunOS" ]
-  then
-    ${SED}  's/ *\|/\|/g;s/\| */\|/g;/^$/d;/^\+/d;s/^|//g;s/|\r//g'  ${outfile} > sed_${V_FILE_TAG}.tmp
-    cp sed_${V_FILE_TAG}.tmp ${outfile}
-    rm sed_${V_FILE_TAG}.tmp
-  else if [ $(uname) = "AIX" ]
-  then
-    ${SED} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
-    cp sed_${V_FILE_TAG}.tmp ${outfile}
-    rm sed_${V_FILE_TAG}.tmp
-  else if [ "$(uname)" = "HP-UX" ]
-  then
-    ${SED} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${V_FILE_TAG}.tmp
-    cp sed_${V_FILE_TAG}.tmp ${outfile}
-    rm sed_${V_FILE_TAG}.tmp
-  else if [ "$(uname)" = "Darwin" ]
-  then
-    ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/' ${outfile} > sed_${V_FILE_TAG}.tmp
-    cp sed_${V_FILE_TAG}.tmp ${outfile}
-    rm sed_${V_FILE_TAG}.tmp
+function cleanup_dma_output() {
+  local v_file_tag=$1
+  echo "Preparing files for compression."
+  for outfile in  ${output_dir}/opdb*${v_file_tag}.csv
+  do
+  if [[ -f $outfile ]] ; then
+    if [[ $(uname) = "SunOS" ]]
+    then
+      ${sed_cmd}  's/ *\|/\|/g;s/\| */\|/g;/^$/d;/^\+/d;s/^|//g;s/|\r//g'  ${outfile} > sed_${v_file_tag}.tmp
+      cp sed_${v_file_tag}.tmp ${outfile}
+      rm sed_${v_file_tag}.tmp
+    else
+      if [[ $(uname) = "AIX" ]] ; then
+        ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${v_file_tag}.tmp
+        cp sed_${v_file_tag}.tmp ${outfile}
+        rm sed_${v_file_tag}.tmp
+      else
+        if [[ "$(uname)" = "HP-UX" ]] ; then
+          ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${v_file_tag}.tmp
+          cp sed_${v_file_tag}.tmp ${outfile}
+          rm sed_${v_file_tag}.tmp
+        else
+          if [[ "$(uname)" = "Darwin" ]] ; then
+            ${sed_cmd} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/' ${outfile} > sed_${v_file_tag}.tmp
+            cp sed_${v_file_tag}.tmp ${outfile}
+            rm sed_${v_file_tag}.tmp
+          else
+            ${sed_cmd} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 s/[a-z]/\U&/g' ${outfile} > sed_${v_file_tag}.tmp
+            cp sed_${v_file_tag}.tmp ${outfile}
+            rm sed_${v_file_tag}.tmp
+          fi
+        fi
+      fi
+    fi
+  fi
+  done
+}
+
+function compress_dma_files() {
+  local v_file_tag=$1
+  local v_hostname=$2
+  local v_err_tag=""
+  local retval
+
+  echo ""
+  echo "Archiving output files with tag ${v_file_tag}"
+  local current_working_dir=$(pwd)
+  cp ${log_dir}/opdb__${v_file_tag}_errors.log ${output_dir}/opdb__${v_file_tag}_errors.log
+  if [[ -f VERSION.txt ]]; then
+    cp VERSION.txt ${output_dir}/opdb__${v_file_tag}_version.txt
   else
-    ${SED} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 s/[a-z]/\U&/g' ${outfile} > sed_${V_FILE_TAG}.tmp
-    cp sed_${V_FILE_TAG}.tmp ${outfile}
-    rm sed_${V_FILE_TAG}.tmp
+    echo "No Version file found" >  ${output_dir}/opdb__${v_file_tag}_version.txt
   fi
+  # Copy machine specs file to final file name.
+  if [[ -f ${output_dir}/opdb__pg_db_machine_specs_${v_hostname}.csv ]]; then
+    cp ${output_dir}/opdb__pg_db_machine_specs_${v_hostname}.csv ${output_dir}/opdb__pg_db_machine_specs_${v_file_tag}.csv
   fi
+  # If not a recursive call, remove the db_machine_specs file
+  if [[ ${dma_recursion} -ne 1 ]] && [[ -f ${output_dir}/opdb__pg_db_machine_specs_${v_hostname}.csv ]]; then
+    rm  ${output_dir}/opdb__pg_db_machine_specs_${v_hostname}.csv
   fi
+  local error_count=$(wc -l < ${output_dir}/opdb__${v_file_tag}_errors.log)
+  if [[ ${error_count} -ne 0 ]]
+  then
+    v_err_tag="_ERROR"
+    retval=1
+    echo "Errors reported during collection:"
+    cat ${output_dir}/opdb__${v_file_tag}_errors.log
+    echo " "
+    echo "Please rerun the extract after correcting the error condition."
   fi
- fi
-done
+
+  local tarfile_name=opdb_${database_type}_${database_type}__${v_file_tag}${v_err_tag}.tar
+  local zipfile_name=opdb_${database_type}_${database_type}__${v_file_tag}${v_err_tag}.zip
+
+  locale > ${output_dir}/opdb__${v_file_tag}_locale.txt
+
+  echo "dbmajor = ${dbmajor}"  >> ${output_dir}/opdb__defines__${v_file_tag}.csv
+  echo "MANUAL_ID : " ${manual_unique_id} >> ${output_dir}/opdb__defines__${v_file_tag}.csv
+  echo "zipfile_name: " $zipfile_name >> ${output_dir}/opdb__defines__${v_file_tag}.csv
+
+  cd ${output_dir}
+  if [[ -f opdb__manifest__${v_file_tag}.txt ]]; then
+    rm opdb__manifest__${v_file_tag}.txt
+  fi
+
+  for file in $(ls -1  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt)
+  do
+    local md5_val=$(${md5_cmd} $file | cut -d ' ' -f ${md5_col})
+    echo "${database_type}|${md5_val}|${file}"  >> opdb__manifest__${v_file_tag}.txt
+  done
+
+  if [[ ! "${zip_cmd}" = "" ]]; then
+    ${zip_cmd} ${zipfile_name}  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt
+    output_file=${zipfile_name}
+  else
+    tar cvf ${tarfile_name}  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt
+    ${gzip_cmd} ${tarfile_name}
+    output_file=${tarfile_name}.gz
+  fi
+
+  if [[ -f ${output_file} ]]; then
+    rm opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt
+  fi
+
+  cd "${current_working_dir}"
+  echo ""
+  echo "Step completed."
+  echo ""
+  return ${retval}
 }
 
-function compressOpFiles  {
-V_FILE_TAG=$1
-V_HOSTNAME=$2
-V_ERR_TAG=""
-echo ""
-echo "Archiving output files with tag ${V_FILE_TAG}"
-CURRENT_WORKING_DIR=$(pwd)
-cp ${LOG_DIR}/opdb__${V_FILE_TAG}_errors.log ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
-if [ -f VERSION.txt ]; then
-  cp VERSION.txt ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
-else
-  echo "No Version file found" >  ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_version.txt
-fi
-# Copy machine specs file to final file name.
-if [ -f ${OUTPUT_DIR}/opdb__pg_db_machine_specs_${V_HOSTNAME}.csv ]; then
-  cp ${OUTPUT_DIR}/opdb__pg_db_machine_specs_${V_HOSTNAME}.csv ${OUTPUT_DIR}/opdb__pg_db_machine_specs_${V_FILE_TAG}.csv
-fi
-# If not a recursive call, remove the db_machine_specs file
-if [[ ${DMA_RECURSION} -ne 1 ]] && [[ -f ${OUTPUT_DIR}/opdb__pg_db_machine_specs_${V_HOSTNAME}.csv ]]; then
-  rm  ${OUTPUT_DIR}/opdb__pg_db_machine_specs_${V_HOSTNAME}.csv
-fi
-ERRCNT=$(wc -l < ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log)
-if [[ ${ERRCNT} -ne 0 ]]
-then
-  V_ERR_TAG="_ERROR"
-  retval=1
-  echo "Errors reported during collection:"
-  cat ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_errors.log
-  echo " "
-  echo "Please rerun the extract after correcting the error condition."
-fi
-
-TARFILE=opdb_${DBTYPE}_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.tar
-ZIPFILE=opdb_${DBTYPE}_${DIAGPACKACCESS}__${V_FILE_TAG}${V_ERR_TAG}.zip
-
-locale > ${OUTPUT_DIR}/opdb__${V_FILE_TAG}_locale.txt
-
-echo "dbmajor = ${dbmajor}"  >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
-echo "MANUAL_ID : " ${MANUAL_ID} >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
-echo "ZIPFILE: " $ZIPFILE >> ${OUTPUT_DIR}/opdb__defines__${V_FILE_TAG}.csv
-
-cd ${OUTPUT_DIR}
-if [ -f opdb__manifest__${V_FILE_TAG}.txt ];
-then
-  rm opdb__manifest__${V_FILE_TAG}.txt
-fi
-
-for file in $(ls -1  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt)
-do
- MD5=$(${MD5SUM} $file | cut -d ' ' -f ${MD5COL})
- echo "${DBTYPE}|${MD5}|${file}"  >> opdb__manifest__${V_FILE_TAG}.txt
-done
-
-if [ ! "${ZIP}" = "" ]
-then
-  $ZIP $ZIPFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
-  OUTFILE=$ZIPFILE
-else
-  tar cvf $TARFILE  opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
-  $GZIP $TARFILE
-  OUTFILE=${TARFILE}.gz
-fi
-
-if [ -f $OUTFILE ]
-then
-  rm opdb*${V_FILE_TAG}.csv opdb*${V_FILE_TAG}*.log opdb*${V_FILE_TAG}*.txt
-fi
-
-cd ${CURRENT_WORKING_DIR}
-echo ""
-echo "Step completed."
-echo ""
-return $retval
-}
-
-function getVersion  {
-  if [ -f VERSION.txt ]; then
+function get_version() {
+  local githash
+  if [[ -f VERSION.txt ]]; then
    githash=$(cat VERSION.txt | cut -d '(' -f 2 | tr -d ')' )
   else githash="NONE"
   fi
-  echo "$githash"
+  echo "${githash}"
 }
 
-function printExtractorVersion
-{
-if [ "$1" == "NONE" ];
-then
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "This appears to be an unsupported version of this code. "
-  echo "Please download the latest stable version from "
-  echo "https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-postgres.zip"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-  echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-else
-  echo "Using release version $1"
-fi
-
+function print_extractor_version() {
+  if [[ "$1" == "NONE" ]];
+  then
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "This appears to be an unsupported version of this code. "
+    echo "Please download the latest stable version from "
+    echo "https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-postgres.zip"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+  else
+    echo "Using release version $1"
+  fi
 }
 
 
-function printUsage()
-{
-echo " Usage:"
-echo "  Parameters"
-echo ""
-echo "  Connection definition must one of:"
-echo "      {"
-echo "        --connectionStr       Connection string formatted as {user}/{password}@//{db host}:{listener port}/{service name}"
-echo "       or"
-echo "        --hostName            Database server host name"
-echo "        --port                Database listener port"
-echo "        --databaseService     Database service name (Optional. Defaults to 'postgres'.)"
-echo "        --collectionUserName  Database user name."
-echo "        --collectionUserPass  Database password"
-echo "        --allDbs              Collect data for all databases (Y/N).  Optional. Defaults to 'Y'.  Set to N to collect for only the database service given."
-echo "      }"
-echo
-echo "  Additional Parameters:"
-echo "        --manualUniqueId      (Optional) A short string to be attached to this collection.  Use only when directed."
-echo
-echo "  VM collection definition (optional):"
-echo "        --vmUserName          Username on the VM the Database is running on."
-echo "                              Must be supplied to collect hardware configuration of the database server if"
-echo "                              the collection script is not run directly on the database server."
-echo "        --extraSSHArg         Extra args to be passed as is to ssh. Can be specified multiple times."
-echo
-echo " Example:"
-echo
-echo " To collect data for a single database:"
-echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --allDbs N"
-echo " or"
-echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --allDbs N"
-echo
-echo " To collect data for all databases in the instance:"
-echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} "
-echo " or"
-echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name}"
+function print_usage() {
+  echo " Usage:"
+  echo "  Parameters"
+  echo ""
+  echo "  Connection definition must one of:"
+  echo "      {"
+  echo "        --connectionStr       Connection string formatted as {user}/{password}@//{db host}:{listener port}/{service name}"
+  echo "       or"
+  echo "        --hostName            Database server host name"
+  echo "        --port                Database listener port"
+  echo "        --databaseService     Database service name (Optional. Defaults to 'postgres'.)"
+  echo "        --collectionUserName  Database user name."
+  echo "        --collectionUserPass  Database password"
+  echo "        --allDbs              Collect data for all databases (Y/N).  Optional. Defaults to 'Y'.  Set to N to collect for only the database service given."
+  echo "      }"
+  echo
+  echo "  Additional Parameters:"
+  echo "        --manualUniqueId      (Optional) A short string to be attached to this collection.  Use only when directed."
+  echo
+  echo "  VM collection definition (optional):"
+  echo "        --vmUserName          Username on the VM the Database is running on."
+  echo "                              Must be supplied to collect hardware configuration of the database server if"
+  echo "                              the collection script is not run directly on the database server."
+  echo "        --extraSSHArg         Extra args to be passed as is to ssh. Can be specified multiple times."
+  echo
+  echo " Example:"
+  echo
+  echo " To collect data for a single database:"
+  echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --all_dbs N"
+  echo " or"
+  echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --allDbs N"
+  echo
+  echo " To collect data for all databases in the instance:"
+  echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} "
+  echo " or"
+  echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name}"
 }
-### Validate input
 
-hostName=""
-port=""
-databaseService="postgres"
-collectionUserName=""
-collectionUserPass=""
-DBTYPE="postgres"
-statsSrc=""
-connStr=""
-manualUniqueId=""
-vmUserName=""
-extraSSHArgs=()
-specsPath=""
-allDbs="Y"
+function parse_parameters() {
+  if [[ $(($# & 1)) == 1 ]] ;
+  then
+    echo "Invalid number of parameters $# $@"
+    print_usage
+    exit 1
+  fi
 
- if [[ $(($# & 1)) == 1 ]] ;
- then
-  echo "Invalid number of parameters "
-  printUsage
-  exit
- fi
+  while (( "$#" )); do
+    if   [[ "$1" == "--hostName" ]];           then host_name="${2}"
+    elif [[ "$1" == "--port" ]];               then port="${2}"
+    elif [[ "$1" == "--databaseService" ]];    then database_service="${2}"
+    elif [[ "$1" == "--collectionUserName" ]]; then collection_user_name="${2}"
+    elif [[ "$1" == "--collectionUserPass" ]]; then collection_user_pass="${2}"
+    elif [[ "$1" == "--connectionStr" ]];      then conn_str="${2}"
+    elif [[ "$1" == "--manualUniqueId" ]];     then manual_unique_id="${2}"
+    elif [[ "$1" == "--vmUserName" ]];         then vm_user_name="${2}"
+    elif [[ "$1" == "--extraSSHArg" ]];        then extra_ssh_args+=("${2}")
+    elif [[ "$1" == "--specsPath" ]];          then specs_path=("${2}")
+    elif [[ "$1" == "--allDbs" ]];             then all_dbs=("${2}")
+    else
+      echo "Unknown parameter ${1}"
+      print_usage
+      exit 1
+    fi
+    shift 2
+  done
 
- while (( "$#" )); do
-	 if   [[ "$1" == "--hostName" ]];           then hostName="${2}"
-	 elif [[ "$1" == "--port" ]];               then port="${2}"
-	 elif [[ "$1" == "--databaseService" ]];    then databaseService="${2}"
-	 elif [[ "$1" == "--collectionUserName" ]]; then collectionUserName="${2}"
-	 elif [[ "$1" == "--collectionUserPass" ]]; then collectionUserPass="${2}"
-	 elif [[ "$1" == "--connectionStr" ]];      then connStr="${2}"
-	 elif [[ "$1" == "--manualUniqueId" ]];     then manualUniqueId="${2}"
-	 elif [[ "$1" == "--vmUserName" ]];         then vmUserName="${2}"
-	 elif [[ "$1" == "--extraSSHArg" ]];        then extraSSHArgs+=("${2}")
-	 elif [[ "$1" == "--specsPath" ]];          then specsPath=("${2}")
-	 elif [[ "$1" == "--allDbs" ]];             then allDbs=("${2}")
-	 else
-		 echo "Unknown parameter ${1}"
-		 printUsage
-		 exit
-	 fi
-	 shift 2
- done
-
-
-DIAGPACKACCESS="postgres"
-
- if [[ "${connStr}" == "" ]] ; then
-	 if [[ "${hostName}" != "" && "${port}" != "" && "${collectionUserName}" != "" && "${collectionUserPass}" != "" ]] ; then
-		 baseConnStr="${collectionUserName}/${collectionUserPass}@//${hostName}:${port}"
-		 if [[ "${databaseService}" != "" ]]; then
-    		 	connStr="${baseConnStr}/${databaseService}"
-		 else connStr="${baseConnStr}"
-		 fi
-	 else
-		 echo "Connection information incomplete"
-		 printUsage
-		 exit
-	 fi
- else
-     hostName=$(echo ${connStr} | cut -d '/' -f 4 | cut -d ':' -f 1)
- fi
+  if [[ "${conn_str}" == "" ]] ; then
+    if [[ "${host_name}" != "" && "${port}" != "" && "${collection_user_name}" != "" && "${collection_user_pass}" != "" ]] ; then
+      local base_conn_str="${collection_user_name}/${collection_user_pass}@//${host_name}:${port}"
+      if [[ "${database_service}" != "" ]]; then
+            conn_str="${base_conn_str}/${database_service}"
+      else conn_str="${base_conn_str}"
+      fi
+    else
+      echo "Connection information incomplete"
+      print_usage
+      exit 1
+    fi
+  else
+      host_name=$(echo ${conn_str} | cut -d '/' -f 4 | cut -d ':' -f 1)
+  fi
 
 
- if [[ "${allDbs}" != "Y" && "${allDbs}" != "N" ]] ; then
-	 echo "Invalid value supplied for parameter allDbs.  Must be Y or N."
-         printUsage
-	 exit 255
- fi
+  if [[ "${all_dbs}" != "Y" && "${all_dbs}" != "N" ]] ; then
+    echo "Invalid value supplied for parameter all_dbs.  Must be Y or N."
+    print_usage
+    exit 255
+  fi
 
- if [[ "${manualUniqueId}" != "" && "${manualUniqueId}" != "NA" ]] ; then
-    	     manualUniqueId=$(echo "${manualUniqueId}" | iconv -t ascii//TRANSLIT | sed -E -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
- else manualUniqueId='NA'
+  if [[ "${manual_unique_id}" != "" ]] ; then
+    case "$(uname)" in
+      "Solaris" )
+            manual_unique_id=$(echo "${manual_unique_id}" | iconv -t ascii//TRANSLIT | ${sed_cmd} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+            ;;
+      ( "Darwin" | "Linux" )
+            manual_unique_id=$(echo "${manual_unique_id}" | iconv -t ascii//TRANSLIT | ${sed_cmd} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+            ;;
+      "HP-UX" )
+            manual_unique_id=$(echo "${manual_unique_id}" | tr -c '[:alnum:]\n' '-' |  sed 's/^-//; s/-$//' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+            ;;
+      "AIX" )
+            manual_unique_id=$(echo "${manual_unique_id}" | iconv -f $(locale charmap) -t UTF-8 | tr -c '[:alnum:]\n' '-' |  sed 's/^-//; s/-$//' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
+            ;;
+      esac
+  else
+    manual_unique_id='NA'
+  fi
+}
 
- fi
+
+function check_db_connection() {
+  #echo "Checking connection ${connect_string}"
+  local sqlcmd_result=$(check_version "${connect_string}" "${dma_version}" )
+  local retval=$?
+  if [[ $retval -ne 0 ]]; then
+    echo " "
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "Unable to connect to the target Postgres database.  Please verify the connection information and target database status."
+    echo "Got ${sqlcmd_result}"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    exit 255
+  fi
+  echo "${sqlcmd_result}" | "${grep_cmd}" DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r'
+}
+
 
 # MAIN
 #############################################################################
 
-connectString="${connStr}"
+function main() {
+  check_dependencies
+  init_variables
+  parse_parameters "$@"
+  connect_string="${conn_str}"
 
-checkPlatform $DBTYPE
+local extractor_version="$(get_version)"
+  echo ""
+  echo "==================================================================================="
+  echo "Database Migration Assessment Database Assessment Collector Version ${dma_version}"
+  print_extractor_version "${extractor_version}"
+  echo "==================================================================================="
 
-    if [ "$DBTYPE" == "postgres" ] ; then
-        sqlcmd_result=$(checkVersionPg "${connectString}" "${OpVersion}" )
-	retval=$?
-        if [[ $retval -ne 0 ]];
-            then
-	    echo " "
-	    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-            echo "Unable to connect to the target Postgres database.  Please verify the connection information and target database status."
-	    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-            exit 255
-        else
-	    sqlcmd_result=$(echo "$sqlcmd_result" | $GREP DMAFILETAG | tr -d ' ' | cut -d '~' -f 2 | tr -d '\r' )
-        fi
-    fi
+  local sqlcmd_result=$(check_db_connection)
+  local retval=$?
 
-extractorVersion="$(getVersion)"
+  if [[ $retval -eq 0 ]]; then
+    if [[ "$(echo ${sqlcmd_result} | $grep_cmd -E '(ORA-|SP2-|ERROR|FATAL)')" != "" ]]; then
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo "Database version check returned error ${sqlcmd_result}"
+      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      echo "Exiting...."
+      exit 255
+    else
+      echo "Your database version is $(echo "${sqlcmd_result}" | cut -d '|' -f1)"
+      dbmajor=$((echo "${sqlcmd_result}" | cut -d '|' -f1)  |cut -d '.' -f 1)
+      V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
 
-echo ""
-echo "==================================================================================="
-echo "Database Migration Assessment Database Assessment Collector Version ${OpVersion}"
-printExtractorVersion "${extractorVersion}"
-echo "==================================================================================="
-
-if [ $retval -eq 0 ]; then
-  if [ "$(echo ${sqlcmd_result} | $GREP -E '(ORA-|SP2-|ERROR|FATAL)')" != "" ]; then
-    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    echo "Database version check returned error ${sqlcmd_result}"
-    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    echo "Exiting...."
-    exit 255
-  else
-    echo "Your database version is $(echo ${sqlcmd_result} | cut -d '|' -f1)"
-    dbmajor=$((echo ${sqlcmd_result} | cut -d '|' -f1)  |cut -d '.' -f 1)
-    V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
-
-    if [ "$DBTYPE" == "postgres" ]; then
-      PGVER=$(echo $dbmajor | cut -c 1-2)
+      local PGVER=$(echo $dbmajor | cut -c 1-2)
       if [[ $PGVER -gt 13 ]] && [[ $PGVER -lt 17 ]] ; then
         PGVER="base"
       fi
-      executeOPPg "${connectString}" ${OpVersion} $(echo ${V_TAG} | ${SED} 's/.csv//g') "${manualUniqueId}" "${PGVER}" "${allDbs}"
-      retval=$?
-    fi
 
-    if [ $retval -ne 0 ]; then
-      createErrorLog  $(echo ${V_TAG} | ${SED} 's/.csv//g')
-      compressOpFiles $(echo ${V_TAG} | ${SED} 's/.csv//g') ${hostName}
-      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${LOG_DIR}"
-      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Exiting...."
-      exit 255
+      execute_dma "${connect_string}" ${dma_version} $(echo "${V_TAG}" | "${sed_cmd}" 's/.csv//g') "${manual_unique_id}" "${PGVER}" "${all_dbs}"
+      retval=$?
+      if [[ ${retval} -ne 0 ]]; then
+        create_error_log  $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g')
+        compress_dma_files $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g') ${host_name}
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${log_dir}"
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Exiting...."
+        exit 255
+      fi
+      create_error_log  $(echo ${V_TAG} | sed 's/.csv//g')
+      cleanup_dma_output $(echo ${V_TAG} | sed 's/.csv//g')
+      retval=$?
+      if [[ ${retval} -ne 0 ]]; then
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Database Migration Assessment data sanitation reported an error. Please check the error log in directory ${output_dir}"
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Exiting...."
+        exit 255
+      fi
+
+      compress_dma_files $(echo ${V_TAG} | ${sed_cmd} 's/.csv//g') ${host_name}
+      retval=$?
+      if [[ ${retval} -ne 0 ]]; then
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "Database Migration Assessment data file archive encountered a problem.  Exiting...."
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        exit 255
+      fi
+      echo ""
+      echo "==================================================================================="
+      echo "Database Migration Assessment Database Assessment Collector completed."
+      echo "Data collection located at ${output_dir}/${output_file}"
+      echo "==================================================================================="
+      echo ""
+      print_extractor_version "${extractor_version}"
+      exit 0
     fi
-    createErrorLog  $(echo ${V_TAG} | sed 's/.csv//g')
-    cleanupOpOutput $(echo ${V_TAG} | sed 's/.csv//g')
-    retval=$?
-    if [ $retval -ne 0 ]; then
-      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Database Migration Assessment data sanitation reported an error. Please check the error log in directory ${OUTPUT_DIR}"
-      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Exiting...."
-      exit 255
-    fi
-    compressOpFiles $(echo ${V_TAG} | ${SED} 's/.csv//g') ${hostName}
-    retval=$?
-    if [ $retval -ne 0 ]; then
-      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      echo "Database Migration Assessment data file archive encountered a problem.  Exiting...."
-      echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      exit 255
-    fi
-    echo ""
-    echo "==================================================================================="
-    echo "Database Migration Assessment Database Assessment Collector completed."
-    echo "Data collection located at ${OUTPUT_DIR}/${OUTFILE}"
-    echo "==================================================================================="
-    echo ""
-    printExtractorVersion "${extractorVersion}"
-    exit 0
+  else
+    echo "Error executing SQL*Plus"
+    exit 255
   fi
-else
-  echo "Error executing SQL*Plus"
-  exit 255
-fi
+}
+
+main "$@"
