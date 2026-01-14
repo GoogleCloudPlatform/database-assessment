@@ -197,10 +197,12 @@ jobs:
     - name: Bundle Python dependencies
       shell: bash
       run: |
-        uv run tools/bundle_python.py \
+        uv run tools/bundle_python.py build \
           --target ${{ matrix.job.target }} \
           --requirements dist/requirements.txt \
-          --output dist/python-dist-${{ matrix.job.target }}.tar.gz
+          --output dist/python-dist-${{ matrix.job.target }}.tar.gz \
+          --pyapp-dir pyapp-src \
+          --install-root "~/.dma"
         # Use PYAPP_DISTRIBUTION_PATH for local files (not PYAPP_DISTRIBUTION_SOURCE which expects a URL)
         echo "PYAPP_DISTRIBUTION_PATH=${{ github.workspace }}/dist/python-dist-${{ matrix.job.target }}.tar.gz" >> $GITHUB_ENV
         # Set the path to Python binary inside the custom distribution
