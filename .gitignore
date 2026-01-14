@@ -187,9 +187,8 @@ src/dma/templates/*
 # vscode
 # .vscode
 # Gemini Agent System
-specs/active/
-specs/archive/
-!specs/active/.gitkeep
-!specs/archive/.gitkeep
+specs
 uv.toml
 build_dist_temp
+.gemini
+tools/scripts/detect_mcp_tools.py
