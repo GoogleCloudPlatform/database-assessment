@@ -405,6 +405,30 @@ def render_install_dir_expression(install_dir: Path) -> str:
     return f"std::path::PathBuf::from({rust_string_literal(str(install_dir))})"
 
 
+def patch_pyapp_cargo_toml(pyapp_dir: Path) -> None:
+    """Add 'dirs' dependency to PyApp Cargo.toml."""
+
+    cargo_toml = pyapp_dir / "Cargo.toml"
+    if not cargo_toml.exists():
+        msg = f"PyApp Cargo.toml not found at {cargo_toml}"
+        raise click.ClickException(msg)
+
+    content = cargo_toml.read_text(encoding="utf-8")
+    if 'dirs = "' in content:
+        console.print("[dim]Dependency 'dirs' already present in Cargo.toml[/]")
+        return
+
+    # Add dirs dependency under [dependencies]
+    # We look for the [dependencies] section and insert it after
+    if "[dependencies]" in content:
+        updated = content.replace("[dependencies]", '[dependencies]\ndirs = "5.0"', 1)
+        cargo_toml.write_text(updated, encoding="utf-8")
+        console.print("[green]Patched[/] PyApp Cargo.toml -> added 'dirs' dependency")
+    else:
+        msg = "Failed to locate [dependencies] section in Cargo.toml"
+        raise click.ClickException(msg)
+
+
 def patch_pyapp_install_dir(pyapp_dir: Path, install_dir: Path) -> None:
     """Patch PyApp to use a custom default installation directory."""
 
@@ -642,7 +666,9 @@ def build_bundle(
     console.print()
 
     if pyapp_dir:
-        patch_pyapp_install_dir(pyapp_dir.expanduser().resolve(), resolved_install_dir)
+        resolved_pyapp = pyapp_dir.expanduser().resolve()
+        patch_pyapp_install_dir(resolved_pyapp, resolved_install_dir)
+        patch_pyapp_cargo_toml(resolved_pyapp)
     else:
         console.print("[dim]Note:[/] pass --pyapp-dir to patch PyApp for the install directory.")
 
