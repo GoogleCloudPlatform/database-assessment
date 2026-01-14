@@ -1,0 +1,57 @@
+!specs
+!.gemini
+!AGENTS.md
+!GEMINI.md
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+# PEP 582; used by e.g. github.com/David-OConnor/pyflow
+__pypackages__/
+# dotenv
+.env
+!.env.example
+env.bak/
+service_account.json
+.venv
+venv/
+ENV/
+.pyre/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/
+.ruff_cache
+.ds_store
+.DS_Store
+.astro
+.vite
+.npmrc

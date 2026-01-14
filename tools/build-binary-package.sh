@@ -39,6 +39,19 @@ git clone --quiet --depth 1 --branch $PYAPP_VERSION https://github.com/ofek/pyap
 uv build
 uv export --frozen --no-dev --no-editable --no-hashes --no-header --no-emit-project --extra postgres --extra server > dist/requirements.txt
 echo "$(realpath dist/dma-${current_version}-py3-none-any.whl)" >> dist/requirements.txt
+
+# Bundle Python dependencies and patch PyApp
+uv run tools/bundle_python.py build \
+  --requirements dist/requirements.txt \
+  --output dist/python-dist.tar.gz \
+  --pyapp-dir ${PYAPP_DIR} \
+  --install-root "~/.dma"
+
+export PYAPP_DISTRIBUTION_PATH="$(realpath dist/python-dist.tar.gz)"
+export PYAPP_DISTRIBUTION_EMBED="true"
+export PYAPP_SKIP_INSTALL="true"
+unset PYAPP_PROJECT_DEPENDENCY_FILE
+
 cd ${PYAPP_DIR} && cargo build --release  &&  cd -
 cp ${PYAPP_DIR}/target/release/pyapp dist/dma
 chmod +x dist/dma
