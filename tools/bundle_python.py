@@ -415,10 +415,10 @@ def patch_pyapp_install_dir(pyapp_dir: Path, install_dir: Path) -> None:
 
     content = app_rs.read_text(encoding="utf-8")
     pattern = re.compile(
-        r"platform_dirs\\(\\)\\s*\\.data_local_dir\\(\\)\\s*"
-        r"\\.join\\(project_name\\(\\)\\)\\s*"
-        r"\\.join\\(distribution_id\\(\\)\\)\\s*"
-        r"\\.join\\(project_version\\(\\)\\)"
+        r"platform_dirs\(\)\s*\.data_local_dir\(\)\s*"
+        r"\.join\(project_name\(\)\)\s*"
+        r"\.join\(distribution_id\(\)\)\s*"
+        r"\.join\(project_version\(\)\)"
     )
     if not pattern.search(content):
         msg = "Failed to locate the PyApp installation directory block in src/app.rs"
