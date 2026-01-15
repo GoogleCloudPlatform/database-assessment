@@ -21,8 +21,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-import psycopg
 from rich.padding import Padding
+from sqlspec.exceptions import OperationalError, SQLSpecError
 
 from dma.cli._utils import console
 from dma.collector.util.postgres.helpers import get_db_major_version
@@ -316,21 +316,14 @@ class PostgresCollectionService:
                     table_name = script.replace("-", "_")
                     results[table_name] = arrow_result.data
                     status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
-                except psycopg.errors.UndefinedTable:
-                    status.console.print(rf"[yellow]Skipped[/] `{script}` - table doesn't exist")
-                except psycopg.errors.InsufficientPrivilege:
-                    status.console.print(rf"[yellow]Skipped[/] `{script}` - insufficient privileges")
-                except RuntimeError as e:
-                    # ADBC driver may raise RuntimeError for query errors
-                    if "Unreachable" in str(e) or "does not exist" in str(e):
-                        status.console.print(rf"[yellow]Skipped[/] `{script}` - required objects not available")
-                    else:
-                        raise
-                except Exception as e:
-                    # Catch SQLSpec exceptions like SQLParsingError for missing tables
+                except (SQLSpecError, OperationalError, RuntimeError) as e:
+                    # Handle database errors gracefully - skip queries for missing tables/privileges
                     error_msg = str(e).lower()
-                    if "does not exist" in error_msg or "undefined" in error_msg:
-                        status.console.print(rf"[yellow]Skipped[/] `{script}` - required objects not available")
+                    if any(
+                        pattern in error_msg
+                        for pattern in ["does not exist", "undefined", "permission denied", "insufficient privilege", "unreachable"]
+                    ):
+                        status.console.print(rf"[yellow]Skipped[/] `{script}` - required objects not available or insufficient privileges")
                     else:
                         raise
             if not self.get_per_db_collection_queries():

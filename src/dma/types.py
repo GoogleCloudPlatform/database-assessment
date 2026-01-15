@@ -15,11 +15,7 @@ from __future__ import annotations
 
 from typing import Literal, TypeAlias
 
-# Currently only PostgreSQL is supported. MySQL, MSSQL, and Oracle coming in future releases.
+# Currently only PostgreSQL is supported
 SupportedSources: TypeAlias = Literal["POSTGRES"]
 PostgresVariants: TypeAlias = Literal["CLOUDSQL", "ALLOYDB"]
-# Future database support placeholders
-MySQLVariants: TypeAlias = Literal["CLOUDSQL"]
-MSSQLVariants: TypeAlias = Literal["CLOUDSQL"]
-OracleVariants: TypeAlias = Literal["BMS"]
 SeverityLevels: TypeAlias = Literal["ACTION REQUIRED", "ERROR", "WARNING", "INFO", "PASS"]

@@ -15,12 +15,10 @@
 
 from __future__ import annotations
 
-from textwrap import dedent
+import time
 from typing import TYPE_CHECKING, Final
-from urllib.parse import urlparse
 
 import pytest
-from sqlalchemy import text
 
 from dma.cli.main import app
 from dma.lib.db.local import get_duckdb_driver
@@ -29,7 +27,8 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from click.testing import CliRunner
-    from sqlalchemy import Engine
+    from sqlspec.adapters.adbc import AdbcDriver
+    from tools.postgres.database import PostgreSQLDatabase
 
 pytestmark = [
     pytest.mark.anyio,
@@ -43,14 +42,30 @@ WARNING: Final = "WARNING"
 PASS: Final = "PASS"
 
 
+def _wait_for_extension(driver: AdbcDriver, extension_name: str, max_retries: int = 5) -> None:
+    """Wait for an extension to be visible in a new connection."""
+    for _ in range(max_retries):
+        result = driver.select(
+            "SELECT extname FROM pg_extension WHERE extname = $name",
+            name=extension_name,
+        )
+        if result:
+            return
+        time.sleep(0.1)
+    msg = f"Extension {extension_name} not visible after {max_retries} retries"
+    raise AssertionError(msg)
+
+
 def test_pglogical(
-    sync_engine: Engine,
+    postgres_collector_db: PostgreSQLDatabase,
+    adbc_driver: AdbcDriver,
     runner: CliRunner,
     tmp_path: Path,
 ) -> None:
-    with sync_engine.begin() as conn:
-        conn.execute(text(dedent("""create extension if not exists pglogical;""")))
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    adbc_driver.execute("CREATE EXTENSION IF NOT EXISTS pglogical")
+    # Wait for extension to be visible in new connections
+    _wait_for_extension(adbc_driver, "pglogical")
+    config = postgres_collector_db.config
     result = runner.invoke(
         app,
         [
@@ -59,20 +74,20 @@ def test_pglogical(
             "postgres",
             "--no-prompt",
             "--hostname",
-            f"{url.hostname}",
+            "localhost",
             "--port",
-            f"{url.port!s}",
+            str(config.host_port),
             "--database",
-            f"{url.path.lstrip('/')}",
+            config.postgres_db,
             "--username",
-            f"{url.username}",
+            config.postgres_user,
             "--password",
-            f"{url.password}",
+            config.postgres_password,
             "--export",
             str(tmp_path),
         ],
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, f"CLI failed: {result.output}"
     with get_duckdb_driver(working_path=tmp_path, export_path=tmp_path) as driver:
         rows = driver.select("SELECT severity FROM readiness_check_summary WHERE rule_code = 'PGLOGICAL_INSTALLED'")
         for row in rows:
@@ -80,25 +95,29 @@ def test_pglogical(
 
 
 def test_privileges_success(
-    sync_engine: Engine,
+    postgres_collector_db: PostgreSQLDatabase,
+    adbc_driver: AdbcDriver,
     runner: CliRunner,
     tmp_path: Path,
 ) -> None:
     test_user = "testuser"
     test_passwd = "testpasswd"
-    with sync_engine.begin() as conn:
-        # setup test user.
-        conn.execute(text(dedent(f"create user {test_user} WITH PASSWORD '{test_passwd}';")))
+    config = postgres_collector_db.config
 
-        conn.execute(text(dedent("""create extension if not exists pglogical;""")))
-        grant_privilege_cmds = [
-            "GRANT USAGE on SCHEMA pglogical to testuser",
-            "GRANT SELECT on ALL TABLES in SCHEMA pglogical to testuser;",
-            "GRANT SELECT on ALL TABLES in SCHEMA public to testuser;",
-        ]
-        for cmd in grant_privilege_cmds:
-            conn.execute(text(cmd))
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    # setup test user
+    adbc_driver.execute(f"CREATE USER {test_user} WITH PASSWORD '{test_passwd}'")
+    adbc_driver.execute("CREATE EXTENSION IF NOT EXISTS pglogical")
+
+    grant_privilege_cmds = [
+        "GRANT USAGE on SCHEMA pglogical to testuser",
+        "GRANT SELECT on ALL TABLES in SCHEMA pglogical to testuser",
+        "GRANT SELECT on ALL TABLES in SCHEMA public to testuser",
+    ]
+    for cmd in grant_privilege_cmds:
+        adbc_driver.execute(cmd)
+
+    # Wait for extension to be visible
+    _wait_for_extension(adbc_driver, "pglogical")
 
     result = runner.invoke(
         app,
@@ -108,41 +127,45 @@ def test_privileges_success(
             "postgres",
             "--no-prompt",
             "--hostname",
-            f"{url.hostname}",
+            "localhost",
             "--port",
-            f"{url.port!s}",
+            str(config.host_port),
             "--database",
-            f"{url.path.lstrip('/')}",
+            config.postgres_db,
             "--username",
-            f"{test_user}",
+            test_user,
             "--password",
-            f"{test_passwd}",
+            test_passwd,
             "--export",
             str(tmp_path),
         ],
     )
-    # cleanup.
-    with sync_engine.begin() as conn:
-        conn.execute(text("DROP OWNED BY testuser; DROP USER testuser;"))
-    assert result.exit_code == 0
+    # cleanup
+    adbc_driver.execute("DROP OWNED BY testuser; DROP USER testuser")
+    assert result.exit_code == 0, f"CLI failed with output: {result.output}"
     with get_duckdb_driver(working_path=tmp_path, export_path=tmp_path) as driver:
         rows = driver.select("SELECT severity, info FROM readiness_check_summary WHERE rule_code='PRIVILEGES'")
         for row in rows:
-            assert row["severity"] == PASS
+            assert row["severity"] == PASS, f"Privilege check failed: {row['info']}"
 
 
 def test_privileges_failure(
-    sync_engine: Engine,
+    postgres_collector_db: PostgreSQLDatabase,
+    adbc_driver: AdbcDriver,
     runner: CliRunner,
     tmp_path: Path,
 ) -> None:
     test_user = "testuser"
     test_passwd = "testpasswd"
-    with sync_engine.begin() as conn:
-        # setup test user.
-        conn.execute(text(dedent(f"create user {test_user} WITH PASSWORD '{test_passwd}';")))
-        conn.execute(text(dedent("""create extension if not exists pglogical;""")))
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    config = postgres_collector_db.config
+
+    # setup test user
+    adbc_driver.execute(f"CREATE USER {test_user} WITH PASSWORD '{test_passwd}'")
+    adbc_driver.execute("CREATE EXTENSION IF NOT EXISTS pglogical")
+
+    # Wait for extension to be visible
+    _wait_for_extension(adbc_driver, "pglogical")
+
     result = runner.invoke(
         app,
         [
@@ -151,23 +174,22 @@ def test_privileges_failure(
             "postgres",
             "--no-prompt",
             "--hostname",
-            f"{url.hostname}",
+            "localhost",
             "--port",
-            f"{url.port!s}",
+            str(config.host_port),
             "--database",
-            f"{url.path.lstrip('/')}",
+            config.postgres_db,
             "--username",
-            f"{test_user}",
+            test_user,
             "--password",
-            f"{test_passwd}",
+            test_passwd,
             "--export",
             str(tmp_path),
         ],
     )
 
-    # Cleanup.
-    with sync_engine.begin() as conn:
-        conn.execute(text("DROP OWNED BY testuser; DROP USER testuser;"))
+    # Cleanup
+    adbc_driver.execute("DROP OWNED BY testuser; DROP USER testuser")
 
     assert result.exit_code == 0
     with get_duckdb_driver(working_path=tmp_path, export_path=tmp_path) as driver:
@@ -177,11 +199,11 @@ def test_privileges_failure(
 
 
 def test_wal_level(
-    sync_engine: Engine,
+    postgres_collector_db: PostgreSQLDatabase,
     runner: CliRunner,
     tmp_path: Path,
 ) -> None:
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    config = postgres_collector_db.config
     result = runner.invoke(
         app,
         [
@@ -190,15 +212,15 @@ def test_wal_level(
             "postgres",
             "--no-prompt",
             "--hostname",
-            f"{url.hostname}",
+            "localhost",
             "--port",
-            f"{url.port!s}",
+            str(config.host_port),
             "--database",
-            f"{url.path.lstrip('/')}",
+            config.postgres_db,
             "--username",
-            f"{url.username}",
+            config.postgres_user,
             "--password",
-            f"{url.password}",
+            config.postgres_password,
             "--export",
             str(tmp_path),
         ],
@@ -211,11 +233,12 @@ def test_wal_level(
 
 
 def test_pg_version(
-    sync_engine: Engine,
+    postgres_collector_db: PostgreSQLDatabase,
+    adbc_driver: AdbcDriver,
     runner: CliRunner,
     tmp_path: Path,
 ):
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    config = postgres_collector_db.config
     result = runner.invoke(
         app,
         [
@@ -224,26 +247,23 @@ def test_pg_version(
             "postgres",
             "--no-prompt",
             "--hostname",
-            f"{url.hostname}",
+            "localhost",
             "--port",
-            f"{url.port!s}",
+            str(config.host_port),
             "--database",
-            f"{url.path.lstrip('/')}",
+            config.postgres_db,
             "--username",
-            f"{url.username}",
+            config.postgres_user,
             "--password",
-            f"{url.password}",
+            config.postgres_password,
             "--export",
             str(tmp_path),
         ],
     )
     assert result.exit_code == 0
-    with sync_engine.begin() as conn:
-        res = conn.execute(text("SHOW server_version_num;"))
-        pg_version = res.fetchone()
-        pg_major_version = 0
-        if pg_version:
-            pg_major_version = int(int(pg_version[0]) / 10000)
+
+    pg_version_num = adbc_driver.select_value("SHOW server_version_num")
+    pg_major_version = int(int(pg_version_num) / 10000)
 
     with get_duckdb_driver(working_path=tmp_path, export_path=tmp_path) as driver:
         rows = driver.select(
@@ -251,19 +271,19 @@ def test_pg_version(
         )
         for row in rows:
             migration_target = row["migration_target"]
-            if migration_target == "ALLOYDB" and pg_major_version == 17:
-                # AlloyDB doesn't support pg17 yet. Remove this check after AlloyDB supports pg17.
+            if migration_target == "ALLOYDB" and pg_major_version >= 18:
+                # AlloyDB max supported version is 17. Update when AlloyDB supports newer versions.
                 assert row["severity"] == ERROR
             else:
                 assert row["severity"] == PASS
 
 
 def test_pg_source_settings(
-    sync_engine: Engine,
+    postgres_collector_db: PostgreSQLDatabase,
     runner: CliRunner,
     tmp_path: Path,
 ):
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    config = postgres_collector_db.config
     result = runner.invoke(
         app,
         [
@@ -272,15 +292,15 @@ def test_pg_source_settings(
             "postgres",
             "--no-prompt",
             "--hostname",
-            f"{url.hostname}",
+            "localhost",
             "--port",
-            f"{url.port!s}",
+            str(config.host_port),
             "--database",
-            f"{url.path.lstrip('/')}",
+            config.postgres_db,
             "--username",
-            f"{url.username}",
+            config.postgres_user,
             "--password",
-            f"{url.password}",
+            config.postgres_password,
             "--export",
             str(tmp_path),
         ],
@@ -319,13 +339,13 @@ def test_pg_source_settings(
 
 
 def test_tables_without_pk(
-    sync_engine: Engine,
+    postgres_collector_db: PostgreSQLDatabase,
+    adbc_driver: AdbcDriver,
     runner: CliRunner,
     tmp_path: Path,
 ):
-    with sync_engine.begin() as conn:
-        conn.execute(text("CREATE TABLE test_table (id INTEGER, data text);"))
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    adbc_driver.execute("CREATE TABLE IF NOT EXISTS test_table (id INTEGER, data text)")
+    config = postgres_collector_db.config
     result = runner.invoke(
         app,
         [
@@ -334,15 +354,15 @@ def test_tables_without_pk(
             "postgres",
             "--no-prompt",
             "--hostname",
-            f"{url.hostname}",
+            "localhost",
             "--port",
-            f"{url.port!s}",
+            str(config.host_port),
             "--database",
-            f"{url.path.lstrip('/')}",
+            config.postgres_db,
             "--username",
-            f"{url.username}",
+            config.postgres_user,
             "--password",
-            f"{url.password}",
+            config.postgres_password,
             "--export",
             str(tmp_path),
         ],

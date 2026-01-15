@@ -18,10 +18,11 @@ from __future__ import annotations
 import subprocess
 import time
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from tools.lib.container import ContainerRuntime
 
 
@@ -89,6 +90,7 @@ class DatabaseConfig:
     build_args: dict[str, str] = field(default_factory=dict)
     extra_env: dict[str, str] = field(default_factory=dict)
     extra_command: list[str] = field(default_factory=list)
+    data_mount_path: str = "/var/lib/postgresql/data"  # For PG 18+, use "/var/lib/postgresql"
 
 
 class PostgreSQLDatabase:
@@ -132,6 +134,8 @@ class PostgreSQLDatabase:
             else:
                 # Start existing stopped container
                 self.runtime.start_container(config.container_name)
+                if config.host_port is None:
+                    self.config.host_port = self._get_allocated_port()
                 self._wait_for_health()
                 return
 
@@ -155,11 +159,8 @@ class PostgreSQLDatabase:
                 if self.runtime.container_exists(config.container_name)
                 else ""
             )
-            raise ContainerStartError(
-                f"Failed to start container: {e}",
-                container_name=config.container_name,
-                logs=logs,
-            ) from e
+            msg = f"Failed to start container: {e}"
+            raise ContainerStartError(msg, container_name=config.container_name, logs=logs) from e
 
         # Get allocated port if dynamic
         if config.host_port is None:
@@ -193,7 +194,7 @@ class PostgreSQLDatabase:
             "--hostname",
             config.hostname,
             "-v",
-            f"{config.data_volume_name}:/var/lib/postgresql/data",
+            f"{config.data_volume_name}:{config.data_mount_path}",
             "-e",
             f"POSTGRES_PASSWORD={config.postgres_password}",
             "-e",
@@ -240,13 +241,13 @@ class PostgreSQLDatabase:
         Raises:
             ContainerStartError: If port cannot be determined.
         """
-        port = self.runtime.get_container_port(self.config.container_name, self.config.container_port)
-        if port is None:
-            raise ContainerStartError(
-                f"Failed to get allocated port for container '{self.config.container_name}'",
-                container_name=self.config.container_name,
-            )
-        return port
+        for _ in range(10):
+            port = self.runtime.get_container_port(self.config.container_name, self.config.container_port)
+            if port is not None:
+                return port
+            time.sleep(0.1)
+        msg = f"Failed to get allocated port for container '{self.config.container_name}'"
+        raise ContainerStartError(msg, container_name=self.config.container_name)
 
     def _wait_for_health(self) -> None:
         """Wait for the database to be healthy.
@@ -266,11 +267,8 @@ class PostgreSQLDatabase:
             waited += poll_interval
 
         logs = self.runtime.get_container_logs(config.container_name, tail=50)
-        raise ContainerStartError(
-            f"Database health check timed out after {max_wait}s. Check container logs for details.",
-            container_name=config.container_name,
-            logs=logs,
-        )
+        msg = f"Database health check timed out after {max_wait}s. Check container logs for details."
+        raise ContainerStartError(msg, container_name=config.container_name, logs=logs)
 
     def is_healthy(self) -> bool:
         """Check if the database is healthy and accepting connections."""
@@ -287,9 +285,9 @@ class PostgreSQLDatabase:
                 ],
                 check=False,
             )
-            return "accepting connections" in stdout
         except (subprocess.SubprocessError, OSError):
             return False
+        return "accepting connections" in stdout
 
     def is_running(self) -> bool:
         """Check if the container is running."""

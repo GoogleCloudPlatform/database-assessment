@@ -25,6 +25,7 @@ SQL files use the `-- name: query-name` comment format (kebab-case names).
 
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -35,40 +36,34 @@ if TYPE_CHECKING:
 
 from dma.utils import module_to_os_path
 
-_sqlspec: SQLSpec | None = None
 _root_path = module_to_os_path("dma")
 
 
+@lru_cache(maxsize=1)
 def get_sqlspec() -> SQLSpec:
     """Get or create the global SQLSpec manager.
 
     The manager is created lazily on first access and loads SQL files from:
     - collector/sql/sources/postgres/ - PostgreSQL-specific collection queries
-    - collector/sql/sources/mysql/ - MySQL-specific collection queries
-    - collector/sql/sources/oracle/ - Oracle-specific collection queries
-    - collector/sql/sources/mssql/ - MSSQL-specific collection queries
     - collector/sql/canonical/ - DuckDB analysis queries
 
     Returns:
         The global SQLSpec instance with all SQL files loaded.
     """
-    global _sqlspec
-    if _sqlspec is None:
-        _sqlspec = SQLSpec()
-        sql_root = Path(_root_path) / "collector" / "sql"
+    sqlspec = SQLSpec()
+    sql_root = Path(_root_path) / "collector" / "sql"
 
-        # Load source database queries
-        for source_type in ["postgres", "mysql", "oracle", "mssql"]:
-            source_path = sql_root / "sources" / source_type
-            if source_path.exists():
-                _sqlspec.load_sql_files(source_path)
+    # Load source database queries (currently only PostgreSQL is supported)
+    postgres_path = sql_root / "sources" / "postgres"
+    if postgres_path.exists():
+        sqlspec.load_sql_files(postgres_path)
 
-        # Load canonical DuckDB queries
-        canonical_path = sql_root / "canonical"
-        if canonical_path.exists():
-            _sqlspec.load_sql_files(canonical_path)
+    # Load canonical DuckDB queries
+    canonical_path = sql_root / "canonical"
+    if canonical_path.exists():
+        sqlspec.load_sql_files(canonical_path)
 
-    return _sqlspec
+    return sqlspec
 
 
 def reset_sqlspec() -> None:
@@ -76,8 +71,7 @@ def reset_sqlspec() -> None:
 
     This is primarily useful for testing to ensure a clean state.
     """
-    global _sqlspec
-    _sqlspec = None
+    get_sqlspec.cache_clear()
 
 
 def get_sql(name: str) -> "SQL":

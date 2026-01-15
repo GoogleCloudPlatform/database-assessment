@@ -55,7 +55,7 @@ class RuntimeType(str, Enum):
     NONE = "none"
 
 
-class ContainerRuntime:
+class ContainerRuntime:  # noqa: PLR0904
     """Unified interface for Docker and Podman container operations.
 
     This class auto-detects the available container runtime (Docker or Podman)
@@ -74,10 +74,11 @@ class ContainerRuntime:
         neither is available or responsive.
         """
         # Check for Docker
-        if shutil.which("docker"):
+        docker_path = shutil.which("docker")
+        if docker_path:
             try:
                 result = subprocess.run(
-                    ["docker", "--version"],
+                    [docker_path, "--version"],
                     capture_output=True,
                     text=True,
                     timeout=10,
@@ -89,10 +90,11 @@ class ContainerRuntime:
                 pass
 
         # Check for Podman
-        if shutil.which("podman"):
+        podman_path = shutil.which("podman")
+        if podman_path:
             try:
                 result = subprocess.run(
-                    ["podman", "--version"],
+                    [podman_path, "--version"],
                     capture_output=True,
                     text=True,
                     timeout=10,
@@ -203,37 +205,32 @@ class ContainerRuntime:
         except (subprocess.SubprocessError, OSError):
             return False
 
-    def list_containers(self, *, all: bool = True) -> list[str]:
+    def list_containers(self, *, include_all: bool = True) -> list[str]:
         """List container names.
 
         Args:
-            all: If True, include stopped containers. If False, only running containers.
+            include_all: If True, include stopped containers. If False, only running containers.
 
         Returns:
             List of container names.
         """
         try:
             args = ["ps", "--format", "{{.Names}}"]
-            if all:
+            if include_all:
                 args.insert(1, "-a")
 
             _, stdout, _ = self.run_command(args, check=False)
-            containers = [name.strip() for name in stdout.strip().split("\n") if name.strip()]
-            return containers
         except (subprocess.SubprocessError, OSError):
             return []
+        return [name.strip() for name in stdout.strip().split("\n") if name.strip()]
 
     def list_volumes(self) -> list[str]:
         """List volume names."""
         try:
-            _, stdout, _ = self.run_command(
-                ["volume", "ls", "--format", "{{.Name}}"],
-                check=False,
-            )
-            volumes = [name.strip() for name in stdout.strip().split("\n") if name.strip()]
-            return volumes
+            _, stdout, _ = self.run_command(["volume", "ls", "--format", "{{.Name}}"], check=False)
         except (subprocess.SubprocessError, OSError):
             return []
+        return [name.strip() for name in stdout.strip().split("\n") if name.strip()]
 
     def get_container_status(self, container_name: str) -> str | None:
         """Get the status of a container.
@@ -246,10 +243,10 @@ class ContainerRuntime:
                 ["ps", "-a", "--filter", f"name=^{container_name}$", "--format", "{{.Status}}"],
                 check=False,
             )
-            status = stdout.strip()
-            return status or None
         except (subprocess.SubprocessError, OSError):
             return None
+        status = stdout.strip()
+        return status or None
 
     def create_volume(self, volume_name: str) -> None:
         """Create a volume if it doesn't exist."""

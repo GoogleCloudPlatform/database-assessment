@@ -17,6 +17,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from dma.collector.util import CollectionFileWriter
+
 if TYPE_CHECKING:
     from pathlib import Path
 
@@ -76,3 +78,43 @@ class BaseWorkflow:
         """
         self.driver.execute(f"EXPORT DATABASE '{export_path!s}' (FORMAT CSV, DELIMITER '{delimiter}')")
         self.console.print(f"Database exported to '{export_path!s}'")
+
+    def generate_collection_zip(
+        self,
+        output_dir: "Path",
+        db_version: str = "",
+        dma_version: str = "4.3.45",
+        hostname: str = "localhost",
+        port: int = 5432,
+        database: str = "postgres",
+    ) -> "Path":
+        """Generate a collection ZIP file compatible with shell script output.
+
+        Creates a ZIP archive containing CSV exports of all collection tables,
+        a manifest file with MD5 checksums, and metadata files. The output
+        format matches the shell script collector for compatibility with
+        downstream processing tools.
+
+        Args:
+            output_dir: Directory for output ZIP file.
+            db_version: Source database version number (e.g., "150000").
+            dma_version: DMA collector version string.
+            hostname: Source database hostname.
+            port: Source database port.
+            database: Source database name.
+
+        Returns:
+            Path to created ZIP file.
+        """
+        writer = CollectionFileWriter(
+            driver=self.driver,
+            db_type=self.db_type,
+            db_version=db_version,
+            dma_version=dma_version,
+            hostname=hostname,
+            port=port,
+            database=database,
+        )
+        zip_path = writer.create_collection_zip(output_dir)
+        self.console.print(f"Collection ZIP created: {zip_path}")
+        return zip_path

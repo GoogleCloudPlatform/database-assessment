@@ -319,13 +319,10 @@ dma collect-data --db-type mysql --hostname localhost
 
 ### Start Test Databases
 
-```bash
-# Start all test databases via Docker Compose
-docker-compose -f tests/docker-compose.yml up -d
+Test containers are managed automatically by pytest fixtures. Running tests will
+start and stop the required containers as needed.
 
-# Stop test databases
-docker-compose -f tests/docker-compose.yml down
-```
+To keep volumes between runs, set `DMA_TEST_KEEP_VOLUMES=1` in the environment.
 
 ### Run Database-Specific Tests
 

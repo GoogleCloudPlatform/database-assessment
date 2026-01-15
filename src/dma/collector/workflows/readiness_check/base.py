@@ -31,9 +31,6 @@ if TYPE_CHECKING:
 
     from dma.lib.db.config import SourceInfo
     from dma.types import (
-        MSSQLVariants,
-        MySQLVariants,
-        OracleVariants,
         PostgresVariants,
         SeverityLevels,
         SupportedSources,
@@ -97,17 +94,6 @@ class ReadinessCheck:
                 console=self.console,
             )
             self.executor.execute()
-        elif self.src_info.db_type == "MYSQL":
-            # lazy loaded to help with circular import issues
-            from dma.collector.workflows.readiness_check._mysql.main import (  # noqa: PLC0415
-                MySQLReadinessCheckExecutor,
-            )
-
-            self.executor = MySQLReadinessCheckExecutor(
-                readiness_check=self,
-                console=self.console,
-            )
-            self.executor.execute()
         else:
             msg = f"{self.src_info.db_type} is not implemented."
             raise ApplicationError(msg)
@@ -148,7 +134,7 @@ class ReadinessCheckExecutor:
 
     def save_rule_result(
         self,
-        migration_target: "PostgresVariants | MySQLVariants | OracleVariants | MSSQLVariants",
+        migration_target: "PostgresVariants",
         rule_code: str,
         severity: "SeverityLevels",
         info: str,

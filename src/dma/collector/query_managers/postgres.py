@@ -19,11 +19,14 @@ that handles version-aware query selection for data collection.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING
 
 from dma.collector.query_managers.base import CollectionQueryManager
 from dma.collector.util.postgres.helpers import get_db_major_version
 from dma.lib.exceptions import ApplicationError
+
+if TYPE_CHECKING:
+    from sqlspec.adapters.adbc import AdbcDriver
 
 
 class PostgresCollectionQueryManager(CollectionQueryManager):
@@ -35,7 +38,7 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
 
     def __init__(
         self,
-        connection: Any,
+        driver: "AdbcDriver",
         execution_id: str | None = None,
         source_id: str | None = None,
         manual_id: str | None = None,
@@ -43,13 +46,13 @@ class PostgresCollectionQueryManager(CollectionQueryManager):
         """Initialize the PostgreSQL query manager.
 
         Args:
-            connection: Database connection/driver instance.
+            driver: SQLSpec ADBC driver instance.
             execution_id: Unique execution identifier.
             source_id: Source database identifier.
             manual_id: Manual collection identifier.
         """
         super().__init__(
-            connection=connection,
+            driver=driver,
             execution_id=execution_id,
             source_id=source_id,
             manual_id=manual_id,

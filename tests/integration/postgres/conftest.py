@@ -16,22 +16,21 @@
 from __future__ import annotations
 
 from pathlib import Path
-from textwrap import dedent
 from typing import TYPE_CHECKING
 
 import pytest
 from click.testing import CliRunner
-from sqlalchemy import URL, Engine, NullPool, create_engine, text
+from sqlspec.adapters.adbc import AdbcConfig
 
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+    from sqlspec.adapters.adbc import AdbcDriver
     from tools.postgres.database import PostgreSQLDatabase
 
 pytestmark = [
     pytest.mark.anyio,
     pytest.mark.postgres,
-    pytest.mark.xdist_group("postgres"),
 ]
 
 
@@ -41,33 +40,33 @@ def runner() -> CliRunner:
 
 
 @pytest.fixture(scope="session")
-def sync_engine(postgres_collector_db: PostgreSQLDatabase) -> Generator[Engine, None, None]:
-    """SQLAlchemy engine for the current PostgreSQL version.
+def adbc_config(postgres_collector_db: PostgreSQLDatabase) -> AdbcConfig:
+    """ADBC configuration for the current PostgreSQL version.
 
     This fixture is parameterized through postgres_collector_db, which tests
-    against all supported PostgreSQL versions (12-17).
+    against all supported PostgreSQL versions (12-18).
     """
     config = postgres_collector_db.config
-    yield create_engine(
-        URL(
-            drivername="postgresql+psycopg",
-            username=config.postgres_user,
-            password=config.postgres_password,
-            host="localhost",
-            port=config.host_port,
-            database=config.postgres_db,
-            query={},  # type: ignore[arg-type]
-        ),
-        poolclass=NullPool,
-    )
+    uri = f"postgresql://{config.postgres_user}:{config.postgres_password}@localhost:{config.host_port}/{config.postgres_db}"
+    return AdbcConfig(connection_config={"uri": uri})
 
 
 @pytest.fixture(scope="session")
-def _seed_postgres_database(sync_engine: Engine) -> None:
-    with sync_engine.begin() as conn:
-        conn.execute(text(dedent("""create extension if not exists pg_stat_statements;""")))
-        driver_connection = conn._dbapi_connection
-        assert driver_connection is not None
-        cursor = driver_connection.cursor()
-        cursor.execute(Path(Path(__file__).parent / "northwind_ddl.sql").read_text(encoding="utf-8"))
-        cursor.execute(Path(Path(__file__).parent / "northwind_data.sql").read_text(encoding="utf-8"))
+def adbc_driver(adbc_config: AdbcConfig) -> Generator[AdbcDriver, None, None]:
+    """ADBC driver for the current PostgreSQL version."""
+    with adbc_config.provide_session() as driver:
+        yield driver
+
+
+@pytest.fixture(scope="session")
+def _seed_postgres_database(adbc_driver: AdbcDriver) -> None:
+    """Seed the test database with northwind data."""
+    # Create pg_stat_statements extension
+    adbc_driver.execute("CREATE EXTENSION IF NOT EXISTS pg_stat_statements")
+
+    # Load northwind DDL and data
+    ddl_path = Path(__file__).parent / "northwind_ddl.sql"
+    data_path = Path(__file__).parent / "northwind_data.sql"
+
+    adbc_driver.execute(ddl_path.read_text(encoding="utf-8"))
+    adbc_driver.execute(data_path.read_text(encoding="utf-8"))

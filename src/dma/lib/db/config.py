@@ -37,7 +37,7 @@ class SourceInfo:
     """Connection information for a source database.
 
     Attributes:
-        db_type: The type of database (POSTGRES, MYSQL, ORACLE, MSSQL).
+        db_type: The type of database (currently only POSTGRES is supported).
         username: Database authentication username.
         password: Database authentication password.
         hostname: Database server hostname or IP address.

@@ -125,6 +125,8 @@ class MySQLDatabase:
             else:
                 # Start existing stopped container
                 self.runtime.start_container(config.container_name)
+                if config.host_port is None:
+                    self.config.host_port = self._get_allocated_port()
                 self._wait_for_health()
                 return
 
@@ -146,11 +148,8 @@ class MySQLDatabase:
                 if self.runtime.container_exists(config.container_name)
                 else ""
             )
-            raise ContainerStartError(
-                f"Failed to start container: {e}",
-                container_name=config.container_name,
-                logs=logs,
-            ) from e
+            msg = f"Failed to start container: {e}"
+            raise ContainerStartError(msg, container_name=config.container_name, logs=logs) from e
 
         # Get allocated port if dynamic
         if config.host_port is None:
@@ -220,13 +219,13 @@ class MySQLDatabase:
         Raises:
             ContainerStartError: If port cannot be determined.
         """
-        port = self.runtime.get_container_port(self.config.container_name, self.config.container_port)
-        if port is None:
-            raise ContainerStartError(
-                f"Failed to get allocated port for container '{self.config.container_name}'",
-                container_name=self.config.container_name,
-            )
-        return port
+        for _ in range(10):
+            port = self.runtime.get_container_port(self.config.container_name, self.config.container_port)
+            if port is not None:
+                return port
+            time.sleep(0.1)
+        msg = f"Failed to get allocated port for container '{self.config.container_name}'"
+        raise ContainerStartError(msg, container_name=self.config.container_name)
 
     def _wait_for_health(self) -> None:
         """Wait for the database to be healthy.
@@ -246,11 +245,8 @@ class MySQLDatabase:
             waited += poll_interval
 
         logs = self.runtime.get_container_logs(config.container_name, tail=50)
-        raise ContainerStartError(
-            f"Database health check timed out after {max_wait}s. Check container logs for details.",
-            container_name=config.container_name,
-            logs=logs,
-        )
+        msg = f"Database health check timed out after {max_wait}s. Check container logs for details."
+        raise ContainerStartError(msg, container_name=config.container_name, logs=logs)
 
     def is_healthy(self) -> bool:
         """Check if the database is healthy and accepting connections."""
@@ -269,9 +265,9 @@ class MySQLDatabase:
                 ],
                 check=False,
             )
-            return returncode == 0
         except (subprocess.SubprocessError, OSError):
             return False
+        return returncode == 0
 
     def is_running(self) -> bool:
         """Check if the container is running."""

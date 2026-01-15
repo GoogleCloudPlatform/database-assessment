@@ -27,6 +27,7 @@ from rich.table import Table
 from dma.__about__ import __version__ as current_version
 from dma.collector.services.postgres import PostgresCollectionService
 from dma.collector.workflows.base import BaseWorkflow
+from dma.collector.workflows.collection_extractor._postgres import print_summary_postgres
 from dma.lib.db.config import SourceInfo, create_postgres_adbc_config
 from dma.lib.exceptions import ApplicationError
 
@@ -190,8 +191,6 @@ class CollectionExtractor(BaseWorkflow):
         table.add_row("Collection Summary")
         self.console.print(table)
         if self.db_type == "POSTGRES":
-            from dma.collector.workflows.collection_extractor._postgres import print_summary_postgres
-
             print_summary_postgres(console=self.console, driver=self.driver, manager=self.canonical_query_manager)
         else:
             msg = f"{self.db_type} is not implemented."

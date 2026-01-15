@@ -13,13 +13,14 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
--- name: readiness-check-init-get-db-count$
-select count(*) as db_count
-from collection_postgres_all_databases;
-
--- name:  readiness-check-init-get-execution-id$
-select 'postgres_' || current_setting('server_version_num') || '_' || to_char(current_timestamp, 'YYYYMMDDHH24MISSMS') as execution_id;
-
--- name:  readiness-check-init-get-source-id$
-select system_identifier::VARCHAR as source_id
-from pg_control_system();
+with src as (
+  SELECT rolname, rolreplication FROM pg_catalog.pg_roles
+  WHERE rolname IN (SELECT CURRENT_USER)
+)
+select chr(34) || :PKEY || chr(34) as pkey,
+  chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
+  chr(34) || :DMA_MANUAL_ID || chr(34) as dma_manual_id,
+  chr(34) || src.rolname || chr(34) as rolname,
+  chr(34) || src.rolreplication || chr(34) as rolreplication,
+  chr(34) || current_database() || chr(34) as database_name
+from src;

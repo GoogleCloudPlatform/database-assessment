@@ -61,7 +61,8 @@ class CanonicalQueryManager:
         self.source_id = source_id
         self.manual_id = manual_id
 
-    def available_queries(self, prefix: str | None = None) -> list[str]:
+    @staticmethod
+    def available_queries(prefix: str | None = None) -> list[str]:
         """Get available queries optionally filtered by prefix.
 
         Args:
@@ -151,7 +152,8 @@ class CollectionQueryManager:
         self.db_version = db_version
         self.expected_collection_queries = expected_queries
 
-    def available_queries(self, prefix: str | None = None) -> list[str]:
+    @staticmethod
+    def available_queries(prefix: str | None = None) -> list[str]:
         """Get available queries optionally filtered by prefix.
 
         Args:

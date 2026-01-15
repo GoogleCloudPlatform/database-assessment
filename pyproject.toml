@@ -135,7 +135,6 @@ lint = [
     "types-decorator",
     "types-pyyaml",
     "types-setuptools",
-    "asyncpg-stubs",
     "pyyaml>=6",
 ]
 

@@ -278,6 +278,15 @@ def _collect_data(
     required=False,
     show_default=False,
 )
+@click.option(
+    "--output-zip",
+    "-oz",
+    help="Path to output a collection ZIP file compatible with shell script format.",
+    default=None,
+    type=click.Path(),
+    required=False,
+    show_default=False,
+)
 def readiness_assessment(
     no_prompt: bool,
     db_type: Literal["postgres"],
@@ -289,6 +298,7 @@ def readiness_assessment(
     collection_identifier: str | None = None,
     export: str | None = None,
     working_path: str | None = None,
+    output_zip: str | None = None,
 ) -> None:
     """Process a collection of advisor extracts."""
     print_app_info()
@@ -318,6 +328,7 @@ def readiness_assessment(
             collection_identifier=collection_identifier,
             working_path=Path(working_path) if working_path else None,
             export_path=Path(export) if export else None,
+            output_zip_path=Path(output_zip) if output_zip else None,
         )
     else:
         console.rule("Skipping execution until input is confirmed", align="left")
@@ -331,6 +342,7 @@ def _readiness_check(
     working_path: Path | None = None,
     export_path: Path | None = None,
     export_delimiter: str = "|",
+    output_zip_path: Path | None = None,
 ) -> None:
     _execution_id = f"{src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
     with get_duckdb_driver(working_path=working_path, export_path=export_path) as driver:
@@ -348,6 +360,15 @@ def _readiness_check(
         workflow.print_summary()
         if workflow.collection_extractor is not None and export_path is not None:
             workflow.collection_extractor.dump_database(export_path=export_path, delimiter=export_delimiter)
+        if workflow.collection_extractor is not None and output_zip_path is not None:
+            workflow.collection_extractor.generate_collection_zip(
+                output_dir=output_zip_path,
+                db_version=workflow.db_version,
+                dma_version=current_version,
+                hostname=src_info.hostname,
+                port=src_info.port,
+                database=database,
+            )
         console.rule("Assessment complete.", align="left")
 
 

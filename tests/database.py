@@ -69,6 +69,7 @@ POSTGRES_VERSIONS = [
     "postgres:15",
     "postgres:16",
     "postgres:17",
+    "postgres:18",
 ]
 
 MYSQL_VERSIONS = [
@@ -155,10 +156,6 @@ class SessionContainerManager:
                     db = PostgreSQLDatabase(self.runtime, config)
                     config.host_port = db._get_allocated_port()
             else:
-                # Clean up any stopped container
-                if self.runtime.container_exists(config.container_name):
-                    self.runtime.run_command(["rm", "-f", config.container_name], check=False)
-                # Start fresh
                 db = PostgreSQLDatabase(self.runtime, config)
                 db.start(pull=False, recreate=False)
                 self._started_containers.append(config.container_name)
@@ -174,8 +171,6 @@ class SessionContainerManager:
                     db = MySQLDatabase(self.runtime, config)
                     config.host_port = db._get_allocated_port()
             else:
-                if self.runtime.container_exists(config.container_name):
-                    self.runtime.run_command(["rm", "-f", config.container_name], check=False)
                 db = MySQLDatabase(self.runtime, config)
                 db.start(pull=False, recreate=False)
                 self._started_containers.append(config.container_name)
@@ -191,8 +186,6 @@ class SessionContainerManager:
                     db = OracleDatabase(self.runtime, config)
                     config.host_port = db._get_allocated_port()
             else:
-                if self.runtime.container_exists(config.container_name):
-                    self.runtime.run_command(["rm", "-f", config.container_name], check=False)
                 db = OracleDatabase(self.runtime, config)
                 db.start(pull=False, recreate=False)
                 self._started_containers.append(config.container_name)
@@ -208,8 +201,6 @@ class SessionContainerManager:
                     db = SQLServerDatabase(self.runtime, config)
                     config.host_port = db._get_allocated_port()
             else:
-                if self.runtime.container_exists(config.container_name):
-                    self.runtime.run_command(["rm", "-f", config.container_name], check=False)
                 db = SQLServerDatabase(self.runtime, config)
                 db.start(pull=False, recreate=False)
                 self._started_containers.append(config.container_name)
@@ -279,7 +270,12 @@ def postgres_collector_db(
         version_match = re.search(r":(\d+)", image)
         if version_match:
             pg_version = version_match.group(1)
+            pg_major = int(pg_version)
             custom_image = f"dma-test-postgres-pglogical:{pg_version}"
+
+            # PG 18+ changed the data directory structure
+            # See: https://github.com/docker-library/postgres/pull/1259
+            data_mount_path = "/var/lib/postgresql" if pg_major >= 18 else "/var/lib/postgresql/data"
 
             config = PostgresDatabaseConfig(
                 image=custom_image,
@@ -289,11 +285,12 @@ def postgres_collector_db(
                 build_context=postgres_integration_dir,
                 dockerfile=dockerfile_path,
                 build_args={"PG_VERSION": pg_version},
+                data_mount_path=data_mount_path,
                 extra_command=[
                     "-c",
                     "wal_level=logical",
                     "-c",
-                    "shared_preload_libraries=pglogical",
+                    "shared_preload_libraries=pg_stat_statements,pglogical",
                 ],
             )
         else:
@@ -364,6 +361,14 @@ def postgres17_port(postgres_collector_db: PostgreSQLDatabase, request: pytest.F
     return postgres_collector_db.config.host_port or 5432
 
 
+@pytest.fixture(scope="session")
+def postgres18_port(postgres_collector_db: PostgreSQLDatabase, request: pytest.FixtureRequest) -> int:
+    """Port for PostgreSQL 18."""
+    if "postgres:18" not in str(request.node.callspec.params.get("postgres_collector_db", "")):
+        pytest.skip("Not testing PostgreSQL 18")
+    return postgres_collector_db.config.host_port or 5432
+
+
 # Version-specific service fixtures (no-op, for backwards compatibility)
 @pytest.fixture(scope="session")
 def postgres12_service(postgres_collector_db: PostgreSQLDatabase) -> None:
@@ -398,6 +403,12 @@ def postgres16_service(postgres_collector_db: PostgreSQLDatabase) -> None:
 @pytest.fixture(scope="session")
 def postgres17_service(postgres_collector_db: PostgreSQLDatabase) -> None:
     """Ensure PostgreSQL 17 is running (backwards compatibility)."""
+    return
+
+
+@pytest.fixture(scope="session")
+def postgres18_service(postgres_collector_db: PostgreSQLDatabase) -> None:
+    """Ensure PostgreSQL 18 is running (backwards compatibility)."""
     return
 
 
@@ -486,7 +497,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     cmd = runtime.get_runtime_command()
 
     # Remove test containers
-    containers = runtime.list_containers(all=True)
+    containers = runtime.list_containers(include_all=True)
     test_containers = [c for c in containers if c.startswith("dma-test-")]
     if test_containers:
         subprocess.run([cmd, "rm", "-f", *test_containers], capture_output=True, check=False)
@@ -501,19 +512,31 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
-    """Add xdist_group markers based on database type.
+    """Add xdist_group markers based on database type and version.
 
-    This ensures tests for the same database version run on the same worker,
-    reducing container startup overhead.
+    This ensures tests for the same database version run on the same worker
+    AND are serialized (not run in parallel), preventing test interference
+    when tests modify shared database state.
     """
     for item in items:
         # Check for database fixtures in the test
-        if hasattr(item, "fixturenames"):
-            if "postgres_collector_db" in item.fixturenames:
-                item.add_marker(pytest.mark.xdist_group("postgres"))
-            elif "mysql_collector_db" in item.fixturenames:
-                item.add_marker(pytest.mark.xdist_group("mysql"))
-            elif "oracle_collector_db" in item.fixturenames:
-                item.add_marker(pytest.mark.xdist_group("oracle"))
-            elif "sqlserver_collector_db" in item.fixturenames:
-                item.add_marker(pytest.mark.xdist_group("sqlserver"))
+        if not hasattr(item, "fixturenames"):
+            continue
+
+        # Get version-specific group name from parameterization
+        group_suffix = ""
+        if hasattr(item, "callspec") and hasattr(item.callspec, "params"):
+            for param_name, param_value in item.callspec.params.items():
+                if "collector_db" in param_name and param_value:
+                    # Extract version from parameter value (e.g., "postgres:12" -> "12")
+                    group_suffix = f"-{slugify(str(param_value))}"
+                    break
+
+        if "postgres_collector_db" in item.fixturenames:
+            item.add_marker(pytest.mark.xdist_group(f"postgres{group_suffix}"))
+        elif "mysql_collector_db" in item.fixturenames:
+            item.add_marker(pytest.mark.xdist_group(f"mysql{group_suffix}"))
+        elif "oracle_collector_db" in item.fixturenames:
+            item.add_marker(pytest.mark.xdist_group(f"oracle{group_suffix}"))
+        elif "sqlserver_collector_db" in item.fixturenames:
+            item.add_marker(pytest.mark.xdist_group(f"sqlserver{group_suffix}"))
