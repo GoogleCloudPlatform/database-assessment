@@ -104,6 +104,12 @@ def test_privileges_success(
     test_passwd = "testpasswd"
     config = postgres_collector_db.config
 
+    # cleanup from previous runs (if any)
+    try:
+        adbc_driver.execute_script("DROP OWNED BY testuser; DROP USER IF EXISTS testuser")
+    except Exception:
+        pass  # User may not exist
+
     # setup test user
     adbc_driver.execute(f"CREATE USER {test_user} WITH PASSWORD '{test_passwd}'")
     adbc_driver.execute("CREATE EXTENSION IF NOT EXISTS pglogical")
@@ -141,7 +147,7 @@ def test_privileges_success(
         ],
     )
     # cleanup
-    adbc_driver.execute("DROP OWNED BY testuser; DROP USER testuser")
+    adbc_driver.execute_script("DROP OWNED BY testuser; DROP USER testuser")
     assert result.exit_code == 0, f"CLI failed with output: {result.output}"
     with get_duckdb_driver(working_path=tmp_path, export_path=tmp_path) as driver:
         rows = driver.select("SELECT severity, info FROM readiness_check_summary WHERE rule_code='PRIVILEGES'")
@@ -158,6 +164,12 @@ def test_privileges_failure(
     test_user = "testuser"
     test_passwd = "testpasswd"
     config = postgres_collector_db.config
+
+    # cleanup from previous runs (if any)
+    try:
+        adbc_driver.execute_script("DROP OWNED BY testuser; DROP USER IF EXISTS testuser")
+    except Exception:
+        pass  # User may not exist
 
     # setup test user
     adbc_driver.execute(f"CREATE USER {test_user} WITH PASSWORD '{test_passwd}'")
@@ -189,7 +201,7 @@ def test_privileges_failure(
     )
 
     # Cleanup
-    adbc_driver.execute("DROP OWNED BY testuser; DROP USER testuser")
+    adbc_driver.execute_script("DROP OWNED BY testuser; DROP USER testuser")
 
     assert result.exit_code == 0
     with get_duckdb_driver(working_path=tmp_path, export_path=tmp_path) as driver:
