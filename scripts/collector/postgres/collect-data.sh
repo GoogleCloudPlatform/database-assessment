@@ -19,7 +19,7 @@
 
 # Global variables and constants
 dma_version="4.3.45"
-all_dbs=""
+all_dbs="Y"
 collection_user_name=""
 collection_user_pass=""
 conn_str=""
@@ -438,7 +438,7 @@ function print_usage() {
   echo " Example:"
   echo
   echo " To collect data for a single database:"
-  echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --all_dbs N"
+  echo "  ./collect-data.sh --connectionStr {user}/{password}@//{db host}:{listener port}/{service name} --allDbs N"
   echo " or"
   echo "  ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --allDbs N"
   echo
@@ -494,7 +494,7 @@ function parse_parameters() {
 
 
   if [[ "${all_dbs}" != "Y" && "${all_dbs}" != "N" ]] ; then
-    echo "Invalid value supplied for parameter all_dbs.  Must be Y or N."
+    echo "Invalid value supplied for parameter allDbs.  Must be Y or N."
     print_usage
     exit 255
   fi
