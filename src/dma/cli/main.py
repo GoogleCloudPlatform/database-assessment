@@ -116,6 +116,38 @@ def app(ctx: Context) -> None:
     required=False,
     show_default=False,
 )
+@click.option(
+    "--ssl-mode",
+    help="SSL connection mode (disable, allow, prefer, require, verify-ca, verify-full).",
+    default=None,
+    type=click.Choice(["disable", "allow", "prefer", "require", "verify-ca", "verify-full"]),
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--ssl-cert",
+    help="Path to client SSL certificate file.",
+    default=None,
+    type=click.Path(exists=True),
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--ssl-key",
+    help="Path to client SSL private key file.",
+    default=None,
+    type=click.Path(exists=True),
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--ssl-root-cert",
+    help="Path to SSL root CA certificate file.",
+    default=None,
+    type=click.Path(exists=True),
+    required=False,
+    show_default=False,
+)
 def collect_data(
     no_prompt: bool,
     db_type: Literal["postgres"],
@@ -125,6 +157,10 @@ def collect_data(
     port: int | None = None,
     database: str | None = None,
     collection_identifier: str | None = None,
+    ssl_mode: str | None = None,
+    ssl_cert: str | None = None,
+    ssl_key: str | None = None,
+    ssl_root_cert: str | None = None,
 ) -> None:
     """Process a collection of advisor extracts."""
     print_app_info()
@@ -149,6 +185,10 @@ def collect_data(
                 password=password,
                 hostname=hostname,
                 port=port,
+                ssl_mode=ssl_mode,
+                ssl_cert=ssl_cert,
+                ssl_key=ssl_key,
+                ssl_root_cert=ssl_root_cert,
             ),
             database=database,
             collection_identifier=collection_identifier,
@@ -287,6 +327,38 @@ def _collect_data(
     required=False,
     show_default=False,
 )
+@click.option(
+    "--ssl-mode",
+    help="SSL connection mode (disable, allow, prefer, require, verify-ca, verify-full).",
+    default=None,
+    type=click.Choice(["disable", "allow", "prefer", "require", "verify-ca", "verify-full"]),
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--ssl-cert",
+    help="Path to client SSL certificate file.",
+    default=None,
+    type=click.Path(exists=True),
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--ssl-key",
+    help="Path to client SSL private key file.",
+    default=None,
+    type=click.Path(exists=True),
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--ssl-root-cert",
+    help="Path to SSL root CA certificate file.",
+    default=None,
+    type=click.Path(exists=True),
+    required=False,
+    show_default=False,
+)
 def readiness_assessment(
     no_prompt: bool,
     db_type: Literal["postgres"],
@@ -299,6 +371,10 @@ def readiness_assessment(
     export: str | None = None,
     working_path: str | None = None,
     output_zip: str | None = None,
+    ssl_mode: str | None = None,
+    ssl_cert: str | None = None,
+    ssl_key: str | None = None,
+    ssl_root_cert: str | None = None,
 ) -> None:
     """Process a collection of advisor extracts."""
     print_app_info()
@@ -323,6 +399,10 @@ def readiness_assessment(
                 password=password,
                 hostname=hostname,
                 port=port,
+                ssl_mode=ssl_mode,
+                ssl_cert=ssl_cert,
+                ssl_key=ssl_key,
+                ssl_root_cert=ssl_root_cert,
             ),
             database=database,
             collection_identifier=collection_identifier,

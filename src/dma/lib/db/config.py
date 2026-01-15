@@ -42,6 +42,10 @@ class SourceInfo:
         password: Database authentication password.
         hostname: Database server hostname or IP address.
         port: Database server port number.
+        ssl_mode: SSL connection mode (disable, allow, prefer, require, verify-ca, verify-full).
+        ssl_cert: Path to client SSL certificate file.
+        ssl_key: Path to client SSL private key file.
+        ssl_root_cert: Path to SSL root CA certificate file.
     """
 
     db_type: SupportedSources
@@ -49,6 +53,10 @@ class SourceInfo:
     password: str
     hostname: str
     port: int
+    ssl_mode: str | None = None
+    ssl_cert: str | None = None
+    ssl_key: str | None = None
+    ssl_root_cert: str | None = None
 
 
 def create_postgres_adbc_config(
@@ -68,8 +76,26 @@ def create_postgres_adbc_config(
         Configured AdbcConfig instance.
     """
     uri = f"postgresql://{src_info.username}:{src_info.password}@{src_info.hostname}:{src_info.port}/{database}"
+
+    # Add SSL parameters as URI query string if specified
+    ssl_params: list[str] = []
+    if src_info.ssl_mode:
+        ssl_params.append(f"sslmode={src_info.ssl_mode}")
+    if src_info.ssl_cert:
+        ssl_params.append(f"sslcert={src_info.ssl_cert}")
+    if src_info.ssl_key:
+        ssl_params.append(f"sslkey={src_info.ssl_key}")
+    if src_info.ssl_root_cert:
+        ssl_params.append(f"sslrootcert={src_info.ssl_root_cert}")
+
+    if ssl_params:
+        uri = f"{uri}?{'&'.join(ssl_params)}"
+
     return AdbcConfig(
-        connection_config={"uri": uri},
+        connection_config={
+            "uri": uri,
+            "autocommit": True,  # Each statement is its own transaction to prevent cascading failures
+        },
     )
 
 

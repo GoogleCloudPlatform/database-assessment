@@ -262,7 +262,10 @@ def test_pg_version(
     )
     assert result.exit_code == 0
 
-    pg_version_num = adbc_driver.select_value("SHOW server_version_num")
+    # Use pg_settings query instead of SHOW (ADBC wraps queries in COPY which doesn't support SHOW)
+    pg_version_num = adbc_driver.select_value(
+        "SELECT setting FROM pg_settings WHERE name = 'server_version_num'"
+    )
     pg_major_version = int(int(pg_version_num) / 10000)
 
     with get_duckdb_driver(working_path=tmp_path, export_path=tmp_path) as driver:
