@@ -656,19 +656,22 @@ BEGIN
   IF (l_tab_name != 'NONE' AND l_tab_name NOT LIKE 'ERROR%') THEN
      -- Get the snapshot range for AWR stats.
      IF l_tab_name = 'DBA_HIST_SNAPSHOT' THEN
-       THE_SQL := 'SELECT min(snap_id) , max(snap_id) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- :v_statsWindow ) AND dbid = :v_dbid ';
+       THE_SQL := 'SELECT min(snap_id) , max(snap_id), min(begin_interval_time), max(begin_interval_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- :v_statsWindow ) AND dbid = :v_dbid ';
        -- dbms_output.put_Line(the_sql);
        -- dbms_output.put_line(:v_statsWindow);
        -- dbms_output.put_line(:v_dbid);
-       EXECUTE IMMEDIATE the_sql INTO  :v_min_snapid, :v_max_snapid USING :v_statsWindow,  :v_dbid ;
+       EXECUTE IMMEDIATE the_sql INTO  :v_min_snapid, :v_max_snapid, :v_min_snaptime, :v_max_snaptime USING :v_statsWindow,  :v_dbid ;
        IF :v_min_snapid IS NULL THEN
           dbms_output.put_line('Warning: No DBA_HIST snapshots found within the last ' || :v_statsWindow || ' days.  No performance data will be extracted.');
           :v_min_snapid := -1;
           :v_max_snapid := -1;
+          :v_min_snaptime := sysdate;
+          :v_max_snaptime := sysdate;
           :v_info_prompt := 'without performance data';
           :v_statssrc := 'nostats';
        ELSE
-          :v_info_prompt := 'between snaps ' || :v_min_snapid || ' and ' || :v_max_snapid;
+          -- :v_info_prompt := 'between snaps ' || :v_min_snapid || ' and ' || :v_max_snapid;
+          :v_info_prompt := 'between  ' || :v_min_snaptime || ' and ' || :v_max_snaptime;
        END IF;
      ELSE
        -- Get the snapshot range for STATSPACK stats.
