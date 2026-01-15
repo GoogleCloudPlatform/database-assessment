@@ -23,7 +23,7 @@ import pytest
 from sqlalchemy import text
 
 from dma.cli.main import app
-from dma.lib.db.local import get_duckdb_connection
+from dma.lib.db.local import get_duckdb_driver
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -73,12 +73,10 @@ def test_pglogical(
         ],
     )
     assert result.exit_code == 0
-    with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
-        rows = local_db.sql(
-            "select severity from readiness_check_summary WHERE rule_code = 'PGLOGICAL_INSTALLED'",
-        ).fetchall()
+    with get_duckdb_driver(working_path=tmp_path, export_path=tmp_path) as driver:
+        rows = driver.select("SELECT severity FROM readiness_check_summary WHERE rule_code = 'PGLOGICAL_INSTALLED'")
         for row in rows:
-            assert row[0] == PASS
+            assert row["severity"] == PASS
 
 
 def test_privileges_success(
@@ -127,12 +125,10 @@ def test_privileges_success(
     with sync_engine.begin() as conn:
         conn.execute(text("DROP OWNED BY testuser; DROP USER testuser;"))
     assert result.exit_code == 0
-    with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
-        rows = local_db.sql(
-            "select severity, info from readiness_check_summary where rule_code='PRIVILEGES'",
-        ).fetchall()
+    with get_duckdb_driver(working_path=tmp_path, export_path=tmp_path) as driver:
+        rows = driver.select("SELECT severity, info FROM readiness_check_summary WHERE rule_code='PRIVILEGES'")
         for row in rows:
-            assert row[0] == PASS
+            assert row["severity"] == PASS
 
 
 def test_privileges_failure(
@@ -174,12 +170,10 @@ def test_privileges_failure(
         conn.execute(text("DROP OWNED BY testuser; DROP USER testuser;"))
 
     assert result.exit_code == 0
-    with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
-        rows = local_db.sql(
-            "select severity, info from readiness_check_summary where rule_code='PRIVILEGES'",
-        ).fetchall()
+    with get_duckdb_driver(working_path=tmp_path, export_path=tmp_path) as driver:
+        rows = driver.select("SELECT severity, info FROM readiness_check_summary WHERE rule_code='PRIVILEGES'")
         for row in rows:
-            assert row[0] == ACTION_REQUIRED
+            assert row["severity"] == ACTION_REQUIRED
 
 
 def test_wal_level(
@@ -210,12 +204,10 @@ def test_wal_level(
         ],
     )
     assert result.exit_code == 0
-    with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
-        rows = local_db.sql(
-            "select severity from readiness_check_summary WHERE rule_code = 'WAL_LEVEL'",
-        ).fetchall()
+    with get_duckdb_driver(working_path=tmp_path, export_path=tmp_path) as driver:
+        rows = driver.select("SELECT severity FROM readiness_check_summary WHERE rule_code = 'WAL_LEVEL'")
         for row in rows:
-            assert row[0] == "PASS"
+            assert row["severity"] == PASS
 
 
 def test_pg_version(
@@ -253,17 +245,17 @@ def test_pg_version(
         if pg_version:
             pg_major_version = int(int(pg_version[0]) / 10000)
 
-    with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
-        rows = local_db.sql(
-            "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'DATABASE_VERSION'",
-        ).fetchall()
+    with get_duckdb_driver(working_path=tmp_path, export_path=tmp_path) as driver:
+        rows = driver.select(
+            "SELECT severity, migration_target, info FROM readiness_check_summary WHERE rule_code = 'DATABASE_VERSION'"
+        )
         for row in rows:
-            migration_target = row[1]
+            migration_target = row["migration_target"]
             if migration_target == "ALLOYDB" and pg_major_version == 17:
                 # AlloyDB doesn't support pg17 yet. Remove this check after AlloyDB supports pg17.
-                assert row[0] == ERROR
+                assert row["severity"] == ERROR
             else:
-                assert row[0] == PASS
+                assert row["severity"] == PASS
 
 
 def test_pg_source_settings(
@@ -294,34 +286,34 @@ def test_pg_source_settings(
         ],
     )
     assert result.exit_code == 0
-    with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
-        rows = local_db.sql(
-            "select severity, info from readiness_check_summary WHERE rule_code = 'MAX_REPLICATION_SLOTS'",
-        ).fetchall()
+    with get_duckdb_driver(working_path=tmp_path, export_path=tmp_path) as driver:
+        rows = driver.select(
+            "SELECT severity, info FROM readiness_check_summary WHERE rule_code = 'MAX_REPLICATION_SLOTS'"
+        )
         for row in rows:
-            assert row[0] == WARNING
+            assert row["severity"] == WARNING
             assert (
-                row[1]
+                row["info"]
                 == """`max_replication_slots` current value: 10, this might need to be increased to 11 depending on the parallelism level set for migration. Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."""
             )
 
-        rows = local_db.sql(
-            "select severity, info from readiness_check_summary WHERE rule_code = 'WAL_SENDERS_REPLICATION_SLOTS'",
-        ).fetchall()
+        rows = driver.select(
+            "SELECT severity, info FROM readiness_check_summary WHERE rule_code = 'WAL_SENDERS_REPLICATION_SLOTS'"
+        )
         for row in rows:
-            assert row[0] == PASS
+            assert row["severity"] == PASS
             assert (
-                row[1]
+                row["info"]
                 == """`max_wal_senders` current value: 10, this meets or exceeds the `max_replication_slots` value of 10"""
             )
 
-        rows = local_db.sql(
-            "select severity, info from readiness_check_summary WHERE rule_code = 'MAX_WORKER_PROCESSES'",
-        ).fetchall()
+        rows = driver.select(
+            "SELECT severity, info FROM readiness_check_summary WHERE rule_code = 'MAX_WORKER_PROCESSES'"
+        )
         for row in rows:
-            assert row[0] == WARNING
+            assert row["severity"] == WARNING
             assert (
-                row[1]
+                row["info"]
                 == "`max_worker_processes` current value: 8, this might need to be increased to 11 depending on the parallelism level set for migration. Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
             )
 
@@ -356,10 +348,8 @@ def test_tables_without_pk(
         ],
     )
     assert result.exit_code == 0
-    with get_duckdb_connection(working_path=tmp_path, export_path=tmp_path) as local_db:
-        rows = local_db.sql(
-            "select severity, info from readiness_check_summary WHERE rule_code = 'TABLES_WITH_NO_PK'",
-        ).fetchall()
+    with get_duckdb_driver(working_path=tmp_path, export_path=tmp_path) as driver:
+        rows = driver.select("SELECT severity, info FROM readiness_check_summary WHERE rule_code = 'TABLES_WITH_NO_PK'")
         assert len(rows) == 2
         for row in rows:
-            assert row[0] == WARNING
+            assert row["severity"] == WARNING

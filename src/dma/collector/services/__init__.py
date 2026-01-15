@@ -11,28 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Dummy conftest.py for `DMA`.
+"""Collection services for database data extraction.
 
-If you don't know what this is for, just leave it empty.
-Read more about conftest.py under:
-- https://docs.pytest.org/en/stable/fixture.html
-- https://docs.pytest.org/en/stable/writing_plugins.html
+This module provides database-specific collection services that use SQLSpec
+drivers for efficient data extraction with Arrow-native data transfer.
 """
 
 from __future__ import annotations
 
-from pathlib import Path
+from dma.collector.services.postgres import PostgresCollectionService
 
-import pytest
-
-pytestmark = pytest.mark.anyio
-here = Path(__file__).parent
-root_path = here.parent
-pytest_plugins = [
-    "tests.database",
-]
-
-
-@pytest.fixture(scope="session")
-def anyio_backend() -> str:
-    return "asyncio"
+__all__ = ("PostgresCollectionService",)

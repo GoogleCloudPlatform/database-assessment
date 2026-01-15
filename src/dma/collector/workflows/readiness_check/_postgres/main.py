@@ -198,10 +198,8 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     )
 
     def _get_collation(self) -> set[str]:
-        result = self.local_db.sql(
-            "select distinct database_collation from collection_postgres_database_details"
-        ).fetchall()
-        return {row[0].lower() for row in result}
+        result = self.driver.select("select distinct database_collation from collection_postgres_database_details")
+        return {row["database_collation"].lower() for row in result}
 
     def _check_collation(self) -> None:
         rule_code = "COLLATION"
@@ -226,22 +224,22 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_tables_without_pk(self, db_name: str, db_check_results: dict[str, dict[str, list]]) -> None:
         rule_code = TABLES_WITH_NO_PK
-        result = self.local_db.sql(
-            "select CONCAT(nspname, '.', relname) from collection_postgres_tables_with_no_primary_key where database_name = $db_name",
-            params={"db_name": db_name},
-        ).fetchall()
-        tables = ", ".join(row[0] for row in result)
+        result = self.driver.select(
+            "select CONCAT(nspname, '.', relname) as table_name from collection_postgres_tables_with_no_primary_key where database_name = $db_name",
+            db_name=db_name,
+        )
+        tables = ", ".join(row["table_name"] for row in result)
         init_results_dict(db_check_results, rule_code)
         if tables:
             db_check_results[rule_code][WARNING].append(f"In database {db_name}, {tables} don't have primary keys")
 
     def _check_tables_replica_identity(self, db_name: str, db_check_results: dict[str, dict[str, list]]) -> None:
         rule_code = UNSUPPORTED_TABLES_WITH_REPLICA_IDENTITY
-        result = self.local_db.sql(
-            "select CONCAT(nspname, '.', relname) from collection_postgres_tables_with_primary_key_replica_identity where database_name = $db_name",
-            params={"db_name": db_name},
-        ).fetchall()
-        tables = ", ".join(row[0] for row in result)
+        result = self.driver.select(
+            "select CONCAT(nspname, '.', relname) as table_name from collection_postgres_tables_with_primary_key_replica_identity where database_name = $db_name",
+            db_name=db_name,
+        )
+        tables = ", ".join(row["table_name"] for row in result)
         init_results_dict(db_check_results, rule_code)
         if tables:
             db_check_results[rule_code][ACTION_REQUIRED].append(f"{tables} in database {db_name}")
@@ -293,11 +291,11 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_pglogical_installed(self, db_name: str, db_check_results: dict[str, dict[str, list]]) -> bool:
         rule_code = PGLOGICAL_INSTALLED
-        result = self.local_db.sql(
-            query="select count(*) from collection_postgres_extensions where extension_name = 'pglogical' and database_name = $db_name",
-            params={"db_name": db_name},
-        ).fetchone()
-        is_installed = result[0] > 0 if result is not None else False
+        count = self.driver.select_value(
+            "select count(*) from collection_postgres_extensions where extension_name = 'pglogical' and database_name = $db_name",
+            db_name=db_name,
+        )
+        is_installed = count > 0 if count is not None else False
         init_results_dict(db_check_results, rule_code)
         if not is_installed:
             db_check_results[rule_code][ACTION_REQUIRED].append(db_name)
@@ -306,13 +304,13 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         return is_installed
 
     def _check_pglogical_schema_usage_privilege(self, db_name: str) -> str | None:
-        result = self.local_db.sql(
+        result = self.driver.select_one_or_none(
             "select has_schema_usage_privilege from collection_postgres_pglogical_schema_usage_privilege where database_name = $db_name",
-            params={"db_name": db_name},
-        ).fetchone()
+            db_name=db_name,
+        )
         if result is None:
             return "Empty result reading pglogical schema usage privilege for the user"
-        if not result[0]:
+        if not result["has_schema_usage_privilege"]:
             return "user doesn't have USAGE privilege on schema pglogical"
         return None
 
@@ -320,31 +318,31 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         err = self._check_pglogical_schema_usage_privilege(db_name)
         if err is not None:
             return [err]
-        result = self.local_db.sql(
+        result = self.driver.select_one_or_none(
             "select has_tables_select_privilege, has_local_node_select_privilege, has_node_select_privilege, has_node_interface_select_privilege from collection_postgres_pglogical_privileges where database_name = $db_name",
-            params={"db_name": db_name},
-        ).fetchone()
+            db_name=db_name,
+        )
         errors: list[str] = []
         if result is None:
             errors.append("Empty result reading pglogical privileges for the user")
         else:
-            if not result[0]:
+            if not result["has_tables_select_privilege"]:
                 errors.append("user doesn't have SELECT privilege on table pglogical.tables")
-            if not result[1]:
+            if not result["has_local_node_select_privilege"]:
                 errors.append("user doesn't have SELECT privilege on table pglogical.local_node")
-            if not result[2]:
+            if not result["has_node_select_privilege"]:
                 errors.append("user doesn't have SELECT privilege on table pglogical.node")
-            if not result[3]:
+            if not result["has_node_interface_select_privilege"]:
                 errors.append("user doesn't have SELECT privilege on table pglogical.node_interface")
         return errors
 
     def _check_if_node_exists(self, db_name: str, db_check_results: dict[str, dict[str, list]]) -> None:
         rule_code = PGLOGICAL_NODE_ALREADY_EXISTS
-        result = self.local_db.sql(
+        count = self.driver.select_value(
             "select count(*) from collection_postgres_pglogical_provider_node where database_name = $db_name",
-            params={"db_name": db_name},
-        ).fetchone()
-        node_exists = result[0] > 0 if result is not None else False
+            db_name=db_name,
+        )
+        node_exists = count > 0 if count is not None else False
         init_results_dict(db_check_results, rule_code)
         if node_exists:
             db_check_results[rule_code][ACTION_REQUIRED].append(db_name)
@@ -353,40 +351,46 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def check_user_obj_privileges(self, db_name: str) -> list[str]:
         errors: list[str] = []
-        rows = self.local_db.sql(
+        rows = self.driver.select(
             "select namespace_name from collection_postgres_user_schemas_without_privilege where database_name = $db_name",
-            params={"db_name": db_name},
-        ).fetchall()
-        errors.extend(f"user doesn't have USAGE privilege on schema {row[0]}" for row in rows)
+            db_name=db_name,
+        )
+        errors.extend(f"user doesn't have USAGE privilege on schema {row['namespace_name']}" for row in rows)
 
-        rows = self.local_db.sql(
+        rows = self.driver.select(
             "select schema_name, table_name from collection_postgres_user_tables_without_privilege where database_name = $db_name",
-            params={"db_name": db_name},
-        ).fetchall()
-        errors.extend(f"user doesn't have SELECT privilege on table {row[0]}.{row[1]}" for row in rows)
+            db_name=db_name,
+        )
+        errors.extend(
+            f"user doesn't have SELECT privilege on table {row['schema_name']}.{row['table_name']}" for row in rows
+        )
 
-        rows = self.local_db.sql(
+        rows = self.driver.select(
             "select schema_name, view_name from collection_postgres_user_views_without_privilege where database_name = $db_name",
-            params={"db_name": db_name},
-        ).fetchall()
-        errors.extend(f"user doesn't have SELECT privilege on view {row[0]}.{row[1]}" for row in rows)
+            db_name=db_name,
+        )
+        errors.extend(
+            f"user doesn't have SELECT privilege on view {row['schema_name']}.{row['view_name']}" for row in rows
+        )
 
-        rows = self.local_db.sql(
+        rows = self.driver.select(
             "select namespace_name, rel_name from collection_postgres_user_sequences_without_privilege where database_name = $db_name",
-            params={"db_name": db_name},
-        ).fetchall()
-        errors.extend(f"user doesn't have SELECT privilege on sequence {row[0]}.{row[1]}" for row in rows)
+            db_name=db_name,
+        )
+        errors.extend(
+            f"user doesn't have SELECT privilege on sequence {row['namespace_name']}.{row['rel_name']}" for row in rows
+        )
         return errors
 
     def _check_replication_role(self) -> None:
         if self._is_rds():
             return
         rule_code = REPLICATION_ROLE
-        result = self.local_db.sql("SELECT rolreplication FROM collection_postgres_replication_role").fetchone()
+        result = self.driver.select_one_or_none("SELECT rolreplication FROM collection_postgres_replication_role")
         if result is None:
             return
         for c in self.rule_config:
-            if result[0] == "false":
+            if result["rolreplication"] == "false":
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
@@ -418,16 +422,16 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_wal_level(self) -> None:
         rule_code = "WAL_LEVEL"
-        result = self.local_db.sql(
-            "select c.setting_value as wal_level from collection_postgres_settings c where c.setting_name='wal_level' and c.setting_value!='logical';"
-        ).fetchone()
+        result = self.driver.select_one_or_none(
+            "select c.setting_value as wal_level from collection_postgres_settings c where c.setting_name='wal_level' and c.setting_value!='logical'"
+        )
         for c in self.rule_config:
             if result is not None:
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,
                     ACTION_REQUIRED,
-                    f'The `wal_level` settings should be set to "logical" instead of "{result[0]}".',
+                    f'The `wal_level` settings should be set to "logical" instead of "{result["wal_level"]}".',
                 )
             else:
                 self.save_rule_result(
@@ -438,10 +442,10 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 )
 
     def _get_rds_logical_replication(self) -> str:
-        rds_logical_replication_result = self.local_db.sql(
-            "select c.setting_value from collection_postgres_settings c where c.setting_name='rds.logical_replication';"
-        ).fetchone()
-        return rds_logical_replication_result[0] if rds_logical_replication_result is not None else "unset"
+        result = self.driver.select_one_or_none(
+            "select c.setting_value from collection_postgres_settings c where c.setting_name='rds.logical_replication'"
+        )
+        return result["setting_value"] if result is not None else "unset"
 
     def _check_rds_logical_replication(self) -> None:
         rule_code = "RDS_LOGICAL_REPLICATION"
@@ -467,21 +471,15 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
     def _check_max_replication_slots(self) -> None:
         rule_code = "MAX_REPLICATION_SLOTS"
         url_link = "Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
-        db_count_result = self.local_db.sql(
-            "select count(*) from extended_collection_postgres_all_databases"
-        ).fetchone()
-        db_count = int(db_count_result[0]) if db_count_result is not None else 0
-        total_replication_slots_result = self.local_db.sql(
-            "select c.setting_value as max_replication_slots from collection_postgres_settings c where c.setting_name='max_replication_slots';"
-        ).fetchone()
-        total_replication_slots = (
-            int(total_replication_slots_result[0]) if total_replication_slots_result is not None else 0
+        db_count = self.driver.select_value("select count(*) from extended_collection_postgres_all_databases") or 0
+        total_replication_slots = int(
+            self.driver.select_value(
+                "select c.setting_value from collection_postgres_settings c where c.setting_name='max_replication_slots'"
+            )
+            or 0
         )
-        used_replication_slots_result = self.local_db.sql(
-            "select count(*) from collection_postgres_replication_slots"
-        ).fetchone()
         used_replication_slots = (
-            int(used_replication_slots_result[0]) if used_replication_slots_result is not None else 0
+            self.driver.select_value("select count(*) from collection_postgres_replication_slots") or 0
         )
         required_replication_slots = db_count + used_replication_slots
         for c in self.rule_config:
@@ -511,14 +509,13 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
     def _check_max_wal_senders(self) -> None:
         rule_code = "MAX_WAL_SENDERS"
         url_link = "Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
-        db_count_result = self.local_db.sql(
-            "select count(*) from extended_collection_postgres_all_databases"
-        ).fetchone()
-        db_count = int(db_count_result[0]) if db_count_result is not None else 0
-        wal_senders_result = self.local_db.sql(
-            "select c.setting_value as max_wal_senders from collection_postgres_settings c where c.setting_name='max_wal_senders';"
-        ).fetchone()
-        wal_senders = int(wal_senders_result[0]) if wal_senders_result is not None else 0
+        db_count = self.driver.select_value("select count(*) from extended_collection_postgres_all_databases") or 0
+        wal_senders = int(
+            self.driver.select_value(
+                "select c.setting_value from collection_postgres_settings c where c.setting_name='max_wal_senders'"
+            )
+            or 0
+        )
         for c in self.rule_config:
             max_required_subscriptions = db_count + c.extra_replication_subscriptions_required
             if wal_senders < db_count:
@@ -545,15 +542,17 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_max_wal_senders_replication_slots(self) -> None:
         rule_code = "WAL_SENDERS_REPLICATION_SLOTS"
-        wal_senders_result = self.local_db.sql(
-            "select c.setting_value as max_wal_senders from collection_postgres_settings c where c.setting_name='max_wal_senders';"
-        ).fetchone()
-        wal_senders = int(wal_senders_result[0]) if wal_senders_result is not None else 0
-        total_replication_slots_result = self.local_db.sql(
-            "select c.setting_value as max_replication_slots from collection_postgres_settings c where c.setting_name='max_replication_slots';"
-        ).fetchone()
-        total_replication_slots = (
-            int(total_replication_slots_result[0]) if total_replication_slots_result is not None else 0
+        wal_senders = int(
+            self.driver.select_value(
+                "select c.setting_value from collection_postgres_settings c where c.setting_name='max_wal_senders'"
+            )
+            or 0
+        )
+        total_replication_slots = int(
+            self.driver.select_value(
+                "select c.setting_value from collection_postgres_settings c where c.setting_name='max_replication_slots'"
+            )
+            or 0
         )
         for c in self.rule_config:
             if wal_senders < total_replication_slots:
@@ -574,14 +573,13 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
     def _check_max_worker_processes(self) -> None:
         rule_code = "MAX_WORKER_PROCESSES"
         url_link = "Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
-        db_count_result = self.local_db.sql(
-            "select count(*) from extended_collection_postgres_all_databases"
-        ).fetchone()
-        db_count = int(db_count_result[0]) if db_count_result is not None else 0
-        max_worker_processes_result = self.local_db.sql(
-            "select c.setting_value as max_worker_processes from collection_postgres_settings c where c.setting_name='max_worker_processes';"
-        ).fetchone()
-        max_worker_processes = int(max_worker_processes_result[0]) if max_worker_processes_result is not None else 0
+        db_count = self.driver.select_value("select count(*) from extended_collection_postgres_all_databases") or 0
+        max_worker_processes = int(
+            self.driver.select_value(
+                "select c.setting_value from collection_postgres_settings c where c.setting_name='max_worker_processes'"
+            )
+            or 0
+        )
         for c in self.rule_config:
             max_required_subscriptions = db_count + c.extra_replication_subscriptions_required
             if max_worker_processes < db_count:
@@ -606,10 +604,10 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                     f"`max_worker_processes` current value: {max_worker_processes}, this meets or exceeds the maximum required value of {max_required_subscriptions}",
                 )
 
-    def _get_installed_extensions(self) -> list[Any]:
-        return self.local_db.sql(
+    def _get_installed_extensions(self) -> list[dict[str, Any]]:
+        return self.driver.select(
             "select extension_name, extension_owner, database_name from collection_postgres_extensions"
-        ).fetchall()
+        )
 
     @dataclass
     class ExtensionInfo:
@@ -622,9 +620,9 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             list
         )
         for row in installed_extensions:
-            ext_name = row[0]
-            ext_owner = row[1]
-            db_name = row[2]
+            ext_name = row["extension_name"]
+            ext_owner = row["extension_owner"]
+            db_name = row["database_name"]
             exts = installed_db_extensions[db_name]
             exts.append(self.ExtensionInfo(ext_name, ext_owner))
 
@@ -690,10 +688,10 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     def _check_fdw(self) -> None:
         rule_code = "FDWS"
-        result = self.local_db.sql(
+        result = self.driver.select(
             "select foreign_data_wrapper_name as fdw_name, count(distinct table_schema || table_name) as table_count from collection_postgres_table_details where foreign_data_wrapper_name is not null group by foreign_data_wrapper_name"
-        ).fetchall()
-        fdw_map = {row[0]: int(row[1]) for row in result}
+        )
+        fdw_map = {row["fdw_name"]: int(row["table_count"]) for row in result}
         fdws = set(fdw_map.keys())
         for c in self.rule_config:
             unsupported_fdws = fdws.difference(c.supported_fdws)
@@ -722,15 +720,15 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         self,
     ) -> None:
         """Print Summary of the Migration Readiness Assessment."""
-        results = self.local_db.sql(
+        results = self.driver.select(
             "select metric_category, metric_name, metric_value from collection_postgres_calculated_metrics",
-        ).fetchall()
+        )
         count_table = Table(min_width=80)
         count_table.add_column("Variable Category", justify="right", style="green")
         count_table.add_column("Variable", justify="right", style="green")
         count_table.add_column("Value", justify="right", style="green")
         for row in results:
-            count_table.add_row(*[str(col) for col in row])
+            count_table.add_row(str(row["metric_category"]), str(row["metric_name"]), str(row["metric_value"]))
         self.console.print(count_table)
 
     def _print_readiness_check_summary(self) -> None:
@@ -738,10 +736,10 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         db_variants: list[PostgresVariants] = [ALLOYDB, CLOUDSQL]
 
         def table_for_target(migration_target: PostgresVariants) -> None:
-            results = self.local_db.execute(
-                "select severity, rule_code, info from readiness_check_summary where migration_target = ? ORDER BY severity, rule_code",
-                [migration_target],
-            ).fetchall()
+            results = self.driver.select(
+                "select severity, rule_code, info from readiness_check_summary where migration_target = $migration_target ORDER BY severity, rule_code",
+                migration_target=migration_target,
+            )
             count_table = Table(
                 min_width=80, title=f"{migration_target} Compatibility", leading=5, title_justify="left"
             )
@@ -750,14 +748,15 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
             count_table.add_column("Info", justify="left", overflow="fold")
 
             for row in results:
+                severity = row["severity"]
                 count_table.add_row(
-                    f"[bold green]{row[0]}[/]"
-                    if row[0] == PASS
-                    else f"[bold yellow]{row[0]}[/]"
-                    if row[0] == WARNING
-                    else f"[bold red]{row[0]}[/]",
-                    f"[bold]{row[1]}[/]",
-                    row[2],
+                    f"[bold green]{severity}[/]"
+                    if severity == PASS
+                    else f"[bold yellow]{severity}[/]"
+                    if severity == WARNING
+                    else f"[bold red]{severity}[/]",
+                    f"[bold]{row['rule_code']}[/]",
+                    row["info"],
                 )
             self.console.print("\n")
             self.console.print(count_table)
@@ -776,7 +775,7 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
 
     # helper methods
     def _is_rds(self) -> bool:
-        result = self.local_db.sql(
+        result = self.driver.select_value(
             "select case when a.cnt > 0 then true else false end as is_rds from (select count() as cnt from collection_postgres_extensions where extension_owner='rdsadmin' AND is_super_user) a"
-        ).fetchone()
-        return bool(result[0] > 0) if result is not None else False
+        )
+        return bool(result) if result is not None else False

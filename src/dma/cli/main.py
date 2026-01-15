@@ -28,8 +28,8 @@ from dma.cli._utils import console
 from dma.collector.dependencies import provide_canonical_queries
 from dma.collector.workflows.collection_extractor.base import CollectionExtractor
 from dma.collector.workflows.readiness_check.base import ReadinessCheck
-from dma.lib.db.base import SourceInfo
-from dma.lib.db.local import get_duckdb_connection
+from dma.lib.db.config import SourceInfo
+from dma.lib.db.local import get_duckdb_driver
 
 if TYPE_CHECKING:
     from click import Context
@@ -57,10 +57,10 @@ def app(ctx: Context) -> None:
     "--db-type",
     "-db",
     help="The type of the database to connect to",
-    default=None,
-    type=click.Choice(["mysql", "postgres", "oracle", "mssql"]),
+    default="postgres",
+    type=click.Choice(["postgres"]),
     required=False,
-    show_default=False,
+    show_default=True,
 )
 @click.option(
     "--username",
@@ -118,7 +118,7 @@ def app(ctx: Context) -> None:
 )
 def collect_data(
     no_prompt: bool,
-    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    db_type: Literal["postgres"],
     username: str | None = None,
     password: str | None = None,
     hostname: str | None = None,
@@ -167,10 +167,10 @@ def _collect_data(
     export_delimiter: str = "|",
 ) -> None:
     _execution_id = f"{src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
-    with get_duckdb_connection(working_path=working_path, export_path=export_path) as local_db:
-        canonical_query_manager = next(provide_canonical_queries(local_db=local_db, working_path=working_path))
+    with get_duckdb_driver(working_path=working_path, export_path=export_path) as driver:
+        canonical_query_manager = next(provide_canonical_queries(driver=driver, working_path=working_path))
         collection_extractor = CollectionExtractor(
-            local_db=local_db,
+            driver=driver,
             src_info=src_info,
             database=database,
             canonical_query_manager=canonical_query_manager,
@@ -201,10 +201,10 @@ def _collect_data(
     "--db-type",
     "-db",
     help="The type of the database to connect to",
-    default=None,
-    type=click.Choice({"mysql", "postgres", "oracle", "mssql"}),
+    default="postgres",
+    type=click.Choice(["postgres"]),
     required=False,
-    show_default=False,
+    show_default=True,
 )
 @click.option(
     "--username",
@@ -280,7 +280,7 @@ def _collect_data(
 )
 def readiness_assessment(
     no_prompt: bool,
-    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    db_type: Literal["postgres"],
     username: str | None = None,
     password: str | None = None,
     hostname: str | None = None,
@@ -333,9 +333,9 @@ def _readiness_check(
     export_delimiter: str = "|",
 ) -> None:
     _execution_id = f"{src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
-    with get_duckdb_connection(working_path=working_path, export_path=export_path) as local_db:
+    with get_duckdb_driver(working_path=working_path, export_path=export_path) as driver:
         workflow = ReadinessCheck(
-            local_db=local_db,
+            driver=driver,
             src_info=src_info,
             database=database,
             console=console,
