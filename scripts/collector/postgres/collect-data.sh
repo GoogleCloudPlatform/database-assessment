@@ -348,7 +348,7 @@ function compress_dma_files() {
 
   echo "dbmajor = ${dbmajor}"  >> ${output_dir}/opdb__defines__${v_file_tag}.csv
   echo "MANUAL_ID : " ${manual_unique_id} >> ${output_dir}/opdb__defines__${v_file_tag}.csv
-  echo "zipfile_name: " $zipfile_name >> ${output_dir}/opdb__defines__${v_file_tag}.csv
+  echo "ZIPFILE: " $zipfile_name >> ${output_dir}/opdb__defines__${v_file_tag}.csv
 
   cd ${output_dir}
   if [[ -f opdb__manifest__${v_file_tag}.txt ]]; then
@@ -499,7 +499,8 @@ function parse_parameters() {
     exit 255
   fi
 
-  if [[ "${manual_unique_id}" != "" ]] ; then
+  if [[ "${manual_unique_id}" != "" && "${manual_unique_id}" != "NA" ]] ; then
+    echo "Forcing ${manual_unique_id} to lower case"
     case "$(uname)" in
       "Solaris" )
             manual_unique_id=$(echo "${manual_unique_id}" | iconv -t ascii//TRANSLIT | ${sed_cmd} -e 's/[^[:alnum:]]+/-/g' -e 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]' | cut -c 1-100)
