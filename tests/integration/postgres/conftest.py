@@ -45,10 +45,12 @@ def adbc_config(postgres_collector_db: PostgreSQLDatabase) -> AdbcConfig:
 
     This fixture is parameterized through postgres_collector_db, which tests
     against all supported PostgreSQL versions (12-18).
+
+    Uses autocommit to ensure changes are visible to CLI's separate connection.
     """
     config = postgres_collector_db.config
     uri = f"postgresql://{config.postgres_user}:{config.postgres_password}@localhost:{config.host_port}/{config.postgres_db}"
-    return AdbcConfig(connection_config={"uri": uri})
+    return AdbcConfig(connection_config={"uri": uri, "autocommit": True})
 
 
 @pytest.fixture(scope="session")

@@ -122,6 +122,8 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
     def execute(self) -> None:
         """Execute postgres checks"""
         self._check_version()
+        self._check_extended_support_warning()
+        self._check_alloydb_omni_compatibility()
         self._check_collation()
         self._check_rds_logical_replication()
         self._check_wal_level()
@@ -146,6 +148,37 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
                 self._check_tables_without_pk(db, db_check_results)
                 self._check_tables_replica_identity(db, db_check_results)
             self._save_results(config.db_variant, db_check_results)
+
+    def _check_extended_support_warning(self) -> None:
+        """Warn when CloudSQL requires extended support for older PG versions."""
+        rule_code = "EXTENDED_SUPPORT_WARNING"
+        detected_major_version = get_db_major_version(self.db_version)
+
+        if 9.6 <= detected_major_version <= 12:
+            for config in self.rule_config:
+                self.save_rule_result(
+                    config.db_variant,
+                    rule_code,
+                    WARNING,
+                    (
+                        f"PostgreSQL {detected_major_version} requires Extended Support on Cloud SQL. "
+                        "Additional charges apply since May 2025. Consider upgrading to PostgreSQL 13+."
+                    ),
+                )
+
+    def _check_alloydb_omni_compatibility(self) -> None:
+        """Warn when PG 17+ is not available on AlloyDB Omni."""
+        rule_code = "ALLOYDB_OMNI_COMPATIBILITY"
+        detected_major_version = get_db_major_version(self.db_version)
+
+        if detected_major_version >= 17:
+            self.save_rule_result(
+                ALLOYDB,
+                rule_code,
+                WARNING,
+                "PostgreSQL 17 is not available on AlloyDB Omni (containerized). "
+                "AlloyDB Omni supports PostgreSQL 15-16 only.",
+            )
 
     def _save_results(self, db_variant: PostgresVariants, db_check_results: dict[str, dict[str, list]]) -> None:
         for rule, result in db_check_results.items():

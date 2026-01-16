@@ -53,6 +53,7 @@ class CollectionExtractor(BaseWorkflow):
         canonical_query_manager: CanonicalQueryManager,
         console: Console,
         collection_identifier: str | None,
+        single_db: bool = False,
     ) -> None:
         """Initialize the collection extractor.
 
@@ -63,10 +64,12 @@ class CollectionExtractor(BaseWorkflow):
             canonical_query_manager: Manager for canonical DuckDB queries.
             console: Rich console for output.
             collection_identifier: Optional manual collection identifier.
+            single_db: When True, restricts per-database collection to the provided database.
         """
         self.src_info = src_info
         self.database = database
         self.collection_identifier = collection_identifier
+        self.single_db = single_db
         self.db_version: str | None = None
         super().__init__(driver, canonical_query_manager, src_info.db_type, console)
 
@@ -126,7 +129,7 @@ class CollectionExtractor(BaseWorkflow):
         if self.src_info.db_type != "POSTGRES":
             return
 
-        dbs = self.get_all_dbs()
+        dbs = {self.database} if self.single_db else self.get_all_dbs()
         for db in dbs:
             config = create_postgres_adbc_config(self.src_info, db)
             with config.provide_session() as pg_driver:

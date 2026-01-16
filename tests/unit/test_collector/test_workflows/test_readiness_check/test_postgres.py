@@ -18,7 +18,11 @@ from unittest.mock import patch
 import pytest
 from rich import get_console
 
-from dma.collector.workflows.readiness_check._postgres.main import PostgresReadinessCheckExecutor
+from dma.collector.workflows.readiness_check._postgres.constants import DB_TYPE_MAP
+from dma.collector.workflows.readiness_check._postgres.main import (
+    POSTGRES_RULE_CONFIGURATIONS,
+    PostgresReadinessCheckExecutor,
+)
 from dma.collector.workflows.readiness_check.base import ReadinessCheck
 from dma.lib.db.config import SourceInfo
 from dma.lib.db.local import get_duckdb_driver
@@ -188,3 +192,41 @@ def test_rds_db_version(database_version, expected_severity):
         )
         for row in rows:
             assert row["severity"] == expected_severity
+
+
+def test_db_type_map_includes_pg18() -> None:
+    assert 18 in DB_TYPE_MAP
+
+
+def test_target_version_limits_updated() -> None:
+    alloydb_config = next(config for config in POSTGRES_RULE_CONFIGURATIONS if config.db_variant == "ALLOYDB")
+    cloudsql_config = next(config for config in POSTGRES_RULE_CONFIGURATIONS if config.db_variant == "CLOUDSQL")
+    assert alloydb_config.maximum_supported_major_version == 17
+    assert cloudsql_config.maximum_supported_major_version == 18
+
+
+def test_extended_support_warning() -> None:
+    with get_duckdb_driver() as driver:
+        executor = _dummy_postgres_readiness_executor(driver, "12.7")
+        _create_readiness_check_summary_table(driver)
+        executor._check_extended_support_warning()
+        rows = driver.select(
+            "select severity, rule_code from readiness_check_summary WHERE rule_code = 'EXTENDED_SUPPORT_WARNING'"
+        )
+        assert rows
+        for row in rows:
+            assert row["severity"] == "WARNING"
+
+
+def test_alloydb_omni_warning() -> None:
+    with get_duckdb_driver() as driver:
+        executor = _dummy_postgres_readiness_executor(driver, "17.2")
+        _create_readiness_check_summary_table(driver)
+        executor._check_alloydb_omni_compatibility()
+        rows = driver.select(
+            "select severity, migration_target from readiness_check_summary WHERE rule_code = 'ALLOYDB_OMNI_COMPATIBILITY'"
+        )
+        assert rows
+        for row in rows:
+            assert row["severity"] == "WARNING"
+            assert row["migration_target"] == "ALLOYDB"

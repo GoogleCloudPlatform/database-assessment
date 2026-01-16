@@ -471,6 +471,8 @@ filterwarnings = [
 markers = [
     "integration: Integration Tests",
     "unit: Unit Tests",
+    "script_test: Collection script tests",
+    "slow: Tests that take > 30 seconds",
     "mysql: MySQL Tests",
     "postgres: Postgres Tests",
     "oracle: Oracle Tests",

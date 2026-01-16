@@ -44,6 +44,11 @@ def app(ctx: Context) -> None:
     """Database Migration Assessment"""
 
 
+@app.command(
+    name="collect-data",
+    no_args_is_help=True,
+    short_help="Run a full database collection.",
+)
 @click.option(
     "--no-prompt",
     help="Do not prompt for confirmation before executing check.",
@@ -108,6 +113,14 @@ def app(ctx: Context) -> None:
     show_default=False,
 )
 @click.option(
+    "--single-db",
+    help="Only collect the specified database (skip all-database collection).",
+    default=False,
+    required=False,
+    show_default=True,
+    is_flag=True,
+)
+@click.option(
     "--collection-identifier",
     "-id",
     help="An optional identifier used to tag the collection.  If one is not provided, the identifier will be generated from the database configuration.",
@@ -156,6 +169,7 @@ def collect_data(
     hostname: str | None = None,
     port: int | None = None,
     database: str | None = None,
+    single_db: bool = False,
     collection_identifier: str | None = None,
     ssl_mode: str | None = None,
     ssl_cert: str | None = None,
@@ -170,7 +184,9 @@ def collect_data(
     if port is None:
         port = prompt.IntPrompt.ask("Please enter a port for the database")
     if database is None:
-        database = prompt.Prompt.ask("Please enter a database name")
+        database = prompt.Prompt.ask(
+            "Please enter a database name (all databases will be collected unless --single-db is set)"
+        )
     if username is None:
         username = prompt.Prompt.ask("Please enter a username")
     if password is None:
@@ -191,6 +207,7 @@ def collect_data(
                 ssl_root_cert=ssl_root_cert,
             ),
             database=database,
+            single_db=single_db,
             collection_identifier=collection_identifier,
         )
     else:
@@ -201,6 +218,7 @@ def _collect_data(
     console: Console,
     src_info: SourceInfo,
     database: str,
+    single_db: bool,
     collection_identifier: str | None,
     working_path: Path | None = None,
     export_path: Path | None = None,
@@ -216,6 +234,7 @@ def _collect_data(
             canonical_query_manager=canonical_query_manager,
             console=console,
             collection_identifier=collection_identifier,
+            single_db=single_db,
         )
         collection_extractor.execute()
         if collection_extractor is not None and export_path is not None:
@@ -290,6 +309,14 @@ def _collect_data(
     type=click.STRING,
     required=False,
     show_default=False,
+)
+@click.option(
+    "--single-db",
+    help="Only collect the specified database (skip all-database collection).",
+    default=False,
+    required=False,
+    show_default=True,
+    is_flag=True,
 )
 @click.option(
     "--collection-identifier",
@@ -367,6 +394,7 @@ def readiness_assessment(
     hostname: str | None = None,
     port: int | None = None,
     database: str | None = None,
+    single_db: bool = False,
     collection_identifier: str | None = None,
     export: str | None = None,
     working_path: str | None = None,
@@ -384,7 +412,9 @@ def readiness_assessment(
     if port is None:
         port = prompt.IntPrompt.ask("Please enter a port for the database")
     if database is None:
-        database = prompt.Prompt.ask("Please enter a database name")
+        database = prompt.Prompt.ask(
+            "Please enter a database name (all databases will be collected unless --single-db is set)"
+        )
     if username is None:
         username = prompt.Prompt.ask("Please enter a username")
     if password is None:
@@ -405,6 +435,7 @@ def readiness_assessment(
                 ssl_root_cert=ssl_root_cert,
             ),
             database=database,
+            single_db=single_db,
             collection_identifier=collection_identifier,
             working_path=Path(working_path) if working_path else None,
             export_path=Path(export) if export else None,
@@ -418,6 +449,7 @@ def _readiness_check(
     console: Console,
     src_info: SourceInfo,
     database: str,
+    single_db: bool,
     collection_identifier: str | None,
     working_path: Path | None = None,
     export_path: Path | None = None,
@@ -433,6 +465,7 @@ def _readiness_check(
             console=console,
             collection_identifier=collection_identifier,
             working_path=working_path,
+            single_db=single_db,
         )
         workflow.execute()
         console.print(Padding("", 1, expand=True))

@@ -52,6 +52,7 @@ class ReadinessCheck:
         database: str,
         console: Console,
         collection_identifier: str | None,
+        single_db: bool = False,
         working_path: "Path | None" = None,
     ) -> None:
         self.executor: ReadinessCheckExecutor | None = None
@@ -61,6 +62,7 @@ class ReadinessCheck:
         self.database = database
         self.console = console
         self.collection_identifier = collection_identifier
+        self.single_db = single_db
         self.working_path = working_path
 
     def execute(self) -> None:
@@ -77,6 +79,7 @@ class ReadinessCheck:
             canonical_query_manager=canonical_query_manager,
             console=self.console,
             collection_identifier=self.collection_identifier,
+            single_db=self.single_db,
         )
         self.collection_extractor.execute()
         self.db_version = self.collection_extractor.get_db_version()
@@ -124,6 +127,8 @@ class ReadinessCheckExecutor:
         raise NotImplementedError(msg)
 
     def get_all_dbs(self) -> set[str]:
+        if self.readiness_check.single_db:
+            return {self.readiness_check.database}
         result = self.driver.select("select database_name from extended_collection_postgres_all_databases")
         return {row["database_name"] for row in result}
 

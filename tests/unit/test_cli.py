@@ -25,6 +25,7 @@ def test_readiness_check() -> None:
     runner = CliRunner()
     result = runner.invoke(app, ["readiness-check", "--help"])
     assert result.exit_code == 0
+    assert "--single-db" in result.output
 
 
 class TestReadinessCheckSslOptions:
@@ -61,3 +62,10 @@ class TestReadinessCheckSslOptions:
         runner = CliRunner()
         result = runner.invoke(app, ["readiness-check", "--help"])
         assert "--ssl-root-cert" in result.output
+
+
+def test_collect_data_single_db_option_exists() -> None:
+    runner = CliRunner()
+    result = runner.invoke(app, ["collect-data", "--help"])
+    assert result.exit_code == 0
+    assert "--single-db" in result.output

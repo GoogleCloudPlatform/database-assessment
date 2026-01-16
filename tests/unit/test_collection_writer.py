@@ -15,17 +15,13 @@
 
 from __future__ import annotations
 
+import math
+import re
 import zipfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
-import pytest
-
 from dma.collector.util.collection_writer import CollectionFileWriter
-
-if TYPE_CHECKING:
-    pass
 
 
 class TestQuoteValue:
@@ -57,7 +53,7 @@ class TestQuoteValue:
 
     def test_float(self) -> None:
         """Floats should not be quoted."""
-        assert CollectionFileWriter._quote_value(3.14) == "3.14"
+        assert CollectionFileWriter._quote_value(math.pi) == "3.14"
 
 
 class TestGetFileTag:
@@ -228,13 +224,14 @@ class TestCreateCollectionZip:
         def execute_side_effect(query: str) -> None:
             if "COPY collection_postgres_calculated_metrics TO" in query:
                 # Extract the file path from the COPY command
-                import re
-
                 match = re.search(r"TO '([^']+)'", query)
                 if match:
                     filepath = Path(match.group(1))
                     # Create a mock CSV file
-                    filepath.write_text('pkey|metric_name|metric_value\n"key1"|"VERSION"|"15.0"\n')
+                    filepath.write_text(
+                        'pkey|metric_name|metric_value\n"key1"|"VERSION"|"15.0"\n',
+                        encoding="utf-8",
+                    )
 
         mock_driver.execute.side_effect = execute_side_effect
 

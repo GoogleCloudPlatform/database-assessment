@@ -321,9 +321,17 @@ class PostgresCollectionService:
                     error_msg = str(e).lower()
                     if any(
                         pattern in error_msg
-                        for pattern in ["does not exist", "undefined", "permission denied", "insufficient privilege", "unreachable"]
+                        for pattern in [
+                            "does not exist",
+                            "undefined",
+                            "permission denied",
+                            "insufficient privilege",
+                            "unreachable",
+                        ]
                     ):
-                        status.console.print(rf"[yellow]Skipped[/] `{script}` - required objects not available or insufficient privileges")
+                        status.console.print(
+                            rf"[yellow]Skipped[/] `{script}` - required objects not available or insufficient privileges"
+                        )
                     else:
                         raise
             if not self.get_per_db_collection_queries():

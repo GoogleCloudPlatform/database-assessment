@@ -170,6 +170,30 @@ uv run pytest -k "test_database"
 uv run pytest --no-cov
 ```
 
+### Collection Script Tests
+
+These tests execute the packaged collection scripts inside containers, then validate the output archives.
+They require Docker or Podman.
+
+```bash
+# Run all collection script tests
+uv run pytest -m script_test
+
+# Run Postgres script tests only
+uv run pytest -m "script_test and postgres"
+
+# Skip slow tests
+uv run pytest -m "script_test and not slow"
+```
+
+**Environment variables:**
+
+- `DMA_TEST_KEEP_VOLUMES=1` keeps container volumes for debugging.
+
+**Structure:** Script tests live under `tests/integration/<db>/test_collection_scripts.py` and
+share session-scoped fixtures from `tests/lib/collector_build.py` and
+`tests/lib/script_executor.py` to avoid rebuilding artifacts per test.
+
 ## Linting and Code Quality
 
 ### `make lint`

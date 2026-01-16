@@ -104,84 +104,11 @@ destroy:                                            ## Destroy the virtual envir
 
 .PHONY: build-collector
 build-collector: 										## Build the collector SQL scripts.
-	@rm -rf ./$(BUILD_DIR)/collector
-	@echo "=> Building Assessment Data Collection Scripts for Oracle version $(VERSION)..."
-	@mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts
-	@mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts/awr
-	@mkdir -p $(BUILD_DIR)/collector/oracle/sql/setup
-	@mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts/statspack
-	@cp scripts/collector/oracle/sql/*.sql $(BUILD_DIR)/collector/oracle/sql
-	@cp scripts/collector/oracle/sql/extracts/*.sql $(BUILD_DIR)/collector/oracle/sql/extracts
-	@cp scripts/collector/oracle/sql/extracts/awr/*.sql $(BUILD_DIR)/collector/oracle/sql/extracts/awr
-	@cp scripts/collector/oracle/sql/setup/*.sql $(BUILD_DIR)/collector/oracle/sql/setup
-	@cp scripts/collector/oracle/sql/extracts/statspack/*.sql $(BUILD_DIR)/collector/oracle/sql/extracts/statspack
-	@cp scripts/collector/oracle/collect-data.sh $(BUILD_DIR)/collector/oracle/
-	@cp scripts/collector/oracle/README.txt $(BUILD_DIR)/collector/oracle/
-	@cp  LICENSE $(BUILD_DIR)/collector/oracle
-	echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/oracle/VERSION.txt
-
-	@echo "=> Building Assessment Data Collection Scripts for Microsoft SQL Server version $(VERSION)..."
-	@mkdir -p $(BUILD_DIR)/collector/sqlserver/sql/
-	@cp scripts/collector/sqlserver/sql/*.sql $(BUILD_DIR)/collector/sqlserver/sql
-	@cp scripts/collector/sqlserver/*.bat $(BUILD_DIR)/collector/sqlserver/
-	@cp scripts/collector/sqlserver/*.ps1 $(BUILD_DIR)/collector/sqlserver/
-	@cp scripts/collector/sqlserver/*.psm1 $(BUILD_DIR)/collector/sqlserver/
-	@cp scripts/collector/sqlserver/README.txt $(BUILD_DIR)/collector/sqlserver/
-	@cp  LICENSE $(BUILD_DIR)/collector/sqlserver
-	@echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/sqlserver/VERSION.txt
-
-	@echo "=> Building Assessment Data Collection Scripts for MySQL version $(VERSION)..."
-	@mkdir -p $(BUILD_DIR)/collector/mysql/sql/
-	@mkdir -p $(BUILD_DIR)/collector/mysql/sql/5.7
-	@mkdir -p $(BUILD_DIR)/collector/mysql/sql/base
-	@mkdir -p $(BUILD_DIR)/collector/mysql/sql/headers
-	@cp scripts/collector/mysql/sql/*.sql $(BUILD_DIR)/collector/mysql/sql
-	@cp scripts/collector/mysql/sql/5.7/*.sql $(BUILD_DIR)/collector/mysql/sql/5.7
-	@cp scripts/collector/mysql/sql/base/*.sql $(BUILD_DIR)/collector/mysql/sql/base
-	@cp scripts/collector/mysql/sql/headers/*.header $(BUILD_DIR)/collector/mysql/sql/headers
-	@cp scripts/collector/mysql/collect-data.sh $(BUILD_DIR)/collector/mysql/
-	@cp -L scripts/collector/mysql/db-machine-specs.sh $(BUILD_DIR)/collector/mysql/
-	@cp scripts/collector/mysql/README.txt $(BUILD_DIR)/collector/mysql/
-	@cp  LICENSE $(BUILD_DIR)/collector/mysql
-	@echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/mysql/VERSION.txt
-
-	@echo "=> Building Assessment Data Collection Scripts for Postgresql version $(VERSION)..."
-	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/
-	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/12
-	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/13
-	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/base
-	@cp scripts/collector/postgres/sql/*.sql $(BUILD_DIR)/collector/postgres/sql
-	@cp scripts/collector/postgres/sql/12/*.sql $(BUILD_DIR)/collector/postgres/sql/12
-	@cp scripts/collector/postgres/sql/13/*.sql $(BUILD_DIR)/collector/postgres/sql/13
-	@cp scripts/collector/postgres/sql/base/*.sql $(BUILD_DIR)/collector/postgres/sql/base
-	@cp scripts/collector/postgres/collect-data.sh $(BUILD_DIR)/collector/postgres/
-	@cp scripts/collector/postgres/db-machine-specs.sh $(BUILD_DIR)/collector/postgres/
-	@cp scripts/collector/postgres/README.txt $(BUILD_DIR)/collector/postgres/
-	@cp  LICENSE $(BUILD_DIR)/collector/postgres
-	@echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/postgres/VERSION.txt
-
-	@make package-collector
+	@tools/build-collector.sh
 
 .PHONY: package-collector
 package-collector:
-	@rm -f ./$(BUILD_DIR)/$(COLLECTOR_PACKAGE)*.bz2
-	@rm -f ./$(BUILD_DIR)/$(COLLECTOR_PACKAGE)*.zip
-
-	@echo  "=> Packaging Database Migration Assessment Collector for Oracle..."
-	@echo "Zipping files in ./$(BUILD_DIR)/collector/oracle"
-	@cd $(BASE_DIR)/$(BUILD_DIR)/collector/oracle; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-oracle.zip  *
-
-	@echo  "=> Packaging Database Migration Assessment Collector for Microsoft SQL Server..."
-	@echo "Zipping files in ./$(BUILD_DIR)/collector/sqlserver"
-	@cd $(BASE_DIR)/$(BUILD_DIR)/collector/sqlserver; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-sqlserver.zip  *
-
-	@echo  "=> Packaging Database Migration Assessment Collector for MySQL..."
-	@echo "Zipping files in ./$(BUILD_DIR)/collector/mysql"
-	@cd $(BASE_DIR)/$(BUILD_DIR)/collector/mysql; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-mysql.zip  *
-
-	@echo  "=> Packaging Database Migration Assessment Collector for Postgres..."
-	@echo "Zipping files in ./$(BUILD_DIR)/collector/postgres"
-	@cd $(BASE_DIR)/$(BUILD_DIR)/collector/postgres; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-postgres.zip  *
+	@tools/build-collector.sh
 
 .PHONY: build
 build: clean                                        ## Build and package the collectors and wheel
