@@ -204,7 +204,7 @@ class TestCreateCollectionZip:
             names = zf.namelist()
             # Should have manifest, version, locale, defines files
             assert any("manifest" in n for n in names)
-            assert any("VERSION" in n for n in names)
+            assert any(n.endswith("_version.txt") for n in names)
             assert any("locale" in n for n in names)
             assert any("defines" in n for n in names)
 
