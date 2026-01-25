@@ -85,6 +85,7 @@ nav:
   - Developers:
       - Developer Setup: developer_guide/developer_setup.md
       - Commands: developer_guide/commands.md
+      - Collection Format: developer_guide/collection-format.md
       - Workflows: developer_guide/workflows.md
       - Releases: developer_guide/releases.md
   - Code Of Conduct: code_of_conduct.md

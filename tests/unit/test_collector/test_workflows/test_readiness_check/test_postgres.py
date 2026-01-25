@@ -12,16 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
 import pytest
-from duckdb import DuckDBPyConnection
 from rich import get_console
 
-from dma.collector.workflows.readiness_check._postgres.main import PostgresReadinessCheckExecutor
+from dma.collector.workflows.readiness_check._postgres.constants import DB_TYPE_MAP
+from dma.collector.workflows.readiness_check._postgres.main import (
+    POSTGRES_RULE_CONFIGURATIONS,
+    PostgresReadinessCheckExecutor,
+)
 from dma.collector.workflows.readiness_check.base import ReadinessCheck
-from dma.lib.db.base import SourceInfo
-from dma.lib.db.local import get_duckdb_connection
+from dma.lib.db.config import SourceInfo
+from dma.lib.db.local import get_duckdb_driver
+
+if TYPE_CHECKING:
+    from sqlspec.adapters.duckdb import DuckDBDriver
 
 pytestmark = pytest.mark.anyio
 
@@ -41,10 +48,10 @@ readiness_check_summary = """create or replace table readiness_check_summary(
 
 
 def _dummy_postgres_readiness_executor(
-    local_db: DuckDBPyConnection, db_version: str = "dummy"
+    driver: "DuckDBDriver", db_version: str = "dummy"
 ) -> PostgresReadinessCheckExecutor:
     rc = ReadinessCheck(
-        local_db=local_db,
+        driver=driver,
         src_info=SourceInfo("POSTGRES", "test_user", "test_passwd", "dummy_host", 0),
         database="dummy",
         console=get_console(),
@@ -54,8 +61,8 @@ def _dummy_postgres_readiness_executor(
     return PostgresReadinessCheckExecutor(get_console(), rc)
 
 
-def _create_readiness_check_summary_table(local_db: DuckDBPyConnection) -> None:
-    local_db.execute(readiness_check_summary)
+def _create_readiness_check_summary_table(driver: "DuckDBDriver") -> None:
+    driver.execute(readiness_check_summary)
 
 
 @pytest.mark.parametrize(
@@ -68,16 +75,16 @@ def test_collation(collations, expected_severity):
             "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._get_collation",
             return_value=collations,
         ),
-        get_duckdb_connection() as local_db,
+        get_duckdb_driver() as driver,
     ):
-        executor = _dummy_postgres_readiness_executor(local_db)
-        _create_readiness_check_summary_table(local_db)
+        executor = _dummy_postgres_readiness_executor(driver)
+        _create_readiness_check_summary_table(driver)
         executor._check_collation()
-        rows = local_db.sql(
-            "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'COLLATION'",
-        ).fetchall()
+        rows = driver.select(
+            "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'COLLATION'"
+        )
         for row in rows:
-            assert row[0] == expected_severity
+            assert row["severity"] == expected_severity
 
 
 @pytest.mark.parametrize(
@@ -94,23 +101,32 @@ def test_rds_logical_replication(rds_logical_replication, expected_severity):
             "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._get_rds_logical_replication",
             return_value=rds_logical_replication,
         ),
-        get_duckdb_connection() as local_db,
+        get_duckdb_driver() as driver,
     ):
-        executor = _dummy_postgres_readiness_executor(local_db)
-        _create_readiness_check_summary_table(local_db)
+        executor = _dummy_postgres_readiness_executor(driver)
+        _create_readiness_check_summary_table(driver)
         executor._check_rds_logical_replication()
-        rows = local_db.sql(
-            "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'RDS_LOGICAL_REPLICATION'",
-        ).fetchall()
+        rows = driver.select(
+            "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'RDS_LOGICAL_REPLICATION'"
+        )
         for row in rows:
-            assert row[0] == expected_severity
+            assert row["severity"] == expected_severity
 
 
 @pytest.mark.parametrize(
     ("installed_extensions, expected_severity"),
     argvalues=[
-        [[["unsupported_ext", "postgres", "postgres"]], "WARNING"],
-        [[["unsupported_ext", "alloydbadmin", "postgres"], ["pgaudit", "postgres", "postgres"]], "PASS"],
+        [
+            [{"extension_name": "unsupported_ext", "extension_owner": "postgres", "database_name": "postgres"}],
+            "WARNING",
+        ],
+        [
+            [
+                {"extension_name": "unsupported_ext", "extension_owner": "alloydbadmin", "database_name": "postgres"},
+                {"extension_name": "pgaudit", "extension_owner": "postgres", "database_name": "postgres"},
+            ],
+            "PASS",
+        ],
     ],
 )
 def test_unsupported_extensions(installed_extensions, expected_severity):
@@ -119,23 +135,23 @@ def test_unsupported_extensions(installed_extensions, expected_severity):
             "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._get_installed_extensions",
             return_value=installed_extensions,
         ),
-        get_duckdb_connection() as local_db,
+        get_duckdb_driver() as driver,
     ):
-        executor = _dummy_postgres_readiness_executor(local_db)
-        _create_readiness_check_summary_table(local_db)
+        executor = _dummy_postgres_readiness_executor(driver)
+        _create_readiness_check_summary_table(driver)
         executor._check_extensions()
-        rows = local_db.sql(
-            "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'UNSUPPORTED_EXTENSIONS_NOT_MIGRATED'",
-        ).fetchall()
+        rows = driver.select(
+            "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'UNSUPPORTED_EXTENSIONS_NOT_MIGRATED'"
+        )
         for row in rows:
-            assert row[0] == expected_severity
+            assert row["severity"] == expected_severity
 
 
 @pytest.mark.parametrize(
     ("installed_extensions, expected_severity"),
     argvalues=[
-        [[["pg_cron", "postgres", "postgres"]], "WARNING"],
-        [[["pgAudit", "postgres", "postgres"]], "PASS"],
+        [[{"extension_name": "pg_cron", "extension_owner": "postgres", "database_name": "postgres"}], "WARNING"],
+        [[{"extension_name": "pgAudit", "extension_owner": "postgres", "database_name": "postgres"}], "PASS"],
     ],
 )
 def test_unmigrated_extensions(installed_extensions, expected_severity):
@@ -144,16 +160,16 @@ def test_unmigrated_extensions(installed_extensions, expected_severity):
             "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._get_installed_extensions",
             return_value=installed_extensions,
         ),
-        get_duckdb_connection() as local_db,
+        get_duckdb_driver() as driver,
     ):
-        executor = _dummy_postgres_readiness_executor(local_db)
-        _create_readiness_check_summary_table(local_db)
+        executor = _dummy_postgres_readiness_executor(driver)
+        _create_readiness_check_summary_table(driver)
         executor._check_extensions()
-        rows = local_db.sql(
-            "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'EXTENSIONS_NOT_MIGRATED'",
-        ).fetchall()
+        rows = driver.select(
+            "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'EXTENSIONS_NOT_MIGRATED'"
+        )
         for row in rows:
-            assert row[0] == expected_severity
+            assert row["severity"] == expected_severity
 
 
 @pytest.mark.parametrize(
@@ -166,13 +182,51 @@ def test_rds_db_version(database_version, expected_severity):
             "dma.collector.workflows.readiness_check._postgres.main.PostgresReadinessCheckExecutor._is_rds",
             return_value=True,
         ),
-        get_duckdb_connection() as local_db,
+        get_duckdb_driver() as driver,
     ):
-        executor = _dummy_postgres_readiness_executor(local_db, database_version)
-        _create_readiness_check_summary_table(local_db)
+        executor = _dummy_postgres_readiness_executor(driver, database_version)
+        _create_readiness_check_summary_table(driver)
         executor._check_version()
-        rows = local_db.sql(
-            "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'DATABASE_VERSION'",
-        ).fetchall()
+        rows = driver.select(
+            "select severity, migration_target, info from readiness_check_summary WHERE rule_code = 'DATABASE_VERSION'"
+        )
         for row in rows:
-            assert row[0] == expected_severity
+            assert row["severity"] == expected_severity
+
+
+def test_db_type_map_includes_pg18() -> None:
+    assert 18 in DB_TYPE_MAP
+
+
+def test_target_version_limits_updated() -> None:
+    alloydb_config = next(config for config in POSTGRES_RULE_CONFIGURATIONS if config.db_variant == "ALLOYDB")
+    cloudsql_config = next(config for config in POSTGRES_RULE_CONFIGURATIONS if config.db_variant == "CLOUDSQL")
+    assert alloydb_config.maximum_supported_major_version == 17
+    assert cloudsql_config.maximum_supported_major_version == 18
+
+
+def test_extended_support_warning() -> None:
+    with get_duckdb_driver() as driver:
+        executor = _dummy_postgres_readiness_executor(driver, "12.7")
+        _create_readiness_check_summary_table(driver)
+        executor._check_extended_support_warning()
+        rows = driver.select(
+            "select severity, rule_code from readiness_check_summary WHERE rule_code = 'EXTENDED_SUPPORT_WARNING'"
+        )
+        assert rows
+        for row in rows:
+            assert row["severity"] == "WARNING"
+
+
+def test_alloydb_omni_warning() -> None:
+    with get_duckdb_driver() as driver:
+        executor = _dummy_postgres_readiness_executor(driver, "17.2")
+        _create_readiness_check_summary_table(driver)
+        executor._check_alloydb_omni_compatibility()
+        rows = driver.select(
+            "select severity, migration_target from readiness_check_summary WHERE rule_code = 'ALLOYDB_OMNI_COMPATIBILITY'"
+        )
+        assert rows
+        for row in rows:
+            assert row["severity"] == "WARNING"
+            assert row["migration_target"] == "ALLOYDB"

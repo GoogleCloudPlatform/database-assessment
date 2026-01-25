@@ -28,8 +28,8 @@ from dma.cli._utils import console
 from dma.collector.dependencies import provide_canonical_queries
 from dma.collector.workflows.collection_extractor.base import CollectionExtractor
 from dma.collector.workflows.readiness_check.base import ReadinessCheck
-from dma.lib.db.base import SourceInfo
-from dma.lib.db.local import get_duckdb_connection
+from dma.lib.db.config import SourceInfo
+from dma.lib.db.local import get_duckdb_driver
 
 if TYPE_CHECKING:
     from click import Context
@@ -44,6 +44,11 @@ def app(ctx: Context) -> None:
     """Database Migration Assessment"""
 
 
+@app.command(
+    name="collect-data",
+    no_args_is_help=True,
+    short_help="Run a full database collection.",
+)
 @click.option(
     "--no-prompt",
     help="Do not prompt for confirmation before executing check.",
@@ -57,10 +62,10 @@ def app(ctx: Context) -> None:
     "--db-type",
     "-db",
     help="The type of the database to connect to",
-    default=None,
-    type=click.Choice(["mysql", "postgres", "oracle", "mssql"]),
+    default="postgres",
+    type=click.Choice(["postgres"]),
     required=False,
-    show_default=False,
+    show_default=True,
 )
 @click.option(
     "--username",
@@ -108,6 +113,14 @@ def app(ctx: Context) -> None:
     show_default=False,
 )
 @click.option(
+    "--single-db",
+    help="Only collect the specified database (skip all-database collection).",
+    default=False,
+    required=False,
+    show_default=True,
+    is_flag=True,
+)
+@click.option(
     "--collection-identifier",
     "-id",
     help="An optional identifier used to tag the collection.  If one is not provided, the identifier will be generated from the database configuration.",
@@ -116,15 +129,52 @@ def app(ctx: Context) -> None:
     required=False,
     show_default=False,
 )
+@click.option(
+    "--ssl-mode",
+    help="SSL connection mode (disable, allow, prefer, require, verify-ca, verify-full).",
+    default=None,
+    type=click.Choice(["disable", "allow", "prefer", "require", "verify-ca", "verify-full"]),
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--ssl-cert",
+    help="Path to client SSL certificate file.",
+    default=None,
+    type=click.Path(exists=True),
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--ssl-key",
+    help="Path to client SSL private key file.",
+    default=None,
+    type=click.Path(exists=True),
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--ssl-root-cert",
+    help="Path to SSL root CA certificate file.",
+    default=None,
+    type=click.Path(exists=True),
+    required=False,
+    show_default=False,
+)
 def collect_data(
     no_prompt: bool,
-    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    db_type: Literal["postgres"],
     username: str | None = None,
     password: str | None = None,
     hostname: str | None = None,
     port: int | None = None,
     database: str | None = None,
+    single_db: bool = False,
     collection_identifier: str | None = None,
+    ssl_mode: str | None = None,
+    ssl_cert: str | None = None,
+    ssl_key: str | None = None,
+    ssl_root_cert: str | None = None,
 ) -> None:
     """Process a collection of advisor extracts."""
     print_app_info()
@@ -134,7 +184,9 @@ def collect_data(
     if port is None:
         port = prompt.IntPrompt.ask("Please enter a port for the database")
     if database is None:
-        database = prompt.Prompt.ask("Please enter a database name")
+        database = prompt.Prompt.ask(
+            "Please enter a database name (all databases will be collected unless --single-db is set)"
+        )
     if username is None:
         username = prompt.Prompt.ask("Please enter a username")
     if password is None:
@@ -149,8 +201,13 @@ def collect_data(
                 password=password,
                 hostname=hostname,
                 port=port,
+                ssl_mode=ssl_mode,
+                ssl_cert=ssl_cert,
+                ssl_key=ssl_key,
+                ssl_root_cert=ssl_root_cert,
             ),
             database=database,
+            single_db=single_db,
             collection_identifier=collection_identifier,
         )
     else:
@@ -161,21 +218,23 @@ def _collect_data(
     console: Console,
     src_info: SourceInfo,
     database: str,
+    single_db: bool,
     collection_identifier: str | None,
     working_path: Path | None = None,
     export_path: Path | None = None,
     export_delimiter: str = "|",
 ) -> None:
     _execution_id = f"{src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
-    with get_duckdb_connection(working_path=working_path, export_path=export_path) as local_db:
-        canonical_query_manager = next(provide_canonical_queries(local_db=local_db, working_path=working_path))
+    with get_duckdb_driver(working_path=working_path, export_path=export_path) as driver:
+        canonical_query_manager = next(provide_canonical_queries(driver=driver, working_path=working_path))
         collection_extractor = CollectionExtractor(
-            local_db=local_db,
+            driver=driver,
             src_info=src_info,
             database=database,
             canonical_query_manager=canonical_query_manager,
             console=console,
             collection_identifier=collection_identifier,
+            single_db=single_db,
         )
         collection_extractor.execute()
         if collection_extractor is not None and export_path is not None:
@@ -201,10 +260,10 @@ def _collect_data(
     "--db-type",
     "-db",
     help="The type of the database to connect to",
-    default=None,
-    type=click.Choice({"mysql", "postgres", "oracle", "mssql"}),
+    default="postgres",
+    type=click.Choice(["postgres"]),
     required=False,
-    show_default=False,
+    show_default=True,
 )
 @click.option(
     "--username",
@@ -250,6 +309,14 @@ def _collect_data(
     type=click.STRING,
     required=False,
     show_default=False,
+)
+@click.option(
+    "--single-db",
+    help="Only collect the specified database (skip all-database collection).",
+    default=False,
+    required=False,
+    show_default=True,
+    is_flag=True,
 )
 @click.option(
     "--collection-identifier",
@@ -278,17 +345,64 @@ def _collect_data(
     required=False,
     show_default=False,
 )
+@click.option(
+    "--output-zip",
+    "-oz",
+    help="Path to output a collection ZIP file compatible with shell script format.",
+    default=None,
+    type=click.Path(),
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--ssl-mode",
+    help="SSL connection mode (disable, allow, prefer, require, verify-ca, verify-full).",
+    default=None,
+    type=click.Choice(["disable", "allow", "prefer", "require", "verify-ca", "verify-full"]),
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--ssl-cert",
+    help="Path to client SSL certificate file.",
+    default=None,
+    type=click.Path(exists=True),
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--ssl-key",
+    help="Path to client SSL private key file.",
+    default=None,
+    type=click.Path(exists=True),
+    required=False,
+    show_default=False,
+)
+@click.option(
+    "--ssl-root-cert",
+    help="Path to SSL root CA certificate file.",
+    default=None,
+    type=click.Path(exists=True),
+    required=False,
+    show_default=False,
+)
 def readiness_assessment(
     no_prompt: bool,
-    db_type: Literal["mysql", "postgres", "mssql", "oracle"],
+    db_type: Literal["postgres"],
     username: str | None = None,
     password: str | None = None,
     hostname: str | None = None,
     port: int | None = None,
     database: str | None = None,
+    single_db: bool = False,
     collection_identifier: str | None = None,
     export: str | None = None,
     working_path: str | None = None,
+    output_zip: str | None = None,
+    ssl_mode: str | None = None,
+    ssl_cert: str | None = None,
+    ssl_key: str | None = None,
+    ssl_root_cert: str | None = None,
 ) -> None:
     """Process a collection of advisor extracts."""
     print_app_info()
@@ -298,7 +412,9 @@ def readiness_assessment(
     if port is None:
         port = prompt.IntPrompt.ask("Please enter a port for the database")
     if database is None:
-        database = prompt.Prompt.ask("Please enter a database name")
+        database = prompt.Prompt.ask(
+            "Please enter a database name (all databases will be collected unless --single-db is set)"
+        )
     if username is None:
         username = prompt.Prompt.ask("Please enter a username")
     if password is None:
@@ -313,11 +429,17 @@ def readiness_assessment(
                 password=password,
                 hostname=hostname,
                 port=port,
+                ssl_mode=ssl_mode,
+                ssl_cert=ssl_cert,
+                ssl_key=ssl_key,
+                ssl_root_cert=ssl_root_cert,
             ),
             database=database,
+            single_db=single_db,
             collection_identifier=collection_identifier,
             working_path=Path(working_path) if working_path else None,
             export_path=Path(export) if export else None,
+            output_zip_path=Path(output_zip) if output_zip else None,
         )
     else:
         console.rule("Skipping execution until input is confirmed", align="left")
@@ -327,20 +449,23 @@ def _readiness_check(
     console: Console,
     src_info: SourceInfo,
     database: str,
+    single_db: bool,
     collection_identifier: str | None,
     working_path: Path | None = None,
     export_path: Path | None = None,
     export_delimiter: str = "|",
+    output_zip_path: Path | None = None,
 ) -> None:
     _execution_id = f"{src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
-    with get_duckdb_connection(working_path=working_path, export_path=export_path) as local_db:
+    with get_duckdb_driver(working_path=working_path, export_path=export_path) as driver:
         workflow = ReadinessCheck(
-            local_db=local_db,
+            driver=driver,
             src_info=src_info,
             database=database,
             console=console,
             collection_identifier=collection_identifier,
             working_path=working_path,
+            single_db=single_db,
         )
         workflow.execute()
         console.print(Padding("", 1, expand=True))
@@ -348,6 +473,15 @@ def _readiness_check(
         workflow.print_summary()
         if workflow.collection_extractor is not None and export_path is not None:
             workflow.collection_extractor.dump_database(export_path=export_path, delimiter=export_delimiter)
+        if workflow.collection_extractor is not None and output_zip_path is not None:
+            workflow.collection_extractor.generate_collection_zip(
+                output_dir=output_zip_path,
+                db_version=workflow.db_version,
+                dma_version=current_version,
+                hostname=src_info.hostname,
+                port=src_info.port,
+                database=database,
+            )
         console.rule("Assessment complete.", align="left")
 
 

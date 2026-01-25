@@ -224,7 +224,10 @@ EOF
     IFS=$(echo -en "\n\b")
     echo PGPASSWORD="${pass}" ${sql_cmd}  --user=${user}  -h ${host} -w -p ${port} -d "${db}" -t --no-align
     local dblist=$(PGPASSWORD="${pass}" ${sql_cmd}  --user=${user}  -h ${host} -w -p ${port} -d "${db}" -t --no-align <<EOF
-SELECT datname FROM pg_database WHERE datname NOT LIKE 'template%' ORDER BY datname;
+SELECT datname FROM pg_database
+WHERE datname NOT IN ('template0', 'template1', 'rdsadmin', 'cloudsqladmin', 'alloydbadmin', 'alloydbmetadata', 'azure_maintenance', 'azure_sys')
+  AND NOT datistemplate
+ORDER BY datname;
 EOF
     )
 

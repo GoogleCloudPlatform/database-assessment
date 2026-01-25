@@ -18,10 +18,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from sqlalchemy import text
 
 if TYPE_CHECKING:
-    from sqlalchemy import Engine
+    from sqlspec.adapters.adbc import AdbcDriver
 
 
 pytestmark = [
@@ -31,9 +30,6 @@ pytestmark = [
 ]
 
 
-def test_engine_connectivity(sync_engine: Engine) -> None:
-    with sync_engine.begin() as conn:
-        result = conn.execute(
-            text("select 1"),
-        )
-        assert result.scalar() == 1
+def test_adbc_connectivity(adbc_driver: AdbcDriver) -> None:
+    result = adbc_driver.select_value("SELECT 1")
+    assert result == 1

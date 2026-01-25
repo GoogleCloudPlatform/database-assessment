@@ -11,26 +11,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Unit tests for the Oracle."""
+"""PostgreSQL integration test fixtures."""
 
 from __future__ import annotations
 
 from pathlib import Path
-from textwrap import dedent
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import pytest
 from click.testing import CliRunner
-from pytest import FixtureRequest
-from sqlalchemy import URL, Engine, NullPool, create_engine, text
+from sqlspec.adapters.adbc import AdbcConfig
 
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+    from sqlspec.adapters.adbc import AdbcDriver
+    from tools.postgres.database import PostgreSQLDatabase
+
 pytestmark = [
     pytest.mark.anyio,
     pytest.mark.postgres,
-    pytest.mark.xdist_group("postgres"),
 ]
 
 
@@ -40,205 +40,35 @@ def runner() -> CliRunner:
 
 
 @pytest.fixture(scope="session")
-def postgres17_sync_engine(
-    postgres_docker_ip: str,
-    postgres_user: str,
-    postgres_password: str,
-    postgres_database: str,
-    postgres17_port: int,
-    postgres17_service: None,
-) -> Generator[Engine, None, None]:
-    """Postgresql instance for end-to-end testing."""
-    yield create_engine(
-        URL(
-            drivername="postgresql+psycopg",
-            username=postgres_user,
-            password=postgres_password,
-            host=postgres_docker_ip,
-            port=postgres17_port,
-            database=postgres_database,
-            query={},  # type: ignore[arg-type]
-        ),
-        poolclass=NullPool,
-    )
+def adbc_config(postgres_collector_db: PostgreSQLDatabase) -> AdbcConfig:
+    """ADBC configuration for the current PostgreSQL version.
+
+    This fixture is parameterized through postgres_collector_db, which tests
+    against all supported PostgreSQL versions (12-18).
+
+    Uses autocommit to ensure changes are visible to CLI's separate connection.
+    """
+    config = postgres_collector_db.config
+    uri = f"postgresql://{config.postgres_user}:{config.postgres_password}@localhost:{config.host_port}/{config.postgres_db}"
+    return AdbcConfig(connection_config={"uri": uri, "autocommit": True})
 
 
 @pytest.fixture(scope="session")
-def postgres16_sync_engine(
-    postgres_docker_ip: str,
-    postgres_user: str,
-    postgres_password: str,
-    postgres_database: str,
-    postgres16_port,
-    postgres16_service: None,
-) -> Generator[Engine, None, None]:
-    """Postgresql instance for end-to-end testing."""
-    yield create_engine(
-        URL(
-            drivername="postgresql+psycopg",
-            username=postgres_user,
-            password=postgres_password,
-            host=postgres_docker_ip,
-            port=postgres16_port,
-            database=postgres_database,
-            query={},  # type: ignore[arg-type]
-        ),
-        poolclass=NullPool,
-    )
+def adbc_driver(adbc_config: AdbcConfig) -> Generator[AdbcDriver, None, None]:
+    """ADBC driver for the current PostgreSQL version."""
+    with adbc_config.provide_session() as driver:
+        yield driver
 
 
 @pytest.fixture(scope="session")
-def postgres15_sync_engine(
-    postgres_docker_ip: str,
-    postgres_user: str,
-    postgres_password: str,
-    postgres_database: str,
-    postgres15_port,
-    postgres15_service: None,
-) -> Generator[Engine, None, None]:
-    """Postgresql instance for end-to-end testing."""
-    yield create_engine(
-        URL(
-            drivername="postgresql+psycopg",
-            username=postgres_user,
-            password=postgres_password,
-            host=postgres_docker_ip,
-            port=postgres15_port,
-            database=postgres_database,
-            query={},  # type: ignore[arg-type]
-        ),
-        poolclass=NullPool,
-    )
+def _seed_postgres_database(adbc_driver: AdbcDriver) -> None:
+    """Seed the test database with northwind data."""
+    # Create pg_stat_statements extension
+    adbc_driver.execute("CREATE EXTENSION IF NOT EXISTS pg_stat_statements")
 
+    # Load northwind DDL and data
+    ddl_path = Path(__file__).parent / "northwind_ddl.sql"
+    data_path = Path(__file__).parent / "northwind_data.sql"
 
-@pytest.fixture(scope="session")
-def postgres14_sync_engine(
-    postgres_docker_ip: str,
-    postgres_user: str,
-    postgres_password: str,
-    postgres_database: str,
-    postgres14_port,
-    postgres14_service: None,
-) -> Generator[Engine, None, None]:
-    """Postgresql instance for end-to-end testing."""
-    yield create_engine(
-        URL(
-            drivername="postgresql+psycopg",
-            username=postgres_user,
-            password=postgres_password,
-            host=postgres_docker_ip,
-            port=postgres14_port,
-            database=postgres_database,
-            query={},  # type: ignore[arg-type]
-        ),
-        poolclass=NullPool,
-    )
-
-
-@pytest.fixture(scope="session")
-def postgres13_sync_engine(
-    postgres_docker_ip: str,
-    postgres_user: str,
-    postgres_password: str,
-    postgres_database: str,
-    postgres13_port,
-    postgres13_service: None,
-) -> Generator[Engine, None, None]:
-    """Postgresql instance for end-to-end testing."""
-    yield create_engine(
-        URL(
-            drivername="postgresql+psycopg",
-            username=postgres_user,
-            password=postgres_password,
-            host=postgres_docker_ip,
-            port=postgres13_port,
-            database=postgres_database,
-            query={},  # type: ignore[arg-type]
-        ),
-        poolclass=NullPool,
-    )
-
-
-@pytest.fixture(scope="session")
-def postgres12_sync_engine(
-    postgres_docker_ip: str,
-    postgres_user: str,
-    postgres_password: str,
-    postgres_database: str,
-    postgres12_port,
-    postgres12_service: None,
-) -> Generator[Engine, None, None]:
-    """Postgresql instance for end-to-end testing."""
-    yield create_engine(
-        URL(
-            drivername="postgresql+psycopg",
-            username=postgres_user,
-            password=postgres_password,
-            host=postgres_docker_ip,
-            port=postgres12_port,
-            database=postgres_database,
-            query={},  # type: ignore[arg-type]
-        ),
-        poolclass=NullPool,
-    )
-
-
-@pytest.fixture(scope="session")
-def postgres_docker_compose_files() -> list[Path]:
-    return [Path(Path(__file__).parent / "docker-compose.yml")]
-
-
-@pytest.fixture(
-    scope="session",
-    params=[
-        pytest.param(
-            "postgres12_sync_engine",
-            marks=[
-                pytest.mark.postgres,
-            ],
-        ),
-        pytest.param(
-            "postgres13_sync_engine",
-            marks=[
-                pytest.mark.postgres,
-            ],
-        ),
-        pytest.param(
-            "postgres14_sync_engine",
-            marks=[
-                pytest.mark.postgres,
-            ],
-        ),
-        pytest.param(
-            "postgres15_sync_engine",
-            marks=[
-                pytest.mark.postgres,
-            ],
-        ),
-        pytest.param(
-            "postgres16_sync_engine",
-            marks=[
-                pytest.mark.postgres,
-            ],
-        ),
-        pytest.param(
-            "postgres17_sync_engine",
-            marks=[
-                pytest.mark.postgres,
-            ],
-        ),
-    ],
-)
-def sync_engine(request: FixtureRequest) -> Generator[Engine, None, None]:
-    yield cast("Engine", request.getfixturevalue(request.param))
-
-
-@pytest.fixture(scope="session")
-def _seed_postgres_database(sync_engine: Engine) -> None:
-    with sync_engine.begin() as conn:
-        conn.execute(text(dedent("""create extension if not exists pg_stat_statements;""")))
-        driver_connection = conn._dbapi_connection
-        assert driver_connection is not None
-        cursor = driver_connection.cursor()
-        cursor.execute(Path(Path(__file__).parent / "northwind_ddl.sql").read_text(encoding="utf-8"))
-        cursor.execute(Path(Path(__file__).parent / "northwind_data.sql").read_text(encoding="utf-8"))
+    adbc_driver.execute(ddl_path.read_text(encoding="utf-8"))
+    adbc_driver.execute(data_path.read_text(encoding="utf-8"))
