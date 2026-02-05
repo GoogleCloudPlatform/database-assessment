@@ -27,8 +27,8 @@ WITH vossummary
                      ON s.snap_id = snap.snap_id
                      AND s.instance_number = snap.instance_number
                      AND s.dbid = snap.dbid
-         WHERE s.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
-         AND s.dbid = :v_dbid         
+         WHERE snap.begin_interval_time BETWEEN :v_min_snaptime AND :v_max_snaptime
+         AND snap.dbid = :v_dbid         
          GROUP BY s.dbid, s.instance_number, snap.begin_interval_time
         )
 SELECT :v_pkey  || '|' ||  

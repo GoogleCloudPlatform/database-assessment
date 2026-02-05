@@ -53,7 +53,7 @@ FROM   &s_tblprefix._hist_snapshot s,
 WHERE  s.snap_id = g.snap_id
   AND  s.instance_number = g.instance_number
   AND  s.dbid = g.dbid
-  AND  s.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+  AND  s.begin_interval_time BETWEEN :v_min_snaptime AND :v_max_snaptime
   AND  s.dbid = :v_dbid
 )
 GROUP BY

@@ -80,12 +80,12 @@ spool off
 
 spool &outputdir./dma__system_metric_time_series__&s_tag.
 prompt PKEY|SNAP_ID|INSTANCE_NUMBER|BEGIN_INTERVAL_TIME|SESSION_COUNT|CPU_PER_SEC|HOST_CPU_CENTISECS_PER_SEC|DATABASE_TIME_CENTISECS_PER_SEC|EXECUTIONS_PER_SEC|IO_MB_PER_SEC|IO_REQ_PER_SEC|LOGICAL_READS_PER_SEC|LOGINS_PER_SEC|NETWORK_TRAFFIC_BYTES_PER_SEC|REDO_BYTES_PER_SEC|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/awr/dba_system_metric_time_series.sql
+@sql/extracts/awr/system_metric_time_series.sql
 spool off
 
-spool &outputdir./dma__iops_series__&s_tag.
+spool &outputdir./dma__iops_time_series__&s_tag.
 prompt PKEY|BEGIN_INTERVAL_TIME|SNAP_ID|INSTANCE_NUMBER|READ_REQS|WRITE_REQS|READ_BYTES|WRITE_BYTES|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/awr/iops_series.sql
+@sql/extracts/awr/iops_time_series.sql
 spool off
 
 spool &outputdir./dma__active_sessions_time_series__&s_tag.
@@ -95,6 +95,6 @@ spool off
 
 spool &outputdir./dma__os_load_time_series__&s_tag.
 prompt PKEY|DBID|INSTANCE_NUMBER|BEGIN_INTERVAL_TIME|NUM_CPU_CORES|OS_LOAD|DMA_SOURCE_ID|DMA_MANUAL_ID
-@sql/extracts/awr/dba_os_load_time_series.sql
+@sql/extracts/awr/os_load_time_series.sql
 spool off
 

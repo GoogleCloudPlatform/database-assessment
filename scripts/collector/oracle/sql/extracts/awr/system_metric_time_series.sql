@@ -98,8 +98,8 @@ FROM
     &s_tblprefix._hist_sysmetric_summary s,
     &s_tblprefix._hist_snapshot ss
 WHERE  s.snap_id = ss.snap_id
-       AND s.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
-       AND s.dbid = :v_dbid
+       AND ss.begin_interval_time BETWEEN :v_min_snaptime AND :v_max_snaptime
+       AND ss.dbid = :v_dbid
        AND s.instance_number = ss.instance_number
        AND s.dbid = ss.dbid
        AND s.metric_name IN ( 'CPU Usage Per Sec', 'Host CPU Usage Per Sec', 'Database Time Per Sec', 'Executions Per Sec', 'I/O Megabytes per Second' ,

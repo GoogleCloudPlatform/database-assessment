@@ -45,7 +45,7 @@ FROM &s_tblprefix._HIST_SYSTEM_EVENT sev
              ON sev.snap_id = dhsnap.snap_id
             AND sev.instance_number = dhsnap.instance_number
             AND sev.dbid = dhsnap.dbid
-WHERE sev.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+WHERE sev.begin_interval_time BETWEEN :v_min_snaptime AND :v_max_snaptime
   AND sev.dbid = :v_dbid
   AND sev.wait_class IN ('User I/O', 'System I/O', 'Commit')),
 vpercev AS(

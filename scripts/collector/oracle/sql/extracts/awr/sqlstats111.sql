@@ -51,7 +51,7 @@ FROM &s_tblprefix._hist_sqlstat a, &s_tblprefix._hist_snapshot b
 WHERE a.snap_id = b.snap_id
   AND a.instance_number = b.instance_number
   AND a.dbid = b.dbid
-  AND b.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+  AND b.begin_interval_time BETWEEN :v_min_snaptime AND :v_max_snaptime
   AND b.dbid = :v_dbid
 -- AND &s_a_con_id. = &s_b_con_id.
 GROUP BY :v_pkey,

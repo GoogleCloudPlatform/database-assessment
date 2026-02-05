@@ -28,8 +28,8 @@ FROM &s_tblprefix._HIST_ACTIVE_SESS_HISTORY has
              ON has.snap_id = dhsnap.snap_id
             AND has.instance_number = dhsnap.instance_number
             AND has.dbid = dhsnap.dbid
-WHERE has.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
-  AND has.dbid = :v_dbid
+WHERE dhsnap.begin_interval_time BETWEEN :v_min_snaptime AND :v_max_snaptime
+  AND dhsnap.dbid = :v_dbid
   AND (session_state = 'ON CPU' or event = 'resmgr:cpu quantum')
 GROUP BY 
        :v_pkey ,

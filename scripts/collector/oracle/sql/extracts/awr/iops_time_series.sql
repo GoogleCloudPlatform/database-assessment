@@ -14,7 +14,7 @@ From &s_tblprefix._HIST_SYSSTAT dhs
 join &s_tblprefix._hist_snapshot s
         on s.snap_Id = dhs.snap_id
         and s.instance_number = dhs.instance_number
-       AND s.snap_id BETWEEN :v_min_snapid AND :v_max_snapid
+       AND s.begin_interval_time BETWEEN :v_min_snaptime AND :v_max_snaptime
        AND s.dbid = :v_dbid
        AND s.dbid = dhs.dbid
 group by s.begin_interval_time, dhs.snap_id, dhs.instance_number
