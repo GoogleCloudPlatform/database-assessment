@@ -99,8 +99,8 @@ variable v_dma_source_id               VARCHAR2(100);
 variable v_manual_unique_id            VARCHAR2(100);
 variable v_min_snapid                  NUMBER;
 variable v_max_snapid                  NUMBER;
-variable v_min_snaptime                VARCHAR2(20);
-variable v_max_snaptime                VARCHAR2(20);
+variable v_min_snaptime                VARCHAR2(30);
+variable v_max_snaptime                VARCHAR2(30);
 
 variable v_dbid                        NUMBER;
 variable v_dbversion                   VARCHAR2(20);
