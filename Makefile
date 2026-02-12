@@ -117,6 +117,12 @@ build-collector: 										## Build the collector SQL scripts.
 	@cp scripts/collector/oracle/sql/extracts/statspack/*.sql $(BUILD_DIR)/collector/oracle/sql/extracts/statspack
 	@cp scripts/collector/oracle/collect-data.sh $(BUILD_DIR)/collector/oracle/
 	@cp scripts/collector/oracle/README.txt $(BUILD_DIR)/collector/oracle/
+	@cp scripts/collector/oracle/dma_batch_run.sh $(BUILD_DIR)/collector/oracle/
+	@cp scripts/collector/oracle/dma_make_user.sh $(BUILD_DIR)/collector/oracle/
+	@cp scripts/collector/oracle/dma_oee.sh $(BUILD_DIR)/collector/oracle/
+	@cp scripts/collector/oracle/dma_precheck.sh $(BUILD_DIR)/collector/oracle/
+	@cp scripts/collector/oracle/dma_print_pass_fail.sh $(BUILD_DIR)/collector/oracle/
+	@cp scripts/collector/oracle/dma_db_list.csv $(BUILD_DIR)/collector/oracle/
 	@cp  LICENSE $(BUILD_DIR)/collector/oracle
 	echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/oracle/VERSION.txt
 
