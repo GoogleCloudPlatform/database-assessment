@@ -215,7 +215,7 @@ EOF
   local vm_specs_output_file="output/opdb__pg_db_machine_specs_${host}.csv"
   if [[ ! -f "${vm_specs_output_file}" ]] ; then
         host=$(echo "${connect_string}" | cut -d '/' -f 4 | cut -d ':' -f 1)
-        ./db-machine-specs.sh "$host" "$vm_user_name" "${v_file_tag}" "${dma_source_id}" "${v_manual_id}" "${vm_specs_output_file}" "${extra_ssh_args[@]}"
+        ./db-machine-specs.sh "${host}" "${vm_user_name}" "${v_file_tag}" "${dma_source_id}" "${v_manual_id}" "${vm_specs_output_file}" "${extra_ssh_args[@]}"
   fi
 
   # If all_dbs = "Y" loop through all the databases in the instance and create a collection for each one, then exit.
