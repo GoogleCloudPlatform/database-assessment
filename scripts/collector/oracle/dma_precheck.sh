@@ -655,12 +655,12 @@ function print_usage() {
   echo
   echo " Verify the sysdba user connection information is correct:"
   echo
-  echo "  ./dma_precheck.sh --connectionFile dma_db_list.csv --verifyUser N"
+  echo "  ./dma_precheck.sh --configFile dma_db_list.csv --verifyUser N"
   echo
   echo
   echo " then, after running the dma_make_user.sh script, verify the user connection information as well:"
   echo
-  echo "  ./dma_precheck.sh --connectionFile dma_db_list.csv"
+  echo "  ./dma_precheck.sh --configFile dma_db_list.csv"
 
 }
 
