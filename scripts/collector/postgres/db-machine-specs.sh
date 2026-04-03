@@ -85,9 +85,8 @@ else
 EOF
 )
     output=$(ssh "$userName@$machine_name" "${@:7}" "$coreScript; $setScript") || { echo "SSH to $machine_name failed"; exit 1; }
-    source <(echo "$output")
+    eval ${output}
 fi
-
 
 # Writing result to output
 csvData="\"$pkey\"|\"$dmaSourceId\"|\"$dmaManualId\"|\"$hostName\"|$physicalCpuCount|$logicalCpuCount|$memoryMB|$totalSizeBytes|$usedSizeBytes|$primaryMac|$ipAddresses"
