@@ -566,7 +566,7 @@ function main() {
       v_tag="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export v_tag
       execute_dma "${connect_string}" ${dma_version} ${diag_pack_access} "${manual_unique_id}" $stats_window
       retval=$?
-      if [[ $retval -ne 0 ]];then
+      if [[ $retval -ne 0 ]];then # DMA Collection failed, so package up what we did get.
         create_error_log  $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
         compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g') ${database_type}
         print_failure
@@ -579,7 +579,7 @@ function main() {
       create_error_log  $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
       cleanup_dma_output $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
       retval=$?
-      if [[ $retval -ne 0 ]];then
+      if [[ $retval -ne 0 ]];then  # Handle failure of cleanup.
         print_failure
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo "Database Migration Assessment data sanitation reported an error. Please check the error log in directory ${output_dir}"
@@ -587,13 +587,14 @@ function main() {
         echo "Exiting...."
         exit 255
       fi
+      # Now start processing OEE collection if requested.
       dma_id=$(get_dma_source_id ${v_tag})
       if [[ "${collect_oee}" == "Y" ]]; then
         oee_check_results=$(oee_check_conditions "${connection_string}")
         if [[ "${oee_check_results}" == "PASS" ]] ; then
           echo Generating OEE driver file
           oee_generate_config ${dma_id} ${database_service} ${host_name} ${port} ${collection_user_name} ${collection_user_pass} ${oee_group_name} ${oee_run_id} ${v_tag}
-          if [[ "${dma_automation_flag}" != "Y" ]] ; then
+          #if [[ "${dma_automation_flag}" != "Y" ]] ; then
             echo Running OEE
             cd oee
             oee_run "${oee_run_id}"
@@ -606,7 +607,7 @@ function main() {
               echo "Oracle Estate Explorer collection encountered errors.  Collection may be missing some data."
               echo
             fi
-          fi
+          #fi
         else
           final_status="WARNING"
           echo

@@ -13,7 +13,7 @@ function oee_generate_config() {
   local oee_runid="${8}"
   local v_file_tag="${9}"
 
-  local driver_file_name="${oee_dir}/mpack_DMA-OEE-${oee_group}.driverfile.${oee_runid}"
+  local driver_file_name="${oee_dir}/mpack_DMA-OEE-${oee_group}.${v_file_tag}.driverfile.${oee_runid}"
 
   echo "Generating driver file ${driver_file_name}"
 
@@ -64,13 +64,14 @@ EOF
 function oee_package_zips() {
   local oee_runid="${1}"
 
-  for zipname in *driverfile.${oee_runid}
+  for fname in *driverfile.${oee_runid}
   do
-    zipname=$(echo ${zipname} | cut -d '_' -f 2- | cut -d '.' -f 1 ).zip
+    zipname=$(echo ${fname} | cut -d '_' -f 2- | cut -d '.' -f 1 ).zip
+    newname=$(echo ${fname} | rev | cut -d '.' -f 4- | rev).zip
     if [[ -f ${zipname} ]] ; then
-      echo Moving OEE file ${zipname} to DMA output directory.
+      echo Moving OEE file ${fname} to DMA output directory.
       pwd
-      mv ${zipname} ${output_dir}/${zipname}
+      mv ${zipname} ${output_dir}/${newname}
     else
       echo Error: Could not locate output file ${zipname} !!
     fi
