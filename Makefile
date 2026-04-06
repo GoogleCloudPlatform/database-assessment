@@ -101,6 +101,11 @@ destroy:                                            ## Destroy the virtual envir
 	@rm -rf .venv
 	@echo "${OK} Virtual environment destroyed 🗑️"
 
+.PHONY: update-oee
+update-oee:                                         ## Get most recent Oracle Estate Explorer scripts
+	@cd $(BASE_DIR)/scripts/collector/oracle/oee; wget -O oee_group_extract-SA.sh https://raw.githubusercontent.com/oracle-devrel/terraform-oci-oracle-cloud-foundation/refs/heads/main/estate-explorer/oee_group_extract-SA.sh && chmod u+x oee_group_extract-SA.sh
+	@cd $(BASE_DIR)/scripts/collector/oracle/oee; wget -O oee_group_metrics-SA.sql https://raw.githubusercontent.com/oracle-devrel/terraform-oci-oracle-cloud-foundation/refs/heads/main/estate-explorer/oee_group_metrics-SA.sql
+	@cd $(BASE_DIR)/scripts/collector/oracle/oee; wget -O oee_group_dbextract-SA.sql https://raw.githubusercontent.com/oracle-devrel/terraform-oci-oracle-cloud-foundation/refs/heads/main/estate-explorer/oee_group_dbextract-SA.sql
 
 .PHONY: build-collector
 build-collector: 										## Build the collector SQL scripts.
@@ -110,6 +115,7 @@ build-collector: 										## Build the collector SQL scripts.
 	@mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts/awr
 	@mkdir -p $(BUILD_DIR)/collector/oracle/sql/setup
 	@mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts/statspack
+	@mkdir -p $(BUILD_DIR)/collector/oracle/oee
 	@cp scripts/collector/oracle/sql/*.sql $(BUILD_DIR)/collector/oracle/sql
 	@cp scripts/collector/oracle/sql/extracts/*.sql $(BUILD_DIR)/collector/oracle/sql/extracts
 	@cp scripts/collector/oracle/sql/extracts/awr/*.sql $(BUILD_DIR)/collector/oracle/sql/extracts/awr
@@ -123,6 +129,7 @@ build-collector: 										## Build the collector SQL scripts.
 	@cp scripts/collector/oracle/dma_precheck.sh $(BUILD_DIR)/collector/oracle/
 	@cp scripts/collector/oracle/dma_print_pass_fail.sh $(BUILD_DIR)/collector/oracle/
 	@cp scripts/collector/oracle/dma_db_list.csv $(BUILD_DIR)/collector/oracle/
+	@cp scripts/collector/oracle/oee/* $(BUILD_DIR)/collector/oracle/oee/
 	@cp  LICENSE $(BUILD_DIR)/collector/oracle
 	echo "Database Migration Assessment Collector version $(VERSION) ($(COMMIT_SHA))" > $(BUILD_DIR)/collector/oracle/VERSION.txt
 
