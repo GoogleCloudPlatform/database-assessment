@@ -79,26 +79,15 @@ from (
         and t.TABLE_NAME = pt.TABLE_NAME
       )
       left join (
-        select table_schema,
-          TABLE_NAME
-        from information_schema.statistics
-        where table_schema not in (
+        SELECT DISTINCT table_schema, table_name
+        FROM information_schema.columns 
+        WHERE column_key = 'PRI'
+        AND table_schema not in (
             'mysql',
             'information_schema',
             'performance_schema',
             'sys'
           )
-        group by table_schema,
-          TABLE_NAME,
-          index_name
-        having SUM(
-            if(
-              non_unique = 0
-              and NULLABLE != 'YES',
-              1,
-              0
-            )
-          ) = count(*)
       ) pks on (
         t.table_schema = pks.table_schema
         and t.TABLE_NAME = pks.TABLE_NAME
