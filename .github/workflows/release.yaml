@@ -275,6 +275,6 @@ jobs:
     #     password: ${{ secrets.PYPI_API_TOKEN }}
 
     - name: Add assets to release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         files: dist/*
