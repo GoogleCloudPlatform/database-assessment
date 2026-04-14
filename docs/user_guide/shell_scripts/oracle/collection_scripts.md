@@ -321,4 +321,3 @@ Manual execution of the job(s) if needed:
 exec dbms_scheduler.run_job('SP_PURGE_JOB_I1');
 exec dbms_scheduler.run_job('SP_PURGE_JOB_I2');
 ```
-
