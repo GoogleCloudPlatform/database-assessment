@@ -217,3 +217,108 @@ User creation and data collection across many databases can be automated.
 ## Upload Collections
 
 Upon completion, the tool will automatically create an archive of the extracted metrics that can be uploaded into the assessment tool.  Do not modify the file names or contents.
+
+# Statspack installation and configuration
+
+If you are not licensed for the Oracle Tuning and Diagnostics pack, you can use Statspack to gather performance data for DMA.
+
+## Installing Statspack in a multitenant Oracle database.
+
+For best results with DMA, be sure to execute `spcreate.sql` in the root container when running in a multitenant database. Verify that the line:
+`alter session set "_oracle_script" = TRUE;`
+is present in the `$ORACLE_HOME/rdbms/admin/spcreate.sql` script before executing it, or run execute the statement before running spcreate. This will allow creation of the PERFSTAT user without needing the common user prefix (typically C##).
+
+```shell
+cd $ORACLE_HOME/rdbms/admin
+sqlplus / as sysdba
+alter session set "_oracle_script" = TRUE;
+@spcreate
+
+GRANT CREATE JOB TO perfstat;
+exit;
+```
+
+Once the PERFSTAT user is created, connect to CDB$ROOT as user PERFSTAT and create a scheduled job for each instance.
+
+Create the program definition:
+
+```sql
+exec dbms_scheduler.create_program(program_name=>'SP_SNAP_PROG', program_type=> 'STORED_PROCEDURE', program_action=>'PERFSTAT.statspack.snap');
+```
+
+Create a job for each instance:
+
+```sql
+exec dbms_scheduler.create_job(job_name=>'SP_SNAP_JOB_I1', program_name=>'SP_SNAP_PROG', repeat_interval=>'FREQ=HOURLY', start_date=>to_date('2026-03-06 08:00', 'YYYY-MM-DD HH24:MI:SS'), enabled=>false);
+exec dbms_scheduler.create_job(job_name=>'SP_SNAP_JOB_I2', program_name=>'SP_SNAP_PROG', repeat_interval=>'FREQ=HOURLY', start_date=>to_date('2026-03-06 08:00', 'YYYY-MM-DD HH24:MI:SS'), enabled=>false);
+```
+
+Assign one job to each instance (instance stickiness):
+
+```sql
+exec dbms_scheduler.set_attribute(name=>'SP_SNAP_JOB_I1', attribute=>'instance_id', value=>1);
+exec dbms_scheduler.set_attribute(name=>'SP_SNAP_JOB_I2', attribute=>'instance_id', value=>2);
+```
+
+Enable the program and the job(s):
+
+```sql
+exec dbms_scheduler.enable('SP_SNAP_PROG');
+exec dbms_scheduler.enable('SP_SNAP_JOB_I1');
+exec dbms_scheduler.enable('SP_SNAP_JOB_I2');
+```
+
+Manual execution of the job(s) if needed:
+
+```sql
+exec dbms_scheduler.run_job('SP_SNAP_JOB_I1');
+exec dbms_scheduler.run_job('SP_SNAP_JOB_I2');
+```
+
+Allow the job(s) to run for a minimum of 8 full calendar days before running the DMA collector.
+
+The jobs can be dropped after DMA collection if needed:
+
+```sql
+exec dbms_scheduler.drop_job('SP_SNAP_JOB_I1');
+exec dbms_scheduler.drop_job('SP_SNAP_JOB_I2');
+exec dbms_scheduler.drop_program(program_name=>'SP_SNAP_PROG');
+```
+
+## To automatically purge stats after 30 days:
+
+Create a purge program:
+
+```sql
+exec dbms_scheduler.create_program(program_name=>'SP_PURGE_PROG', program_type=> 'STORED_PROCEDURE', program_action=>'PERFSTAT.statspack.purge(I_NUM_DAYS=>30)');
+```
+
+Create purge jobs to run at midnight:
+
+```sql
+exec dbms_scheduler.create_job(job_name=>'SP_PURGE_JOB_I1', program_name=>'SP_PURGE_PROG', repeat_interval=>'FREQ=DAILY', start_date=>trunc(sysdate + 1), 'HH24'), enabled=>false);
+exec dbms_scheduler.create_job(job_name=>'SP_PURGE_JOB_I2', program_name=>'SP_PURGE_PROG', repeat_interval=>'FREQ=DAILY', start_date=>trunc(sysdate + 1), 'HH24'), enabled=>false);
+```
+
+Set instance stickiness for each job:
+
+```sql
+exec dbms_scheduler.set_attribute(name=>'SP_PURGE_JOB_I1', attribute=>'instance_id', value=>1);
+exec dbms_scheduler.set_attribute(name=>'SP_PURGE_JOB_I2', attribute=>'instance_id', value=>2);
+```
+
+Enable the program and jobs:
+
+```sql
+exec dbms_scheduler.enable('SP_PURGE_PROG');
+exec dbms_scheduler.enable('SP_PURGE_JOB_I1');
+exec dbms_scheduler.enable('SP_PURGE_JOB_I2');
+```
+
+Manual execution of the job(s) if needed:
+
+```sql
+exec dbms_scheduler.run_job('SP_PURGE_JOB_I1');
+exec dbms_scheduler.run_job('SP_PURGE_JOB_I2');
+```
+
