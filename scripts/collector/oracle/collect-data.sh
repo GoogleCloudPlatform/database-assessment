@@ -583,7 +583,7 @@ function main() {
         echo "Exiting...."
         exit 255
       fi
-      create_error_log   ${v_tagbase} 
+      create_error_log   ${v_tagbase}
       cleanup_dma_output  ${v_tagbase}
       retval=$?
       if [[ $retval -ne 0 ]];then  # Handle failure of cleanup.
