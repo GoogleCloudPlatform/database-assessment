@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This script is not diectly executable
+# This script is not directly executable
 
 function print_failure() {
   echo :FAILURE:

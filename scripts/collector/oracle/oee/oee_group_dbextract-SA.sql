@@ -7,9 +7,9 @@ REM ****************************************
 REM SQLPLUS Environment Options that help format the output of MPACK
 REM ================================================================================================
         SET LONG 99999999
-        -- added an extra 9 for long that should allow clob to be ~10 times bigger and avoid concatenetaed results 
+        -- added an extra 9 for long that should allow clob to be ~10 times bigger and avoid concatenetaed results
         set longchunksize 99999999
-        -- added an extra 9 for longchunksize that should allow clob to be ~10 times bigger and avoid concatenetaed results 
+        -- added an extra 9 for longchunksize that should allow clob to be ~10 times bigger and avoid concatenetaed results
         set echo OFF
         set feed OFF
         set lines 20000
@@ -63,12 +63,12 @@ REM ============================================================================
 
         /* Removed in v5.0 for CPAT alignment
         CURSOR c_oracle_maintained_schema IS
-        SELECT NAME AS SCHEMA 
-        FROM SYS.KU_NOEXP_VIEW 
-        WHERE OBJ_TYPE='SCHEMA' 
-        UNION 
-        SELECT USERNAME 
-        FROM SYS.DBA_USERS 
+        SELECT NAME AS SCHEMA
+        FROM SYS.KU_NOEXP_VIEW
+        WHERE OBJ_TYPE='SCHEMA'
+        UNION
+        SELECT USERNAME
+        FROM SYS.DBA_USERS
         WHERE ORACLE_MAINTAINED = 'Y';
 
         c_oracle_maintained_schema_row c_oracle_maintained_schema%rowtype;
@@ -112,7 +112,7 @@ REM ============================================================================
         c_multitenant_flag_sql varchar2(500):='SELECT CDB FROM V$DATABASE';
         c_multitenant_flag_value varchar2(3);
 
-        -- Dyanmic SQL Cursor used to obtain PDB rather than CDB values for database identification
+        -- Dynamic SQL Cursor used to obtain PDB rather than CDB values for database identification
         c_database_sql varchar2(500):='SELECT DBID,NAME FROM v$PDBS';
         c_database_sql_dbid number:=null;
         c_database_sql_name varchar2(50);
@@ -123,7 +123,7 @@ REM ============================================================================
                 INSTANCE_NAME,
                 HOST_NAME,
                 VERSION
-            FROM v$instance;  
+            FROM v$instance;
 
         c_instance_row c_instance%rowtype;
 
@@ -206,7 +206,7 @@ REM ============================================================================
 
         -- CURSOR TO FETCH ALL PARAMETERS
         CURSOR c_all_parameters IS
-        SELECT 
+        SELECT
             name,
             type,
             SUBSTR(
@@ -233,7 +233,7 @@ REM ============================================================================
             round(sum(curr_ts_size)/1024, 2) "TOTAL_CURRENT_DB_SIZE_GB",
             round(sum(max_ts_size)/1024, 2) "TOTAL_MAX_ALLOCATED_DB_SIZE_GB"
         FROM
-            (SELECT df.tablespace_name, 
+            (SELECT df.tablespace_name,
                     (df.bytes - sum(fs.bytes)) / (1024 * 1024) used_ts_size,
                     df.bytes / (1024 * 1024) curr_ts_size,
                     df.maxbytes / (1024 * 1024) max_ts_size
@@ -242,7 +242,7 @@ REM ============================================================================
                             sum(bytes) bytes,
                             sum(decode(maxbytes, 0, bytes, maxbytes)) maxbytes
                         FROM dba_data_files
-                        GROUP BY tablespace_name) df   
+                        GROUP BY tablespace_name) df
                 WHERE fs.tablespace_name (+) = df.tablespace_name
                 GROUP BY df.tablespace_name,
                         df.bytes,
@@ -266,7 +266,7 @@ REM ============================================================================
 
         -- Cursor to retrieve nls characterset
         CURSOR c_nls IS
-        SELECT value 
+        SELECT value
         FROM v$nls_parameters
         WHERE parameter='NLS_CHARACTERSET';
 
@@ -274,7 +274,7 @@ REM ============================================================================
 
         -- Cursor to retrieve national characterset
         CURSOR c_national_char IS
-        SELECT value 
+        SELECT value
         FROM v$nls_parameters
         WHERE parameter='NLS_NCHAR_CHARACTERSET';
 
@@ -282,7 +282,7 @@ REM ============================================================================
 
         -- Cursor to establish the maximum number of sessions ever seen in the database
         CURSOR c_max_sessions IS
-        SELECT highwater 
+        SELECT highwater
         FROM dba_high_water_mark_statistics
         WHERE name='SESSIONS';
 
@@ -290,7 +290,7 @@ REM ============================================================================
 
         -- Cursor to establish how many active session there are on average
         CURSOR c_avg_active IS
-        SELECT highwater 
+        SELECT highwater
         FROM dba_high_water_mark_statistics
         WHERE name='ACTIVE_SESSIONS';
 
@@ -304,9 +304,9 @@ REM ============================================================================
 
         -- CPAT Cursor to check for the use of clustered tables
         CURSOR c_cpat_clustered_tables IS
-        SELECT OWNER, 
+        SELECT OWNER,
             TABLE_NAME
-        FROM DBA_TABLES  
+        FROM DBA_TABLES
         WHERE CLUSTER_NAME IS NOT NULL
         AND OWNER NOT IN (SELECT column_value FROM TABLE(l_excluded_schemas));
 
@@ -314,10 +314,10 @@ REM ============================================================================
 
         -- CPAT Cursor to check for the use of rowid's in column definitions
         CURSOR c_cpat_rowids IS
-        SELECT a.OWNER, 
-            a.TABLE_NAME, 
+        SELECT a.OWNER,
+            a.TABLE_NAME,
             a.COLUMN_NAME
-        FROM DBA_TAB_COLS a  
+        FROM DBA_TAB_COLS a
         WHERE a.DATA_TYPE = 'ROWID'
         AND a.OWNER NOT IN (SELECT column_value FROM TABLE(l_excluded_schemas))
         AND NOT EXISTS (SELECT 1 FROM DBA_VIEWS WHERE OWNER=a.OWNER and VIEW_NAME=a.TABLE_NAME)
@@ -327,14 +327,14 @@ REM ============================================================================
 
         -- CPAT Cursor to check for the use of media data types
         CURSOR c_cpat_media IS
-        SELECT OWNER, 
-            TABLE_NAME, 
-            COLUMN_NAME, 
+        SELECT OWNER,
+            TABLE_NAME,
+            COLUMN_NAME,
             DATA_TYPE
-        FROM DBA_TAB_COLUMNS 
+        FROM DBA_TAB_COLUMNS
         WHERE DATA_TYPE IN ('ORDIMAGE','ORDIMAGESIGNATURE','ORDAUDIO','ORDVIDEO', 'ORDDOC','ORDSOURCE',
-                            'ORDDICOM','ORDDATASOURCE', 'SI_STILLIMAGE','SI_COLOR','SI_AVERAGECOLOR', 
-                            'SI_POSITIONALCOLOR','SI_TEXTURE','SI_COLORHISTOGRAM', 'SI_FEATURELIST')  
+                            'ORDDICOM','ORDDATASOURCE', 'SI_STILLIMAGE','SI_COLOR','SI_AVERAGECOLOR',
+                            'SI_POSITIONALCOLOR','SI_TEXTURE','SI_COLORHISTOGRAM', 'SI_FEATURELIST')
             AND DATA_TYPE_OWNER IN ('ORDSYS', 'PUBLIC')
             AND OWNER NOT IN (SELECT column_value FROM TABLE(l_excluded_schemas));
 
@@ -355,34 +355,34 @@ REM ============================================================================
 
         -- CPAT Cursor to check for the use of index-organized tables
         CURSOR c_cpat_iots IS
-        SELECT OWNER, 
+        SELECT OWNER,
             TABLE_NAME
-        FROM DBA_ALL_TABLES  
-        WHERE IOT_TYPE='IOT' 
-        AND TABLE_NAME NOT LIKE 'AQ$%'  
-        AND TABLE_NAME NOT LIKE 'DR$%'  
+        FROM DBA_ALL_TABLES
+        WHERE IOT_TYPE='IOT'
+        AND TABLE_NAME NOT LIKE 'AQ$%'
+        AND TABLE_NAME NOT LIKE 'DR$%'
         AND TABLE_NAME NOT LIKE 'DM$%'
         AND OWNER NOT IN (SELECT column_value FROM TABLE(l_excluded_schemas));
 
-        c_cpat_iots_row c_cpat_iots%rowtype;    
+        c_cpat_iots_row c_cpat_iots%rowtype;
 
         -- CPAT Cursor to check for the use of java within the database
         CURSOR c_cpat_java_objects IS
         SELECT owner,
-            object_name, 
-            object_type, 
+            object_name,
+            object_type,
             status
-        FROM dba_objects 
-        WHERE (object_name NOT LIKE 'SYS_%' 
-                AND object_name NOT LIKE 'CREATE$%' 
-                AND object_name NOT LIKE 'JAVA$%' 
-                AND object_name NOT LIKE 'LOADLOB%') 
+        FROM dba_objects
+        WHERE (object_name NOT LIKE 'SYS_%'
+                AND object_name NOT LIKE 'CREATE$%'
+                AND object_name NOT LIKE 'JAVA$%'
+                AND object_name NOT LIKE 'LOADLOB%')
         AND OBJECT_TYPE IN ('JAVA CLASS', 'JAVA RESOURCES', 'JAVA DATA')
         AND OWNER NOT IN (SELECT column_value FROM TABLE(l_excluded_schemas));
 
         c_cpat_java_objects_row c_cpat_java_objects%rowtype;
 
-        -- Dyanmic SQL Cursor to check for the use of information lifecycle management policies
+        -- Dynamic SQL Cursor to check for the use of information lifecycle management policies
         c_ilm_policies_sql VARCHAR2(500):='SELECT OBJECT_OWNER,POLICY_NAME,OBJECT_NAME,OBJECT_TYPE FROM DBA_ILMOBJECTS WHERE OBJECT_TYPE = ''TABLE''  AND ENABLED = ''YES''';
         c_ilm_sql_object_owner varchar2(200):=null;
         c_ilm_sql_policy_name varchar2(200):=null;
@@ -391,85 +391,85 @@ REM ============================================================================
 
         -- CPAT Cursor to check for the use of jobs not written in PL/SQL
         CURSOR c_cpat_incompatible_jobs IS
-        SELECT OWNER, 
-            NAME, 
-            TYPE, 
+        SELECT OWNER,
+            NAME,
+            TYPE,
             LOCUS
-        FROM (SELECT OWNER, 
-                    JOB_NAME AS NAME, 
-                    JOB_TYPE AS TYPE, 
-                    'DBA_SCHEDULER_JOBS' AS LOCUS     
-                FROM DBA_SCHEDULER_JOBS  
-                WHERE JOB_TYPE NOT IN ('STORED_PROCEDURE','PLSQL_BLOCK')  
+        FROM (SELECT OWNER,
+                    JOB_NAME AS NAME,
+                    JOB_TYPE AS TYPE,
+                    'DBA_SCHEDULER_JOBS' AS LOCUS
+                FROM DBA_SCHEDULER_JOBS
+                WHERE JOB_TYPE NOT IN ('STORED_PROCEDURE','PLSQL_BLOCK')
                 AND OWNER NOT IN (SELECT column_value FROM TABLE(l_excluded_schemas))
-                UNION ALL   
-                SELECT OWNER, 
-                    PROGRAM_NAME AS NAME, 
-                    PROGRAM_TYPE AS TYPE, 
-                    'DBA_SCHEDULER_PROGRAMS' AS LOCUS     
-                FROM DBA_SCHEDULER_PROGRAMS  
-                WHERE PROGRAM_TYPE NOT IN ('STORED_PROCEDURE','PLSQL_BLOCK') 
+                UNION ALL
+                SELECT OWNER,
+                    PROGRAM_NAME AS NAME,
+                    PROGRAM_TYPE AS TYPE,
+                    'DBA_SCHEDULER_PROGRAMS' AS LOCUS
+                FROM DBA_SCHEDULER_PROGRAMS
+                WHERE PROGRAM_TYPE NOT IN ('STORED_PROCEDURE','PLSQL_BLOCK')
                 AND OWNER NOT IN (SELECT column_value FROM TABLE(l_excluded_schemas))
-                );        
+                );
 
-        c_cpat_incompatible_jobs_row c_cpat_incompatible_jobs%rowtype;   
+        c_cpat_incompatible_jobs_row c_cpat_incompatible_jobs%rowtype;
 
         -- CPAT Cursor to check for references to restricted Oracle packages
         CURSOR c_cpat_restricted_packages IS
 
-        SELECT OWNER, 
-            NAME, 
-            TYPE, 
-            REFERENCED_NAME, 
+        SELECT OWNER,
+            NAME,
+            TYPE,
+            REFERENCED_NAME,
             SUPPORT
-        FROM (SELECT OWNER, 
-                    NAME, 
-                    TYPE, 
-                    REFERENCED_NAME, 
-                    'UNSUPPORTED' AS SUPPORT 
-                FROM DBA_DEPENDENCIES 
-                WHERE REFERENCED_NAME IN ('DBMS_DEBUG_JDWP','DBMS_DEBUG_JDWP_CUSTOM','UTL_INADDR','DBMS_SYSTEM','DBMS_SYS_SQL')   
+        FROM (SELECT OWNER,
+                    NAME,
+                    TYPE,
+                    REFERENCED_NAME,
+                    'UNSUPPORTED' AS SUPPORT
+                FROM DBA_DEPENDENCIES
+                WHERE REFERENCED_NAME IN ('DBMS_DEBUG_JDWP','DBMS_DEBUG_JDWP_CUSTOM','UTL_INADDR','DBMS_SYSTEM','DBMS_SYS_SQL')
                 AND OWNER NOT IN (SELECT column_value FROM TABLE(l_excluded_schemas))
-                UNION ALL  
-                SELECT OWNER, 
-                    NAME, 
-                    TYPE, 
-                    REFERENCED_NAME, 
-                    'PARTIALLY SUPPORTED' AS SUPPORT 
-                FROM DBA_DEPENDENCIES 
+                UNION ALL
+                SELECT OWNER,
+                    NAME,
+                    TYPE,
+                    REFERENCED_NAME,
+                    'PARTIALLY SUPPORTED' AS SUPPORT
+                FROM DBA_DEPENDENCIES
                 WHERE REFERENCED_NAME IN ('UTL_HTTP','UTL_SMTP','UTL_TCP','DBMS_SHARED_POOL','DBMS_PIPE','DBMS_LDAP','DBMS_NETWORK_ACL_ADMIN')
                 AND OWNER NOT IN (SELECT column_value FROM TABLE(l_excluded_schemas))
-                ) 
-        WHERE OWNER <> 'PUBLIC' 
-        AND TYPE <> 'SYNONYM' 
+                )
+        WHERE OWNER <> 'PUBLIC'
+        AND TYPE <> 'SYNONYM'
         AND NAME <> REFERENCED_NAME;
 
-        c_cpat_restricted_packages_row   c_cpat_restricted_packages%rowtype;  
+        c_cpat_restricted_packages_row   c_cpat_restricted_packages%rowtype;
 
 
         -- Cursor to check for users granted dba privileges
 
         /* Pre v5.0 Cursor
         CURSOR c_cpat_dba_roles IS
-        SELECT GRANTEE, 
-            GRANTED_ROLE 
-        FROM DBA_ROLE_PRIVS  
-        WHERE GRANTED_ROLE <> 'SQLT_USER_ROLE'  
+        SELECT GRANTEE,
+            GRANTED_ROLE
+        FROM DBA_ROLE_PRIVS
+        WHERE GRANTED_ROLE <> 'SQLT_USER_ROLE'
         AND GRANTED_ROLE  IN ('DBA')
         AND GRANTEE NOT IN ('SYS','SYSTEM');
         */
 
         -- v5.0 CPAT aligned cursor
         CURSOR c_cpat_dba_roles IS
-        SELECT GRANTEE, GRANTED_ROLE 
-        FROM (SELECT DISTINCT CONNECT_BY_ROOT GRANTEE AS GRANTEE, 
-                                GRANTED_ROLE    
-                FROM SYS.DBA_ROLE_PRIVS  
-                START WITH GRANTEE NOT IN (SELECT column_value FROM TABLE(l_excluded_schemas))  
-            CONNECT BY GRANTEE = PRIOR GRANTED_ROLE)  
+        SELECT GRANTEE, GRANTED_ROLE
+        FROM (SELECT DISTINCT CONNECT_BY_ROOT GRANTEE AS GRANTEE,
+                                GRANTED_ROLE
+                FROM SYS.DBA_ROLE_PRIVS
+                START WITH GRANTEE NOT IN (SELECT column_value FROM TABLE(l_excluded_schemas))
+            CONNECT BY GRANTEE = PRIOR GRANTED_ROLE)
         WHERE GRANTEE NOT IN (SELECT column_value FROM TABLE(l_excluded_schemas))
-        AND GRANTEE IN (SELECT USERNAME FROM SYS.DBA_USERS)  
-        AND GRANTED_ROLE <> 'SQLT_USER_ROLE'  
+        AND GRANTEE IN (SELECT USERNAME FROM SYS.DBA_USERS)
+        AND GRANTED_ROLE <> 'SQLT_USER_ROLE'
         AND GRANTED_ROLE IN ('EXP_FULL_DATABASE','JAVAUSERPRIV','XDB_SET_INVOKER','JAVA_ADMIN','XDBADMIN','DBA','RECOVERY_CATALOG_USER',
                             'SCHEDULER_ADMIN','EM_EXPRESS_ALL','EM_EXPRESS_BASIC','EXECUTE_CATALOG_ROLE','DATAPUMP_EXP_FULL_DATABASE',
                             'IMP_FULL_DATABASE','HS_ADMIN_EXECUTE_ROLE','XS_RESOURCE','JAVA_DEPLOY','OLAP_DBA','DATAPUMP_IMP_FULL_DATABASE',
@@ -488,7 +488,7 @@ REM ============================================================================
         -- Cursor to check for use of XMLType Tables
         l_xml_queryB varchar2(4000);
         TYPE l_xml_queryB_rec is RECORD (DXT_OWNER        VARCHAR2(128),
-                                        DXT_TABLE_NAME   VARCHAR2(128), 
+                                        DXT_TABLE_NAME   VARCHAR2(128),
                                         DXT_STORAGE_TYPE VARCHAR2(17));
         TYPE l_xml_queryB_tab is TABLE OF l_xml_queryB_rec;
         l_xml_queryB_collection l_xml_queryB_tab;
@@ -515,8 +515,8 @@ REM ============================================================================
 
         c_spatial_sql varchar2(5000);
         c_spatial_sql_owner varchar2(500);
-        c_spatial_sql_table_name varchar2(500); 
-        c_spatial_sql_column_name varchar2(500); 
+        c_spatial_sql_table_name varchar2(500);
+        c_spatial_sql_column_name varchar2(500);
         c_spatial_sql_data_type varchar2(500);
 
         -- Dynamic cursor to check for use of Common Objects
@@ -552,7 +552,7 @@ REM ============================================================================
             AND OWNER NOT IN (SELECT column_value FROM TABLE(l_excluded_schemas))
         GROUP BY OWNER ORDER BY OWNER;
 
-        c_cpat_no_compression_row  c_cpat_no_compression%rowtype;    
+        c_cpat_no_compression_row  c_cpat_no_compression%rowtype;
 
         -- Cursor to check for db links
         CURSOR c_cpat_dblinks IS
@@ -605,17 +605,17 @@ REM ============================================================================
         SELECT TRUST,
                 NAME
         FROM TRUSTED_SERVERS
-        --  WHERE UPPER(NAME) != 'ALL'  * Removed in v5.0 to align with CPAT  
+        --  WHERE UPPER(NAME) != 'ALL'  * Removed in v5.0 to align with CPAT
         ORDER BY 1,2;
 
         c_cpat_trusted_server_row  c_cpat_trusted_server%rowtype;
 
         CURSOR c_cpat_lcm_user IS
         SELECT 'EXISTS' AS STATUS
-            FROM dba_users 
+            FROM dba_users
         WHERE username = 'LCM_SUPER_ADMIN';
 
-        c_cpat_lcm_user_row   c_cpat_lcm_user%rowtype; 
+        c_cpat_lcm_user_row   c_cpat_lcm_user%rowtype;
 
         -- SUMMARY CLOBS
         -- ==================================
@@ -630,7 +630,7 @@ REM ============================================================================
         -- Declare CLOB locators that will each store the detailed output of one CPAT test
         -- Each of these CLOBS may ultimately contain more than one record. In some cases, this could many thousands.
         -- Therefore, these CLOBS will be accessed via the DBMS_LOB package so that more than 32KB of data (max 4GB) can be stored
-        -- in each of them. 
+        -- in each of them.
         -- For this to be possible, the code will create temporary lobs linked to each of these LOB locators
 
         cpat_all_parameters CLOB;
@@ -758,7 +758,7 @@ REM ============================================================================
         dbms_lob.createtemporary(mpack_summary, true);
         -- Create the temporary lobs that hold the CPAT detailed results
 
-        dbms_lob.createtemporary(cpat_all_parameters,true); 
+        dbms_lob.createtemporary(cpat_all_parameters,true);
         dbms_lob.createtemporary(cpat_basic_lobs,true);
         dbms_lob.createtemporary(cpat_clustered_tables,true);
         dbms_lob.createtemporary(cpat_rowid_columns,true);
@@ -787,29 +787,29 @@ REM ============================================================================
         /* Removed in v5.0 for CPAT alignment
 
         -- Determine whether this database potentially has objects managed by Oracle
-        SELECT COUNT(*) AS COUNT 
-        INTO v_oracle_maintained 
-        FROM DBA_TAB_COLS 
-        WHERE TABLE_NAME='DBA_OBJECTS' 
-        AND COLUMN_NAME='ORACLE_MAINTAINED' 
+        SELECT COUNT(*) AS COUNT
+        INTO v_oracle_maintained
+        FROM DBA_TAB_COLS
+        WHERE TABLE_NAME='DBA_OBJECTS'
+        AND COLUMN_NAME='ORACLE_MAINTAINED'
         AND OWNER='SYS';
 
         -- If it does, then the list of excluded schemas must be built dynamically
 
         l_excluded_schemas := SYS.ODCIVARCHAR2LIST();
         IF v_oracle_maintained > 0
-        THEN -- Build list of schemas to exclude from analysis 
+        THEN -- Build list of schemas to exclude from analysis
             FOR c_oracle_maintained_schema_row IN c_oracle_maintained_schema LOOP
                 l_excluded_schemas.EXTEND(1);
                 l_excluded_schemas(l_excluded_schemas.LAST) := c_oracle_maintained_schema_row.SCHEMA;
             END LOOP;
 
-            -- Build comma delimited string version of excluded schemas to be used in dyanmic SQL
+            -- Build comma delimited string version of excluded schemas to be used in dynamic SQL
             v_excluded_schemas := '';
             FOR i IN 1 .. l_excluded_schemas.COUNT LOOP
                     v_excluded_schemas := v_excluded_schemas || '''' || l_excluded_schemas(i) || ''',';
             END LOOP;
-        
+
             IF v_excluded_schemas IS NOT NULL THEN
                 v_excluded_schemas := RTRIM(v_excluded_schemas, ',');
             END IF;
@@ -824,28 +824,28 @@ REM ============================================================================
         v_excluded_schemas := v_default_excluded_schemas;
 
         -- Build all dynamic query text so that it excludes the appropriate schemas from analysis
-        l_xml_queryB :='SELECT OWNER AS DXT_OWNER, 
-                                            TABLE_NAME AS DXT_TABLE_NAME, 
-                                            STORAGE_TYPE AS DXT_STORAGE_TYPE 
-                                        FROM DBA_XML_TABLES        
-                                    WHERE STORAGE_TYPE != ''BINARY'' 
+        l_xml_queryB :='SELECT OWNER AS DXT_OWNER,
+                                            TABLE_NAME AS DXT_TABLE_NAME,
+                                            STORAGE_TYPE AS DXT_STORAGE_TYPE
+                                        FROM DBA_XML_TABLES
+                                    WHERE STORAGE_TYPE != ''BINARY''
                                         AND OWNER NOT IN ('||v_excluded_schemas||')
                                     ORDER BY 1,2';
 
-        l_xml_queryC :='SELECT OWNER AS DXS_OWNER, 
+        l_xml_queryC :='SELECT OWNER AS DXS_OWNER,
                                             SCHEMA_URL DXS_SCHEMA_URL
-                                        FROM DBA_XML_SCHEMAS S   
+                                        FROM DBA_XML_SCHEMAS S
                                     WHERE OWNER NOT IN ('||v_excluded_schemas||')
                                     ORDER BY 1,2';
 
-        l_xml_queryD :='SELECT OWNER AS DXTC_OWNER, 
-                                            TABLE_NAME DXTC_TABLE_NAME, 
-                                            COLUMN_NAME DXTC_COLUMN_NAME, 
-                                            STORAGE_TYPE DXTC_STORAGE_TYPE, 
-                                            XMLSCHEMA DXTC_XMLSCHEMA, 
-                                            SCHEMA_OWNER DXTC_SCHEMA_OWNER  
-                                        FROM DBA_XML_TAB_COLS  
-                                    WHERE (XMLSCHEMA IS NOT NULL OR STORAGE_TYPE != ''BINARY'') 
+        l_xml_queryD :='SELECT OWNER AS DXTC_OWNER,
+                                            TABLE_NAME DXTC_TABLE_NAME,
+                                            COLUMN_NAME DXTC_COLUMN_NAME,
+                                            STORAGE_TYPE DXTC_STORAGE_TYPE,
+                                            XMLSCHEMA DXTC_XMLSCHEMA,
+                                            SCHEMA_OWNER DXTC_SCHEMA_OWNER
+                                        FROM DBA_XML_TAB_COLS
+                                    WHERE (XMLSCHEMA IS NOT NULL OR STORAGE_TYPE != ''BINARY'')
                                         AND OWNER NOT IN ('||v_excluded_schemas||')
                                     ORDER BY 1,2,3';
 
@@ -854,19 +854,19 @@ REM ============================================================================
                                 COLUMN_NAME,
                                 DATA_TYPE
                             FROM DBA_TAB_COLUMNS
-                        WHERE OWNER NOT IN ('||v_excluded_schemas||') 
-                            AND DATA_TYPE IN '||Q'[('SDO_GEOMETRY','SDO_POINT','SDO_ELEM_INFO_ARRAY','SDO_ORDINATE_ARRAY','SDO_GEOMETRY_ARRAY','SDO_GEORASTER','SDO_PC','SDO_TIN','SDO_TOPO_GEOMETRY')  
-                            AND DATA_TYPE_OWNER IN ('MDSYS','PUBLIC')]'|| 
+                        WHERE OWNER NOT IN ('||v_excluded_schemas||')
+                            AND DATA_TYPE IN '||Q'[('SDO_GEOMETRY','SDO_POINT','SDO_ELEM_INFO_ARRAY','SDO_ORDINATE_ARRAY','SDO_GEOMETRY_ARRAY','SDO_GEORASTER','SDO_PC','SDO_TIN','SDO_TOPO_GEOMETRY')
+                            AND DATA_TYPE_OWNER IN ('MDSYS','PUBLIC')]'||
                         ' ORDER BY 1,2,3';
 
         c_12c_libraries_sql :='SELECT OWNER, LIBRARY_NAME, FILE_SPEC, ORIGIN_CON_ID '||
-                                    'FROM DBA_LIBRARIES 
-                                    WHERE OWNER NOT IN ('||v_excluded_schemas||') 
+                                    'FROM DBA_LIBRARIES
+                                    WHERE OWNER NOT IN ('||v_excluded_schemas||')
                                     ORDER BY 1,2';
 
         c_11g_libraries_sql :='SELECT OWNER, LIBRARY_NAME, FILE_SPEC '||
-                                    'FROM DBA_LIBRARIES 
-                                    WHERE OWNER NOT IN ('||v_excluded_schemas||') 
+                                    'FROM DBA_LIBRARIES
+                                    WHERE OWNER NOT IN ('||v_excluded_schemas||')
                                     ORDER BY 1,2';
 
         -- Database Summary Record
@@ -882,7 +882,7 @@ REM ============================================================================
         CLOSE c_instance;
 
         -- If this database is a 12c database or higher, check to see if its a multitenant database (CDB)
-        -- If it is, this is a pluugable database. Go and get the DBID for the pluggable. Otherwise we 
+        -- If it is, this is a pluugable database. Go and get the DBID for the pluggable. Otherwise we
         -- use the DBID taken from the main database cursor against v$database.
         IF to_number(substr(c_instance_row.version,1,2))>=12
         THEN v_dynsql := c_multitenant_flag_sql;
@@ -952,8 +952,8 @@ REM ============================================================================
                         '"'||'description'||'":"'||c_all_parameters_row.description||'"'||
                         '}'||
                         chr(10);
-                        
-        dbms_lob.writeappend(cpat_all_parameters, dbms_lob.getlength(new_clob_record), new_clob_record);                                             
+
+        dbms_lob.writeappend(cpat_all_parameters, dbms_lob.getlength(new_clob_record), new_clob_record);
 
         END LOOP;
 
@@ -963,14 +963,14 @@ REM ============================================================================
 
         -- CPAT Check - Basic LOBS
 
-        c_lobs_sql := 
-        Q'[SELECT LOBS.OWNER, 
-            LOBS.TABLE_NAME, 
+        c_lobs_sql :=
+        Q'[SELECT LOBS.OWNER,
+            LOBS.TABLE_NAME,
             regexp_replace(LOBS.COLUMN_NAME,'"','') COLUMN_NAME /* To overcome issue with objects derived from Queues, Scheduler and nested records where " are used to demonstrate the object full identifier */
-        FROM DBA_LOBS LOBS, DBA_TABLES TABS  
-        WHERE ]'|| case 
+        FROM DBA_LOBS LOBS, DBA_TABLES TABS
+        WHERE ]'|| case
                 when to_number(substr(c_instance_row.version,1,2)) > 10 then Q'[LOBS.SECUREFILE = 'NO' AND ]'
-                end 
+                end
                 ||Q'[LOBS.OWNER NOT IN ('ANONYMOUS',
                                 'APPQOSSYS',
                                 'AUDSYS',
@@ -1008,8 +1008,8 @@ REM ============================================================================
                                 'WMSYS',
                                 'XDB',
                                 'XS$NULL')
-        AND TABS.OWNER=LOBS.OWNER 
-        AND TABS.TABLE_NAME = LOBS.TABLE_NAME  
+        AND TABS.OWNER=LOBS.OWNER
+        AND TABS.TABLE_NAME = LOBS.TABLE_NAME
         AND NVL(TABS.TEMPORARY, 'N') <>'Y']';
 
         OPEN v_dyn_cursor FOR c_lobs_sql;
@@ -1027,8 +1027,8 @@ REM ============================================================================
                         '"'||'column_name'||'":"'||c_lobs_column_name||'"'||
                         '}'||
                         chr(10);
-                        
-        dbms_lob.writeappend(cpat_basic_lobs, dbms_lob.getlength(new_clob_record), new_clob_record);                                             
+
+        dbms_lob.writeappend(cpat_basic_lobs, dbms_lob.getlength(new_clob_record), new_clob_record);
 
         END LOOP;
         CLOSE  v_dyn_cursor;
@@ -1046,7 +1046,7 @@ REM ============================================================================
                         '}'||
                         chr(10);
 
-        dbms_lob.writeappend(cpat_clustered_tables, dbms_lob.getlength(new_clob_record), new_clob_record);                                             
+        dbms_lob.writeappend(cpat_clustered_tables, dbms_lob.getlength(new_clob_record), new_clob_record);
         v_clustered_tables_rows:= c_cpat_clustered_tables%rowcount;
 
         END LOOP;
@@ -1065,7 +1065,7 @@ REM ============================================================================
                         '}'||
                         chr(10);
 
-        dbms_lob.writeappend(cpat_rowid_columns, dbms_lob.getlength(new_clob_record), new_clob_record);                                             
+        dbms_lob.writeappend(cpat_rowid_columns, dbms_lob.getlength(new_clob_record), new_clob_record);
         v_rowid_columns_rows:= c_cpat_rowids%rowcount;
 
         END LOOP;
@@ -1081,11 +1081,11 @@ REM ============================================================================
                         '"'||'owner'||'":"'||c_cpat_media_row.owner||'",'||
                         '"'||'table_name'||'":"'||c_cpat_media_row.table_name||'",'||
                         '"'||'column_name'||'":"'||c_cpat_media_row.column_name||'",'||
-                        '"'||'data_type'||'":"'||c_cpat_media_row.data_type||'"'||   
+                        '"'||'data_type'||'":"'||c_cpat_media_row.data_type||'"'||
                         '}'||
                         chr(10);
 
-        dbms_lob.writeappend(cpat_media_columns, dbms_lob.getlength(new_clob_record), new_clob_record);                             
+        dbms_lob.writeappend(cpat_media_columns, dbms_lob.getlength(new_clob_record), new_clob_record);
         v_media_columns_rows:= c_cpat_media%rowcount;
 
         END LOOP;
@@ -1107,7 +1107,7 @@ REM ============================================================================
                         '}'||
                         chr(10);
 
-        dbms_lob.writeappend(cpat_external_tables, dbms_lob.getlength(new_clob_record), new_clob_record);             
+        dbms_lob.writeappend(cpat_external_tables, dbms_lob.getlength(new_clob_record), new_clob_record);
         v_external_tables_rows:= c_cpat_external_tabs%rowcount;
         END LOOP;
 
@@ -1172,7 +1172,7 @@ REM ============================================================================
                         dbms_lob.writeappend(cpat_ilm_policies, dbms_lob.getlength(new_clob_record), new_clob_record);
             END LOOP;
             CLOSE v_dyn_cursor;
-        END IF;                
+        END IF;
 
         -- CPAT Check - Incompatible Scheduled Jobs and Programs
         FOR c_cpat_incompatible_jobs_row IN c_cpat_incompatible_jobs LOOP
@@ -1257,7 +1257,7 @@ REM ============================================================================
                 v_xmltypes_rows:= l_xml_queryD_collection.count;
             END LOOP;
         EXCEPTION
-        WHEN OTHERS THEN 
+        WHEN OTHERS THEN
         l_xml_check2:='N';
         null;
         END;
@@ -1285,7 +1285,7 @@ REM ============================================================================
 
             END LOOP;
         EXCEPTION
-        WHEN OTHERS THEN 
+        WHEN OTHERS THEN
         l_xml_check3:='N';
         null;
         END;
@@ -1309,13 +1309,13 @@ REM ============================================================================
                 v_xmltype_tables_rows:= l_xml_queryB_collection.count;
             END LOOP;
         EXCEPTION
-        WHEN OTHERS THEN 
+        WHEN OTHERS THEN
         l_xml_check4:='N';
         null;
         END;
 
         -- CPAT Check - Check for XMLDB Objects
-        -- TEST EXECUTE STATEMENT if Successfull run loop
+        -- TEST EXECUTE STATEMENT if Successful run loop
         -- if not then do not run loop
         BEGIN
         EXECUTE IMMEDIATE l_xml_queryA BULK COLLECT INTO l_xml_queryA_collection;
@@ -1326,14 +1326,14 @@ REM ============================================================================
                                 v_extract_date_time||'|'||
                                 '1'||'|'||
                                 '{'||
-                                '"'||'count'||'":"'||l_xml_queryA_collection(idqA).counter||'"'|| 
+                                '"'||'count'||'":"'||l_xml_queryA_collection(idqA).counter||'"'||
                                 '}'||
                                 chr(10);
                 dbms_lob.writeappend(cpat_xmldb_objects, dbms_lob.getlength(new_clob_record), new_clob_record);
                 v_xmldb_objects_rows := 1;
             END LOOP;
         EXCEPTION
-        WHEN OTHERS THEN 
+        WHEN OTHERS THEN
         l_xml_check:='N';
         null;
         END;
@@ -1360,7 +1360,7 @@ REM ============================================================================
                                 v_spatial_obj_rows||'|'||
                                 '{'||
                                 '"'||'owner'||'":"'||c_spatial_sql_owner||'",'||
-                                '"'||'table_name'||'":"'||c_spatial_sql_table_name||'",'||                 
+                                '"'||'table_name'||'":"'||c_spatial_sql_table_name||'",'||
                                 '"'||'column_name'||'":"'||c_spatial_sql_column_name||'",'||
                                 '"'||'data_type'||'":"'||c_spatial_sql_data_type||'"'||
                                 '}'||
@@ -1381,7 +1381,7 @@ REM ============================================================================
 
                 EXIT WHEN v_dyn_cursor%NOTFOUND;
                 v_common_obj_rows:=v_common_obj_rows+1;
-                
+
                 new_clob_record:='MPACK_COMMON_OBJECTS'||'|GUIDPLACEHOLDER|'||
                         v_dbid||'|'||
                         v_extract_date_time||'|'||
@@ -1394,11 +1394,11 @@ REM ============================================================================
                         -- Removed in v5.0 '"'||'application'||'":"'||c_common_sql_application||'"'||
                         '}'||
                         chr(10);
-                        dbms_lob.writeappend(cpat_common_objs, dbms_lob.getlength(new_clob_record), new_clob_record);            
+                        dbms_lob.writeappend(cpat_common_objs, dbms_lob.getlength(new_clob_record), new_clob_record);
             END LOOP;
             CLOSE v_dyn_cursor;
-        END IF;      
-        
+        END IF;
+
         -- CPAT Check - Identify tables with COMPRESSION disabled
         FOR c_cpat_no_compression_row IN c_cpat_no_compression LOOP
 
@@ -1407,7 +1407,7 @@ REM ============================================================================
                         v_extract_date_time||'|'||
                         c_cpat_no_compression%rowcount||'|'||
                         '{'||
-                        '"'||'owner'||'":"'||c_cpat_no_compression_row.owner||'",'|| 
+                        '"'||'owner'||'":"'||c_cpat_no_compression_row.owner||'",'||
                         '"'||'count'||'":"'||c_cpat_no_compression_row.NO_COMPRESSION_TABLES||'"'||
                         '}'||
                         chr(10);
@@ -1426,8 +1426,8 @@ REM ============================================================================
                         c_cpat_dblinks%rowcount||'|'||
                         '{'||
                         '"'||'owner'||'":"'||c_cpat_dblinks_row.owner||'",'||
-                        '"'||'dblink'||'":"'||c_cpat_dblinks_row.db_link||'",'|| 
-                        '"'||'host'||'":"'||c_cpat_dblinks_row.host||'"'||                    
+                        '"'||'dblink'||'":"'||c_cpat_dblinks_row.db_link||'",'||
+                        '"'||'host'||'":"'||c_cpat_dblinks_row.host||'"'||
                         '}'||
                         chr(10);
 
@@ -1445,8 +1445,8 @@ REM ============================================================================
                         c_cpat_directories%rowcount||'|'||
                         '{'||
                         '"'||'owner'||'":"'||c_cpat_directories_row.owner||'",'||
-                        '"'||'directory_name'||'":"'||c_cpat_directories_row.directory_name||'",'|| 
-                        '"'||'directory_path'||'":"'||c_cpat_directories_row.directory_path||'"'||                    
+                        '"'||'directory_name'||'":"'||c_cpat_directories_row.directory_name||'",'||
+                        '"'||'directory_path'||'":"'||c_cpat_directories_row.directory_path||'"'||
                         '}'||
                         chr(10);
 
@@ -1475,7 +1475,7 @@ REM ============================================================================
                         '"'||'container_id'||'":"'||c_libraries_12c_conid||'"'||
                         '}'||
                         chr(10);
-                        dbms_lob.writeappend(cpat_libraries, dbms_lob.getlength(new_clob_record), new_clob_record);     
+                        dbms_lob.writeappend(cpat_libraries, dbms_lob.getlength(new_clob_record), new_clob_record);
             END LOOP;
             CLOSE v_dyn_cursor;
         ELSE v_dynsql:=c_11g_libraries_sql;
@@ -1495,10 +1495,10 @@ REM ============================================================================
                         '"'||'file_spec'||'":"'||c_libraries_file_spec||'"'||
                         '}'||
                         chr(10);
-                        dbms_lob.writeappend(cpat_libraries, dbms_lob.getlength(new_clob_record), new_clob_record);     
+                        dbms_lob.writeappend(cpat_libraries, dbms_lob.getlength(new_clob_record), new_clob_record);
             END LOOP;
             CLOSE v_dyn_cursor;
-        END IF;  
+        END IF;
 
         -- CPAT Check - Check for trusted servers
         FOR c_cpat_trusted_server_row IN c_cpat_trusted_server LOOP
@@ -1509,7 +1509,7 @@ REM ============================================================================
                         c_cpat_trusted_server%rowcount||'|'||
                         '{'||
                         '"'||'trust'||'":"'||c_cpat_trusted_server_row.trust||'",'||
-                        '"'||'name'||'":"'||c_cpat_trusted_server_row.name||'"'||                    
+                        '"'||'name'||'":"'||c_cpat_trusted_server_row.name||'"'||
                         '}'||
                         chr(10);
 
@@ -1526,7 +1526,7 @@ REM ============================================================================
                         v_extract_date_time||'|'||
                         c_cpat_lcm_user%rowcount||'|'||
                         '{'||
-                        '"'||'status'||'":"'||c_cpat_lcm_user_row.status||'"'||                 
+                        '"'||'status'||'":"'||c_cpat_lcm_user_row.status||'"'||
                         '}'||
                         chr(10);
 
@@ -1539,10 +1539,10 @@ REM ============================================================================
 
         -- Build the Database Summary Record
 
-        new_clob_record:=to_char(  
+        new_clob_record:=to_char(
         'MPACK_DATABASE'||'|GUIDPLACEHOLDER|'||
         v_dbid||'|'||
-        v_extract_date_time||'|'||    
+        v_extract_date_time||'|'||
         '0|'||
         '{'||
         '"'||'db_name'||'":"'||v_dbname||'",'||
@@ -1660,7 +1660,7 @@ REM ============================================================================
         '}'||
         chr(10));
 
-        dbms_lob.writeappend(mpack_summary, dbms_lob.getlength(new_clob_record), new_clob_record);  
+        dbms_lob.writeappend(mpack_summary, dbms_lob.getlength(new_clob_record), new_clob_record);
 
         -- Pass the contents of each CLOB to the corresponding SQLPLUS BIND variable
         select trim(mpack_summary) into :mpack_database from dual;
@@ -1746,6 +1746,3 @@ REM print mpack_no_compression
         print mpack_all_parameters
 
         exit
-
-
-
