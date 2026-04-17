@@ -13,6 +13,7 @@
 # limitations under the License.
 from __future__ import annotations
 
+import shutil
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -59,8 +60,9 @@ def build_collector_artifacts(project_root: Path) -> CollectorArtifacts:
         sqlserver_zip = _artifact_path(dist_dir, "sqlserver")
 
         if not postgres_zip.exists():
+            make_cmd = shutil.which("make") or "make"
             result = subprocess.run(
-                ["make", "build-collector"],
+                [make_cmd, "build-collector"],
                 cwd=project_root,
                 capture_output=True,
                 text=True,
@@ -68,10 +70,12 @@ def build_collector_artifacts(project_root: Path) -> CollectorArtifacts:
                 check=False,
             )
             if result.returncode != 0:
-                raise RuntimeError(f"Collector build failed.\nstdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
+                err_msg = f"Collector build failed.\nstdout:\n{result.stdout}\n\nstderr:\n{result.stderr}"
+                raise RuntimeError(err_msg)
 
         if not postgres_zip.exists():
-            raise RuntimeError(f"Collector build did not produce {postgres_zip}")
+            err_msg = f"Collector build did not produce {postgres_zip}"
+            raise RuntimeError(err_msg)
 
         return CollectorArtifacts(
             dist_dir=dist_dir,

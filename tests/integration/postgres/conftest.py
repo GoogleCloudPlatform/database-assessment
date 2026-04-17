@@ -70,5 +70,5 @@ def _seed_postgres_database(adbc_driver: AdbcDriver) -> None:
     ddl_path = Path(__file__).parent / "northwind_ddl.sql"
     data_path = Path(__file__).parent / "northwind_data.sql"
 
-    adbc_driver.execute(ddl_path.read_text(encoding="utf-8"))
-    adbc_driver.execute(data_path.read_text(encoding="utf-8"))
+    adbc_driver.execute_script(ddl_path.read_text(encoding="utf-8"))
+    adbc_driver.execute_script(data_path.read_text(encoding="utf-8"))

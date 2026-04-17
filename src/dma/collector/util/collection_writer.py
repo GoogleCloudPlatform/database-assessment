@@ -98,6 +98,7 @@ class CollectionFileWriter:
             hostname: Source database hostname.
             port: Source database port.
             database: Source database name.
+            manual_id: Optional manual identifier for the collection.
         """
         self.driver = driver
         self.db_type = db_type

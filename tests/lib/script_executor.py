@@ -63,6 +63,22 @@ class ScriptExecutor:
     def copy_from_container(self, container_name: str, container_path: str, local_path: Path) -> tuple[int, str, str]:
         return self.runtime.run_command(["cp", f"{container_name}:{container_path}", str(local_path)], check=False)
 
+    def _process_output(self, container_name: str, script_dir: str) -> tuple[Path | None, Path | None, Path | None]:
+        output_dir = Path(tempfile.mkdtemp(prefix="dma-collector-output-"))
+        copy_exit, _, _ = self.copy_from_container(container_name, f"{script_dir}/output/.", output_dir)
+        if copy_exit != 0:
+            output_dir = None
+
+        output_archive = None
+        error_log = None
+        if output_dir and output_dir.exists():
+            archives = list(output_dir.glob("*.zip")) + list(output_dir.glob("*.tar.gz"))
+            output_archive = archives[0] if archives else None
+            error_logs = list(output_dir.glob("*_errors.log"))
+            error_log = error_logs[0] if error_logs else None
+
+        return output_dir, output_archive, error_log
+
     def run_collector(
         self,
         container_name: str,
@@ -72,7 +88,7 @@ class ScriptExecutor:
         extra_args: Sequence[str] | None = None,
         timeout: int = 300,
     ) -> CollectorResult:
-        container_work_dir = f"/tmp/collector-{int(time.time())}"
+        container_work_dir = f"{tempfile.gettempdir()}/collector-{int(time.time())}"
         script_name = "collect-data.sh"
         start_time = time.time()
 
@@ -99,18 +115,7 @@ class ScriptExecutor:
 
         execution_time = time.time() - start_time
 
-        output_dir = Path(tempfile.mkdtemp(prefix="dma-collector-output-"))
-        copy_exit, _, _ = self.copy_from_container(container_name, f"{script_dir}/output/.", output_dir)
-        if copy_exit != 0:
-            output_dir = None
-
-        output_archive = None
-        error_log = None
-        if output_dir and output_dir.exists():
-            archives = list(output_dir.glob("*.zip")) + list(output_dir.glob("*.tar.gz"))
-            output_archive = archives[0] if archives else None
-            error_logs = list(output_dir.glob("*_errors.log"))
-            error_log = error_logs[0] if error_logs else None
+        output_dir, output_archive, error_log = self._process_output(container_name, script_dir)
 
         return CollectorResult(
             exit_code=exit_code,

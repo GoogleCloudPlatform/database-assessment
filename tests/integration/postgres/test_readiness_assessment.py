@@ -47,8 +47,7 @@ def _wait_for_extension(driver: AdbcDriver, extension_name: str, max_retries: in
     """Wait for an extension to be visible in a new connection."""
     for _ in range(max_retries):
         result = driver.select(
-            "SELECT extname FROM pg_extension WHERE extname = $name",
-            name=extension_name,
+            f"SELECT extname FROM pg_extension WHERE extname = '{extension_name}'"
         )
         if result:
             return

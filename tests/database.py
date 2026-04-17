@@ -308,8 +308,7 @@ def postgres_collector_db(
             host_port=None,
         )
 
-    db = container_manager.ensure_postgres(config)
-    yield db
+    yield container_manager.ensure_postgres(config)
 
 
 # Version-specific PostgreSQL fixtures for backwards compatibility
@@ -428,8 +427,7 @@ def mysql_collector_db(
         host_port=None,
     )
 
-    db = container_manager.ensure_mysql(config)
-    yield db
+    yield container_manager.ensure_mysql(config)
 
 
 @pytest.fixture(scope="session", params=ORACLE_VERSIONS, ids=slugify)
@@ -448,8 +446,7 @@ def oracle_collector_db(
         host_port=None,
     )
 
-    db = container_manager.ensure_oracle(config)
-    yield db
+    yield container_manager.ensure_oracle(config)
 
 
 @pytest.fixture(scope="session", params=SQLSERVER_VERSIONS, ids=slugify)
@@ -468,8 +465,7 @@ def sqlserver_collector_db(
         host_port=None,
     )
 
-    db = container_manager.ensure_sqlserver(config)
-    yield db
+    yield container_manager.ensure_sqlserver(config)
 
 
 # =============================================================================

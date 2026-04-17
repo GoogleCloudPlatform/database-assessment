@@ -16,13 +16,13 @@ from __future__ import annotations
 import hashlib
 import tarfile
 import zipfile
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+    from pathlib import Path
 
     from tools.postgres.database import PostgreSQLDatabase
 
