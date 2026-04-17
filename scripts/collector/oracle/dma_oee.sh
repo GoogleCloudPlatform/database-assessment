@@ -1,3 +1,17 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 #
 # Helper functions for Oracle Estate Explorer integration.  This script is not directly executable.
 #
@@ -13,7 +27,8 @@ function oee_generate_config() {
   local oee_runid="${8}"
   local v_file_tag="${9}"
 
-  local driver_file_name="${oee_dir}/mpack_DMA-OEE-${oee_group}.driverfile.${oee_runid}"
+  local v_container_count=0
+  local driver_file_name="${oee_dir}/mpack_DMA-OEE-${oee_group}.${v_file_tag}.driverfile.${oee_runid}"
 
   echo "Generating driver file ${driver_file_name}"
 
@@ -22,17 +37,14 @@ function oee_generate_config() {
     dbdomain=".${dbdomain}"
   fi
 
-  # For single tenant or container databases
-  oee_guid=$(echo ${oee_guid} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
-  echo ${oee_guid}:${oee_database}://${oee_host_name}:${oee_port}/${oee_database}:${oee_user}:${oee_pass} >> ${driver_file_name}
-
-  # For multitenant, we need to add entries for all the pluggable databases.
+  # For multitenant, we need to add entries for all the pluggable databases but not the root or seed
   if [[ -f ${output_dir}/opdb__pdb_summary__${v_file_tag} ]] ; then
     for pdbname in $(${grep_cmd} -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" ${output_dir}/opdb__pdb_summary__${v_file_tag} | ${grep_cmd} -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 4)
     do
       echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
       oee_guid=$(echo ${oee_guid}${pdbname}${dbdomain} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
       echo ${oee_guid}:${pdbname}://${oee_host_name}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${driver_file_name}
+      ((v_container_count++))
     done
   elif [[ -f ${output_dir}/opdb__pdbsopenmode__${v_file_tag} ]] ; then
     for pdbname in $(${grep_cmd} -v -e PKEY -e "CDB\$ROOT" -e "PDB\$SEED" ${output_dir}/opdb__pdbsopenmode__${v_file_tag} | ${grep_cmd} -e "READ WRITE" -e "READ ONLY" -e "^----" | cut -d '|' -f 3)
@@ -40,9 +52,15 @@ function oee_generate_config() {
       echo Adding pluggable database ${pdbname} to driverfile ${oee_runid}
       oee_guid=$(echo ${oee_guid}${pdbname} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
       echo ${oee_guid}:${pdbname}://${oee_host_name}:${oee_port}/${pdbname}${dbdomain}:${oee_user}:${oee_pass} >> ${driver_file_name}
+      ((v_container_count++))
     done
   fi
 
+  if [[ v_container_count -eq 0 ]]; then
+    # For single tenant or container databases
+    oee_guid=$(echo ${oee_guid} | ${md5_cmd} | cut -d ' ' -f ${md5_col})
+    echo ${oee_guid}:${oee_database}://${oee_host_name}:${oee_port}/${oee_database}:${oee_user}:${oee_pass} >> ${driver_file_name}
+  fi
 }
 
 
@@ -64,13 +82,14 @@ EOF
 function oee_package_zips() {
   local oee_runid="${1}"
 
-  for zipname in *driverfile.${oee_runid}
+  for fname in *driverfile.${oee_runid}
   do
-    zipname=$(echo ${zipname} | cut -d '_' -f 2- | cut -d '.' -f 1 ).zip
+    zipname=$(echo ${fname} | cut -d '_' -f 2- | cut -d '.' -f 1 ).zip
+    newname=$(echo ${fname} | rev | cut -d '.' -f 4- | rev).zip
     if [[ -f ${zipname} ]] ; then
-      echo Moving OEE file ${zipname} to DMA output directory.
+      echo Moving OEE file ${zipname} to DMA output directoryas ${output_dir}/${newname} .
       pwd
-      mv ${zipname} ${output_dir}/${zipname}
+      mv ${zipname} ${output_dir}/${newname}
     else
       echo Error: Could not locate output file ${zipname} !!
     fi
@@ -80,7 +99,12 @@ function oee_package_zips() {
 
 function oee_run() {
   local oee_runid="${1}"
-
+  echo Running OEE for runid ${oee_runid}
+  mkdir ${oee_runid}
+  cp *.sh ${oee_runid}
+  cp *.sql ${oee_runid}
+  cp *driverfile.${oee_runid} ${oee_runid}
+  cd ${oee_runid}
   oee_run_standalone_extract "${oee_runid}"
 
   if [[ $? -eq 0 ]]; then
