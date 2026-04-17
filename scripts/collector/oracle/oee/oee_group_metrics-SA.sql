@@ -1597,4 +1597,3 @@ print mpack_summary_clob
 --exit
 
 exit;
-
