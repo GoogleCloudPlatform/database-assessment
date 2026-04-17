@@ -99,7 +99,7 @@ class ScriptExecutor:
 
         self.exec_in_container(container_name, ["unzip", "-q", container_zip, "-d", container_work_dir])
 
-        script_dir = f"{container_work_dir}/{db_type}"
+        script_dir = container_work_dir
         extra = " ".join(extra_args) if extra_args else ""
         command = [
             "bash",

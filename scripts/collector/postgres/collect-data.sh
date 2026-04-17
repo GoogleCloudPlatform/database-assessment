@@ -572,7 +572,9 @@ local extractor_version="$(get_version)"
       V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
 
       local PGVER=$(echo $dbmajor | cut -c 1-2)
-      if [[ $PGVER -gt 13 ]] && [[ $PGVER -lt 17 ]] ; then
+      if [[ $PGVER -ge 17 ]] ; then
+        PGVER="17"
+      elif [[ ! -d "sql/${PGVER}" ]] ; then
         PGVER="base"
       fi
 

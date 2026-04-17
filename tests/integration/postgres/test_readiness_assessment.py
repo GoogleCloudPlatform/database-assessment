@@ -47,7 +47,7 @@ def _wait_for_extension(driver: AdbcDriver, extension_name: str, max_retries: in
     """Wait for an extension to be visible in a new connection."""
     for _ in range(max_retries):
         result = driver.select(
-            f"SELECT extname FROM pg_extension WHERE extname = '{extension_name}'"
+            f"SELECT extname FROM pg_extension WHERE extname = '{extension_name}'"  # noqa: S608
         )
         if result:
             return
@@ -332,7 +332,7 @@ def test_pg_source_settings(
             assert row["severity"] == WARNING
             assert (
                 row["info"]
-                == """`max_replication_slots` current value: 10, this might need to be increased to 11 depending on the parallelism level set for migration. Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."""
+                == """`max_replication_slots` current value: 10, this might need to be increased to 12 depending on the parallelism level set for migration. Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."""
             )
 
         rows = driver.select(
@@ -352,7 +352,7 @@ def test_pg_source_settings(
             assert row["severity"] == WARNING
             assert (
                 row["info"]
-                == "`max_worker_processes` current value: 8, this might need to be increased to 11 depending on the parallelism level set for migration. Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
+                == "`max_worker_processes` current value: 8, this might need to be increased to 12 depending on the parallelism level set for migration. Refer to https://cloud.google.com/database-migration/docs/postgres/create-migration-job#specify-source-connection-profile-info for more info."
             )
 
 

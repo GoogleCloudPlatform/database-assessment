@@ -208,6 +208,8 @@ class CollectionFileWriter:
             return ""
         if isinstance(value, bool):
             return str(value).lower()
+        if isinstance(value, float):
+            return f"{value:.2f}"
         if isinstance(value, str):
             # Replace inner double quotes with single quotes (matches shell SQL)
             escaped = value.replace('"', "'")
