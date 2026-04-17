@@ -1,3 +1,18 @@
+#!/usr/bin/env bash
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 # Use this script to execute the dma collector in parallel via the list in dma_db_list.csv.
 # The format of dma_db_list.csv is described in the header of that file.
 # maxParallel controls how many DMA collectors can run at one time.
@@ -84,7 +99,6 @@ function batchRun() {
       dmaid="N/A"
     fi
 
-    oee_flag="N"
     if [[ "${oee_flag}" = "" ]] ; then
       oee_flag="N"
     else
@@ -96,10 +110,7 @@ function batchRun() {
     fi
 
     # Run a collection in the background, capturing screen output to a log file.
-    # RESERVED FOR FUTURE USE
-    # ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}" --collectOEE "${oee_flag}" --oeeGroup "${oee_group}" --oeeRunId "${run_id}" --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_${this_pid}.log" &
-    # RESERVED FOR FUTURE USE
-    ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}"  --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_${this_pid}.log" &
+    ./collect-data.sh --connectionStr ''"${user}${db}"'' --statsSrc "${statssrc}" ${statsparam} --manualUniqueId "${dmaid}" --collectOEE "${oee_flag}" --oeeGroup "${oee_group}" --dmaAutomation Y 2>&1 | tee "DMA_COLLECT_DATA_${batchlogname}_$(date +%Y%m%d%H%M%S)_${this_pid}.log" &
 
     # Wait a couple of seconds before starting another collection.
     sleep 2
@@ -200,24 +211,6 @@ function main() {
 
     if [[ ${retval} -eq 0 ]] ; then
       print_complete
-      oee_file_count=$(wc -l < <(ls -1 "${oee_dir}"  | ${grep_cmd} "driverfile.${run_id}"))
-      if [[ -d ${oee_dir} ]] && [[ ${oee_file_count} -gt 0 ]]; then
-          echo "Running Oracle Estate Explorer for ${oee_file_count} groups."
-          cd "${oee_dir}"
-          oee_run "${run_id}" 2>&1 | tee "OEE_${dma_log_name}"
-          echo "Checking log file OEE_${dma_log_name} for OEE failures}"
-
-          for oee_fail_number in  $(${grep_cmd} "Database extract failures" "OEE_${dma_log_name}" | cut -d ':' -f 2 | tr -d ' '); do
-            oee_fail_count=$(( ${oee_fail_count}  + ${oee_fail_number} ))
-          done
-          if [[ ${oee_fail_count} -ne 0 ]] ; then
-            print_failure
-          else
-            print_complete
-          fi
-      else
-        print_complete
-      fi
     else
       print_separator
       echo "One or more collections encountered errors.  Please review the logs, remediate the errors and rerun the failed collection(s)."
