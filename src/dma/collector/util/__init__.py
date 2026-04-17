@@ -12,3 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from __future__ import annotations
+
+from dma.collector.util.collection_writer import CollectionFileWriter
+
+__all__ = ["CollectionFileWriter"]

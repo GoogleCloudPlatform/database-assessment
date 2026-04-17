@@ -109,6 +109,9 @@ update-oee:                                         ## Get most recent Oracle Es
 
 .PHONY: build-collector
 build-collector: 										## Build the collector SQL scripts.
+	@tools/build-collector.sh
+
+  # todo: this needs to be merged in with the latest changes
 	@rm -rf ./$(BUILD_DIR)/collector
 	@echo "=> Building Assessment Data Collection Scripts for Oracle version $(VERSION)..."
 	@mkdir -p $(BUILD_DIR)/collector/oracle/sql/extracts
@@ -177,24 +180,7 @@ build-collector: 										## Build the collector SQL scripts.
 
 .PHONY: package-collector
 package-collector:
-	@rm -f ./$(BUILD_DIR)/$(COLLECTOR_PACKAGE)*.bz2
-	@rm -f ./$(BUILD_DIR)/$(COLLECTOR_PACKAGE)*.zip
-
-	@echo  "=> Packaging Database Migration Assessment Collector for Oracle..."
-	@echo "Zipping files in ./$(BUILD_DIR)/collector/oracle"
-	@cd $(BASE_DIR)/$(BUILD_DIR)/collector/oracle; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-oracle.zip  *
-
-	@echo  "=> Packaging Database Migration Assessment Collector for Microsoft SQL Server..."
-	@echo "Zipping files in ./$(BUILD_DIR)/collector/sqlserver"
-	@cd $(BASE_DIR)/$(BUILD_DIR)/collector/sqlserver; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-sqlserver.zip  *
-
-	@echo  "=> Packaging Database Migration Assessment Collector for MySQL..."
-	@echo "Zipping files in ./$(BUILD_DIR)/collector/mysql"
-	@cd $(BASE_DIR)/$(BUILD_DIR)/collector/mysql; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-mysql.zip  *
-
-	@echo  "=> Packaging Database Migration Assessment Collector for Postgres..."
-	@echo "Zipping files in ./$(BUILD_DIR)/collector/postgres"
-	@cd $(BASE_DIR)/$(BUILD_DIR)/collector/postgres; zip -r $(BASE_DIR)/$(BUILD_DIR)/$(COLLECTOR_PACKAGE)-postgres.zip  *
+	@tools/build-collector.sh
 
 .PHONY: build
 build: clean                                        ## Build and package the collectors and wheel

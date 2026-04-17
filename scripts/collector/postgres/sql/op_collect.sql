@@ -86,3 +86,7 @@
 \o output/opdb__pg_calculated_metrics_:VTAG.csv
 \i sql/calculated_metrics.sql
 \o
+
+\o output/opdb__pg_privileges_:VTAG.csv
+\i sql/privileges.sql
+\o

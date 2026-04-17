@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from urllib.parse import urlparse
 
 import pytest
 
@@ -24,7 +23,7 @@ from dma.cli.main import app
 
 if TYPE_CHECKING:
     from click.testing import CliRunner
-    from sqlalchemy import Engine
+    from tools.postgres.database import PostgreSQLDatabase
 
 pytestmark = [
     pytest.mark.anyio,
@@ -34,11 +33,11 @@ pytestmark = [
 
 
 def test_cli_postgres(
-    sync_engine: Engine,
+    postgres_collector_db: PostgreSQLDatabase,
     _seed_postgres_database: None,
     runner: CliRunner,
 ) -> None:
-    url = urlparse(str(sync_engine.url.render_as_string(hide_password=False)))
+    config = postgres_collector_db.config
     result = runner.invoke(
         app,
         [
@@ -47,15 +46,15 @@ def test_cli_postgres(
             "postgres",
             "--no-prompt",
             "--hostname",
-            f"{url.hostname}",
+            "localhost",
             "--port",
-            f"{url.port!s}",
+            str(config.host_port),
             "--database",
-            f"{url.path.lstrip('/')}",
+            config.postgres_db,
             "--username",
-            f"{url.username}",
+            config.postgres_user,
             "--password",
-            f"{url.password}",
+            config.postgres_password,
         ],
     )
     assert result.exit_code == 0

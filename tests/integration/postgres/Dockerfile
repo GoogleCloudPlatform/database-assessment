@@ -4,9 +4,13 @@ ARG PG_VERSION
 FROM postgres:$PG_VERSION
 
 ARG PG_VERSION
-# Install pglogical dependencies and pglogical itself
+# Install pglogical and script dependencies
 RUN apt-get update && apt-get install -y \
     postgresql-$PG_VERSION-pglogical \
+    zip \
+    unzip \
+    locales \
+    && locale-gen en_US.UTF-8 \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 

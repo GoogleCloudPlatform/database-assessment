@@ -33,6 +33,7 @@ DB_TYPE_MAP: Final[dict[float, str]] = {
     15: "POSTGRES_15",
     16: "POSTGRES_16",
     17: "POSTGRES_17",
+    18: "POSTGRES_18",
 }
 ALLOYDB_SUPPORTED_FDWS: Final[set[str]] = {"oracle_fdw", "orafdw", "postgres_fdw"}
 CLOUDSQL_SUPPORTED_FDWS: Final[set[str]] = {"oracle_fdw", "orafdw", "postgres_fdw"}

@@ -11,44 +11,46 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""DuckDB local database management using SQLSpec.
+
+This module provides DuckDB connection management for the local analysis
+database using SQLSpec's DuckDBConfig for Arrow-native data transfer.
+"""
+
 from __future__ import annotations
 
-import tempfile
 from contextlib import contextmanager
-from pathlib import Path
 from typing import TYPE_CHECKING
 
-import duckdb
+from dma.lib.db.config import create_duckdb_config
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+    from pathlib import Path
+
+    from sqlspec.adapters.duckdb import DuckDBDriver
 
 
 @contextmanager
-def get_duckdb_connection(
-    working_path: Path | None = None, export_path: Path | None = None, database: str | None = None
-) -> Iterator[duckdb.DuckDBPyConnection]:
-    """Yield a new duckdb connections and automatically manages resource cleanup."""
+def get_duckdb_driver(
+    working_path: Path | None = None,
+    export_path: Path | None = None,
+    database: str | None = None,
+) -> Iterator[DuckDBDriver]:
+    """Yield a SQLSpec DuckDB driver for Arrow-native data operations.
 
-    if database is None and export_path is not None:
-        database = f"{Path(export_path / 'assessment.db').absolute()!s}"
-    elif database is None:
-        database = ":memory:"
-    if working_path is None:
-        working_path = Path(tempfile.gettempdir())
-    config: dict[str, str | bool | int | float | list[str]] = {
-        "memory_limit": "1GB",
-        "temp_directory": str(working_path),
-        "worker_threads": 2,
-        "preserve_insertion_order": False,
-    }
-    Path(working_path).mkdir(parents=True, exist_ok=True)
-    with duckdb.connect(
+    Args:
+        working_path: Directory for temporary files.
+        export_path: If provided, creates persistent database.
+        database: Explicit database path.
+
+    Yields:
+        SQLSpec DuckDB driver with Arrow support via to_arrow().
+    """
+    config = create_duckdb_config(
+        working_path=working_path,
+        export_path=export_path,
         database=database,
-        read_only=False,
-        config=config,
-    ) as local_db:
-        try:
-            yield local_db
-        finally:
-            local_db.close()
+    )
+    with config.provide_session() as driver:
+        yield driver

@@ -26,14 +26,11 @@ from dma.lib.exceptions import ApplicationError
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from duckdb import DuckDBPyConnection
     from rich.console import Console
+    from sqlspec.adapters.duckdb import DuckDBDriver
 
-    from dma.lib.db.base import SourceInfo
+    from dma.lib.db.config import SourceInfo
     from dma.types import (
-        MSSQLVariants,
-        MySQLVariants,
-        OracleVariants,
         PostgresVariants,
         SeverityLevels,
         SupportedSources,
@@ -50,20 +47,22 @@ class ReadinessCheckTargetConfig:
 class ReadinessCheck:
     def __init__(
         self,
-        local_db: DuckDBPyConnection,
-        src_info: SourceInfo,
+        driver: "DuckDBDriver",
+        src_info: "SourceInfo",
         database: str,
         console: Console,
         collection_identifier: str | None,
-        working_path: Path | None = None,
+        single_db: bool = False,
+        working_path: "Path | None" = None,
     ) -> None:
         self.executor: ReadinessCheckExecutor | None = None
         self.collection_extractor: CollectionExtractor | None = None
-        self.local_db = local_db
+        self.driver = driver
         self.src_info = src_info
         self.database = database
         self.console = console
         self.collection_identifier = collection_identifier
+        self.single_db = single_db
         self.working_path = working_path
 
     def execute(self) -> None:
@@ -71,17 +70,16 @@ class ReadinessCheck:
         self.execute_readiness_check()
 
     def execute_data_collection(self) -> None:
-        canonical_query_manager = next(
-            provide_canonical_queries(local_db=self.local_db, working_path=self.working_path)
-        )
+        canonical_query_manager = next(provide_canonical_queries(driver=self.driver, working_path=self.working_path))
 
         self.collection_extractor = CollectionExtractor(
-            local_db=self.local_db,
+            driver=self.driver,
             src_info=self.src_info,
             database=self.database,
             canonical_query_manager=canonical_query_manager,
             console=self.console,
             collection_identifier=self.collection_identifier,
+            single_db=self.single_db,
         )
         self.collection_extractor.execute()
         self.db_version = self.collection_extractor.get_db_version()
@@ -95,17 +93,6 @@ class ReadinessCheck:
             )
 
             self.executor = PostgresReadinessCheckExecutor(
-                readiness_check=self,
-                console=self.console,
-            )
-            self.executor.execute()
-        elif self.src_info.db_type == "MYSQL":
-            # lazy loaded to help with circular import issues
-            from dma.collector.workflows.readiness_check._mysql.main import (  # noqa: PLC0415
-                MySQLReadinessCheckExecutor,
-            )
-
-            self.executor = MySQLReadinessCheckExecutor(
                 readiness_check=self,
                 console=self.console,
             )
@@ -131,7 +118,7 @@ class ReadinessCheckExecutor:
     def __init__(self, console: Console, readiness_check: ReadinessCheck) -> None:
         self.console = console
         self.readiness_check = readiness_check
-        self.local_db = readiness_check.local_db
+        self.driver = readiness_check.driver
         self.db_version = readiness_check.db_version
 
     def execute(self) -> None:
@@ -140,10 +127,10 @@ class ReadinessCheckExecutor:
         raise NotImplementedError(msg)
 
     def get_all_dbs(self) -> set[str]:
-        result = self.local_db.sql("""
-            select database_name from extended_collection_postgres_all_databases
-        """).fetchall()
-        return {row[0] for row in result}
+        if self.readiness_check.single_db:
+            return {self.readiness_check.database}
+        result = self.driver.select("select database_name from extended_collection_postgres_all_databases")
+        return {row["database_name"] for row in result}
 
     def print_summary(self) -> None:
         """Summarizes results"""
@@ -152,12 +139,15 @@ class ReadinessCheckExecutor:
 
     def save_rule_result(
         self,
-        migration_target: PostgresVariants | MySQLVariants | OracleVariants | MSSQLVariants,
+        migration_target: "PostgresVariants",
         rule_code: str,
-        severity: SeverityLevels,
+        severity: "SeverityLevels",
         info: str,
     ) -> None:
-        self.local_db.execute(
-            "insert into readiness_check_summary(migration_target, rule_code, severity, info) values (?,?,?,?)",
-            [migration_target, rule_code, severity, info],
+        self.driver.execute(
+            "insert into readiness_check_summary(migration_target, rule_code, severity, info) values ($migration_target, $rule_code, $severity, $info)",
+            migration_target=migration_target,
+            rule_code=rule_code,
+            severity=severity,
+            info=info,
         )

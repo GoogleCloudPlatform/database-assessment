@@ -11,47 +11,103 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Query managers for database data collection using SQLSpec.
+
+This module provides base classes for query managers that handle SQL query
+execution against source databases and the canonical DuckDB database.
+
+The query managers use SQLSpec for database connectivity and query execution,
+supporting both dict-based results and Arrow-native data transfer.
+"""
+
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
-import aiosql
-import psycopg
 from rich.padding import Padding
 
 from dma.cli._utils import console
-from dma.lib.db.query_manager import QueryManager
+from dma.lib.db.manager import get_available_queries, get_sql
 from dma.lib.exceptions import ApplicationError
-from dma.utils import module_to_os_path
 
 if TYPE_CHECKING:
-    from aiosql.queries import Queries
-
-_root_path = module_to_os_path("dma")
+    from sqlspec.adapters.duckdb import DuckDBDriver
 
 
-class CanonicalQueryManager(QueryManager):
-    """Canonical Query Manager"""
+class CanonicalQueryManager:
+    """Canonical Query Manager for DuckDB operations.
+
+    Handles DDL execution and query execution against the local DuckDB
+    database used for canonical data model and analysis.
+    """
 
     def __init__(
         self,
-        connection: Any,
+        driver: "DuckDBDriver",
         execution_id: str | None = None,
         source_id: str | None = None,
         manual_id: str | None = None,
-        queries: Queries = aiosql.from_path(
-            sql_path=f"{_root_path}/collector/sql/canonical/",
-            driver_adapter="duckdb",
-            mandatory_parameters=False,
-        ),
     ) -> None:
+        """Initialize the canonical query manager.
+
+        Args:
+            driver: SQLSpec DuckDB driver instance.
+            execution_id: Unique execution identifier.
+            source_id: Source database identifier.
+            manual_id: Manual collection identifier.
+        """
+        self.driver = driver
         self.execution_id = execution_id
         self.source_id = source_id
         self.manual_id = manual_id
-        super().__init__(connection, queries)
 
-    def execute_ddl_scripts(self, *args: Any, **kwargs: Any) -> None:
-        """Execute pre-processing queries."""
+    @staticmethod
+    def available_queries(prefix: str | None = None) -> list[str]:
+        """Get available queries optionally filtered by prefix.
+
+        Args:
+            prefix: If provided, only return queries starting with this prefix.
+
+        Returns:
+            Sorted list of query names.
+        """
+        return get_available_queries(prefix)
+
+    def execute(self, query_name: str, **binds: Any) -> None:
+        """Execute a query (typically DDL).
+
+        Args:
+            query_name: Name of the query to execute.
+            **binds: Parameter bindings for the query.
+        """
+        self.driver.execute(get_sql(query_name).sql, **binds)
+
+    def select(self, query_name: str, **binds: Any) -> list[dict[str, Any]]:
+        """Execute a SELECT query and return results as dicts.
+
+        Args:
+            query_name: Name of the query to execute.
+            **binds: Parameter bindings for the query.
+
+        Returns:
+            List of result rows as dictionaries.
+        """
+        return self.driver.select(get_sql(query_name).sql, **binds)
+
+    def select_one_value(self, query_name: str, **binds: Any) -> Any:
+        """Execute a query and return a single scalar value.
+
+        Args:
+            query_name: Name of the query to execute.
+            **binds: Parameter bindings for the query.
+
+        Returns:
+            The scalar value from the query result.
+        """
+        return self.driver.select_value(get_sql(query_name).sql, **binds)
+
+    def execute_ddl_scripts(self) -> None:
+        """Execute DDL scripts to create canonical tables."""
         console.print(Padding("CANONICAL DATA MODEL", 1, style="bold", expand=True), width=80)
         with console.status("[bold green]Creating tables...[/]") as status:
             for script in self.available_queries("ddl"):
@@ -62,184 +118,121 @@ class CanonicalQueryManager(QueryManager):
                 console.print(" [dim grey]:heavy_check_mark: No DDL scripts to load[/]")
 
 
-class CollectionQueryManager(QueryManager):
-    """Collection Query Manager"""
+class CollectionQueryManager:
+    """Base collection query manager.
+
+    Provides the foundation for database-specific collection query managers.
+    Subclasses implement get_collection_queries() to provide version-specific
+    query selection.
+    """
 
     def __init__(
         self,
-        connection: Any,
-        queries: Queries,
+        driver: Any,
         execution_id: str | None = None,
         source_id: str | None = None,
         manual_id: str | None = None,
         db_version: str | None = None,
         expected_queries: set[str] | None = None,
     ) -> None:
+        """Initialize the collection query manager.
+
+        Args:
+            driver: SQLSpec driver instance.
+            execution_id: Unique execution identifier.
+            source_id: Source database identifier.
+            manual_id: Manual collection identifier.
+            db_version: Database version string.
+            expected_queries: Expected collection queries (for validation).
+        """
+        self.driver = driver
         self.execution_id = execution_id
         self.source_id = source_id
         self.manual_id = manual_id
         self.db_version = db_version
         self.expected_collection_queries = expected_queries
-        super().__init__(connection, queries)
+
+    @staticmethod
+    def available_queries(prefix: str | None = None) -> list[str]:
+        """Get available queries optionally filtered by prefix.
+
+        Args:
+            prefix: If provided, only return queries starting with this prefix.
+
+        Returns:
+            Sorted list of query names.
+        """
+        return get_available_queries(prefix)
 
     def get_collection_queries(self) -> set[str]:
+        """Get the set of collection query names.
+
+        Must be overridden by subclasses.
+
+        Returns:
+            Set of query names for collection.
+        """
         if self.db_version is None:
-            msg = "Database Version was not set.  Ensure the initialization step complete successfully."
+            msg = "Database Version was not set. Ensure the initialization step completed successfully."
             raise ApplicationError(msg)
         return set(self.available_queries("collection"))
 
     def get_extended_collection_queries(self) -> set[str]:
+        """Get the set of extended collection query names.
+
+        Returns:
+            Set of extended collection query names.
+        """
         if self.db_version is None:
-            msg = "Database Version was not set.  Ensure the initialization step complete successfully."
+            msg = "Database Version was not set. Ensure the initialization step completed successfully."
             raise ApplicationError(msg)
-        return set(self.available_queries("extended_collection"))
+        return set(self.available_queries("extended-collection"))
 
     def get_per_db_collection_queries(self) -> set[str]:
-        """Get the collection queries that need to be executed for each DB in the instance"""
+        """Get collection queries for per-database execution.
+
+        Must be overridden by subclasses.
+
+        Raises:
+            NotImplementedError: Always raised, subclasses must implement.
+        """
         msg = "Implement this execution method."
         raise NotImplementedError(msg)
 
     def get_db_version(self) -> str:
+        """Get the database version.
+
+        Returns:
+            Database version string.
+
+        Raises:
+            ApplicationError: If version was not set.
+        """
         if self.db_version is None:
-            msg = "Database Version was not set.  Ensure the initialization step complete successfully."
+            msg = "Database Version was not set. Ensure the initialization step completed successfully."
             raise ApplicationError(msg)
         return self.db_version
 
-    def set_identifiers(
-        self,
-        execution_id: str | None = None,
-        source_id: str | None = None,
-        manual_id: str | None = None,
-        db_version: str | None = None,
-    ) -> None:
-        """Execute pre-processing queries."""
-        if execution_id is not None:
-            self.execution_id = execution_id
-        if source_id is not None:
-            self.source_id = source_id
-        if manual_id is not None:
-            self.manual_id = manual_id
-        if db_version is not None:
-            self.db_version = db_version
-        if self.execution_id is None or self.source_id is None or self.db_version is None:
-            init_results = self.execute_init_queries()
-            self.source_id = (
-                source_id if source_id is not None else cast("str | None", init_results.get("init_get_source_id", None))
-            )
-            self.execution_id = (
-                execution_id
-                if execution_id is not None
-                else cast("str | None", init_results.get("init_get_execution_id", None))
-            )
-            self.db_version = (
-                db_version
-                if db_version is not None
-                else cast("str | None", init_results.get("init_get_db_version", None))
-            )
-        if self.source_id is None or self.execution_id is None or self.db_version is None:
-            msg = "Failed to set execution identifiers for collection."
-            raise ApplicationError(msg)
-        if self.expected_collection_queries is None:
-            self.expected_collection_queries = self.get_collection_queries()
+    def select(self, query_name: str, **binds: Any) -> list[dict[str, Any]]:
+        """Execute a SELECT query and return results as dicts.
 
-    def execute_init_queries(
-        self,
-        *args: Any,
-        **kwargs: Any,
-    ) -> dict[str, Any]:
-        """Execute pre-processing queries."""
-        console.print(Padding("SCRIPT INITIALIZATION QUERIES", 1, style="bold", expand=True), width=80)
-        with console.status("[bold green]Executing queries...[/]") as status:
-            results: dict[str, Any] = {}
-            for script in self.available_queries("init"):
-                status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                script_result = self.select_one_value(script)
-                results[script] = script_result
-                status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
-            if not self.available_queries("init"):
-                status.console.print(
-                    " [dim grey]:heavy_check_mark: No initialization queries for this database type[/]"
-                )
-            return results
+        Args:
+            query_name: Name of the query to execute.
+            **binds: Parameter bindings for the query.
 
-    def execute_collection_queries(
-        self,
-        execution_id: str | None = None,
-        source_id: str | None = None,
-        manual_id: str | None = None,
-        *args: Any,
-        **kwargs: Any,
-    ) -> dict[str, Any]:
-        """Execute pre-processing queries."""
-        self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
-        console.print(Padding("COLLECTION QUERIES", 1, style="bold", expand=True), width=80)
-        with console.status("[bold green]Executing queries...[/]") as status:
-            results: dict[str, Any] = {}
-            for script in self.get_collection_queries():
-                status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                script_result = self.select(
-                    script, PKEY=self.execution_id, DMA_SOURCE_ID=self.source_id, DMA_MANUAL_ID=self.manual_id
-                )
-                results[script] = script_result
-                status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
-            if not self.get_collection_queries():
-                status.console.print(" [dim grey]:heavy_check_mark: No collection queries for this database type[/]")
-            return results
-
-    def execute_extended_collection_queries(
-        self,
-        execution_id: str | None = None,
-        source_id: str | None = None,
-        manual_id: str | None = None,
-        *args: Any,
-        **kwargs: Any,
-    ) -> dict[str, Any]:
-        """Execute extended collection queries.
-
-        Returns: None
+        Returns:
+            List of result rows as dictionaries.
         """
-        self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
-        console.print(Padding("EXTENDED COLLECTION QUERIES", 1, style="bold", expand=True), width=80)
-        with console.status("[bold green]Executing queries...[/]") as status:
-            results: dict[str, Any] = {}
-            for script in self.get_extended_collection_queries():
-                status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                script_result = self.select(
-                    script, PKEY=self.execution_id, DMA_SOURCE_ID=self.source_id, DMA_MANUAL_ID=self.manual_id
-                )
-                results[script] = script_result
-                status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
-            if not self.get_extended_collection_queries():
-                console.print(" [dim grey]:heavy_check_mark: No extended collection queries for this database type[/]")
-            return results
+        return self.driver.select(get_sql(query_name).sql, **binds)
 
-    def execute_per_db_collection_queries(
-        self,
-        execution_id: str | None = None,
-        source_id: str | None = None,
-        manual_id: str | None = None,
-        *args: Any,
-        **kwargs: Any,
-    ) -> dict[str, Any]:
-        """Execute per DB pre-processing queries."""
-        self.set_identifiers(execution_id=execution_id, source_id=source_id, manual_id=manual_id)
-        console.print(Padding("PER DB QUERIES", 1, style="bold", expand=True), width=80)
-        with console.status("[bold green]Executing queries...[/]") as status:
-            results: dict[str, Any] = {}
-            for script in self.get_per_db_collection_queries():
-                status.update(rf" [yellow]*[/] Executing [bold magenta]`{script}`[/]")
-                try:
-                    script_result = self.select(
-                        script, PKEY=self.execution_id, DMA_SOURCE_ID=self.source_id, DMA_MANUAL_ID=self.manual_id
-                    )
-                    results[script] = script_result
-                    status.console.print(rf" [green]:heavy_check_mark:[/] Gathered [bold magenta]`{script}`[/]")
-                except psycopg.errors.UndefinedTable:
-                    status.console.print(rf"Skipped `{script}` as the table doesn't exist")
-                except psycopg.errors.InsufficientPrivilege:
-                    status.console.print(rf"Skipped `{script}` due to insufficient privileges.")
-            if not self.get_per_db_collection_queries():
-                status.console.print(
-                    " [dim grey]:heavy_check_mark: No DB specific collection queries for this database type[/]"
-                )
-            return results
+    def select_one_value(self, query_name: str, **binds: Any) -> Any:
+        """Execute a query and return a single scalar value.
+
+        Args:
+            query_name: Name of the query to execute.
+            **binds: Parameter bindings for the query.
+
+        Returns:
+            The scalar value from the query result.
+        """
+        return self.driver.select_value(get_sql(query_name).sql, **binds)

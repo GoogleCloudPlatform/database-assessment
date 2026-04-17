@@ -25,3 +25,47 @@ def test_readiness_check() -> None:
     runner = CliRunner()
     result = runner.invoke(app, ["readiness-check", "--help"])
     assert result.exit_code == 0
+    assert "--single-db" in result.output
+
+
+class TestReadinessCheckSslOptions:
+    """Tests for SSL CLI options on readiness-check command."""
+
+    def test_ssl_mode_option_exists(self) -> None:
+        """readiness-check should accept --ssl-mode option."""
+        runner = CliRunner()
+        result = runner.invoke(app, ["readiness-check", "--help"])
+        assert "--ssl-mode" in result.output
+
+    def test_ssl_mode_choices(self) -> None:
+        """--ssl-mode should show valid choices in help."""
+        runner = CliRunner()
+        result = runner.invoke(app, ["readiness-check", "--help"])
+        assert "disable" in result.output
+        assert "require" in result.output
+        assert "verify-full" in result.output
+
+    def test_ssl_cert_option_exists(self) -> None:
+        """readiness-check should accept --ssl-cert option."""
+        runner = CliRunner()
+        result = runner.invoke(app, ["readiness-check", "--help"])
+        assert "--ssl-cert" in result.output
+
+    def test_ssl_key_option_exists(self) -> None:
+        """readiness-check should accept --ssl-key option."""
+        runner = CliRunner()
+        result = runner.invoke(app, ["readiness-check", "--help"])
+        assert "--ssl-key" in result.output
+
+    def test_ssl_root_cert_option_exists(self) -> None:
+        """readiness-check should accept --ssl-root-cert option."""
+        runner = CliRunner()
+        result = runner.invoke(app, ["readiness-check", "--help"])
+        assert "--ssl-root-cert" in result.output
+
+
+def test_collect_data_single_db_option_exists() -> None:
+    runner = CliRunner()
+    result = runner.invoke(app, ["collect-data", "--help"])
+    assert result.exit_code == 0
+    assert "--single-db" in result.output

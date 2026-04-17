@@ -29,18 +29,10 @@ pytestmark = pytest.mark.anyio
 here = Path(__file__).parent
 root_path = here.parent
 pytest_plugins = [
-    "pytest_databases.docker",
-    "pytest_databases.docker.postgres",
-    "pytest_databases.docker.mariadb",
-    "pytest_databases.docker.mysql",
-    "pytest_databases.docker.oracle",
-    "pytest_databases.docker.mssql",
+    "tests.database",
+    "tests.lib.collector_build",
+    "tests.lib.script_executor",
 ]
-
-
-@pytest.fixture(scope="session")
-def compose_project_name() -> str:
-    return "dma-test"
 
 
 @pytest.fixture(scope="session")
