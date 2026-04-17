@@ -20,7 +20,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-
 from tools.lib.container import ContainerRuntime
 
 if TYPE_CHECKING:

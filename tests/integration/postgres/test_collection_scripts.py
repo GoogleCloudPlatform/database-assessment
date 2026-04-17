@@ -24,9 +24,10 @@ import pytest
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
+    from tools.postgres.database import PostgreSQLDatabase
+
     from tests.lib.collector_build import CollectorArtifacts
     from tests.lib.script_executor import CollectorResult, ScriptExecutor
-    from tools.postgres.database import PostgreSQLDatabase
 
 
 pytestmark = [
@@ -97,9 +98,9 @@ def postgres_multi_db_ready(
             "bash",
             "-c",
             (
-                "PGPASSWORD={password} psql -U {user} -d {db} "
-                "-c \"CREATE DATABASE dma_test_extra\" || true"
-            ).format(password=config.postgres_password, user=config.postgres_user, db=config.postgres_db),
+                f"PGPASSWORD={config.postgres_password} psql -U {config.postgres_user} -d {config.postgres_db} "
+                '-c "CREATE DATABASE dma_test_extra" || true'
+            ),
         ],
     )
 

@@ -68,10 +68,7 @@ def build_collector_artifacts(project_root: Path) -> CollectorArtifacts:
                 check=False,
             )
             if result.returncode != 0:
-                raise RuntimeError(
-                    "Collector build failed.\n"
-                    f"stdout:\n{result.stdout}\n\nstderr:\n{result.stderr}"
-                )
+                raise RuntimeError(f"Collector build failed.\nstdout:\n{result.stdout}\n\nstderr:\n{result.stderr}")
 
         if not postgres_zip.exists():
             raise RuntimeError(f"Collector build did not produce {postgres_zip}")

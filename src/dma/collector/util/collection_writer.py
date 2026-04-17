@@ -137,7 +137,9 @@ class CollectionFileWriter:
         # Sanitize database name
         safe_database = self.database.replace("/", "_").replace("\\", "_")
 
-        return f"{version_tag}_{self.dma_version}_{safe_hostname}-{self.port}_{safe_database}_{safe_database}_{timestamp}"
+        return (
+            f"{version_tag}_{self.dma_version}_{safe_hostname}-{self.port}_{safe_database}_{safe_database}_{timestamp}"
+        )
 
     def _resolve_db_version_tag(self) -> str:
         """Resolve the numeric database version tag for filenames."""
@@ -284,21 +286,19 @@ class CollectionFileWriter:
             "TOTAL_OS_MEMORY_MB|TOTAL_SIZE_BYTES|USED_SIZE_BYTES|PRIMARY_MAC|IP_ADDRESSES"
         )
         pkey, source_id, manual_id = self._get_collection_identifiers()
-        row = "|".join(
-            [
-                self._quote_value(pkey),
-                self._quote_value(source_id),
-                self._quote_value(manual_id),
-                self._quote_value(self.hostname),
-                self._quote_value(""),
-                self._quote_value(""),
-                self._quote_value(""),
-                self._quote_value(""),
-                self._quote_value(""),
-                self._quote_value(""),
-                self._quote_value(""),
-            ]
-        )
+        row = "|".join([
+            self._quote_value(pkey),
+            self._quote_value(source_id),
+            self._quote_value(manual_id),
+            self._quote_value(self.hostname),
+            self._quote_value(""),
+            self._quote_value(""),
+            self._quote_value(""),
+            self._quote_value(""),
+            self._quote_value(""),
+            self._quote_value(""),
+            self._quote_value(""),
+        ])
         filepath.write_text(f"{header}\n{row}\n", encoding="utf-8")
         return filepath
 
@@ -384,6 +384,7 @@ class CollectionFileWriter:
         """
         locale_path = output_dir / f"opdb__{file_tag}_locale.txt"
         with locale_path.open("w", encoding="utf-8") as f:
+
             def get_locale_setting(name: str, category: int | None, default: str = "") -> str:
                 value = os.environ.get(name)
                 if value is not None:

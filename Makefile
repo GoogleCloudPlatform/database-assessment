@@ -110,7 +110,7 @@ update-oee:                                         ## Get most recent Oracle Es
 .PHONY: build-collector
 build-collector: 										## Build the collector SQL scripts.
 	@tools/build-collector.sh
-  
+
   # todo: this needs to be merged in with the latest changes
 	@rm -rf ./$(BUILD_DIR)/collector
 	@echo "=> Building Assessment Data Collection Scripts for Oracle version $(VERSION)..."
