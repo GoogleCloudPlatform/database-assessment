@@ -7,7 +7,7 @@ REM ****************************************/
 
 set longchunksize 99999999
 -- set pages 0
-set LONG 99999999 
+set LONG 99999999
 set echo OFF
 set feed OFF
 set lines 20000
@@ -18,7 +18,7 @@ set underline off
 set verify off
 
 
--- make connection persistent to number formats and conversions 
+-- make connection persistent to number formats and conversions
 
 alter session set NLS_NUMERIC_CHARACTERS = '.,' ;
 ALTER SESSION SET NLS_DATE_FORMAT = 'DD-MON-YYYY HH24:MI:SS';
@@ -43,11 +43,11 @@ VAR MPACK_BLOCKSIZE_clob CLOB
 DECLARE
     --
     table_does_not_exist EXCEPTION;
-    PRAGMA EXCEPTION_INIT(table_does_not_exist, -942); 
+    PRAGMA EXCEPTION_INIT(table_does_not_exist, -942);
     --
     --declate a type to hold summary rows
     TYPE t_summary
-        IS TABLE OF integer 
+        IS TABLE OF integer
         INDEX BY VARCHAR2(50);
     --
     v_column_sep CHAR(1):= '|';
@@ -114,11 +114,11 @@ DECLARE
     --
     PROCEDURE build_summary
     IS
-        l_name VARCHAR2(50) := v_summary.FIRST;    
-        l_json VARCHAR2(32767) :=   
+        l_name VARCHAR2(50) := v_summary.FIRST;
+        l_json VARCHAR2(32767) :=
             'MPACK_SUMMARY'||'|GUIDPLACEHOLDER|'||
             v_dbid||'|'||v_extract_dt||'|'||'0|'||'{';
-    --    
+    --
     BEGIN
         WHILE l_name IS NOT NULL
         LOOP
@@ -127,7 +127,7 @@ DECLARE
         END LOOP;
         l_json := l_json ||'}';
         --
-        dbms_lob.writeappend(:mpack_summary_clob, length(l_json), l_json); 
+        dbms_lob.writeappend(:mpack_summary_clob, length(l_json), l_json);
         --
     END build_summary;
     /*
@@ -142,7 +142,7 @@ DECLARE
         p_dbid            OUT NUMBER,    -- This holds the dbid info of the database connection (pluggable dbid if connected to a pluggable)
         p_dbname          OUT VARCHAR2,  -- This holds the database name info of the database connection (pluggable database name if connected to a pluggable)
         p_con_dbid        OUT NUMBER,    -- This holds the dbid of the container database if connected to a pluggable or a container database (if connected to container it has the same value as p_dbid)
-                                         -- If connected to a nonCDB (versions 12.x-19.x) then then it takes value 0 
+                                         -- If connected to a nonCDB (versions 12.x-19.x) then then it takes value 0
                                          -- if connected to a version below 12 where containers where not applicable it takes value -1
         p_pdb_con_id      OUT NUMBER,    -- if connected to pluggable database it holds the connection id (con_id) of the pluggable database
                                          -- if connected to the container database it holds the value (con_id) of the container database which is always 1
@@ -155,14 +155,14 @@ DECLARE
         p_pluggable_count OUT NUMBER,    -- If on CDB count of pluggable databases
         p_unique_dbname   OUT VARCHAR2,  -- it holds the value of the unique database name from v$database
         p_resetlogs_scn   OUT NUMBER,    -- it holds the value of the reset_logs of the database to distinguish between different copies of the same database (prod/test/dev)
-        p_instance_number OUT NUMBER,    -- it holds the information of the instance number that the information was collected from 
-        p_instance_name   OUT VARCHAR2,  -- it holds the information of the instance name that the information was collected from 
+        p_instance_number OUT NUMBER,    -- it holds the information of the instance number that the information was collected from
+        p_instance_name   OUT VARCHAR2,  -- it holds the information of the instance name that the information was collected from
         p_instance_role   OUT VARCHAR2,  -- it holds information about the role instance (e.g. PRIMARY INSTANCE)
         p_hostname        OUT VARCHAR2,  -- it holds information about the host (from v$instance) that information was collected from
         p_exadata_flag    OUT VARCHAR2,  -- it hold information if the host is an Exadata
         p_gg_flag         OUT VARCHAR2,  -- checks if Golden Gate is used or configured
         p_host_list       OUT VARCHAR2,  -- if database uses RAC this is the list of all the hosts of the Cluster
-        p_pdb_host_list   OUT VARCHAR2,  -- if a database is PDB list the hosts that it is running when on RAC cluster 
+        p_pdb_host_list   OUT VARCHAR2,  -- if a database is PDB list the hosts that it is running when on RAC cluster
         p_version         OUT VARCHAR,   -- Version of the database (full) as character
         p_version_major   OUT NUMBER,    -- Major Version of the database (first number before the first dot)
         p_version_minor   OUT NUMBER,    -- Minor Version of the database (second number after the first dot before the second)
@@ -170,9 +170,9 @@ DECLARE
     )
     IS
         --
-        lv_multitenant_sql varchar2(1024):='select decode(sys_context(''USERENV'', ''CON_NAME''),''CDB$ROOT'',sys_context(''USERENV'', ''DB_NAME''),sys_context(''USERENV'', ''CON_NAME'')) DB_NAME, 
-                                                  sys_context(''USERENV'', ''CON_ID'') DB_CON_ID, 
-                                                  decode(CDB,''NO'',''nonCDB'',decode(sys_context(''USERENV'',''CON_ID''),1,''CDB'',''PDB'')) DBTYPE, 
+        lv_multitenant_sql varchar2(1024):='select decode(sys_context(''USERENV'', ''CON_NAME''),''CDB$ROOT'',sys_context(''USERENV'', ''DB_NAME''),sys_context(''USERENV'', ''CON_NAME'')) DB_NAME,
+                                                  sys_context(''USERENV'', ''CON_ID'') DB_CON_ID,
+                                                  decode(CDB,''NO'',''nonCDB'',decode(sys_context(''USERENV'',''CON_ID''),1,''CDB'',''PDB'')) DBTYPE,
                                                   name CDB_DB_NAME,
                                                   DB_UNIQUE_NAME,
                                                   DBID CON_DBID,
@@ -182,28 +182,28 @@ DECLARE
         lv_pdb_count_sql   varchar2(500):='SELECT (count(*)-1) pdb_count FROM v$PDBS';
         lv_exa_flag_10g    varchar2(500):='select count(*) from v$system_event a, v$event_name b where a.event_id=b.event_id and b.name=''cell single block physical read''';
         lv_exa_flag        varchar2(500):='select count(*) from (select distinct cell_name from gv$cell_state)';
-        lv_host_list       varchar2(1024):='select listagg( HOST_NAME, '','') 
-                                                   within group (order by HOST_NAME) "HOST_LIST" 
-                                                          from ( select CASE INSTR( HOST_NAME, ''.'', 1 ) 
-                                                                        when 0 then HOST_NAME 
-                                                                        ELSE SUBSTR( HOST_NAME, 1,  INSTR( HOST_NAME, ''.'', 1 )-1 ) end HOST_NAME 
+        lv_host_list       varchar2(1024):='select listagg( HOST_NAME, '','')
+                                                   within group (order by HOST_NAME) "HOST_LIST"
+                                                          from ( select CASE INSTR( HOST_NAME, ''.'', 1 )
+                                                                        when 0 then HOST_NAME
+                                                                        ELSE SUBSTR( HOST_NAME, 1,  INSTR( HOST_NAME, ''.'', 1 )-1 ) end HOST_NAME
                                               from gv$instance )';
-        lv_pdb_host_list   varchar2(1024):='select listagg( HOST_NAME, '','') 
-                                                   within group (order by HOST_NAME) "HOST_LIST" 
-                                                          from ( select CASE INSTR( a.HOST_NAME, ''.'', 1 ) 
-                                                                        when 0 then a.HOST_NAME 
-                                                                        ELSE SUBSTR( a.HOST_NAME, 1,  INSTR( a.HOST_NAME, ''.'', 1 )-1 ) end HOST_NAME 
-                                              from gv$instance a, 
-                                                   gv$pdbs b 
-                                             where a.inst_id = b.inst_id 
-                                               and b.con_id = sys_context(''USERENV'',''CON_ID'') 
+        lv_pdb_host_list   varchar2(1024):='select listagg( HOST_NAME, '','')
+                                                   within group (order by HOST_NAME) "HOST_LIST"
+                                                          from ( select CASE INSTR( a.HOST_NAME, ''.'', 1 )
+                                                                        when 0 then a.HOST_NAME
+                                                                        ELSE SUBSTR( a.HOST_NAME, 1,  INSTR( a.HOST_NAME, ''.'', 1 )-1 ) end HOST_NAME
+                                              from gv$instance a,
+                                                   gv$pdbs b
+                                             where a.inst_id = b.inst_id
+                                               and b.con_id = sys_context(''USERENV'',''CON_ID'')
                                                and open_mode =''READ WRITE'')';
         lv_host_list_10g   varchar2(4000):='select host1 || case when host2 is not null then '','' || host2 end
                                                          || case when host3 is not null then '','' || host3 end
                                                          || case when host4 is not null then '','' || host4 end
-                                                         || case when host5 is not null then '','' || host5 end 
-                                                         || case when host6 is not null then '','' || host6 end 
-                                                         || case when host7 is not null then '','' || host7 end 
+                                                         || case when host5 is not null then '','' || host5 end
+                                                         || case when host6 is not null then '','' || host6 end
+                                                         || case when host7 is not null then '','' || host7 end
                                                          || case when host8 is not null then '','' || host8 end "HOST_LIST"
                                             from ( SELECT MAX( CASE WHEN inst_id = 1 THEN host_name END) host1,
                                                           MAX( CASE WHEN inst_id = 2 THEN host_name END) host2,
@@ -213,7 +213,7 @@ DECLARE
                                                           MAX( CASE WHEN inst_id = 6 THEN host_name END) host6,
                                                           MAX( CASE WHEN inst_id = 7 THEN host_name END) host7,
                                                           MAX( CASE WHEN inst_id = 8 THEN host_name END) host8
-                                                    FROM ( select inst_id, 
+                                                    FROM ( select inst_id,
                                                                   CASE WHEN INSTR( host_name, ''.'', 1 )=0 THEN host_name
                                                                        ELSE substr( host_name, 1, INSTR( host_name, ''.'', 1 )-1 )
                                                                   END host_name
@@ -229,10 +229,10 @@ DECLARE
         l_pdb_count number;
 
     BEGIN
-    -- Get the basic basic identifiers that exist for all verisons of database
+    -- Get the basic basic identifiers that exist for all versions of database
     -- from 11g onwards
-        
-    -- First select Version of the database including minor number 
+
+    -- First select Version of the database including minor number
         SELECT version,
                to_number(substr(version,1,instr(version,'.',1,1)-1)) version_number_major,
                to_number(substr(version,instr(version,'.')+1,instr(version,'.',1,2)-instr(version,'.')-1)) version_number_minor
@@ -240,13 +240,13 @@ DECLARE
           from dba_registry
          where comp_id='CATPROC';
 
-        -- Populate information about the instance and host the information was queried from 
+        -- Populate information about the instance and host the information was queried from
         --
         SELECT INSTANCE_NUMBER,   INSTANCE_NAME,   HOST_NAME,  INSTANCE_ROLE
           INTO p_instance_number, p_instance_name, p_hostname, p_instance_role
           FROM V$INSTANCE;
-        -- populate Identifiers based on version of multitenant 
-        -- if version (major) of the database is before 12 and after 9 then there is no multitenant option hence 
+        -- populate Identifiers based on version of multitenant
+        -- if version (major) of the database is before 12 and after 9 then there is no multitenant option hence
         -- p_con_dbname will be set to N/A p_con_dbid to 0
         if p_version_major > 11 then
            open lv_cursor for lv_multitenant_sql;
@@ -266,7 +266,7 @@ DECLARE
            else
               p_pdb_host_list := 'N/A';
            end if;
-        else 
+        else
            SELECT DBID,   NAME,     RESETLOGS_CHANGE#, DB_UNIQUE_NAME
              INTO p_dbid, p_dbname, p_resetlogs_scn,   p_unique_dbname
              FROM v$database;
@@ -287,7 +287,7 @@ DECLARE
         -- 1. From version 11gR2 view gv$cell_state allows you to view information of the number of Exadata CELLS in a database and hence identifies Exadata
         -- 2. For versions below we query the existence of the event "cell single block physical read" which can only exist if database runs on Exadata
         -- Host List
-        -- 1. Also from version 11gR2 LISTAGG is a function which orders data within each group specified in the ORDER BY clause this is used to produce 
+        -- 1. Also from version 11gR2 LISTAGG is a function which orders data within each group specified in the ORDER BY clause this is used to produce
         --    the list of hostnames fromgv$instance
         -- 2. For lesser versions we run a CASE query the number of hostnames to 8 (so Exadata databases can be captured and highly unlikely to have more than 8 outside Exadata)
         --
@@ -311,7 +311,7 @@ DECLARE
            fetch lv_cursor into p_host_list;
            close lv_cursor;
         end if;
-        
+
         if l_exa_flag >0 then
            p_exadata_flag:='Y';
         else
@@ -338,17 +338,17 @@ DECLARE
 
     END get_database_identifiers;
     --
-    --    
+    --
     --
         /*
     The get_cursor function returns a open cursor for a specific sql id.
     By putting all the sql needed into a single call, we can use standard
-    error checking and logging. 
+    error checking and logging.
     */
     FUNCTION get_cursor (
         p_cur_name VARCHAR2
     )
-    RETURN varchar2 --sys_refcursor 
+    RETURN varchar2 --sys_refcursor
     IS
         --v_cur   sys_refcursor;
         v_cur_stmt varchar2(32000);
@@ -358,36 +358,36 @@ DECLARE
         v_cur_stmt:='SELECT DBID, NAME from v$database';
 
 /*****MPACK_TRANSACTIONS*****/
-        ELSIF p_cur_name = 'MPACK_TRANSACTIONS' THEN 
+        ELSIF p_cur_name = 'MPACK_TRANSACTIONS' THEN
 -- CPAT Cursor to check for the use of rowid's in column definitions
 -- CURSOR c_transactions IS
-      
-           IF v_multitenant in ('N/A','nonCDB','CDB') THEN 
+
+           IF v_multitenant in ('N/A','nonCDB','CDB') THEN
               --  OPEN v_cur FOR
               v_cur_stmt:=
 '
 
 -- version_required : All versions except PDBs
 
-SELECT 
+SELECT
        st.dbid,
        st.snap_id,
        st.instance_number,
        decode('||v_version_major||',10,-1,11,-1,st.dbid) con_db_id,
        datetime,
        ROUND (SUM (delta_value) / 3600, 2) "Transactions per second"
-  FROM (SELECT dbid, 
+  FROM (SELECT dbid,
                instance_number,
                snap_id,
                round(begin_interval_time,''MI'') datetime,
                (begin_interval_time + 0 - LAG (begin_interval_time + 0)
           OVER (PARTITION BY dbid, instance_number ORDER BY snap_id)) * 86400 diff_time
-          FROM dba_hist_snapshot) sn, 
+          FROM dba_hist_snapshot) sn,
        (SELECT dbid,
                instance_number,
                snap_id,
                stat_name,
-               VALUE - LAG (VALUE) 
+               VALUE - LAG (VALUE)
           OVER (PARTITION BY dbid,instance_number,stat_name ORDER BY snap_id) delta_value
           FROM dba_hist_sysstat
          WHERE stat_name IN (''user commits'', ''user rollbacks'')) st
@@ -408,28 +408,28 @@ q'[
 
 -- version_required : 12.0
 
-SELECT 
+SELECT
        st.dbid,
        st.snap_id,
        st.instance_number,
        st.con_dbid,
        datetime,
        ROUND (SUM (delta_value) / 3600, 2) "Transactions per second"
-  FROM (SELECT dbid, 
+  FROM (SELECT dbid,
                instance_number,
                snap_id,
                round(begin_interval_time,'MI') datetime,
                (begin_interval_time + 0 - LAG (begin_interval_time + 0)
           OVER (PARTITION BY dbid, instance_number ORDER BY snap_id)) * 86400 diff_time
-          FROM dba_hist_snapshot) sn, 
+          FROM dba_hist_snapshot) sn,
        (SELECT dbid,
                instance_number,
                con_dbid,
                snap_id,
                stat_name,
-               VALUE - LAG (VALUE) 
+               VALUE - LAG (VALUE)
           OVER (PARTITION BY dbid,instance_number,stat_name ORDER BY snap_id) delta_value
-          FROM dba_hist_con_sysstat 
+          FROM dba_hist_con_sysstat
          WHERE stat_name IN ('user commits', 'user rollbacks')) st
  WHERE st.instance_number = sn.instance_number
    AND st.snap_id = sn.snap_id
@@ -445,25 +445,25 @@ SELECT
 
 -- specific for PDBs in version 12.1§
 
-SELECT 
+SELECT
        st.dbid,
        st.snap_id,
        st.instance_number,
        decode('||v_version_major||',10,-1,11,-1,st.dbid) con_db_id,
        datetime,
        ROUND (SUM (delta_value) / 3600, 2)/'||v_pluggable_count||' "Transactions per second"
-  FROM (SELECT dbid, 
+  FROM (SELECT dbid,
                instance_number,
                snap_id,
                round(begin_interval_time,''MI'') datetime,
                (begin_interval_time + 0 - LAG (begin_interval_time + 0)
           OVER (PARTITION BY dbid, instance_number ORDER BY snap_id)) * 86400 diff_time
-          FROM dba_hist_snapshot) sn, 
+          FROM dba_hist_snapshot) sn,
        (SELECT dbid,
                instance_number,
                snap_id,
                stat_name,
-               VALUE - LAG (VALUE) 
+               VALUE - LAG (VALUE)
           OVER (PARTITION BY dbid,instance_number,stat_name ORDER BY snap_id) delta_value
           FROM dba_hist_sysstat
          WHERE stat_name IN (''user commits'', ''user rollbacks'')) st
@@ -475,17 +475,17 @@ SELECT
 
 ';
              END IF;
-         
+
 
            END IF;
 
 
 /*****MPACK_USERSCONNECTED*****/
-        ELSIF p_cur_name = 'MPACK_USERSCONNECTED' THEN 
+        ELSIF p_cur_name = 'MPACK_USERSCONNECTED' THEN
 -- CPAT Cursor to check for the use of rowid's in column definitions
 -- CURSOR c_usersconnected IS
 
-           IF v_multitenant = 'PDB' THEN 
+           IF v_multitenant = 'PDB' THEN
               -- OPEN v_cur FOR
               v_cur_stmt:=
 q'[
@@ -504,14 +504,14 @@ with x as
            client_version,
            client_driver
      from  gv$session_connect_info)
-SELECT * from 
+SELECT * from
 (select sys_context('USERENV', 'CON_DBID') DBID
           from v$database),
-(select x.osuser,        
+(select x.osuser,
         x.authentication_type,
-        y.username, 
-        x.inst_id,  
-        y.MACHINE, 
+        y.username,
+        x.inst_id,
+        y.MACHINE,
         y.PROGRAM,
         y.module,
         x.client_connection,
@@ -520,22 +520,22 @@ SELECT * from
         x.client_driver,
         y.terminal,
         count(*) CONNECTIONS
-   from x, gv$session y 
+   from x, gv$session y
   where x.sid = y.sid
     and x.serial#=y.serial#
     and y.type !='BACKGROUND'
-  group by x.osuser,        
+  group by x.osuser,
            x.authentication_type,
-           y.username, 
-           x.inst_id,  
-           y.MACHINE, 
+           y.username,
+           x.inst_id,
+           y.MACHINE,
            y.PROGRAM,
            y.module,
            x.client_connection,
            x.client_oci_library,
            x.client_version,
            x.client_driver,
-           y.terminal) 
+           y.terminal)
 
 
 ]';
@@ -561,14 +561,14 @@ with x as
            client_version,
            client_driver
      from  gv$session_connect_info)
-SELECT * from 
+SELECT * from
 (select   DBID
           from v$database),
-(select x.osuser,        
+(select x.osuser,
         x.authentication_type,
-        y.username, 
-        x.inst_id,  
-        y.MACHINE, 
+        y.username,
+        x.inst_id,
+        y.MACHINE,
         y.PROGRAM,
         y.module,
         x.client_connection,
@@ -577,15 +577,15 @@ SELECT * from
         x.client_driver,
         y.terminal,
         count(*) CONNECTIONS
-   from x, gv$session y 
+   from x, gv$session y
   where x.sid = y.sid
     and x.serial#=y.serial#
     and y.type !='BACKGROUND'
-  group by x.osuser,        
+  group by x.osuser,
            x.authentication_type,
-           y.username, 
-           x.inst_id,  
-           y.MACHINE, 
+           y.username,
+           x.inst_id,
+           y.MACHINE,
            y.PROGRAM,
            y.module,
            x.client_connection,
@@ -611,14 +611,14 @@ q'[
            'N/A' client_version,
            'N/A' client_driver
      from  gv$session_connect_info)
-SELECT * from 
+SELECT * from
 (select   DBID
           from v$database),
-(select x.osuser,        
+(select x.osuser,
         x.authentication_type,
-        y.username, 
-        x.inst_id,  
-        y.MACHINE, 
+        y.username,
+        x.inst_id,
+        y.MACHINE,
         y.PROGRAM,
         y.module,
         x.client_connection,
@@ -627,15 +627,15 @@ SELECT * from
         x.client_driver,
         y.terminal,
         count(*) CONNECTIONS
-   from x, gv$session y 
+   from x, gv$session y
   where x.sid = y.sid
     and x.inst_id = y.inst_id
     and y.type !='BACKGROUND'
-  group by x.osuser,        
+  group by x.osuser,
            x.authentication_type,
-           y.username, 
-           x.inst_id,  
-           y.MACHINE, 
+           y.username,
+           x.inst_id,
+           y.MACHINE,
            y.PROGRAM,
            y.module,
            x.client_connection,
@@ -650,11 +650,11 @@ SELECT * from
            END IF;
 
 /*****MPACK_METRIC_CPU*****/
-        ELSIF p_cur_name = 'MPACK_METRIC_CPU' THEN 
+        ELSIF p_cur_name = 'MPACK_METRIC_CPU' THEN
 -- CPAT Cursor to check for the use of rowid's in column definitions
 -- CURSOR c_metric_cpu IS
 
-           IF v_multitenant in ('N/A','nonCDB','CDB')  THEN 
+           IF v_multitenant in ('N/A','nonCDB','CDB')  THEN
               -- OPEN v_cur FOR
               v_cur_id:='CPU1';
               v_cur_stmt:=
@@ -662,39 +662,39 @@ q'[
 
 -- version_required : 11.0
 
-SELECT instance_number, 
-       first_snap_id, 
-       second_snap_id, 
-       begin_time, 
-       end_time, 
+SELECT instance_number,
+       first_snap_id,
+       second_snap_id,
+       begin_time,
+       end_time,
        ROUND(dbtime_mins/(elapsed_mins*num_cpus)*100, 2) || '%' awr_cpu_load
-  FROM (SELECT dhsp.instance_number, 
-               LAG(dhsp.snap_id, 1, 0) OVER (PARTITION BY dhsp.dbid, dhsp.instance_number ORDER BY dhsp.snap_id) first_snap_id, 
-               dhsp.snap_id second_snap_id, 
-               CAST(dhsp.begin_interval_time AS DATE) begin_time, 
-               CAST(dhsp.end_interval_time AS DATE) end_time, 
-               ROUND((dhstm.value - LAG(dhstm.value, 1, 0) OVER (PARTITION BY dhstm.dbid, dhstm.instance_number ORDER BY dhstm.snap_id))/1e6/6e1, 2) dbtime_mins, 
-               (CAST(dhsp.end_interval_time AS DATE) - CAST(begin_interval_time AS DATE))*24*6e1 elapsed_mins, 
+  FROM (SELECT dhsp.instance_number,
+               LAG(dhsp.snap_id, 1, 0) OVER (PARTITION BY dhsp.dbid, dhsp.instance_number ORDER BY dhsp.snap_id) first_snap_id,
+               dhsp.snap_id second_snap_id,
+               CAST(dhsp.begin_interval_time AS DATE) begin_time,
+               CAST(dhsp.end_interval_time AS DATE) end_time,
+               ROUND((dhstm.value - LAG(dhstm.value, 1, 0) OVER (PARTITION BY dhstm.dbid, dhstm.instance_number ORDER BY dhstm.snap_id))/1e6/6e1, 2) dbtime_mins,
+               (CAST(dhsp.end_interval_time AS DATE) - CAST(begin_interval_time AS DATE))*24*6e1 elapsed_mins,
                dhos.value num_cpus
-          FROM (SELECT snap_id, 
-                       dbid, 
-                       instance_number, 
-                       begin_interval_time, 
+          FROM (SELECT snap_id,
+                       dbid,
+                       instance_number,
+                       begin_interval_time,
                        end_interval_time
                 FROM dba_hist_snapshot
                ) dhsp,
-               (SELECT snap_id, 
-                       dbid, 
-                       instance_number, 
-                       stat_name, 
+               (SELECT snap_id,
+                       dbid,
+                       instance_number,
+                       stat_name,
                        value
                   FROM dba_hist_sys_time_model
                  WHERE stat_name = 'DB time'
                ) dhstm,
-               (SELECT snap_id, 
-                       dbid, 
-                       instance_number, 
-                       stat_name, 
+               (SELECT snap_id,
+                       dbid,
+                       instance_number,
+                       stat_name,
                        value
                   FROM dba_hist_osstat
                  WHERE stat_name = 'NUM_CPUS'
@@ -705,15 +705,15 @@ SELECT instance_number,
             AND   dhstm.snap_id         = dhos.snap_id
             AND   dhstm.instance_number = dhos.instance_number
             AND   dhstm.dbid            = dhos.dbid
-        ORDER BY dhsp.instance_number, 
+        ORDER BY dhsp.instance_number,
                  first_snap_id) all_awr_dbtime_and_cpus
  WHERE first_snap_id <> 0
 
 
 ]';
 
-           ELSIF  v_multitenant = 'PDB' THEN 
-              IF to_number(to_char(v_version_major)||'.'||to_char(v_version_minor)) > 12.1 THEN 
+           ELSIF  v_multitenant = 'PDB' THEN
+              IF to_number(to_char(v_version_major)||'.'||to_char(v_version_minor)) > 12.1 THEN
                  -- OPEN v_cur FOR
                  v_cur_id:='CPU2';
                  v_cur_stmt:=
@@ -721,39 +721,39 @@ q'[
 
 -- version_required : 12.0
 
-SELECT instance_number, 
-       first_snap_id, 
-       second_snap_id, 
-       begin_time, 
-       end_time, 
+SELECT instance_number,
+       first_snap_id,
+       second_snap_id,
+       begin_time,
+       end_time,
        ROUND(dbtime_mins/(elapsed_mins*num_cpus)*100, 2) || '%' awr_cpu_load
-  FROM (SELECT dhsp.instance_number, 
-               LAG(dhsp.snap_id, 1, 0) OVER (PARTITION BY dhsp.dbid, dhsp.instance_number ORDER BY dhsp.snap_id) first_snap_id, 
-               dhsp.snap_id second_snap_id, 
-               CAST(dhsp.begin_interval_time AS DATE) begin_time, 
-               CAST(dhsp.end_interval_time AS DATE) end_time, 
-               ROUND((dhstm.value - LAG(dhstm.value, 1, 0) OVER (PARTITION BY dhstm.dbid, dhstm.instance_number ORDER BY dhstm.snap_id))/1e6/6e1, 2) dbtime_mins, 
-               (CAST(dhsp.end_interval_time AS DATE) - CAST(begin_interval_time AS DATE))*24*6e1 elapsed_mins, 
+  FROM (SELECT dhsp.instance_number,
+               LAG(dhsp.snap_id, 1, 0) OVER (PARTITION BY dhsp.dbid, dhsp.instance_number ORDER BY dhsp.snap_id) first_snap_id,
+               dhsp.snap_id second_snap_id,
+               CAST(dhsp.begin_interval_time AS DATE) begin_time,
+               CAST(dhsp.end_interval_time AS DATE) end_time,
+               ROUND((dhstm.value - LAG(dhstm.value, 1, 0) OVER (PARTITION BY dhstm.dbid, dhstm.instance_number ORDER BY dhstm.snap_id))/1e6/6e1, 2) dbtime_mins,
+               (CAST(dhsp.end_interval_time AS DATE) - CAST(begin_interval_time AS DATE))*24*6e1 elapsed_mins,
                dhos.value num_cpus
-          FROM (SELECT snap_id, 
-                       dbid, 
-                       instance_number, 
-                       begin_interval_time, 
+          FROM (SELECT snap_id,
+                       dbid,
+                       instance_number,
+                       begin_interval_time,
                        end_interval_time
                 FROM dba_hist_snapshot
                ) dhsp,
-               (SELECT snap_id, 
-                       dbid, 
-                       instance_number, 
-                       stat_name, 
+               (SELECT snap_id,
+                       dbid,
+                       instance_number,
+                       stat_name,
                        value
                   FROM dba_hist_con_sys_time_model
                  WHERE stat_name = 'DB time'
                ) dhstm,
-               (SELECT snap_id, 
-                       dbid, 
-                       instance_number, 
-                       stat_name, 
+               (SELECT snap_id,
+                       dbid,
+                       instance_number,
+                       stat_name,
                        value
                   FROM dba_hist_osstat
                  WHERE stat_name = 'NUM_CPUS'
@@ -764,7 +764,7 @@ SELECT instance_number,
             AND   dhstm.snap_id         = dhos.snap_id
             AND   dhstm.instance_number = dhos.instance_number
             AND   dhstm.dbid            = dhos.dbid
-        ORDER BY dhsp.instance_number, 
+        ORDER BY dhsp.instance_number,
                  first_snap_id) all_awr_dbtime_and_cpus
  WHERE first_snap_id <> 0
 
@@ -774,39 +774,39 @@ SELECT instance_number,
                  v_cur_id:='CPU3';
                  v_cur_stmt:=
 '
-SELECT instance_number, 
-       first_snap_id, 
-       second_snap_id, 
-       begin_time, 
-       end_time, 
+SELECT instance_number,
+       first_snap_id,
+       second_snap_id,
+       begin_time,
+       end_time,
        ROUND(dbtime_mins/(elapsed_mins*num_cpus)*100, 2)/'||v_pluggable_count||' || ''%'' awr_cpu_load
-  FROM (SELECT dhsp.instance_number, 
-               LAG(dhsp.snap_id, 1, 0) OVER (PARTITION BY dhsp.dbid, dhsp.instance_number ORDER BY dhsp.snap_id) first_snap_id, 
-               dhsp.snap_id second_snap_id, 
-               CAST(dhsp.begin_interval_time AS DATE) begin_time, 
-               CAST(dhsp.end_interval_time AS DATE) end_time, 
-               ROUND((dhstm.value - LAG(dhstm.value, 1, 0) OVER (PARTITION BY dhstm.dbid, dhstm.instance_number ORDER BY dhstm.snap_id))/1e6/6e1, 2) dbtime_mins, 
-               (CAST(dhsp.end_interval_time AS DATE) - CAST(begin_interval_time AS DATE))*24*6e1 elapsed_mins, 
+  FROM (SELECT dhsp.instance_number,
+               LAG(dhsp.snap_id, 1, 0) OVER (PARTITION BY dhsp.dbid, dhsp.instance_number ORDER BY dhsp.snap_id) first_snap_id,
+               dhsp.snap_id second_snap_id,
+               CAST(dhsp.begin_interval_time AS DATE) begin_time,
+               CAST(dhsp.end_interval_time AS DATE) end_time,
+               ROUND((dhstm.value - LAG(dhstm.value, 1, 0) OVER (PARTITION BY dhstm.dbid, dhstm.instance_number ORDER BY dhstm.snap_id))/1e6/6e1, 2) dbtime_mins,
+               (CAST(dhsp.end_interval_time AS DATE) - CAST(begin_interval_time AS DATE))*24*6e1 elapsed_mins,
                dhos.value num_cpus
-          FROM (SELECT snap_id, 
-                       dbid, 
-                       instance_number, 
-                       begin_interval_time, 
+          FROM (SELECT snap_id,
+                       dbid,
+                       instance_number,
+                       begin_interval_time,
                        end_interval_time
                 FROM dba_hist_snapshot
                ) dhsp,
-               (SELECT snap_id, 
-                       dbid, 
-                       instance_number, 
-                       stat_name, 
+               (SELECT snap_id,
+                       dbid,
+                       instance_number,
+                       stat_name,
                        value
                   FROM dba_hist_sys_time_model
                  WHERE stat_name = ''DB time''
                ) dhstm,
-               (SELECT snap_id, 
-                       dbid, 
-                       instance_number, 
-                       stat_name, 
+               (SELECT snap_id,
+                       dbid,
+                       instance_number,
+                       stat_name,
                        value
                   FROM dba_hist_osstat
                  WHERE stat_name = ''NUM_CPUS''
@@ -817,7 +817,7 @@ SELECT instance_number,
             AND   dhstm.snap_id         = dhos.snap_id
             AND   dhstm.instance_number = dhos.instance_number
             AND   dhstm.dbid            = dhos.dbid
-        ORDER BY dhsp.instance_number, 
+        ORDER BY dhsp.instance_number,
                  first_snap_id) all_awr_dbtime_and_cpus
  WHERE first_snap_id <> 0
 ';
@@ -826,9 +826,9 @@ SELECT instance_number,
            END IF;
 
 /*****MPACK_HOST*****/
-        ELSIF p_cur_name = 'MPACK_HOST' THEN 
+        ELSIF p_cur_name = 'MPACK_HOST' THEN
 -- CPAT Cursor to check for the use of rowid's in column definitions
--- CURSOR c_host IS 
+-- CURSOR c_host IS
 -- All version and CDB/PDB follow the same query
 -- IOWAIT_TIME stat does not exist in 10gR2
 -- NUM_CPU_CORES stat does not exist in 10gR2, 11gR1, 11gR2
@@ -851,39 +851,39 @@ select snap_id,
        max(decode( stat_name, 'BUSY_TIME'               , value , null ))  as busy,
        max(decode( stat_name, 'USER_TIME'               , value , null ))  as  usr,
        max(decode( stat_name, 'SYS_TIME'                , value , null ))  as cpusys,
-       max(decode( stat_name, 'IOWAIT_TIME'             , value , null ))  as iowait, 
+       max(decode( stat_name, 'IOWAIT_TIME'             , value , null ))  as iowait,
        max(decode( stat_name, 'NUM_CPU_CORES'           , value , null ))  as cores,
        max(decode( stat_name, 'NUM_CPU_SOCKETS'         , value , null ))  as sockets,
        max(decode( stat_name, 'PHYSICAL_MEMORY_BYTES'   , value , null ))  as ram
   from (select s.snap_id,
-               s.dbid, 
-               s.instance_number, 
-               d.db_name, 
+               s.dbid,
+               s.instance_number,
+               d.db_name,
                d.host_name,
-               s.stat_name, s.value 
-          from DBA_HIST_OSSTAT  s 
-               inner join DBA_HIST_OSSTAT n 
+               s.stat_name, s.value
+          from DBA_HIST_OSSTAT  s
+               inner join DBA_HIST_OSSTAT n
                      on s.dbid = n.dbid and s.instance_number = n.instance_number and s.snap_id = n.snap_id
-               inner join DBA_HIST_DATABASE_INSTANCE d 
+               inner join DBA_HIST_DATABASE_INSTANCE d
                      on n.dbid = d.dbid and n.instance_number = d.instance_number
-       ) 
+       )
  group by snap_id,
           dbid,
           instance_number,
           db_name,
-          host_name 
+          host_name
 
 
 ]';
 
 
 /*****MPACK_SGA_PGA_METRIC*****/
-        ELSIF p_cur_name = 'MPACK_SGA_PGA_METRIC' THEN 
+        ELSIF p_cur_name = 'MPACK_SGA_PGA_METRIC' THEN
 -- CPAT Cursor to check for the use of rowid's in column definitions
 -- CURSOR c_pga_metric IS
 
-           IF v_multitenant = 'PDB' and to_number(to_char(v_version_major)||'.'||to_char(v_version_minor)) > 12.1 then   
-              v_cur_id:='MEM1';    
+           IF v_multitenant = 'PDB' and to_number(to_char(v_version_major)||'.'||to_char(v_version_minor)) > 12.1 then
+              v_cur_id:='MEM1';
               -- OPEN v_cur FOR
               v_cur_stmt:=
 q'[
@@ -899,9 +899,9 @@ select x.DBID,
        z.mbytes buffer_cache_bytes,
        r.mbytes shared_pool_bytes
   from (select sys_context('USERENV', 'CON_DBID') DBID
-          from v$database) x, 
+          from v$database) x,
        (select max(pga_bytes) mbytes
-          from v$rsrcpdbmetric_history) s, 
+          from v$rsrcpdbmetric_history) s,
        (select max(buffer_cache_bytes) mbytes
           from v$rsrcpdbmetric_history) z,
        (select max(shared_pool_bytes) mbytes
@@ -922,7 +922,7 @@ select DBID, TOTAL_PGA_IN_USE, TOTAL_PGA_ALLOCATED, SGA_BYTES, BUFFER_CACHE_BYTE
          where name = 'total PGA inuse') pu,
        (select value TOTAL_PGA_ALLOCATED
           from V$PGASTAT
-         where name = 'total PGA allocated') pa,  
+         where name = 'total PGA allocated') pa,
        (select round(s.mbytes) SGA_BYTES,
                round(o.mbytes) SHARED_POOL_BYTES,
                round(b.mbytes) BUFFER_CACHE_BYTES
@@ -930,11 +930,11 @@ select DBID, TOTAL_PGA_IN_USE, TOTAL_PGA_ALLOCATED, SGA_BYTES, BUFFER_CACHE_BYTE
                   from v$sgastat
                  where con_id in (0,1)) s,
                (select sum(bytes) mbytes
-                  from v$sgastat  
+                  from v$sgastat
                 where pool  like '%pool%'
                   and con_id in (0,1)) o,
                (select sum(bytes) mbytes
-                  from v$sgastat 
+                  from v$sgastat
                  where pool is null
                    and con_id in (0,1)) b)
 
@@ -953,24 +953,24 @@ select DBID, TOTAL_PGA_IN_USE, TOTAL_PGA_ALLOCATED, SGA_BYTES, BUFFER_CACHE_BYTE
          where name = 'total PGA inuse') pu,
        (select value TOTAL_PGA_ALLOCATED
           from V$PGASTAT
-         where name = 'total PGA allocated') pa,  
+         where name = 'total PGA allocated') pa,
        (select round(s.mbytes) SGA_BYTES,
                round(o.mbytes) SHARED_POOL_BYTES,
                round(b.mbytes) BUFFER_CACHE_BYTES
           from (select sum(bytes) mbytes
                   from v$sgastat) s,
                (select sum(bytes) mbytes
-                  from v$sgastat  
+                  from v$sgastat
                 where pool  like '%pool%') o,
                (select sum(bytes) mbytes
-                  from v$sgastat 
+                  from v$sgastat
                  where pool is null) b)
 ]';
            END IF;
 
 
 /*****MPACK_DBSIZE*****/
-        ELSIF p_cur_name = 'MPACK_DBSIZE' THEN 
+        ELSIF p_cur_name = 'MPACK_DBSIZE' THEN
 -- CPAT Cursor to check for the use of rowid's in column definitions
 -- CURSOR c_dbsize IS
            -- OPEN v_cur FOR
@@ -999,11 +999,11 @@ select round(sum(used_ts_size)/1024, 2) TOTAL_USED_DB_SIZE_GB,
 ]';
 
 /*****MPACK_DAILY_ARCH_METRIC*****/
-        ELSIF p_cur_name = 'MPACK_DAILY_ARCH_METRIC' THEN 
+        ELSIF p_cur_name = 'MPACK_DAILY_ARCH_METRIC' THEN
 -- CPAT Cursor to check for the use of rowid's in column definitions
 -- CURSOR c_sga_metric IS
 
-           IF v_multitenant = 'CDB'  THEN 
+           IF v_multitenant = 'CDB'  THEN
               -- OPEN v_cur FOR
               v_cur_stmt:=
 q'[
@@ -1015,9 +1015,9 @@ select y.dbid,
        (s.redo_size/t.total_redo)*x.ARCH_DAILY_GB DB_DAILY_ARCHIVE_EST,
        s.con_id
   from (select max(GB) ARCH_DAILY_GB
-          from (select trunc(COMPLETION_TIME,'DD') Day, thread#, 
+          from (select trunc(COMPLETION_TIME,'DD') Day, thread#,
                        round(sum(BLOCKS*BLOCK_SIZE)/1024/1024/1024) GB,
-                       count(*) Archives_Generated 
+                       count(*) Archives_Generated
                   from gv$archived_log
                  group by trunc(COMPLETION_TIME,'DD'),thread# order by 1)) x,
        (select dbid
@@ -1033,7 +1033,7 @@ select y.dbid,
 
 ]';
 
-           ELSIF  v_multitenant = 'PDB'  THEN 
+           ELSIF  v_multitenant = 'PDB'  THEN
               -- OPEN v_cur FOR
               v_cur_stmt:=
 q'[
@@ -1042,9 +1042,9 @@ select y.dbid,
        (s.redo_size/t.total_redo)*x.ARCH_DAILY_GB DB_DAILY_ARCHIVE_EST,
        s.con_id
   from (select max(GB) ARCH_DAILY_GB
-          from (select trunc(COMPLETION_TIME,'DD') Day, thread#, 
+          from (select trunc(COMPLETION_TIME,'DD') Day, thread#,
                        round(sum(BLOCKS*BLOCK_SIZE)/1024/1024/1024) GB,
-                       count(*) Archives_Generated 
+                       count(*) Archives_Generated
                   from gv$archived_log
                  group by trunc(COMPLETION_TIME,'DD'),thread# order by 1)) x,
        (select dbid
@@ -1058,7 +1058,7 @@ select y.dbid,
           where name='redo size') t
 ]';
 
-           ELSE 
+           ELSE
               -- OPEN v_cur FOR
               v_cur_stmt:=
 q'[
@@ -1067,26 +1067,26 @@ select y.dbid,
        '' DB_DAILY_ARCHIVE_EST,
        '' CON_ID
   from (select max(GB) ARCH_DAILY_GB
-          from (select trunc(COMPLETION_TIME,'DD') Day, thread#, 
+          from (select trunc(COMPLETION_TIME,'DD') Day, thread#,
                        round(sum(BLOCKS*BLOCK_SIZE)/1024/1024/1024) GB,
-                       count(*) Archives_Generated 
+                       count(*) Archives_Generated
                   from gv$archived_log
                  group by trunc(COMPLETION_TIME,'DD'),thread# order by 1)) x,
        (select DBID
           from v$database) y
 ]';
- 
+
            END IF;
 
 
 /*****MPACK_QUERIES*****/
-     ELSIF p_cur_name = 'MPACK_QUERIES' THEN 
+     ELSIF p_cur_name = 'MPACK_QUERIES' THEN
 -- CPAT Cursor to check for the use of rowid's in column definitions
--- more columns to be added - to see how much is on cpu (performance) 
+-- more columns to be added - to see how much is on cpu (performance)
 -- the sql text, not only sql id
 -- CURSOR c_queries IS
 
-      IF to_number(to_char(v_version_major)||'.'||to_char(v_version_minor)) > 11.1 THEN 
+      IF to_number(to_char(v_version_major)||'.'||to_char(v_version_minor)) > 11.1 THEN
          -- OPEN v_cur FOR
          v_cur_stmt:=
 q'[
@@ -1116,14 +1116,14 @@ select * from (select sa.sql_id,
                          from v$sql
                         where parsing_schema_name not in ('SYS','SYSTEM', 'RMAN','SYSMAN', 'DBSNMP')
                           and parsing_schema_name not like 'APEX%') sa,
-                      (select sql_id, 
-                              child_number, 
-                              plan_hash_value, 
-                              object_owner, 
+                      (select sql_id,
+                              child_number,
+                              plan_hash_value,
+                              object_owner,
                               object_name,
                               cost,
                               rank() over (partition by sql_id,child_number order by cost desc nulls last) costrank
-                              -- result set partitioned by sql and child to avoid duplicates 
+                              -- result set partitioned by sql and child to avoid duplicates
                               -- when same sql is executed by multiple users
                          from v$sql_plan
                         where (operation like '%INDEX%' or operation like '%TABLE%' or operation like '%MAT%')
@@ -1151,7 +1151,7 @@ select * from (select sa.sql_id,
 
 ]';
 
-    ELSE 
+    ELSE
        -- OPEN v_cur FOR
        v_cur_stmt:=
 q'[
@@ -1224,12 +1224,12 @@ SELECT * FROM (
 
 
 /*****MPACK_METRIC*****/
-        ELSIF p_cur_name = 'MPACK_METRIC' THEN 
+        ELSIF p_cur_name = 'MPACK_METRIC' THEN
 -- CPAT Cursor to check for the use of rowid's in column definitions
 -- CURSOR c_metric IS
 
-           IF v_multitenant = 'PDB'  THEN 
-              IF to_number(to_char(v_version_major)||'.'||to_char(v_version_minor)) > 12.1 then           
+           IF v_multitenant = 'PDB'  THEN
+              IF to_number(to_char(v_version_major)||'.'||to_char(v_version_minor)) > 12.1 then
                  -- OPEN v_cur FOR
                  v_cur_stmt:=
 
@@ -1238,7 +1238,7 @@ q'[
 -- version_required : 11.0
 
 Select * from (
-    select 
+    select
         sys_context('USERENV', 'CON_DBID') DBID,
         hs.snap_id,
         hs.begin_time,
@@ -1248,7 +1248,7 @@ Select * from (
     from
         v$database db
     INNER JOIN dba_hist_con_sysmetric_summ hs using (dbid)
-    where 
+    where
         hs.begin_time > sysdate - 31
         and metric_id in ('18000', '18014', '18020', '18022','18027','18025')
 )
@@ -1267,14 +1267,14 @@ PIVOT (
     )
 order by 1,2,3
 
-]';         
-              ELSE 
+]';
+              ELSE
                  -- OPEN v_cur FOR
                  v_cur_stmt:=
 '
 
 Select * from (
-    select 
+    select
         sys_context(''USERENV'', ''CON_DBID'') DBID,
         hs.snap_id,
         hs.begin_time,
@@ -1284,7 +1284,7 @@ Select * from (
     from
         v$database db
     INNER JOIN dba_hist_sysmetric_summary hs using (dbid)
-    where 
+    where
         hs.begin_time > sysdate - 31
         and metric_id in (''2143'', ''2016'', ''2092'', ''2100'',''2093'',''2124'')
 )
@@ -1303,11 +1303,11 @@ PIVOT (
     )
 order by 1,2,3
 
-'; 
+';
               END IF;
 
            ELSE
-              IF v_version_major > 10 then            
+              IF v_version_major > 10 then
                  -- OPEN v_cur FOR
                  v_cur_stmt:=
 q'[
@@ -1315,7 +1315,7 @@ q'[
 -- version_required : 12.0
 
 Select * from (
-    select 
+    select
         dbid,
         hs.snap_id,
         hs.begin_time,
@@ -1325,7 +1325,7 @@ Select * from (
     from
         v$database db
     INNER JOIN dba_hist_sysmetric_summary hs using (dbid)
-    where 
+    where
         hs.begin_time > sysdate - 31
         and metric_id in ('2143', '2016', '2092', '2100','2093','2124')
 )
@@ -1350,7 +1350,7 @@ order by 1,2,3
                  v_cur_stmt:=
 q'[
 
-SELECT 
+SELECT
     dbid,
     snap_id,
     begin_time,
@@ -1367,7 +1367,7 @@ SELECT
     SUM(CASE WHEN metric_name = 'Physical Write Total Per Sec' THEN metric_average END) AS total_writes_bytes_avg,
     MAX(CASE WHEN metric_name = 'Physical Write Total Per Sec' THEN metric_max END) AS total_writes_bytes_max
 FROM (
-    SELECT 
+    SELECT
         db.dbid,
         hs.snap_id,
         hs.begin_time,
@@ -1377,7 +1377,7 @@ FROM (
     FROM
         v$database db
     INNER JOIN dba_hist_sysmetric_summary hs ON db.dbid = hs.dbid
-    WHERE 
+    WHERE
         hs.begin_time > sysdate - 31
         AND metric_id IN ('2143', '2016', '2092', '2100','2093','2124')
 ) metrics
@@ -1389,7 +1389,7 @@ ORDER BY dbid, snap_id, begin_time
            END IF;
 
 /*****MPACK_BLOCKSIZE*****/
-        ELSIF p_cur_name = 'MPACK_BLOCKSIZE' THEN 
+        ELSIF p_cur_name = 'MPACK_BLOCKSIZE' THEN
 -- CPAT Cursor to check for the use of rowid's in column definitions
 -- CURSOR c_blocksize IS
 
@@ -1399,7 +1399,7 @@ q'[
 
 -- version_required : 11.0
 
-select db.dbid, db.name, dp.name, dp.value from 
+select db.dbid, db.name, dp.name, dp.value from
 v$database db, v$parameter dp where dp.name in ('db_block_size')
 
 
@@ -1437,15 +1437,15 @@ v$database db, v$parameter dp where dp.name in ('db_block_size')
        IF to_number(to_char(p_version_major)||'.'||to_char(p_version_minor)) < p_version_required THEN
            RETURN;
        END IF;
-           
+
        -- Call the function that returns the referenced cursor
-    
+
            v_cur_stmt := get_cursor(p_cur_name);
-       
+
        -- Switch to native dynamic SQL to get the cursor ID
        v_cursor_id := DBMS_SQL.OPEN_CURSOR;
        BEGIN
-       -- PARSE statement and handle execptions
+       -- PARSE statement and handle exceptions
           DBMS_SQL.PARSE(v_cursor_id, v_cur_stmt, DBMS_SQL.NATIVE);
              EXCEPTION
              WHEN OTHERS THEN
@@ -1456,12 +1456,12 @@ v$database db, v$parameter dp where dp.name in ('db_block_size')
        END;
        DBMS_SQL.DESCRIBE_COLUMNS(v_cursor_id, v_num_columns, v_desc_tab);
        FOR v_col_num IN 1..v_num_columns
-       
+
        -- Define columns from parsed cursor
        LOOP
-          DBMS_SQL.DEFINE_COLUMN(v_cursor_id, v_col_num, v_string, 50); 
+          DBMS_SQL.DEFINE_COLUMN(v_cursor_id, v_col_num, v_string, 50);
        END LOOP;
-       
+
        v_rows_processed := dbms_sql.execute(v_cursor_id);
        -- Fetch rows and describe columns
        LOOP
@@ -1469,17 +1469,17 @@ v$database db, v$parameter dp where dp.name in ('db_block_size')
            IF DBMS_SQL.FETCH_ROWS(v_cursor_id) <= 0 THEN
                EXIT;
            END IF;
-       
+
            -- Initialize the output row with the prefix
            v_row_count := v_row_count + 1;
            v_row_data := p_cur_name || v_placeholder || v_dbid || v_column_sep || v_extract_dt || v_column_sep || v_row_count || v_column_sep || v_open_p;
-       
+
            -- Loop through the columns in the query to create name-value pairs in JSON format
            FOR v_col_num IN 1 .. v_num_columns LOOP
                DBMS_SQL.COLUMN_VALUE(v_cursor_id, v_col_num, v_string);
                v_row_data := v_row_data || if_gt_one(v_col_num) || nv_pair(v_desc_tab(v_col_num).col_name, v_string);
            END LOOP;
-       
+
            -- Close the JSON parenthesis and add a line ending
            v_row_data := v_row_data || v_close_p || v_eol;
            DBMS_LOB.WRITEAPPEND(p_clob, LENGTH(v_row_data), v_row_data);
@@ -1530,10 +1530,10 @@ v$database db, v$parameter dp where dp.name in ('db_block_size')
                              v_version_major,
                              v_version_minor,
                              v_multitenant);
- 
+
     -- build database info clob
 
-    v_dbinfo:='MPACK_DBINFO'||v_placeholder||  
+    v_dbinfo:='MPACK_DBINFO'||v_placeholder||
             v_dbid||'|'||v_extract_dt||'|'||'0|'||'{'||
             '"'||'db_name'||'":"'||v_dbname||'",'||
             '"'||'con_dbid'||'":"'||to_char(v_con_dbid)||'",'||
@@ -1556,13 +1556,13 @@ v$database db, v$parameter dp where dp.name in ('db_block_size')
             '"'||'multitenant'||'":"'||v_multitenant||'"'||
             '}'||
   chr(10);
-    
+
     --dbms_lob.writeappend(v_dbinfo, dbms_lob.getlength(v_new_clob_record), v_new_clob_record);
-    
+
     select v_dbinfo into :MPACK_DBINFO_clob from dual;
-    
+
     --dbms_lob.freetemporary(v_dbinfo);
-    
+
     -- build the output rows
 
 
@@ -1597,3 +1597,4 @@ print mpack_summary_clob
 --exit
 
 exit;
+
