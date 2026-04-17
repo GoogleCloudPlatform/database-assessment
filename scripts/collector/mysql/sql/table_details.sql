@@ -80,7 +80,7 @@ from (
       )
       left join (
         SELECT DISTINCT table_schema, table_name
-        FROM information_schema.columns 
+        FROM information_schema.columns
         WHERE column_key = 'PRI'
         AND table_schema not in (
             'mysql',
