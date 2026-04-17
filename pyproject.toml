@@ -122,7 +122,7 @@ test = [
     "cython",
     "anyio",
     "coverage[toml]>=6.2",
-    "pytest>=8.0.0",
+    "pytest>=9.0.3",
     "pytest-cov>=5.0.0",
     "pytest-mock",
     "pytest-sugar",
