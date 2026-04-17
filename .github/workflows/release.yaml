@@ -59,7 +59,7 @@ jobs:
 
       - name: Building & Package Collector
         run: make clean && make build-collector
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
             name: collections
             path: dist/*.zip
@@ -85,7 +85,7 @@ jobs:
     - name: Build
       run: uv build
 
-    - uses: actions/upload-artifact@v6
+    - uses: actions/upload-artifact@v7
       with:
         name: wheels
         path: dist/*
@@ -167,7 +167,7 @@ jobs:
         target: ${{ matrix.job.target }}
 
     - name: Download wheel artifact
-      uses: actions/download-artifact@v7
+      uses: actions/download-artifact@v8
       with:
         name: wheels
         path: dist/
@@ -246,7 +246,7 @@ jobs:
       run: ./${{ matrix.job.artifact }} --help
 
     - name: Upload binary artifact
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: binary-${{ matrix.job.artifact }}
         path: ${{ matrix.job.artifact }}
@@ -262,7 +262,7 @@ jobs:
     permissions:
      contents: write
     steps:
-    - uses: actions/download-artifact@v7
+    - uses: actions/download-artifact@v8
       with:
         path: dist
         merge-multiple: true
@@ -275,6 +275,6 @@ jobs:
     #     password: ${{ secrets.PYPI_API_TOKEN }}
 
     - name: Add assets to release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         files: dist/*
