@@ -94,7 +94,7 @@ jobs:
         run: uv python install ${{ env.STABLE_PYTHON_VERSION }}
       - name: Build
         run: uv build
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: wheels
           path: dist/*
