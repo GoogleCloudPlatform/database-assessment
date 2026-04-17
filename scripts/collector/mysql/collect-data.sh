@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # Global variables and constants
-dma_version="4.3.45"
+dma_version="4.3.46"
 collection_user_name=""
 collection_user_pass=""
 conn_str=""

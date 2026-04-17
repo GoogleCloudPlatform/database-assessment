@@ -18,7 +18,7 @@
 . ./dma_oee.sh
 
 # Global variables and constants
-dma_version="4.3.45"
+dma_version="4.3.46"
 dbmajor=""
 dbdomain=""
 script_dir=""
@@ -46,7 +46,7 @@ manual_unique_id=""
 stats_window=30
 collect_oee="N"
 oee_group_name="DEFAULT-$$"
-oee_run_id=$(date +%Y%m%d%H%M%S)
+oee_run_id=$(echo $(date +%Y%m%d%H%M%S)_${BASHPID})
 extractor_version=""
 dma_automation_flag="N"
 
@@ -255,6 +255,7 @@ function cleanup_dma_output() {
 function compress_dma_files() {
   local v_file_tag=$1
   local db_type=$2
+  local oee_file=$3
   local v_err_tag=""
   local err_cnt
   local -i retval
@@ -262,7 +263,11 @@ function compress_dma_files() {
   local zip_file
 
   echo ""
-  echo "Archiving output files with tag ${v_file_tag}"
+  if [[ "${oee_file}" = "" ]]; then
+    echo "Archiving output files with tag ${v_file_tag}"
+  else
+    echo "Archiving output files with tag ${v_file_tag} including oee file ${oee_file}"
+  fi
 
   current_working_dir=$(pwd)
   cp ${log_dir}/opdb__${v_file_tag}_errors.log ${output_dir}/opdb__${v_file_tag}_errors.log
@@ -300,7 +305,7 @@ function compress_dma_files() {
   fi
 
   # Skip creating the manifest file if the platform does not have md5_cmd installed
-  for file in $(ls -1  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt)
+  for file in opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt ${oee_file}
   do
     if [[ -f "${md5_cmd}" ]] ; then
       md5_val=$(${md5_cmd} $file | cut -d ' ' -f ${md5_col})
@@ -311,16 +316,16 @@ function compress_dma_files() {
   done
 
   if [[ ! "${zip_cmd}" = "" ]];then
-    ${zip_cmd} ${zip_file}  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt
+    ${zip_cmd} ${zip_file}  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt ${oee_file}
     output_file=${zip_file}
   else
-    tar cvf "${tar_file}"  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt
+    tar cvf "${tar_file}"  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt ${oee_file}
     $gzip_cmd "${tar_file}"
     output_file="${tar_file}".gz
   fi
 
   if [[ -f $output_file ]];then
-    rm  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt
+    rm  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt ${oee_file}
   fi
 
   cd ${current_working_dir}
@@ -388,16 +393,14 @@ function print_usage() {
   echo "                              NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION."
   echo "                              IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8"
   echo "                              CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR."
-# RESERVED FOR FUTURE USE
-#  echo "  Oracle Estate Explorer collection"
-#  echo "      --collectOee            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector.  Default is Y."
-#  echo "                              NOTE: This requires SQL client version 21 and above, plus Oracle database 11.2 or above."
-#  echo "                                    OEE collection will not run if requirements are not met."
-#  echo
-#  echo "      --oeeGroup              Required if --collect_oee is Y.  This is the group name (ex: Dev, Prod, QA, etc) to use for bundling multiple databases togegther within OEE."
-#  echo "                              Maximum length of 32 characters."
-#  echo "      --oeeRunId              Internal use only.  This is used by DMA automation to handle parallel runs of multiple collections."
-# RESERVED FOR FUTURE USE
+  echo "  Oracle Estate Explorer collection"
+  echo "      --collectOEE            Optional.  Y or N flag to run the Oracle Estate Explorer data collection in addition to the DMA collector.  Default is Y."
+  echo "                              NOTE: This requires SQL client version 21 and above, plus Oracle database 11.2 or above."
+  echo "                                    OEE collection will not run if requirements are not met."
+  echo
+  echo "      --oeeGroup              Required if --collect_oee is Y.  This is the group name (ex: Dev, Prod, QA, etc) to use for bundling multiple databases togegther within OEE."
+  echo "                              Maximum length of 32 characters."
+  echo "      --oeeRunId              Internal use only.  This is used by DMA automation to handle parallel runs of multiple collections."
   echo
   echo " Optional identifier"
   echo "      --manualUniqueId        Optional.  Allows the end user to create a unique identifier with which to tag the collection. "
@@ -430,11 +433,9 @@ function parse_parameters() {
     elif [[ "$1" == "--connectionStr" ]];      then connection_string="${2}"
     elif [[ "$1" == "--statsWindow" ]];        then stats_window="${2}"
     elif [[ "$1" == "--manualUniqueId" ]];     then manual_unique_id="${2}"
-# RESERVED FOR FUTURE USE
-#    elif [[ "$1" == "--collectOEE" ]];         then collect_oee="${2}"
-#    elif [[ "$1" == "--oeeGroup"   ]];         then oee_group_name="${2}"
-#    elif [[ "$1" == "--oeeRunId"   ]];         then oee_run_id="${2}"
-# RESERVED FOR FUTURE USE
+    elif [[ "$1" == "--collectOEE" ]];         then collect_oee="${2}"
+    elif [[ "$1" == "--oeeGroup"   ]];         then oee_group_name="${2}"
+    elif [[ "$1" == "--oeeRunId"   ]];         then oee_run_id="${2}"
     elif [[ "$1" == "--dmaAutomation"   ]];    then dma_automation_flag="${2}"  # Internal use only
     else
       echo "Unknown parameter ${1}"
@@ -475,28 +476,26 @@ function parse_parameters() {
     database_service=$(echo ${connection_string} | cut -d '/' -f 5)
   fi
 
-# RESERVED FOR FUTURE USE
-#  if [[ "${collect_oee}" == "Y" ]] ; then
-#    if [[ "${oee_group_name}" == "" ]] ; then
-#      echo "ERROR: Parameter --oeeGroup must be specified if --collect_oee is Y."
-#      print_usage
-#      exit
-#    fi
-#    if [[ "${oee_run_id}" == "" ]] ; then
-#      oee_run_id=$$
-#      oee_run_id="${oee_run_id}_$(date +%Y%m%d%H%M%S)"
-#    fi
-#    if [[ ! -f $oee_dir/oee_group_extract-SA.sh ]]; then
-#      echo
-#      echo "ERROR: Oracle Estate Explorer extraction scripts not found in ${oee_dir}".
-#      echo "Skipping collection for database ${database_service}".
-#      echo "Either install Oracle Estate Explorer files or disable OEE collection for this database and retry the collection."
-#      echo
-#      print_fail
-#      exit 1
-#    fi
-#  fi
-# RESERVED FOR FUTURE USE
+  if [[ "${collect_oee}" == "Y" ]] ; then
+    if [[ "${oee_group_name}" == "" ]] ; then
+      echo "ERROR: Parameter --oeeGroup must be specified if --collect_oee is Y."
+      print_usage
+      exit
+    fi
+    if [[ "${oee_run_id}" == "" ]] ; then
+      oee_run_id=${BASHPID}
+      oee_run_id="$(date +%Y%m%d%H%M%S)_${oee_run_id}"
+    fi
+    if [[ ! -f $oee_dir/oee_group_extract-SA.sh ]]; then
+      echo
+      echo "ERROR: Oracle Estate Explorer extraction scripts not found in ${oee_dir}".
+      echo "Skipping collection for database ${database_service}".
+      echo "Either install Oracle Estate Explorer files or disable OEE collection for this database and retry the collection."
+      echo
+      print_fail
+      exit 1
+    fi
+  fi
 
   if [[ "${manual_unique_id}" != "" ]] ; then
     case "$(uname)" in
@@ -569,12 +568,14 @@ function main() {
           diag_pack_access="NoDiagnostics"
         fi
       fi
-      v_tag="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export v_tag
+      v_tagbase="$(echo ${sqlcmd_result} | cut -d '|' -f 2)"
+      v_tag="${v_tagbase}.csv"; export v_tag
+
       execute_dma "${connect_string}" ${dma_version} ${diag_pack_access} "${manual_unique_id}" $stats_window
       retval=$?
-      if [[ $retval -ne 0 ]];then
-        create_error_log  $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
-        compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g') ${database_type}
+      if [[ $retval -ne 0 ]];then # DMA Collection failed, so package up what we did get.
+        create_error_log  ${v_tagbase}
+        compress_dma_files  ${v_tagbase} ${database_type}
         print_failure
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo "Database Migration Assessment extract reported an error.  Please check the error log in directory ${log_dir}"
@@ -582,10 +583,10 @@ function main() {
         echo "Exiting...."
         exit 255
       fi
-      create_error_log  $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
-      cleanup_dma_output $(echo ${v_tag} | ${sed_cmd} 's/.csv//g')
+      create_error_log   ${v_tagbase}
+      cleanup_dma_output  ${v_tagbase}
       retval=$?
-      if [[ $retval -ne 0 ]];then
+      if [[ $retval -ne 0 ]];then  # Handle failure of cleanup.
         print_failure
         echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
         echo "Database Migration Assessment data sanitation reported an error. Please check the error log in directory ${output_dir}"
@@ -593,37 +594,40 @@ function main() {
         echo "Exiting...."
         exit 255
       fi
+      # Now start processing OEE collection if requested.
       dma_id=$(get_dma_source_id ${v_tag})
-# RESERVED FOR FUTURE USE
-#      if [[ "${collect_oee}" == "Y" ]]; then
-#        oee_check_results=$(oee_check_conditions "${connection_string}")
-#        if [[ "${oee_check_results}" == "PASS" ]] ; then
-#          echo Generating OEE driver file
-#          oee_generate_config ${dma_id} ${database_service} ${host_name} ${port} ${collection_user_name} ${collection_user_pass} ${oee_group_name} ${oee_run_id} ${v_tag}
-#          if [[ "${dma_automation_flag}" != "Y" ]] ; then
-#            echo Running OEE
-#            cd oee
-#            oee_run "${oee_run_id}"
-#            cd ..
-#            oee_ret_val=$?
-#            if [[ ${oee_ret_val} -eq 1 ]]; then
-#              final_status="WARNING"
-#              print_warning
-#              echo
-#              echo "Oracle Estate Explorer collection encountered errors.  Collection may be missing some data."
-#              echo
-#            fi
-#          fi
-#        else
-#          final_status="WARNING"
-#          echo
-#          echo "Skipping Estate Explorer collection for ${database_service} ${host_name} due to "
-#          echo "${oee_check_results}"
-#          echo
-#        fi
-#      fi
-# RESERVED FOR FUTURE USE
-      compress_dma_files $(echo ${v_tag} | ${sed_cmd} 's/.csv//g') ${database_type}
+      oee_output_file=""
+      if [[ "${collect_oee}" == "Y" ]]; then
+        oee_check_results=$(oee_check_conditions "${connection_string}")
+        if [[ "${oee_check_results}" == "PASS" ]] ; then
+          echo Generating OEE driver file for run id ${oee_run_id}
+          oee_generate_config ${dma_id} ${database_service} ${host_name} ${port} ${collection_user_name} ${collection_user_pass} ${oee_group_name} ${oee_run_id} ${v_tag}
+          #if [[ "${dma_automation_flag}" != "Y" ]] ; then
+            echo Running OEE
+            current_dir=$(pwd)
+            cd oee
+            oee_run "${oee_run_id}"
+            oee_ret_val=$?
+            cd ${current_dir}
+            if [[ ${oee_ret_val} -eq 1 ]]; then
+              final_status="WARNING"
+              print_warning
+              echo
+              echo "Oracle Estate Explorer collection encountered errors.  Collection may be missing some data."
+              echo
+            else
+              oee_output_file=$(find ${output_dir} -type f -name "mpack*${v_tagbase}.zip" -printf "%f")
+            fi
+          #fi
+        else
+          final_status="WARNING"
+          echo
+          echo "Skipping Estate Explorer collection for ${database_service} ${host_name} due to "
+          echo "${oee_check_results}"
+          echo
+        fi
+      fi
+      compress_dma_files  ${v_tagbase} ${database_type} ${oee_output_file}
       retval=$?
       if [[ $retval -ne 0 ]];then
         print_failure
