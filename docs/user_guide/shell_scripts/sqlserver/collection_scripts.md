@@ -23,7 +23,9 @@ This utility extracts metadata about the tables, partitions and SQL workload in 
 
 ## [License Requirements](#license-requirements)
 
-!!! IMPORTANT Google Database Migration Assessment does not require any additional licensing with regards to Microsoft SQL Server.
+:::{important}
+Google Database Migration Assessment does not require any additional licensing with regards to Microsoft SQL Server.
+:::
 
 ---
 
@@ -294,7 +296,9 @@ This is recommended if you plan to upload the results to the Migration Center.
 - The full path and file name will be displayed on completion.
 - Return the listed file to Google for processing
 
-!!! IMPORTANT Do not modify the name or the contents of the zip file without consultation from Google.
+:::{important}
+Do not modify the name or the contents of the zip file without consultation from Google.
+:::
 
 ## [Digitially Signing Powershell Scripts](#digitially-signing-powershell-scripts)
 
