@@ -13,7 +13,7 @@ Learn about the readiness check feature and how to use it.
 :::
 
 :::{grid-item-card} Shell Scripts
-:link: shell_scripts/postgres/index
+:link: shell_scripts/index
 :link-type: doc
 
 Learn how to use the raw shell scripts.
@@ -26,4 +26,5 @@ Learn how to use the raw shell scripts.
 
 readiness_check/overview
 readiness_check/package-installation
+shell_scripts/index
 ```

@@ -345,7 +345,7 @@ Occasionally, organizational security policies require that Powershell scripts b
         - Set-AuthenticodeSignature $ScriptRepo\dmaSQLServerHWSpecs.ps1 -Certificate (Get-ChildItem "cert:\CurrentUser\My\$($newCodeSigningCert.Thumbprint)" -CodeSigningCert)
         - Set-AuthenticodeSignature $ScriptRepo\dmaSQLServerPerfmonDataset.ps1 -Certificate (Get-ChildItem "cert:\CurrentUser\My\$($newCodeSigningCert.Thumbprint)" -CodeSigningCert)
 
-## [License](#license)
+## License
 
 Copyright 2025 Google LLC
 
