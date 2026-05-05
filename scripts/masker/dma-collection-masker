@@ -2159,6 +2159,7 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
             sys.exit(1)
 
         for collection in collections:
+            logger.info(msg=f"Found collection {collection}")
             collection_metadata = _metadata_from_filename(collection)
             fake.date_time = collection_metadata.date_time
             fake.set_collection_key_from_date_time(
@@ -2182,6 +2183,9 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
                 collection_files = _find_files_referenced_by_rule(rule, work_dir)
                 if collection_files:
                     identity_map = _generate_and_apply_identity_map(identity_map, rule, collection_files)
+
+            if collection_metadata.database_type == "mssql":
+              _generate_mssql_manifest(output_path, output_path )
 
             logger.info("Completed work on %s", collection.stem)
             _collection_key_file, _new_collection_archive = _package_collection(
@@ -2221,7 +2225,7 @@ def _metadata_from_filename(collection_file: Path) -> FileMetadata:
         meta_values.append(collection_file.stem.split(sep="_")[1])  # database_type
         metadata = FileMetadata(*meta_values)
     except (ValueError, IndexError, TypeError) as e:
-        msg = f"Could not determine metadata from file {collection_file.stem}"
+        msg = f"Could not determine metadata from file {collection_file}"
         raise ApplicationError(msg) from e
     else:
         return metadata
@@ -2433,6 +2437,27 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
         shutil.move(t.name, collection_file)
 
 
+def _generate_mssql_manifest(directory: str | Path, output_file: str = "manifest.csv") -> None:
+    """
+    Generates a pipe-separated manifest file for MSSQL collection files.
+    Replicates: for x in *.csv ; do md=$(md5sum $x | cut -d ' ' -f 1); echo '"mssql"|"'${md}'"|"'${x}'"'; done
+    """
+    path = Path(directory)
+    output_path = Path(output_file).joinpath('manifest.csv')
+
+    with output_path.open("w", encoding="utf-8") as f:
+        # sorted() ensures the manifest order matches shell globbing behavior
+        for csv_file in sorted(path.glob("*.csv")):
+            # Calculate MD5 hash of file content
+            file_hash = hashlib.md5(csv_file.read_bytes()).hexdigest()
+
+            # Format: "mssql"|"md5_hash"|"filename"
+            line = f'"mssql"|"{file_hash}"|"{csv_file.name}"\n'
+            f.write(line)
+
+    for base_name in sorted(path.glob("opdb__ServerProps__*.csv")):
+        manifest_file_name=base_name.__str__.replace("opdb__ServerProps__", "opdb__manifest__")        
+ 
 def _rewrite_mssql_collector_log(logfile_name: Path, zipfile_name: str) -> None:
     """Rewrites the collector log file to include only the masked zipfile name.
 
@@ -2486,7 +2511,7 @@ def _package_collection(
     with zf.ZipFile(archive_file, "w", compression=zf.ZIP_DEFLATED, compresslevel=9) as f:
         for matched_file in matched_files:
             # Exclude the Permon log fileq
-            if "opdb__perfMonLog_" not in str(matched_file):
+            if ("opdb__perfMonLog_" not in str(matched_file)) and ("Google-DMA-SQLServerDataSet" not in str(object=matched_file)):
                 masked_file = _mask_file_collection_key(matched_file)
                 identity_map[matched_file.name] = masked_file.name
 
