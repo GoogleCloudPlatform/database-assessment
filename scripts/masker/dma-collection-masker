@@ -2185,7 +2185,7 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
                     identity_map = _generate_and_apply_identity_map(identity_map, rule, collection_files)
 
             if collection_metadata.database_type == "mssql":
-              _generate_mssql_manifest(output_path, output_path )
+                _generate_mssql_manifest(work_dir, work_dir)
 
             logger.info("Completed work on %s", collection.stem)
             _collection_key_file, _new_collection_archive = _package_collection(
@@ -2443,21 +2443,42 @@ def _generate_mssql_manifest(directory: str | Path, output_file: str = "manifest
     Replicates: for x in *.csv ; do md=$(md5sum $x | cut -d ' ' -f 1); echo '"mssql"|"'${md}'"|"'${x}'"'; done
     """
     path = Path(directory)
-    output_path = Path(output_file).joinpath('manifest.csv')
+    output_dir = Path(output_file)
+
+    manifest_file = next(path.glob("opdb__*__*csv"), None)
+    manifest_file_name = ""
+    if manifest_file:
+        parts = manifest_file.name.split("__")
+        if len(parts) >= 3:
+            parts[1] = "manifest"
+            manifest_file_name = "__".join(parts)
+
+    if not manifest_file_name:
+        logger.warning("Could not determine manifest file name for MSSQL collection in %s", directory)
+        return
+
+    output_path = output_dir.joinpath(manifest_file_name)
 
     with output_path.open("w", encoding="utf-8") as f:
         # sorted() ensures the manifest order matches shell globbing behavior
         for csv_file in sorted(path.glob("*.csv")):
+            if "opdb__manifest" in csv_file.name:
+                continue
+            if ("opdb__perfMonLog_" in csv_file.name) or ("Google-DMA-SQLServerDataSet" in csv_file.name):
+                continue
             # Calculate MD5 hash of file content
             file_hash = hashlib.md5(csv_file.read_bytes()).hexdigest()
 
+            # For the masked collection, we want the masked filename in the manifest
+            masked_file = _mask_file_collection_key(csv_file)
+
             # Format: "mssql"|"md5_hash"|"filename"
-            line = f'"mssql"|"{file_hash}"|"{csv_file.name}"\n'
+            line = f'"mssql"|"{file_hash}"|"{masked_file.name}"\n'
             f.write(line)
 
-    for base_name in sorted(path.glob("opdb__ServerProps__*.csv")):
-        manifest_file_name=base_name.__str__.replace("opdb__ServerProps__", "opdb__manifest__")        
- 
+
+
+
 def _rewrite_mssql_collector_log(logfile_name: Path, zipfile_name: str) -> None:
     """Rewrites the collector log file to include only the masked zipfile name.
 
@@ -2521,7 +2542,7 @@ def _package_collection(
                 if "opdb__defines" in str(matched_file):
                     _rewrite_oracle_collector_log(matched_file, masked_collection_file.stem + ".zip")
 
-                if ("opdb_mssql_sqlErrorlog" not in str(matched_file)) and ("opdb__manifest" not in str(matched_file)):
+                if ("opdb_mssql_sqlErrorlog" not in str(matched_file)):
                     f.write(matched_file, f"{masked_file.stem}{masked_file.suffix}")
 
     with key_file.open(mode="w", encoding="utf-8") as f:
