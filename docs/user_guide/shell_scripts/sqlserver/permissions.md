@@ -15,6 +15,7 @@ The following permissions are required for the script execution:
 - `GRANT VIEW ANY DATABASE TO [username];`
 - `GRANT VIEW ANY DEFINITION TO [username];`
 - `GRANT VIEW SERVER STATE TO [username];`
+- `GRANT VIEW DATABASE STATE TO [username];`
 
 ### For SQL Server Version 2022 and above the following additional permissions are needed:
 - `GRANT VIEW SERVER PERFORMANCE STATE TO [username];`
