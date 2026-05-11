@@ -1869,6 +1869,20 @@ DATA_MASK_CONFIG_ORACLE = [
         fake_function=fake.user_name,
     ),  # owner
     DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="app_cloud",
+        column_position=1,
+        missing_ok=True,
+        fake_function=fake.user_name,
+    ),  # owner
+    DataMaskRule(
+        mask_type=DataMaskTypes.SCHEMA_NAME,
+        table_name="app_cloud_pdb",
+        column_position=1,
+        missing_ok=True,
+        fake_function=fake.user_name,
+    ),  # owner
+    DataMaskRule(
         mask_type=DataMaskTypes.OBJECT_NAME,
         table_name="columntypes",
         column_position=3,
@@ -2186,6 +2200,8 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
 
             if collection_metadata.database_type == "mssql":
                 _generate_mssql_manifest(work_dir, work_dir)
+            elif collection_metadata.database_type == "oracle":
+                _generate_oracle_manifest(work_dir, work_dir)
 
             logger.info("Completed work on %s", collection.stem)
             _collection_key_file, _new_collection_archive = _package_collection(
@@ -2366,12 +2382,31 @@ def _generate_identity_map_from_rule(
     column_position = rule.column_position
     if Version(collection_metadata.script_version) < Version("4.3.15") and rule.column_position < -2:
         column_position += 2
+    is_app_cloud = "opdb__app_cloud" in collection_file.name
+    delimiter = ":" if is_app_cloud else "|"
+    skip_header = not is_app_cloud
+
     with collection_file.open(mode="r", encoding="utf-8") as f:
-        data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
+        data_to_mask = csv.reader(f, delimiter=delimiter, quotechar='"')
         for rn, row in enumerate(data_to_mask):
-            if (rn > 0) and (len(row) > 0):
+            if is_app_cloud:
+                # app_cloud files have format "KEY: VALUE"
+                # If there are more than 2 parts, we only care about the first two for key:value
+                if len(row) >= 2:
+                    row = [row[0], ":".join(row[1:])]
+                row = [c.strip() for c in row]
+
+            if (rn > 0 or not skip_header) and (len(row) > 0):
+                # Bounds check for column_position
+                if column_position >= len(row) or (column_position < 0 and abs(column_position) > len(row)):
+                    if not rule.missing_ok:
+                        msg = f"Column position {column_position} out of range for file {collection_file} at line {rn+1}. Row length: {len(row)}"
+                        raise ApplicationError(msg)
+                    logger.warning("Column position %s out of range for file %s at line %s. Skipping.", column_position, collection_file, rn+1)
+                    continue
+
                 if (rule.mask_type == DataMaskTypes.DATABASE_NAME) and (
-                    row[column_position] in {"master", "model", "msdb", "tempdb", "PDB$SEEED", "CDB$ROOT"}
+                    row[column_position] in {"master", "model", "msdb", "tempdb", "PDB$SEED", "CDB$ROOT"}
                 ):
                     continue
                 if (rule.mask_type == DataMaskTypes.SCHEMA_NAME) and (
@@ -2407,33 +2442,61 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
         collection_file (Path): the current collection file to mask
         identity_map (Dict[str, str]): The key/replacement key dictionary.
     """
+    is_app_cloud = "opdb__app_cloud" in collection_file.name
+    delimiter = ":" if is_app_cloud else "|"
+    skip_header = not is_app_cloud
+
     with (
         collection_file.open(mode="r", encoding="utf-8") as f,
         NamedTemporaryFile(mode="w", delete=False, encoding="utf-8") as t,
     ):
-        data_to_mask = csv.reader(f, delimiter="|", quotechar='"')
-        temp_file = csv.writer(t, delimiter="|", quotechar='"')
+        data_to_mask = csv.reader(f, delimiter=delimiter, quotechar='"')
+        temp_file = csv.writer(t, delimiter=delimiter, quotechar='"', quoting=csv.QUOTE_MINIMAL)
         collection_metadata = _metadata_from_filename(collection_file)
         column_position = rule.column_position
         if Version(collection_metadata.script_version) < Version("4.3.15") and rule.column_position < -2:
             column_position += 2
         for rn, row in enumerate(data_to_mask):
-            if (
-                (rn > 0)
-                and (len(row) > 0)
-                and not (
+            orig_row = list(row)
+            if is_app_cloud:
+                if len(row) >= 2:
+                    row = [row[0], ":".join(row[1:])]
+                row = [c.strip() for c in row]
+
+            if (rn > 0 or not skip_header) and (len(row) > 0):
+                # Bounds check for column_position
+                if column_position >= len(row) or (column_position < 0 and abs(column_position) > len(row)):
+                    if not rule.missing_ok:
+                        msg = f"Column position {column_position} out of range for file {collection_file} at line {rn+1}. Row length: {len(row)}"
+                        raise ApplicationError(msg)
+                    if is_app_cloud:
+                        t.write(delimiter.join(orig_row) + "\n")
+                    else:
+                        temp_file.writerow(orig_row)
+                    continue
+
+                if not (
                     (rule.mask_type == DataMaskTypes.DATABASE_NAME)
                     and (row[column_position] in {"master", "model", "msdb", "tempdb", "PDB$SEED", "CDB$ROOT"})
-                )
-            ):
-                if (rule.row_filter is None) or (len(rule.row_filter) == 0):
-                    prefix = "BIN$" if row[column_position].startswith("BIN$") else ""
-                    if not _exclude_owner_from_masking(row[column_position]):
-                        row[column_position] = prefix + identity_map.get(row[column_position], "~~UNMAPPED~~")
-                elif any(check_val in rule.row_filter for check_val in row):
-                    row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
+                ):
+                    if (rule.row_filter is None) or (len(rule.row_filter) == 0):
+                        prefix = "BIN$" if row[column_position].startswith("BIN$") else ""
+                        if not _exclude_owner_from_masking(row[column_position]):
+                            row[column_position] = prefix + identity_map.get(row[column_position], "~~UNMAPPED~~")
+                    elif any(check_val in rule.row_filter for check_val in row):
+                        row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
 
-            temp_file.writerow(row)
+            if is_app_cloud:
+                # Reconstruct with original padding if possible
+                if len(orig_row) >= 2:
+                    key_part = orig_row[0]
+                    # Restore the key exactly as it was (with its spaces)
+                    # and write the masked value
+                    t.write(f"{key_part}:{row[1]}\n")
+                else:
+                    t.write(delimiter.join(row) + "\n")
+            else:
+                temp_file.writerow(row)
         shutil.move(t.name, collection_file)
 
 
@@ -2474,6 +2537,55 @@ def _generate_mssql_manifest(directory: str | Path, output_file: str = "manifest
 
             # Format: "mssql"|"md5_hash"|"filename"
             line = f'"mssql"|"{file_hash}"|"{masked_file.name}"\n'
+            f.write(line)
+
+
+def _generate_oracle_manifest(directory: str | Path, output_file: str = "manifest.txt") -> None:
+    """
+    Generates a pipe-separated manifest file for Oracle collection files.
+    Replicates: for x in opdb* ; do md=$(md5sum $x | cut -d ' ' -f 1); echo "oracle|${md}|${x}"; done
+    """
+    path = Path(directory)
+    output_dir = Path(output_file)
+
+    # Search for a file to use as a template for the manifest name
+    manifest_file = next(path.glob("opdb__*"), None)
+    manifest_file_name = ""
+    if manifest_file:
+        parts = manifest_file.name.split("__")
+        if len(parts) >= 3:
+            parts[1] = "manifest"
+            manifest_file_name = "__".join(parts)
+            # Oracle manifests typically have .txt extension
+            if manifest_file_name.endswith(".csv"):
+                manifest_file_name = manifest_file_name.replace(".csv", ".txt")
+            elif not manifest_file_name.endswith(".txt"):
+                manifest_file_name += ".txt"
+
+    if not manifest_file_name:
+        logger.warning("Could not determine manifest file name for Oracle collection in %s", directory)
+        return
+
+    output_path = output_dir.joinpath(manifest_file_name)
+
+    # Oracle manifests include .csv, .log and .txt files
+    files_to_hash = sorted(
+        list(path.glob("*.csv")) + list(path.glob("*.log")) + list(path.glob("*.txt"))
+    )
+
+    with output_path.open("w", encoding="utf-8") as f:
+        for matched_file in files_to_hash:
+            if "opdb__manifest" in matched_file.name:
+                continue
+
+            # Calculate MD5 hash of file content
+            file_hash = hashlib.md5(matched_file.read_bytes()).hexdigest()
+
+            # For the masked collection, we want the masked filename in the manifest
+            masked_file = _mask_file_collection_key(matched_file)
+
+            # Format: oracle|md5_hash|filename
+            line = f"oracle|{file_hash}|{masked_file.name}\n"
             f.write(line)
 
 
