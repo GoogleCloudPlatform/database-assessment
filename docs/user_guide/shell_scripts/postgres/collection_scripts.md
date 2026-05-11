@@ -3,7 +3,7 @@
 
 !!! note
     For Postgres homogeneous migrations, please upload the collections files to Google Migration Center
-!!!
+
 
 The workload collection supports Postgres 12 and newer. Older versions of Postgres are not currently supported.
 

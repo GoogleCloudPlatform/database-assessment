@@ -44,7 +44,7 @@ unzip db-migration-assessment-collection-scripts-oracle.zip
 
 If the extract will be run by a user that does not have SYSDBA privilege, connect to the database
 as a user with SYSDBA privileges and create the user if needed. If this is a multi-tenant database,
-create the user as a common user in the root container. The Dma_collector does not currently support
+create the user as a common user in the root container. The DMA collector does not currently support
 running in individual pluggable databases.
 
 For non-CDB databases:
@@ -86,7 +86,7 @@ SQL> Please enter the DB Local Username(Or CDB Username) to receive all required
 SQL> Please enter Y or N to allow or disallow use of the Tuning and Diagnostic Pack (AWR) data (Y) Y
 ```
 
-The grant_wrapper script will grant privileges required and will output a list of what has been granted.
+The grants_wrapper script will grant privileges required and will output a list of what has been granted.
 
 Launch the collection script: (Note that the parameter names have changed from earlier versions of the collector)
 
@@ -94,7 +94,7 @@ Launch the collection script: (Note that the parameter names have changed from e
     - If this is an Oracle RAC and/or PDB environment you just need to run it once per database. No need to run in each PDB or in each Oracle RAC instance.
     - If you are licensed for the Oracle Diagnostic pack, specify AWR for the --statsSrc parameter.
     - If you are NOT licensed for the Oracle Diagnostics pack, specify STATSPACK for the --statsSrc parameter.
-    - If you do not want to collect performance data, specife NONE for the --statsSrc parameter. This will block the ability to provide sizing and pricing estimates.
+    - If you do not want to collect performance data, specify NONE for the --statsSrc parameter. This will block the ability to provide sizing and pricing estimates.
 
     - Parameters
 
