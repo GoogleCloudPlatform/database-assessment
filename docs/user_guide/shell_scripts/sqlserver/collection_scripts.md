@@ -85,26 +85,7 @@ In order to begin running the Database Migration Assessment Collection process, 
 
 ### Database Privileges
 
-This utility must be run as a database user with privileges to SELECT from certain data dictionary views. The scripts "createUserForAssessmentWithSQLAuth.bat" and "createUserForAssessmentWithWindowsAuth.bat" are supplied to create the required user and privileges. Instructions for executing it are below. Alternatively, you may use a user that already has following privileges:
-
-In the master database:
-
-```sql
-  GRANT VIEW SERVER STATE TO [username];
-  GRANT SELECT ALL USER SECURABLES TO [username];
-  GRANT VIEW ANY DATABASE TO [username];
-  GRANT VIEW ANY DEFINITION TO [username];
-  GRANT VIEW SERVER STATE TO [username];
-  GRANT VIEW DATABASE STATE TO [username];
-```
-
-In addition the user must also be mapped to all user databases, tempdb and master databases along with the following grant:
-
-```sql
-  use [user database name];
-  CREATE USER [username] FOR LOGIN [username];
-  GRANT VIEW DATABASE STATE TO [username];
-```
+This utility must be run as a database user with appropriate privileges. Please see the [permissions.md](permissions.md) file for detailed information on the minimum permissions required and instructions for using the supplied user creation scripts.
 
 ### Perfmon Requirements
 
