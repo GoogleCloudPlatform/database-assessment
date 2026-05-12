@@ -22,7 +22,7 @@ grant connect, create session to c##dmacollector;
 
 ## Grants
 
-From the directory you extracted the collector scripts, change to the sql/setup directory:
+From the directory where you extracted the collector scripts, change to the sql/setup directory:
 ```shell
 cd sql/setup
 ```

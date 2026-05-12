@@ -4,6 +4,43 @@ The collection scripts can be executed with any DBA account. Alternately, a new 
 
 ---
 
+## Create User
+
+If an existing user with SYSADMIN privileges will not be used, from a command prompt, execute either of the following scripts depending on what type of authentication you currently use for your SYSADMIN user.
+
+#### SQL Authentication
+
+```powershell
+
+.\createUserForAssessmentWithSQLAuth.bat
+
+The following parameters can be specified:
+    -serverName  ** Required
+    -serverUserName  ** Required
+    -serverUserPass  ** Optional at script level.  Will be prompted if not provided
+
+        and
+
+    -collectionUserName  ** Required if a custom username will be used
+    -collectionUserPass  ** Optional at script level.  Will be prompted if not provided
+```
+
+#### Windows Authentication
+
+```powershell
+.\createUserForAssessmentWithWindowsAuth.bat
+
+The following parameters can be specified:
+    -serverName  ** Required
+    -collectionUserName  ** Required if a custom username will be used
+    -collectionUserPass  ** Optional at script level.  Will be prompted if not provided
+
+```
+
+---
+
+## Grants
+
 #### Grants Required
 
 The user creation scripts will grant the appropriate permissions. If it is desired to utilize an existing user, the following grants must be granted. From the master database:
@@ -39,41 +76,6 @@ In addition the user must also be mapped to all user databases, tempdb and maste
     use [user database name];
     CREATE USER [username] FOR LOGIN [username];
     GRANT VIEW DATABASE STATE TO [username];
-```
-
----
-
-## Create User
-
-If an existing user with SYSADMIN privileges will not be used, from a command prompt, execute either of the following scripts depending on what type of authentication you currently use for your SYSADMIN user.
-
-#### SQL Authentication
-
-```powershell
-
-.\createUserForAssessmentWithSQLAuth.bat
-
-The following parameters can be specified:
-    -serverName  ** Required
-    -serverUserName  ** Required
-    -serverUserPass  ** Optional at script level.  Will be prompted if not provided
-
-        and
-
-    -collectionUserName  ** Required if a custom username will be used
-    -collectionUserPass  ** Optional at script level.  Will be prompted if not provided
-```
-
-#### Windows Authentication
-
-```powershell
-.\createUserForAssessmentWithWindowsAuth.bat
-
-The following parameters can be specified:
-    -serverName  ** Required
-    -collectionUserName  ** Required if a custom username will be used
-    -collectionUserPass  ** Optional at script level.  Will be prompted if not provided
-
 ```
 
 ---
