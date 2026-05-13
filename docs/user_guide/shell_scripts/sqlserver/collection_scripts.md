@@ -31,8 +31,8 @@ If needed sqlcmd can be downloaded from [here](https://learn.microsoft.com/en-us
 
 !!! note
 
-    Ensure that the `ODBC` version of `sqlcmd` is used
-    Ensure that `sqlcmd` is also in your `$PATH` variable
+    - Ensure that the `ODBC` version of `sqlcmd` is used.
+    - Ensure that `sqlcmd` is also in your `$PATH` variable.
 
 ## Execute collection script
 
@@ -85,7 +85,7 @@ In order to begin running the Database Migration Assessment Collection process, 
 
 ### Database Privileges
 
-This utility must be run as a database user with appropriate privileges. Please see the [permissions.md](permissions.md) file for detailed information on the minimum permissions required and instructions for using the supplied user creation scripts.
+This utility must be run as a database user with appropriate privileges. Please see the [Permissions Required](permissions.md) file for detailed information on the minimum permissions required and instructions for using the supplied user creation scripts.
 
 ### Perfmon Requirements
 
@@ -253,15 +253,14 @@ This is recommended if you plan to upload the results to the Migration Center.
 
 ## Upload Collections
 
-- An archive of the extracted results will be created in the directory collector/output.
-- The full path and file name will be displayed on completion.
-- Return the listed file to Google for processing
+Upon completion, the tool will automatically create an archive of the extracted metrics for upload into the DMA application.
 
-!!! IMPORTANT Do not modify the name or the contents of the zip file without consultation from Google.
+!!! important
+    Do not modify the name or the contents of the zip file without consultation from Google.
 
 ## License Requirements
 
-!!! IMPORTANT Google Database Migration Assessment does not require any additional licensing with regards to Microsoft SQL Server.
+This tool does not require any additional licensing with regards to Microsoft SQL Server.
 
 ## Digitally Signing Powershell Scripts
 
@@ -310,7 +309,7 @@ Occasionally, organizational security policies require that Powershell scripts b
 
 ## License
 
-Copyright 2025 Google LLC
+Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
