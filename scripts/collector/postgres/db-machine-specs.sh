@@ -74,24 +74,28 @@ else
         exit 0
     fi
     setScript=$(cat <<'EOF'
-        echo "hostName=$hostName"
-        echo "physicalCpuCount=$physicalCpuCount"
-        echo "logicalCpuCount=$logicalCpuCount"
-        echo "memoryMB=$memoryMB"
-        echo "totalSizeBytes=$totalSizeBytes"
-        echo "usedSizeBytes=$usedSizeBytes"
-        echo "primaryMac=$primaryMac"
-        echo "ipAddresses=$ipAddresses"
+        echo
+        echo "DMA_hostName=${hostName}"
+        echo "DMA_physicalCpuCount=${physicalCpuCount}"
+        echo "DMA_logicalCpuCount=${logicalCpuCount}"
+        echo "DMA_memoryMB=${memoryMB}"
+        echo "DMA_totalSizeBytes=${totalSizeBytes}"
+        echo "DMA_usedSizeBytes=${usedSizeBytes}"
+        echo "DMA_primaryMac=${primaryMac}"
+        echo "DMA_ipAddresses=${ipAddresses}"
 EOF
 )
-    output=$(ssh "$userName@$machine_name" "${@:7}" "$coreScript; $setScript") || { echo "SSH to $machine_name failed"; exit 1; }
-    source <(echo "$output")
+    output=$(ssh "${@:7}" "${userName}@${machine_name}" "${coreScript}; ${setScript}") || { echo "SSH to ${machine_name} failed"; exit 1; }
+    for outvar in "${output}"
+    do
+      export ${outvar}
+    done
 fi
 
 
 # Writing result to output
-csvData="\"$pkey\"|\"$dmaSourceId\"|\"$dmaManualId\"|\"$hostName\"|$physicalCpuCount|$logicalCpuCount|$memoryMB|$totalSizeBytes|$usedSizeBytes|$primaryMac|$ipAddresses"
-echo "$headers" > "$outputPath"
-echo "$csvData" >> "$outputPath"
+csvData="\"${pkey}\"|\"${dmaSourceId}\"|\"${dmaManualId}\"|\"${DMA_hostName}\"|${DMA_physicalCpuCount}|${DMA_logicalCpuCount}|${DMA_memoryMB}|${DMA_totalSizeBytes}|${DMA_usedSizeBytes}|${DMA_primaryMac}|${DMA_ipAddresses}"
+echo "${headers}" > "${outputPath}"
+echo "${csvData}" >> "${outputPath}"
 
 writeLog "Successfully fetched machine HW specs of $machine_name to output: $outputPath"
