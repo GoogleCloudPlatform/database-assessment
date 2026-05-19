@@ -2173,7 +2173,7 @@ def run_masker(input_dir: Path | None = None, output_path: Path | None = None) -
             sys.exit(1)
 
         for collection in collections:
-            logger.info(msg="Found collection %s", collection)
+            logger.info("Found collection %s", collection)
             collection_metadata = _metadata_from_filename(collection)
             fake.date_time = collection_metadata.date_time
             fake.set_collection_key_from_date_time(
