@@ -2529,7 +2529,7 @@ def _generate_mssql_manifest(directory: str | Path, output_file: str = "manifest
             if ("opdb__perfMonLog_" in csv_file.name) or ("Google-DMA-SQLServerDataSet" in csv_file.name):
                 continue
             # Calculate MD5 hash of file content
-            file_hash = hashlib.md5(csv_file.read_bytes()).hexdigest()
+            file_hash = hashlib.md5(csv_file.read_bytes(), usedforsecurity=False).hexdigest()
 
             # For the masked collection, we want the masked filename in the manifest
             masked_file = _mask_file_collection_key(csv_file)
@@ -2577,7 +2577,7 @@ def _generate_oracle_manifest(directory: str | Path, output_file: str = "manifes
                 continue
 
             # Calculate MD5 hash of file content
-            file_hash = hashlib.md5(matched_file.read_bytes()).hexdigest()
+            file_hash = hashlib.md5(matched_file.read_bytes(), usedforsecurity=False).hexdigest()
 
             # For the masked collection, we want the masked filename in the manifest
             masked_file = _mask_file_collection_key(matched_file)
