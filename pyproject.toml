@@ -10,11 +10,6 @@ readme = "README.md"
 requires-python = ">=3.10"
 version = "4.3.46"
 
-[[tool.uv.index]]
-name = "pypi"
-url = "https://pypi.org/simple"
-default = true
-
 # keywords for easier look-up on PyPI
 authors = [
     { name = "Cody Fincher", email = "codyfincher@google.com" },
@@ -87,6 +82,11 @@ server = ["litestar[structlog,jinja]>=2.7.0", "litestar-granian>=0.2.3"]
 
 [project.scripts]
 dma = "dma.cli.main:app"
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true
 
 ######################
 # Build & Versioning #
