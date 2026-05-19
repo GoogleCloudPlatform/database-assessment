@@ -2402,7 +2402,12 @@ def _generate_identity_map_from_rule(
                     if not rule.missing_ok:
                         msg = f"Column position {column_position} out of range for file {collection_file} at line {rn + 1}. Row length: {len(row)}"
                         raise ApplicationError(msg)
-                    logger.warning("Column position %s out of range for file %s at line %s. Skipping.", column_position, collection_file, rn + 1)
+                    logger.warning(
+                        "Column position %s out of range for file %s at line %s. Skipping.",
+                        column_position,
+                        collection_file,
+                        rn + 1,
+                    )
                     continue
 
                 if (rule.mask_type == DataMaskTypes.DATABASE_NAME) and (
@@ -2456,10 +2461,47 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
         column_position = rule.column_position
         if Version(collection_metadata.script_version) < Version("4.3.15") and rule.column_position < -2:
             column_position += 2
-        _write_mapped_files(rule, collection_file, identity_map, is_app_cloud, delimiter, skip_header, t, data_to_mask, temp_file, column_position)
+        _write_mapped_files(
+            rule,
+            collection_file,
+            identity_map,
+            is_app_cloud,
+            delimiter,
+            skip_header,
+            t,
+            data_to_mask,
+            temp_file,
+            column_position,
+        )
         shutil.move(t.name, collection_file)
 
-def _write_mapped_files(rule, collection_file, identity_map, is_app_cloud, delimiter, skip_header, t, data_to_mask, temp_file, column_position):
+
+def _write_mapped_files(
+    rule: DataMaskRule,
+    collection_file: Path,
+    identity_map: Dict[str, str],
+    is_app_cloud: bool,
+    delimiter: str,
+    skip_header: bool,
+    t: Any,
+    data_to_mask: Any,
+    temp_file: Any,
+    column_position: int,
+) -> None:
+    """Process and write masked/mapped rows to the target file.
+
+    Args:
+        rule (DataMaskRule): Data masking rule to apply.
+        collection_file (Path): Path of the file being processed.
+        identity_map (Dict[str, str]): Dict of original to masked key mappings.
+        is_app_cloud (bool): Whether this is an app_cloud key-value format.
+        delimiter (str): The column delimiter to use.
+        skip_header (bool): Whether to skip masking the first row.
+        t (Any): File stream object for raw text output.
+        data_to_mask (Any): Reader object to iterate over source rows.
+        temp_file (Any): CSV writer object for standard table output.
+        column_position (int): Index of the column being masked.
+    """
     for rn, row in enumerate(data_to_mask):
         orig_row = list(row)
         if is_app_cloud:
@@ -2468,7 +2510,7 @@ def _write_mapped_files(rule, collection_file, identity_map, is_app_cloud, delim
             row = [c.strip() for c in row]
 
         if (rn > 0 or not skip_header) and (len(row) > 0):
-                # Bounds check for column_position
+            # Bounds check for column_position
             if column_position >= len(row) or (column_position < 0 and abs(column_position) > len(row)):
                 if not rule.missing_ok:
                     msg = f"Column position {column_position} out of range for file {collection_file} at line {rn + 1}. Row length: {len(row)}"
@@ -2480,9 +2522,9 @@ def _write_mapped_files(rule, collection_file, identity_map, is_app_cloud, delim
                 continue
 
             if not (
-                    (rule.mask_type == DataMaskTypes.DATABASE_NAME)
-                    and (row[column_position] in {"master", "model", "msdb", "tempdb", "PDB$SEED", "CDB$ROOT"})
-                ):
+                (rule.mask_type == DataMaskTypes.DATABASE_NAME)
+                and (row[column_position] in {"master", "model", "msdb", "tempdb", "PDB$SEED", "CDB$ROOT"})
+            ):
                 if (rule.row_filter is None) or (len(rule.row_filter) == 0):
                     prefix = "BIN$" if row[column_position].startswith("BIN$") else ""
                     if not _exclude_owner_from_masking(row[column_position]):
@@ -2491,11 +2533,11 @@ def _write_mapped_files(rule, collection_file, identity_map, is_app_cloud, delim
                     row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
 
         if is_app_cloud:
-                # Reconstruct with original padding if possible
+            # Reconstruct with original padding if possible
             if len(orig_row) >= 2:
                 key_part = orig_row[0]
-                    # Restore the key exactly as it was (with its spaces)
-                    # and write the masked value
+                # Restore the key exactly as it was (with its spaces)
+                # and write the masked value
                 t.write(f"{key_part}:{row[1]}\n")
             else:
                 t.write(delimiter.join(row) + "\n")
@@ -2570,9 +2612,7 @@ def _generate_oracle_manifest(directory: str | Path, output_file: str = "manifes
     output_path = output_dir.joinpath(manifest_file_name)
 
     # Oracle manifests include .csv, .log and .txt files
-    files_to_hash = sorted(
-        list(path.glob("*.csv")) + list(path.glob("*.log")) + list(path.glob("*.txt"))
-    )
+    files_to_hash = sorted(list(path.glob("*.csv")) + list(path.glob("*.log")) + list(path.glob("*.txt")))
 
     with output_path.open("w", encoding="utf-8") as f:
         for matched_file in files_to_hash:
@@ -2588,6 +2628,7 @@ def _generate_oracle_manifest(directory: str | Path, output_file: str = "manifes
             # Format is : oracle|md5_hash|filename
             line = f"oracle|{file_hash}|{masked_file.name}\n"
             f.write(line)
+
 
 def _rewrite_mssql_collector_log(logfile_name: Path, zipfile_name: str) -> None:
     """Rewrites the collector log file to include only the masked zipfile name.
@@ -2642,7 +2683,9 @@ def _package_collection(
     with zf.ZipFile(archive_file, "w", compression=zf.ZIP_DEFLATED, compresslevel=9) as f:
         for matched_file in matched_files:
             # Exclude the Permon log fileq
-            if ("opdb__perfMonLog_" not in str(matched_file)) and ("Google-DMA-SQLServerDataSet" not in str(object=matched_file)):
+            if ("opdb__perfMonLog_" not in str(matched_file)) and (
+                "Google-DMA-SQLServerDataSet" not in str(object=matched_file)
+            ):
                 masked_file = _mask_file_collection_key(matched_file)
                 identity_map[matched_file.name] = masked_file.name
 
@@ -2652,7 +2695,7 @@ def _package_collection(
                 if "opdb__defines" in str(matched_file):
                     _rewrite_oracle_collector_log(matched_file, masked_collection_file.stem + ".zip")
 
-                if ("opdb_mssql_sqlErrorlog" not in str(matched_file)):
+                if "opdb_mssql_sqlErrorlog" not in str(matched_file):
                     f.write(matched_file, f"{masked_file.stem}{masked_file.suffix}")
 
     with key_file.open(mode="w", encoding="utf-8") as f:
