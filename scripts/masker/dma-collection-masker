@@ -2456,48 +2456,51 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
         column_position = rule.column_position
         if Version(collection_metadata.script_version) < Version("4.3.15") and rule.column_position < -2:
             column_position += 2
-        for rn, row in enumerate(data_to_mask):
-            orig_row = list(row)
-            if is_app_cloud:
-                if len(row) >= 2:
-                    row = [row[0], ":".join(row[1:])]
-                row = [c.strip() for c in row]
+        _write_mapped_files(rule, collection_file, identity_map, is_app_cloud, delimiter, skip_header, t, data_to_mask, temp_file, column_position)
+        shutil.move(t.name, collection_file)
 
-            if (rn > 0 or not skip_header) and (len(row) > 0):
+def _write_mapped_files(rule, collection_file, identity_map, is_app_cloud, delimiter, skip_header, t, data_to_mask, temp_file, column_position):
+    for rn, row in enumerate(data_to_mask):
+        orig_row = list(row)
+        if is_app_cloud:
+            if len(row) >= 2:
+                row = [row[0], ":".join(row[1:])]
+            row = [c.strip() for c in row]
+
+        if (rn > 0 or not skip_header) and (len(row) > 0):
                 # Bounds check for column_position
-                if column_position >= len(row) or (column_position < 0 and abs(column_position) > len(row)):
-                    if not rule.missing_ok:
-                        msg = f"Column position {column_position} out of range for file {collection_file} at line {rn + 1}. Row length: {len(row)}"
-                        raise ApplicationError(msg)
-                    if is_app_cloud:
-                        t.write(delimiter.join(orig_row) + "\n")
-                    else:
-                        temp_file.writerow(orig_row)
-                    continue
+            if column_position >= len(row) or (column_position < 0 and abs(column_position) > len(row)):
+                if not rule.missing_ok:
+                    msg = f"Column position {column_position} out of range for file {collection_file} at line {rn + 1}. Row length: {len(row)}"
+                    raise ApplicationError(msg)
+                if is_app_cloud:
+                    t.write(delimiter.join(orig_row) + "\n")
+                else:
+                    temp_file.writerow(orig_row)
+                continue
 
-                if not (
+            if not (
                     (rule.mask_type == DataMaskTypes.DATABASE_NAME)
                     and (row[column_position] in {"master", "model", "msdb", "tempdb", "PDB$SEED", "CDB$ROOT"})
                 ):
-                    if (rule.row_filter is None) or (len(rule.row_filter) == 0):
-                        prefix = "BIN$" if row[column_position].startswith("BIN$") else ""
-                        if not _exclude_owner_from_masking(row[column_position]):
-                            row[column_position] = prefix + identity_map.get(row[column_position], "~~UNMAPPED~~")
-                    elif any(check_val in rule.row_filter for check_val in row):
-                        row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
+                if (rule.row_filter is None) or (len(rule.row_filter) == 0):
+                    prefix = "BIN$" if row[column_position].startswith("BIN$") else ""
+                    if not _exclude_owner_from_masking(row[column_position]):
+                        row[column_position] = prefix + identity_map.get(row[column_position], "~~UNMAPPED~~")
+                elif any(check_val in rule.row_filter for check_val in row):
+                    row[column_position] = identity_map.get(row[column_position], "~~UNMAPPED~~")
 
-            if is_app_cloud:
+        if is_app_cloud:
                 # Reconstruct with original padding if possible
-                if len(orig_row) >= 2:
-                    key_part = orig_row[0]
+            if len(orig_row) >= 2:
+                key_part = orig_row[0]
                     # Restore the key exactly as it was (with its spaces)
                     # and write the masked value
-                    t.write(f"{key_part}:{row[1]}\n")
-                else:
-                    t.write(delimiter.join(row) + "\n")
+                t.write(f"{key_part}:{row[1]}\n")
             else:
-                temp_file.writerow(row)
-        shutil.move(t.name, collection_file)
+                t.write(delimiter.join(row) + "\n")
+        else:
+            temp_file.writerow(row)
 
 
 def _generate_mssql_manifest(directory: str | Path, output_file: str = "manifest.csv") -> None:
