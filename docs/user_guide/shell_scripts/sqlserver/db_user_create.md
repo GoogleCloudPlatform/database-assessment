@@ -37,6 +37,6 @@ The following parameters can be specified:
 
 ## Grants
 
-The supplied user creation scripts will automatically grant all appropriate permissions to the new database user during execution. 
+The supplied user creation scripts will automatically grant all appropriate permissions to the new database user during execution.
 
 If you choose to utilize an existing user instead, please see the dedicated [Permissions Required](permissions.md) guide for the exact lists of data dictionary views and minimum server state permissions required across various SQL Server versions.
