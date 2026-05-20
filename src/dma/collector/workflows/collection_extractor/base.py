@@ -11,43 +11,70 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Collection extractor workflow using SQLSpec ADBC.
+
+This module provides the main collection workflow that extracts data from
+source databases using SQLSpec ADBC for zero-copy Arrow data transfer.
+"""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from rich.table import Table
-from sqlalchemy.orm import Session
 
 from dma.__about__ import __version__ as current_version
-from dma.collector.dependencies import provide_collection_query_manager
+from dma.collector.services.postgres import PostgresCollectionService
 from dma.collector.workflows.base import BaseWorkflow
-from dma.lib.db.base import SourceInfo, get_engine
+from dma.collector.workflows.collection_extractor._postgres import print_summary_postgres
+from dma.lib.db.config import SourceInfo, create_postgres_adbc_config
 from dma.lib.exceptions import ApplicationError
 
 if TYPE_CHECKING:
-    from duckdb import DuckDBPyConnection
     from rich.console import Console
+    from sqlspec.adapters.duckdb import DuckDBDriver
 
-    from dma.collector.query_managers.base import CanonicalQueryManager, CollectionQueryManager
+    from dma.collector.query_managers.base import CanonicalQueryManager
 
 
 class CollectionExtractor(BaseWorkflow):
+    """Collection extractor workflow.
+
+    Orchestrates the full data collection process from source databases
+    to DuckDB using SQLSpec for database connectivity.
+    """
+
     def __init__(
         self,
-        local_db: DuckDBPyConnection,
+        driver: "DuckDBDriver",
         src_info: SourceInfo,
         database: str,
         canonical_query_manager: CanonicalQueryManager,
         console: Console,
         collection_identifier: str | None,
+        single_db: bool = False,
     ) -> None:
+        """Initialize the collection extractor.
+
+        Args:
+            driver: SQLSpec DuckDB driver for local data storage.
+            src_info: Source database connection information.
+            database: Target database name.
+            canonical_query_manager: Manager for canonical DuckDB queries.
+            console: Rich console for output.
+            collection_identifier: Optional manual collection identifier.
+            single_db: When True, restricts per-database collection to the provided database.
+        """
         self.src_info = src_info
         self.database = database
         self.collection_identifier = collection_identifier
-        super().__init__(local_db, canonical_query_manager, src_info.db_type, console)
+        self.single_db = single_db
+        self.db_version: str | None = None
+        super().__init__(driver, canonical_query_manager, src_info.db_type, console)
 
     def execute(self) -> None:
+        """Execute the full collection workflow."""
         super().execute()
         execution_id = (
             f"{self.src_info.db_type}_{current_version!s}_{datetime.now(tz=timezone.utc).strftime('%y%m%d%H%M%S')}"
@@ -56,70 +83,118 @@ class CollectionExtractor(BaseWorkflow):
         self.collect_db_specific_data(execution_id)
 
     def collect_data(self, execution_id: str) -> None:
-        sync_engine = get_engine(self.src_info, self.database)
-        with Session(sync_engine) as db_session:
-            collection_manager = next(
-                provide_collection_query_manager(
-                    db_session=db_session, execution_id=execution_id, manual_id=self.collection_identifier
-                )
+        """Collect main data from the source database.
+
+        Uses SQLSpec ADBC for PostgreSQL to enable zero-copy Arrow
+        data transfer.
+
+        Args:
+            execution_id: Unique execution identifier.
+        """
+        if self.src_info.db_type == "POSTGRES":
+            self._collect_postgres_data(execution_id)
+        else:
+            msg = f"{self.src_info.db_type} collection is not yet migrated to SQLSpec."
+            raise ApplicationError(msg)
+
+    def _collect_postgres_data(self, execution_id: str) -> None:
+        """Collect data from PostgreSQL using ADBC.
+
+        Args:
+            execution_id: Unique execution identifier.
+        """
+        config = create_postgres_adbc_config(self.src_info, self.database)
+
+        with config.provide_session() as pg_driver:
+            service = PostgresCollectionService(
+                driver=pg_driver,
+                execution_id=execution_id,
+                manual_id=self.collection_identifier,
             )
-            self.extract_collection(collection_manager)
-            self.extract_extended_collection(collection_manager)
+            collection = service.execute_collection_queries()
+            self.import_to_table(collection)
+            extended_collection = service.execute_extended_collection_queries()
+            self.import_to_table(extended_collection)
             self.process_collection()
-            self.db_version = collection_manager.get_db_version()
-        sync_engine.dispose()
+            self.db_version = service.get_db_version()
 
     def collect_db_specific_data(self, execution_id: str) -> None:
-        dbs = self.get_all_dbs()
+        """Collect per-database data.
+
+        Executes queries that must run against each database in the instance.
+
+        Args:
+            execution_id: Unique execution identifier.
+        """
+        if self.src_info.db_type != "POSTGRES":
+            return
+
+        dbs = {self.database} if self.single_db else self.get_all_dbs()
         for db in dbs:
-            async_engine = get_engine(src_info=self.src_info, database=db)
-            with Session(async_engine) as db_session:
-                collection_manager = next(
-                    provide_collection_query_manager(
-                        db_session=db_session, execution_id=execution_id, manual_id=self.collection_identifier
-                    )
+            config = create_postgres_adbc_config(self.src_info, db)
+            with config.provide_session() as pg_driver:
+                service = PostgresCollectionService(
+                    driver=pg_driver,
+                    execution_id=execution_id,
+                    manual_id=self.collection_identifier,
                 )
-                db_collection = collection_manager.execute_per_db_collection_queries()
+                # Set version from main collection
+                service.db_version = self.db_version
+                db_collection = service.execute_per_db_collection_queries()
                 self.import_to_table(db_collection)
-            async_engine.dispose()
 
     def get_all_dbs(self) -> set[str]:
-        result = self.local_db.sql("""
-            select database_name from extended_collection_postgres_all_databases
-        """).fetchall()
-        return {row[0] for row in result}
+        """Get all database names from the extended collection.
+
+        Returns:
+            Set of database names.
+        """
+        result = self.driver.select("select database_name from extended_collection_postgres_all_databases")
+        return {row["database_name"] for row in result}
 
     def get_db_version(self) -> str:
+        """Get the database version.
+
+        Returns:
+            Database version string.
+
+        Raises:
+            ApplicationError: If version was not set.
+        """
         if self.db_version is None:
-            msg = "Database Version was not set.  Ensure the initialization step complete successfully."
+            msg = "Database Version was not set. Ensure the initialization step completed successfully."
             raise ApplicationError(msg)
         return self.db_version
 
-    def extract_collection(self, collection_query_manager: CollectionQueryManager) -> None:
-        collection = collection_query_manager.execute_collection_queries()
+    def extract_collection(self, service: PostgresCollectionService) -> None:
+        """Extract main collection data.
+
+        Args:
+            service: Collection service instance.
+        """
+        collection = service.execute_collection_queries()
         self.import_to_table(collection)
 
-    def extract_extended_collection(self, collection_query_manager: CollectionQueryManager) -> None:
-        extended_collection = collection_query_manager.execute_extended_collection_queries()
+    def extract_extended_collection(self, service: PostgresCollectionService) -> None:
+        """Extract extended collection data.
+
+        Args:
+            service: Collection service instance.
+        """
+        extended_collection = service.execute_extended_collection_queries()
         self.import_to_table(extended_collection)
 
     def process_collection(self) -> None:
-        """Process Collections"""
+        """Process collected data."""
 
     def print_summary(self) -> None:
-        """Print Summary of the Migration Readiness Assessment."""
+        """Print summary of the collection."""
         table = Table(show_header=False)
         table.add_column("title", style="cyan", width=80)
         table.add_row("Collection Summary")
         self.console.print(table)
         if self.db_type == "POSTGRES":
-            from dma.collector.workflows.collection_extractor._postgres import print_summary_postgres  # noqa: PLC0415
-
-            print_summary_postgres(console=self.console, local_db=self.local_db, manager=self.canonical_query_manager)
-        elif self.db_type == "MYSQL":
-            from dma.collector.workflows.collection_extractor._mysql import print_summary_mysql  # noqa: PLC0415
-
-            print_summary_mysql(console=self.console, local_db=self.local_db, manager=self.canonical_query_manager)
+            print_summary_postgres(console=self.console, driver=self.driver, manager=self.canonical_query_manager)
         else:
             msg = f"{self.db_type} is not implemented."
             raise ApplicationError(msg)

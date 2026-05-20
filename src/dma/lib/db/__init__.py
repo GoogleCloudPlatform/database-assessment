@@ -11,25 +11,38 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Database connectivity layer using SQLSpec.
+
+This module provides the database abstraction layer for DMA Collector using
+SQLSpec for unified database access. Key components:
+
+- config: Configuration factories for database connections
+- manager: Global SQLSpec instance and query management
+- local: DuckDB connection management for local analysis
+"""
+
 from __future__ import annotations
 
-import contextlib
+from dma.lib.db.config import (
+    SourceInfo,
+    create_duckdb_config,
+    create_postgres_adbc_config,
+)
+from dma.lib.db.local import get_duckdb_driver
+from dma.lib.db.manager import (
+    get_available_queries,
+    get_sql,
+    get_sqlspec,
+    reset_sqlspec,
+)
 
-import aiosql
-
-with contextlib.suppress(ImportError):
-    from dma.lib.db.adapters.aioodbc import AIOODBCAdapter
-
-    aiosql.register_adapter("aioodbc", AIOODBCAdapter)  # type: ignore[arg-type]
-with contextlib.suppress(ImportError):
-    from dma.lib.db.adapters.oracledb import AsyncOracleDBAdapter
-
-    aiosql.register_adapter("async_oracledb", AsyncOracleDBAdapter)  # type: ignore[arg-type]
-with contextlib.suppress(ImportError):
-    from dma.lib.db.adapters.asyncmy import AsyncMYAdapter
-
-    aiosql.register_adapter("asyncmy", AsyncMYAdapter)  # type: ignore[arg-type]
-with contextlib.suppress(ImportError):
-    from dma.lib.db.adapters.asyncpg import AsyncPGAdapter
-
-    aiosql.register_adapter("asyncpg", AsyncPGAdapter)  # type: ignore[arg-type]
+__all__ = (
+    "SourceInfo",
+    "create_duckdb_config",
+    "create_postgres_adbc_config",
+    "get_available_queries",
+    "get_duckdb_driver",
+    "get_sql",
+    "get_sqlspec",
+    "reset_sqlspec",
+)

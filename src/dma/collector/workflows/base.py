@@ -11,33 +11,43 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Base workflow for DuckDB data processing using SQLSpec."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
-import polars as pl
+from dma.collector.util import CollectionFileWriter
 
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from duckdb import DuckDBPyConnection
+    import pyarrow as pa
     from rich.console import Console
+    from sqlspec.adapters.duckdb import DuckDBDriver
 
     from dma.collector.query_managers.base import CanonicalQueryManager
 
 
 class BaseWorkflow:
-    """A collection of tasks that interact with DuckDB"""
+    """A collection of tasks that interact with DuckDB via SQLSpec driver."""
 
     def __init__(
         self,
-        local_db: DuckDBPyConnection,
+        driver: "DuckDBDriver",
         canonical_query_manager: CanonicalQueryManager,
-        db_type: Literal["POSTGRES", "MYSQL", "ORACLE", "MSSQL"],
+        db_type: Literal["POSTGRES"],
         console: Console,
     ) -> None:
-        """Initialize a workflow on a local duckdb instance."""
-        self.local_db = local_db
+        """Initialize a workflow with a SQLSpec DuckDB driver.
+
+        Args:
+            driver: SQLSpec DuckDB driver for database operations.
+            canonical_query_manager: Manager for canonical DuckDB queries.
+            db_type: Source database type (currently only POSTGRES).
+            console: Rich console for output.
+        """
+        self.driver = driver
         self.console = console
         self.db_type = db_type
         self.canonical_query_manager = canonical_query_manager
@@ -46,24 +56,65 @@ class BaseWorkflow:
         """Execute Workflow"""
         self.canonical_query_manager.execute_ddl_scripts()
 
-    def import_to_table(self, data: dict[str, list[dict]]) -> None:
-        """Load a dictionary of result sets into duckdb.
+    def import_to_table(self, data: "dict[str, pa.Table]") -> None:
+        """Load Arrow tables into DuckDB via zero-copy transfer.
 
         The key of the dictionary becomes the table name in the database.
+        Uses SQLSpec's load_from_arrow for efficient Arrow data transfer.
+
+        Args:
+            data: Dictionary mapping table names to Arrow tables.
         """
-        for table_name, table_data in data.items():
-            if len(table_data) > 0:
-                column_names = table_data[0].keys()
-                self.local_db.register(
-                    f"obj_{table_name}", pl.from_dicts(table_data, strict=False, infer_schema_length=10000)
-                )
-                self.local_db.execute(
-                    f"insert into {table_name}({', '.join(column_name for column_name in column_names)}) select {', '.join(column_name for column_name in column_names)} from obj_{table_name}"  # noqa: S608
-                )
+        for table_name, arrow_table in data.items():
+            if arrow_table.num_rows > 0:
+                self.driver.load_from_arrow(table_name, arrow_table)
 
-                self.local_db.execute(f"drop view obj_{table_name}")
+    def dump_database(self, export_path: "Path", delimiter: str = "|") -> None:
+        """Export the entire database with DDLs and data as CSV.
 
-    def dump_database(self, export_path: Path, delimiter: str = "|") -> None:
-        """Export the entire database with DDLs and data as CSV"""
-        self.local_db.execute(f"export database '{export_path!s}' (format csv, delimiter '{delimiter}')")
+        Args:
+            export_path: Directory path for exported files.
+            delimiter: CSV delimiter character.
+        """
+        self.driver.execute(f"EXPORT DATABASE '{export_path!s}' (FORMAT CSV, DELIMITER '{delimiter}')")
         self.console.print(f"Database exported to '{export_path!s}'")
+
+    def generate_collection_zip(
+        self,
+        output_dir: "Path",
+        db_version: str = "",
+        dma_version: str = "4.3.45",
+        hostname: str = "localhost",
+        port: int = 5432,
+        database: str = "postgres",
+    ) -> "Path":
+        """Generate a collection ZIP file compatible with shell script output.
+
+        Creates a ZIP archive containing CSV exports of all collection tables,
+        a manifest file with MD5 checksums, and metadata files. The output
+        format matches the shell script collector for compatibility with
+        downstream processing tools.
+
+        Args:
+            output_dir: Directory for output ZIP file.
+            db_version: Source database version number (e.g., "150000").
+            dma_version: DMA collector version string.
+            hostname: Source database hostname.
+            port: Source database port.
+            database: Source database name.
+
+        Returns:
+            Path to created ZIP file.
+        """
+        writer = CollectionFileWriter(
+            driver=self.driver,
+            db_type=self.db_type,
+            db_version=db_version,
+            dma_version=dma_version,
+            hostname=hostname,
+            port=port,
+            database=database,
+        )
+        zip_path = writer.create_collection_zip(output_dir)
+        self.console.print(f"Collection ZIP created: {zip_path}")
+        return zip_path

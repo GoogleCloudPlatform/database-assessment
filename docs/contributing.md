@@ -32,3 +32,12 @@ All submissions, including submissions by project members, require review. We
 use GitHub pull requests for this purpose. Consult
 [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
 information on using pull requests.
+
+### Testing expectations
+
+- If you modify collection scripts under `scripts/collector/`, run the collection
+  script tests: `uv run pytest -m script_test` (Postgres-only is acceptable when
+  other databases are deferred).
+- Add new script tests under `tests/integration/<db>/test_collection_scripts.py`
+  and include the `script_test` marker. See
+  [Development Commands](developer_guide/commands.md) for the full test matrix.

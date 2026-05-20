@@ -224,7 +224,10 @@ EOF
     IFS=$(echo -en "\n\b")
     echo PGPASSWORD="${pass}" ${sql_cmd}  --user=${user}  -h ${host} -w -p ${port} -d "${db}" -t --no-align
     local dblist=$(PGPASSWORD="${pass}" ${sql_cmd}  --user=${user}  -h ${host} -w -p ${port} -d "${db}" -t --no-align <<EOF
-SELECT datname FROM pg_database WHERE datname NOT LIKE 'template%' ORDER BY datname;
+SELECT datname FROM pg_database
+WHERE datname NOT IN ('template0', 'template1', 'rdsadmin', 'cloudsqladmin', 'alloydbadmin', 'alloydbmetadata', 'azure_maintenance', 'azure_sys')
+  AND NOT datistemplate
+ORDER BY datname;
 EOF
     )
 
@@ -569,7 +572,9 @@ local extractor_version="$(get_version)"
       V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
 
       local PGVER=$(echo $dbmajor | cut -c 1-2)
-      if [[ $PGVER -gt 13 ]] && [[ $PGVER -lt 17 ]] ; then
+      if [[ $PGVER -ge 17 ]] ; then
+        PGVER="17"
+      elif [[ ! -d "sql/${PGVER}" ]] ; then
         PGVER="base"
       fi
 

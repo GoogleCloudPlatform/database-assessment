@@ -442,8 +442,8 @@ with src as (
 SELECT onr.nspname, oc.relname
 		FROM pg_namespace onr, pg_class oc
 		WHERE onr.oid = oc.relnamespace
-		  AND oc.relkind = 'r'::"char"
-			AND oc.relpersistence = 'p'::"char"
+		  AND oc.relkind = 'r'::pg_catalog."char"
+			AND oc.relpersistence = 'p'::pg_catalog."char"
 			AND onr.nspname not in ('pg_catalog', 'information_schema', 'pglogical', 'pglogical_origin')
 			AND onr.nspname not like 'pg\_%%'
 			AND (onr.nspname, oc.relname) NOT IN
@@ -456,8 +456,8 @@ SELECT onr.nspname, oc.relname
 			nr.oid = r.relnamespace
 			AND r.oid = c.conrelid
 			AND nc.oid = c.connamespace
-			AND c.contype = 'p'::"char"
-			AND r.relkind = 'r'::"char"
+			AND c.contype = 'p'::pg_catalog."char"
+			AND r.relkind = 'r'::pg_catalog."char"
 			AND NOT pg_catalog.pg_is_other_temp_schema(nr.oid))
 )
 select :PKEY as pkey,
@@ -479,10 +479,10 @@ SELECT nr.nspname, r.relname
 			nr.oid = r.relnamespace
 			AND r.oid = c.conrelid
 			AND nc.oid = c.connamespace
-			AND c.contype = 'p'::"char"
-			AND r.relkind = 'r'::"char"
-			AND r.relpersistence = 'p'::"char"
-			AND r.relreplident IN ('f'::"char", 'n'::"char")
+			AND c.contype = 'p'::pg_catalog."char"
+			AND r.relkind = 'r'::pg_catalog."char"
+			AND r.relpersistence = 'p'::pg_catalog."char"
+			AND r.relreplident IN ('f'::pg_catalog."char", 'n'::pg_catalog."char")
 			AND NOT pg_catalog.pg_is_other_temp_schema(nr.oid)
 			AND nr.nspname not in ('pg_catalog', 'information_schema', 'pglogical', 'pglogical_origin')
 			and nr.nspname not like 'pg\_%%'

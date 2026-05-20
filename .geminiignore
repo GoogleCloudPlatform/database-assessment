@@ -55,3 +55,10 @@ dmypy.json
 .astro
 .vite
 .npmrc
+
+# Allow Gemini to access Flow and agent context
+!.agents/
+!.agents/**
+!AGENTS.md
+!GEMINI.md
+!CLAUDE.md

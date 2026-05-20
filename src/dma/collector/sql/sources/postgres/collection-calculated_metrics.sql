@@ -229,6 +229,9 @@ calculated_metrics as (
   select 'TABLE_COUNT' as metric_name,
     cast(ts.total_table_count as varchar) as metric_value
   from table_summary ts
+  union all
+  select 'IS_RDS' as metric_name,
+    case when exists (select 1 from pg_roles where rolname = 'rdsadmin') then 'true' else 'false' end as metric_value
 ),
 src as (
   select 'CALCULATED_METRIC' as metric_category,
