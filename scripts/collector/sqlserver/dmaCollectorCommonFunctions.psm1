@@ -91,8 +91,17 @@ function checkTimestampFormat {
     elseif ($dateParts[0] -match '[0-9][0-9][-][0-9][0-9][-][0-9][0-9][0-9][0-9]') {
         $formattedTimestamp = $dateParts[0].replace("-", "/") + ' ' + $dateParts[1]
     }
+	elseif ($dateParts[0] -match '[0-9][0-9][0-9][0-9][-][0-9][0-9][-][0-9][0-9]') {
+		$tempDatePart = $dateParts[0] -split "-"
+		$arrangedDate = $tempDatePart[1] + '-' + $tempDatePart[2] + '-' + $tempDatePart[0]
+        if ($dateParts[1] -match '[0-9][0-9]:[0-9][0-9]:[0-9][0-9].[0-9][0-9][0-9]') {
+            $formattedTimestamp = $arrangedDate.replace("-", "/") + ' ' + $dateParts[1]
+        } else {
+            $formattedTimestamp = $arrangedDate.replace("-", "/") + ' ' + $dateParts[1] + '.000'
+        }
+    }
     else {
         $formattedTimestamp = $inputDateString
     }
-    return $formattedTimestamp
+    return [string]$formattedTimestamp
 }

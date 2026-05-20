@@ -45,7 +45,7 @@ In addition the user must also be mapped to all user databases, tempdb and maste
 
 ## Create User
 
-If an existing user with SYSADMIN privileges wil not be used, from a command prompt, execute either of the following scripts depending on what type of authentication you currently use for your SYSADMIN user.
+If an existing user with SYSADMIN privileges will not be used, from a command prompt, execute either of the following scripts depending on what type of authentication you currently use for your SYSADMIN user.
 
 #### SQL Authentication
 

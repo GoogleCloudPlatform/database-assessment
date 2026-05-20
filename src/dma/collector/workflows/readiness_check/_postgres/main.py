@@ -693,11 +693,12 @@ class PostgresReadinessCheckExecutor(ReadinessCheckExecutor):
         result = self.local_db.sql(
             "select foreign_data_wrapper_name as fdw_name, count(distinct table_schema || table_name) as table_count from collection_postgres_table_details where foreign_data_wrapper_name is not null group by foreign_data_wrapper_name"
         ).fetchall()
-        fdws = {row[0] for row in result}
-        fdw_table_count = {int(row[1]) for row in result}
+        fdw_map = {row[0]: int(row[1]) for row in result}
+        fdws = set(fdw_map.keys())
         for c in self.rule_config:
             unsupported_fdws = fdws.difference(c.supported_fdws)
-            for unsupported_fdw, table_count in zip(unsupported_fdws, fdw_table_count):
+            for unsupported_fdw in unsupported_fdws:
+                table_count = fdw_map[unsupported_fdw]
                 self.save_rule_result(
                     c.db_variant,
                     rule_code,

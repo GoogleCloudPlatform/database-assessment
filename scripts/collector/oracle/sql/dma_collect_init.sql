@@ -24,7 +24,7 @@ define dtrange = &v_statsWindow
 define colspr = '|'
 
 -- Set the environment to a known state, overriding any custom configuration.
-@@op_set_sql_env.sql
+@@dma_set_sql_env.sql
 set headsep off
 set trimspool on
 set lines 32000
@@ -210,7 +210,7 @@ BEGIN
   :lv_tblprefix := 'dba';
   :lv_is_container := 0;
   :lv_editionable_col := '''N/A''';
-  :lv_do_pluggable := 'op_collect_nopluggable_info.sql';
+  :lv_do_pluggable := 'dma_collect_nopluggable_info.sql';
   :lv_db_container_col := '''N/A''';
 
   SELECT count(1) INTO cnt FROM dba_tab_columns WHERE owner ='SYS' AND table_name = 'V_$DATABASE' AND column_name = 'CDB';
@@ -219,7 +219,7 @@ BEGIN
     IF cnt > 0 THEN
       :lv_tblprefix := 'cdb' ;
       :lv_is_container := 1;
-      :lv_do_pluggable := 'op_collect_pluggable_info.sql';
+      :lv_do_pluggable := 'dma_collect_pluggable_info.sql';
       :lv_db_container_col := 'cdb';
     END IF;
   END IF;
@@ -426,7 +426,7 @@ BEGIN
 
          -- If we have access to STATSPACK, use STATSPACK as the source of performance metrics
  	 IF cnt = 8 THEN
-           :sp := 'op_collect_statspack.sql';
+           :sp := 'dma_collect_statspack.sql';
            l_tab_name := 'STATS$SNAPSHOT';
            l_col_name := 'snap_time';
          END IF;
@@ -468,7 +468,7 @@ BEGIN
           :v_info_prompt := 'between snaps ' || :minsnap || ' and ' || :maxsnap;
        END IF;
      ELSE
-       -- Get the snapshot range for STATSPACE stats.
+       -- Get the snapshot range for STATSPACK stats.
        THE_SQL := 'SELECT min(snap_time) , max(snap_time) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
        EXECUTE IMMEDIATE the_sql INTO  :minsnaptime, :maxsnaptime USING '&&v_dbid' ;
        IF :minsnaptime IS NULL THEN
@@ -477,7 +477,7 @@ BEGIN
           :maxsnaptime := sysdate;
           :v_info_prompt := 'without performance data';
        ELSE
-          :v_info_prompt := 'between  ' || :minsnaptime || ' and ' || :maxsnaptime;
+          :v_info_prompt := 'using STATSPACK between  ' || :minsnaptime || ' and ' || :maxsnaptime;
        END IF;
      END IF;
   ELSE

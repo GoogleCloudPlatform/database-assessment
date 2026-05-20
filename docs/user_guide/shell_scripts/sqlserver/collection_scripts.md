@@ -86,7 +86,7 @@ In order to begin running the Database Migration Assessment Collection process, 
 
     - An existing user may be used or one can be created using the scripts as shown below.  SYSADMIN is not required although a user with that privilege may be used:
 
-        If an existing user with SYSADMIN privileges wil not be used, from a command prompt, execute either of the following scripts depending on what type of authentication you currently use for your SYSADMIN user.
+        If an existing user with SYSADMIN privileges will not be used, from a command prompt, execute either of the following scripts depending on what type of authentication you currently use for your SYSADMIN user.
 
         In this example the collection user will use SQL Authentication:
             - createUserForAssessmentWithSQLAuth.bat

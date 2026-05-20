@@ -78,7 +78,8 @@ BEGIN
         SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
         SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
 	END CATCH
-END
+END;
+
 BEGIN
     IF @CLOUDTYPE <> 'AZURE'
 	BEGIN
@@ -158,6 +159,7 @@ BEGIN
     OPEN db_cursor
     FETCH NEXT FROM db_cursor INTO @dbname
     WHILE @@FETCH_STATUS = 0
+	BEGIN
 		BEGIN TRY
         	exec ('
             use [' + @dbname + '];
@@ -168,6 +170,7 @@ BEGIN
                 CREATE USER [' + @COLLECTION_USER + '] FOR LOGIN  [' + @COLLECTION_USER + '];
             END;
 			GRANT VIEW DATABASE STATE TO  [' + @COLLECTION_USER + '];');
+			FETCH NEXT FROM db_cursor INTO @dbname;
 		END TRY
 		BEGIN CATCH
 			SELECT
@@ -179,8 +182,9 @@ BEGIN
 				SUBSTRING(CONVERT(NVARCHAR(255),ERROR_SEVERITY()),1,254) as error_severity,
 				SUBSTRING(CONVERT(NVARCHAR(255),ERROR_STATE()),1,254) as error_state,
 				SUBSTRING(CONVERT(NVARCHAR(255),ERROR_MESSAGE()),1,512) as error_message;
+			FETCH NEXT FROM db_cursor INTO @dbname;
 		END CATCH
-	FETCH NEXT FROM db_cursor INTO @dbname;
-	CLOSE db_cursor
-	DEALLOCATE db_cursor
+	END;
 END;
+CLOSE db_cursor;
+DEALLOCATE db_cursor;

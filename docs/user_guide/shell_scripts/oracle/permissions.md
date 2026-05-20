@@ -1,8 +1,8 @@
-# Create a user for Collection
+# Create a user for Collection > docs/user_guide/shell_scripts/oracle/permissions.md
 
-The collection scripts can be executed with any DBA account. Alternatively, create a new user with the minimum privileges required.
-The included script sql/setup/grants_wrapper.sql will grant the privileges listed below.
-Please see the Database User Scripts page for information on how to create the user.
+ The collection scripts can be executed with any DBA account. Alternatively, create a new user with the minimum privileges required.
+ The included script sql/setup/grants_wrapper.sql will grant the privileges listed below.
+ Please see the Database User Scripts page for information on how to create the user.
 
 ## Permissions Required
 
@@ -134,3 +134,7 @@ The following permissions are required for the script execution:
       SELECT ON SYS.V_$TEMP_SPACE_HEADER
       SELECT ON SYS.V_$VERSION
       SELECT ON SYSTEM.LOGSTDBY$SKIP_SUPPORT
+
+On multitenant databases, the statement below must be executed from within the root container to include the PDBs in the collection:
+
+      ALTER USER "&username" SET CONTAINER_DATA=ALL CONTAINER=CURRENT;

@@ -18,7 +18,7 @@ This script access Automatic Repository Workload (AWR) views in the database dic
 Please ensure you have proper licensing. For more information consult Oracle Support Doc ID 1490798.1
 
 */
-set arraysize 15
+set arraysize 100
 set autocommit OFF
 set autoprint OFF
 set autorecovery OFF

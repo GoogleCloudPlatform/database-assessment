@@ -26,19 +26,49 @@ for analysis by Database Migration Assessment.
     ----------------------
     The collection script depends on the following to be available on the machine from which it is run:
     bash shell
-    cat
-    cut
-    dirname
-    grep
-    locale
-    mkdir
-    sed
-    sqlplus
-    tar
-    tr
-    which
-    zip or gzip
 
+    awk
+    cat
+    cp
+    cut
+    date
+    dirname
+    grep (ggrep on Solaris)
+    gzip
+    head
+    iconv
+    locale
+    ls
+    md5sum (md5 or csum on HP/UX)
+    mkdir
+    mv
+    ps
+    pwd
+    rm
+    sed
+    sleep
+    sort
+    sqlplus
+    tail
+    tar
+    tee
+    time
+    tr
+    uname
+    uniq
+    wait
+    wc
+    which
+    xargs
+    zip
+
+    d) Performance Statistics
+    -------------------------
+    This utility can collect database performance information from either the AWR/ASH views, or from STATSPACK.
+    Use of the AWR/ASH views requires that you have a license from Oracle for the Diagnostics Pack.
+    Note that the AWR/ASH tables and views are installed and enabled by default on Enterprise versions of Oracle,
+    so their existence is not necessarily indicative of a license.
+    If you are unsure of your license status, use STATSPACK for performance data collection.
 
 2. Preparation
 --------------
@@ -100,12 +130,19 @@ for analysis by Database Migration Assessment.
              --collectionUserPass  Database password.
            }
        Performance statistics source
-           --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.   When using STATSPACK, see note about --statsWindow parameter below.
+           --statsSrc              Required. Must be one of AWR, STATSPACK, NONE.
+                                   When using STATSPACK, see note about --statsWindow parameter below.
+                                   When using AWR, ensure you are licensed for the Oracle Diagnostics Pack.
        Performance statistics window
            --statsWindow           Optional. Number of days of performance stats to collect.  Must be one of 7, 30.  Default is 30.
                                    NOTE: IF STATSPACK HAS LESS THAN 30 DAYS OF COLLECTION DATA, SET THIS PARAMETER TO 7 TO LIMIT TO 1 WEEK OF COLLECTION.
                                    IF STATSPACK HAS BEEN ACTIVATED SPECIFICALLY FOR DMA COLLECTION, ENSURE THERE ARE AT LEAST 8
                                    CALENDAR DAYS OF COLLECTION BEFORE RUNNING THE DMA COLLECTOR.
+       Customer-supplied unique identifier
+           --manualUniqueId        Optional. Descriptive unique identifier for the database being collected.
+                                   Do not use the same value for multiple databases.
+                                   Use no spaces or special characters.
+                                   Ex: SalesDev, InventoryQA, etc.
 
       Note: If the password has special characters that may be interpreted by the shell, use the --connectionStr option and enclose the entire connection string in single quotes.
 
@@ -123,7 +160,7 @@ for analysis by Database Migration Assessment.
           ./collect-data.sh --collectionUserName {user} --collectionUserPass {password} --hostName {db host} --port {listener port} --databaseService {service name} --statsSrc STATSPACK
 
 
-        If Statspack has less than 30 days of data, limit collection to the last 7 days using the paramter --statsWindow:
+        If Statspack has less than 30 days of data, limit collection to the last 7 days using the parameter --statsWindow:
 
           ./collect-data.sh --connectionStr 'MyUser/MyPassword@//dbhost.company.com:1521/MyDbName.company.com' --statsSrc STATSPACK --statsWindow 7
          or
@@ -144,15 +181,43 @@ for analysis by Database Migration Assessment.
                CDB databases, you must connect to the container database.  Running this from within a
                pluggable database will not collect the proper data.
 
+4. Automation
+-------------
+    If you wish to automate setup and collection from multiple databases, edit the file dma_db_list.csv with connection information and options for each database, one entry per line.
+    The file header describes the file format and provides examples.
 
-4. Results
+    Verify the configuration file is valid and the sysdba connection information is correct by executing the precheck script with the --verifyUser N option.
+      ./dma_precheck.sh --configFile dma_db_list.csv --verifyUser N
+
+    Address any errors reported before continuing.
+
+    If you are creating a new database user or modifying an existing user for DMA collection, execute the dma_make_user.sh script to create or modify the user(s) specified in the configuration file.
+      ./dma_make_user.sh --configFile dma_db_list.csv
+
+    If any errors are encountered, address the issue before continuing to the next step.  The dma_make_user.sh script can be run multiple times if needed.
+
+    Verify the user connection and privilege information by re-running the dma_precheck.sh script without the --verifyUser parameter.  This will verify the user can connect.
+      ./dma_precheck.sh --configFile dma_db_list.csv
+
+    Address any errors reported before continuing.
+
+    Execute automated DMA collection by running the dma_batch_run.sh script.  It can execute collections in parallel via the --maxParallel parameter.  Set this to 1 to disable parallel collection.
+    The default is 4.  Note that this controls the number of DMA collections running at one time, not the parallelism of the queries in the database.  Each running collection consumes some disk space
+    for temporary files as the data is extracted.  Very high settings for --maxParallel may consume a lot of space.  The example below shows a limit of two collections running at once.
+
+      ./dma_batch_run.sh --configFile dma_db_list.csv --maxParallel 2
+
+    Collections run via dma_batch_run.sh will automatically create log files for each collection, as the terminal will intermingle the output of all threads.
+
+
+5. Results
 ----------
 
     An archive of the extracted results will be created in the directory collector/output.
     The full path and file name will be displayed on completion.
 
 
-5. License
+6. License
 ------------
 
 Copyright 2024 Google LLC

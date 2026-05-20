@@ -133,7 +133,7 @@ spool &_report_name
 DECLARE
     sql_message         VARCHAR2(1000)         := :sql_message;
     c_cdc_mode          CONSTANT VARCHAR2(20)  := 'LOG_MINER';
-    c_script_version    CONSTANT VARCHAR2(3)   := '1.1';
+    c_script_version    CONSTANT VARCHAR2(3)   := '1.2';
     c_user_name         CONSTANT VARCHAR2(128) := UPPER('&_user_name');
     c_pdb_name          CONSTANT VARCHAR2(128) := UPPER('&_pdb_name');
     c_report_format     CONSTANT VARCHAR2(4)   := NVL(UPPER('&_report_format'), 'HTML');
@@ -653,10 +653,11 @@ BEGIN
         v_finding_types(c_check_obj_names).type_description_html := 'Schema and table names that include other than alphanumeric characters or an underscore (<code>_</code>) aren''t supported';
         v_finding_types(c_check_obj_names).type_action := 'Materialized view tables should be excluded as they do not need to be migrated. The other objects must be renamed to include only supported characters otherwise they must be excluded from the migration job for it to succeed';
 
-        v_finding_types(c_check_col_names).type_severity := c_finding_critical;
-        v_finding_types(c_check_col_names).type_description := 'Column names that include characters other than alphanumeric characters or an underscore (_) aren''t supported';
-        v_finding_types(c_check_col_names).type_description_html := 'Column names that include characters other than alphanumeric characters or an underscore (<code>_</code>) aren''t supported';
-        v_finding_types(c_check_col_names).type_action := 'These columns must be renamed to include only supported characters otherwise the tables must be excluded from the migration job for it to succeed';
+        v_finding_types(c_check_col_names).type_severity := c_finding_warning;
+        v_finding_types(c_check_col_names).type_description := 'Column names that include characters other than alphanumeric characters or an underscore (_) aren''t supported, and will be replaced with NULL values';
+        v_finding_types(c_check_col_names).type_description_html := 'Column names that include characters other than alphanumeric characters or an underscore (<code>_</code>) aren''t supported, and will be replaced with <code>NULL</code> values';
+        v_finding_types(c_check_col_names).type_action := 'Consider the impact of having a NULL value in the target column(s). If the data in the column(s) is critical you will need to rename the source column(s) to include only supported characters';
+        v_finding_types(c_check_col_names).type_action := 'Consider the impact of having a <code>NULL</code> value in the target column(s). If the data in the column(s) is critical you will need to rename the source column(s) to include only supported characters';
 
         v_finding_types(c_check_internal_col_names).type_severity := c_finding_warning;
         v_finding_types(c_check_internal_col_names).type_description := 'Oracle hidden column names include unsupported characters. These will be reported by DMS in the test of a migration job';
@@ -680,7 +681,8 @@ BEGIN
         v_finding_types(c_check_data_types_no_nn).type_severity := c_finding_warning;
         v_finding_types(c_check_data_types_no_nn).type_description := 'Columns of data types ANYDATA, BFILE, INTERVAL DAY TO SECOND, INTERVAL YEAR TO MONTH, LONG/LONG RAW, SDO_GEOMETRY, UROWID, XMLTYPE and User-Defined Types aren''t supported, and will be replaced with NULL values';
         v_finding_types(c_check_data_types_no_nn).type_description_html := 'Columns of data types <code>ANYDATA, BFILE, INTERVAL DAY TO SECOND, INTERVAL YEAR TO MONTH, LONG/LONG RAW, SDO_GEOMETRY, UROWID, XMLTYPE</code> and User-Defined Types aren''t supported, and will be replaced with <code>NULL</code> values';
-        v_finding_types(c_check_data_types_no_nn).type_action := 'Consider the impact of having a <code>NULL</code> value in the target column(s). If the data in the column(s) is critical you will need to replicate the data in the column(s) using another method';
+        v_finding_types(c_check_data_types_no_nn).type_action := 'Consider the impact of having a NULL value in the target column(s). If the data in the column(s) is critical you will need to replicate the data in the column(s) using another method';
+        v_finding_types(c_check_data_types_no_nn).type_action_html := 'Consider the impact of having a <code>NULL</code> value in the target column(s). If the data in the column(s) is critical you will need to replicate the data in the column(s) using another method';
 
         v_finding_types(c_check_data_types_nn).type_severity := c_finding_critical;
         v_finding_types(c_check_data_types_nn).type_description := 'Columns of data types ANYDATA, BFILE, INTERVAL DAY TO SECOND, INTERVAL YEAR TO MONTH, LONG/LONG RAW, SDO_GEOMETRY, UROWID, XMLTYPE and User-Defined Types aren''t supported, and will be replaced with NULL values. The column(s) also have a NOT NULL constraint enabled. If this constraint is also enabled in the target database then the NULL value cannot be inserted and the migration job will fail';
@@ -755,8 +757,8 @@ BEGIN
         -- c_check_namespace_clash
         DBMS_APPLICATION_INFO.SET_ACTION(c_check_namespace_clash);
 
-        v_finding_sql := q'|SELECT 'Constraint name '|| constraint_name AS result_message
-             , owner || '.' || table_name AS result_object
+        v_finding_sql := q'|SELECT 'Constraint name '|| owner || '.' || constraint_name AS result_message
+             , 'Table name '|| owner || '.' || table_name AS result_object
         FROM dba_constraints
         WHERE owner IN (|' || valid_schema_subquery || q'|)
         AND constraint_name = table_name

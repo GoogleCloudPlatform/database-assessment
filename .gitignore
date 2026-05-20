@@ -15,9 +15,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-!resources/lib
-!src/**/*/lib
 lib64/
 parts/
 sdist/
@@ -189,3 +186,9 @@ src/dma/templates/*
 .npmrc
 # vscode
 # .vscode
+# Gemini Agent System
+specs
+uv.toml
+build_dist_temp
+.gemini
+tools/scripts/detect_mcp_tools.py

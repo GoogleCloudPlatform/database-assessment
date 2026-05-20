@@ -49,7 +49,7 @@ CREATE TABLE #serverProperties
     property_value nvarchar(1024)
 );
 
-/* need to record table permissions in order to determine if we can run certain serverprops queryies
+/* need to record table permissions in order to determine if we can run certain serverprops queries
     as some tables are not available in managed instances
 */
 IF OBJECT_ID('tempdb..#myPerms') IS NOT NULL
@@ -274,7 +274,7 @@ BEGIN
     exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'', ''UNKNOWN''');
     exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(NVARCHAR(255), committed_kb/1024) FROM sys.dm_os_sys_info');
     exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(NVARCHAR(255), committed_target_kb/1024) FROM sys.dm_os_sys_info');
-    /* Derive total OS memory by choosing the max Target Node Memory for Azure SQL Database because regualr dm_os views are not available */
+    /* Derive total OS memory by choosing the max Target Node Memory for Azure SQL Database because regular dm_os views are not available */
     exec('INSERT INTO #serverProperties SELECT ''TotalOSMemoryMB'', max(cntr_value)/1024 from sys.dm_os_performance_counters where UPPER(object_name) like ''%MEMORY NODE%'' and counter_name = ''Target Node Memory (KB)''')
     exec('INSERT INTO #serverProperties SELECT ''TotalSQLServerCommittedMemoryMB'', CONVERT(NVARCHAR(255), committed_target_kb/1024) FROM sys.dm_os_sys_info')
     exec('INSERT INTO #serverProperties SELECT ''AvailableOSMemoryMB'', CONVERT(varchar, 0)')
@@ -352,8 +352,8 @@ BEGIN
         exec('INSERT INTO #serverProperties SELECT ''HostServicePackLevel'', COALESCE(SUBSTRING(CONVERT(NVARCHAR(255),SERVERPROPERTY(''ProductLevel'')),1,1024), ''UNKNOWN'') ');
         exec('INSERT INTO #serverProperties SELECT ''HostOsLanguageVersion'',''UNKNOWN''');
         exec('INSERT INTO #serverProperties SELECT ''HostDistribution'', SUBSTRING(REPLACE(REPLACE(@@version, CHAR(13), '' ''), CHAR(10), '' ''),1,1024)');
-        exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(NVARCHAR(255), 0) /* Parameter defaulted because its not avaliable in this version */');
-        exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(NVARCHAR(255), 0) /* Parameter defaulted because its not avaliable in this version */');
+        exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryUsedInMB'', CONVERT(NVARCHAR(255), 0) /* Parameter defaulted because its not available in this version */');
+        exec('INSERT INTO #serverProperties SELECT ''SQLServerMemoryTargetInMB'', CONVERT(NVARCHAR(255), 0) /* Parameter defaulted because its not available in this version */');
     END;
     IF @PRODUCT_VERSION >= 13
     BEGIN

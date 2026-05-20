@@ -38,7 +38,7 @@ function writeLog() {
 
 # Output headers
 headers="PKEY|DMA_SOURCE_ID|DMA_MANUAL_ID|MACHINE_NAME|PHYSICAL_CPU_COUNT|LOGICAL_CPU_COUNT|TOTAL_OS_MEMORY_MB|TOTAL_SIZE_BYTES|USED_SIZE_BYTES|PRIMARY_MAC|IP_ADDRESSES"
-# Output defaults. We do some wierd postprocessing that deletes some characters, if not for the quotation marks.
+# Output defaults. We do some weird postprocessing that deletes some characters, if not for the quotation marks.
 defaults="\"$pkey\"|\"$dmaSourceId\"|\"$dmaManualId\"|\"$machine_name\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\"|\"\""
 echo "$headers" > "$outputPath"
 echo "$defaults" >> "$outputPath"
