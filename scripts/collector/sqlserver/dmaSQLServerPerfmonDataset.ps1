@@ -238,9 +238,9 @@ function CreateDMAPerfmonDataSet {
 		<CounterDisplayName>\IO Write Operations/sec</CounterDisplayName>
 		<CounterDisplayName>\IO Read Bytes/sec</CounterDisplayName>
 		<CounterDisplayName>\IO Write Bytes/sec</CounterDisplayName>
-                <CounterDisplayName>\$instance:Log Bytes Flushed/sec</CounterDisplayName>
-                <CounterDisplayName>\Network Bytes Received/sec</CounterDisplayName>
-                <CounterDisplayName>\Network Bytes Sent/sec</CounterDisplayName>
+		<CounterDisplayName>\$instance:Log Bytes Flushed/sec</CounterDisplayName>
+		<CounterDisplayName>\Network Bytes Received/sec</CounterDisplayName>
+		<CounterDisplayName>\Network Bytes Sent/sec</CounterDisplayName>
 	</PerformanceCounterDataCollector>
 	<DataManager>
 		<Enabled>0</Enabled>
@@ -340,9 +340,9 @@ function CreateDMAPerfmonDataSet {
 		<Counter>\Process(_Total)\IO Write Operations/sec</Counter>
 		<Counter>\Process(_Total)\IO Read Bytes/sec</Counter>
 		<Counter>\Process(_Total)\IO Write Bytes/sec</Counter>
-                <Counter>\$instance:Log Bytes Flushed/sec</Counter>
-                <Counter>\Network\Bytes Received/sec</Counter>
-                <Counter>\Network\Bytes Sent/sec</Counter>
+		<Counter>\$instance:Log Bytes Flushed/sec</Counter>
+		<Counter>\Network\Bytes Received/sec</Counter>
+		<Counter>\Network\Bytes Sent/sec</Counter>
 		<CounterDisplayName>\Memory\Available MBytes</CounterDisplayName>
 		<CounterDisplayName>\PhysicalDisk(_Total)\Avg. Disk Bytes/Read</CounterDisplayName>
 		<CounterDisplayName>\PhysicalDisk(_Total)\Avg. Disk Bytes/Write</CounterDisplayName>
@@ -372,9 +372,9 @@ function CreateDMAPerfmonDataSet {
 		<CounterDisplayName>\IO Write Operations/sec</CounterDisplayName>
 		<CounterDisplayName>\IO Read Bytes/sec</CounterDisplayName>
 		<CounterDisplayName>\IO Write Bytes/sec</CounterDisplayName>
-                <CounterDisplayName>\SQLServer:Log Bytes Flushed/sec</CounterDisplayName>
-                <CounterDisplayName>\Network Bytes Received/sec</CounterDisplayName>
-                <CounterDisplayName>\Network Bytes Sent/sec</CounterDisplayName>
+		<CounterDisplayName>\SQLServer:Log Bytes Flushed/sec</CounterDisplayName>
+		<CounterDisplayName>\Network Bytes Received/sec</CounterDisplayName>
+		<CounterDisplayName>\Network Bytes Sent/sec</CounterDisplayName>
 	</PerformanceCounterDataCollector>
 	<DataManager>
 		<Enabled>0</Enabled>
