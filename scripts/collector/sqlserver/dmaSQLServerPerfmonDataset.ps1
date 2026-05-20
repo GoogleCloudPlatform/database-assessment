@@ -206,9 +206,9 @@ function CreateDMAPerfmonDataSet {
 		<Counter>\Process(_Total)\IO Write Operations/sec</Counter>
 		<Counter>\Process(_Total)\IO Read Bytes/sec</Counter>
 		<Counter>\Process(_Total)\IO Write Bytes/sec</Counter>
-                <Counter>\$instance:Log Bytes Flushed/sec</Counter>
-                <Counter>\Network\Bytes Received/sec</Counter>
-                <Counter>\Network\Bytes Sent/sec</Counter>
+		<Counter>\$instance:Log Bytes Flushed/sec</Counter>
+		<Counter>\Network\Bytes Received/sec</Counter>
+		<Counter>\Network\Bytes Sent/sec</Counter>
 		<CounterDisplayName>\Memory\Available MBytes</CounterDisplayName>
 		<CounterDisplayName>\PhysicalDisk(_Total)\Avg. Disk Bytes/Read</CounterDisplayName>
 		<CounterDisplayName>\PhysicalDisk(_Total)\Avg. Disk Bytes/Write</CounterDisplayName>
