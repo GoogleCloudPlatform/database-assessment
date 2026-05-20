@@ -139,7 +139,7 @@ END;
 
 -- Determine the owner of logstdby$skip_support -- BEGIN
 SELECT owner AS p_lss_owner
-FROM dba_tables 
+FROM dba_tables
 WHERE table_name = 'LOGSTDBY$SKIP_SUPPORT'
 /
 -- Determine the owner of logstdby$skip_support -- END

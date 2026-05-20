@@ -83,6 +83,11 @@ server = ["litestar[structlog,jinja]>=2.7.0", "litestar-granian>=0.2.3"]
 [project.scripts]
 dma = "dma.cli.main:app"
 
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true
+
 ######################
 # Build & Versioning #
 ######################
