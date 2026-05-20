@@ -21,6 +21,7 @@ with proc_alias1 as (
       select 'Y'
       from pg_trigger
       where tgfoid = (n.nspname || '.' || p.proname)::regproc
+      limit 1
     ) as Trigger_Func,
     lower(pg_get_functiondef(p.oid)::text) as def
   from pg_proc p
@@ -275,6 +276,7 @@ trigger_alias1 as (
       select 'Y'
       from pg_trigger
       where tgfoid = (n.nspname || '.' || p.proname)::regproc
+      limit 1
     ) as Trigger_Func,
     lower(pg_get_functiondef(p.oid)::text) as def
   from pg_proc p
