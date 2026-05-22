@@ -22,7 +22,7 @@ grant connect, create session to c##dmacollector;
 
 ## Grants
 
-From the directory you extracted the collector scripts, change to the sql/setup directory:
+From the directory where you extracted the collector scripts, change to the sql/setup directory:
 ```shell
 cd sql/setup
 ```
@@ -33,5 +33,5 @@ Execute the grants_wrapper script
 -- You will also be prompted whether or not to allow access to the AWR data.
 ```
 
-
-> AWR is a licensed feature of Oracle. If you don't have license to run AWR you can answer "N" to the above prompt and it will exclude the AWR data from collection.  If STATSPACK data is available, it will use that instead.
+!!! important
+    AWR is a licensed feature of Oracle. If you don't have license to run AWR you can answer "N" to the above prompt and it will exclude the AWR data from collection.  If STATSPACK data is available, it will use that instead.

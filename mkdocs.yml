@@ -68,17 +68,23 @@ nav:
   - Collection Scripts:
     - Oracle Data Collection:
         - Data Collection: user_guide/shell_scripts/oracle/collection_scripts.md
+        - User Creation: user_guide/shell_scripts/oracle/db_user_create.md
         - Permissions Required: user_guide/shell_scripts/oracle/permissions.md
-        - Database User Scripts: user_guide/shell_scripts/oracle/db_user_create.md
-        - Collection Masking: user_guide/shell_scripts/oracle/collection_masker.md
         - DMS Migration Job Validation: user_guide/shell_scripts/oracle/dms_migration_job_validation.md
     - Microsoft SQL Server Data Collection:
         - Data Collection: user_guide/shell_scripts/sqlserver/collection_scripts.md
-        - Database User Scripts: user_guide/shell_scripts/sqlserver/db_user_create.md
+        - User Creation: user_guide/shell_scripts/sqlserver/db_user_create.md
+        - Permissions Required: user_guide/shell_scripts/sqlserver/permissions.md
     - Postgres Data Collection:
         - Data Collection: user_guide/shell_scripts/postgres/collection_scripts.md
+        - User Creation: user_guide/shell_scripts/postgres/db_user_create.md
+        - Permissions Required: user_guide/shell_scripts/postgres/permissions.md
     - MySQL Data Collection:
         - Data Collection: user_guide/shell_scripts/mysql/collection_scripts.md
+        - User Creation: user_guide/shell_scripts/mysql/db_user_create.md
+        - Permissions Required: user_guide/shell_scripts/mysql/permissions.md
+    - Collection Masking:
+        - Overview: user_guide/shell_scripts/collection_masker.md
   - Readiness Check Utility:
       - Overview: user_guide/readiness_check/overview.md
       - Installation: user_guide/readiness_check/package-installation.md

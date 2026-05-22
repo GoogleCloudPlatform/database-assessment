@@ -4,7 +4,7 @@ While the collection script does not gather any data or source code, it does con
 
 This one-way script will create a key file that maps the anonymized schema and hostname attributes to its original name.  This anonymized data can not be reversed in any way and requires the key to be decoded.  It currently is only supported for Oracle and MS SQL database collections.
 
-**Note** This file should not be sent with the collection and should not be lost, as it can't be recreated.
+**Note** The key file should not be sent with the collection and should not be lost, as it can't be recreated.
 
 ## Executing the script
 

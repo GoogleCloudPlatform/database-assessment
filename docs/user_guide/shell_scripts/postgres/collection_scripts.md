@@ -1,9 +1,8 @@
-
 # Gather workload metadata
 
 !!! note
     For Postgres homogeneous migrations, please upload the collections files to Google Migration Center
-!!!
+
 
 The workload collection supports Postgres 12 and newer. Older versions of Postgres are not currently supported.
 
@@ -39,6 +38,14 @@ unzip db-migration-assessment-collection-scripts-postgres.zip
 ```
 
 - Execute this from a system that can access your database via psql
+
+### User Creation
+
+Please refer to the standalone [User Creation](db_user_create.md) guide for options on executing data collections via default superusers or bootstrapping least-privileged collector accounts.
+
+### Permissions
+
+Data collection requires access to basic monitoring stats and system catalogs. Consult the dedicated [Permissions](permissions.md) file for complete reference matrices on minimum required database connection grants and built-in viewing roles.
 
 - NOTE: The collector can be run for a single database or all databases in the instance.
 
@@ -92,5 +99,23 @@ To collect data for a single database:
 
 ## Upload Collections
 
-Upon completion, the tool will automatically create an archive of the extracted metrics that can be uploaded into the assessment tool.
-One ZIP file will be created per database.
+Upon completion, the tool will automatically create an archive of the extracted metrics for upload into the DMA application.  Do not modify the file names or contents.
+
+!!! important
+    Do not modify the name or the contents of the zip file without consultation from Google.
+
+## License
+
+Copyright 2026 Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
