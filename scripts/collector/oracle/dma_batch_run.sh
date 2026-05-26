@@ -153,7 +153,7 @@ function batchRun() {
   if [[ ${oee_err_cnt} -ne 0 ]] ; then
     print_separator
     echo "Failed to collect Oracle Estate Explorer data :"
-    grep -A 4 "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log 
+    grep -A 4 "Skipping Estate Explorer collection" DMA_COLLECT_DATA_*_${this_pid}.log
     echo
     print_failure
   fi
