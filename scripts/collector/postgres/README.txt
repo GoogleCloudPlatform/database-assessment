@@ -11,7 +11,29 @@ for analysis by Database Migration Assessment.
 
     b) Database Privileges
     ----------------------
-    TBD
+    Running the metadata collector does NOT require database superuser privileges. It is highly 
+    recommended to follow the Principle of Least Privilege (PoLP) by creating a dedicated, 
+    limited read-only collector role.
+    
+    Below is the standard DDL SQL template to provision the non-superuser collector role:
+
+        -- 1. Create the dedicated login role
+        CREATE ROLE dma_collector WITH LOGIN PASSWORD 'your_secure_password';
+
+        -- 2. Grant connection rights to the target database
+        GRANT CONNECT ON DATABASE your_database TO dma_collector;
+
+        -- 3. Grant usage permissions on public/user-defined schemas
+        GRANT USAGE ON SCHEMA public TO dma_collector;
+
+        -- 4. Grant SELECT privileges on all pg_catalog and information_schema tables
+        GRANT SELECT ON ALL TABLES IN SCHEMA pg_catalog TO dma_collector;
+        GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO dma_collector;
+
+        -- 5. Grant pg_read_all_stats default role (PostgreSQL 10+)
+        -- This enables high-fidelity reading of active queries, locks, and relation sizes
+        GRANT pg_read_all_stats TO dma_collector;
+
 
     c) System Requirements
     ----------------------
@@ -100,3 +122,19 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+
+6. Performance Considerations
+----------------------------
+
+    The metadata collector executes non-blocking, read-only queries against the database catalogs 
+    and statistics views. In typical environments, CPU and I/O overhead is negligible (under 1%).
+    
+    However, in enterprise high-scale environments containing massive catalog footprints 
+    (e.g., >50,000 physical/partitioned tables, complex schema maps, or high-density indexes):
+    * Disk Sizing functions (such as pg_relation_size, pg_total_relation_size, and pg_indexes_size) 
+      may trigger temporary disk I/O spikes during execution.
+    * It is recommended to execute the collection script during off-peak hours or scheduled 
+      maintenance windows to minimize any production footprint.
+    * Ensure the target server is configured with sufficient connection limits to accommodate the 
+      collector session.

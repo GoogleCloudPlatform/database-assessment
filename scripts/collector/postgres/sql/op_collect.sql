@@ -1,5 +1,5 @@
 /*
- Copyright 2024 Google LLC
+ Copyright 2026 Google LLC
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -26,10 +26,6 @@
 \o output/opdb__pg_aws_oracle_exists_:VTAG.csv
 \i sql/aws_oracle_exists.sql
 \o
-
---\o output/opdb__pg_aws_oracle_version_:VTAG.csv
---\i sql/aws_oracle_version.sql
---\o
 
 \o output/opdb__pg_bg_writer_stats_:VTAG.csv
 \i sql/:VPGVERSION/bg_writer_stats.sql
@@ -71,10 +67,6 @@
 \i sql/schema_details.sql
 \o
 
-\o output/opdb__pg_settings_:VTAG.csv
-\i sql/settings.sql
-\o
-
 \o output/opdb__pg_table_details_:VTAG.csv
 \i sql/:VPGVERSION/table_details.sql
 \o
@@ -83,6 +75,15 @@
 \i sql/source_details.sql
 \o
 
+\o output/opdb__pg_procedure_details_:VTAG.csv
+\i sql/procedure_details.sql
+\o
+
 \o output/opdb__pg_calculated_metrics_:VTAG.csv
 \i sql/calculated_metrics.sql
 \o
+
+--\o output/opdb__pg_aws_oracle_version_:VTAG.csv
+--\i sql/aws_oracle_version.sql
+--\o
+
