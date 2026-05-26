@@ -238,7 +238,7 @@ function CreateDMAPerfmonDataSet {
 		<CounterDisplayName>\IO Write Operations/sec</CounterDisplayName>
 		<CounterDisplayName>\IO Read Bytes/sec</CounterDisplayName>
 		<CounterDisplayName>\IO Write Bytes/sec</CounterDisplayName>
-		<CounterDisplayName>\$instance:Log Bytes Flushed/sec</CounterDisplayName>
+		<CounterDisplayName>\Log Bytes Flushed/sec</CounterDisplayName>
 		<CounterDisplayName>\Network Bytes Received/sec</CounterDisplayName>
 		<CounterDisplayName>\Network Bytes Sent/sec</CounterDisplayName>
 	</PerformanceCounterDataCollector>
@@ -372,7 +372,7 @@ function CreateDMAPerfmonDataSet {
 		<CounterDisplayName>\IO Write Operations/sec</CounterDisplayName>
 		<CounterDisplayName>\IO Read Bytes/sec</CounterDisplayName>
 		<CounterDisplayName>\IO Write Bytes/sec</CounterDisplayName>
-		<CounterDisplayName>\SQLServer:Log Bytes Flushed/sec</CounterDisplayName>
+		<CounterDisplayName>\Log Bytes Flushed/sec</CounterDisplayName>
 		<CounterDisplayName>\Network Bytes Received/sec</CounterDisplayName>
 		<CounterDisplayName>\Network Bytes Sent/sec</CounterDisplayName>
 	</PerformanceCounterDataCollector>
