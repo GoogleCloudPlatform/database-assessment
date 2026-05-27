@@ -63,6 +63,7 @@ dependencies = [
     "msgspec",
     "greenlet",
     "anyio",
+    "psycopg[binary]>=3.0.0",
 ]
 
 [project.urls]
@@ -374,7 +375,7 @@ ban-relative-imports = "all"
 
 [tool.ruff.lint.per-file-ignores]
 # Allow print/pprint
-"docs/*" = ["S404", "INP001"]
+"docs/*" = ["S404", "INP001", "A001"]
 "examples/*" = ["T201"]
 # Tests can use magic values, assertions, and relative imports
 "__init__.py" = ['F401', 'D104']
@@ -394,7 +395,7 @@ ban-relative-imports = "all"
 ]
 "scripts/post_build.py" = ["ERA001"]
 "scripts/pre_build.py" = ["ERA001"]
-"tools/*.py" = ["INP001", "S404", "T201", "PLR0914", "S310", "ANN001", "ANN201", "S202", "ERA001"]
+"tools/*.py" = ["INP001", "S404", "T201", "PLR0914", "S310", "ANN001", "ANN201", "S202", "ERA001", "PLW0717"]
 "tests/**/*" = [
     "PLR2004",
     "S101",
@@ -412,6 +413,7 @@ ban-relative-imports = "all"
 ]
 "src/dma/lib/db/__init__.py" = ["RUF067"]
 "src/dma/cli/__init__.py" = ["RUF067"]
+"src/dma/lib/db/adapters/*.py" = ["ANN001", "ANN201", "ANN204", "PLR6301"]
 
 # copyright
 "**/*.py" = ["CPY001", 'RUF029']

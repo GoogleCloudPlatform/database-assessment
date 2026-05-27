@@ -45,7 +45,7 @@ uv run tools/bundle_python.py build \
   --requirements dist/requirements.txt \
   --output dist/python-dist.tar.gz \
   --pyapp-dir ${PYAPP_DIR} \
-  --install-root "~/.dma"
+  --install-root "~/.dma-collector"
 
 export PYAPP_DISTRIBUTION_PATH="$(realpath dist/python-dist.tar.gz)"
 export PYAPP_DISTRIBUTION_EMBED="true"

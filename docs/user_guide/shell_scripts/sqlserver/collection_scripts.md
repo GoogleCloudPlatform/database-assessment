@@ -278,7 +278,7 @@ To Execute the Collection:
           3. When using a port to connect only provide the local host name
           4. The manualUniqueId can be used to give the collection a unique identifier specified by the customer
 
-#### [CollectVMSpecs](#collectvmspecs)
+#### CollectVMSpecs
 
 To provide rightsizing information the script attempts to connect to the host VM using the current users credentials and collect hardware specs (number of CPUs/amount of memory).
 

@@ -88,7 +88,7 @@ class ScriptExecutor:
         extra_args: Sequence[str] | None = None,
         timeout: int = 300,
     ) -> CollectorResult:
-        container_work_dir = f"{tempfile.gettempdir()}/collector-{int(time.time())}"
+        container_work_dir = f"{tempfile.gettempdir()}/collector-{int(time.time_ns())}"
         script_name = "collect-data.sh"
         start_time = time.time()
 

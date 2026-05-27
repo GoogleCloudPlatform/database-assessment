@@ -100,8 +100,12 @@ function init_variables() {
 
   grep_cmd=$(which grep)
   sed_cmd=$(which sed)
-  md5_cmd=$(which md5sum)
+  md5_cmd=$(which md5sum || which md5)
   md5_col=1
+  # If md5 (BSD) is resolved instead of md5sum, it prints output as "MD5 (file) = hash", so hash is in column 4
+  if [[ "${md5_cmd}" = *"/md5" ]]; then
+    md5_col=4
+  fi
 
   if [[ "$(uname)" = "SunOS" ]]; then
     grep_cmd=/usr/xpg4/bin/grep
@@ -212,7 +216,7 @@ EOF
   fi
 
   # Only run once per VM, instead of once per DB.
-  local vm_specs_output_file="output/opdb__pg_db_machine_specs_${host}.csv"
+  local vm_specs_output_file="${output_dir}/opdb__pg_db_machine_specs_${host}.csv"
   if [[ ! -f "${vm_specs_output_file}" ]] ; then
         host=$(echo "${connect_string}" | cut -d '/' -f 4 | cut -d ':' -f 1)
         ./db-machine-specs.sh "$host" "$vmUserName" "${v_file_tag}" "${dma_source_id}" "${v_manual_id}" "${vm_specs_output_file}" "${extra_ssh_args[@]}"
@@ -241,7 +245,7 @@ EOF
   else
   # If given a database name, create a collection for that one database.
   export PGPASSWORD="$pass"
-  ${sql_cmd} -X --user=${user} -d "${db}" -h ${host} -w -p ${port}  --no-align --echo-errors 2>output/opdb__stderr_${v_file_tag}.log <<EOF
+  ${sql_cmd} -X --user=${user} -d "${db}" -h ${host} -w -p ${port}  --no-align --echo-errors 2>${output_dir}/opdb__stderr_${v_file_tag}.log <<EOF
   \set VTAG ${v_file_tag}
   \set PKEY '\'${v_file_tag}\''
   \set DMA_SOURCE_ID '\'${dma_source_id}\''
@@ -277,28 +281,28 @@ function cleanup_dma_output() {
   if [[ -f $outfile ]] ; then
     if [[ $(uname) = "SunOS" ]]
     then
-      ${sed_cmd}  's/ *\|/\|/g;s/\| */\|/g;/^$/d;/^\+/d;s/^|//g;s/|\r//g'  ${outfile} > sed_${v_file_tag}.tmp
-      cp sed_${v_file_tag}.tmp ${outfile}
-      rm sed_${v_file_tag}.tmp
+      ${sed_cmd}  's/ *\|/\|/g;s/\| */\|/g;/^$/d;/^\+/d;s/^|//g;s/|\r//g'  ${outfile} > ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp
+      cp ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp ${outfile}
+      rm ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp
     else
       if [[ $(uname) = "AIX" ]] ; then
-        ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${v_file_tag}.tmp
-        cp sed_${v_file_tag}.tmp ${outfile}
-        rm sed_${v_file_tag}.tmp
+        ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp
+        cp ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp ${outfile}
+        rm ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp
       else
         if [[ "$(uname)" = "HP-UX" ]] ; then
-          ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > sed_${v_file_tag}.tmp
-          cp sed_${v_file_tag}.tmp ${outfile}
-          rm sed_${v_file_tag}.tmp
+          ${sed_cmd} 's/ *\|/\|/g;s/\| */\|/g;/^$/d'  ${outfile} > ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp
+          cp ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp ${outfile}
+          rm ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp
         else
           if [[ "$(uname)" = "Darwin" ]] ; then
-            ${sed_cmd} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/' ${outfile} > sed_${v_file_tag}.tmp
-            cp sed_${v_file_tag}.tmp ${outfile}
-            rm sed_${v_file_tag}.tmp
+            ${sed_cmd} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/' ${outfile} > ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp
+            cp ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp ${outfile}
+            rm ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp
           else
-            ${sed_cmd} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 s/[a-z]/\U&/g' ${outfile} > sed_${v_file_tag}.tmp
-            cp sed_${v_file_tag}.tmp ${outfile}
-            rm sed_${v_file_tag}.tmp
+            ${sed_cmd} -r 's/[[:space:]]+\|/\|/g;s/\|[[:space:]]+/\|/g;/^$/d;/^\+/d;s/^\|//g;s/\|$//g;/^(.* row(s)?)/d;1 s/[a-z]/\U&/g' ${outfile} > ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp
+            cp ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp ${outfile}
+            rm ${output_dir}/sed_${v_file_tag}_$(basename ${outfile}).tmp
           fi
         fi
       fi
@@ -371,7 +375,7 @@ function compress_dma_files() {
   fi
 
   if [[ -f ${output_file} ]]; then
-    rm opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt
+    rm opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt opdb*${v_file_tag}*manifest*.txt
   fi
 
   cd "${current_working_dir}"
@@ -570,6 +574,10 @@ local extractor_version="$(get_version)"
 
       local PGVER=$(echo $dbmajor | cut -c 1-2)
       if [[ $PGVER -gt 13 ]] && [[ $PGVER -lt 17 ]] ; then
+        PGVER="base"
+      fi
+      # Fallback for newer version numbers like 18
+      if [[ $PGVER -ge 18 ]] ; then
         PGVER="base"
       fi
 

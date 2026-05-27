@@ -79,4 +79,3 @@ The following parameters can be specified:
 ---
 
 ## Notes
-

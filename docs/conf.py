@@ -1,9 +1,9 @@
-import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.abspath("../src"))
+sys.path.insert(0, str(Path("../src").resolve()))
 
-project = "dma"
+project = "Database Migration Assessment"
 copyright = "2024, Google LLC"
 author = "Google LLC"
 
@@ -27,6 +27,7 @@ myst_enable_extensions = [
     "attrs_block",
     "deflist",
 ]
+myst_heading_anchors = 3
 
 html_theme_options = {
     "icon": {

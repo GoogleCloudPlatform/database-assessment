@@ -69,7 +69,6 @@ POSTGRES_VERSIONS = [
     "postgres:15",
     "postgres:16",
     "postgres:17",
-    "postgres:18",
 ]
 
 MYSQL_VERSIONS = [

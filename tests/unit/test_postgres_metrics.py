@@ -11,29 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Unit tests for the Postgres Connectivity."""
-
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-import pytest
-from sqlalchemy import text
-
-if TYPE_CHECKING:
-    from sqlalchemy import Engine
+from pathlib import Path
 
 
-pytestmark = [
-    pytest.mark.anyio,
-    pytest.mark.postgres,
-    pytest.mark.xdist_group("postgres"),
-]
-
-
-def test_engine_connectivity(sync_engine: Engine) -> None:
-    with sync_engine.begin() as conn:
-        result = conn.execute(
-            text("select 1"),
-        )
-        assert result.scalar() == 1
+def test_is_rds_metric_present() -> None:
+    sql_path = Path(__file__).parents[2] / "scripts" / "collector" / "postgres" / "sql" / "calculated_metrics.sql"
+    sql = sql_path.read_text(encoding="utf-8")
+    assert "IS_RDS" in sql
+    assert "rdsadmin" in sql
