@@ -1,8 +1,8 @@
 # Gather workload metadata
 
-!!! note
-    For MySQL homogeneous migrations, please upload the collections files to Google Migration Center
-
+:::{note}
+For MySQL homogeneous migrations, please upload the collections files to Google Migration Center
+:::
 
 The workload collection supports MySQL 5.6 and newer. Older versions of MySQL are not currently supported.  MariaDB is also not currently supported with this version of the script.
 
@@ -38,14 +38,6 @@ unzip db-migration-assessment-collection-scripts-mysql.zip
 ```
 
 - Execute this from a system that can access your database via mysql command line client.
-
-### User Creation
-
-Please refer to the standalone [User Creation](db_user_create.md) guide for instructions on executing collections via administrative accounts or provisioning customized collection users.
-
-### Permissions
-
-Data collection accesses standard configuration logs and system structures. See the dedicated [Permissions](permissions.md) file for complete details regarding required global read and process execution privileges.
 
 Execute the collection script with connection parameters:
 
@@ -95,23 +87,4 @@ To collect data for a single database:
 
 ## Upload Collections
 
-Upon completion, the tool will automatically create an archive of the extracted metrics for upload into the DMA application.
-
-!!! important
-    Do not modify the name or the contents of the zip file without consultation from Google.
-
-## License
-
-Copyright 2026 Google LLC
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-https://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+Upon completion, the tool will automatically create an archive of the extracted metrics that can be uploaded into the assessment tool.

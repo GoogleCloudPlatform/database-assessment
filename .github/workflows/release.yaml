@@ -194,7 +194,7 @@ jobs:
           --requirements dist/requirements.txt \
           --output dist/python-dist-${{ matrix.job.target }}.tar.gz \
           --pyapp-dir ${{ env.PYAPP_REPO }} \
-          --install-root "~/.dma"
+          --install-root "~/.dma-collector"
         # CRITICAL: Use PYAPP_DISTRIBUTION_PATH for local files (not PYAPP_DISTRIBUTION_SOURCE)
         # PYAPP_DISTRIBUTION_SOURCE expects a URL, PYAPP_DISTRIBUTION_PATH accepts a filesystem path
         echo "PYAPP_DISTRIBUTION_PATH=${{ github.workspace }}/dist/python-dist-${{ matrix.job.target }}.tar.gz" >> $GITHUB_ENV

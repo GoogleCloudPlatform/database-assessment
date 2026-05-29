@@ -51,7 +51,6 @@ classifiers = [ # ToDo: Modify according to your needs!
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
 ]
-# direct dependencies of this package, installed when users `pip install dma` later.
 dependencies = [
     "duckdb>=1.4.3",
     "polars[pyarrow]>=0.20.0",
@@ -63,7 +62,8 @@ dependencies = [
     "typing-extensions>=4.0.0",
     "msgspec",
     "greenlet",
-    "anyio"
+    "anyio",
+    "psycopg[binary]>=3.0.0",
 ]
 
 [project.urls]
@@ -73,10 +73,8 @@ Issues = "https://github.com/GoogleCloudPlatform/database-assessment/issues"
 Source = "https://github.com/GoogleCloudPlatform/database-assessment"
 
 [project.optional-dependencies]
-mssql = ["aioodbc"]
-mysql = ["asyncmy>=0.2.9"]
+# MySQL, MSSQL, and Oracle support coming in future releases
 oracle = ["oracledb"]
-postgres = ["psycopg[pool,binary]"]
 server = ["litestar[structlog,jinja]>=2.7.0", "litestar-granian>=0.2.3"]
 
 
@@ -115,9 +113,6 @@ dev = [
     "bump-my-version",{ include-group = "lint" }, { include-group = "test" }, { include-group = "docs" }
 ]
 test = [
-    "psycopg[binary]",
-    "pymysql",
-    "pymssql",
     "oracledb",
     "cython",
     "anyio",
@@ -128,7 +123,7 @@ test = [
     "pytest-sugar",
     "pytest-click",
     "pytest-xdist>=3.6.0",
-    "pytest-databases<=0.10.0",
+    "filelock>=3.0.0",
 ]
 lint = [
     "mypy>=1.13.0",
@@ -140,31 +135,16 @@ lint = [
     "types-decorator",
     "types-pyyaml",
     "types-setuptools",
-    "asyncpg-stubs",
     "pyyaml>=6",
 ]
 
 docs = [
-    # Core MkDocs Material (includes mkdocs>=1.6, pymdown-extensions, pygments)
-    "mkdocs-material[git,imaging,recommended]>=9.5.0",
-
-    # Versioning
-    "mike>=2.0.0",
-
-    # Documentation generation
-    "mkdocstrings[python]>=0.24.0",
-    "mkdocs-gen-files>=0.5.0",
-    "mkdocs-literate-nav>=0.6.0",
-    "mkdocs-section-index>=0.3.0",
-
-    # Content plugins
-    "mkdocs-include-markdown-plugin>=6.0.0",
-    "mkdocs-glightbox>=0.3.0",
-
-    # Optimization
-    "mkdocs-minify-plugin>=0.7.0",
-
-    # Validation
+    "sphinx>=8.0.0",
+    "sphinx-immaterial>=0.13.0",
+    "myst-parser>=4.0.0",
+    "sphinx-autobuild",
+    "sphinx-copybutton",
+    "sphinx-design",
     "linkchecker>=10.3.0",
 ]
 
@@ -280,20 +260,8 @@ module = ["tests.*"]
 warn_unused_ignores = false
 
 [[tool.mypy.overrides]]
-disable_error_code = ["arg-type"]
-disallow_untyped_calls = false
-disallow_untyped_decorators = false
-module = ["aisoql.*"]
-
-[[tool.mypy.overrides]]
-disallow_untyped_calls = false
-disallow_untyped_defs = false
-module = ["dma.lib.db.adapters.*", "dma.lib.db.adapters", "dma.lib.db.base", "dma.lib.db"]
-warn_unused_ignores = false
-
-[[tool.mypy.overrides]]
 ignore_missing_imports = true
-module = ["sqlalchemy.*", "nodeenv"]
+module = ["nodeenv", "sqlspec.*"]
 
 [tool.ruff]
 exclude = [
@@ -407,7 +375,7 @@ ban-relative-imports = "all"
 
 [tool.ruff.lint.per-file-ignores]
 # Allow print/pprint
-"docs/*" = ["S404", "INP001"]
+"docs/*" = ["S404", "INP001", "A001"]
 "examples/*" = ["T201"]
 # Tests can use magic values, assertions, and relative imports
 "__init__.py" = ['F401', 'D104']
@@ -427,7 +395,7 @@ ban-relative-imports = "all"
 ]
 "scripts/post_build.py" = ["ERA001"]
 "scripts/pre_build.py" = ["ERA001"]
-"tools/*.py" = ["INP001", "S404", "T201", "PLR0914", "S310", "ANN001", "ANN201", "S202", "ERA001"]
+"tools/*.py" = ["INP001", "S404", "T201", "PLR0914", "S310", "ANN001", "ANN201", "S202", "ERA001", "PLW0717"]
 "tests/**/*" = [
     "PLR2004",
     "S101",
@@ -443,11 +411,9 @@ ban-relative-imports = "all"
     "PLC2701",
     "FA102",
 ]
-# temp
-"src/dma/lib/db/adapters/*.py" = ["ANN001", "ANN201", "ANN204", "PLR6301"]
-
 "src/dma/lib/db/__init__.py" = ["RUF067"]
 "src/dma/cli/__init__.py" = ["RUF067"]
+"src/dma/lib/db/adapters/*.py" = ["ANN001", "ANN201", "ANN204", "PLR6301"]
 
 # copyright
 "**/*.py" = ["CPY001", 'RUF029']
@@ -486,13 +452,14 @@ line-length = 120
 [tool.pytest.ini_options]
 addopts = "-n 2 --dist=loadgroup -ra -q --doctest-glob='*.md'"
 filterwarnings = [
-    "ignore::DeprecationWarning:aiosql.*",
     "ignore::DeprecationWarning:pkg_resources",
     "ignore::DeprecationWarning:xdist.*",
 ]
 markers = [
     "integration: Integration Tests",
     "unit: Unit Tests",
+    "script_test: Collection script tests",
+    "slow: Tests that take > 30 seconds",
     "mysql: MySQL Tests",
     "postgres: Postgres Tests",
     "oracle: Oracle Tests",

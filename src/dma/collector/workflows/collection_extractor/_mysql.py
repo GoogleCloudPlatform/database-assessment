@@ -15,7 +15,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import duckdb
 from rich.table import Table
 
 if TYPE_CHECKING:
