@@ -18,14 +18,8 @@ with table_columns as (
     case
       c.relkind
       when 'r' then 'TABLE'
-      when 'v' then 'VIEW'
-      when 'm' then 'MATERIALIZED_VIEW'
-      when 'S' then 'SEQUENCE'
-      when 'f' then 'FOREIGN_TABLE'
       when 'p' then 'PARTITIONED_TABLE'
-      when 'c' then 'COMPOSITE_TYPE'
-      when 'I' then 'PARTITIONED INDEX'
-      when 't' then 'TOAST_TABLE'
+      when 'm' then 'MATERIALIZED_VIEW'
       else 'UNCATEGORIZED'
     end as table_type,
     c.relname as table_name,
@@ -36,17 +30,14 @@ with table_columns as (
     join pg_namespace n on n.oid = c.relnamespace
     join pg_type t on a.atttypid = t.oid
   where a.attnum > 0
+    and not a.attisdropped
     and (
       n.nspname <> all (
         ARRAY ['pg_catalog', 'information_schema']
       )
       and n.nspname !~ '^pg_toast'
     )
-    and (
-      c.relkind = ANY (
-        ARRAY ['r', 'p', 'S', 'v', 'f', 'm', 'c', 'I', 't']
-      )
-    )
+    and c.relkind = ANY (ARRAY ['r', 'p', 'm'])
 ),
 src as (
   select a.table_schema,

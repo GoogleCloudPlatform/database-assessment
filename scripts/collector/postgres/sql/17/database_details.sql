@@ -20,9 +20,15 @@ with db as (
     db.datconnlimit as max_connection_limit,
     db.datistemplate as is_template_database,
     pg_encoding_to_char(db.encoding) as character_set_encoding,
-    pg_database_size(db.datname) as total_disk_size_bytes
+    pg_database_size(db.datname) as total_disk_size_bytes,
+    r.rolname as owner_name,
+    t.spcname as tablespace_name,
+    db.datallowconn as allow_connections,
+    db.datfrozenxid as frozen_xid,
+    db.datminmxid as min_mxid
   from pg_database db
-  where datname = current_database()
+    left join pg_roles r on db.datdba = r.oid
+    left join pg_tablespace t on db.dattablespace = t.oid
 ),
 db_size as (
   select s.datid as database_oid,
@@ -62,6 +68,11 @@ src as (
     db.is_template_database,
     db.character_set_encoding,
     db.total_disk_size_bytes,
+    db.owner_name,
+    db.tablespace_name,
+    db.allow_connections,
+    db.frozen_xid,
+    db.min_mxid,
     db_size.backends_connected,
     db_size.txn_commit_count,
     db_size.txn_rollback_count,
@@ -88,7 +99,7 @@ src as (
     db_size.killed_sessions_count,
     db_size.statistics_last_reset_on
   from db
-    join db_size on (db.database_oid = db_size.database_oid)
+    left join db_size on (db.database_oid = db_size.database_oid)
 )
 select chr(34) || :PKEY || chr(34) as pkey,
   chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
@@ -133,5 +144,10 @@ select chr(34) || :PKEY || chr(34) as pkey,
     '1970-01-01 00:00:00'
   ) as statistics_last_reset_on,
   inet_server_addr() as inet_server_addr,
-  src.database_collation
+  src.database_collation,
+  src.owner_name,
+  src.tablespace_name,
+  src.allow_connections,
+  src.frozen_xid,
+  src.min_mxid
 from src;

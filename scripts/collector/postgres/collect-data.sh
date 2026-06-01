@@ -47,6 +47,19 @@ md5_cmd=""
 md5_col=1
 zip_cmd=""
 gzip_cmd=""
+function parse_connection_string() {
+  local conn_string="$1"
+  if [[ "${conn_string}" =~ ^([^/]+)/(.+)@//([^:]+):([0-9]+)(/(.*))?$ ]]; then
+    user="${BASH_REMATCH[1]}"
+    pass="${BASH_REMATCH[2]}"
+    host="${BASH_REMATCH[3]}"
+    port="${BASH_REMATCH[4]}"
+    db="${BASH_REMATCH[6]:-}"
+  else
+    echo "ERROR: Invalid connection string format: ${conn_string}" >&2
+    exit 1
+  fi
+}
 
 
 function check_dependencies() {
@@ -147,11 +160,8 @@ function check_version() {
   local connect_string="$1"
   local dma_version=$2
   local retcd=""
-  local user=$(echo "${connect_string}" | cut -d '/' -f 1)
-  local pass=$(echo "${connect_string}" | cut -d '/' -f 2 | cut -d '@' -f 1)
-  local host=$(echo "${connect_string}" | cut -d '/' -f 4 | cut -d ':' -f 1)
-  local port=$(echo "${connect_string}" | cut -d ':' -f 2 | cut -d '/' -f 1)
-  local db=$(echo "${connect_string}"   | cut -d '/' -f 5)
+  local user pass host port db
+  parse_connection_string "${connect_string}"
 
   export PGPASSWORD="${pass}"
   if ! [[ -x "$(command -v ${sql_cmd})" ]]; then
@@ -182,11 +192,8 @@ function execute_dma() {
   local v_manual_id="${4}"
   local v_pgversion="${5}"
   local all_dbs="${6}"
-  local user=$(echo "${connect_string}" | cut -d '/' -f 1)
-  local pass=$(echo "${connect_string}" | cut -d '/' -f 2 | cut -d '@' -f 1)
-  local host=$(echo "${connect_string}" | cut -d '/' -f 4 | cut -d ':' -f 1)
-  local port=$(echo "${connect_string}" | cut -d ':' -f 2 | cut -d '/' -f 1)
-  local db=$(echo "${connect_string}"  | cut -d '/' -f 5)
+  local user pass host port db
+  parse_connection_string "${connect_string}"
 
   if ! [[ -x "$(command -v ${sql_cmd})" ]]; then
     echo "Could not find ${sql_cmd} command. Source in environment and try again"
@@ -213,9 +220,13 @@ EOF
 
   # Only run once per VM, instead of once per DB.
   local vm_specs_output_file="output/opdb__pg_db_machine_specs_${host}.csv"
-  if [[ ! -f "${vm_specs_output_file}" ]] ; then
-        host=$(echo "${connect_string}" | cut -d '/' -f 4 | cut -d ':' -f 1)
-        ./db-machine-specs.sh "$host" "$vmUserName" "${v_file_tag}" "${dma_source_id}" "${v_manual_id}" "${vm_specs_output_file}" "${extra_ssh_args[@]}"
+  local collect_os=${COLLECT_OS_SPECS:-false}
+  if [[ "${collect_os}" == "true" || "${collect_os}" == "Y" ]] && [[ "${vm_user_name}" != "" ]]; then
+    if [[ ! -f "${vm_specs_output_file}" ]] ; then
+          ./db-machine-specs.sh "${host}" "${vm_user_name}" "${v_file_tag}" "${dma_source_id}" "${v_manual_id}" "${vm_specs_output_file}" "${extra_ssh_args[@]}"
+    fi
+  else
+    echo "Optional OS metric collection is disabled (COLLECT_OS_SPECS=false). Skipping..."
   fi
 
   # If all_dbs = "Y" loop through all the databases in the instance and create a collection for each one, then exit.
@@ -241,7 +252,7 @@ EOF
   else
   # If given a database name, create a collection for that one database.
   export PGPASSWORD="$pass"
-  ${sql_cmd} -X --user=${user} -d "${db}" -h ${host} -w -p ${port}  --no-align --echo-errors 2>output/opdb__stderr_${v_file_tag}.log <<EOF
+  ${sql_cmd} -X --user=${user} -d "${db}" -h ${host} -w -p ${port} -v ON_ERROR_STOP=1 -A -t -F, --echo-errors 2>output/opdb__stderr_${v_file_tag}.log <<EOF
   \set VTAG ${v_file_tag}
   \set PKEY '\'${v_file_tag}\''
   \set DMA_SOURCE_ID '\'${dma_source_id}\''
@@ -259,7 +270,7 @@ function create_error_log() {
   local v_file_tag=$1
   echo "Checking for errors..."
   if [[ "$database_type" == "postgres" ]]; then
-    $grep_cmd  -i -E 'ERROR:' ${output_dir}/opdb__stderr_${v_file_tag}.log > ${log_dir}/opdb__${v_file_tag}_errors.log
+    $grep_cmd  -i -E 'ERROR:' ${output_dir}/opdb__stderr_${v_file_tag}.log > ${log_dir}/opdb__${v_file_tag}_errors.log || true
     local retval=$?
   fi
   if [[ ! -f  ${log_dir}/opdb__${v_file_tag}_errors.log ]]; then
@@ -489,7 +500,9 @@ function parse_parameters() {
       exit 1
     fi
   else
-      host_name=$(echo ${conn_str} | cut -d '/' -f 4 | cut -d ':' -f 1)
+      local user pass host port db
+      parse_connection_string "${conn_str}"
+      host_name="${host}"
   fi
 
 
@@ -569,7 +582,7 @@ local extractor_version="$(get_version)"
       V_TAG="$(echo ${sqlcmd_result} | cut -d '|' -f2).csv"; export V_TAG
 
       local PGVER=$(echo $dbmajor | cut -c 1-2)
-      if [[ $PGVER -gt 13 ]] && [[ $PGVER -lt 17 ]] ; then
+      if [[ "${PGVER}" != "11" && "${PGVER}" != "12" && "${PGVER}" != "13" && "${PGVER}" != "17" ]]; then
         PGVER="base"
       fi
 

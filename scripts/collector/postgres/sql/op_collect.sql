@@ -83,6 +83,10 @@
 \i sql/source_details.sql
 \o
 
+\o output/opdb__pg_procedure_details_:VTAG.csv
+\i sql/procedure_details.sql
+\o
+
 \o output/opdb__pg_calculated_metrics_:VTAG.csv
 \i sql/calculated_metrics.sql
 \o
