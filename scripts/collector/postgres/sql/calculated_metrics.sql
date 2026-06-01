@@ -228,6 +228,22 @@ calculated_metrics as (
   select 'TABLE_COUNT' as metric_name,
     cast(ts.total_table_count as varchar) as metric_value
   from table_summary ts
+  union all
+  select 'HEAP_CACHE_HIT_RATIO' as metric_name,
+    cast(case when (sum(blks_hit) + sum(blks_read)) > 0 then round(cast(sum(blks_hit) as decimal) / (sum(blks_hit) + sum(blks_read)), 4) else 0 end as varchar) as metric_value
+  from pg_stat_database
+  union all
+  select 'TRANSACTION_COMMIT_RATIO' as metric_name,
+    cast(case when (sum(xact_commit) + sum(xact_rollback)) > 0 then round(cast(sum(xact_commit) as decimal) / (sum(xact_commit) + sum(xact_rollback)), 4) else 0 end as varchar) as metric_value
+  from pg_stat_database
+  union all
+  select 'INDEX_CACHE_HIT_RATIO' as metric_name,
+    cast(case when (sum(idx_blks_hit) + sum(idx_blks_read)) > 0 then round(cast(sum(idx_blks_hit) as decimal) / (sum(idx_blks_hit) + sum(idx_blks_read)), 4) else 0 end as varchar) as metric_value
+  from pg_statio_user_indexes
+  union all
+  select 'INDEX_USAGE_RATIO' as metric_name,
+    cast(case when (sum(seq_scan) + sum(idx_scan)) > 0 then round(cast(sum(idx_scan) as decimal) / (sum(seq_scan) + sum(idx_scan)), 4) else 0 end as varchar) as metric_value
+  from pg_stat_user_tables
 ),
 src as (
   select 'CALCULATED_METRIC' as metric_category,

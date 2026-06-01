@@ -18,7 +18,7 @@ with src as (
     sut.relname as table_name,
     sut.schemaname as table_owner,
     ipc.relname as index_name,
-    psui.schemaname as index_owner,
+    ns.nspname as index_owner,
     i.indrelid as table_object_id,
     i.indnatts as indexed_column_count,
     i.indnkeyatts as indexed_keyed_column_count,
@@ -32,18 +32,19 @@ with src as (
     i.indisready as is_ready,
     i.indislive as is_live,
     i.indisreplident as is_replica_identity,
-    psui.idx_blks_read as index_block_read,
-    psui.idx_blks_hit as index_blocks_hit,
-    p.idx_scan as index_scan,
-    p.idx_tup_read as index_tuples_read,
-    p.idx_tup_fetch as index_tuples_fetched
+    coalesce(psui.idx_blks_read, 0) as index_block_read,
+    coalesce(psui.idx_blks_hit, 0) as index_blocks_hit,
+    coalesce(p.idx_scan, 0) as index_scan,
+    coalesce(p.idx_tup_read, 0) as index_tuples_read,
+    coalesce(p.idx_tup_fetch, 0) as index_tuples_fetched
   from pg_index i
-    join pg_stat_user_tables sut on (i.indrelid = sut.relid)
     join pg_class ipc on (i.indexrelid = ipc.oid)
+    join pg_namespace ns on (ipc.relnamespace = ns.oid)
+    join pg_stat_user_tables sut on (i.indrelid = sut.relid)
     left join pg_catalog.pg_statio_user_indexes psui on (i.indexrelid = psui.indexrelid)
     left join pg_catalog.pg_stat_user_indexes p on (i.indexrelid = p.indexrelid)
-  where psui.indexrelid is not null
-    or p.indexrelid is not null
+  where ns.nspname <> all (array ['pg_catalog', 'information_schema'])
+    and ns.nspname !~ '^pg_toast'
 )
 select chr(34) || :PKEY || chr(34) as pkey,
   chr(34) || :DMA_SOURCE_ID || chr(34) as dma_source_id,
