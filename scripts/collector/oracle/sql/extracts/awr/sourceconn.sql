@@ -41,7 +41,7 @@ FROM &v_tblprefix._HIST_ACTIVE_SESS_HISTORY has
      AND has.dbid = dhsnap.dbid
 @&v_sql_cmd
         ON has.sql_opcode = scmd.COMMAND_TYPE
-WHERE  has.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+WHERE  dhsnap.begin_interval_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
 AND has.dbid = &&v_dbid
 AND has.session_type = 'FOREGROUND'
 group by :v_pkey,

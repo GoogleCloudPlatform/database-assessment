@@ -67,25 +67,26 @@ writeLog "Fetching machine HW specs from computer: $machine_name and storing it 
 
 # Check if machineName is "localhost"
 if [ "$machine_name" = "0.0.0.0" ] || grep -q "$machine_name" /etc/hosts; then
-    source <(echo "$coreScript")
+    source <(echo "${coreScript}")
 else
     if [[ -z "$userName" ]]; then
         echo "VM User name not set, skipping."
         exit 0
     fi
     setScript=$(cat <<'EOF'
-        echo "hostName=$hostName"
-        echo "physicalCpuCount=$physicalCpuCount"
-        echo "logicalCpuCount=$logicalCpuCount"
-        echo "memoryMB=$memoryMB"
-        echo "totalSizeBytes=$totalSizeBytes"
-        echo "usedSizeBytes=$usedSizeBytes"
-        echo "primaryMac=$primaryMac"
-        echo "ipAddresses=$ipAddresses"
+        echo
+        echo "hostName=${hostName}"
+        echo "physicalCpuCount=${physicalCpuCount}"
+        echo "logicalCpuCount=${logicalCpuCount}"
+        echo "memoryMB=${memoryMB}"
+        echo "totalSizeBytes=${totalSizeBytes}"
+        echo "usedSizeBytes=${usedSizeBytes}"
+        echo "primaryMac=${primaryMac}"
+        echo "ipAddresses=${ipAddresses}"
 EOF
 )
-    output=$(ssh "$userName@$machine_name" "${@:7}" "$coreScript; $setScript") || { echo "SSH to $machine_name failed"; exit 1; }
-    source <(echo "$output")
+    output=$(ssh "${@:7}" "${userName}@${machine_name}" "${coreScript}; ${setScript}") || { echo "SSH to ${machine_name} failed"; exit 1; }
+    eval ${output}
 fi
 
 
