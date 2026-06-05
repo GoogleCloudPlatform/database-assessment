@@ -44,7 +44,7 @@ SELECT
        s.startup_time,
        lag(s.startup_time,1) over (partition by s.dbid, s.instance_number order by s.snap_id) lag_startup_time
 FROM   &v_tblprefix._hist_snapshot s
-WHERE  s.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+WHERE  s.begin_interval_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
 AND dbid = &&v_dbid
 )
 WHERE startup_time = lag_startup_time

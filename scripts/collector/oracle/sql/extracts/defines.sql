@@ -34,7 +34,7 @@ SHOW trimspool
 SHOW underline
 SHOW verify
 SHOW wrap
-prompt p_sp_script        = &p_sp_script
+prompt v_info_prompt      = &v_info_prompt
 prompt v_a_con_id         = &v_a_con_id
 prompt v_b_con_id         = &v_b_con_id
 prompt v_c_con_id         = &v_c_con_id

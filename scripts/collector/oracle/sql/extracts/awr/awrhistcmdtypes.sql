@@ -44,7 +44,7 @@ FROM   &v_tblprefix._hist_sqlstat a
                AND a.dbid = c.dbid
                AND a.instance_number = c.instance_number)
        left outer join audit_actions aa on b.command_type = aa.action
-WHERE  a.snap_id BETWEEN '&&v_min_snapid' AND '&&v_max_snapid'
+WHERE  c.begin_interval_time BETWEEN '&&v_min_snaptime' AND '&&v_max_snaptime'
 AND a.dbid = &&v_dbid
 GROUP  BY :v_pkey,
           &v_a_con_id,

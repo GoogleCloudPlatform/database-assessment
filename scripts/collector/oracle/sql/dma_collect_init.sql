@@ -13,10 +13,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 --
-This script access Automatic Repository Workload (AWR) views in the database dictionary.
-Please ensure you have proper licensing. For more information consult Oracle Support Doc ID 1490798.1
+-- This script access Automatic Repository Workload (AWR) views in the database dictionary.
+-- Please ensure you have proper licensing. For more information consult Oracle Support Doc ID 1490798.1
 
-*/
 prompt Param1 = &1
 
 define version = '&1'
@@ -43,6 +42,7 @@ set timing off
 set time off
 alter session set nls_numeric_characters='.,';
 alter session set nls_date_format='YYYY-MM-DD HH24:MI:SS';
+alter session set nls_timestamp_format='YYYY-MM-DD HH24:MI:SS';
 
 set termout on
 whenever sqlerror exit failure
@@ -457,15 +457,16 @@ BEGIN
   IF (l_tab_name != '---' AND l_tab_name NOT LIKE 'ERROR%') THEN
      -- Get the snapshot range for AWR stats.
      IF l_tab_name = 'DBA_HIST_SNAPSHOT' THEN
-       THE_SQL := 'SELECT min(snap_id) , max(snap_id) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
-       EXECUTE IMMEDIATE the_sql INTO  :minsnap, :maxsnap USING '&&v_dbid' ;
-       IF :minsnap IS NULL THEN
+       THE_SQL := 'SELECT min(CAST (begin_interval_time AS DATE)) , max(CAST (begin_interval_time AS DATE)) FROM ' || l_tab_name || ' WHERE ' || l_col_name || ' >= (sysdate- &&dtrange ) AND dbid = :1 ';
+       dbms_output.put_line(the_sql ||' using &&v_dbid');
+       EXECUTE IMMEDIATE the_sql INTO  :minsnaptime, :maxsnaptime USING '&&v_dbid' ;
+       IF :minsnaptime IS NULL THEN
           dbms_output.put_line('Warning: No snapshots found within the last &&dtrange days.  No performance data will be extracted.');
-          :minsnap := -1;
-          :maxsnap := -1;
+          :minsnaptime := sysdate;
+          :maxsnaptime := sysdate;
           :v_info_prompt := 'without performance data';
        ELSE
-          :v_info_prompt := 'between snaps ' || :minsnap || ' and ' || :maxsnap;
+          :v_info_prompt := 'using AWR between  ' || :minsnaptime || ' and ' || :maxsnaptime;
        END IF;
      ELSE
        -- Get the snapshot range for STATSPACK stats.
