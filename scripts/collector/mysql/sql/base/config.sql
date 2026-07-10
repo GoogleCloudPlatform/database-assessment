@@ -51,7 +51,7 @@ from (
 					name as tablespace_name,
 					allocated_size
 				from
-					information_schema.INNODB_TABLESPACES it 
+					information_schema.INNODB_TABLESPACES it
 		) file_sizes
           ) as variable_value
       ) calculated_metrics

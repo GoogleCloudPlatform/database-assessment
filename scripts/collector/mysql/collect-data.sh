@@ -194,7 +194,7 @@ EOF
     fname=$(echo "${f}" | cut -d '/' -f 3 | cut -d '.' -f 1)
     APPENDPARAMS=""
     if [[ -f "${output_dir}/opdb__mysql_${fname}__${v_file_tag}.csv" ]]; then
-      APPENDPARAMS=" --silent --skip-column-names " 
+      APPENDPARAMS=" --silent --skip-column-names "
     fi
     ${sql_cmd} --user="${user}" --password="${pass}" -h "${host}" -P "${port}" --force --table ${APPENDPARAMS} "${db}" >>"${output_dir}/opdb__mysql_${fname}__${v_file_tag}.csv" 2>>"${output_dir}/opdb__stderr_${v_file_tag}.log"  <<EOF
 SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}';

@@ -14,7 +14,7 @@
  limitations under the License.
  */
 -- init-mysql-script-base-path
-select if(clean_version like '5.%', if(clean_version like '5.7%', '5.7', '5.6'), 
+select if(clean_version like '5.%', if(clean_version like '5.7%', '5.7', '5.6'),
           'base') as script_path
 from (
     select if(
