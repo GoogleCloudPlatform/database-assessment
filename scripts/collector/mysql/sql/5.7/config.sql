@@ -47,7 +47,99 @@ from (
           ) as variable_value
       ) calculated_metrics
     UNION
-    select 'ALL_VARIABLES' as variable_category,
-           'HOSTNAME' as variable_name,
-           @@hostname as variable_value
+    select 'CALCULATED_METRIC' as variable_category,
+      variable_name,
+      variable_value
+    from (
+        select variable_name,
+          variable_value
+        from (
+            select upper(variable_name) as variable_name,
+              variable_value
+            from performance_schema.global_variables
+            union
+            select upper(variable_name),
+              variable_value
+            from performance_schema.session_variables
+            where variable_name not in (
+                select variable_name
+                from performance_schema.global_variables
+              )
+          ) a
+        where a.variable_name not in ('FT_BOOLEAN_SYNTAX')
+          and a.variable_name not like '%PUBLIC_KEY'
+          and a.variable_name not like '%PRIVATE_KEY'
+      ) all_vars
+    union
+    select 'GLOBAL_STATUS' as variable_category,
+      variable_name,
+      variable_value
+    from (
+        select upper(variable_name) as variable_name,
+          variable_value
+        from performance_schema.global_status a
+        where a.variable_name not in ('FT_BOOLEAN_SYNTAX')
+          and a.variable_name not like '%PUBLIC_KEY'
+          and a.variable_name not like '%PRIVATE_KEY'
+      ) global_status
+    union
+    select 'CALCULATED_METRIC' as variable_category,
+      variable_name,
+      variable_value
+    from (
+        select 'IS_MARIADB' as variable_name,
+          if(upper(gv.variable_value) like '%MARIADB%', 1, 0) as variable_value
+        from performance_schema.global_variables gv
+        where gv.variable_name = 'VERSION'
+        union
+        select 'TABLE_SIZE' as variable_name,
+          total_data_size_bytes as variable_value
+        from (
+            select sum(data_length) as total_data_size_bytes
+            from (
+                select t.table_schema as table_schema,
+                  t.table_name as table_name,
+                  t.table_rows as table_rows,
+                  t.DATA_LENGTH as DATA_LENGTH,
+                  t.INDEX_LENGTH as INDEX_LENGTH,
+                  t.DATA_LENGTH + t.INDEX_LENGTH as total_length,
+                  t.ROW_FORMAT as row_format,
+                  t.TABLE_TYPE as table_type,
+                  t.ENGINE as table_engine,
+                  if(pks.table_name is not null, 1, 0) as has_primary_key
+                from information_schema.TABLES t
+                  left join (
+                    select table_schema,
+                      TABLE_NAME
+                    from information_schema.statistics
+                    where table_schema not in (
+                        'mysql',
+                        'information_schema',
+                        'performance_schema',
+                        'sys'
+                      )
+                    group by table_schema,
+                      TABLE_NAME,
+                      index_name
+                    having SUM(
+                        if(
+                          non_unique = 0
+                          and NULLABLE != 'YES',
+                          1,
+                          0
+                        )
+                      ) = count(*)
+                  ) pks on (
+                    t.table_schema = pks.table_schema
+                    and t.TABLE_NAME = pks.TABLE_NAME
+                  )
+                where t.table_schema not in (
+                    'mysql',
+                    'information_schema',
+                    'performance_schema',
+                    'sys'
+                  )
+              ) user_tables
+          ) data_summary
+    ) calc_metric
   ) src;
