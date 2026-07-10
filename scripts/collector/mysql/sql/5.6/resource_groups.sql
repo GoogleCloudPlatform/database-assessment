@@ -13,22 +13,20 @@
  See the License for the specific language governing permissions and
  limitations under the License.
  */
-select distinct concat(char(34), @PKEY, char(34)) as pkey,
+-- name: collector-mysql-5-resource-groups
+select concat(char(34), @PKEY, char(34)) as pkey,
   concat(char(34), @DMA_SOURCE_ID, char(34)) as dma_source_id,
   concat(char(34), @DMA_MANUAL_ID, char(34)) as dma_manual_id,
-  concat(char(34), src.variable_category, char(34)) as variable_category,
-  concat(char(34), src.variable_name, char(34)) as variable_name,
-  concat(char(34), src.variable_value, char(34)) as variable_value
+  concat(char(34), src.resource_group_name, char(34)) as resource_group_name,
+  concat(char(34), src.resource_group_type, char(34)) as resource_group_type,
+  concat(char(34), src.resource_group_enabled, char(34)) as resource_group_enabled,
+  concat(char(34), src.vcpu_ids, char(34)) as vcpu_ids,
+  concat(char(34), src.thread_priority, char(34)) as thread_priority
 from (
-    select 'CALCULATED_METRIC' as variable_category,
-      variable_name,
-      variable_value
-    from (
-        select 'DATAFILE_SIZE_BYTES' as variable_name,
-          '' as variable_value
-      ) calculated_metrics
-    UNION
-    select 'ALL_VARIABLES' as variable_category,
-           'HOSTNAME' as variable_name,
-           @@hostname as variable_value
+    select 'Unsupported Version Placeholder' as resource_group_type,
+      0 as resource_group_enabled,
+      'Placeholder Value' as resource_group_name,
+      '' as vcpu_ids,
+      0 as thread_priority
+    limit 0
   ) src;

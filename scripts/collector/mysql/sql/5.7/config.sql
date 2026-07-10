@@ -46,4 +46,8 @@ from (
                 ) file_sizes
           ) as variable_value
       ) calculated_metrics
+    UNION
+    select 'ALL_VARIABLES' as variable_category,
+           'HOSTNAME' as variable_name,
+           @@hostname as variable_value
   ) src;
