@@ -208,6 +208,9 @@ Operating System Versions:
                 -ignorePerfmon **Optional (Defaults to "false" / Set to "true" to ignore perfmon collection)
                 -manualUniqueId **Optional (Defaults to "NA" - Gives the ability the user to tag their collection with a unique name)
                 -collectVMSpecs **Optional switch. See below.
+                -useWindowsAuthentication **Optional switch. Uses the current Windows authenticated user instead of SQL authentication.
+                -useEntraIDAuthentication **Optional switch. Uses Microsoft Entra ID authentication through sqlcmd -G -U. Do not provide -collectionUserName or -collectionUserPass with this switch.
+                -entraIDUserName **Required with -useEntraIDAuthentication. Microsoft Entra ID username used for MFA sign-in.
                 -outputDirectory  **Optional (write the final zip file to another location - must be escaped properly if spaces are in the directory name)
 
         For a Named Instance (all databases):
@@ -241,6 +244,13 @@ Operating System Versions:
                 Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true -manualUniqueId [string]
                 Example (default port / all databases): runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true -manualUniqueId [string]
                 Example (custom port / all databases): runAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true -manualUniqueId [string]
+
+        For Azure SQL Managed Instance using Microsoft Entra ID:
+            .\runAssessment.bat -serverName [managed-instance-name].[dns-zone].database.windows.net -database [database name] -ignorePerfmon true -manualUniqueId [string] -useEntraIDAuthentication -entraIDUserName [user principal name]
+
+                Example: runAssessment.bat -serverName myinstance.public.000000000000.database.windows.net -ignorePerfmon true -manualUniqueId mySQLManagedInstance1 -useEntraIDAuthentication -entraIDUserName user@domain.com
+
+            Microsoft Entra ID authentication does not use collection credentials. It uses sqlcmd -G -U with the supplied Entra ID username. Do not pass -collectionUserName or -collectionUserPass.
 
         Notes:
             1) Google Database Migration Assessment Data Extractor extracts data for all user databases present in the instance
