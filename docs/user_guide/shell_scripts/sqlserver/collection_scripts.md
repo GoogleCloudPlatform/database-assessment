@@ -1,4 +1,4 @@
-# Gather workload metadata
+# Google Cloud Database Migration Assessment for Microsoft SQL Server
 
 Instructions on how to prepare and run Google Database Migration Assessment Data Extractor for Microsoft SQL Server to extract the data required for analysis by the Database Migration Assessment tool.
 
@@ -13,11 +13,48 @@ Operating System Versions:
 
 - Windows Server 2012 through Windows Server 2022 (Requires PowerShell Version 5 or Greater)
 
-## Introduction
+---
+
+## [Introduction](#introduction)
 
 This utility extracts metadata about the tables, partitions and SQL workload in a database into CSV files. It also leverages perfmon data that must have a perfmon counter started before the final data collection. These CSV files are then used by Database Migration Assessment internally to analyze the data with Google Database Migration Assessment.
 
-## System environment
+---
+
+## [License Requirements](#license-requirements)
+
+:::{important}
+Google Database Migration Assessment does not require any additional licensing with regards to Microsoft SQL Server.
+:::
+
+---
+
+## [Database Privileges](#database-privileges)
+
+This utility must be run as a database user with privileges to SELECT from certain data dictionary views. The scripts "createUserForAssessmentWithSQLAuth.bat" and "createUserForAssessmentWithWindowsAuth.bat" are supplied to create the required user and privileges. Instructions for executing it are below. Alternatively, you may use a user that already has following privileges:
+
+In the master database:
+
+```sql
+  GRANT VIEW SERVER STATE TO [username];
+  GRANT SELECT ALL USER SECURABLES TO [username];
+  GRANT VIEW ANY DATABASE TO [username];
+  GRANT VIEW ANY DEFINITION TO [username];
+  GRANT VIEW SERVER STATE TO [username];
+  GRANT VIEW DATABASE STATE TO [username];
+```
+
+In addition the user must also be mapped to all user databases, tempdb and master databases along with the following grant:
+
+```sql
+  use [user database name];
+  CREATE USER [username] FOR LOGIN [username];
+  GRANT VIEW DATABASE STATE TO [username];
+```
+
+---
+
+## [System Requirements](#system-requirements)
 
 The collection script depends on the following executables to be available on the machine from which it is run. The script is also expected to be run from a Windows machine in "Administrator Mode":
 
@@ -31,12 +68,12 @@ If needed sqlcmd can be downloaded from [here](https://learn.microsoft.com/en-us
 
 !!! note
 
-    - Ensure that the `ODBC` version of `sqlcmd` is used.
-    - Ensure that `sqlcmd` is also in your `$PATH` variable.
+    Ensure that the `ODBC` version of `sqlcmd` is used
+    Ensure that `sqlcmd` is also in your `$PATH` variable
 
-## Execute collection script
+---
 
-### Preparation
+## [Preparation](#preparation)
 
 In order to begin running the Database Migration Assessment Collection process, download the collector script from [here](https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-sqlserver.zip) onto the host to be collected and follow the below instructions:
 
@@ -83,11 +120,11 @@ In order to begin running the Database Migration Assessment Collection process, 
             For a Default Instance:
                 createUserForAssessmentWithWindowsAuth.bat -serverName [servername] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password]
 
-### Database Privileges
+---
 
-This utility must be run as a database user with appropriate privileges. Please see the [Permissions Required](permissions.md) file for detailed information on the minimum permissions required and instructions for using the supplied user creation scripts.
+## [Execution](#execution)
 
-### Perfmon Requirements
+### [Perfmon Requirements](#perfmon-requirements)
 
 (Optional)
 
@@ -181,7 +218,7 @@ The script will create a permon data set that will collect the above metrics at 
 
 <br/>
 
-### Perform Collection
+### [Perform Collection](#perform-collection)
 
 - When the perfmon dataset completes or if you would like to execute the collection sooner, execute the following command from a command prompt session in "Administrator Mode" on the server you would like to collect data on and return the subsequent .zip file to Google.
 - The collection can also be run for all user databases or a single user database. See the below examples for each scenario
@@ -251,18 +288,19 @@ This is recommended if you plan to upload the results to the Migration Center.
 
         Example: runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string] -collectVMSpecs
 
-## Upload Collections
+---
 
-Upon completion, the tool will automatically create an archive of the extracted metrics for upload into the DMA application.
+## [Return Results](#return-results)
 
-!!! important
-    Do not modify the name or the contents of the zip file without consultation from Google.
+- An archive of the extracted results will be created in the directory collector/output.
+- The full path and file name will be displayed on completion.
+- Return the listed file to Google for processing
 
-## License Requirements
+:::{important}
+Do not modify the name or the contents of the zip file without consultation from Google.
+:::
 
-This tool does not require any additional licensing with regards to Microsoft SQL Server.
-
-## Digitally Signing Powershell Scripts
+## [Digitially Signing Powershell Scripts](#digitially-signing-powershell-scripts)
 
 (Optional / Only if Necessary)
 
@@ -309,7 +347,7 @@ Occasionally, organizational security policies require that Powershell scripts b
 
 ## License
 
-Copyright 2026 Google LLC
+Copyright 2025 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

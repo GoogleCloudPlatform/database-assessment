@@ -1,0 +1,24 @@
+:root {
+  --md-tooltip-width: 600px;
+}
+
+/* Hovering cards from sphinx-design */
+.sd-card {
+  border-radius: 1rem;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.sd-card:hover {
+  box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+  transform: translateY(-2px);
+}
+
+/* Code block container aesthetics */
+.code-block-caption {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+pre > code {
+  border-radius: 0.4rem;
+}
