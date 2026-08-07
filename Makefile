@@ -164,12 +164,14 @@ build-collector: 										## Build the collector SQL scripts.
 	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/12
 	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/13
 	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/17
+	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/18
 	@mkdir -p $(BUILD_DIR)/collector/postgres/sql/base
 	@cp scripts/collector/postgres/sql/*.sql $(BUILD_DIR)/collector/postgres/sql
 	@cp scripts/collector/postgres/sql/12/*.sql $(BUILD_DIR)/collector/postgres/sql/11
 	@cp scripts/collector/postgres/sql/12/*.sql $(BUILD_DIR)/collector/postgres/sql/12
 	@cp scripts/collector/postgres/sql/13/*.sql $(BUILD_DIR)/collector/postgres/sql/13
-	@cp scripts/collector/postgres/sql/12/*.sql $(BUILD_DIR)/collector/postgres/sql/17
+	@cp scripts/collector/postgres/sql/17/*.sql $(BUILD_DIR)/collector/postgres/sql/17
+	@cp scripts/collector/postgres/sql/18/*.sql $(BUILD_DIR)/collector/postgres/sql/18
 	@cp scripts/collector/postgres/sql/base/*.sql $(BUILD_DIR)/collector/postgres/sql/base
 	@cp scripts/collector/postgres/collect-data.sh $(BUILD_DIR)/collector/postgres/
 	@cp scripts/collector/postgres/db-machine-specs.sh $(BUILD_DIR)/collector/postgres/
