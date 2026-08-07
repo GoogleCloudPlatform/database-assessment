@@ -18,7 +18,7 @@
 . ./dma_oee.sh
 
 # Global variables and constants
-dma_version="4.3.47"
+dma_version="4.3.48"
 dbmajor=""
 dbdomain=""
 script_dir=""

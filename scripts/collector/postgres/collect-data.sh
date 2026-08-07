@@ -18,7 +18,7 @@
 
 
 # Global variables and constants
-dma_version="4.3.47"
+dma_version="4.3.48"
 all_dbs="Y"
 collection_user_name=""
 collection_user_pass=""
