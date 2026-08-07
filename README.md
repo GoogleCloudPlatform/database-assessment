@@ -8,7 +8,7 @@ Extensive support for many database sources and versions:
 
 - Oracle from 10g to 21c - Exadata, RDS, and OCI workloads included by leveraging AWR data (requires tuning and diagnostics pack for Oracle) or statspack for sizing.
 - Microsoft SQL Server for Windows Versions 2008R2 (SP2) to SQL Server 2022
-- Postgres 12-16
+- Postgres 12-18
 - MySQL 5.6, 5.7, and 8
 
 ## Getting Started
