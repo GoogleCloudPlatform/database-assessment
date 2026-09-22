@@ -1,0 +1,29 @@
+-- Copyright 2024 Google LLC
+--
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
+--
+--     https://www.apache.org/licenses/LICENSE-2.0
+--
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+
+SELECT
+    CHR(34) || REPLACE(VARCHAR(RTRIM('@PKEY@'), 256), CHR(34), CHR(92) || CHR(34)) || CHR(34) || '|' ||
+    CHR(34) || REPLACE(VARCHAR(RTRIM('@DMA_SOURCE_ID@'), 256), CHR(34), CHR(92) || CHR(34)) || CHR(34) || '|' ||
+    CHR(34) || REPLACE(VARCHAR(RTRIM('@DMA_MANUAL_ID@'), 256), CHR(34), CHR(92) || CHR(34)) || CHR(34) || '|' ||
+    '0' || '|' ||
+    CHR(34) || REPLACE(VARCHAR(RTRIM(COALESCE(i.INST_NAME, 'DEFAULT'))), CHR(34), CHR(92) || CHR(34)) || CHR(34) || '|' ||
+    CHR(34) || REPLACE(VARCHAR(RTRIM(COALESCE(s.HOST_NAME, 'UNKNOWN'))), CHR(34), CHR(92) || CHR(34)) || CHR(34) || '|' ||
+    CHR(34) || REPLACE(VARCHAR(RTRIM(COALESCE(i.SERVICE_LEVEL, COALESCE(i.RELEASE_NUM, 'UNKNOWN')))), CHR(34), CHR(92) || CHR(34)) || CHR(34) || '|' ||
+    CHR(34) || 'OPEN' || CHR(34) || '|' ||
+    CHR(34) || 'ACTIVE' || CHR(34) || '|' ||
+    CHR(34) || VARCHAR(CASE WHEN i.NUM_DBPARTITIONS > 1 THEN 'DPF_NODE' ELSE 'STANDALONE' END) || CHR(34) || '|' ||
+    CHR(34) || VARCHAR(CASE WHEN i.NUM_DBPARTITIONS > 1 THEN 'Y' ELSE 'N' END) || CHR(34) || '|' ||
+    CHR(34) || COALESCE((SELECT VARCHAR(CHAR(DB2START_TIME)) FROM TABLE(SYSPROC.MON_GET_INSTANCE(-2)) FETCH FIRST 1 ROWS ONLY), 'N/A') || CHR(34)
+FROM TABLE(SYSPROC.ENV_GET_INST_INFO()) i,
+     SYSIBMADM.ENV_SYS_INFO s;
