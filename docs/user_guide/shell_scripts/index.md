@@ -16,5 +16,6 @@ postgres/db_user_create
 postgres/permissions
 sqlserver/collection_scripts
 sqlserver/db_user_create
+sqlserver/managed_instance_entraid_collection
 sqlserver/permissions
 ```

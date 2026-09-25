@@ -18,7 +18,7 @@
 
 
 # Global variables and constants
-dma_version="4.3.47"
+dma_version="4.3.48"
 all_dbs="Y"
 collection_user_name=""
 collection_user_pass=""
@@ -66,7 +66,7 @@ function check_dependencies() {
   local cmd_not_found=0
   for cmd in "${dependencies[@]}"; do
     if ! command -v "${cmd}" &> /dev/null; then
-      echo "ERROR: Required command '\${cmd}' not found in PATH." >&2
+      echo "ERROR: Required command '${cmd}' not found in PATH." >&2
       cmd_not_found=1
     fi
   done

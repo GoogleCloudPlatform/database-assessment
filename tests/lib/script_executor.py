@@ -64,10 +64,9 @@ class ScriptExecutor:
         return self.runtime.run_command(["cp", f"{container_name}:{container_path}", str(local_path)], check=False)
 
     def _process_output(self, container_name: str, script_dir: str) -> tuple[Path | None, Path | None, Path | None]:
-        output_dir = Path(tempfile.mkdtemp(prefix="dma-collector-output-"))
-        copy_exit, _, _ = self.copy_from_container(container_name, f"{script_dir}/output/.", output_dir)
-        if copy_exit != 0:
-            output_dir = None
+        temp_dir = Path(tempfile.mkdtemp(prefix="dma-collector-output-"))
+        copy_exit, _, _ = self.copy_from_container(container_name, f"{script_dir}/output/.", temp_dir)
+        output_dir: Path | None = temp_dir if copy_exit == 0 else None
 
         output_archive = None
         error_log = None

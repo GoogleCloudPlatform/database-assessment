@@ -22,6 +22,8 @@ html_theme = "sphinx_immaterial"
 html_static_path = ["_static"]
 html_css_files = ["custom.css"]
 
+suppress_warnings = ["ref.param"]
+
 myst_enable_extensions = [
     "colon_fence",
     "attrs_block",

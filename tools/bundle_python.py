@@ -27,10 +27,10 @@ import rich_click as click
 from rich.console import Console
 from rich.rule import Rule
 
-try:
+if sys.version_info >= (3, 11):
     import tomllib
-except ModuleNotFoundError:  # pragma: no cover - Python 3.12+ ships tomllib
-    import tomli as tomllib  # type: ignore[no-redef]
+else:
+    import tomli as tomllib
 
 
 DEFAULT_PYTHON_VERSION = "3.13"
@@ -689,6 +689,7 @@ def build_bundle(
         else:
             cache_root = resolved_cache / "python-build-standalone" / resolved_target
             ensure_directory(cache_root)
+            assert url is not None
             archive_name = Path(url).name
             archive_path = cache_root / archive_name
             if refresh and archive_path.exists():
