@@ -29,10 +29,10 @@ sqlcmd (version 11.0.7512.11 or greater)
 
 If needed sqlcmd can be downloaded from [here](https://learn.microsoft.com/en-us/sql/tools/sqlcmd/sqlcmd-utility?view=sql-server-ver16&tabs=odbc%2Cwindows#download-and-install-sqlcmd)
 
-!!! note
-
-    - Ensure that the `ODBC` version of `sqlcmd` is used.
-    - Ensure that `sqlcmd` is also in your `$PATH` variable.
+:::{note}
+- Ensure that the `ODBC` version of `sqlcmd` is used.
+- Ensure that `sqlcmd` is also in your `$PATH` variable.
+:::
 
 ## Execute collection script
 
@@ -241,7 +241,7 @@ To Execute the Collection:
           3. When using a port to connect only provide the local host name
           4. The manualUniqueId can be used to give the collection a unique identifier specified by the customer
 
-#### CollectVMSpecs
+### CollectVMSpecs
 
 To provide rightsizing information the script attempts to connect to the host VM using the current users credentials and collect hardware specs (number of CPUs/amount of memory).
 
@@ -255,8 +255,9 @@ This is recommended if you plan to upload the results to the Migration Center.
 
 Upon completion, the tool will automatically create an archive of the extracted metrics for upload into the DMA application.
 
-!!! important
-    Do not modify the name or the contents of the zip file without consultation from Google.
+:::{important}
+Do not modify the name or the contents of the zip file without consultation from Google.
+:::
 
 ## License Requirements
 

@@ -1,7 +1,8 @@
 # Gather workload metadata
 
-!!! note
-    For Postgres homogeneous migrations, please upload the collections files to Google Migration Center
+:::{note}
+For Postgres homogeneous migrations, please upload the collections files to Google Migration Center
+:::
 
 
 The workload collection supports Postgres 12 and newer. Older versions of Postgres are not currently supported.
@@ -101,8 +102,9 @@ To collect data for a single database:
 
 Upon completion, the tool will automatically create an archive of the extracted metrics for upload into the DMA application.  Do not modify the file names or contents.
 
-!!! important
-    Do not modify the name or the contents of the zip file without consultation from Google.
+:::{important}
+Do not modify the name or the contents of the zip file without consultation from Google.
+:::
 
 ## License
 
