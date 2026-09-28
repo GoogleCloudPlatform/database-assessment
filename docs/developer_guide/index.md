@@ -26,7 +26,6 @@ Learn about how we develop the collector.
 
 developer_setup
 commands
-collection-format
 workflows
 releases
 ```

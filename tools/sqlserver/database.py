@@ -71,14 +71,13 @@ class DatabaseConfig:
     hostname: str = "db"
     host_port: int | None = None
     container_port: int = 1433
-    # Password must meet SQL Server complexity: uppercase, lowercase, digit, special char, 8+ chars
     sa_password: str = "Super-secret1"
     accept_eula: str = "Y"
     mssql_pid: str = "Developer"
     data_volume_name: str = "dma-test-mssql-data"
     health_interval: int = 10
     health_timeout: int = 5
-    health_retries: int = 20  # SQL Server can take a while to start
+    health_retries: int = 20
     restart_policy: str = "unless-stopped"
     extra_env: dict[str, str] = field(default_factory=dict)
 
@@ -113,7 +112,6 @@ class SQLServerDatabase:
         """
         config = self.config
 
-        # Handle existing container
         if self.runtime.container_running(config.container_name):
             if not recreate:
                 raise ContainerAlreadyRunningError(config.container_name)
@@ -122,21 +120,17 @@ class SQLServerDatabase:
             if recreate:
                 self.remove(force=True)
             else:
-                # Start existing stopped container
                 self.runtime.start_container(config.container_name)
                 if config.host_port is None:
                     self.config.host_port = self._get_allocated_port()
                 self._wait_for_health()
                 return
 
-        # Pull image if requested
         if pull:
             self.runtime.pull_image(config.image)
 
-        # Create data volume
         self.runtime.create_volume(config.data_volume_name)
 
-        # Build run command
         run_args = self._build_run_args()
 
         try:
@@ -150,18 +144,15 @@ class SQLServerDatabase:
             msg = f"Failed to start container: {e}"
             raise ContainerStartError(msg, container_name=config.container_name, logs=logs) from e
 
-        # Get allocated port if dynamic
         if config.host_port is None:
             self.config.host_port = self._get_allocated_port()
 
-        # Wait for database to be ready
         self._wait_for_health()
 
     def _build_run_args(self) -> list[str]:
         """Build the docker run command arguments."""
         config = self.config
 
-        # Build the health check command
         health_cmd = f"/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '{config.sa_password}' -Q 'SELECT 1' -C -b"
 
         args = [
@@ -193,17 +184,14 @@ class SQLServerDatabase:
             str(config.health_retries),
         ]
 
-        # Port mapping
         if config.host_port is not None:
-            args.extend(["-p", f"{config.host_port}:{config.container_port}"])
+            args.extend(["-p", f"127.0.0.1:{config.host_port}:{config.container_port}"])
         else:
-            args.extend(["-p", str(config.container_port)])
+            args.extend(["-p", f"127.0.0.1::{config.container_port}"])
 
-        # Additional environment variables
         for key, value in config.extra_env.items():
             args.extend(["-e", f"{key}={value}"])
 
-        # Image
         args.append(config.image)
 
         return args
@@ -262,8 +250,8 @@ class SQLServerDatabase:
                     self.config.sa_password,
                     "-Q",
                     "SELECT 1",
-                    "-C",  # Trust server certificate
-                    "-b",  # Exit on error
+                    "-C",
+                    "-b",
                 ],
                 check=False,
             )

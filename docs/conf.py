@@ -1,19 +1,25 @@
+"""Sphinx configuration for Database Migration Assessment documentation."""
+
+from __future__ import annotations
+
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path("../src").resolve()))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
+
+from dma.__about__ import __version__
 
 project = "Database Migration Assessment"
 copyright = "2024, Google LLC"
 author = "Google LLC"
+version = __version__
+release = __version__
 
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "myst_parser",
-    "sphinx_copybutton",
     "sphinx_design",
     "sphinx_immaterial",
 ]
@@ -64,7 +70,6 @@ html_theme_options = {
         "navigation.tabs",
         "navigation.sections",
         "navigation.top",
-        "toc.sticky",
         "search.share",
         "content.code.annotate",
         "content.code.copy",

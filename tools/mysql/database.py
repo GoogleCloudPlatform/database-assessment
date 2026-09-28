@@ -79,7 +79,7 @@ class DatabaseConfig:
     data_volume_name: str = "dma-test-mysql-data"
     health_interval: int = 10
     health_timeout: int = 5
-    health_retries: int = 15  # MySQL can take longer to start
+    health_retries: int = 15
     restart_policy: str = "unless-stopped"
     extra_env: dict[str, str] = field(default_factory=dict)
 
@@ -114,7 +114,6 @@ class MySQLDatabase:
         """
         config = self.config
 
-        # Handle existing container
         if self.runtime.container_running(config.container_name):
             if not recreate:
                 raise ContainerAlreadyRunningError(config.container_name)
@@ -123,21 +122,17 @@ class MySQLDatabase:
             if recreate:
                 self.remove(force=True)
             else:
-                # Start existing stopped container
                 self.runtime.start_container(config.container_name)
                 if config.host_port is None:
                     self.config.host_port = self._get_allocated_port()
                 self._wait_for_health()
                 return
 
-        # Pull image if requested
         if pull:
             self.runtime.pull_image(config.image)
 
-        # Create data volume
         self.runtime.create_volume(config.data_volume_name)
 
-        # Build run command
         run_args = self._build_run_args()
 
         try:
@@ -151,11 +146,9 @@ class MySQLDatabase:
             msg = f"Failed to start container: {e}"
             raise ContainerStartError(msg, container_name=config.container_name, logs=logs) from e
 
-        # Get allocated port if dynamic
         if config.host_port is None:
             self.config.host_port = self._get_allocated_port()
 
-        # Wait for database to be ready
         self._wait_for_health()
 
     def _build_run_args(self) -> list[str]:
@@ -195,17 +188,14 @@ class MySQLDatabase:
             str(config.health_retries),
         ]
 
-        # Port mapping
         if config.host_port is not None:
-            args.extend(["-p", f"{config.host_port}:{config.container_port}"])
+            args.extend(["-p", f"127.0.0.1:{config.host_port}:{config.container_port}"])
         else:
-            args.extend(["-p", str(config.container_port)])
+            args.extend(["-p", f"127.0.0.1::{config.container_port}"])
 
-        # Additional environment variables
         for key, value in config.extra_env.items():
             args.extend(["-e", f"{key}={value}"])
 
-        # Image
         args.append(config.image)
 
         return args

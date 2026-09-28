@@ -178,10 +178,22 @@ test:                                               ## Run the tests
 	@uv run pytest -n 2 --dist loadgroup --cov
 	@echo "=> Tests complete"
 
+.PHONY: test-unit
+test-unit:                                          ## Run unit tests only (no containers)
+	@echo "=> Running unit tests"
+	@uv run pytest tests/unit -n 0 --no-cov
+	@echo "=> Unit tests complete"
+
+.PHONY: test-integration
+test-integration:                                   ## Run integration and collection script tests
+	@echo "=> Running integration tests"
+	@uv run pytest tests/integration -n 2 --dist loadgroup --no-cov
+	@echo "=> Integration tests complete"
+
 .PHONY: test-all-pythons
 test-all-pythons:                                   ## Run the tests against all Python versions
-	@echo "=> Running test cases for Python 3.9-3.13"
-	@for version in 3.9 3.10 3.11 3.12 3.13; do \
+	@echo "=> Running test cases for Python 3.10-3.13"
+	@for version in 3.10 3.11 3.12 3.13; do \
 		echo "=> Testing with Python $$version"; \
 		uv run --python $$version pytest -n 2 --dist loadgroup --cov; \
 	done

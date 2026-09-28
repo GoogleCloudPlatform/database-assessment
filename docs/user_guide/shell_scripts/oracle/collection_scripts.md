@@ -218,8 +218,9 @@ User creation and data collection across many databases can be automated.
 
 Upon completion, the tool will automatically create an archive of the extracted metrics for upload into the DMA application.
 
-!!! important
-    Do not modify the name or the contents of the zip file without consultation from Google.
+:::{important}
+Do not modify the name or the contents of the zip file without consultation from Google.
+:::
 
 ## License
 

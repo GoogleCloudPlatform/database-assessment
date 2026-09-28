@@ -27,25 +27,25 @@ import rich_click as click
 from rich.console import Console
 from rich.rule import Rule
 
-if sys.version_info >= (3, 11):
+try:
     import tomllib
-else:
-    import tomli as tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python 3.12+ ships tomllib
+    import tomli as tomllib  # type: ignore[no-redef]
 
 
 DEFAULT_PYTHON_VERSION = "3.13"
 DEFAULT_INSTALL_ROOT = "~/.local"
 DEFAULT_CACHE_DIRNAME = ".cache/bundler"
 
-# Mapping from Rust target to Python Build Standalone URL (Python 3.13.13)
+# Mapping from Rust target to Python Build Standalone URL (Python 3.13.9)
 # Source: build.rs in pyapp 0.29.0
-# Release: https://github.com/astral-sh/python-build-standalone/releases/tag/20260510
+# Release: https://github.com/astral-sh/python-build-standalone/releases/tag/20251014
 DEFAULT_URLS: dict[str, str] = {
-    "x86_64-unknown-linux-gnu": "https://github.com/astral-sh/python-build-standalone/releases/download/20260510/cpython-3.13.13%2B20260510-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
-    "aarch64-unknown-linux-gnu": "https://github.com/astral-sh/python-build-standalone/releases/download/20260510/cpython-3.13.13%2B20260510-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz",
-    "x86_64-apple-darwin": "https://github.com/astral-sh/python-build-standalone/releases/download/20260510/cpython-3.13.13%2B20260510-x86_64-apple-darwin-install_only_stripped.tar.gz",
-    "aarch64-apple-darwin": "https://github.com/astral-sh/python-build-standalone/releases/download/20260510/cpython-3.13.13%2B20260510-aarch64-apple-darwin-install_only_stripped.tar.gz",
-    "x86_64-pc-windows-msvc": "https://github.com/astral-sh/python-build-standalone/releases/download/20260510/cpython-3.13.13%2B20260510-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+    "x86_64-unknown-linux-gnu": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
+    "aarch64-unknown-linux-gnu": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz",
+    "x86_64-apple-darwin": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-apple-darwin-install_only_stripped.tar.gz",
+    "aarch64-apple-darwin": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-aarch64-apple-darwin-install_only_stripped.tar.gz",
+    "x86_64-pc-windows-msvc": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
 }
 
 # Mapping from Rust target to uv pip --python-platform value
@@ -236,22 +236,21 @@ def download_with_retry(url: str, dest: Path, max_retries: int = 3) -> None:
     """Download a file with retry logic."""
 
     for attempt in range(max_retries):
-        console.print(f"[blue]Downloading[/] {url}...")
         try:
+            console.print(f"[blue]Downloading[/] {url}...")
             urllib.request.urlretrieve(url, dest)
+            if dest.exists() and dest.stat().st_size > 0:
+                size_mb = dest.stat().st_size / (1024 * 1024)
+                console.print(f"[green]OK[/] Downloaded {size_mb:.1f} MB")
+                return
+            console.print("[yellow]Warning:[/] Downloaded file appears empty, retrying...")
         except urllib.error.URLError as exc:
             if attempt < max_retries - 1:
                 console.print(f"[yellow]Warning:[/] Download failed (attempt {attempt + 1}/{max_retries}): {exc}")
                 console.print("[dim]Retrying...[/]")
-                continue
-            msg = f"Failed to download after {max_retries} attempts: {exc}"
-            raise click.ClickException(msg) from exc
-
-        if dest.exists() and dest.stat().st_size > 0:
-            size_mb = dest.stat().st_size / (1024 * 1024)
-            console.print(f"[green]OK[/] Downloaded {size_mb:.1f} MB")
-            return
-        console.print("[yellow]Warning:[/] Downloaded file appears empty, retrying...")
+            else:
+                msg = f"Failed to download after {max_retries} attempts: {exc}"
+                raise click.ClickException(msg) from exc
 
 
 def find_site_packages(python_root: Path, target: str, python_version: str) -> Path:
@@ -689,7 +688,6 @@ def build_bundle(
         else:
             cache_root = resolved_cache / "python-build-standalone" / resolved_target
             ensure_directory(cache_root)
-            assert url is not None
             archive_name = Path(url).name
             archive_path = cache_root / archive_name
             if refresh and archive_path.exists():

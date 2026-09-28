@@ -70,6 +70,7 @@ class DatabaseConfig:
         build_args: Arguments to pass during image build.
         extra_env: Additional environment variables.
         extra_command: Additional command arguments for postgres.
+        data_mount_path: Mount path inside the container (use "/var/lib/postgresql" for PG 18+).
     """
 
     container_name: str = "dma-test-postgres"
@@ -90,7 +91,7 @@ class DatabaseConfig:
     build_args: dict[str, str] = field(default_factory=dict)
     extra_env: dict[str, str] = field(default_factory=dict)
     extra_command: list[str] = field(default_factory=list)
-    data_mount_path: str = "/var/lib/postgresql/data"  # For PG 18+, use "/var/lib/postgresql"
+    data_mount_path: str = "/var/lib/postgresql/data"
 
 
 class PostgreSQLDatabase:
@@ -123,7 +124,6 @@ class PostgreSQLDatabase:
         """
         config = self.config
 
-        # Handle existing container
         if self.runtime.container_running(config.container_name):
             if not recreate:
                 raise ContainerAlreadyRunningError(config.container_name)
@@ -132,23 +132,19 @@ class PostgreSQLDatabase:
             if recreate:
                 self.remove(force=True)
             else:
-                # Start existing stopped container
                 self.runtime.start_container(config.container_name)
                 if config.host_port is None:
                     self.config.host_port = self._get_allocated_port()
                 self._wait_for_health()
                 return
 
-        # Build or pull image
         if config.build_context is not None:
             self._build_image()
         elif pull:
             self.runtime.pull_image(config.image)
 
-        # Create data volume
         self.runtime.create_volume(config.data_volume_name)
 
-        # Build run command
         run_args = self._build_run_args()
 
         try:
@@ -162,11 +158,9 @@ class PostgreSQLDatabase:
             msg = f"Failed to start container: {e}"
             raise ContainerStartError(msg, container_name=config.container_name, logs=logs) from e
 
-        # Get allocated port if dynamic
         if config.host_port is None:
             self.config.host_port = self._get_allocated_port()
 
-        # Wait for database to be ready
         self._wait_for_health()
 
     def _build_image(self) -> None:
@@ -183,7 +177,11 @@ class PostgreSQLDatabase:
         )
 
     def _build_run_args(self) -> list[str]:
-        """Build the docker run command arguments."""
+        """Build the docker run command arguments.
+
+        Binds host ports to 127.0.0.1 to prevent wildcard interface collisions
+        when starting multiple containers in parallel under pytest-xdist.
+        """
         config = self.config
 
         args = [
@@ -213,20 +211,16 @@ class PostgreSQLDatabase:
             str(config.health_retries),
         ]
 
-        # Port mapping
         if config.host_port is not None:
-            args.extend(["-p", f"{config.host_port}:{config.container_port}"])
+            args.extend(["-p", f"127.0.0.1:{config.host_port}:{config.container_port}"])
         else:
-            args.extend(["-p", str(config.container_port)])
+            args.extend(["-p", f"127.0.0.1::{config.container_port}"])
 
-        # Additional environment variables
         for key, value in config.extra_env.items():
             args.extend(["-e", f"{key}={value}"])
 
-        # Image
         args.append(config.image)
 
-        # Additional postgres command arguments
         if config.extra_command:
             args.extend(config.extra_command)
 

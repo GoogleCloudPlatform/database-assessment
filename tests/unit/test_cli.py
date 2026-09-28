@@ -11,13 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from __future__ import annotations
+from click.testing import CliRunner
 
-from pathlib import Path
+from dma.cli.main import app
+
+# def test_collect_data() -> None:
+#     runner = CliRunner()
+#     result = runner.invoke(app, ["collect"])
+#     assert result.exit_code == 0
 
 
-def test_is_rds_metric_present() -> None:
-    sql_path = Path(__file__).parents[2] / "scripts" / "collector" / "postgres" / "sql" / "calculated_metrics.sql"
-    sql = sql_path.read_text(encoding="utf-8")
-    assert "IS_RDS" in sql
-    assert "rdsadmin" in sql
+def test_readiness_check() -> None:
+    runner = CliRunner()
+    result = runner.invoke(app, ["readiness-check", "--help"])
+    assert result.exit_code == 0

@@ -36,31 +36,33 @@ Usage:
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import subprocess
 import tempfile
+import time
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import filelock
 import pytest
 from tools.lib.container import ContainerRuntime, NoRuntimeAvailableError
+from tools.mysql.database import ContainerStartError as MySQLContainerStartError
 from tools.mysql.database import DatabaseConfig as MySQLDatabaseConfig
 from tools.mysql.database import MySQLDatabase
+from tools.oracle.database import ContainerStartError as OracleContainerStartError
 from tools.oracle.database import DatabaseConfig as OracleDatabaseConfig
 from tools.oracle.database import OracleDatabase
+from tools.postgres.database import ContainerStartError as PostgresContainerStartError
 from tools.postgres.database import DatabaseConfig as PostgresDatabaseConfig
 from tools.postgres.database import PostgreSQLDatabase
+from tools.sqlserver.database import ContainerStartError as SQLServerContainerStartError
 from tools.sqlserver.database import DatabaseConfig as SQLServerDatabaseConfig
 from tools.sqlserver.database import SQLServerDatabase
 
 if TYPE_CHECKING:
     from collections.abc import Generator
-
-# =============================================================================
-# Version Constants
-# =============================================================================
 
 POSTGRES_VERSIONS = [
     "postgres:12",
@@ -87,22 +89,18 @@ SQLSERVER_VERSIONS = [
 ]
 
 
-# =============================================================================
-# Utility Functions
-# =============================================================================
-
-
 def slugify(value: str) -> str:
     """Convert a string to a URL/container-safe slug.
+
+    Strips any registry prefix before replacing non-alphanumeric characters
+    with hyphens.
 
     Examples:
         slugify("postgres:17") -> "postgres-17"
         slugify("gvenzl/oracle-free:23-slim-faststart") -> "oracle-free-23-slim-faststart"
     """
-    # Remove registry prefix if present
     if "/" in value:
         value = value.rsplit("/", maxsplit=1)[-1]
-    # Replace colons and other special chars with hyphens
     return re.sub(r"[^a-zA-Z0-9]+", "-", value).strip("-").lower()
 
 
@@ -120,16 +118,63 @@ def is_xdist_master() -> bool:
     return get_xdist_worker_id() == "master"
 
 
-# =============================================================================
-# Session Container Manager
-# =============================================================================
+class SessionRegistry:
+    """Tracks started containers across xdist workers in a shared JSON file."""
+
+    def __init__(self, run_uid: str | None = None) -> None:
+        uid = run_uid or os.environ.get("DMA_TEST_RUN_UID", "default")
+        self.base_dir = Path(tempfile.gettempdir())
+        self.registry_file = self.base_dir / f"pytest-dma-session-{uid}.json"
+        self.lock_file = self.base_dir / f"pytest-dma-session-{uid}.lock"
+
+    def _read_data(self) -> dict[str, Any]:
+        if not self.registry_file.exists():
+            return {"containers_started": []}
+        try:
+            with self.registry_file.open("r", encoding="utf-8") as f:
+                data: dict[str, Any] = json.load(f)
+                return data
+        except (OSError, json.JSONDecodeError):
+            return {"containers_started": []}
+
+    def _write_data(self, data: dict[str, Any]) -> None:
+        try:
+            with self.registry_file.open("w", encoding="utf-8") as f:
+                json.dump(data, f)
+        except OSError:
+            pass
+
+    def record_container_started(self, container_name: str) -> None:
+        """Record that a container was started during this test session."""
+        with filelock.FileLock(str(self.lock_file), timeout=30):
+            data = self._read_data()
+            started: list[str] = data.setdefault("containers_started", [])
+            if container_name not in started:
+                started.append(container_name)
+                self._write_data(data)
+
+    def get_started_containers(self) -> list[str]:
+        """Return the list of containers started in this test session."""
+        with filelock.FileLock(str(self.lock_file), timeout=30):
+            data = self._read_data()
+            return list(data.get("containers_started", []))
+
+    def cleanup_files(self) -> None:
+        """Remove session registry and lock files."""
+        for path in (self.registry_file, self.lock_file):
+            try:
+                if path.exists():
+                    path.unlink()
+            except OSError:
+                pass
 
 
 class SessionContainerManager:
     """Manages database containers across pytest-xdist workers.
 
-    Uses file locks to coordinate container startup between parallel workers,
-    ensuring only one worker starts each container and others wait for it.
+    Uses double-checked file locking to coordinate container startup between
+    parallel workers, ensuring only one worker starts each container and
+    others reuse the running instance.
     """
 
     def __init__(self) -> None:
@@ -137,80 +182,109 @@ class SessionContainerManager:
         self.runtime = ContainerRuntime()
         self.lock_dir = Path(tempfile.gettempdir()) / "pytest-dma-locks"
         self.lock_dir.mkdir(exist_ok=True, parents=True)
-        self._started_containers: list[str] = []
+        self.registry = SessionRegistry()
 
     def get_lock_path(self, name: str) -> Path:
         """Get the lock file path for a container name."""
         return self.lock_dir / f"{name}.lock"
 
     def ensure_postgres(self, config: PostgresDatabaseConfig) -> PostgreSQLDatabase:
-        """Ensure a PostgreSQL container is running.
+        """Ensure a PostgreSQL container is running and healthy."""
+        db = PostgreSQLDatabase(self.runtime, config)
+        if self.runtime.container_running(config.container_name) and db.is_healthy():
+            if config.host_port is None:
+                config.host_port = db._get_allocated_port()
+            self.registry.record_container_started(config.container_name)
+            return db
 
-        Uses file locking to coordinate with other xdist workers.
-        """
-        lock = filelock.FileLock(str(self.get_lock_path(config.container_name)))
+        lock = filelock.FileLock(str(self.get_lock_path(config.container_name)), timeout=360)
         with lock:
-            if self.runtime.container_running(config.container_name):
-                # Container already running, just get the port
+            if self.runtime.container_running(config.container_name) and db.is_healthy():
                 if config.host_port is None:
-                    db = PostgreSQLDatabase(self.runtime, config)
                     config.host_port = db._get_allocated_port()
             else:
-                db = PostgreSQLDatabase(self.runtime, config)
-                db.start(pull=False, recreate=False)
-                self._started_containers.append(config.container_name)
+                self._start_with_retry(db, PostgresContainerStartError)
+            self.registry.record_container_started(config.container_name)
 
-        return PostgreSQLDatabase(self.runtime, config)
+        return db
 
     def ensure_mysql(self, config: MySQLDatabaseConfig) -> MySQLDatabase:
-        """Ensure a MySQL container is running."""
-        lock = filelock.FileLock(str(self.get_lock_path(config.container_name)))
+        """Ensure a MySQL container is running and healthy."""
+        db = MySQLDatabase(self.runtime, config)
+        if self.runtime.container_running(config.container_name) and db.is_healthy():
+            if config.host_port is None:
+                config.host_port = db._get_allocated_port()
+            self.registry.record_container_started(config.container_name)
+            return db
+
+        lock = filelock.FileLock(str(self.get_lock_path(config.container_name)), timeout=360)
         with lock:
-            if self.runtime.container_running(config.container_name):
+            if self.runtime.container_running(config.container_name) and db.is_healthy():
                 if config.host_port is None:
-                    db = MySQLDatabase(self.runtime, config)
                     config.host_port = db._get_allocated_port()
             else:
-                db = MySQLDatabase(self.runtime, config)
-                db.start(pull=False, recreate=False)
-                self._started_containers.append(config.container_name)
+                self._start_with_retry(db, MySQLContainerStartError)
+            self.registry.record_container_started(config.container_name)
 
-        return MySQLDatabase(self.runtime, config)
+        return db
 
     def ensure_oracle(self, config: OracleDatabaseConfig) -> OracleDatabase:
-        """Ensure an Oracle container is running."""
-        lock = filelock.FileLock(str(self.get_lock_path(config.container_name)))
+        """Ensure an Oracle container is running and healthy."""
+        db = OracleDatabase(self.runtime, config)
+        if self.runtime.container_running(config.container_name) and db.is_healthy():
+            if config.host_port is None:
+                config.host_port = db._get_allocated_port()
+            self.registry.record_container_started(config.container_name)
+            return db
+
+        lock = filelock.FileLock(str(self.get_lock_path(config.container_name)), timeout=360)
         with lock:
-            if self.runtime.container_running(config.container_name):
+            if self.runtime.container_running(config.container_name) and db.is_healthy():
                 if config.host_port is None:
-                    db = OracleDatabase(self.runtime, config)
                     config.host_port = db._get_allocated_port()
             else:
-                db = OracleDatabase(self.runtime, config)
-                db.start(pull=False, recreate=False)
-                self._started_containers.append(config.container_name)
+                self._start_with_retry(db, OracleContainerStartError)
+            self.registry.record_container_started(config.container_name)
 
-        return OracleDatabase(self.runtime, config)
+        return db
 
     def ensure_sqlserver(self, config: SQLServerDatabaseConfig) -> SQLServerDatabase:
-        """Ensure a SQL Server container is running."""
-        lock = filelock.FileLock(str(self.get_lock_path(config.container_name)))
+        """Ensure a SQL Server container is running and healthy."""
+        db = SQLServerDatabase(self.runtime, config)
+        if self.runtime.container_running(config.container_name) and db.is_healthy():
+            if config.host_port is None:
+                config.host_port = db._get_allocated_port()
+            self.registry.record_container_started(config.container_name)
+            return db
+
+        lock = filelock.FileLock(str(self.get_lock_path(config.container_name)), timeout=360)
         with lock:
-            if self.runtime.container_running(config.container_name):
+            if self.runtime.container_running(config.container_name) and db.is_healthy():
                 if config.host_port is None:
-                    db = SQLServerDatabase(self.runtime, config)
                     config.host_port = db._get_allocated_port()
             else:
-                db = SQLServerDatabase(self.runtime, config)
-                db.start(pull=False, recreate=False)
-                self._started_containers.append(config.container_name)
+                self._start_with_retry(db, SQLServerContainerStartError)
+            self.registry.record_container_started(config.container_name)
 
-        return SQLServerDatabase(self.runtime, config)
+        return db
 
-
-# =============================================================================
-# Pytest Fixtures
-# =============================================================================
+    @staticmethod
+    def _start_with_retry(
+        db: PostgreSQLDatabase | MySQLDatabase | OracleDatabase | SQLServerDatabase,
+        error_cls: type[Exception],
+        max_attempts: int = 3,
+    ) -> None:
+        """Start a database container, retrying on transient dynamic port conflicts."""
+        for attempt in range(max_attempts):
+            try:
+                db.start(pull=False, recreate=attempt > 0)
+            except error_cls:
+                if attempt + 1 >= max_attempts:
+                    raise
+                db.config.host_port = None
+                time.sleep(1)
+            else:
+                return
 
 
 @pytest.fixture(scope="session")
@@ -224,30 +298,6 @@ def container_manager() -> Generator[SessionContainerManager, None, None]:
     yield manager
 
 
-@pytest.fixture(scope="session")
-def postgres_docker_ip() -> str:
-    """Return the Docker host IP address for PostgreSQL connections."""
-    return "localhost"
-
-
-@pytest.fixture(scope="session")
-def postgres_user() -> str:
-    """Return the PostgreSQL username."""
-    return "postgres"
-
-
-@pytest.fixture(scope="session")
-def postgres_password() -> str:
-    """Return the PostgreSQL password."""
-    return "super-secret"
-
-
-@pytest.fixture(scope="session")
-def postgres_database() -> str:
-    """Return the PostgreSQL database name."""
-    return "postgres"
-
-
 @pytest.fixture(scope="session", params=POSTGRES_VERSIONS, ids=slugify)
 def postgres_collector_db(
     request: pytest.FixtureRequest,
@@ -256,25 +306,21 @@ def postgres_collector_db(
     """Session-scoped PostgreSQL database container.
 
     Parameterized to test against multiple PostgreSQL versions.
-    Uses dynamic port allocation to avoid conflicts.
+    Uses dynamic loopback port allocation to avoid conflicts.
+    PostgreSQL 18+ mounts "/var/lib/postgresql" instead of "/var/lib/postgresql/data".
     """
     image = request.param
     version_tag = slugify(image)
 
-    # Check if we need to build a custom image (for pglogical support)
     postgres_integration_dir = Path(__file__).parent / "integration" / "postgres"
     dockerfile_path = postgres_integration_dir / "Dockerfile"
 
     if dockerfile_path.exists():
-        # Extract major version from image tag
         version_match = re.search(r":(\d+)", image)
         if version_match:
             pg_version = version_match.group(1)
             pg_major = int(pg_version)
             custom_image = f"dma-test-postgres-pglogical:{pg_version}"
-
-            # PG 18+ changed the data directory structure
-            # See: https://github.com/docker-library/postgres/pull/1259
             data_mount_path = "/var/lib/postgresql" if pg_major >= 18 else "/var/lib/postgresql/data"
 
             config = PostgresDatabaseConfig(
@@ -309,106 +355,6 @@ def postgres_collector_db(
         )
 
     yield container_manager.ensure_postgres(config)
-
-
-# Version-specific PostgreSQL fixtures for backwards compatibility
-@pytest.fixture(scope="session")
-def postgres12_port(postgres_collector_db: PostgreSQLDatabase, request: pytest.FixtureRequest) -> int:
-    """Port for PostgreSQL 12."""
-    if "postgres:12" not in str(request.node.callspec.params.get("postgres_collector_db", "")):
-        pytest.skip("Not testing PostgreSQL 12")
-    return postgres_collector_db.config.host_port or 5432
-
-
-@pytest.fixture(scope="session")
-def postgres13_port(postgres_collector_db: PostgreSQLDatabase, request: pytest.FixtureRequest) -> int:
-    """Port for PostgreSQL 13."""
-    if "postgres:13" not in str(request.node.callspec.params.get("postgres_collector_db", "")):
-        pytest.skip("Not testing PostgreSQL 13")
-    return postgres_collector_db.config.host_port or 5432
-
-
-@pytest.fixture(scope="session")
-def postgres14_port(postgres_collector_db: PostgreSQLDatabase, request: pytest.FixtureRequest) -> int:
-    """Port for PostgreSQL 14."""
-    if "postgres:14" not in str(request.node.callspec.params.get("postgres_collector_db", "")):
-        pytest.skip("Not testing PostgreSQL 14")
-    return postgres_collector_db.config.host_port or 5432
-
-
-@pytest.fixture(scope="session")
-def postgres15_port(postgres_collector_db: PostgreSQLDatabase, request: pytest.FixtureRequest) -> int:
-    """Port for PostgreSQL 15."""
-    if "postgres:15" not in str(request.node.callspec.params.get("postgres_collector_db", "")):
-        pytest.skip("Not testing PostgreSQL 15")
-    return postgres_collector_db.config.host_port or 5432
-
-
-@pytest.fixture(scope="session")
-def postgres16_port(postgres_collector_db: PostgreSQLDatabase, request: pytest.FixtureRequest) -> int:
-    """Port for PostgreSQL 16."""
-    if "postgres:16" not in str(request.node.callspec.params.get("postgres_collector_db", "")):
-        pytest.skip("Not testing PostgreSQL 16")
-    return postgres_collector_db.config.host_port or 5432
-
-
-@pytest.fixture(scope="session")
-def postgres17_port(postgres_collector_db: PostgreSQLDatabase, request: pytest.FixtureRequest) -> int:
-    """Port for PostgreSQL 17."""
-    if "postgres:17" not in str(request.node.callspec.params.get("postgres_collector_db", "")):
-        pytest.skip("Not testing PostgreSQL 17")
-    return postgres_collector_db.config.host_port or 5432
-
-
-@pytest.fixture(scope="session")
-def postgres18_port(postgres_collector_db: PostgreSQLDatabase, request: pytest.FixtureRequest) -> int:
-    """Port for PostgreSQL 18."""
-    if "postgres:18" not in str(request.node.callspec.params.get("postgres_collector_db", "")):
-        pytest.skip("Not testing PostgreSQL 18")
-    return postgres_collector_db.config.host_port or 5432
-
-
-# Version-specific service fixtures (no-op, for backwards compatibility)
-@pytest.fixture(scope="session")
-def postgres12_service(postgres_collector_db: PostgreSQLDatabase) -> None:
-    """Ensure PostgreSQL 12 is running (backwards compatibility)."""
-    return
-
-
-@pytest.fixture(scope="session")
-def postgres13_service(postgres_collector_db: PostgreSQLDatabase) -> None:
-    """Ensure PostgreSQL 13 is running (backwards compatibility)."""
-    return
-
-
-@pytest.fixture(scope="session")
-def postgres14_service(postgres_collector_db: PostgreSQLDatabase) -> None:
-    """Ensure PostgreSQL 14 is running (backwards compatibility)."""
-    return
-
-
-@pytest.fixture(scope="session")
-def postgres15_service(postgres_collector_db: PostgreSQLDatabase) -> None:
-    """Ensure PostgreSQL 15 is running (backwards compatibility)."""
-    return
-
-
-@pytest.fixture(scope="session")
-def postgres16_service(postgres_collector_db: PostgreSQLDatabase) -> None:
-    """Ensure PostgreSQL 16 is running (backwards compatibility)."""
-    return
-
-
-@pytest.fixture(scope="session")
-def postgres17_service(postgres_collector_db: PostgreSQLDatabase) -> None:
-    """Ensure PostgreSQL 17 is running (backwards compatibility)."""
-    return
-
-
-@pytest.fixture(scope="session")
-def postgres18_service(postgres_collector_db: PostgreSQLDatabase) -> None:
-    """Ensure PostgreSQL 18 is running (backwards compatibility)."""
-    return
 
 
 @pytest.fixture(scope="session", params=MYSQL_VERSIONS, ids=slugify)
@@ -468,18 +414,24 @@ def sqlserver_collector_db(
     yield container_manager.ensure_sqlserver(config)
 
 
-# =============================================================================
-# Pytest Hooks
-# =============================================================================
-
-
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     """Clean up test containers at the end of the session.
 
-    Only the master xdist process performs cleanup to avoid race conditions.
+    Only the master xdist process performs cleanup, and only when containers
+    were actually started during the session and DMA_TEST_KEEP_CONTAINER is unset.
     """
-    # Only master/main process cleans up
     if not is_xdist_master():
+        return
+
+    registry = SessionRegistry()
+    started_containers = registry.get_started_containers()
+    registry.cleanup_files()
+
+    if not started_containers:
+        return
+
+    keep_container = os.environ.get("DMA_TEST_KEEP_CONTAINER", "").lower() in {"1", "true", "yes"}
+    if keep_container:
         return
 
     try:
@@ -492,13 +444,11 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
 
     cmd = runtime.get_runtime_command()
 
-    # Remove test containers
     containers = runtime.list_containers(include_all=True)
-    test_containers = [c for c in containers if c.startswith("dma-test-")]
+    test_containers = [c for c in containers if c in started_containers or c.startswith("dma-test-")]
     if test_containers:
         subprocess.run([cmd, "rm", "-f", *test_containers], capture_output=True, check=False)
 
-    # Remove volumes unless DMA_TEST_KEEP_VOLUMES is set
     keep_volumes = os.environ.get("DMA_TEST_KEEP_VOLUMES", "").lower() in {"1", "true", "yes"}
     if not keep_volumes:
         volumes = runtime.list_volumes()
@@ -511,20 +461,16 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
     """Add xdist_group markers based on database type and version.
 
     This ensures tests for the same database version run on the same worker
-    AND are serialized (not run in parallel), preventing test interference
-    when tests modify shared database state.
+    and are serialized, preventing test interference on shared database state.
     """
     for item in items:
-        # Check for database fixtures in the test
         if not hasattr(item, "fixturenames"):
             continue
 
-        # Get version-specific group name from parameterization
         group_suffix = ""
         if hasattr(item, "callspec") and hasattr(item.callspec, "params"):
             for param_name, param_value in item.callspec.params.items():
                 if "collector_db" in param_name and param_value:
-                    # Extract version from parameter value (e.g., "postgres:12" -> "12")
                     group_suffix = f"-{slugify(str(param_value))}"
                     break
 

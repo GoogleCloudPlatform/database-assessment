@@ -55,7 +55,7 @@ class RuntimeType(str, Enum):
     NONE = "none"
 
 
-class ContainerRuntime:  # noqa: PLR0904
+class ContainerRuntime:
     """Unified interface for Docker and Podman container operations.
 
     This class auto-detects the available container runtime (Docker or Podman)
@@ -73,7 +73,6 @@ class ContainerRuntime:  # noqa: PLR0904
         Checks for Docker first, then Podman. Returns RuntimeType.NONE if
         neither is available or responsive.
         """
-        # Check for Docker
         docker_path = shutil.which("docker")
         if docker_path:
             try:
@@ -89,7 +88,6 @@ class ContainerRuntime:  # noqa: PLR0904
             except (subprocess.SubprocessError, OSError):
                 pass
 
-        # Check for Podman
         podman_path = shutil.which("podman")
         if podman_path:
             try:
@@ -298,6 +296,8 @@ class ContainerRuntime:  # noqa: PLR0904
     def get_container_port(self, container_name: str, container_port: int) -> int | None:
         """Get the host port mapped to a container port.
 
+        Parses runtime port output (such as "127.0.0.1:49153", "0.0.0.0:49153", or ":::49153").
+
         Args:
             container_name: Name of the container.
             container_port: The container port to look up.
@@ -310,9 +310,8 @@ class ContainerRuntime:  # noqa: PLR0904
                 ["port", container_name, f"{container_port}/tcp"],
                 check=False,
             )
-            # Output format: "0.0.0.0:49153" or ":::49153"
             if stdout.strip():
-                port_str = stdout.strip().split(":")[-1]
+                port_str = stdout.strip().splitlines()[0].rsplit(":", maxsplit=1)[-1]
                 return int(port_str)
         except (subprocess.SubprocessError, OSError, ValueError):
             pass

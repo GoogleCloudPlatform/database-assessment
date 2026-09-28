@@ -78,10 +78,9 @@ class DatabaseConfig:
     app_user: str = "app"
     app_user_password: str = "super-secret"
     data_volume_name: str = "dma-test-oracle-data"
-    # Oracle needs longer timeouts - startup can take 2-5 minutes
     health_interval: int = 15
     health_timeout: int = 10
-    health_retries: int = 30  # 7.5 minutes max wait
+    health_retries: int = 30
     restart_policy: str = "unless-stopped"
     extra_env: dict[str, str] = field(default_factory=dict)
 
@@ -120,7 +119,6 @@ class OracleDatabase:
         """
         config = self.config
 
-        # Handle existing container
         if self.runtime.container_running(config.container_name):
             if not recreate:
                 raise ContainerAlreadyRunningError(config.container_name)
@@ -129,21 +127,17 @@ class OracleDatabase:
             if recreate:
                 self.remove(force=True)
             else:
-                # Start existing stopped container
                 self.runtime.start_container(config.container_name)
                 if config.host_port is None:
                     self.config.host_port = self._get_allocated_port()
                 self._wait_for_health()
                 return
 
-        # Pull image if requested
         if pull:
             self.runtime.pull_image(config.image)
 
-        # Create data volume
         self.runtime.create_volume(config.data_volume_name)
 
-        # Build run command
         run_args = self._build_run_args()
 
         try:
@@ -157,11 +151,9 @@ class OracleDatabase:
             msg = f"Failed to start container: {e}"
             raise ContainerStartError(msg, container_name=config.container_name, logs=logs) from e
 
-        # Get allocated port if dynamic
         if config.host_port is None:
             self.config.host_port = self._get_allocated_port()
 
-        # Wait for database to be ready
         self._wait_for_health()
 
     def _build_run_args(self) -> list[str]:
@@ -185,7 +177,6 @@ class OracleDatabase:
             f"APP_USER_PASSWORD={config.app_user_password}",
             "--restart",
             config.restart_policy,
-            # The gvenzl images provide a built-in healthcheck.sh script
             "--health-cmd",
             "healthcheck.sh",
             "--health-interval",
@@ -196,17 +187,14 @@ class OracleDatabase:
             str(config.health_retries),
         ]
 
-        # Port mapping
         if config.host_port is not None:
-            args.extend(["-p", f"{config.host_port}:{config.container_port}"])
+            args.extend(["-p", f"127.0.0.1:{config.host_port}:{config.container_port}"])
         else:
-            args.extend(["-p", str(config.container_port)])
+            args.extend(["-p", f"127.0.0.1::{config.container_port}"])
 
-        # Additional environment variables
         for key, value in config.extra_env.items():
             args.extend(["-e", f"{key}={value}"])
 
-        # Image
         args.append(config.image)
 
         return args
@@ -240,7 +228,7 @@ class OracleDatabase:
         config = self.config
         max_wait = config.health_interval * config.health_retries
         waited = 0
-        poll_interval = 5  # Longer poll interval for Oracle
+        poll_interval = 5
 
         while waited < max_wait:
             if self.is_healthy():

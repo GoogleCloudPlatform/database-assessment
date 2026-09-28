@@ -75,6 +75,7 @@ Source = "https://github.com/GoogleCloudPlatform/database-assessment"
 [project.optional-dependencies]
 # MySQL, MSSQL, and Oracle support coming in future releases
 oracle = ["oracledb"]
+postgres = ["psycopg[binary]>=3.0.0"]
 server = ["litestar[structlog,jinja]>=2.7.0", "litestar-granian>=0.2.3"]
 
 
@@ -274,10 +275,6 @@ module = ["sphinx.*", "pygments.*", "docutils.*"]
 ignore_missing_imports = true
 module = ["nodeenv", "sqlspec.*"]
 
-[[tool.mypy.overrides]]
-module = ["tools.bundle_python"]
-disable_error_code = ["type-var"]
-
 [tool.ruff]
 exclude = [
     ".bzr",
@@ -410,10 +407,11 @@ ban-relative-imports = "all"
 ]
 "scripts/post_build.py" = ["ERA001"]
 "scripts/pre_build.py" = ["ERA001"]
-"tools/*.py" = ["INP001", "S404", "T201", "PLR0914", "S310", "ANN001", "ANN201", "S202", "ERA001", "PLW0717"]
+"tools/**/*.py" = ["INP001", "S404", "T201", "PLR0904", "PLR0914", "S310", "ANN001", "ANN201", "S202", "ERA001"]
 "tests/**/*" = [
     "PLR2004",
     "S101",
+    "S324",
     "TID252",
     "ERA001",
     "ANN201",

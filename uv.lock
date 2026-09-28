@@ -644,6 +644,9 @@ dependencies = [
 oracle = [
     { name = "oracledb" },
 ]
+postgres = [
+    { name = "psycopg", extra = ["binary"] },
+]
 server = [
     { name = "litestar", extra = ["jinja", "structlog"] },
     { name = "litestar-granian" },
@@ -743,11 +746,12 @@ requires-dist = [
     { name = "oracledb", marker = "extra == 'oracle'" },
     { name = "polars", extras = ["pyarrow"], specifier = ">=0.20.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.0.0" },
+    { name = "psycopg", extras = ["binary"], marker = "extra == 'postgres'", specifier = ">=3.0.0" },
     { name = "rich-click", specifier = ">=1.7.3" },
     { name = "sqlalchemy", specifier = ">=2.0.25" },
     { name = "typing-extensions", specifier = ">=4.0.0" },
 ]
-provides-extras = ["oracle", "server"]
+provides-extras = ["oracle", "postgres", "server"]
 
 [package.metadata.requires-dev]
 build = [{ name = "bump-my-version", specifier = ">=1.2.4" }]

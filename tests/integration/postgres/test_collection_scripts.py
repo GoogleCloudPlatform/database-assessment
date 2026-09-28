@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Integration tests for packaged PostgreSQL collection scripts."""
+
 from __future__ import annotations
 
 import hashlib
@@ -123,54 +125,57 @@ def postgres_script_result_all_dbs(
     )
 
 
-class TestPostgresCollectionScript:
-    def test_postgres_collector_executes_successfully(self, postgres_script_result: CollectorResult) -> None:
-        assert postgres_script_result.exit_code == 0, (
-            f"Script failed.\nstdout:\n{postgres_script_result.stdout}\n\nstderr:\n{postgres_script_result.stderr}"
-        )
+def test_postgres_collector_executes_successfully(postgres_script_result: CollectorResult) -> None:
+    assert postgres_script_result.exit_code == 0, (
+        f"Script failed.\nstdout:\n{postgres_script_result.stdout}\n\nstderr:\n{postgres_script_result.stderr}"
+    )
 
-    def test_postgres_collector_creates_output_archive(self, postgres_script_result: CollectorResult) -> None:
-        assert postgres_script_result.output_archive is not None, "No output archive created"
-        assert postgres_script_result.output_archive.stat().st_size > 0, "Output archive is empty"
 
-    def test_postgres_collector_csv_files_valid(self, postgres_script_result: CollectorResult) -> None:
-        assert postgres_script_result.output_archive is not None
-        csv_files = [
-            name
-            for name, _ in _iter_archive_members(postgres_script_result.output_archive)
-            if name.endswith(".csv") and "defines" not in name
-        ]
-        assert csv_files, "No CSV files found in archive"
-        for csv_name in csv_files:
-            content = _read_archive_file(postgres_script_result.output_archive, csv_name).decode("utf-8")
-            header = content.splitlines()[0] if content.strip() else ""
-            if header:
-                assert "|" in header, f"CSV {csv_name} header missing pipe delimiter"
+def test_postgres_collector_creates_output_archive(postgres_script_result: CollectorResult) -> None:
+    assert postgres_script_result.output_archive is not None, "No output archive created"
+    assert postgres_script_result.output_archive.stat().st_size > 0, "Output archive is empty"
 
-    def test_postgres_collector_manifest_checksums(self, postgres_script_result: CollectorResult) -> None:
-        assert postgres_script_result.output_archive is not None
-        manifest_name = next(
-            name
-            for name, _ in _iter_archive_members(postgres_script_result.output_archive)
-            if "manifest" in name and name.endswith(".txt")
-        )
-        manifest_content = _read_archive_file(postgres_script_result.output_archive, manifest_name).decode("utf-8")
-        for line in manifest_content.strip().splitlines():
-            db_type, expected_md5, filename = line.split("|", maxsplit=2)
-            data = _read_archive_file(postgres_script_result.output_archive, filename)
-            actual_md5 = hashlib.md5(data).hexdigest()  # noqa: S324
-            assert db_type == "postgres"
-            assert actual_md5 == expected_md5
 
-    def test_postgres_collector_all_dbs_mode(self, postgres_script_result_all_dbs: CollectorResult) -> None:
-        assert postgres_script_result_all_dbs.output_dir is not None
-        archives = list(postgres_script_result_all_dbs.output_dir.glob("*.zip")) + list(
-            postgres_script_result_all_dbs.output_dir.glob("*.tar.gz")
-        )
-        assert len(archives) > 1, "Expected multiple archives when --allDbs Y is set"
-        for archive in archives:
-            members = list(_iter_archive_members(archive))
-            csv_files = [name for name, _ in members if name.endswith(".csv") and "defines" not in name]
-            manifests = [name for name, _ in members if "manifest" in name and name.endswith(".txt")]
-            assert csv_files, f"No CSV files found in {archive.name}"
-            assert manifests, f"No manifest file found in {archive.name}"
+def test_postgres_collector_csv_files_valid(postgres_script_result: CollectorResult) -> None:
+    assert postgres_script_result.output_archive is not None
+    csv_files = [
+        name
+        for name, _ in _iter_archive_members(postgres_script_result.output_archive)
+        if name.endswith(".csv") and "defines" not in name
+    ]
+    assert csv_files, "No CSV files found in archive"
+    for csv_name in csv_files:
+        content = _read_archive_file(postgres_script_result.output_archive, csv_name).decode("utf-8")
+        header = content.splitlines()[0] if content.strip() else ""
+        if header:
+            assert "|" in header, f"CSV {csv_name} header missing pipe delimiter"
+
+
+def test_postgres_collector_manifest_checksums(postgres_script_result: CollectorResult) -> None:
+    assert postgres_script_result.output_archive is not None
+    manifest_name = next(
+        name
+        for name, _ in _iter_archive_members(postgres_script_result.output_archive)
+        if "manifest" in name and name.endswith(".txt")
+    )
+    manifest_content = _read_archive_file(postgres_script_result.output_archive, manifest_name).decode("utf-8")
+    for line in manifest_content.strip().splitlines():
+        db_type, expected_md5, filename = line.split("|", maxsplit=2)
+        data = _read_archive_file(postgres_script_result.output_archive, filename)
+        actual_md5 = hashlib.md5(data).hexdigest()
+        assert db_type == "postgres"
+        assert actual_md5 == expected_md5
+
+
+def test_postgres_collector_all_dbs_mode(postgres_script_result_all_dbs: CollectorResult) -> None:
+    assert postgres_script_result_all_dbs.output_dir is not None
+    archives = list(postgres_script_result_all_dbs.output_dir.glob("*.zip")) + list(
+        postgres_script_result_all_dbs.output_dir.glob("*.tar.gz")
+    )
+    assert len(archives) > 1, "Expected multiple archives when --allDbs Y is set"
+    for archive in archives:
+        members = list(_iter_archive_members(archive))
+        csv_files = [name for name, _ in members if name.endswith(".csv") and "defines" not in name]
+        manifests = [name for name, _ in members if "manifest" in name and name.endswith(".txt")]
+        assert csv_files, f"No CSV files found in {archive.name}"
+        assert manifests, f"No manifest file found in {archive.name}"
