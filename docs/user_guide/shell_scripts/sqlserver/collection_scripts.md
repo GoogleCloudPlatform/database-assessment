@@ -255,6 +255,28 @@ This is recommended if you plan to upload the results to the Migration Center.
 
 Upon completion, the tool will automatically create an archive of the extracted metrics for upload into the DMA application.
 
+In addition to the standard schema, configuration, and performance counter datasets, the collection archive includes the following deep assessment telemetry files:
+
+| Output File Pattern | Source SQL Script | Description |
+| :--- | :--- | :--- |
+| `opdb__CpuUsage__*.csv` | `sql/cpuUsage.sql` | Ring buffer CPU utilization history (`RING_BUFFER_SCHEDULER_MONITOR`) |
+| `opdb__MemoryUsage__*.csv` | `sql/memoryUsage.sql` | Ring buffer memory utilization history (`RING_BUFFER_RESOURCE_MONITOR`) |
+| `opdb__MemorySizing__*.csv` | `sql/memorySizing.sql` | Host RAM, buffer pool, and memory pressure event summary |
+| `opdb__MemoryClerks__*.csv` | `sql/memoryClerks.sql` | Top memory clerk allocations (`sys.dm_os_memory_clerks`) |
+| `opdb__BatchFootprint__*.csv` | `sql/batchFootprint.sql` | Execution duration bucket distribution (`sys.dm_exec_query_stats`) |
+| `opdb__WaitsStats__*.csv` | `sql/waitsStats.sql` | Filtered wait statistics (`sys.dm_os_wait_stats`) |
+| `opdb__QueryOptimizerInfo__*.csv` | `sql/queryOptimizerInfo.sql` | Query optimizer counter statistics (`sys.dm_exec_query_optimizer_info`) |
+| `opdb__FileIoLatency__*.csv` | `sql/fileIoLatency.sql` | Per-database file I/O stall and latency metrics (`sys.dm_io_virtual_file_stats`) |
+| `opdb__InstanceErrorLog__*.csv` | `sql/instanceErrorLog.sql` | Filtered instance error log messages (`xp_readerrorlog`) |
+| `opdb__DeprecatedFeatures__*.csv` | `sql/deprecatedFeatures.sql` | Active deprecated feature counters (`SQLServer:Deprecated Features`) |
+| `opdb__SqlAgentJobs__*.csv` | `sql/sqlAgentJobs.sql` | SQL Server Agent job steps and migration incompatibility classification |
+| `opdb__PostgresMigrationIssues__*.csv` | `sql/tsqlPostgresDeepScanner.sql` | Per-database T-SQL procedural code scan for PostgreSQL migration blockers |
+| `opdb__MachineSpecsTsql__*.csv` | `sql/machineSpecsTsql.sql` | Hardware CPU and OS memory specifications queried via T-SQL (`sys.dm_os_sys_info`) |
+| `opdb__AzureDbResourceStats__*.csv` | `sql/azureDbResourceStats.sql` | Azure SQL Database recent resource stats (`sys.dm_db_resource_stats`, Azure only) |
+| `opdb__AzureResourceStats__*.csv` | `sql/azureResourceStats.sql` | Azure SQL master historical resource stats (`sys.resource_stats`, Azure only) |
+| `opdb__AzureResourceGovernance__*.csv` | `sql/azureResourceGovernance.sql` | Azure SQL resource governance limits (`sys.dm_user_db_resource_governance`, Azure only) |
+| `opdb__AzureElasticPoolStats__*.csv` | `sql/azureElasticPoolStats.sql` | Azure SQL elastic pool resource stats (`sys.elastic_pool_resource_stats`, Azure only) |
+
 :::{important}
 Do not modify the name or the contents of the zip file without consultation from Google.
 :::

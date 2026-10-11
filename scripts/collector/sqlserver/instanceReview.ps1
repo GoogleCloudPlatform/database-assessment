@@ -475,6 +475,11 @@ if ($useEntraIDAuthentication) {
 
 # Establish a persistent shared ADO.NET connection to guarantee exactly ONE Entra MFA prompt across all 50+ queries
 function sqlcmd {
+    if (-not $useEntraIDAuthentication) {
+        & $script:NativeSqlcmdPath @args
+        return
+    }
+
     $serverInstance = $serverName
     $inputFile = ""
     $dbName = "master"
@@ -501,7 +506,7 @@ function sqlcmd {
         $connStr = "Server=$serverInstance;Database=$dbName;TrustServerCertificate=True"
         if ($useEntraIDAuthentication) {
             $connStr += ";Authentication=Active Directory Interactive"
-            if ($entraUpn) { $connStr += ";User ID=$entraUpn" }
+            if ($entraIDUserName) { $connStr += ";User ID=$entraIDUserName" }
         } elseif ($env:SQLCMDUSER -and $env:SQLCMDPASSWORD) {
             $connStr += ";User ID=$env:SQLCMDUSER;Password=$env:SQLCMDPASSWORD"
         } else {
@@ -850,6 +855,19 @@ $computerSpecsFile = 'opdb' + '__' + 'DbMachineSpecs' + $outputFileSuffix
 $tranLogBkupCountByDayByHour = 'opdb' + '__' + 'TranLogBkupCountByHourByDay' + $outputFileSuffix
 $tranLogBkupSizeByDayByHour = 'opdb' + '__' + 'TranLogBkupSizeByHourByDay' + $outputFileSuffix
 $databaseLevelBlockingFeatures = 'opdb' + '__' + 'DatabaseLevelBlockFeatures' + $outputFileSuffix
+$cpuUsageFile = 'opdb' + '__' + 'CpuUsage' + $outputFileSuffix
+$memoryUsageFile = 'opdb' + '__' + 'MemoryUsage' + $outputFileSuffix
+$memorySizingFile = 'opdb' + '__' + 'MemorySizing' + $outputFileSuffix
+$memoryClerksFile = 'opdb' + '__' + 'MemoryClerks' + $outputFileSuffix
+$batchFootprintFile = 'opdb' + '__' + 'BatchFootprint' + $outputFileSuffix
+$waitsStatsFile = 'opdb' + '__' + 'WaitsStats' + $outputFileSuffix
+$queryOptimizerInfoFile = 'opdb' + '__' + 'QueryOptimizerInfo' + $outputFileSuffix
+$fileIoLatencyFile = 'opdb' + '__' + 'FileIoLatency' + $outputFileSuffix
+$instanceErrorLogFile = 'opdb' + '__' + 'InstanceErrorLog' + $outputFileSuffix
+$deprecatedFeaturesFile = 'opdb' + '__' + 'DeprecatedFeatures' + $outputFileSuffix
+$sqlAgentJobsFile = 'opdb' + '__' + 'SqlAgentJobs' + $outputFileSuffix
+$postgresMigrationIssuesFile = 'opdb' + '__' + 'PostgresMigrationIssues' + $outputFileSuffix
+$machineSpecsTsqlFile = 'opdb' + '__' + 'MachineSpecsTsql' + $outputFileSuffix
 
 $outputFileArray = @($compFileName,
     $srvFileName,
@@ -869,10 +887,36 @@ $outputFileArray = @($compFileName,
     $dbServerConfig,
     $dbServerDmvPerfmon,
     $manifestFile,
-    $computerSpecsFile
+    $computerSpecsFile,
     $tranLogBkupCountByDayByHour,
     $tranLogBkupSizeByDayByHour,
-    $databaseLevelBlockingFeatures)
+    $databaseLevelBlockingFeatures,
+    $cpuUsageFile,
+    $memoryUsageFile,
+    $memorySizingFile,
+    $memoryClerksFile,
+    $batchFootprintFile,
+    $waitsStatsFile,
+    $queryOptimizerInfoFile,
+    $fileIoLatencyFile,
+    $instanceErrorLogFile,
+    $deprecatedFeaturesFile,
+    $sqlAgentJobsFile,
+    $postgresMigrationIssuesFile,
+    $machineSpecsTsqlFile)
+
+if ($isCloudOrLinuxHost -eq "AZURE") {
+    $azureDbResourceStatsFile = 'opdb' + '__' + 'AzureDbResourceStats' + $outputFileSuffix
+    $azureResourceStatsFile = 'opdb' + '__' + 'AzureResourceStats' + $outputFileSuffix
+    $azureResourceGovernanceFile = 'opdb' + '__' + 'AzureResourceGovernance' + $outputFileSuffix
+    $azureElasticPoolStatsFile = 'opdb' + '__' + 'AzureElasticPoolStats' + $outputFileSuffix
+    $outputFileArray += @(
+        $azureDbResourceStatsFile,
+        $azureResourceStatsFile,
+        $azureResourceGovernanceFile,
+        $azureElasticPoolStatsFile
+    )
+}
 
 # Check individual folder + file names for max length
 WriteLog -logMessage "Checking directory path + output file name lengths for max length limitations..." -logOperation "MESSAGE"
@@ -940,6 +984,46 @@ WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Co
 Set-Content -Path $foldername\$dbServerConfig -Encoding utf8 -Value '"pkey"|"configuration_id"|"name"|"value"|"minimum"|"maximum"|"value_in_use"|"description"|"dma_source_id"|"dma_manual_id"'
 sqlcmd -S $serverName -i sql\dbServerConfigurationSettings.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$dbServerConfig -Encoding utf8
 
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server CPU Usage Info (Ring Buffer)..." -logOperation "BOTH"
+Set-Content -Path $foldername\$cpuUsageFile -Encoding utf8 -Value '"PKEY"|"timestamp"|"process_utilization"|"system_idle"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\cpuUsage.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$cpuUsageFile -Encoding utf8
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Memory Usage Info (Ring Buffer)..." -logOperation "BOTH"
+Set-Content -Path $foldername\$memoryUsageFile -Encoding utf8 -Value '"PKEY"|"timestamp"|"state"|"available_physical_memory_mb"|"working_set_mb"|"percent_committed_in_ws"|"system_physical_memory_high"|"system_physical_memory_low"|"process_physical_memory_low"|"process_virtual_memory_low"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\memoryUsage.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$memoryUsageFile -Encoding utf8
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Memory Sizing Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$memorySizingFile -Encoding utf8 -Value '"PKEY"|"host_ram_mb"|"available_host_ram_mb"|"max_server_memory_mb"|"min_server_memory_mb"|"sql_working_set_mb"|"memory_model"|"user_data_on_disk_mb"|"buffer_pool_user_data_mb"|"lifetime_pressure_events"|"internal_sql_pressure_events"|"external_os_pressure_events"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\memorySizing.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$memorySizingFile -Encoding utf8
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Memory Clerks Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$memoryClerksFile -Encoding utf8 -Value '"PKEY"|"memory_clerk_type"|"allocated_mb"|"pct_of_total_sql_memory"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\memoryClerks.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$memoryClerksFile -Encoding utf8
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Batch Footprint Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$batchFootprintFile -Encoding utf8 -Value '"PKEY"|"AvgRunTimeMS"|"StatementCount"|"counter_name"|"TotalElapsedTimeMS"|"ExecutionTimePercent"|"ExecutionCountPercent"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\batchFootprint.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$batchFootprintFile -Encoding utf8
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Waits Stats Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$waitsStatsFile -Encoding utf8 -Value '"PKEY"|"WaitType"|"Wait_S"|"Resource_S"|"Signal_S"|"WaitCount"|"Percentage"|"AvgWait_S"|"AvgRes_S"|"AvgSig_S"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\waitsStats.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$waitsStatsFile -Encoding utf8
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Query Optimizer Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$queryOptimizerInfoFile -Encoding utf8 -Value '"PKEY"|"counter"|"value"|"occurrence"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\queryOptimizerInfo.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$queryOptimizerInfoFile -Encoding utf8
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server File IO Latency Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$fileIoLatencyFile -Encoding utf8 -Value '"PKEY"|"DatabaseName"|"LogicalFileName"|"FileType"|"PhysicalPath"|"TotalReads"|"DataReadMB"|"TotalReadStallMs"|"AvgReadLatencyMs"|"TotalWrites"|"DataWrittenMB"|"TotalWriteStallMs"|"AvgWriteLatencyMs"|"TotalIOStallMs"|"SizeOnDiskMB"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\fileIoLatency.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$fileIoLatencyFile -Encoding utf8
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Instance Error Log Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$instanceErrorLogFile -Encoding utf8 -Value '"PKEY"|"timestamp"|"process_info"|"log_message"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\instanceErrorLog.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$instanceErrorLogFile -Encoding utf8
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Deprecated Features Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$deprecatedFeaturesFile -Encoding utf8 -Value '"PKEY"|"FeatureName"|"UsageCount"|"dma_source_id"|"dma_manual_id"'
+sqlcmd -S $serverName -i sql\deprecatedFeatures.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$deprecatedFeaturesFile -Encoding utf8
+
 if ($isCloudOrLinuxHost -eq "AZURE") {
     WriteLog -logLocation $foldername\$logFile -logMessage "Skipping SQL Server Transaction Log Backup Info...Unavailable in AZURE SQL Managed Instance." -logOperation "BOTH"
     Set-Content -Path $foldername\$tranLogBkupCountByDayByHour -Encoding utf8 -Value '"PKEY"|"collection_date"|"day_of_month"|"total_logs_generated"|"h0_count"|"h1_count"|"h2_count"|"h3_count"|"h4_count"|"h5_count"|"h6_count"|"h7_count"|"h8_count"|"h9_count"|"h10_count"|"h11_count"|"h12_count"|"h13_count"|"h14_count"|"h15_count"|"h16_count"|"h17_count"|"h18_count"|"h19_count"|"h20_count"|"h21_count"|"h22_count"|"h23_count"|"avg_per_hour"|"dma_source_id"|"dma_manual_id"'
@@ -955,6 +1039,10 @@ else {
     sqlcmd -S $serverName -i sql\dbServerTranLogBackupSizeByDayByHour.sql -d msdb -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$tranLogBkupSizeByDayByHour -Encoding utf8
 }
 
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Agent Jobs Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$sqlAgentJobsFile -Encoding utf8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"job_id"|"job_name"|"job_enabled"|"category_name"|"job_description"|"step_id"|"step_name"|"subsystem"|"command"|"database_name"|"incompatibility_category"|"incompatibility_type"|"severity"'
+sqlcmd -S $serverName -i sql\sqlAgentJobs.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$sqlAgentJobsFile -Encoding utf8
+
 ### First establish headers for the collection files which could execute against multiple databases in the instance
 Set-Content -Path $foldername\$objectList -Encoding utf8 -Value '"PKEY"|"database_name"|"schema_name"|"object_name"|"object_type"|"object_type_desc"|"object_count"|"lines_of_code"|"associated_table_name"|"dma_source_id"|"dma_manual_id"'
 Set-Content -Path $foldername\$tableList -Encoding utf8 -Value '"PKEY"|"database_name"|"schema_name"|"table_name"|"partition_count"|"is_memory_optimized"|"temporal_type"|"is_external"|"lock_escalation"|"is_tracked_by_cdc"|"text_in_row_limit"|"is_replicated"|"row_count"|"data_compression"|"total_space_mb"|"used_space_mb"|"unused_space_mb"|"dma_source_id"|"dma_manual_id"|"partition_type"|"is_temp_table"'
@@ -964,6 +1052,7 @@ Set-Content -Path $foldername\$userConnectionList -Encoding utf8 -Value '"PKEY"|
 Set-Content -Path $foldername\$dbsizes -Encoding utf8 -Value '"PKEY"|"database_name"|"type_desc"|"current_size_mb"|"dma_source_id"|"dma_manual_id"|"recovery_model_desc"'
 Set-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8 -Value '"PKEY"|"collection_time"|"available_mbytes"|"physicaldisk_avg_disk_bytes_read"|"physicaldisk_avg_disk_bytes_write"|"physicaldisk_avg_disk_bytes_read_sec"|"physicaldisk_avg_disk_bytes_write_sec"|"physicaldisk_disk_reads_sec"|"physicaldisk_disk_writes_sec"|"processor_idle_time_pct"|"processor_total_time_pct"|"processor_frequency"|"processor_queue_length"|"buffer_cache_hit_ratio"|"checkpoint_pages_sec"|"free_list_stalls_sec"|"page_life_expectancy"|"page_lookups_sec"|"page_reads_sec"|"page_writes_sec"|"user_connection_count"|"memory_grants_pending"|"target_server_memory_kb"|"total_server_memory_kb"|"batch_requests_sec"|"dma_source_id"|"dma_manual_id"'
 Set-Content -Path $foldername\$databaseLevelBlockingFeatures -Encoding utf8 -Value '"PKEY"|"database_name"|"feature_name"|"is_enabled_or_used"|"occurance_count"|"dma_source_id"|"dma_manual_id"'
+Set-Content -Path $foldername\$postgresMigrationIssuesFile -Encoding utf8 -Value '"PKEY"|"database_name"|"schema_name"|"object_name"|"object_type"|"incompatibility_type"|"severity"|"violation_count"|"dma_source_id"|"dma_manual_id"'
 
 ### Iterate through collections that could execute against multiple databases in the instance
 foreach ($databaseName in $dbNameArray) {
@@ -990,6 +1079,9 @@ foreach ($databaseName in $dbNameArray) {
 
         WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Blocked Features for Database $databaseName ..." -logOperation "BOTH"
         sqlcmd -S $serverName -i sql\dbServerFeaturesDatabaseLevel.sql -d $databaseName -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$databaseLevelBlockingFeatures -Encoding utf8
+
+        WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Deep Postgres Migration Blocker Info for Database $databaseName ..." -logOperation "BOTH"
+        sqlcmd -S $serverName -i sql\tsqlPostgresDeepScanner.sql -d $databaseName -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$postgresMigrationIssuesFile -Encoding utf8
     }
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Database Size Info for Database $databaseName ..." -logOperation "BOTH"
     sqlcmd -S $serverName -i sql\dbSizes.sql -d $databaseName -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$dbsizes -Encoding utf8
@@ -1031,6 +1123,22 @@ else {
     }
 }
 
+if ($isCloudOrLinuxHost -eq "AZURE") {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Executing Azure-Specific Compute and Governance Stats..." -logOperation "BOTH"
+
+    Set-Content -Path $foldername\$azureDbResourceStatsFile -Encoding utf8 -Value '"PKEY"|"end_time"|"avg_cpu_percent"|"avg_data_io_percent"|"avg_log_write_percent"|"max_worker_percent"|"max_session_percent"|"current_limit"|"current_storage_usage_db"|"dma_source_id"|"dma_manual_id"'
+    sqlcmd -S $serverName -i sql\azureDbResourceStats.sql -d $dbname -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$azureDbResourceStatsFile -Encoding utf8
+
+    Set-Content -Path $foldername\$azureResourceStatsFile -Encoding utf8 -Value '"PKEY"|"start_time"|"end_time"|"database_name"|"sku"|"avg_cpu_percent"|"avg_data_io_percent"|"avg_log_write_percent"|"max_worker_percent"|"max_session_percent"|"dtu_limit"|"dma_source_id"|"dma_manual_id"'
+    sqlcmd -S $serverName -i sql\azureResourceStats.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$azureResourceStatsFile -Encoding utf8
+
+    Set-Content -Path $foldername\$azureResourceGovernanceFile -Encoding utf8 -Value '"PKEY"|"database_id"|"logical_cpu_count"|"process_memory_limit_mb"|"max_global_index_size_mb"|"user_data_cap_gb"|"user_data_iops_cap"|"log_write_cap_mb_sec"|"dma_source_id"|"dma_manual_id"'
+    sqlcmd -S $serverName -i sql\azureResourceGovernance.sql -d $dbname -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$azureResourceGovernanceFile -Encoding utf8
+
+    Set-Content -Path $foldername\$azureElasticPoolStatsFile -Encoding utf8 -Value '"PKEY"|"end_time"|"elastic_pool_name"|"avg_cpu_percent"|"avg_data_io_percent"|"avg_log_write_percent"|"max_worker_percent"|"elastic_pool_dtu_limit"|"dma_source_id"|"dma_manual_id"'
+    sqlcmd -S $serverName -i sql\azureElasticPoolStats.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$azureElasticPoolStatsFile -Encoding utf8
+}
+
 <# Getting HW Specs. #>
 if ($isCloudOrLinuxHost -eq "AZURE") {
     WriteLog -logLocation $foldername\$logFile -logMessage "Skipping SQL Server HW Shape Info for Machine $machinename ...Unavailable in AZURE SQL Managed Instance." -logOperation "BOTH"
@@ -1045,6 +1153,10 @@ else {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server HW Shape Info for Machine $machinename ..." -logOperation "BOTH"
     .\dmaSQLServerHWSpecs.ps1 -computerName $machinename -outputPath $foldername\$computerSpecsFile -logLocation $foldername\$logFile -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId -requestCreds:$collectVMSpecs
 }
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server HW Shape Info for Machine $machinename via T-SQL..." -logOperation "BOTH"
+Set-Content -Path $foldername\$machineSpecsTsqlFile -Encoding utf8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"MachineName"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
+sqlcmd -S $serverName -i sql\machineSpecsTsql.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$machineSpecsTsqlFile -Encoding utf8
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Remove special characters and UTF8 BOM from extracted files..." -logOperation "BOTH"
 
