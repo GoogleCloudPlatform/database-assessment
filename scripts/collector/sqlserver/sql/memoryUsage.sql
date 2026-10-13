@@ -1,4 +1,5 @@
 /*
+-- Author: Tim Chapman
 Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,21 +28,53 @@ SELECT @PKEY = N'$(pkey)';
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
-SELECT
-    '"' + @PKEY + '"' AS PKEY,
-    '"' + ISNULL(CONVERT(NVARCHAR(30), CAST(event_data AS XML).value('(/event/@timestamp)[1]', 'datetime2'), 126), N'') + '"' AS [timestamp],
-    '"' + ISNULL(CONVERT(NVARCHAR(50), CAST(event_data AS XML).value('(/event/data[@name="state"]/text)[1]', 'nvarchar(50)')), N'') + '"' AS [state],
-    '"' + ISNULL(CONVERT(NVARCHAR(30), CAST(event_data AS XML).value('(//entry[@description="Available Physical Memory"]/@value)[1]', 'bigint') / 1024 / 1024), N'') + '"' AS available_physical_memory_mb,
-    '"' + ISNULL(CONVERT(NVARCHAR(30), CAST(event_data AS XML).value('(//entry[@description="Working Set"]/@value)[1]', 'bigint') / 1024 / 1024), N'') + '"' AS working_set_mb,
-    '"' + ISNULL(CONVERT(NVARCHAR(20), CAST(event_data AS XML).value('(//entry[@description="Percent of Committed Memory in WS"]/@value)[1]', 'int')), N'') + '"' AS percent_committed_in_ws,
-    '"' + ISNULL(CONVERT(NVARCHAR(20), CAST(event_data AS XML).value('(//entry[@description="System physical memory high"]/@value)[1]', 'int')), N'') + '"' AS system_physical_memory_high,
-    '"' + ISNULL(CONVERT(NVARCHAR(20), CAST(event_data AS XML).value('(//entry[@description="System physical memory low"]/@value)[1]', 'int')), N'') + '"' AS system_physical_memory_low,
-    '"' + ISNULL(CONVERT(NVARCHAR(20), CAST(event_data AS XML).value('(//entry[@description="Process physical memory low"]/@value)[1]', 'int')), N'') + '"' AS process_physical_memory_low,
-    '"' + ISNULL(CONVERT(NVARCHAR(20), CAST(event_data AS XML).value('(//entry[@description="Process virtual memory low"]/@value)[1]', 'int')), N'') + '"' AS process_virtual_memory_low,
-    '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
-    '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
-FROM sys.fn_xe_file_target_read_file('system_health*.xel', NULL, NULL, NULL)
-WHERE object_name = 'sp_server_diagnostics_component_result'
-AND CAST(event_data AS XML).value('(/event/@timestamp)[1]', 'datetime2') >= DATEADD(day, -7, GETDATE())
-AND CAST(event_data AS XML).value('(/event/data[@name="component"]/text)[1]', 'nvarchar(100)') = 'RESOURCE'
-ORDER BY [timestamp] DESC;
+IF OBJECT_ID('tempdb..#MemUsage') IS NOT NULL
+    DROP TABLE #MemUsage;
+
+CREATE TABLE #MemUsage (
+    PKEY NVARCHAR(512),
+    [timestamp] NVARCHAR(100),
+    [state] NVARCHAR(100),
+    available_physical_memory_mb NVARCHAR(100),
+    working_set_mb NVARCHAR(100),
+    percent_committed_in_ws NVARCHAR(100),
+    system_physical_memory_high NVARCHAR(100),
+    system_physical_memory_low NVARCHAR(100),
+    process_physical_memory_low NVARCHAR(100),
+    process_virtual_memory_low NVARCHAR(100),
+    dma_source_id NVARCHAR(512),
+    dma_manual_id NVARCHAR(512)
+);
+
+BEGIN TRY
+    INSERT INTO #MemUsage
+    SELECT
+        '"' + @PKEY + '"' AS PKEY,
+        '"' + CONVERT(NVARCHAR(30), x.event_xml.value('(/event/@timestamp)[1]', 'datetime2'), 126) + '"' AS [timestamp],
+        '"' + CONVERT(NVARCHAR(50), x.event_xml.value('(/event/data[@name="state"]/text)[1]', 'nvarchar(50)')) + '"' AS [state],
+        '"' + CONVERT(NVARCHAR(30), x.event_xml.value('(//entry[@description="Available Physical Memory"]/@value)[1]', 'bigint') / 1024 / 1024) + '"' AS available_physical_memory_mb,
+        '"' + CONVERT(NVARCHAR(30), x.event_xml.value('(//entry[@description="Working Set"]/@value)[1]', 'bigint') / 1024 / 1024) + '"' AS working_set_mb,
+        '"' + CONVERT(NVARCHAR(20), x.event_xml.value('(//entry[@description="Percent of Committed Memory in WS"]/@value)[1]', 'int')) + '"' AS percent_committed_in_ws,
+        '"' + CONVERT(NVARCHAR(20), x.event_xml.value('(//entry[@description="System physical memory high"]/@value)[1]', 'int')) + '"' AS system_physical_memory_high,
+        '"' + CONVERT(NVARCHAR(20), x.event_xml.value('(//entry[@description="System physical memory low"]/@value)[1]', 'int')) + '"' AS system_physical_memory_low,
+        '"' + CONVERT(NVARCHAR(20), x.event_xml.value('(//entry[@description="Process physical memory low"]/@value)[1]', 'int')) + '"' AS process_physical_memory_low,
+        '"' + CONVERT(NVARCHAR(20), x.event_xml.value('(//entry[@description="Process virtual memory low"]/@value)[1]', 'int')) + '"' AS process_virtual_memory_low,
+        '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
+        '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
+    FROM sys.fn_xe_file_target_read_file('system_health*.xel', NULL, NULL, NULL) AS f
+    CROSS APPLY (SELECT TRY_CAST(f.event_data AS XML) AS event_xml) AS x
+    WHERE f.object_name = 'sp_server_diagnostics_component_result'
+      AND x.event_xml IS NOT NULL
+      AND x.event_xml.value('(/event/@timestamp)[1]', 'datetime2') >= DATEADD(day, -7, GETDATE())
+      AND x.event_xml.value('(/event/data[@name="component"]/text)[1]', 'nvarchar(100)') = 'RESOURCE';
+END TRY
+BEGIN CATCH
+    -- Gracefully return 0 rows on Azure SQL Database or restricted hosts without system_health XEL file access
+END CATCH;
+
+SELECT *
+FROM #MemUsage
+ORDER BY timestamp DESC;
+
+IF OBJECT_ID('tempdb..#MemUsage') IS NOT NULL
+    DROP TABLE #MemUsage;

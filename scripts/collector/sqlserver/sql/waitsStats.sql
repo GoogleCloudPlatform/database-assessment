@@ -1,4 +1,5 @@
 /*
+-- Author: Tim Chapman
 Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +33,7 @@ WITH [Waits] AS
         ([wait_time_ms] - [signal_wait_time_ms]) / 1000.0 AS [ResourceS],
         [signal_wait_time_ms] / 1000.0 AS [SignalS],
         [waiting_tasks_count] AS [WaitCount],
-        ISNULL(100.0 * [wait_time_ms] / NULLIF(SUM([wait_time_ms]) OVER(), 0), 0.0) AS [Percentage],
+        ISNULL(100.0 * [wait_time_ms] / NULLIF(SUM ([wait_time_ms]) OVER(), 0), 0.0) AS [Percentage],
         ROW_NUMBER() OVER(ORDER BY [wait_time_ms] DESC) AS [RowNum]
     FROM sys.dm_os_wait_stats
     WHERE [wait_type] NOT IN (
@@ -119,18 +120,18 @@ WITH [Waits] AS
     )
 SELECT
     '"' + @PKEY + '"' AS PKEY,
-    '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), MAX([W1].[wait_type])), N''), '"', '""') + '"' AS [WaitType],
-    '"' + CONVERT(NVARCHAR(MAX), CAST(MAX([W1].[WaitS]) AS DECIMAL(16, 2))) + '"' AS [Wait_S],
-    '"' + CONVERT(NVARCHAR(MAX), CAST(MAX([W1].[ResourceS]) AS DECIMAL(16, 2))) + '"' AS [Resource_S],
-    '"' + CONVERT(NVARCHAR(MAX), CAST(MAX([W1].[SignalS]) AS DECIMAL(16, 2))) + '"' AS [Signal_S],
-    '"' + CONVERT(NVARCHAR(MAX), MAX([W1].[WaitCount])) + '"' AS [WaitCount],
-    '"' + CONVERT(NVARCHAR(MAX), CAST(MAX([W1].[Percentage]) AS DECIMAL(5, 2))) + '"' AS [Percentage],
-    '"' + CONVERT(NVARCHAR(MAX), CAST((MAX([W1].[WaitS]) / MAX([W1].[WaitCount])) AS DECIMAL(16, 4))) + '"' AS [AvgWait_S],
-    '"' + CONVERT(NVARCHAR(MAX), CAST((MAX([W1].[ResourceS]) / MAX([W1].[WaitCount])) AS DECIMAL(16, 4))) + '"' AS [AvgRes_S],
-    '"' + CONVERT(NVARCHAR(MAX), CAST((MAX([W1].[SignalS]) / MAX([W1].[WaitCount])) AS DECIMAL(16, 4))) + '"' AS [AvgSig_S],
+    '"' + CONVERT(NVARCHAR(MAX), MAX ([W1].[wait_type])) + '"' AS [WaitType],
+    '"' + CONVERT(NVARCHAR(MAX), CAST (MAX ([W1].[WaitS]) AS DECIMAL (16,2))) + '"' AS [Wait_S],
+    '"' + CONVERT(NVARCHAR(MAX), CAST (MAX ([W1].[ResourceS]) AS DECIMAL (16,2))) + '"' AS [Resource_S],
+    '"' + CONVERT(NVARCHAR(MAX), CAST (MAX ([W1].[SignalS]) AS DECIMAL (16,2))) + '"' AS [Signal_S],
+    '"' + CONVERT(NVARCHAR(MAX), MAX ([W1].[WaitCount])) + '"' AS [WaitCount],
+    '"' + CONVERT(NVARCHAR(MAX), CAST (MAX ([W1].[Percentage]) AS DECIMAL (5,2))) + '"' AS [Percentage],
+    '"' + CONVERT(NVARCHAR(MAX), CAST ((MAX ([W1].[WaitS]) / NULLIF(MAX ([W1].[WaitCount]), 0)) AS DECIMAL (16,4))) + '"' AS [AvgWait_S],
+    '"' + CONVERT(NVARCHAR(MAX), CAST ((MAX ([W1].[ResourceS]) / NULLIF(MAX ([W1].[WaitCount]), 0)) AS DECIMAL (16,4))) + '"' AS [AvgRes_S],
+    '"' + CONVERT(NVARCHAR(MAX), CAST ((MAX ([W1].[SignalS]) / NULLIF(MAX ([W1].[WaitCount]), 0)) AS DECIMAL (16,4))) + '"' AS [AvgSig_S],
     '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
     '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
 FROM [Waits] AS [W1]
 INNER JOIN [Waits] AS [W2] ON [W2].[RowNum] <= [W1].[RowNum]
 GROUP BY [W1].[RowNum]
-HAVING SUM([W2].[Percentage]) - MAX([W1].[Percentage]) < 95;
+HAVING SUM ([W2].[Percentage]) - MAX( [W1].[Percentage] ) < 95;

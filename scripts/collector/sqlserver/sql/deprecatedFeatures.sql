@@ -1,4 +1,5 @@
 /*
+-- Author: Tim Chapman
 Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +28,7 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
 SELECT
     '"' + @PKEY + '"' AS PKEY,
-    '"' + REPLACE(RTRIM(LTRIM(CONVERT(NVARCHAR(MAX), instance_name))), '"', '""') + '"' AS FeatureName,
+    '"' + RTRIM(LTRIM(CONVERT(NVARCHAR(MAX), instance_name))) + '"' AS FeatureName,
     '"' + CONVERT(NVARCHAR(MAX), cntr_value) + '"' AS UsageCount,
     '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
     '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id

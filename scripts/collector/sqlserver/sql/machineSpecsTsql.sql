@@ -1,4 +1,5 @@
 /*
+-- Author: Tim Chapman
 Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,29 +32,37 @@ SELECT @PRODUCT_VERSION = CONVERT(INT, (@@microsoftversion / 0x1000000) & 0xff);
 
 IF @PRODUCT_VERSION >= 11
 BEGIN
-    EXEC('
-    SELECT
-        ''"'' + ''' + @PKEY + ''' + ''"'' AS pkey,
-        ''"'' + ''' + @DMA_SOURCE_ID + ''' + ''"'' AS dma_source_id,
-        ''"'' + ''' + @DMA_MANUAL_ID + ''' + ''"'' AS dma_manual_id,
-        ''"'' + ''' + @MACHINENAME + ''' + ''"'' AS MachineName,
-        ''"'' + CONVERT(NVARCHAR(255), socket_count) + ''"'' AS PhysicalCpuCount,
-        ''"'' + CONVERT(NVARCHAR(255), cpu_count) + ''"'' AS LogicalCpuCount,
-        ''"'' + CONVERT(NVARCHAR(255), physical_memory_kb / 1024) + ''"'' AS TotalOSMemoryMB
-    FROM sys.dm_os_sys_info;
-    ');
+    EXEC sys.sp_executesql
+        N'SELECT
+            ''"'' + @PKEY + ''"'' AS pkey,
+            ''"'' + @DMA_SOURCE_ID + ''"'' AS dma_source_id,
+            ''"'' + @DMA_MANUAL_ID + ''"'' AS dma_manual_id,
+            ''"'' + REPLACE(ISNULL(@MACHINENAME, N''''), ''"'', ''""'') + ''"'' AS MachineName,
+            ''"'' + CONVERT(NVARCHAR(255), socket_count) + ''"'' AS PhysicalCpuCount,
+            ''"'' + CONVERT(NVARCHAR(255), cpu_count) + ''"'' AS LogicalCpuCount,
+            ''"'' + CONVERT(NVARCHAR(255), physical_memory_kb / 1024) + ''"'' AS TotalOSMemoryMB
+        FROM sys.dm_os_sys_info;',
+        N'@PKEY VARCHAR(256), @DMA_SOURCE_ID VARCHAR(256), @DMA_MANUAL_ID VARCHAR(256), @MACHINENAME NVARCHAR(256)',
+        @PKEY = @PKEY,
+        @DMA_SOURCE_ID = @DMA_SOURCE_ID,
+        @DMA_MANUAL_ID = @DMA_MANUAL_ID,
+        @MACHINENAME = @MACHINENAME;
 END
 ELSE
 BEGIN
-    EXEC('
-    SELECT
-        ''"'' + ''' + @PKEY + ''' + ''"'' AS pkey,
-        ''"'' + ''' + @DMA_SOURCE_ID + ''' + ''"'' AS dma_source_id,
-        ''"'' + ''' + @DMA_MANUAL_ID + ''' + ''"'' AS dma_manual_id,
-        ''"'' + ''' + @MACHINENAME + ''' + ''"'' AS MachineName,
-        ''"'' + CONVERT(NVARCHAR(255), CASE WHEN hyperthread_ratio > 0 THEN cpu_count / hyperthread_ratio ELSE cpu_count END) + ''"'' AS PhysicalCpuCount,
-        ''"'' + CONVERT(NVARCHAR(255), cpu_count) + ''"'' AS LogicalCpuCount,
-        ''"'' + CONVERT(NVARCHAR(255), physical_memory_in_bytes / 1048576) + ''"'' AS TotalOSMemoryMB
-    FROM sys.dm_os_sys_info;
-    ');
+    EXEC sys.sp_executesql
+        N'SELECT
+            ''"'' + @PKEY + ''"'' AS pkey,
+            ''"'' + @DMA_SOURCE_ID + ''"'' AS dma_source_id,
+            ''"'' + @DMA_MANUAL_ID + ''"'' AS dma_manual_id,
+            ''"'' + REPLACE(ISNULL(@MACHINENAME, N''''), ''"'', ''""'') + ''"'' AS MachineName,
+            ''"'' + CONVERT(NVARCHAR(255), CASE WHEN hyperthread_ratio > 0 THEN cpu_count / hyperthread_ratio ELSE cpu_count END) + ''"'' AS PhysicalCpuCount,
+            ''"'' + CONVERT(NVARCHAR(255), cpu_count) + ''"'' AS LogicalCpuCount,
+            ''"'' + CONVERT(NVARCHAR(255), physical_memory_in_bytes / 1048576) + ''"'' AS TotalOSMemoryMB
+        FROM sys.dm_os_sys_info;',
+        N'@PKEY VARCHAR(256), @DMA_SOURCE_ID VARCHAR(256), @DMA_MANUAL_ID VARCHAR(256), @MACHINENAME NVARCHAR(256)',
+        @PKEY = @PKEY,
+        @DMA_SOURCE_ID = @DMA_SOURCE_ID,
+        @DMA_MANUAL_ID = @DMA_MANUAL_ID,
+        @MACHINENAME = @MACHINENAME;
 END;

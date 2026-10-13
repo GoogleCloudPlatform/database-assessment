@@ -41,8 +41,8 @@ IF OBJECT_ID('tempdb..#FeaturesEnabledDbLevel') IS NOT NULL
 CREATE TABLE #FeaturesEnabledDbLevel
 (
     database_name nvarchar(255) DEFAULT db_name(),
-    feature_name NVARCHAR(40),
-    is_enabled_or_used NVARCHAR(1),
+    feature_name NVARCHAR(255),
+    is_enabled_or_used NVARCHAR(4),
     occurance_count INT
 );
 
@@ -104,6 +104,70 @@ END
 END
 END CATCH
 
+--Real-Time Operational Analytics (Nonclustered Columnstore Index on Rowstore/In-Memory Table)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabledDbLevel
+            SELECT
+                db_name(),
+                ''RealTimeOperationalAnalyticsUsed'',
+                CASE
+                    WHEN count(*) > 0 THEN ''1''
+                    ELSE ''0''
+                END,
+                CONVERT(int, count(*))
+            FROM sys.indexes i
+            INNER JOIN sys.tables t ON i.object_id = t.object_id
+            WHERE i.type = 6
+              AND t.is_ms_shipped = 0');
+END TRY
+BEGIN CATCH
+    exec('INSERT INTO #FeaturesEnabledDbLevel SELECT db_name(), ''RealTimeOperationalAnalyticsUsed'', ''0'', 0');
+END CATCH
+
+--User Certificates (PFX / Private-Key Backed Certificates)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabledDbLevel
+            SELECT
+                db_name(),
+                ''UserCertificatesUsed'',
+                CASE
+                    WHEN count(*) > 0 THEN ''1''
+                    ELSE ''0''
+                END,
+                CONVERT(int, count(*))
+            FROM sys.certificates
+            WHERE name NOT LIKE ''##MS_%''
+              AND pvt_key_encryption_type <> ''NA''');
+END TRY
+BEGIN CATCH
+    exec('INSERT INTO #FeaturesEnabledDbLevel SELECT db_name(), ''UserCertificatesUsed'', ''0'', 0');
+END CATCH
+
+--RESTORE Statements in User SQL Modules
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabledDbLevel
+            SELECT
+                db_name(),
+                ''RESTORE'',
+                CASE
+                    WHEN count(*) > 0 THEN ''1''
+                    ELSE ''0''
+                END,
+                CONVERT(int, count(*))
+            FROM sys.sql_modules m
+            INNER JOIN sys.objects o ON m.object_id = o.object_id
+            WHERE o.is_ms_shipped = 0
+              AND (
+                  UPPER(m.definition) LIKE ''%RESTORE DATABASE%''
+                  OR UPPER(m.definition) LIKE ''%RESTORE LOG%''
+                  OR UPPER(m.definition) LIKE ''%RESTORE HEADERONLY%''
+                  OR UPPER(m.definition) LIKE ''%RESTORE FILELISTONLY%''
+              )');
+END TRY
+BEGIN CATCH
+    exec('INSERT INTO #FeaturesEnabledDbLevel SELECT db_name(), ''RESTORE'', ''0'', 0');
+END CATCH
+
 /* Collect permissions which are unsupported in CloudSQL SQL Server */
 BEGIN
     BEGIN TRY
@@ -111,7 +175,7 @@ BEGIN
                 SELECT
                     db_name(),
                     tmp.permission_name,
-					CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
+					CASE WHEN count(1) > 0 THEN ''1'' ELSE ''0'' END,
                     count(1)
                 FROM (
                     SELECT
@@ -122,9 +186,14 @@ BEGIN
                         dp.type AS permission_type
                     FROM
                         sys.database_permissions dp
-                        INNER JOIN sys.server_principals pr ON dp.grantee_principal_id = pr.principal_id
+                        INNER JOIN sys.database_principals pr ON dp.grantee_principal_id = pr.principal_id
                     WHERE
-                        pr.name NOT LIKE ''NT SERVICE\%''
+                        dp.state IN (''G'', ''W'')
+                        AND pr.name NOT LIKE ''NT SERVICE\%''
+                        AND pr.name NOT LIKE ''NT AUTHORITY\%''
+                        AND pr.name NOT LIKE ''##MS_%##''
+                        AND pr.name NOT IN (''dbo'', ''guest'', ''INFORMATION_SCHEMA'', ''sys'', ''public'')
+                        AND pr.is_fixed_role <> 1
                         AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
                         ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
                         ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'',

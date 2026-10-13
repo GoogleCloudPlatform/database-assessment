@@ -1,4 +1,5 @@
 /*
+-- Author: Tim Chapman
 Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,53 +18,50 @@ limitations under the License.
 SET ANSI_NULLS ON;
 SET QUOTED_IDENTIFIER ON;
 SET NOCOUNT ON;
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 SET LANGUAGE us_english;
 
-DECLARE @PKEY AS VARCHAR(256)
-DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
-DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
+DECLARE @PKEY AS VARCHAR(256);
+DECLARE @DMA_SOURCE_ID AS VARCHAR(256);
+DECLARE @DMA_MANUAL_ID AS VARCHAR(256);
 
 SELECT @PKEY = N'$(pkey)';
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
 WITH DiskUserData AS (
-    SELECT
+    SELECT 
         ISNULL(SUM(CAST(size AS BIGINT) * 8 / 1024), 0) AS user_data_on_disk_mb
     FROM sys.master_files
     WHERE type_desc = 'ROWS' AND database_id > 4
 ),
 BufferPoolUserData AS (
-    SELECT
+    SELECT 
         ISNULL(COUNT_BIG(*) * 8 / 1024, 0) AS buffer_pool_user_data_mb
     FROM sys.dm_os_buffer_descriptors
     WHERE database_id > 4
 ),
 RingBufferPressure AS (
-    SELECT
+    SELECT 
         COUNT(*) AS total_pressure_events,
         ISNULL(SUM(CASE WHEN CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsProcess)[1]', 'INT') = 1 THEN 1 ELSE 0 END), 0) AS internal_sql_pressure_events,
         ISNULL(SUM(CASE WHEN CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsSystem)[1]', 'INT') = 1 THEN 1 ELSE 0 END), 0) AS external_os_pressure_events
     FROM sys.dm_os_ring_buffers r
     WHERE r.ring_buffer_type = 'RING_BUFFER_RESOURCE_MONITOR'
 )
-SELECT
+SELECT 
     '"' + @PKEY + '"' AS PKEY,
-    '"' + CONVERT(NVARCHAR(MAX), CAST(sm.total_physical_memory_kb / 1024 AS BIGINT)) + '"' AS host_ram_mb,
-    '"' + CONVERT(NVARCHAR(MAX), CAST(sm.available_physical_memory_kb / 1024 AS BIGINT)) + '"' AS available_host_ram_mb,
-    '"' + CONVERT(NVARCHAR(MAX), CAST(cfg_max.value_in_use AS BIGINT)) + '"' AS max_server_memory_mb,
-    '"' + CONVERT(NVARCHAR(MAX), CAST(cfg_min.value_in_use AS BIGINT)) + '"' AS min_server_memory_mb,
-    '"' + CONVERT(NVARCHAR(MAX), CAST(pm.physical_memory_in_use_kb / 1024 AS BIGINT)) + '"' AS sql_working_set_mb,
-    '"' + CASE
-        WHEN pm.large_page_allocations_kb > 0 THEN N'LARGE_PAGES'
-        WHEN pm.locked_page_allocations_kb > 0 THEN N'LOCK_PAGES'
-        ELSE N'CONVENTIONAL'
-    END + '"' AS memory_model,
-    '"' + CONVERT(NVARCHAR(MAX), CAST(d.user_data_on_disk_mb AS BIGINT)) + '"' AS user_data_on_disk_mb,
-    '"' + CONVERT(NVARCHAR(MAX), CAST(b.buffer_pool_user_data_mb AS BIGINT)) + '"' AS buffer_pool_user_data_mb,
-    '"' + CONVERT(NVARCHAR(MAX), CAST(rb.total_pressure_events AS INT)) + '"' AS lifetime_pressure_events,
-    '"' + CONVERT(NVARCHAR(MAX), CAST(rb.internal_sql_pressure_events AS INT)) + '"' AS internal_sql_pressure_events,
-    '"' + CONVERT(NVARCHAR(MAX), CAST(rb.external_os_pressure_events AS INT)) + '"' AS external_os_pressure_events,
+    '"' + CONVERT(NVARCHAR(30), sm.total_physical_memory_kb / 1024) + '"' AS host_ram_mb,
+    '"' + CONVERT(NVARCHAR(30), sm.available_physical_memory_kb / 1024) + '"' AS available_host_ram_mb,
+    '"' + CONVERT(NVARCHAR(30), cfg_max.value_in_use) + '"' AS max_server_memory_mb,
+    '"' + CONVERT(NVARCHAR(30), cfg_min.value_in_use) + '"' AS min_server_memory_mb,
+    '"' + CONVERT(NVARCHAR(30), pm.physical_memory_in_use_kb / 1024) + '"' AS sql_working_set_mb,
+    '"' + CASE WHEN pm.locked_page_allocations_kb > 0 THEN 'LOCK_PAGES' ELSE 'CONVENTIONAL' END + '"' AS memory_model,
+    '"' + CONVERT(NVARCHAR(30), d.user_data_on_disk_mb) + '"' AS user_data_on_disk_mb,
+    '"' + CONVERT(NVARCHAR(30), b.buffer_pool_user_data_mb) + '"' AS buffer_pool_user_data_mb,
+    '"' + CONVERT(NVARCHAR(20), rb.total_pressure_events) + '"' AS lifetime_pressure_events,
+    '"' + CONVERT(NVARCHAR(20), rb.internal_sql_pressure_events) + '"' AS internal_sql_pressure_events,
+    '"' + CONVERT(NVARCHAR(20), rb.external_os_pressure_events) + '"' AS external_os_pressure_events,
     '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
     '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
 FROM sys.dm_os_sys_memory sm

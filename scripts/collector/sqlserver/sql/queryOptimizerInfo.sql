@@ -1,4 +1,5 @@
 /*
+-- Author: Tim Chapman
 Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,9 +28,9 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
 SELECT
     '"' + @PKEY + '"' AS PKEY,
-    '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), counter), N''), '"', '""') + '"' AS counter,
-    '"' + ISNULL(CONVERT(NVARCHAR(MAX), value), N'') + '"' AS value,
-    '"' + ISNULL(CONVERT(NVARCHAR(MAX), occurrence), N'') + '"' AS occurrence,
+    '"' + counter + '"' AS counter,
+    '"' + CONVERT(NVARCHAR(MAX), value) + '"' AS value,
+    '"' + CONVERT(NVARCHAR(MAX), occurrence) + '"' AS occurrence,
     '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
     '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
 FROM sys.dm_exec_query_optimizer_info;
