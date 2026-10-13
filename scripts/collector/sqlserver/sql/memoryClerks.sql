@@ -30,7 +30,7 @@ SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
 WITH TotalMemory AS (
-    SELECT 
+    SELECT
         ISNULL(NULLIF(SUM(pages_kb), 0), 1) AS total_pages_kb
     FROM sys.dm_os_memory_clerks
 )

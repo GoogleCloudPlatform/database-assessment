@@ -30,26 +30,26 @@ SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
 WITH DiskUserData AS (
-    SELECT 
+    SELECT
         ISNULL(SUM(CAST(size AS BIGINT) * 8 / 1024), 0) AS user_data_on_disk_mb
     FROM sys.master_files
     WHERE type_desc = 'ROWS' AND database_id > 4
 ),
 BufferPoolUserData AS (
-    SELECT 
+    SELECT
         ISNULL(COUNT_BIG(*) * 8 / 1024, 0) AS buffer_pool_user_data_mb
     FROM sys.dm_os_buffer_descriptors
     WHERE database_id > 4
 ),
 RingBufferPressure AS (
-    SELECT 
+    SELECT
         COUNT(*) AS total_pressure_events,
         ISNULL(SUM(CASE WHEN CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsProcess)[1]', 'INT') = 1 THEN 1 ELSE 0 END), 0) AS internal_sql_pressure_events,
         ISNULL(SUM(CASE WHEN CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsSystem)[1]', 'INT') = 1 THEN 1 ELSE 0 END), 0) AS external_os_pressure_events
     FROM sys.dm_os_ring_buffers r
     WHERE r.ring_buffer_type = 'RING_BUFFER_RESOURCE_MONITOR'
 )
-SELECT 
+SELECT
     '"' + @PKEY + '"' AS PKEY,
     '"' + CONVERT(NVARCHAR(30), sm.total_physical_memory_kb / 1024) + '"' AS host_ram_mb,
     '"' + CONVERT(NVARCHAR(30), sm.available_physical_memory_kb / 1024) + '"' AS available_host_ram_mb,
