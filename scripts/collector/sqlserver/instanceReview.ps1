@@ -1694,4 +1694,3 @@ if ($null -ne $script:DmaEntraOdbcConnection) {
 }
 
 Exit 0
-

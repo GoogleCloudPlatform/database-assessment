@@ -1,9 +1,9 @@
 # Author: Tim Chapman
 """TDD Seam Verification for SQL Server Collector Files in database-assessment."""
 
-from pathlib import Path
 import re
 import unittest
+from pathlib import Path
 
 REPO_ROOT = Path(__file__).parents[1]
 SQL_DIR = REPO_ROOT / "scripts" / "collector" / "sqlserver" / "sql"
@@ -40,7 +40,6 @@ UPDATED_SQL_FILES = {
 
 
 class TestSqlServerCollectorSeams(unittest.TestCase):
-
     def test_17_new_sql_files_exist_and_have_author_headers(self) -> None:
         """Verify that all 17 new SQL files exist and include author and copyright headers."""
         for filename in NEW_SQL_FILES:
@@ -152,9 +151,7 @@ class TestSqlServerCollectorSeams(unittest.TestCase):
             "computerSpecsFile": 7,
         }
         driver_content = (PS_DIR / "instanceReview.ps1").read_text(encoding="utf-8")
-        pattern = re.compile(
-            r"Set-Content\s+-Path\s+\$foldername\\\$(\w+)\s+-Encoding\s+utf8\s+-Value\s+'([^']+)'"
-        )
+        pattern = re.compile(r"Set-Content\s+-Path\s+\$foldername\\\$(\w+)\s+-Encoding\s+utf8\s+-Value\s+'([^']+)'")
         found_headers = dict(pattern.findall(driver_content))
         for var_name, expected_cols in expected_var_col_counts.items():
             self.assertIn(var_name, found_headers, f"Missing Set-Content header for ${var_name}")
@@ -222,7 +219,9 @@ class TestSqlServerCollectorSeams(unittest.TestCase):
             "UserCertificatesUsed",
             "RESTORE",
         ):
-            self.assertIn(db_feature, db_content, f"Missing DB feature check {db_feature} in dbServerFeaturesDatabaseLevel.sql")
+            self.assertIn(
+                db_feature, db_content, f"Missing DB feature check {db_feature} in dbServerFeaturesDatabaseLevel.sql"
+            )
         self.assertIn("INNER JOIN sys.database_principals pr ON dp.grantee_principal_id = pr.principal_id", db_content)
 
     def test_instance_review_error_scan_excludes_collector_logs_and_guards_trap(self) -> None:
@@ -257,7 +256,7 @@ class TestSqlServerCollectorSeams(unittest.TestCase):
 
         hw_content = (PS_DIR / "dmaSQLServerHWSpecs.ps1").read_text(encoding="utf-8")
         self.assertIn("PhysicalCPUs=$($csvData.PhysicalCpuCount)", hw_content)
-        self.assertIn('$_.Exception.GetType().FullName', hw_content)
+        self.assertIn("$_.Exception.GetType().FullName", hw_content)
 
     def test_sql_hardening_and_false_positive_guards(self) -> None:
         """Verify parameterized machineSpecsTsql, Azure view names, escaped LIKE wildcards, and safe separator filtering."""
@@ -281,7 +280,7 @@ class TestSqlServerCollectorSeams(unittest.TestCase):
 
         waits_stats = (SQL_DIR / "waitsStats.sql").read_text(encoding="utf-8")
         self.assertIn("NULLIF(MAX ([W1].[WaitCount]), 0)", waits_stats)
-        self.assertIn('\'"\' + @PKEY + \'"\' AS PKEY', waits_stats)
+        self.assertIn("'\"' + @PKEY + '\"' AS PKEY", waits_stats)
 
         driver = (PS_DIR / "instanceReview.ps1").read_text(encoding="utf-8")
         self.assertIn(r"if ($lineStr -match '^[\s\-|]+$')", driver)
@@ -289,5 +288,3 @@ class TestSqlServerCollectorSeams(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
