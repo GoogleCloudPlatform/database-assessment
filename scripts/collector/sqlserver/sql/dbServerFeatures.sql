@@ -574,7 +574,7 @@ BEGIN
             exec('INSERT INTO #FeaturesEnabled
                 SELECT
                     SUBSTRING(tmp.permission_name,1,254),
-					CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
+					CASE WHEN count(1) > 0 THEN ''1'' ELSE ''0'' END,
                     count(1)
                 FROM (
                     SELECT
@@ -587,8 +587,11 @@ BEGIN
                         sys.server_permissions p
                         INNER JOIN sys.server_principals pr ON p.grantee_principal_id = pr.principal_id
                     WHERE
-                        pr.name NOT LIKE ''NT SERVICE\%''
-                        AND name NOT LIKE ''##MS_%##''
+                        p.state IN (''G'', ''W'')
+                        AND pr.name NOT LIKE ''NT SERVICE\%''
+                        AND pr.name NOT LIKE ''NT AUTHORITY\%''
+                        AND pr.name NOT LIKE ''##MS_%##''
+                        AND pr.name NOT IN (''sa'', ''public'')
                         AND pr.is_fixed_role <> 1
                         AND p.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
                         ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
@@ -604,10 +607,13 @@ BEGIN
                         dp.type AS permission_type
                     FROM
                         sys.database_permissions dp
-                        INNER JOIN sys.server_principals pr ON dp.grantee_principal_id = pr.principal_id
+                        INNER JOIN sys.database_principals pr ON dp.grantee_principal_id = pr.principal_id
                     WHERE
-                        pr.name NOT LIKE ''NT SERVICE\%''
-                        AND name NOT LIKE ''##MS_%##''
+                        dp.state IN (''G'', ''W'')
+                        AND pr.name NOT LIKE ''NT SERVICE\%''
+                        AND pr.name NOT LIKE ''NT AUTHORITY\%''
+                        AND pr.name NOT LIKE ''##MS_%##''
+                        AND pr.name NOT IN (''dbo'', ''guest'', ''INFORMATION_SCHEMA'', ''sys'', ''public'')
                         AND pr.is_fixed_role <> 1
                         AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
                         ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
@@ -624,7 +630,7 @@ BEGIN
                     exec('INSERT INTO #FeaturesEnabled
                         SELECT
                             SUBSTRING(tmp.permission_name,1,254),
-                            CASE WHEN count(1) > 0 THEN 1 ELSE 0 END,
+                            CASE WHEN count(1) > 0 THEN ''1'' ELSE ''0'' END,
                             count(1)
                         FROM (
                             SELECT
@@ -637,8 +643,11 @@ BEGIN
                                 sys.database_permissions dp
                                 INNER JOIN sys.database_principals pr ON dp.grantee_principal_id = pr.principal_id
                             WHERE
-                                pr.name NOT LIKE ''NT SERVICE\%''
-                                AND name NOT LIKE ''##MS_%##''
+                                dp.state IN (''G'', ''W'')
+                                AND pr.name NOT LIKE ''NT SERVICE\%''
+                                AND pr.name NOT LIKE ''NT AUTHORITY\%''
+                                AND pr.name NOT LIKE ''##MS_%##''
+                                AND pr.name NOT IN (''dbo'', ''guest'', ''INFORMATION_SCHEMA'', ''sys'', ''public'')
                                 AND pr.is_fixed_role <> 1
                                 AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
                                 ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
@@ -763,6 +772,296 @@ BEGIN
                 exec('INSERT INTO #FeaturesEnabled SELECT ''IsBufferPoolExtensionEnabled'', ''0'', 0 /* SQL Server 2014 (13.x) below */');
     END CATCH
 END
+
+-- Performance Data Collector Check
+IF EXISTS (SELECT 1 FROM sys.databases WHERE name = 'msdb' AND HAS_DBACCESS('msdb') = 1)
+   AND OBJECT_ID('msdb.dbo.syscollector_collection_sets') IS NOT NULL
+BEGIN
+    BEGIN TRY
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''Performance Data Collector'',
+                     CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                     COUNT(*)
+              FROM msdb.dbo.syscollector_collection_sets
+              WHERE is_running = 1');
+    END TRY
+    BEGIN CATCH
+        INSERT INTO #FeaturesEnabled VALUES ('Performance Data Collector', '0', 0);
+    END CATCH
+END
+ELSE
+BEGIN
+    INSERT INTO #FeaturesEnabled VALUES ('Performance Data Collector', '0', 0);
+END;
+
+-- Contained Availability Groups Check (SQL Server 2022+)
+IF @PRODUCT_VERSION >= 16
+BEGIN
+    BEGIN TRY
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''ContainedAGCount'',
+                     CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                     COUNT(*)
+              FROM sys.availability_groups
+              WHERE is_contained = 1');
+    END TRY
+    BEGIN CATCH
+        INSERT INTO #FeaturesEnabled VALUES ('ContainedAGCount', '0', 0);
+    END CATCH
+END
+ELSE
+BEGIN
+    INSERT INTO #FeaturesEnabled VALUES ('ContainedAGCount', '0', 0);
+END;
+
+-- Integrated Acceleration and Offloading Check (SQL Server 2022+)
+IF @PRODUCT_VERSION >= 16
+BEGIN
+    BEGIN TRY
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''IntegratedAccelerationEnabled'',
+                     CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                     COUNT(*)
+              FROM sys.dm_server_accelerator_status
+              WHERE ISNULL(mode, 0) > 0 OR ISNULL(config_in_use, 0) > 0');
+    END TRY
+    BEGIN CATCH
+        INSERT INTO #FeaturesEnabled VALUES ('IntegratedAccelerationEnabled', '0', 0);
+    END CATCH
+END
+ELSE
+BEGIN
+    INSERT INTO #FeaturesEnabled VALUES ('IntegratedAccelerationEnabled', '0', 0);
+END;
+
+-- Link to Azure SQL Managed Instance (Distributed Availability Groups)
+IF @PRODUCT_VERSION >= 13
+BEGIN
+    BEGIN TRY
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''AzureSQLMILinkActive'',
+                     CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                     COUNT(*)
+              FROM sys.availability_groups
+              WHERE is_distributed = 1');
+    END TRY
+    BEGIN CATCH
+        INSERT INTO #FeaturesEnabled VALUES ('AzureSQLMILinkActive', '0', 0);
+    END CATCH
+END
+ELSE
+BEGIN
+    INSERT INTO #FeaturesEnabled VALUES ('AzureSQLMILinkActive', '0', 0);
+END;
+
+-- Azure DevOps Server / TFS Hosting Check
+BEGIN TRY
+    INSERT INTO #FeaturesEnabled
+    SELECT
+        'AzureDevOpsServerHost',
+        CASE WHEN COUNT(*) > 0 THEN '1' ELSE '0' END,
+        COUNT(*)
+    FROM sys.databases
+    WHERE name IN ('Tfs_Configuration', 'AzureDevOps_Configuration');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('AzureDevOpsServerHost', '0', 0);
+END CATCH;
+
+-- External Languages Registered Check (SQL Server 2019+)
+IF @PRODUCT_VERSION >= 15
+BEGIN
+    BEGIN TRY
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''ExternalLanguagesRegistered'',
+                     CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                     COUNT(*)
+              FROM sys.external_languages el
+              LEFT JOIN sys.external_language_files elf
+                  ON el.external_language_id = elf.external_language_id
+              WHERE el.principal_id <> 4 OR elf.content IS NOT NULL');
+    END TRY
+    BEGIN CATCH
+        INSERT INTO #FeaturesEnabled VALUES ('ExternalLanguagesRegistered', '0', 0);
+    END CATCH
+END
+ELSE
+BEGIN
+    INSERT INTO #FeaturesEnabled VALUES ('ExternalLanguagesRegistered', '0', 0);
+END;
+
+-- Backups to Azure Blob Storage & Object Storage
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''BackupsToAzureBlobStorage'',
+                 CASE WHEN COUNT(1) > 0 THEN ''1'' ELSE ''0'' END,
+                 COUNT(1)
+          FROM msdb.dbo.backupmediafamily
+          WHERE physical_device_name LIKE ''%blob.core.windows.net%''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('BackupsToAzureBlobStorage', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''BackupsToObjectStorage'',
+                 CASE WHEN COUNT(1) > 0 THEN ''1'' ELSE ''0'' END,
+                 COUNT(1)
+          FROM msdb.dbo.backupmediafamily
+          WHERE physical_device_name LIKE ''%s3://%''
+             OR physical_device_name LIKE ''%blob.core.windows.net%''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('BackupsToObjectStorage', '0', 0);
+END CATCH;
+
+-- MS-TDS 8.0 Protocol and TLS 1.3
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''IsTDS80Used'',
+                 CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                 COUNT(*)
+          FROM sys.dm_exec_connections
+          WHERE sys.fn_varbintohexstr(protocol_version) LIKE ''0x8%''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('IsTDS80Used', '0', 0);
+END CATCH;
+
+-- In-Memory OLTP Support for Database Snapshots
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''in-memory-oltp'',
+                 CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                 COUNT(*)
+          FROM sys.databases snap
+          WHERE snap.source_database_id IS NOT NULL
+            AND EXISTS (
+                SELECT 1
+                FROM sys.master_files mf
+                WHERE mf.database_id = snap.source_database_id
+                  AND mf.type = 2
+            )');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('in-memory-oltp', '0', 0);
+END CATCH;
+
+-- Dedicated Administrator Connection (DAC)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''IsDACEnabled'',
+                 CASE WHEN (
+                     ISNULL((SELECT CONVERT(INT, value_in_use) FROM sys.configurations WHERE name = ''remote admin connections''), 0)
+                     + ISNULL((SELECT COUNT(*) FROM sys.dm_exec_connections c INNER JOIN sys.endpoints e ON c.endpoint_id = e.endpoint_id WHERE e.is_admin_endpoint = 1), 0)
+                 ) > 0 THEN ''1'' ELSE ''0'' END,
+                 ISNULL((SELECT CONVERT(INT, value_in_use) FROM sys.configurations WHERE name = ''remote admin connections''), 0)
+                 + ISNULL((SELECT COUNT(*) FROM sys.dm_exec_connections c INNER JOIN sys.endpoints e ON c.endpoint_id = e.endpoint_id WHERE e.is_admin_endpoint = 1), 0)');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('IsDACEnabled', '0', 0);
+END CATCH;
+
+-- Distributed Transaction Coordinator (MSDTC)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''IsDTCInUse'',
+                 CASE WHEN (
+                     ISNULL((SELECT COUNT(*) FROM sys.availability_groups WHERE ISNULL(dtc_support, 0) > 0), 0)
+                     + ISNULL((SELECT CONVERT(INT, value_in_use) FROM sys.configurations WHERE name = ''remote proc trans''), 0)
+                     + ISNULL((SELECT COUNT(*) FROM sys.dm_tran_active_transactions WHERE transaction_type = 4 OR ISNULL(dtc_state, 0) > 0), 0)
+                 ) > 0 THEN ''1'' ELSE ''0'' END,
+                 ISNULL((SELECT COUNT(*) FROM sys.availability_groups WHERE ISNULL(dtc_support, 0) > 0), 0)
+                 + ISNULL((SELECT CONVERT(INT, value_in_use) FROM sys.configurations WHERE name = ''remote proc trans''), 0)
+                 + ISNULL((SELECT COUNT(*) FROM sys.dm_tran_active_transactions WHERE transaction_type = 4 OR ISNULL(dtc_state, 0) > 0), 0)');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('IsDTCInUse', '0', 0);
+END CATCH;
+
+-- Persistent Memory (PMEM)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''IsPMEMEnabled'',
+                 CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                 COUNT(*)
+          FROM sys.dm_os_loaded_modules
+          WHERE LOWER(name) LIKE ''%pmem%''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('IsPMEMEnabled', '0', 0);
+END CATCH;
+
+-- Hybrid Buffer Pool with Direct Write (SQL Server 2022+)
+IF @PRODUCT_VERSION >= 16 AND COL_LENGTH('sys.server_memory_optimized_hybrid_buffer_pool_configuration', 'is_direct_write_enabled') IS NOT NULL
+BEGIN
+    BEGIN TRY
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''IsHybridBufferPoolDirectWriteEnabled'',
+                     CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                     COUNT(*)
+              FROM sys.server_memory_optimized_hybrid_buffer_pool_configuration
+              WHERE ISNULL(is_enabled, 0) = 1
+                AND ISNULL(is_direct_write_enabled, 0) = 1');
+    END TRY
+    BEGIN CATCH
+        INSERT INTO #FeaturesEnabled VALUES ('IsHybridBufferPoolDirectWriteEnabled', '0', 0);
+    END CATCH
+END
+ELSE
+BEGIN
+    INSERT INTO #FeaturesEnabled VALUES ('IsHybridBufferPoolDirectWriteEnabled', '0', 0);
+END;
+
+-- Multi-Write Replication (Merge, Peer-to-Peer, or Updatable Subscriptions)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''IsMultiWriteReplicationUsed'',
+                 CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                 COUNT(*)
+          FROM sys.databases
+          WHERE is_merge_published = 1
+             OR is_merge_subscribed = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('IsMultiWriteReplicationUsed', '0', 0);
+END CATCH;
+
+-- Support for PFX Certificates and Cryptographic Improvements (Server-Level)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''UserCertificatesUsed'',
+                 CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                 COUNT(*)
+          FROM master.sys.certificates
+          WHERE name NOT LIKE ''##MS_%''
+            AND pvt_key_encryption_type <> ''NA''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('UserCertificatesUsed', '0', 0);
+END CATCH;
+
+-- RESTORE Operation Usage (SQL Agent Jobs / Non-Fixed Server Principals)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''RESTORE'',
+                 CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                 COUNT(*)
+          FROM msdb.dbo.sysjobsteps js
+          INNER JOIN msdb.dbo.sysjobs j ON js.job_id = j.job_id
+          WHERE j.enabled = 1
+            AND js.subsystem = ''TSQL''
+            AND (
+                UPPER(js.command) LIKE ''%RESTORE DATABASE%''
+                OR UPPER(js.command) LIKE ''%RESTORE LOG%''
+                OR UPPER(js.command) LIKE ''%RESTORE HEADERONLY%''
+                OR UPPER(js.command) LIKE ''%RESTORE FILELISTONLY%''
+            )');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('RESTORE', '0', 0);
+END CATCH;
 
 SELECT
     '"' + @PKEY + '"' as PKEY,

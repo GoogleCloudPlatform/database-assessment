@@ -1,4 +1,5 @@
 /*
+-- Author: Tim Chapman
 Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,19 +29,19 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 SELECT @CLOUDTYPE = 'NONE';
 
 IF UPPER(@@VERSION) LIKE '%AZURE%'
-    SELECT @CLOUDTYPE = 'AZURE';
+	SELECT @CLOUDTYPE = 'AZURE';
 
 IF @CLOUDTYPE = 'AZURE' AND OBJECT_ID('sys.dm_user_db_resource_governance') IS NOT NULL
 BEGIN
     SELECT
         '"' + @PKEY + '"' AS PKEY,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), database_id), N'') + '"' AS database_id,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), logical_cpu_count), N'') + '"' AS logical_cpu_count,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), process_memory_limit_mb), N'') + '"' AS process_memory_limit_mb,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), max_global_index_size_mb), N'') + '"' AS max_global_index_size_mb,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), user_data_cap_gb), N'') + '"' AS user_data_cap_gb,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), user_data_iops_cap), N'') + '"' AS user_data_iops_cap,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), log_write_cap_mb_sec), N'') + '"' AS log_write_cap_mb_sec,
+        '"' + CONVERT(NVARCHAR(MAX), database_id) + '"' AS database_id,
+        '"' + CONVERT(NVARCHAR(MAX), logical_cpu_count) + '"' AS logical_cpu_count,
+        '"' + CONVERT(NVARCHAR(MAX), process_memory_limit_mb) + '"' AS process_memory_limit_mb,
+        '"' + CONVERT(NVARCHAR(MAX), max_global_index_size_mb) + '"' AS max_global_index_size_mb,
+        '"' + CONVERT(NVARCHAR(MAX), user_data_cap_gb) + '"' AS user_data_cap_gb,
+        '"' + CONVERT(NVARCHAR(MAX), user_data_iops_cap) + '"' AS user_data_iops_cap,
+        '"' + CONVERT(NVARCHAR(MAX), log_write_cap_mb_sec) + '"' AS log_write_cap_mb_sec,
         '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
         '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
     FROM sys.dm_user_db_resource_governance;
