@@ -1,4 +1,5 @@
 /*
+-- Author: Tim Chapman
 Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,20 +29,20 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 SELECT @CLOUDTYPE = 'NONE';
 
 IF UPPER(@@VERSION) LIKE '%AZURE%'
-    SELECT @CLOUDTYPE = 'AZURE';
+	SELECT @CLOUDTYPE = 'AZURE';
 
 IF @CLOUDTYPE = 'AZURE' AND OBJECT_ID('sys.dm_db_resource_stats') IS NOT NULL
 BEGIN
     SELECT
         '"' + @PKEY + '"' AS PKEY,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), end_time, 121), N'') + '"' AS end_time,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), avg_cpu_percent), N'') + '"' AS avg_cpu_percent,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), avg_data_io_percent), N'') + '"' AS avg_data_io_percent,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), avg_log_write_percent), N'') + '"' AS avg_log_write_percent,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), max_worker_percent), N'') + '"' AS max_worker_percent,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), max_session_percent), N'') + '"' AS max_session_percent,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), current_limit), N'') + '"' AS current_limit,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), current_storage_usage_db), N'') + '"' AS current_storage_usage_db,
+        '"' + CONVERT(NVARCHAR(MAX), end_time, 121) + '"' AS end_time,
+        '"' + CONVERT(NVARCHAR(MAX), avg_cpu_percent) + '"' AS avg_cpu_percent,
+        '"' + CONVERT(NVARCHAR(MAX), avg_data_io_percent) + '"' AS avg_data_io_percent,
+        '"' + CONVERT(NVARCHAR(MAX), avg_log_write_percent) + '"' AS avg_log_write_percent,
+        '"' + CONVERT(NVARCHAR(MAX), max_worker_percent) + '"' AS max_worker_percent,
+        '"' + CONVERT(NVARCHAR(MAX), max_session_percent) + '"' AS max_session_percent,
+        '"' + CONVERT(NVARCHAR(MAX), current_limit) + '"' AS current_limit,
+        '"' + CONVERT(NVARCHAR(MAX), current_storage_usage_db) + '"' AS current_storage_usage_db,
         '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
         '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
     FROM sys.dm_db_resource_stats
@@ -49,6 +50,7 @@ BEGIN
 END
 ELSE
 BEGIN
+    -- Return exactly 0 rows for non-Azure instances
     SELECT TOP 0
         '"' + @PKEY + '"' AS PKEY,
         '' AS end_time,

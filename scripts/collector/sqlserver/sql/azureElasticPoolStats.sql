@@ -1,4 +1,5 @@
 /*
+-- Author: Tim Chapman
 Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,22 +29,22 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 SELECT @CLOUDTYPE = 'NONE';
 
 IF UPPER(@@VERSION) LIKE '%AZURE%'
-    SELECT @CLOUDTYPE = 'AZURE';
+	SELECT @CLOUDTYPE = 'AZURE';
 
-IF @CLOUDTYPE = 'AZURE' AND OBJECT_ID('sys.dm_elastic_pool_resource_stats') IS NOT NULL
+IF @CLOUDTYPE = 'AZURE' AND OBJECT_ID('sys.elastic_pool_resource_stats') IS NOT NULL
 BEGIN
     SELECT
         '"' + @PKEY + '"' AS PKEY,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), end_time, 121), N'') + '"' AS end_time,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), elastic_pool_name), N'') + '"' AS elastic_pool_name,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), avg_cpu_percent), N'') + '"' AS avg_cpu_percent,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), avg_data_io_percent), N'') + '"' AS avg_data_io_percent,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), avg_log_write_percent), N'') + '"' AS avg_log_write_percent,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), max_worker_percent), N'') + '"' AS max_worker_percent,
-        '"' + ISNULL(CONVERT(NVARCHAR(MAX), elastic_pool_dtu_limit), N'') + '"' AS elastic_pool_dtu_limit,
+        '"' + CONVERT(NVARCHAR(MAX), end_time, 121) + '"' AS end_time,
+        '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), elastic_pool_name), N''), '"', '""') + '"' AS elastic_pool_name,
+        '"' + CONVERT(NVARCHAR(MAX), avg_cpu_percent) + '"' AS avg_cpu_percent,
+        '"' + CONVERT(NVARCHAR(MAX), avg_data_io_percent) + '"' AS avg_data_io_percent,
+        '"' + CONVERT(NVARCHAR(MAX), avg_log_write_percent) + '"' AS avg_log_write_percent,
+        '"' + CONVERT(NVARCHAR(MAX), max_worker_percent) + '"' AS max_worker_percent,
+        '"' + CONVERT(NVARCHAR(MAX), elastic_pool_dtu_limit) + '"' AS elastic_pool_dtu_limit,
         '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
         '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
-    FROM sys.dm_elastic_pool_resource_stats
+    FROM sys.elastic_pool_resource_stats
     ORDER BY end_time DESC;
 END
 ELSE

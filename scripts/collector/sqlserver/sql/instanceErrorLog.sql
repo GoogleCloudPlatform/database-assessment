@@ -1,4 +1,5 @@
 /*
+-- Author: Tim Chapman
 Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,14 +40,14 @@ BEGIN TRY
     EXEC master.dbo.xp_readerrorlog 0, 1, NULL, NULL, NULL, NULL, N'desc';
 END TRY
 BEGIN CATCH
-    WAITFOR DELAY '00:00:00';
+    -- Non-sysadmin / non-securityadmin logins without EXECUTE on xp_readerrorlog return an empty log set cleanly
 END CATCH;
 
 SELECT TOP 500
     '"' + @PKEY + '"' AS PKEY,
-    '"' + ISNULL(CONVERT(NVARCHAR(30), LogDate, 121), N'') + '"' AS [timestamp],
-    '"' + REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(CONVERT(NVARCHAR(255), ProcessInfo), N''), N'"', N'""'), N'|', N' '), CHAR(13), N' '), CHAR(10), N' ') + '"' AS [process_info],
-    '"' + REPLACE(REPLACE(REPLACE(REPLACE(ISNULL(Text, N''), N'"', N'""'), N'|', N' '), CHAR(13), N' '), CHAR(10), N' ') + '"' AS [log_message],
+    '"' + CONVERT(VARCHAR(30), LogDate, 121) + '"' AS [timestamp],
+    '"' + REPLACE(REPLACE(REPLACE(CONVERT(NVARCHAR(MAX), ISNULL(ProcessInfo, '')), '"', '""'), CHAR(13), ' '), CHAR(10), ' ') + '"' AS [process_info],
+    '"' + LTRIM(RTRIM(REPLACE(REPLACE(REPLACE(CONVERT(NVARCHAR(MAX), ISNULL(Text, N'')), '"', '""'), CHAR(13), ' '), CHAR(10), ' '))) + '"' AS [log_message],
     '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
     '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
 FROM #ErrLog

@@ -254,7 +254,7 @@ BEGIN
             exec('INSERT INTO #serverProperties SELECT ''IsRemoteLoginEnabled'', ''0''')
     END CATCH
     BEGIN TRY
-        exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', CONVERT(NVARCHAR(255), count(*)) from sys.availability_groups where dtc_support is not null /* SQL Server 2016 (13.x) and above */');
+        exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', CASE WHEN count(*) > 0 THEN ''1'' ELSE ''0'' END from sys.availability_groups where ISNULL(dtc_support, 0) > 0 /* SQL Server 2016 (13.x) and above */');
     END TRY
     BEGIN CATCH
         IF ERROR_NUMBER() = 208 AND ERROR_SEVERITY() = 16 AND ERROR_STATE() = 1
@@ -357,7 +357,7 @@ BEGIN
     END;
     IF @PRODUCT_VERSION >= 13
     BEGIN
-        exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', CONVERT(NVARCHAR(255), count(*)) from sys.availability_groups where dtc_support is not null /* SQL Server 2016 (13.x) and above */');
+        exec('INSERT INTO #serverProperties SELECT ''IsDTCInUse'', CASE WHEN count(*) > 0 THEN ''1'' ELSE ''0'' END from sys.availability_groups where ISNULL(dtc_support, 0) > 0 /* SQL Server 2016 (13.x) and above */');
     END;
     ELSE
     BEGIN

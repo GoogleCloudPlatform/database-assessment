@@ -1,4 +1,5 @@
 /*
+-- Author: Tim Chapman
 Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,37 +27,34 @@ SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
 WITH BatchResponses AS (
-    SELECT
-        RTRIM(LTRIM(counter_name)) AS counter_name,
-        RTRIM(LTRIM(instance_name)) AS instance_name,
-        cntr_value
+    SELECT *
     FROM sys.dm_os_performance_counters
     WHERE object_name LIKE '%Batch Resp Statistics%'
-      AND RTRIM(LTRIM(instance_name)) IN (
+      AND instance_name IN (
         'Elapsed Time:Requests',
         'Elapsed Time:Total(ms)'
       )
 )
 SELECT
-    '"' + @PKEY + '"' AS PKEY,
-    '"' + CONVERT(NVARCHAR(MAX), CASE
+    @PKEY AS PKEY,
+    AvgRunTimeMS = CASE
         WHEN bcount.cntr_value = 0 THEN 0
         ELSE btime.cntr_value / bcount.cntr_value
-    END) + '"' AS AvgRunTimeMS,
-    '"' + CONVERT(NVARCHAR(MAX), CAST(bcount.cntr_value AS BIGINT)) + '"' AS StatementCount,
-    '"' + REPLACE(CONVERT(NVARCHAR(MAX), bcount.counter_name), '"', '""') + '"' AS counter_name,
-    '"' + CONVERT(NVARCHAR(MAX), btime.cntr_value) + '"' AS TotalElapsedTimeMS,
-    '"' + CONVERT(NVARCHAR(MAX), ISNULL(CAST((100.0 * btime.cntr_value / NULLIF(SUM(btime.cntr_value) OVER (), 0)) AS DECIMAL(5, 2)), 0.00)) + '"' AS ExecutionTimePercent,
-    '"' + CONVERT(NVARCHAR(MAX), ISNULL(CAST((100.0 * bcount.cntr_value / NULLIF(SUM(bcount.cntr_value) OVER (), 0)) AS DECIMAL(5, 2)), 0.00)) + '"' AS ExecutionCountPercent,
-    '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
-    '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
+    END,
+    StatementCount = CAST(bcount.cntr_value AS BIGINT),
+    bcount.counter_name,
+    TotalElapsedTimeMS = btime.cntr_value,
+    ExecutionTimePercent = ISNULL(CAST((100.0 * btime.cntr_value / NULLIF(SUM(btime.cntr_value) OVER (), 0)) AS DECIMAL(5, 2)), 0.0),
+    ExecutionCountPercent = ISNULL(CAST((100.0 * bcount.cntr_value / NULLIF(SUM(bcount.cntr_value) OVER (), 0)) AS DECIMAL(5, 2)), 0.0),
+    @DMA_SOURCE_ID AS dma_source_id,
+    @DMA_MANUAL_ID AS dma_manual_id
 FROM (
-    SELECT counter_name, cntr_value
+    SELECT *
     FROM BatchResponses
     WHERE instance_name = 'Elapsed Time:Requests'
 ) bcount
 JOIN (
-    SELECT counter_name, cntr_value
+    SELECT *
     FROM BatchResponses
     WHERE instance_name = 'Elapsed Time:Total(ms)'
 ) btime ON bcount.counter_name = btime.counter_name

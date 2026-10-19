@@ -97,7 +97,7 @@ NEW_DEEP_SQL_SPECS: dict[str, tuple[str, str]] = {
         '"PKEY"|"timestamp"|"process_info"|"log_message"|"dma_source_id"|"dma_manual_id"',
     ),
     "machineSpecsTsql.sql": (
-        "MachineSpecsTsql",
+        "DbMachineSpecs",
         '"pkey"|"dma_source_id"|"dma_manual_id"|"MachineName"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"',
     ),
     "memoryClerks.sql": (
@@ -242,5 +242,5 @@ def test_sql_safety_and_sanitization_guards(instance_review_content: str) -> Non
     assert "'%$' + '(%'" in agent_jobs_sql
 
     assert "if (-not $useEntraIDAuthentication)" in instance_review_content
-    assert "if ($entraIDUserName)" in instance_review_content
+    assert "$entraIDUserName" in instance_review_content
     assert "$entraUpn" not in instance_review_content

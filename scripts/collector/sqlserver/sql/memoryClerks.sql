@@ -1,4 +1,5 @@
 /*
+-- Author: Tim Chapman
 Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,12 +15,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+SET ANSI_NULLS ON;
+SET QUOTED_IDENTIFIER ON;
 SET NOCOUNT ON;
+SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 SET LANGUAGE us_english;
 
-DECLARE @PKEY AS VARCHAR(256)
-DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
-DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
+DECLARE @PKEY AS VARCHAR(256);
+DECLARE @DMA_SOURCE_ID AS VARCHAR(256);
+DECLARE @DMA_MANUAL_ID AS VARCHAR(256);
 
 SELECT @PKEY = N'$(pkey)';
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
@@ -32,9 +36,9 @@ WITH TotalMemory AS (
 )
 SELECT TOP (20)
     '"' + @PKEY + '"' AS PKEY,
-    '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(128), mc.type), N''), '"', '""') + '"' AS memory_clerk_type,
-    '"' + CONVERT(NVARCHAR(MAX), CAST(SUM(mc.pages_kb) / 1024 AS BIGINT)) + '"' AS allocated_mb,
-    '"' + CONVERT(NVARCHAR(MAX), CAST((SUM(mc.pages_kb) * 100.0 / tm.total_pages_kb) AS DECIMAL(5, 2))) + '"' AS pct_of_total_sql_memory,
+    '"' + CONVERT(NVARCHAR(128), mc.type) + '"' AS memory_clerk_type,
+    '"' + CONVERT(NVARCHAR(30), SUM(mc.pages_kb) / 1024) + '"' AS allocated_mb,
+    '"' + CONVERT(NVARCHAR(20), CAST((SUM(mc.pages_kb) * 100.0 / tm.total_pages_kb) AS DECIMAL(5,2))) + '"' AS pct_of_total_sql_memory,
     '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
     '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
 FROM sys.dm_os_memory_clerks mc
