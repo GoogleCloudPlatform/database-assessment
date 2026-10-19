@@ -11,22 +11,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Container runtime utilities for test infrastructure."""
+"""Container runtime and database container utilities for test infrastructure."""
 
 from __future__ import annotations
 
 from tools.lib.container import (
-    ContainerNotFoundError,
     ContainerRuntime,
     ContainerRuntimeError,
     NoRuntimeAvailableError,
     RuntimeType,
 )
+from tools.lib.database import (
+    BaseDatabaseConfig,
+    ContainerAlreadyRunningError,
+    ContainerStartError,
+    DatabaseContainer,
+    DatabaseError,
+)
 
 __all__ = [
-    "ContainerNotFoundError",
+    "BaseDatabaseConfig",
+    "ContainerAlreadyRunningError",
     "ContainerRuntime",
     "ContainerRuntimeError",
+    "ContainerStartError",
+    "DatabaseContainer",
+    "DatabaseError",
     "NoRuntimeAvailableError",
     "RuntimeType",
 ]

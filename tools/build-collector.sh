@@ -29,12 +29,7 @@ if [[ -z "${COMMIT_SHA}" ]]; then
 fi
 
 if [[ -z "${VERSION}" ]]; then
-  if command -v uv >/dev/null 2>&1; then
-    VERSION="$(uv run --no-sync python -c "from dma.__about__ import __version__; print(__version__)" 2>/dev/null || true)"
-  fi
-  if [[ -z "${VERSION}" || "${VERSION}" == "0.0.0" ]]; then
-    VERSION="$(python3 -c 'import re, pathlib; m = re.search(r"^version\s*=\s*\"([^\"]+)\"", pathlib.Path("'"${ROOT_DIR}/pyproject.toml"'").read_text(), re.M); print(m.group(1) if m else "0.0.0")')"
-  fi
+  VERSION="$(python3 -c 'import pathlib, re, sys; m = re.search(r"^version\s*=\s*\"([^\"]+)\"", pathlib.Path(sys.argv[1]).read_text(encoding="utf-8"), re.M); print(m.group(1) if m else "0.0.0")' "${ROOT_DIR}/pyproject.toml")"
 fi
 
 BUILD_ROOT="${ROOT_DIR}/${BUILD_DIR}"
@@ -63,16 +58,22 @@ cp "${ROOT_DIR}/scripts/collector/oracle/dma_db_list.csv" "${COLLECTOR_ROOT}/ora
 if [ -d "${ROOT_DIR}/scripts/collector/oracle/oee" ]; then
   cp -r "${ROOT_DIR}/scripts/collector/oracle/oee/"* "${COLLECTOR_ROOT}/oracle/oee/"
 fi
+mkdir -p "${COLLECTOR_ROOT}/oracle/masker"
+cp "${ROOT_DIR}/scripts/masker/dma-collection-masker" "${COLLECTOR_ROOT}/oracle/masker/dma-collection-masker"
+chmod +x "${COLLECTOR_ROOT}/oracle/masker/dma-collection-masker"
 cp "${ROOT_DIR}/LICENSE" "${COLLECTOR_ROOT}/oracle/"
 echo "Database Migration Assessment Collector version ${VERSION} (${COMMIT_SHA})" > "${COLLECTOR_ROOT}/oracle/VERSION.txt"
 
 echo "=> Building Assessment Data Collection Scripts for Microsoft SQL Server version ${VERSION}..."
 mkdir -p "${COLLECTOR_ROOT}/sqlserver/sql/"
+mkdir -p "${COLLECTOR_ROOT}/sqlserver/masker"
 cp "${ROOT_DIR}/scripts/collector/sqlserver/sql/"*.sql "${COLLECTOR_ROOT}/sqlserver/sql"
 cp "${ROOT_DIR}/scripts/collector/sqlserver/"*.bat "${COLLECTOR_ROOT}/sqlserver/"
 cp "${ROOT_DIR}/scripts/collector/sqlserver/"*.ps1 "${COLLECTOR_ROOT}/sqlserver/"
 cp "${ROOT_DIR}/scripts/collector/sqlserver/"*.psm1 "${COLLECTOR_ROOT}/sqlserver/"
 cp "${ROOT_DIR}/scripts/collector/sqlserver/README.txt" "${COLLECTOR_ROOT}/sqlserver/"
+cp "${ROOT_DIR}/scripts/masker/dma-collection-masker" "${COLLECTOR_ROOT}/sqlserver/masker/dma-collection-masker"
+chmod +x "${COLLECTOR_ROOT}/sqlserver/masker/dma-collection-masker"
 cp "${ROOT_DIR}/LICENSE" "${COLLECTOR_ROOT}/sqlserver/"
 echo "Database Migration Assessment Collector version ${VERSION} (${COMMIT_SHA})" > "${COLLECTOR_ROOT}/sqlserver/VERSION.txt"
 
@@ -117,6 +118,9 @@ fi
 
 rm -f "${BUILD_ROOT}/${COLLECTOR_PACKAGE}"*.bz2
 rm -f "${BUILD_ROOT}/${COLLECTOR_PACKAGE}"*.zip
+rm -f "${BUILD_ROOT}/dma-collection-masker"
+cp "${ROOT_DIR}/scripts/masker/dma-collection-masker" "${BUILD_ROOT}/dma-collection-masker"
+chmod +x "${BUILD_ROOT}/dma-collection-masker"
 
 echo "=> Packaging Database Migration Assessment Collector for Oracle..."
 (

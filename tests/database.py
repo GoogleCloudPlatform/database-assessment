@@ -15,23 +15,6 @@
 
 This module provides session-scoped database containers for integration testing,
 with support for Docker and Podman, dynamic port allocation, and xdist coordination.
-
-Usage:
-    Add "tests.database" to pytest_plugins in conftest.py:
-
-        pytest_plugins = ["tests.database"]
-
-    Then use the database fixtures in your tests:
-
-        def test_something(postgres_collector_db):
-            engine = create_engine(
-                URL(
-                    drivername="postgresql+psycopg",
-                    host="localhost",
-                    port=postgres_collector_db.config.host_port,
-                    ...
-                )
-            )
 """
 
 from __future__ import annotations
@@ -43,27 +26,43 @@ import subprocess
 import tempfile
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import filelock
 import pytest
 
 from tools.lib.container import ContainerRuntime, NoRuntimeAvailableError
-from tools.mysql.database import ContainerStartError as MySQLContainerStartError
+from tools.lib.database import DatabaseContainer, DatabaseError
 from tools.mysql.database import DatabaseConfig as MySQLDatabaseConfig
 from tools.mysql.database import MySQLDatabase
-from tools.oracle.database import ContainerStartError as OracleContainerStartError
 from tools.oracle.database import DatabaseConfig as OracleDatabaseConfig
 from tools.oracle.database import OracleDatabase
-from tools.postgres.database import ContainerStartError as PostgresContainerStartError
 from tools.postgres.database import DatabaseConfig as PostgresDatabaseConfig
 from tools.postgres.database import PostgreSQLDatabase
-from tools.sqlserver.database import ContainerStartError as SQLServerContainerStartError
 from tools.sqlserver.database import DatabaseConfig as SQLServerDatabaseConfig
 from tools.sqlserver.database import SQLServerDatabase
 
 if TYPE_CHECKING:
     from collections.abc import Generator
+
+__all__ = [
+    "MYSQL_VERSIONS",
+    "ORACLE_VERSIONS",
+    "POSTGRES_VERSIONS",
+    "SQLSERVER_VERSIONS",
+    "SessionContainerManager",
+    "SessionRegistry",
+    "container_manager",
+    "get_xdist_worker_id",
+    "is_xdist_master",
+    "mysql_collector_db",
+    "oracle_collector_db",
+    "postgres_collector_db",
+    "pytest_collection_modifyitems",
+    "pytest_sessionfinish",
+    "slugify",
+    "sqlserver_collector_db",
+]
 
 POSTGRES_VERSIONS = [
     "postgres:12",
@@ -88,6 +87,8 @@ ORACLE_VERSIONS = [
 SQLSERVER_VERSIONS = [
     "mcr.microsoft.com/mssql/server:2022-latest",
 ]
+
+DatabaseT = TypeVar("DatabaseT", bound=DatabaseContainer[Any])
 
 
 def slugify(value: str) -> str:
@@ -128,23 +129,6 @@ class SessionRegistry:
         self.registry_file = self.base_dir / f"pytest-dma-session-{uid}.json"
         self.lock_file = self.base_dir / f"pytest-dma-session-{uid}.lock"
 
-    def _read_data(self) -> dict[str, Any]:
-        if not self.registry_file.exists():
-            return {"containers_started": [], "volumes_created": []}
-        try:
-            with self.registry_file.open("r", encoding="utf-8") as f:
-                data: dict[str, Any] = json.load(f)
-                return data
-        except (OSError, json.JSONDecodeError):
-            return {"containers_started": [], "volumes_created": []}
-
-    def _write_data(self, data: dict[str, Any]) -> None:
-        try:
-            with self.registry_file.open("w", encoding="utf-8") as f:
-                json.dump(data, f)
-        except OSError:
-            pass
-
     def record_container_started(self, container_name: str, volume_name: str | None = None) -> None:
         """Record that a container (and optional data volume) was started during this test session."""
         with filelock.FileLock(str(self.lock_file), timeout=30):
@@ -179,6 +163,23 @@ class SessionRegistry:
             except OSError:
                 pass
 
+    def _read_data(self) -> dict[str, Any]:
+        if not self.registry_file.exists():
+            return {"containers_started": [], "volumes_created": []}
+        try:
+            with self.registry_file.open("r", encoding="utf-8") as f:
+                data: dict[str, Any] = json.load(f)
+                return data
+        except (OSError, json.JSONDecodeError):
+            return {"containers_started": [], "volumes_created": []}
+
+    def _write_data(self, data: dict[str, Any]) -> None:
+        try:
+            with self.registry_file.open("w", encoding="utf-8") as f:
+                json.dump(data, f)
+        except OSError:
+            pass
+
 
 class SessionContainerManager:
     """Manages database containers across pytest-xdist workers.
@@ -201,64 +202,23 @@ class SessionContainerManager:
 
     def ensure_postgres(self, config: PostgresDatabaseConfig) -> PostgreSQLDatabase:
         """Ensure a PostgreSQL container is running and healthy."""
-        db = PostgreSQLDatabase(self.runtime, config)
-        if self.runtime.container_running(config.container_name) and db.is_healthy():
-            if config.host_port is None:
-                config.host_port = db.get_allocated_port()
-            return db
-
-        lock = filelock.FileLock(str(self.get_lock_path(config.container_name)), timeout=360)
-        with lock:
-            if self.runtime.container_running(config.container_name) and db.is_healthy():
-                if config.host_port is None:
-                    config.host_port = db.get_allocated_port()
-            else:
-                self._start_with_retry(db, PostgresContainerStartError)
-                self.registry.record_container_started(config.container_name, config.data_volume_name)
-
-        return db
+        return self._ensure_container(PostgreSQLDatabase(self.runtime, config))
 
     def ensure_mysql(self, config: MySQLDatabaseConfig) -> MySQLDatabase:
         """Ensure a MySQL container is running and healthy."""
-        db = MySQLDatabase(self.runtime, config)
-        if self.runtime.container_running(config.container_name) and db.is_healthy():
-            if config.host_port is None:
-                config.host_port = db.get_allocated_port()
-            return db
-
-        lock = filelock.FileLock(str(self.get_lock_path(config.container_name)), timeout=360)
-        with lock:
-            if self.runtime.container_running(config.container_name) and db.is_healthy():
-                if config.host_port is None:
-                    config.host_port = db.get_allocated_port()
-            else:
-                self._start_with_retry(db, MySQLContainerStartError)
-                self.registry.record_container_started(config.container_name, config.data_volume_name)
-
-        return db
+        return self._ensure_container(MySQLDatabase(self.runtime, config))
 
     def ensure_oracle(self, config: OracleDatabaseConfig) -> OracleDatabase:
         """Ensure an Oracle container is running and healthy."""
-        db = OracleDatabase(self.runtime, config)
-        if self.runtime.container_running(config.container_name) and db.is_healthy():
-            if config.host_port is None:
-                config.host_port = db.get_allocated_port()
-            return db
-
-        lock = filelock.FileLock(str(self.get_lock_path(config.container_name)), timeout=360)
-        with lock:
-            if self.runtime.container_running(config.container_name) and db.is_healthy():
-                if config.host_port is None:
-                    config.host_port = db.get_allocated_port()
-            else:
-                self._start_with_retry(db, OracleContainerStartError)
-                self.registry.record_container_started(config.container_name, config.data_volume_name)
-
-        return db
+        return self._ensure_container(OracleDatabase(self.runtime, config))
 
     def ensure_sqlserver(self, config: SQLServerDatabaseConfig) -> SQLServerDatabase:
         """Ensure a SQL Server container is running and healthy."""
-        db = SQLServerDatabase(self.runtime, config)
+        return self._ensure_container(SQLServerDatabase(self.runtime, config))
+
+    def _ensure_container(self, db: DatabaseT) -> DatabaseT:
+        """Ensure a database container is running and healthy under cross-worker file lock."""
+        config = db.config
         if self.runtime.container_running(config.container_name) and db.is_healthy():
             if config.host_port is None:
                 config.host_port = db.get_allocated_port()
@@ -270,23 +230,20 @@ class SessionContainerManager:
                 if config.host_port is None:
                     config.host_port = db.get_allocated_port()
             else:
-                self._start_with_retry(db, SQLServerContainerStartError)
+                self._start_with_retry(db)
                 self.registry.record_container_started(config.container_name, config.data_volume_name)
 
         return db
 
-    @staticmethod
-    def _start_with_retry(
-        db: PostgreSQLDatabase | MySQLDatabase | OracleDatabase | SQLServerDatabase,
-        error_cls: type[Exception],
-        max_attempts: int = 3,
-    ) -> None:
+    def _start_with_retry(self, db: DatabaseContainer[Any], max_attempts: int = 3) -> None:
         """Start a database container, retrying on transient dynamic port conflicts."""
         for attempt in range(max_attempts):
+            recreate = attempt > 0 or self.runtime.container_running(db.config.container_name)
             try:
-                db.start(pull=False, recreate=attempt > 0)
-            except error_cls:
+                db.start(pull=False, recreate=recreate)
+            except DatabaseError:
                 if attempt + 1 >= max_attempts:
+                    db.remove(force=True, remove_volume=True)
                     raise
                 db.config.host_port = None
                 time.sleep(1)

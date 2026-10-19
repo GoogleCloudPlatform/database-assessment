@@ -157,6 +157,13 @@ ORIGINAL_OPDB_FILE_KEYS: tuple[str, ...] = (
 )
 
 
+def _read_project_version() -> str:
+    content = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    match = re.search(r'^version\s*=\s*"([^"]+)"', content, re.MULTILINE)
+    assert match is not None, "Could not parse version from pyproject.toml"
+    return match.group(1)
+
+
 def _read_sql_file(filename: str) -> str:
     return (SQL_DIR / filename).read_text(encoding="utf-8")
 
@@ -206,8 +213,9 @@ def test_new_deep_sql_files_and_instance_review_wiring(
 def test_sqlserver_collector_zip_contains_all_sql_scripts(
     collector_artifacts: CollectorArtifacts,
 ) -> None:
-    assert collector_artifacts.sqlserver_zip is not None
     assert collector_artifacts.sqlserver_zip.is_file()
+    assert collector_artifacts.oracle_zip.is_file()
+    assert (collector_artifacts.dist_dir / "dma-collection-masker").is_file()
 
     with zipfile.ZipFile(collector_artifacts.sqlserver_zip) as zf:
         archive_names = set(zf.namelist())
@@ -217,6 +225,12 @@ def test_sqlserver_collector_zip_contains_all_sql_scripts(
 
     for filename in NEW_DEEP_SQL_SPECS:
         assert f"sql/{filename}" in archive_names
+
+    assert "masker/dma-collection-masker" in archive_names
+
+    with zipfile.ZipFile(collector_artifacts.oracle_zip) as oracle_zf:
+        oracle_names = set(oracle_zf.namelist())
+    assert "masker/dma-collection-masker" in oracle_names
 
 
 def test_sql_safety_and_sanitization_guards(instance_review_content: str) -> None:
@@ -366,7 +380,8 @@ def test_db_server_features_cloud_sql_blockers_and_false_positive_guards() -> No
 
 
 def test_collector_logging_and_telemetry_coverage(instance_review_content: str) -> None:
-    assert '$op_version = "4.3.48"' in instance_review_content
+    expected_version = _read_project_version()
+    assert f'$op_version = "{expected_version}"' in instance_review_content
     assert "Update-DmaManifest" not in instance_review_content
     assert "dma_manifest.json" not in instance_review_content
     assert len(re.findall(r"^\s*function\s+sqlcmd\b", instance_review_content, flags=re.MULTILINE)) == 1
@@ -448,3 +463,16 @@ def test_sql_hardening_and_false_positive_guards(instance_review_content: str) -
     assert "'\"' + @PKEY + '\"' AS PKEY" in waits_stats
 
     assert r"if ($lineStr -match '^[\s\-|]+$')" in instance_review_content
+
+
+def test_version_consistency_across_collector_and_masker_scripts(instance_review_content: str) -> None:
+    expected_version = _read_project_version()
+    assert f'$op_version = "{expected_version}"' in instance_review_content
+
+    masker_content = (REPO_ROOT / "scripts" / "masker" / "dma-collection-masker").read_text(encoding="utf-8")
+    assert f'__version__ = "{expected_version}"' in masker_content
+
+    for db_engine in ("oracle", "mysql", "postgres"):
+        script_path = REPO_ROOT / "scripts" / "collector" / db_engine / "collect-data.sh"
+        script_content = script_path.read_text(encoding="utf-8")
+        assert f'dma_version="{expected_version}"' in script_content, f"Version mismatch in {script_path}"

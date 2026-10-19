@@ -81,7 +81,6 @@ def postgres_script_result(
     result = script_executor.run_collector(
         container_name=postgres_collector_db.config.container_name,
         zip_path=collector_artifacts.postgres_zip,
-        db_type="postgres",
         connection_string=postgres_connection_string,
         extra_args=["--allDbs", "N"],
         timeout=300,
@@ -126,7 +125,6 @@ def postgres_script_result_all_dbs(
     result = script_executor.run_collector(
         container_name=postgres_collector_db.config.container_name,
         zip_path=collector_artifacts.postgres_zip,
-        db_type="postgres",
         connection_string=postgres_connection_string,
         extra_args=["--allDbs", "Y"],
         timeout=300,
@@ -167,10 +165,14 @@ def test_postgres_collector_csv_files_valid(postgres_script_result: CollectorRes
 def test_postgres_collector_manifest_checksums(postgres_script_result: CollectorResult) -> None:
     assert postgres_script_result.output_archive is not None
     manifest_name = next(
-        name
-        for name, _ in _iter_archive_members(postgres_script_result.output_archive)
-        if "manifest" in name and name.endswith(".txt")
+        (
+            name
+            for name, _ in _iter_archive_members(postgres_script_result.output_archive)
+            if "manifest" in name and name.endswith(".txt")
+        ),
+        None,
     )
+    assert manifest_name is not None, "Manifest file not found in output archive"
     manifest_content = _read_archive_file(postgres_script_result.output_archive, manifest_name).decode("utf-8")
     for line in manifest_content.strip().splitlines():
         db_type, expected_md5, filename = line.split("|", maxsplit=2)

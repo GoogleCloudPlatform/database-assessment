@@ -16,7 +16,7 @@ make install-uv
 
 ### `make install`
 
-Creates a fresh virtual environment and installs all dependencies (development, testing, linting, and documentation).
+Creates a fresh virtual environment and installs all development dependencies (testing, linting, documentation, and version management).
 
 **Usage:**
 
@@ -29,7 +29,7 @@ make install
 - Destroys any existing virtual environment
 - Pins Python to version 3.12
 - Creates `.venv/` virtual environment
-- Installs all dependencies with `uv sync --all-extras --dev`
+- Installs development dependencies with `uv sync --dev`
 - Installs pre-commit hooks
 
 ### `make upgrade`
@@ -59,43 +59,25 @@ make destroy
 
 ## Building
 
-### `make build-collector`
+### `make build` / `make build-collector`
 
-Builds database collection script packages (ZIP files) for all supported databases.
-
-**Usage:**
-
-```bash
-make build-collector
-```
-
-**Output:** Creates ZIP files in `dist/`:
-
-- `db-migration-assessment-collection-scripts-oracle.zip`
-- `db-migration-assessment-collection-scripts-sqlserver.zip`
-- `db-migration-assessment-collection-scripts-mysql.zip`
-- `db-migration-assessment-collection-scripts-postgres.zip`
-
-### `make build`
-
-Builds both collection script packages and the Python wheel.
+Builds database collection script packages (ZIP files) for all supported databases and copies the standalone collection masker script into `dist/`.
 
 **Usage:**
 
 ```bash
 make build
+# or
+make build-collector
 ```
-
-**What it does:**
-
-- Runs `make build-collector`
-- Runs `uv build` to create wheel and sdist
 
 **Output:** Creates in `dist/`:
 
-- Collection script ZIP files
-- `dma-{version}-py3-none-any.whl`
-- `dma-{version}.tar.gz`
+- `db-migration-assessment-collection-scripts-oracle.zip` (includes `masker/dma-collection-masker`)
+- `db-migration-assessment-collection-scripts-sqlserver.zip` (includes `masker/dma-collection-masker`)
+- `db-migration-assessment-collection-scripts-mysql.zip`
+- `db-migration-assessment-collection-scripts-postgres.zip`
+- `dma-collection-masker`
 
 ### `make clean`
 
@@ -177,11 +159,11 @@ make test-all-pythons
 ### Run Specific Tests
 
 ```bash
-# Run specific test file
-uv run pytest tests/unit/test_cli.py
+# Run specific unit test file
+uv run pytest tests/unit/test_sqlserver_collection_scripts.py
 
 # Run with debugging
-uv run pytest -s --pdb tests/unit/test_cli.py
+uv run pytest -s --pdb tests/unit/test_sqlserver_collection_scripts.py
 
 # Run tests matching a pattern
 uv run pytest -k "test_postgres"
@@ -249,7 +231,7 @@ uv run ruff check --fix .
 uv run ruff format .
 
 # Run mypy type checking
-uv run mypy src/dma
+uv run mypy
 
 # Run codespell
 uv run codespell
@@ -297,18 +279,18 @@ make doc-privs
 
 ### `make release`
 
-Bumps the version number, updates all version references, and builds documentation.
+Bumps the version number across all collection scripts and builds documentation.
 
 **Usage:**
 
 ```bash
-# Bump patch version (e.g., 4.3.44 → 4.3.45)
+# Bump patch version (e.g., 4.3.48 → 4.3.49)
 make release bump=patch
 
-# Bump minor version (e.g., 4.3.44 → 4.4.0)
+# Bump minor version (e.g., 4.3.48 → 4.4.0)
 make release bump=minor
 
-# Bump major version (e.g., 4.3.44 → 5.0.0)
+# Bump major version (e.g., 4.3.48 → 5.0.0)
 make release bump=major
 ```
 
@@ -321,7 +303,6 @@ make release bump=major
 **Files updated:**
 
 - `pyproject.toml`
-- `uv.lock`
 - `scripts/masker/dma-collection-masker`
 - `scripts/collector/oracle/collect-data.sh`
 - `scripts/collector/mysql/collect-data.sh`
@@ -336,23 +317,6 @@ uv run bump-my-version show current_version
 
 # Dry run version bump
 uv run bump-my-version bump --dry-run patch
-```
-
-## Running the CLI Locally
-
-### Using UV (Recommended)
-
-```bash
-# Run readiness check
-uv run dma readiness-check --db-type postgres --hostname localhost
-```
-
-### Using Activated Virtual Environment
-
-```bash
-source .venv/bin/activate
-
-dma readiness-check --db-type postgres --hostname localhost
 ```
 
 ## Database-Specific Testing
@@ -388,7 +352,7 @@ The project uses UV dependency groups defined in `pyproject.toml`:
 - **test**: Test dependencies (`pytest`, `pytest-cov`, `pytest-xdist`, `filelock`, etc.)
 - **lint**: Linting tools (`ruff`, `mypy`, `pre-commit`, etc.)
 - **docs**: Documentation tools (`sphinx`, `sphinx-immaterial`, `myst-parser`, `sphinx-design`, etc.)
-- **build**: Build tools (`bump-my-version`)
+- **build**: Version management tools (`bump-my-version`)
 
 ### Install Specific Groups
 
@@ -403,28 +367,6 @@ uv sync --group lint
 uv sync --group docs --group lint
 ```
 
-## Useful UV Commands
-
-```bash
-# Show installed packages
-uv pip list
-
-# Show dependency tree
-uv pip tree
-
-# Add a new dependency
-uv add requests
-
-# Add a dev dependency
-uv add --dev pytest-timeout
-
-# Remove a dependency
-uv remove requests
-
-# Sync environment with lockfile
-uv sync --locked
-```
-
 ## Quick Reference
 
 | Task | Command |
@@ -434,9 +376,8 @@ uv sync --locked
 | Run unit tests | `make test-unit` |
 | Run integration tests | `make test-integration` |
 | Run linting | `make lint` |
-| Build everything | `make build` |
+| Build collector packages | `make build` |
 | Clean artifacts | `make clean` |
 | Build docs | `make docs-build` |
 | Serve docs | `make docs-serve` |
 | Bump version | `make release bump=patch` |
-| Run CLI | `uv run dma --help` |

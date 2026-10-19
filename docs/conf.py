@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import sys
+import re
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-
-from dma.__about__ import __version__
+_pyproject_text = (Path(__file__).resolve().parent.parent / "pyproject.toml").read_text(encoding="utf-8")
+_version_match = re.search(r'^version\s*=\s*"([^"]+)"', _pyproject_text, re.MULTILINE)
+__version__ = _version_match.group(1) if _version_match else "0.0.0"
 
 project = "Database Migration Assessment"
 copyright = "2024, Google LLC"
@@ -16,9 +16,6 @@ version = __version__
 release = __version__
 
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.napoleon",
-    "sphinx.ext.viewcode",
     "myst_parser",
     "sphinx_design",
     "sphinx_immaterial",

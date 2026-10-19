@@ -1,11 +1,11 @@
 # Copyright 2024 Google LLC
-
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
+#
 #     https://www.apache.org/licenses/LICENSE-2.0
-
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -30,9 +30,17 @@ from tools.lib.container import ContainerRuntime
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+__all__ = [
+    "CollectorResult",
+    "ScriptExecutor",
+    "script_executor",
+]
+
 
 @dataclass
 class CollectorResult:
+    """Outcome of running a packaged database collection script in a container."""
+
     exit_code: int
     stdout: str
     stderr: str
@@ -49,6 +57,7 @@ class ScriptExecutor:
         self.runtime = runtime
 
     def copy_to_container(self, container_name: str, local_path: Path, container_path: str) -> None:
+        """Copy a local file or directory into a running container."""
         self.runtime.run_command(["cp", str(local_path), f"{container_name}:{container_path}"])
 
     def exec_in_container(
@@ -58,6 +67,7 @@ class ScriptExecutor:
         timeout: int | None = None,
         workdir: str | None = None,
     ) -> tuple[int, str, str]:
+        """Execute a command inside a running container."""
         args = ["exec"]
         if workdir:
             args.extend(["-w", workdir])
@@ -66,7 +76,45 @@ class ScriptExecutor:
         return self.runtime.run_command(args, timeout=timeout, check=False)
 
     def copy_from_container(self, container_name: str, container_path: str, local_path: Path) -> tuple[int, str, str]:
+        """Copy files from a running container to a local path."""
         return self.runtime.run_command(["cp", f"{container_name}:{container_path}", str(local_path)], check=False)
+
+    def run_collector(
+        self,
+        container_name: str,
+        zip_path: Path,
+        connection_string: str,
+        extra_args: Sequence[str] | None = None,
+        timeout: int = 300,
+    ) -> CollectorResult:
+        """Unpack and execute a packaged collector archive inside a running container."""
+        container_work_dir = f"{tempfile.gettempdir()}/collector-{int(time.time_ns())}"
+        start_time = time.time()
+
+        mkdir_code, mkdir_out, mkdir_err = self.exec_in_container(container_name, ["mkdir", "-p", container_work_dir])
+        if mkdir_code != 0:
+            return CollectorResult(
+                exit_code=mkdir_code,
+                stdout=mkdir_out,
+                stderr=mkdir_err,
+                output_dir=None,
+                output_archive=None,
+                error_log=None,
+                execution_time=time.time() - start_time,
+            )
+
+        try:
+            return self._execute_in_workdir(
+                container_name=container_name,
+                container_work_dir=container_work_dir,
+                zip_path=zip_path,
+                connection_string=connection_string,
+                extra_args=extra_args,
+                timeout=timeout,
+                start_time=start_time,
+            )
+        finally:
+            self.exec_in_container(container_name, ["rm", "-rf", container_work_dir])
 
     def _process_output(self, container_name: str, script_dir: str) -> tuple[Path | None, Path | None, Path | None]:
         temp_dir = Path(tempfile.mkdtemp(prefix="dma-collector-output-"))
@@ -79,9 +127,9 @@ class ScriptExecutor:
         output_archive = None
         error_log = None
         if output_dir.exists():
-            archives = list(output_dir.glob("*.zip")) + list(output_dir.glob("*.tar.gz"))
+            archives = sorted(output_dir.glob("*.zip")) + sorted(output_dir.glob("*.tar.gz"))
             output_archive = archives[0] if archives else None
-            error_logs = list(output_dir.glob("*_errors.log"))
+            error_logs = sorted(output_dir.glob("*_errors.log"))
             error_log = error_logs[0] if error_logs else None
 
         return output_dir, output_archive, error_log
@@ -134,33 +182,8 @@ class ScriptExecutor:
             execution_time=time.time() - start_time,
         )
 
-    def run_collector(
-        self,
-        container_name: str,
-        zip_path: Path,
-        db_type: str,
-        connection_string: str,
-        extra_args: Sequence[str] | None = None,
-        timeout: int = 300,
-    ) -> CollectorResult:
-        container_work_dir = f"{tempfile.gettempdir()}/collector-{int(time.time_ns())}"
-        start_time = time.time()
-
-        self.exec_in_container(container_name, ["mkdir", "-p", container_work_dir])
-        try:
-            return self._execute_in_workdir(
-                container_name=container_name,
-                container_work_dir=container_work_dir,
-                zip_path=zip_path,
-                connection_string=connection_string,
-                extra_args=extra_args,
-                timeout=timeout,
-                start_time=start_time,
-            )
-        finally:
-            self.exec_in_container(container_name, ["rm", "-rf", container_work_dir])
-
 
 @pytest.fixture(scope="session")
 def script_executor() -> ScriptExecutor:
+    """Return a session-scoped ScriptExecutor instance."""
     return ScriptExecutor(ContainerRuntime())

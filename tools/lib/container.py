@@ -23,6 +23,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from pathlib import Path
 
+__all__ = [
+    "ContainerRuntime",
+    "ContainerRuntimeError",
+    "NoRuntimeAvailableError",
+    "RuntimeType",
+]
+
 
 class ContainerRuntimeError(Exception):
     """Base exception for container runtime errors."""
@@ -37,14 +44,6 @@ class NoRuntimeAvailableError(ContainerRuntimeError):
             "Please install Docker (https://docs.docker.com/get-docker/) "
             "or Podman (https://podman.io/getting-started/installation)."
         )
-
-
-class ContainerNotFoundError(ContainerRuntimeError):
-    """Raised when a container is not found."""
-
-    def __init__(self, container_name: str) -> None:
-        super().__init__(f"Container '{container_name}' not found.")
-        self.container_name = container_name
 
 
 class RuntimeType(str, Enum):

@@ -23,7 +23,6 @@ ERROR := $(shell printf "$(RED)✖$(NC)")
 MAKEFLAGS += --no-print-directory
 
 BUILD_DIR             =dist
-SRC_DIR               =src
 COLLECTOR_SRC_DIR     =scripts/collector
 COLLECTOR_PACKAGE     =db-migration-assessment-collection-scripts
 BASE_DIR              =$(shell pwd)
@@ -64,7 +63,7 @@ install: destroy clean                              ## Install the project, depe
 	@./tools/setup-local-env.sh
 	@uv python pin 3.12 >/dev/null 2>&1
 	@uv venv >/dev/null 2>&1
-	@uv sync --all-extras --dev
+	@uv sync --dev
 	@echo "${OK} Installation complete! 🎉"
 
 .PHONY: upgrade
@@ -110,26 +109,15 @@ package-collector:
 	@tools/build-collector.sh
 
 .PHONY: build
-build: clean                                        ## Build and package the collectors and wheel
+build: clean                                        ## Build and package the collection scripts
 	@$(MAKE) build-collector
-	@echo "=> Building package..."
-	@uv build
-	@echo "=> Package build complete..."
-
-.PHONY: build-all
-build-all: clean			## Build collector, wheel, and standalone collector binary
-	@$(MAKE) build-collector
-	@echo "=> Building sdist, wheel and binary packages..."
-	@tools/build-binary-package.sh
-	@echo "=> Package build complete..."
-
+	@echo "=> Collector package build complete..."
 
 .PHONY: release
 release:                                           ## Bump version and create release tag
 	@echo "${INFO} Preparing for release... 📦"
 	@make docs-build
 	@make clean
-	@uv lock --upgrade-package dma >/dev/null 2>&1
 	@uv run bump-my-version bump $(bump)
 	@uv run bump-my-version show current_version
 	@echo "${OK} Release complete 🎉"
