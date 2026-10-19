@@ -30,9 +30,10 @@ fi
 
 if [[ -z "${VERSION}" ]]; then
   if command -v uv >/dev/null 2>&1; then
-    VERSION="$(uv run python -c "from dma.__about__ import __version__; print(__version__)")"
-  else
-    VERSION="$(PYTHONPATH="${ROOT_DIR}/src" python -c "from dma.__about__ import __version__; print(__version__)")"
+    VERSION="$(uv run --no-sync python -c "from dma.__about__ import __version__; print(__version__)" 2>/dev/null || true)"
+  fi
+  if [[ -z "${VERSION}" || "${VERSION}" == "0.0.0" ]]; then
+    VERSION="$(python3 -c 'import re, pathlib; m = re.search(r"^version\s*=\s*\"([^\"]+)\"", pathlib.Path("'"${ROOT_DIR}/pyproject.toml"'").read_text(), re.M); print(m.group(1) if m else "0.0.0")')"
   fi
 fi
 

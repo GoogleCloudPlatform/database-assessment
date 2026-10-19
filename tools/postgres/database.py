@@ -133,8 +133,7 @@ class PostgreSQLDatabase:
                 self.remove(force=True)
             else:
                 self.runtime.start_container(config.container_name)
-                if config.host_port is None:
-                    self.config.host_port = self._get_allocated_port()
+                self.config.host_port = self.get_allocated_port()
                 self._wait_for_health()
                 return
 
@@ -159,7 +158,7 @@ class PostgreSQLDatabase:
             raise ContainerStartError(msg, container_name=config.container_name, logs=logs) from e
 
         if config.host_port is None:
-            self.config.host_port = self._get_allocated_port()
+            self.config.host_port = self.get_allocated_port()
 
         self._wait_for_health()
 
@@ -202,7 +201,7 @@ class PostgreSQLDatabase:
             "--restart",
             config.restart_policy,
             "--health-cmd",
-            f"pg_isready -U {config.postgres_user} -d {config.postgres_db}",
+            f"pg_isready -h 127.0.0.1 -U {config.postgres_user} -d {config.postgres_db}",
             "--health-interval",
             f"{config.health_interval}s",
             "--health-timeout",
@@ -226,7 +225,7 @@ class PostgreSQLDatabase:
 
         return args
 
-    def _get_allocated_port(self) -> int:
+    def get_allocated_port(self) -> int:
         """Get the dynamically allocated host port.
 
         Returns:
@@ -265,13 +264,15 @@ class PostgreSQLDatabase:
         raise ContainerStartError(msg, container_name=config.container_name, logs=logs)
 
     def is_healthy(self) -> bool:
-        """Check if the database is healthy and accepting connections."""
+        """Check if the database is healthy and accepting TCP connections."""
         try:
             _, stdout, _ = self.runtime.run_command(
                 [
                     "exec",
                     self.config.container_name,
                     "pg_isready",
+                    "-h",
+                    "127.0.0.1",
                     "-U",
                     self.config.postgres_user,
                     "-d",
@@ -298,6 +299,7 @@ class PostgreSQLDatabase:
     def restart(self) -> None:
         """Restart the database container."""
         self.runtime.run_command(["restart", self.config.container_name])
+        self.config.host_port = self.get_allocated_port()
         self._wait_for_health()
 
     def remove(self, *, force: bool = False, remove_volume: bool = False) -> None:

@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+.SHELLFLAGS := -e -o pipefail -c
 
 # -----------------------------------------------------------------------------
 # Display Formatting and Colors
@@ -31,8 +32,6 @@ BASE_DIR              =$(shell pwd)
 ifneq (,$(wildcard uv.toml))
 export PIP_INDEX_URL=https://pypi.org/simple
 endif
-
-.EXPORT_ALL_VARIABLES:
 
 ifndef VERBOSE
 .SILENT:
@@ -160,7 +159,7 @@ docs-serve:                                         ## Serve documentation local
 
 .PHONY: docs-build
 docs-build:                                         ## Generate HTML documentation
-	@uv run sphinx-build -b html docs/ docs/_build/html --keep-going
+	@uv run sphinx-build -b html docs/ docs/_build/html -W --keep-going
 
 
 # =============================================================================

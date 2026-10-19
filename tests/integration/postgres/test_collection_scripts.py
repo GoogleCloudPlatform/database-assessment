@@ -16,6 +16,7 @@
 from __future__ import annotations
 
 import hashlib
+import shutil
 import tarfile
 import zipfile
 from typing import TYPE_CHECKING
@@ -26,10 +27,9 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
 
-    from tools.postgres.database import PostgreSQLDatabase
-
     from tests.lib.collector_build import CollectorArtifacts
     from tests.lib.script_executor import CollectorResult, ScriptExecutor
+    from tools.postgres.database import PostgreSQLDatabase
 
 
 pytestmark = [
@@ -77,8 +77,8 @@ def postgres_script_result(
     postgres_collector_db: PostgreSQLDatabase,
     script_executor: ScriptExecutor,
     postgres_connection_string: str,
-) -> CollectorResult:
-    return script_executor.run_collector(
+) -> Iterator[CollectorResult]:
+    result = script_executor.run_collector(
         container_name=postgres_collector_db.config.container_name,
         zip_path=collector_artifacts.postgres_zip,
         db_type="postgres",
@@ -86,6 +86,11 @@ def postgres_script_result(
         extra_args=["--allDbs", "N"],
         timeout=300,
     )
+    try:
+        yield result
+    finally:
+        if result.output_dir is not None:
+            shutil.rmtree(result.output_dir, ignore_errors=True)
 
 
 @pytest.fixture(scope="session")
@@ -94,17 +99,20 @@ def postgres_multi_db_ready(
     script_executor: ScriptExecutor,
 ) -> None:
     config = postgres_collector_db.config
-    script_executor.exec_in_container(
+    exit_code, stdout, stderr = script_executor.exec_in_container(
         config.container_name,
         [
             "bash",
             "-c",
             (
-                f"PGPASSWORD={config.postgres_password} psql -U {config.postgres_user} -d {config.postgres_db} "
-                '-c "CREATE DATABASE dma_test_extra" || true'
+                f"PGPASSWORD={config.postgres_password} psql -h 127.0.0.1 -U {config.postgres_user} "
+                f"-d {config.postgres_db} -c 'CREATE DATABASE dma_test_extra'"
             ),
         ],
     )
+    if exit_code != 0 and "already exists" not in stderr:
+        msg = f"Failed to create extra test database.\nstdout:\n{stdout}\n\nstderr:\n{stderr}"
+        raise RuntimeError(msg)
 
 
 @pytest.fixture(scope="session")
@@ -114,8 +122,8 @@ def postgres_script_result_all_dbs(
     postgres_collector_db: PostgreSQLDatabase,
     script_executor: ScriptExecutor,
     postgres_connection_string: str,
-) -> CollectorResult:
-    return script_executor.run_collector(
+) -> Iterator[CollectorResult]:
+    result = script_executor.run_collector(
         container_name=postgres_collector_db.config.container_name,
         zip_path=collector_artifacts.postgres_zip,
         db_type="postgres",
@@ -123,6 +131,11 @@ def postgres_script_result_all_dbs(
         extra_args=["--allDbs", "Y"],
         timeout=300,
     )
+    try:
+        yield result
+    finally:
+        if result.output_dir is not None:
+            shutil.rmtree(result.output_dir, ignore_errors=True)
 
 
 def test_postgres_collector_executes_successfully(postgres_script_result: CollectorResult) -> None:

@@ -4,13 +4,13 @@ These instructions will guide you through setting up and running the DMA Readine
 
 ## Verify Python Version
 
-The DMA collector requires Python 3.9 or higher. Check your Python version by opening a terminal and running:
+The DMA collector requires Python 3.10 or higher. Check your Python version by opening a terminal and running:
 
 ```bash
 python3 --version
 ```
 
-If your Python version is lower than 3.9, you'll need to install a compatible version.
+If your Python version is lower than 3.10, you'll need to install a compatible version.
 
 ## Download the latest Python wheel
 
@@ -64,10 +64,10 @@ Then, use the specific filename in the install command. Replace `<downloaded_whe
 pip install './<downloaded_wheel_filename>[postgres]'
 ```
 
-*Example: If the downloaded file is `dma-collector-4.3.43-py3-none-any.whl`, the command would be:*
+*Example: If the downloaded file is `dma-4.3.43-py3-none-any.whl`, the command would be:*
 
 ```shell
-pip install './dma-collector-4.3.43-py3-none-any.whl[postgres]'
+pip install './dma-4.3.43-py3-none-any.whl[postgres]'
 ```
 
 *(Note: The `./` prefix indicates the file is in the current directory. Depending on your shell and exact pip version, the quotes surrounding the filename might not be required.)*
@@ -94,7 +94,7 @@ If you’ve already installed the utility into a virtual environment and would l
 4. Run the install command with the `--upgrade` flag:
 
 ```shell
-pip install --upgrade 'dma-collector-<new_version>.whl[postgres]'
+pip install --upgrade 'dma-<new_version>.whl[postgres]'
 ```
 
 *(Replace `<new_version>` with the actual version number in the filename)*

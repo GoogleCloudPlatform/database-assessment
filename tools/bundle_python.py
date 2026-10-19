@@ -6,7 +6,12 @@
 #   "tomli; python_version < '3.11'",
 # ]
 # ///
-"""Bundle Python dependencies into a standalone distribution for PyApp."""
+"""Bundle Python dependencies into a standalone distribution for PyApp.
+
+Maps Rust target triples to python-build-standalone CPython 3.13.9 archives
+(release 20251014, matching PyApp 0.29.0) and uv-specific ``--python-platform``
+identifiers (using ``manylinux_2_28`` on Linux for DuckDB wheel compatibility).
+"""
 
 import contextlib
 import os
@@ -29,7 +34,7 @@ from rich.rule import Rule
 
 try:
     import tomllib
-except ModuleNotFoundError:  # pragma: no cover - Python 3.12+ ships tomllib
+except ModuleNotFoundError:
     import tomli as tomllib  # type: ignore[no-redef]
 
 
@@ -37,9 +42,6 @@ DEFAULT_PYTHON_VERSION = "3.13"
 DEFAULT_INSTALL_ROOT = "~/.local"
 DEFAULT_CACHE_DIRNAME = ".cache/bundler"
 
-# Mapping from Rust target to Python Build Standalone URL (Python 3.13.9)
-# Source: build.rs in pyapp 0.29.0
-# Release: https://github.com/astral-sh/python-build-standalone/releases/tag/20251014
 DEFAULT_URLS: dict[str, str] = {
     "x86_64-unknown-linux-gnu": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
     "aarch64-unknown-linux-gnu": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz",
@@ -48,9 +50,6 @@ DEFAULT_URLS: dict[str, str] = {
     "x86_64-pc-windows-msvc": "https://github.com/astral-sh/python-build-standalone/releases/download/20251014/cpython-3.13.9%2B20251014-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
 }
 
-# Mapping from Rust target to uv pip --python-platform value
-# These are uv-specific platform identifiers (NOT PEP 425 wheel tags)
-# Note: manylinux_2_28 required because duckdb only provides wheels for glibc 2.28+
 DEFAULT_PLATFORMS: dict[str, str] = {
     "x86_64-unknown-linux-gnu": "x86_64-manylinux_2_28",
     "aarch64-unknown-linux-gnu": "aarch64-manylinux_2_28",
@@ -236,21 +235,22 @@ def download_with_retry(url: str, dest: Path, max_retries: int = 3) -> None:
     """Download a file with retry logic."""
 
     for attempt in range(max_retries):
+        console.print(f"[blue]Downloading[/] {url}...")
         try:
-            console.print(f"[blue]Downloading[/] {url}...")
             urllib.request.urlretrieve(url, dest)
-            if dest.exists() and dest.stat().st_size > 0:
-                size_mb = dest.stat().st_size / (1024 * 1024)
-                console.print(f"[green]OK[/] Downloaded {size_mb:.1f} MB")
-                return
-            console.print("[yellow]Warning:[/] Downloaded file appears empty, retrying...")
         except urllib.error.URLError as exc:
             if attempt < max_retries - 1:
                 console.print(f"[yellow]Warning:[/] Download failed (attempt {attempt + 1}/{max_retries}): {exc}")
                 console.print("[dim]Retrying...[/]")
-            else:
-                msg = f"Failed to download after {max_retries} attempts: {exc}"
-                raise click.ClickException(msg) from exc
+                continue
+            msg = f"Failed to download after {max_retries} attempts: {exc}"
+            raise click.ClickException(msg) from exc
+
+        if dest.exists() and dest.stat().st_size > 0:
+            size_mb = dest.stat().st_size / (1024 * 1024)
+            console.print(f"[green]OK[/] Downloaded {size_mb:.1f} MB")
+            return
+        console.print("[yellow]Warning:[/] Downloaded file appears empty, retrying...")
 
 
 def find_site_packages(python_root: Path, target: str, python_version: str) -> Path:
@@ -418,8 +418,6 @@ def patch_pyapp_cargo_toml(pyapp_dir: Path) -> None:
         console.print("[dim]Dependency 'dirs' already present in Cargo.toml[/]")
         return
 
-    # Add dirs dependency under [dependencies]
-    # We look for the [dependencies] section and insert it after
     if "[dependencies]" in content:
         updated = content.replace("[dependencies]", '[dependencies]\ndirs = "5.0"', 1)
         cargo_toml.write_text(updated, encoding="utf-8")
@@ -682,57 +680,26 @@ def build_bundle(
         work_dir_path = Path(tempfile.mkdtemp(prefix="bundler-"))
 
     try:
-        archive_path: Path
-        if python_archive:
-            archive_path = python_archive.expanduser().resolve()
-        else:
-            cache_root = resolved_cache / "python-build-standalone" / resolved_target
-            ensure_directory(cache_root)
-            archive_name = Path(url).name
-            archive_path = cache_root / archive_name
-            if refresh and archive_path.exists():
-                archive_path.unlink()
-            if not archive_path.exists():
-                download_with_retry(url, archive_path)
-
-        extract_dir = work_dir_path / "extracted"
-        extract_dir.mkdir(parents=True, exist_ok=True)
-        extract_archive(archive_path, extract_dir)
-
-        python_root = resolve_python_root(extract_dir)
-        site_packages = find_site_packages(python_root, resolved_target, resolved_python_version)
-        console.print(f"[blue]Installing dependencies[/] to {site_packages}...")
-
-        install_requirements(
+        archive_path = _resolve_source_archive(
+            python_archive=python_archive,
+            url=url,
+            resolved_cache=resolved_cache,
+            resolved_target=resolved_target,
+            refresh=refresh,
+        )
+        python_root = _extract_and_install(
+            archive_path=archive_path,
+            work_dir_path=work_dir_path,
+            resolved_target=resolved_target,
+            resolved_platform=resolved_platform,
+            resolved_python_version=resolved_python_version,
             requirements_path=requirements_path,
-            site_packages=site_packages,
-            platform=resolved_platform,
-            python_version=resolved_python_version,
             index_url=index_url,
-            extra_index_urls=extra_index_url,
+            extra_index_url=extra_index_url,
             allow_source=allow_source,
             include_deps=include_deps,
         )
-
-        console.print(f"[blue]Repackaging[/] to {resolved_output}...")
-        ensure_directory(resolved_output.parent)
-        if archive_path.name.endswith(".tar.gz"):
-            with tarfile.open(resolved_output, "w:gz") as tar:
-                tar.add(python_root, arcname="python")
-        elif archive_path.name.endswith(".zip"):
-            with zipfile.ZipFile(resolved_output, "w", zipfile.ZIP_DEFLATED) as zipf:
-                for root, _, files in os.walk(python_root):
-                    for file in files:
-                        file_path = Path(root) / file
-                        arcname = file_path.relative_to(python_root.parent)
-                        zipf.write(file_path, arcname)
-        else:
-            msg = f"Unknown archive format: {archive_path.name}"
-            raise click.ClickException(msg)
-
-        output_size = resolved_output.stat().st_size / (1024 * 1024)
-        console.print()
-        console.print(f"[bold green]Success![/] Created {resolved_output} ({output_size:.1f} MB)")
+        _repackage_distribution(archive_path, python_root, resolved_output)
     finally:
         if not keep_temp and work_dir_path.exists():
             shutil.rmtree(work_dir_path)
@@ -743,6 +710,86 @@ def main() -> None:
 
     configure_rich_click()
     cli()
+
+
+def _resolve_source_archive(
+    python_archive: Path | None,
+    url: str | None,
+    resolved_cache: Path,
+    resolved_target: str,
+    refresh: bool,
+) -> Path:
+    """Resolve or download the source python-build-standalone archive."""
+    if python_archive:
+        return python_archive.expanduser().resolve()
+    if not url:
+        msg = "Python build URL is required when --python-archive is not provided."
+        raise click.ClickException(msg)
+    cache_root = resolved_cache / "python-build-standalone" / resolved_target
+    ensure_directory(cache_root)
+    archive_path = cache_root / Path(url).name
+    if refresh and archive_path.exists():
+        archive_path.unlink()
+    if not archive_path.exists():
+        download_with_retry(url, archive_path)
+    return archive_path
+
+
+def _extract_and_install(
+    archive_path: Path,
+    work_dir_path: Path,
+    resolved_target: str,
+    resolved_platform: str,
+    resolved_python_version: str,
+    requirements_path: Path,
+    index_url: str | None,
+    extra_index_url: tuple[str, ...],
+    allow_source: bool,
+    include_deps: bool,
+) -> Path:
+    """Extract the standalone Python archive and install requirements into site-packages."""
+    extract_dir = work_dir_path / "extracted"
+    extract_dir.mkdir(parents=True, exist_ok=True)
+    extract_archive(archive_path, extract_dir)
+
+    python_root = resolve_python_root(extract_dir)
+    site_packages = find_site_packages(python_root, resolved_target, resolved_python_version)
+    console.print(f"[blue]Installing dependencies[/] to {site_packages}...")
+
+    install_requirements(
+        requirements_path=requirements_path,
+        site_packages=site_packages,
+        platform=resolved_platform,
+        python_version=resolved_python_version,
+        index_url=index_url,
+        extra_index_urls=extra_index_url,
+        allow_source=allow_source,
+        include_deps=include_deps,
+    )
+    return python_root
+
+
+def _repackage_distribution(archive_path: Path, python_root: Path, resolved_output: Path) -> None:
+    """Repackage the customized Python distribution into the target output archive."""
+    console.print(f"[blue]Repackaging[/] to {resolved_output}...")
+    ensure_directory(resolved_output.parent)
+    if archive_path.name.endswith(".tar.gz"):
+        with tarfile.open(resolved_output, "w:gz") as tar:
+            tar.add(python_root, arcname="python")
+    elif archive_path.name.endswith(".zip"):
+        with zipfile.ZipFile(resolved_output, "w", zipfile.ZIP_DEFLATED) as zipf:
+            for root, _, files in os.walk(python_root):
+                for file in files:
+                    file_path = Path(root) / file
+                    arcname = file_path.relative_to(python_root.parent)
+                    zipf.write(file_path, arcname)
+    else:
+        msg = f"Unknown archive format: {archive_path.name}"
+        raise click.ClickException(msg)
+
+    output_size = resolved_output.stat().st_size / (1024 * 1024)
+    console.print()
+    console.print(f"[bold green]Success![/] Created {resolved_output} ({output_size:.1f} MB)")
 
 
 if __name__ == "__main__":

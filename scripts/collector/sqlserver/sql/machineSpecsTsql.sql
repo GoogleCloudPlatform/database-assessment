@@ -1,5 +1,4 @@
 /*
--- Author: Tim Chapman
 Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,7 +37,7 @@ BEGIN
             ''"'' + @DMA_SOURCE_ID + ''"'' AS dma_source_id,
             ''"'' + @DMA_MANUAL_ID + ''"'' AS dma_manual_id,
             ''"'' + REPLACE(ISNULL(@MACHINENAME, N''''), ''"'', ''""'') + ''"'' AS MachineName,
-            ''"'' + CONVERT(NVARCHAR(255), socket_count) + ''"'' AS PhysicalCpuCount,
+            ''"'' + CONVERT(NVARCHAR(255), CASE WHEN hyperthread_ratio > 0 THEN cpu_count / hyperthread_ratio ELSE cpu_count END) + ''"'' AS PhysicalCpuCount,
             ''"'' + CONVERT(NVARCHAR(255), cpu_count) + ''"'' AS LogicalCpuCount,
             ''"'' + CONVERT(NVARCHAR(255), physical_memory_kb / 1024) + ''"'' AS TotalOSMemoryMB
         FROM sys.dm_os_sys_info;',

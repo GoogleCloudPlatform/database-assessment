@@ -47,6 +47,7 @@ from typing import TYPE_CHECKING, Any
 
 import filelock
 import pytest
+
 from tools.lib.container import ContainerRuntime, NoRuntimeAvailableError
 from tools.mysql.database import ContainerStartError as MySQLContainerStartError
 from tools.mysql.database import DatabaseConfig as MySQLDatabaseConfig
@@ -129,13 +130,13 @@ class SessionRegistry:
 
     def _read_data(self) -> dict[str, Any]:
         if not self.registry_file.exists():
-            return {"containers_started": []}
+            return {"containers_started": [], "volumes_created": []}
         try:
             with self.registry_file.open("r", encoding="utf-8") as f:
                 data: dict[str, Any] = json.load(f)
                 return data
         except (OSError, json.JSONDecodeError):
-            return {"containers_started": []}
+            return {"containers_started": [], "volumes_created": []}
 
     def _write_data(self, data: dict[str, Any]) -> None:
         try:
@@ -144,20 +145,30 @@ class SessionRegistry:
         except OSError:
             pass
 
-    def record_container_started(self, container_name: str) -> None:
-        """Record that a container was started during this test session."""
+    def record_container_started(self, container_name: str, volume_name: str | None = None) -> None:
+        """Record that a container (and optional data volume) was started during this test session."""
         with filelock.FileLock(str(self.lock_file), timeout=30):
             data = self._read_data()
             started: list[str] = data.setdefault("containers_started", [])
             if container_name not in started:
                 started.append(container_name)
-                self._write_data(data)
+            if volume_name:
+                volumes: list[str] = data.setdefault("volumes_created", [])
+                if volume_name not in volumes:
+                    volumes.append(volume_name)
+            self._write_data(data)
 
     def get_started_containers(self) -> list[str]:
         """Return the list of containers started in this test session."""
         with filelock.FileLock(str(self.lock_file), timeout=30):
             data = self._read_data()
             return list(data.get("containers_started", []))
+
+    def get_created_volumes(self) -> list[str]:
+        """Return the list of volumes created in this test session."""
+        with filelock.FileLock(str(self.lock_file), timeout=30):
+            data = self._read_data()
+            return list(data.get("volumes_created", []))
 
     def cleanup_files(self) -> None:
         """Remove session registry and lock files."""
@@ -193,18 +204,17 @@ class SessionContainerManager:
         db = PostgreSQLDatabase(self.runtime, config)
         if self.runtime.container_running(config.container_name) and db.is_healthy():
             if config.host_port is None:
-                config.host_port = db._get_allocated_port()
-            self.registry.record_container_started(config.container_name)
+                config.host_port = db.get_allocated_port()
             return db
 
         lock = filelock.FileLock(str(self.get_lock_path(config.container_name)), timeout=360)
         with lock:
             if self.runtime.container_running(config.container_name) and db.is_healthy():
                 if config.host_port is None:
-                    config.host_port = db._get_allocated_port()
+                    config.host_port = db.get_allocated_port()
             else:
                 self._start_with_retry(db, PostgresContainerStartError)
-            self.registry.record_container_started(config.container_name)
+                self.registry.record_container_started(config.container_name, config.data_volume_name)
 
         return db
 
@@ -213,18 +223,17 @@ class SessionContainerManager:
         db = MySQLDatabase(self.runtime, config)
         if self.runtime.container_running(config.container_name) and db.is_healthy():
             if config.host_port is None:
-                config.host_port = db._get_allocated_port()
-            self.registry.record_container_started(config.container_name)
+                config.host_port = db.get_allocated_port()
             return db
 
         lock = filelock.FileLock(str(self.get_lock_path(config.container_name)), timeout=360)
         with lock:
             if self.runtime.container_running(config.container_name) and db.is_healthy():
                 if config.host_port is None:
-                    config.host_port = db._get_allocated_port()
+                    config.host_port = db.get_allocated_port()
             else:
                 self._start_with_retry(db, MySQLContainerStartError)
-            self.registry.record_container_started(config.container_name)
+                self.registry.record_container_started(config.container_name, config.data_volume_name)
 
         return db
 
@@ -233,18 +242,17 @@ class SessionContainerManager:
         db = OracleDatabase(self.runtime, config)
         if self.runtime.container_running(config.container_name) and db.is_healthy():
             if config.host_port is None:
-                config.host_port = db._get_allocated_port()
-            self.registry.record_container_started(config.container_name)
+                config.host_port = db.get_allocated_port()
             return db
 
         lock = filelock.FileLock(str(self.get_lock_path(config.container_name)), timeout=360)
         with lock:
             if self.runtime.container_running(config.container_name) and db.is_healthy():
                 if config.host_port is None:
-                    config.host_port = db._get_allocated_port()
+                    config.host_port = db.get_allocated_port()
             else:
                 self._start_with_retry(db, OracleContainerStartError)
-            self.registry.record_container_started(config.container_name)
+                self.registry.record_container_started(config.container_name, config.data_volume_name)
 
         return db
 
@@ -253,18 +261,17 @@ class SessionContainerManager:
         db = SQLServerDatabase(self.runtime, config)
         if self.runtime.container_running(config.container_name) and db.is_healthy():
             if config.host_port is None:
-                config.host_port = db._get_allocated_port()
-            self.registry.record_container_started(config.container_name)
+                config.host_port = db.get_allocated_port()
             return db
 
         lock = filelock.FileLock(str(self.get_lock_path(config.container_name)), timeout=360)
         with lock:
             if self.runtime.container_running(config.container_name) and db.is_healthy():
                 if config.host_port is None:
-                    config.host_port = db._get_allocated_port()
+                    config.host_port = db.get_allocated_port()
             else:
                 self._start_with_retry(db, SQLServerContainerStartError)
-            self.registry.record_container_started(config.container_name)
+                self.registry.record_container_started(config.container_name, config.data_volume_name)
 
         return db
 
@@ -425,6 +432,7 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
 
     registry = SessionRegistry()
     started_containers = registry.get_started_containers()
+    created_volumes = registry.get_created_volumes()
     registry.cleanup_files()
 
     if not started_containers:
@@ -445,14 +453,14 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
     cmd = runtime.get_runtime_command()
 
     containers = runtime.list_containers(include_all=True)
-    test_containers = [c for c in containers if c in started_containers or c.startswith("dma-test-")]
+    test_containers = [c for c in containers if c in started_containers]
     if test_containers:
         subprocess.run([cmd, "rm", "-f", *test_containers], capture_output=True, check=False)
 
     keep_volumes = os.environ.get("DMA_TEST_KEEP_VOLUMES", "").lower() in {"1", "true", "yes"}
-    if not keep_volumes:
+    if not keep_volumes and created_volumes:
         volumes = runtime.list_volumes()
-        test_volumes = [v for v in volumes if v.startswith("dma-test-")]
+        test_volumes = [v for v in volumes if v in created_volumes]
         if test_volumes:
             subprocess.run([cmd, "volume", "rm", "-f", *test_volumes], capture_output=True, check=False)
 

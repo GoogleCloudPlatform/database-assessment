@@ -192,8 +192,11 @@ The script will create a permon data set that will collect the above metrics at 
   - -serverName \*\*Required
   - -port \*\*Optional (Defaults to 1433)
   - -database \*\*Optional (Defaults to all user databases)
-  - -collectionUserName \*\*Required
-  - -collectionUserPass \*\*Required
+  - -collectionUserName \*\*Required (unless `-useWindowsAuthentication` or `-useEntraIDAuthentication` is set)
+  - -collectionUserPass \*\*Required (unless `-useWindowsAuthentication` or `-useEntraIDAuthentication` is set)
+  - -useWindowsAuthentication \*\*Optional switch (Use current Windows authenticated user)
+  - -useEntraIDAuthentication \*\*Optional switch (Use Microsoft Entra ID interactive authentication)
+  - -entraIDUserName \*\*Optional (Microsoft Entra ID username when `-useEntraIDAuthentication` is set)
   - -ignorePerfmon \*\*Optional (Defaults to "false" / Set to "true" to ignore perfmon collection)
   - -manualUniqueId \*\*Optional (Defaults to "NA" - Gives the ability the user to tag their collection with a unique name)
   - -collectVMSpecs \*\*Optional switch. See [below](#collectvmspecs).
@@ -216,14 +219,14 @@ To Execute the Collection:
       For a named instance (all databases):
         runAssessment.bat -serverName [servername\instanceName] -port [port number] -collectionUserName [collection user name] -collectionUserPass [collection user password] -manualUniqueId [string]
 
-        Example (default port): runAssessment.bat -serverName MS-SERVER1/SQL2019 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
-        Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
+        Example (default port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
+        Example (custom port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -port 1435 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
 
       For a named instance (single database):
         runAssessment.bat -serverName [servername\instanceName] -port [port number] -database [single database name] -collectionUserName [collection user name] -collectionUserPass [collection user password] -manualUniqueId [string]
 
-        Example (default port): runAssessment.bat -serverName MS-SERVER1/SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
-        Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1437 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
+        Example (default port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
+        Example (custom port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -port 1437 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
 
       For Azure SQL Database (Ignore Perfmon Collection):
         runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password] -ignorePerfmon true -manualUniqueId [string]
@@ -271,7 +274,7 @@ In addition to the standard schema, configuration, and performance counter datas
 | `opdb__DeprecatedFeatures__*.csv` | `sql/deprecatedFeatures.sql` | Active deprecated feature counters (`SQLServer:Deprecated Features`) |
 | `opdb__SqlAgentJobs__*.csv` | `sql/sqlAgentJobs.sql` | SQL Server Agent job steps and migration incompatibility classification |
 | `opdb__PostgresMigrationIssues__*.csv` | `sql/tsqlPostgresDeepScanner.sql` | Per-database T-SQL procedural code scan for PostgreSQL migration blockers |
-| `opdb__MachineSpecsTsql__*.csv` | `sql/machineSpecsTsql.sql` | Hardware CPU and OS memory specifications queried via T-SQL (`sys.dm_os_sys_info`) |
+| `opdb__DbMachineSpecs__*.csv` | `sql/machineSpecsTsql.sql` | Hardware CPU and OS memory specifications queried via T-SQL (`sys.dm_os_sys_info`) |
 | `opdb__AzureDbResourceStats__*.csv` | `sql/azureDbResourceStats.sql` | Azure SQL Database recent resource stats (`sys.dm_db_resource_stats`, Azure only) |
 | `opdb__AzureResourceStats__*.csv` | `sql/azureResourceStats.sql` | Azure SQL master historical resource stats (`sys.resource_stats`, Azure only) |
 | `opdb__AzureResourceGovernance__*.csv` | `sql/azureResourceGovernance.sql` | Azure SQL resource governance limits (`sys.dm_user_db_resource_governance`, Azure only) |

@@ -182,7 +182,10 @@ BEGIN
                         pr.name,
                         pr.type,
                         pr.type_desc,
-                        dp.permission_name,
+                        CASE
+                            WHEN dp.permission_name = ''ADMINISTER DATABASE BULK OPERATIONS'' THEN ''ADMINISTER BULK OPERATIONS''
+                            ELSE dp.permission_name
+                        END AS permission_name,
                         dp.type AS permission_type
                     FROM
                         sys.database_permissions dp
@@ -194,7 +197,7 @@ BEGIN
                         AND pr.name NOT LIKE ''##MS_%##''
                         AND pr.name NOT IN (''dbo'', ''guest'', ''INFORMATION_SCHEMA'', ''sys'', ''public'')
                         AND pr.is_fixed_role <> 1
-                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
+                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ADMINISTER DATABASE BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
                         ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
                         ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'',
                         ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'',

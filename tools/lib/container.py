@@ -70,14 +70,15 @@ class ContainerRuntime:
     def detect_runtime() -> RuntimeType:
         """Detect the available container runtime.
 
-        Checks for Docker first, then Podman. Returns RuntimeType.NONE if
-        neither is available or responsive.
+        Checks for Docker first, then Podman, verifying that the runtime daemon
+        is responsive via ``info``. Returns RuntimeType.NONE if neither is
+        available or responsive.
         """
         docker_path = shutil.which("docker")
         if docker_path:
             try:
                 result = subprocess.run(
-                    [docker_path, "--version"],
+                    [docker_path, "info"],
                     capture_output=True,
                     text=True,
                     timeout=10,
@@ -92,7 +93,7 @@ class ContainerRuntime:
         if podman_path:
             try:
                 result = subprocess.run(
-                    [podman_path, "--version"],
+                    [podman_path, "info"],
                     capture_output=True,
                     text=True,
                     timeout=10,

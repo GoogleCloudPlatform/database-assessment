@@ -30,9 +30,7 @@ def print_summary_mysql(
     manager: CanonicalQueryManager,
 ) -> None:
     """Print Summary of the Migration Readiness Assessment."""
-    summary_table = Table(show_edge=False, width=80)
     print_database_details(console=console, local_db=local_db, manager=manager)
-    console.print(summary_table)
 
 
 def print_database_details(

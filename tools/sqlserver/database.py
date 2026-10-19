@@ -121,8 +121,7 @@ class SQLServerDatabase:
                 self.remove(force=True)
             else:
                 self.runtime.start_container(config.container_name)
-                if config.host_port is None:
-                    self.config.host_port = self._get_allocated_port()
+                self.config.host_port = self.get_allocated_port()
                 self._wait_for_health()
                 return
 
@@ -145,7 +144,7 @@ class SQLServerDatabase:
             raise ContainerStartError(msg, container_name=config.container_name, logs=logs) from e
 
         if config.host_port is None:
-            self.config.host_port = self._get_allocated_port()
+            self.config.host_port = self.get_allocated_port()
 
         self._wait_for_health()
 
@@ -196,7 +195,7 @@ class SQLServerDatabase:
 
         return args
 
-    def _get_allocated_port(self) -> int:
+    def get_allocated_port(self) -> int:
         """Get the dynamically allocated host port.
 
         Returns:
@@ -274,6 +273,7 @@ class SQLServerDatabase:
     def restart(self) -> None:
         """Restart the database container."""
         self.runtime.run_command(["restart", self.config.container_name])
+        self.config.host_port = self.get_allocated_port()
         self._wait_for_health()
 
     def remove(self, *, force: bool = False, remove_volume: bool = False) -> None:

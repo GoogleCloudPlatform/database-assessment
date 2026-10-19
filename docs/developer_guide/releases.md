@@ -7,7 +7,7 @@ This document describes the release process for the Database Migration Assessmen
 - Clean, up-to-date copy of the `main` branch
 - All tests passing (`make test`)
 - All linting checks passing (`make lint`)
-- Documentation built successfully (`make docs`)
+- Documentation built successfully (`make docs-build`)
 - Collaborator access to the repository
 
 ## Release Process
@@ -284,7 +284,7 @@ uv pip install dist/dma-*.whl
 ## Pre-Release
 - [ ] All tests pass: `make test`
 - [ ] Linting passes: `make lint`
-- [ ] Documentation builds: `make docs`
+- [ ] Documentation builds: `make docs-build`
 - [ ] On `main` branch with latest changes
 - [ ] No uncommitted changes: `git status`
 

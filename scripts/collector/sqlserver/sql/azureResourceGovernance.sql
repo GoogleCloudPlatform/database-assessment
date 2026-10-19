@@ -1,5 +1,4 @@
 /*
--- Author: Tim Chapman
 Copyright 2026 Google LLC
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,18 +32,23 @@ IF UPPER(@@VERSION) LIKE '%AZURE%'
 
 IF @CLOUDTYPE = 'AZURE' AND OBJECT_ID('sys.dm_user_db_resource_governance') IS NOT NULL
 BEGIN
-    SELECT
-        '"' + @PKEY + '"' AS PKEY,
-        '"' + CONVERT(NVARCHAR(MAX), database_id) + '"' AS database_id,
-        '"' + CONVERT(NVARCHAR(MAX), logical_cpu_count) + '"' AS logical_cpu_count,
-        '"' + CONVERT(NVARCHAR(MAX), process_memory_limit_mb) + '"' AS process_memory_limit_mb,
-        '"' + CONVERT(NVARCHAR(MAX), max_global_index_size_mb) + '"' AS max_global_index_size_mb,
-        '"' + CONVERT(NVARCHAR(MAX), user_data_cap_gb) + '"' AS user_data_cap_gb,
-        '"' + CONVERT(NVARCHAR(MAX), user_data_iops_cap) + '"' AS user_data_iops_cap,
-        '"' + CONVERT(NVARCHAR(MAX), log_write_cap_mb_sec) + '"' AS log_write_cap_mb_sec,
-        '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
-        '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
-    FROM sys.dm_user_db_resource_governance;
+    EXEC sys.sp_executesql
+        N'SELECT
+            ''"'' + @PKEY + ''"'' AS PKEY,
+            ''"'' + CONVERT(NVARCHAR(MAX), database_id) + ''"'' AS database_id,
+            ''"'' + CONVERT(NVARCHAR(MAX), logical_cpus) + ''"'' AS logical_cpu_count,
+            ''"'' + CONVERT(NVARCHAR(MAX), max_db_memory / 1024) + ''"'' AS process_memory_limit_mb,
+            ''"'' + CONVERT(NVARCHAR(MAX), max_db_max_size_in_mb) + ''"'' AS max_global_index_size_mb,
+            ''"'' + CONVERT(NVARCHAR(MAX), max_db_max_size_in_mb / 1024) + ''"'' AS user_data_cap_gb,
+            ''"'' + CONVERT(NVARCHAR(MAX), primary_group_max_io) + ''"'' AS user_data_iops_cap,
+            ''"'' + CONVERT(NVARCHAR(MAX), primary_max_log_rate / 1048576) + ''"'' AS log_write_cap_mb_sec,
+            ''"'' + @DMA_SOURCE_ID + ''"'' AS dma_source_id,
+            ''"'' + @DMA_MANUAL_ID + ''"'' AS dma_manual_id
+        FROM sys.dm_user_db_resource_governance;',
+        N'@PKEY VARCHAR(256), @DMA_SOURCE_ID VARCHAR(256), @DMA_MANUAL_ID VARCHAR(256)',
+        @PKEY = @PKEY,
+        @DMA_SOURCE_ID = @DMA_SOURCE_ID,
+        @DMA_MANUAL_ID = @DMA_MANUAL_ID;
 END
 ELSE
 BEGIN

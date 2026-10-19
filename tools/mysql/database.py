@@ -123,8 +123,7 @@ class MySQLDatabase:
                 self.remove(force=True)
             else:
                 self.runtime.start_container(config.container_name)
-                if config.host_port is None:
-                    self.config.host_port = self._get_allocated_port()
+                self.config.host_port = self.get_allocated_port()
                 self._wait_for_health()
                 return
 
@@ -147,7 +146,7 @@ class MySQLDatabase:
             raise ContainerStartError(msg, container_name=config.container_name, logs=logs) from e
 
         if config.host_port is None:
-            self.config.host_port = self._get_allocated_port()
+            self.config.host_port = self.get_allocated_port()
 
         self._wait_for_health()
 
@@ -179,7 +178,7 @@ class MySQLDatabase:
             "--restart",
             config.restart_policy,
             "--health-cmd",
-            "mysqladmin ping -h localhost",
+            "mysqladmin ping -h 127.0.0.1 --protocol=TCP",
             "--health-interval",
             f"{config.health_interval}s",
             "--health-timeout",
@@ -200,7 +199,7 @@ class MySQLDatabase:
 
         return args
 
-    def _get_allocated_port(self) -> int:
+    def get_allocated_port(self) -> int:
         """Get the dynamically allocated host port.
 
         Returns:
@@ -239,7 +238,7 @@ class MySQLDatabase:
         raise ContainerStartError(msg, container_name=config.container_name, logs=logs)
 
     def is_healthy(self) -> bool:
-        """Check if the database is healthy and accepting connections."""
+        """Check if the database is healthy and accepting TCP connections."""
         try:
             returncode, _, _ = self.runtime.run_command(
                 [
@@ -248,7 +247,8 @@ class MySQLDatabase:
                     "mysqladmin",
                     "ping",
                     "-h",
-                    "localhost",
+                    "127.0.0.1",
+                    "--protocol=TCP",
                     "-u",
                     "root",
                     f"-p{self.config.mysql_root_password}",
@@ -274,6 +274,7 @@ class MySQLDatabase:
     def restart(self) -> None:
         """Restart the database container."""
         self.runtime.run_command(["restart", self.config.container_name])
+        self.config.host_port = self.get_allocated_port()
         self._wait_for_health()
 
     def remove(self, *, force: bool = False, remove_volume: bool = False) -> None:

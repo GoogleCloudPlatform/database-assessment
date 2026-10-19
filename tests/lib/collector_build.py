@@ -15,6 +15,7 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import tempfile
@@ -50,18 +51,24 @@ def _artifact_path(dist_dir: Path, key: str) -> Path:
 def build_collector_artifacts(project_root: Path) -> CollectorArtifacts:
     """Build collector artifacts using make build-collector.
 
-    Uses double-checked file locking to ensure a single build across pytest-xdist workers.
+    Uses double-checked file locking and a per-session marker file so that
+    collector archives are built once per test session across pytest-xdist workers.
     """
-    lock_path = Path(tempfile.gettempdir()) / "dma-collector-build.lock"
+    uid = os.environ.get("DMA_TEST_RUN_UID", "default")
+    temp_root = Path(tempfile.gettempdir())
+    lock_path = temp_root / f"dma-collector-build-{uid}.lock"
+    marker_path = temp_root / f"dma-collector-build-{uid}.done"
     dist_dir = project_root / "dist"
     postgres_zip = _artifact_path(dist_dir, "postgres")
     mysql_zip = _artifact_path(dist_dir, "mysql")
     oracle_zip = _artifact_path(dist_dir, "oracle")
     sqlserver_zip = _artifact_path(dist_dir, "sqlserver")
 
-    if not postgres_zip.exists():
+    all_exist = all(p.exists() for p in (postgres_zip, mysql_zip, oracle_zip, sqlserver_zip))
+    if not (marker_path.exists() and all_exist):
         with filelock.FileLock(str(lock_path), timeout=300):
-            if not postgres_zip.exists():
+            all_exist = all(p.exists() for p in (postgres_zip, mysql_zip, oracle_zip, sqlserver_zip))
+            if not (marker_path.exists() and all_exist):
                 make_cmd = shutil.which("make") or "make"
                 result = subprocess.run(
                     [make_cmd, "build-collector"],
@@ -75,9 +82,10 @@ def build_collector_artifacts(project_root: Path) -> CollectorArtifacts:
                     err_msg = f"Collector build failed.\nstdout:\n{result.stdout}\n\nstderr:\n{result.stderr}"
                     raise RuntimeError(err_msg)
 
-            if not postgres_zip.exists():
-                err_msg = f"Collector build did not produce {postgres_zip}"
-                raise RuntimeError(err_msg)
+                if not postgres_zip.exists():
+                    err_msg = f"Collector build did not produce {postgres_zip}"
+                    raise RuntimeError(err_msg)
+                marker_path.touch()
 
     return CollectorArtifacts(
         dist_dir=dist_dir,

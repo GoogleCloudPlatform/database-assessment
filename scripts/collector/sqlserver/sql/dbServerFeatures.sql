@@ -223,56 +223,36 @@ BEGIN
 END
 
 --hybrid buffer pool enabled
-
-
-IF @CLOUDTYPE = 'AZURE'
+IF @PRODUCT_VERSION >= 15 AND @CLOUDTYPE <> 'AZURE' AND OBJECT_ID('sys.server_memory_optimized_hybrid_buffer_pool_configuration') IS NOT NULL
 BEGIN
-    exec('INSERT INTO #FeaturesEnabled
-            SELECT ''IsHybridBufferPoolEnabled'',
-            CONVERT(NVARCHAR(255),is_enabled),
-            CASE
-                WHEN is_configured > 0 THEN 1
-                ELSE 0
+    BEGIN TRY
+        exec('
+            IF EXISTS (SELECT 1 FROM sys.server_memory_optimized_hybrid_buffer_pool_configuration)
+            BEGIN
+                INSERT INTO #FeaturesEnabled
+                SELECT ''IsHybridBufferPoolEnabled'',
+                    COALESCE(CONVERT(NVARCHAR(255), is_enabled), ''0''),
+                    CASE WHEN is_enabled > 0 THEN 1 ELSE 0 END
+                FROM sys.server_memory_optimized_hybrid_buffer_pool_configuration;
             END
-            from sys.server_memory_optimized_hybrid_buffer_pool_configuration
-            /* SQL Server 2019 (15.x) and later versions */');
+            ELSE
+            BEGIN
+                INSERT INTO #FeaturesEnabled VALUES (''IsHybridBufferPoolEnabled'', ''0'', 0);
+            END
+        ');
+    END TRY
+    BEGIN CATCH
+        exec('INSERT INTO #FeaturesEnabled VALUES (''IsHybridBufferPoolEnabled'', ''0'', 0)');
+    END CATCH
 END
 ELSE
 BEGIN
-    IF @PRODUCT_VERSION >= 15
-    BEGIN
-        SELECT @ROW_COUNT_VAR = COUNT_BIG(*)
-        from sys.server_memory_optimized_hybrid_buffer_pool_configuration;
-        IF @ROW_COUNT_VAR = 0
-        BEGIN
-            exec('INSERT INTO #FeaturesEnabled
-                    SELECT
-                        ''IsHybridBufferPoolEnabled'',
-                        ''0'',
-                        0');
-        END;
-        IF @ROW_COUNT_VAR > 0
-        BEGIN
-            exec('INSERT INTO #FeaturesEnabled
-                SELECT ''IsHybridBufferPoolEnabled'',
-                COALESCE(CONVERT(NVARCHAR(255),is_enabled), 0),
-                CASE
-                    WHEN is_enabled > 0 THEN 1
-                ELSE 0
-                END
-                from sys.server_memory_optimized_hybrid_buffer_pool_configuration
-                /* SQL Server 2019 (15.x) and later versions */');
-        END;
-    END;
-    ELSE
-    BEGIN
-        exec('INSERT INTO #FeaturesEnabled
-            SELECT
-            ''IsHybridBufferPoolEnabled'',
-            ''0'',
-            0
-            /* Earlier than SQL Server 2019 (15.x) versions */');
-    END;
+    exec('INSERT INTO #FeaturesEnabled
+        SELECT
+        ''IsHybridBufferPoolEnabled'',
+        ''0'',
+        0
+        /* Earlier than SQL Server 2019 (15.x) versions or Azure SQL */');
 END;
 
 --log shipping enabled
@@ -603,7 +583,10 @@ BEGIN
                         pr.name,
                         pr.type,
                         pr.type_desc,
-                        dp.permission_name,
+                        CASE
+                            WHEN dp.permission_name = ''ADMINISTER DATABASE BULK OPERATIONS'' THEN ''ADMINISTER BULK OPERATIONS''
+                            ELSE dp.permission_name
+                        END AS permission_name,
                         dp.type AS permission_type
                     FROM
                         sys.database_permissions dp
@@ -615,7 +598,7 @@ BEGIN
                         AND pr.name NOT LIKE ''##MS_%##''
                         AND pr.name NOT IN (''dbo'', ''guest'', ''INFORMATION_SCHEMA'', ''sys'', ''public'')
                         AND pr.is_fixed_role <> 1
-                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
+                        AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ADMINISTER DATABASE BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
                         ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
                         ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'',
                         ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'',
@@ -637,7 +620,10 @@ BEGIN
                                 pr.name,
                                 pr.type,
                                 pr.type_desc,
-                                dp.permission_name,
+                                CASE
+                                    WHEN dp.permission_name = ''ADMINISTER DATABASE BULK OPERATIONS'' THEN ''ADMINISTER BULK OPERATIONS''
+                                    ELSE dp.permission_name
+                                END AS permission_name,
                                 dp.type AS permission_type
                             FROM
                                 sys.database_permissions dp
@@ -649,7 +635,7 @@ BEGIN
                                 AND pr.name NOT LIKE ''##MS_%##''
                                 AND pr.name NOT IN (''dbo'', ''guest'', ''INFORMATION_SCHEMA'', ''sys'', ''public'')
                                 AND pr.is_fixed_role <> 1
-                                AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
+                                AND dp.permission_name IN (''ADMINISTER BULK OPERATIONS'', ''ADMINISTER DATABASE BULK OPERATIONS'', ''ALTER ANY CREDENTIAL'',
                                 ''ALTER ANY EVENT NOTIFICATION'', ''ALTER ANY EVENT SESSION'', ''ALTER RESOURCES'',
                                 ''ALTER SETTINGS'', ''AUTHENTICATE SERVER'', ''CONTROL SERVER'',
                                 ''CREATE DDL EVENT NOTIFICATION'', ''CREATE ENDPOINT'', ''CREATE TRACE EVENT NOTIFICATION'',
@@ -965,16 +951,30 @@ END CATCH;
 
 -- Distributed Transaction Coordinator (MSDTC)
 BEGIN TRY
-    exec('INSERT INTO #FeaturesEnabled
-          SELECT ''IsDTCInUse'',
-                 CASE WHEN (
+    IF @PRODUCT_VERSION >= 13 AND COL_LENGTH('sys.availability_groups', 'dtc_support') IS NOT NULL
+    BEGIN
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''IsDTCInUse'',
+                     CASE WHEN (
+                         ISNULL((SELECT COUNT(*) FROM sys.availability_groups WHERE ISNULL(dtc_support, 0) > 0), 0)
+                         + ISNULL((SELECT CONVERT(INT, value_in_use) FROM sys.configurations WHERE name = ''remote proc trans''), 0)
+                         + ISNULL((SELECT COUNT(*) FROM sys.dm_tran_active_transactions WHERE transaction_type = 4 OR ISNULL(dtc_state, 0) > 0), 0)
+                     ) > 0 THEN ''1'' ELSE ''0'' END,
                      ISNULL((SELECT COUNT(*) FROM sys.availability_groups WHERE ISNULL(dtc_support, 0) > 0), 0)
                      + ISNULL((SELECT CONVERT(INT, value_in_use) FROM sys.configurations WHERE name = ''remote proc trans''), 0)
-                     + ISNULL((SELECT COUNT(*) FROM sys.dm_tran_active_transactions WHERE transaction_type = 4 OR ISNULL(dtc_state, 0) > 0), 0)
-                 ) > 0 THEN ''1'' ELSE ''0'' END,
-                 ISNULL((SELECT COUNT(*) FROM sys.availability_groups WHERE ISNULL(dtc_support, 0) > 0), 0)
-                 + ISNULL((SELECT CONVERT(INT, value_in_use) FROM sys.configurations WHERE name = ''remote proc trans''), 0)
-                 + ISNULL((SELECT COUNT(*) FROM sys.dm_tran_active_transactions WHERE transaction_type = 4 OR ISNULL(dtc_state, 0) > 0), 0)');
+                     + ISNULL((SELECT COUNT(*) FROM sys.dm_tran_active_transactions WHERE transaction_type = 4 OR ISNULL(dtc_state, 0) > 0), 0)');
+    END
+    ELSE
+    BEGIN
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''IsDTCInUse'',
+                     CASE WHEN (
+                         ISNULL((SELECT CONVERT(INT, value_in_use) FROM sys.configurations WHERE name = ''remote proc trans''), 0)
+                         + ISNULL((SELECT COUNT(*) FROM sys.dm_tran_active_transactions WHERE transaction_type = 4 OR ISNULL(dtc_state, 0) > 0), 0)
+                     ) > 0 THEN ''1'' ELSE ''0'' END,
+                     ISNULL((SELECT CONVERT(INT, value_in_use) FROM sys.configurations WHERE name = ''remote proc trans''), 0)
+                     + ISNULL((SELECT COUNT(*) FROM sys.dm_tran_active_transactions WHERE transaction_type = 4 OR ISNULL(dtc_state, 0) > 0), 0)');
+    END
 END TRY
 BEGIN CATCH
     INSERT INTO #FeaturesEnabled VALUES ('IsDTCInUse', '0', 0);

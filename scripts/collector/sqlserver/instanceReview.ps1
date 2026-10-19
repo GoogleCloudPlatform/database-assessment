@@ -1,4 +1,3 @@
-# Author: Tim Chapman
 # Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -279,17 +278,56 @@ function Convert-DmaSqlcmdVariableValue {
     return $Value
 }
 
+function Resolve-DmaSqlOdbcDriverName {
+    if ($null -ne $script:DmaSqlOdbcDriverName) {
+        return $script:DmaSqlOdbcDriverName
+    }
+
+    $preferredDrivers = @(
+        "ODBC Driver 18 for SQL Server",
+        "ODBC Driver 17 for SQL Server",
+        "ODBC Driver 13.1 for SQL Server",
+        "ODBC Driver 13 for SQL Server"
+    )
+    if (Get-Command Get-OdbcDriver -ErrorAction SilentlyContinue) {
+        try {
+            $installedNames = @(Get-OdbcDriver -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
+            foreach ($candidate in $preferredDrivers) {
+                if ($installedNames -contains $candidate) {
+                    $script:DmaSqlOdbcDriverName = $candidate
+                    return $script:DmaSqlOdbcDriverName
+                }
+            }
+        }
+        catch {}
+    }
+
+    $script:DmaSqlOdbcDriverName = "ODBC Driver 17 for SQL Server"
+    return $script:DmaSqlOdbcDriverName
+}
+
 function Initialize-DmaEntraOdbcConnection {
     param(
         [Parameter(Mandatory = $true)][string]$ServerInstance,
-        [Parameter(Mandatory = $true)][string]$DatabaseName
+        [Parameter(Mandatory = $true)][string]$DatabaseName,
+        [Parameter(Mandatory = $false)][switch]$ForceReconnect = $false
     )
+
+    if ($ForceReconnect -and $null -ne $script:DmaEntraOdbcConnection) {
+        try {
+            $script:DmaEntraOdbcConnection.Close()
+            $script:DmaEntraOdbcConnection.Dispose()
+        }
+        catch {}
+        $script:DmaEntraOdbcConnection = $null
+    }
 
     if ($null -ne $script:DmaEntraOdbcConnection -and $script:DmaEntraOdbcConnection.State -eq [System.Data.ConnectionState]::Open) {
         return
     }
 
-    $connectionString = "Driver={ODBC Driver 17 for SQL Server};Server=$ServerInstance;Database=$DatabaseName;Authentication=ActiveDirectoryInteractive;UID=$script:DmaEntraIDUserName;Encrypt=yes;TrustServerCertificate=yes;Connection Timeout=30;"
+    $odbcDriver = Resolve-DmaSqlOdbcDriverName
+    $connectionString = "Driver={$odbcDriver};Server=$ServerInstance;Database=$DatabaseName;Authentication=ActiveDirectoryInteractive;UID=$script:DmaEntraIDUserName;Encrypt=yes;TrustServerCertificate=yes;Connection Timeout=30;"
     $script:DmaEntraOdbcConnection = [System.Data.Odbc.OdbcConnection]::new($connectionString)
     $script:DmaEntraOdbcConnection.Open()
 }
@@ -317,7 +355,12 @@ function Invoke-DmaEntraSql {
     }
 
     if ($script:DmaEntraOdbcConnection.Database -ne $DatabaseName) {
-        $script:DmaEntraOdbcConnection.ChangeDatabase($DatabaseName)
+        try {
+            $script:DmaEntraOdbcConnection.ChangeDatabase($DatabaseName)
+        }
+        catch {
+            Initialize-DmaEntraOdbcConnection -ServerInstance $ServerInstance -DatabaseName $DatabaseName -ForceReconnect
+        }
     }
 
     $command = $script:DmaEntraOdbcConnection.CreateCommand()
@@ -415,10 +458,18 @@ function sqlcmd {
     }
 
     if ([string]::IsNullOrEmpty($serverInstance) -or [string]::IsNullOrEmpty($inputFile)) {
+        $global:LASTEXITCODE = 1
         throw "The internal Entra ID sqlcmd wrapper could not parse the sqlcmd arguments: $($SqlcmdArgs -join ' ')"
     }
 
-    Invoke-DmaEntraSql -ServerInstance $serverInstance -DatabaseName $databaseName -InputFile $inputFile -Separator $separator -IncludeHeaders $includeHeaders -Variables $variables
+    $global:LASTEXITCODE = 0
+    try {
+        Invoke-DmaEntraSql -ServerInstance $serverInstance -DatabaseName $databaseName -InputFile $inputFile -Separator $separator -IncludeHeaders $includeHeaders -Variables $variables
+    }
+    catch {
+        $global:LASTEXITCODE = 1
+        throw
+    }
 }
 
 function Invoke-DmaSqlStep {
@@ -1309,7 +1360,7 @@ if ($isCloudOrLinuxHost -eq "AZURE") {
 }
 else {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Temp Table Info..." -logOperation "BOTH"
-    $tempdbVars = @("pkey=$pkey", "database=$databaseName", "dmaSourceId=$dmaSourceId", "dmaManualId=$manualUniqueId")
+    $tempdbVars = @("pkey=$pkey", "database=tempdb", "dmaSourceId=$dmaSourceId", "dmaManualId=$manualUniqueId")
     Invoke-DmaSqlStep -StepName "TempdbTableList" -SqlFile "sql\tableList.sql" -DatabaseName "tempdb" -OutputFilePath "$foldername\$tableList" -SqlcmdVars $tempdbVars
 }
 
@@ -1318,7 +1369,6 @@ if ($isCloudOrLinuxHost -eq "AZURE") {
 
     $azureDbRes = 'opdb' + '__' + 'AzureDbResourceStats' + $outputFileSuffix
     Set-Content -Path $foldername\$azureDbRes -Encoding utf8 -Value '"PKEY"|"end_time"|"avg_cpu_percent"|"avg_data_io_percent"|"avg_log_write_percent"|"max_worker_percent"|"max_session_percent"|"current_limit"|"current_storage_usage_db"|"dma_source_id"|"dma_manual_id"'
-    Invoke-DmaSqlStep -StepName "AzureDbResourceStats" -SqlFile "sql\azureDbResourceStats.sql" -DatabaseName $dbname -OutputFilePath "$foldername\$azureDbRes" -SqlcmdVars $stdSqlVars
 
     $azureRes = 'opdb' + '__' + 'AzureResourceStats' + $outputFileSuffix
     Set-Content -Path $foldername\$azureRes -Encoding utf8 -Value '"PKEY"|"start_time"|"end_time"|"database_name"|"sku"|"avg_cpu_percent"|"avg_data_io_percent"|"avg_log_write_percent"|"max_worker_percent"|"max_session_percent"|"dtu_limit"|"dma_source_id"|"dma_manual_id"'
@@ -1326,11 +1376,20 @@ if ($isCloudOrLinuxHost -eq "AZURE") {
 
     $azureGov = 'opdb' + '__' + 'AzureResourceGovernance' + $outputFileSuffix
     Set-Content -Path $foldername\$azureGov -Encoding utf8 -Value '"PKEY"|"database_id"|"logical_cpu_count"|"process_memory_limit_mb"|"max_global_index_size_mb"|"user_data_cap_gb"|"user_data_iops_cap"|"log_write_cap_mb_sec"|"dma_source_id"|"dma_manual_id"'
-    Invoke-DmaSqlStep -StepName "AzureResourceGovernance" -SqlFile "sql\azureResourceGovernance.sql" -DatabaseName $dbname -OutputFilePath "$foldername\$azureGov" -SqlcmdVars $stdSqlVars
+
+    foreach ($azureDb in $dbNameArray) {
+        if ($azureDb -inotmatch "tempdb") {
+            $azureDbQuoted = '"{0}"' -f $azureDb
+            Invoke-DmaSqlStep -StepName "AzureDbResourceStats" -SqlFile "sql\azureDbResourceStats.sql" -DatabaseName $azureDbQuoted -OutputFilePath "$foldername\$azureDbRes" -SqlcmdVars $stdSqlVars
+            Invoke-DmaSqlStep -StepName "AzureResourceGovernance" -SqlFile "sql\azureResourceGovernance.sql" -DatabaseName $azureDbQuoted -OutputFilePath "$foldername\$azureGov" -SqlcmdVars $stdSqlVars
+        }
+    }
 
     $azurePool = 'opdb' + '__' + 'AzureElasticPoolStats' + $outputFileSuffix
     Set-Content -Path $foldername\$azurePool -Encoding utf8 -Value '"PKEY"|"end_time"|"elastic_pool_name"|"avg_cpu_percent"|"avg_data_io_percent"|"avg_log_write_percent"|"max_worker_percent"|"elastic_pool_dtu_limit"|"dma_source_id"|"dma_manual_id"'
     Invoke-DmaSqlStep -StepName "AzureElasticPoolStats" -SqlFile "sql\azureElasticPoolStats.sql" -DatabaseName "master" -OutputFilePath "$foldername\$azurePool" -SqlcmdVars $stdSqlVars
+
+    $outputFileArray += @($azureDbRes, $azureRes, $azureGov, $azurePool)
 }
 
 # Pull perfmon file if we are running from same server.  Generate empty file if running on remote server

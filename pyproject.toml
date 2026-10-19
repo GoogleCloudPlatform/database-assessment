@@ -17,6 +17,7 @@ authors = [
     { name = "Steve Senior", email = "stevesenior@google.com" },
     { name = "Shane Borden", email = "shaneborden@google.com" },
     { name = "Eri Santos", email = "erisantos@google.com" },
+    { name = "Tim Chapman", email = "chapmantim@google.com" },
 ]
 keywords = [
     "database",
@@ -40,6 +41,8 @@ maintainers = [
     { name = "Warren Puziewicz", email = "wpuziewicz@google.com" },
     { name = "Steve Senior", email = "stevesenior@google.com" },
     { name = "Shane Borden", email = "shaneborden@google.com" },
+    { name = "Eri Santos", email = "erisantos@google.com" },
+    { name = "Tim Chapman", email = "chapmantim@google.com" },
 ]
 # options under https://pypi.org/classifiers/
 classifiers = [ # ToDo: Modify according to your needs!
@@ -299,7 +302,7 @@ exclude = [
     '__pycache__',
 ]
 fix = true
-include = ["src/**/*.py", "src/**/*.pyi", "tests/**/*.py", "tests/**/*.pyi"]
+include = ["src/**/*.py", "src/**/*.pyi", "tests/**/*.py", "tests/**/*.pyi", "tools/**/*.py", "docs/**/*.py"]
 line-length = 120
 lint.fixable = ["ALL"]
 lint.ignore = [
@@ -373,14 +376,14 @@ lint.select = ["ALL"]
 # Allow unused variables when underscore-prefixed.
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 preview = true                                                    # preview features & checks, use with caution
-src = ["src", "tests/", "scripts/", "docs/", "notebooks/"]
+src = ["src", "tests/", "scripts/", "tools/", "docs/", "notebooks/"]
 target-version = "py310"
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
 [tool.ruff.lint.isort]
-known-first-party = ["dma", "tests", "scripts"]
+known-first-party = ["dma", "tests", "scripts", "tools"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"

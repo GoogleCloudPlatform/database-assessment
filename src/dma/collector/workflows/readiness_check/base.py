@@ -86,9 +86,8 @@ class ReadinessCheck:
         self.db_version = self.collection_extractor.get_db_version()
 
     def execute_readiness_check(self) -> None:
-        """Execute postgres assessments"""
+        """Execute readiness check assessments using lazily imported engine executors."""
         if self.src_info.db_type == "POSTGRES":
-            # lazy loaded to help with circular import issues
             from dma.collector.workflows.readiness_check._postgres.main import (  # noqa: PLC0415
                 PostgresReadinessCheckExecutor,
             )
@@ -99,7 +98,6 @@ class ReadinessCheck:
             )
             self.executor.execute()
         elif self.src_info.db_type == "MYSQL":
-            # lazy loaded to help with circular import issues
             from dma.collector.workflows.readiness_check._mysql.main import (  # noqa: PLC0415
                 MySQLReadinessCheckExecutor,
             )
