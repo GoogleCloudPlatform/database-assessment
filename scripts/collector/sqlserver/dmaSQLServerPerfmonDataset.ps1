@@ -625,9 +625,9 @@ function CollectDMAPerfmonDataSet {
 		Remove-Item -Path $env:TEMP\*$dataSet*.csv
 	}
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
-	WriteLog -logLocation $foldername\$logFile -logMessage "DMA Source Id: $dmaSourceId " -logOperation "FILE"
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "DMA Source Id: $dmaSourceId " -logOperation "FILE"
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
-	WriteLog -logLocation $foldername\$logFile -logMessage "DMA Manual Id: $dmaManualId " -logOperation "FILE"
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "DMA Manual Id: $dmaManualId " -logOperation "FILE"
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Collecting current state of perfmon dataset: $dataset..." -logOperation "BOTH"
 	logman.exe query -n $dataset | out-string | Add-Content -Encoding utf8 -Path $outputDir\$perfmonLogFile
@@ -648,9 +648,9 @@ function CreateEmptyFile {
 	$outputFileName = $perfmonOutFile
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "Creating an empty Google DMA SQL Server Perfmon Counter Data Set..." -logOperation "BOTH"
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
-	WriteLog -logLocation $foldername\$logFile -logMessage "DMA Source Id: $dmaSourceId " -logOperation "FILE"
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "DMA Source Id: $dmaSourceId " -logOperation "FILE"
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
-	WriteLog -logLocation $foldername\$logFile -logMessage "DMA Manual Id: $dmaManualId " -logOperation "FILE"
+	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage "DMA Manual Id: $dmaManualId " -logOperation "FILE"
 	WriteLog -logLocation $outputDir\$perfmonLogFile -logMessage " " -logOperation "FILE"
 
 	if (!(Test-Path -PathType container $outputDir)) {

@@ -1,3 +1,4 @@
+# Author: Tim Chapman
 # Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,6 +70,84 @@ Param(
 )
 
 Import-Module $PSScriptRoot\dmaCollectorCommonFunctions.psm1
+
+$script:CollectionStartTime = Get-Date
+$script:BootstrapLogFile = Join-Path $PSScriptRoot "dma_collector_bootstrap.log"
+$script:StepTelemetry = @()
+$script:StepExecutionErrors = @()
+$script:PermissionWarnings = @()
+$script:CsvManifestStats = @()
+
+function Write-DmaBootstrapLog {
+    param(
+        [Parameter(Mandatory = $true)][string]$Message,
+        [Parameter(Mandatory = $false)][string]$Level = "INFO"
+    )
+    $ts = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
+    $entry = "$ts [$Level] $Message"
+    try {
+        Add-Content -Path $script:BootstrapLogFile -Encoding utf8 -Value $entry -ErrorAction SilentlyContinue
+    }
+    catch {}
+}
+
+try {
+    $bootstrapHeader = @(
+        "================================================================================",
+        "               DMA SQL Server Collector Bootstrap & Execution Log               ",
+        "================================================================================",
+        "Started At:          $($script:CollectionStartTime.ToString('yyyy-MM-dd HH:mm:ss.fff'))",
+        "Host Computer:       $env:COMPUTERNAME",
+        "Current Windows ID:  $([System.Security.Principal.WindowsIdentity]::GetCurrent().Name)",
+        "Working Directory:   $((Get-Location).Path)",
+        "Script Root:         $PSScriptRoot",
+        "PowerShell Version:  $($PSVersionTable.PSVersion)",
+        "Windows OS Version:  $([Environment]::OSVersion.VersionString)",
+        "Parameters:          serverName='$serverName' port='$port' database='$database' collectionUserName='$collectionUserName' collectionUserPass='$(if ([string]::IsNullOrEmpty($collectionUserPass)) { '<empty>' } else { '********' })' useWindowsAuthentication=$useWindowsAuthentication useEntraIDAuthentication=$useEntraIDAuthentication entraIDUserName='$entraIDUserName' ignorePerfmon='$ignorePerfmon' collectVMSpecs=$collectVMSpecs manualUniqueId='$manualUniqueId' outputDirectory='$outputDirectory'",
+        "================================================================================"
+    ) -join [Environment]::NewLine
+    Set-Content -Path $script:BootstrapLogFile -Encoding utf8 -Value $bootstrapHeader -ErrorAction SilentlyContinue
+}
+catch {}
+
+trap {
+    $trappedError = $_
+    $ts = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
+    $stmtLine = if ($trappedError.InvocationInfo -and $trappedError.InvocationInfo.Line) { $trappedError.InvocationInfo.Line.Trim() } else { "N/A" }
+    Write-Host ""
+    Write-Host "================================================================================" -ForegroundColor Red
+    Write-Host "$ts [FATAL ERROR] instanceReview.ps1 encountered an unhandled exception!" -ForegroundColor Red
+    Write-Host "Exception: $($trappedError.Exception.GetType().FullName)" -ForegroundColor Red
+    Write-Host "Message:   $($trappedError.Exception.Message)" -ForegroundColor Red
+    Write-Host "Location:  $($trappedError.InvocationInfo.ScriptName):$($trappedError.InvocationInfo.ScriptLineNumber)" -ForegroundColor Red
+    Write-Host "Statement: $stmtLine" -ForegroundColor Red
+    Write-Host "================================================================================" -ForegroundColor Red
+
+    $crashReport = @(
+        "FATAL SCRIPT ERROR AT: $ts",
+        "Exception: $($trappedError.Exception.GetType().FullName)",
+        "Message:   $($trappedError.Exception.Message)",
+        "Location:  $($trappedError.InvocationInfo.ScriptName):$($trappedError.InvocationInfo.ScriptLineNumber)",
+        "Statement: $stmtLine",
+        "",
+        "Stack Trace:",
+        "$($trappedError.ScriptStackTrace)"
+    ) -join [Environment]::NewLine
+
+    Write-DmaBootstrapLog -Level "FATAL" -Message $crashReport
+    try {
+        Set-Content -Path (Join-Path $PSScriptRoot "CRASH_REPORT.txt") -Encoding utf8 -Value $crashReport -ErrorAction SilentlyContinue
+    }
+    catch {}
+
+    if (-not [string]::IsNullOrEmpty($foldername) -and (Test-Path -Path $foldername)) {
+        Set-Content -Path "$foldername\CRASH_REPORT.txt" -Encoding utf8 -Value $crashReport
+        if (-not [string]::IsNullOrEmpty($logFile)) {
+            Add-Content -Path "$foldername\$logFile" -Encoding utf8 -Value $crashReport -ErrorAction SilentlyContinue
+        }
+    }
+    continue
+}
 
 function Get-DmaAzureSqlAccessToken {
     $sqlServerModule = Get-Module -ListAvailable SqlServer | Sort-Object Version -Descending | Select-Object -First 1
@@ -342,6 +421,203 @@ function sqlcmd {
     Invoke-DmaEntraSql -ServerInstance $serverInstance -DatabaseName $databaseName -InputFile $inputFile -Separator $separator -IncludeHeaders $includeHeaders -Variables $variables
 }
 
+function Invoke-DmaSqlStep {
+    param(
+        [Parameter(Mandatory = $true)][string]$StepName,
+        [Parameter(Mandatory = $true)][string]$SqlFile,
+        [Parameter(Mandatory = $true)][string]$DatabaseName,
+        [Parameter(Mandatory = $true)][string]$OutputFilePath,
+        [Parameter(Mandatory = $false)][string[]]$SqlcmdVars = @()
+    )
+    $outLeaf = Split-Path -Leaf $OutputFilePath
+    WriteLog -logLocation $foldername\$logFile -logMessage "[STEP-START] $StepName | SQL=$SqlFile | DB=$DatabaseName | Out=$outLeaf" -logOperation "BOTH"
+
+    $sw = [System.Diagnostics.Stopwatch]::StartNew()
+    $cmdArgs = @('-S', $serverName, '-i', $SqlFile, '-d', $DatabaseName, '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768')
+    if ($SqlcmdVars -and $SqlcmdVars.Count -gt 0) {
+        $cmdArgs += '-v'
+        $cmdArgs += $SqlcmdVars
+    }
+    $cmdArgs += '-s|'
+    if ($sqlcmdAuthArgs -and $sqlcmdAuthArgs.Count -gt 0) {
+        $cmdArgs += $sqlcmdAuthArgs
+    }
+
+    $rawOutput = @()
+    $exitCode = 0
+    $caughtException = $null
+    try {
+        $rawOutput = @(sqlcmd @cmdArgs 2>&1)
+        if ($null -ne $LASTEXITCODE) {
+            $exitCode = [int]$LASTEXITCODE
+        }
+    }
+    catch {
+        $caughtException = $_
+        $exitCode = -1
+    }
+    $sw.Stop()
+
+    $dataLines = New-Object System.Collections.Generic.List[string]
+    $errorLines = New-Object System.Collections.Generic.List[string]
+    $inSqlErrorBlock = $false
+
+    if ($null -ne $caughtException) {
+        $errorLines.Add("Exception: $($caughtException.Exception.Message)")
+    }
+
+    foreach ($item in $rawOutput) {
+        if ($null -eq $item) { continue }
+        $lineStr = [string]$item
+        if ($item -is [System.Management.Automation.ErrorRecord]) {
+            if (-not [string]::IsNullOrWhiteSpace($lineStr)) {
+                $errorLines.Add($lineStr.Trim())
+            }
+            continue
+        }
+        if ($lineStr -match '^[\s\-|]+$') {
+            continue
+        }
+        if ($lineStr -match '^\s*(Msg\s+\d+,\s*Level\s+\d+,\s*State\s+\d+|Sqlcmd:\s*Error:|HResult\s+0x)') {
+            $inSqlErrorBlock = $true
+            $errorLines.Add($lineStr.Trim())
+            continue
+        }
+        if ($inSqlErrorBlock) {
+            if ($lineStr.Contains('|')) {
+                $inSqlErrorBlock = $false
+                $dataLines.Add($lineStr)
+            }
+            elseif (-not [string]::IsNullOrWhiteSpace($lineStr)) {
+                $errorLines.Add($lineStr.Trim())
+            }
+            continue
+        }
+        $dataLines.Add($lineStr)
+    }
+
+    if ($dataLines.Count -gt 0) {
+        Add-Content -Path $OutputFilePath -Encoding utf8 -Value $dataLines
+    }
+
+    $rowsAdded = $dataLines.Count
+    $hasStepError = ($errorLines.Count -gt 0) -or ($exitCode -ne 0)
+    $status = if ($hasStepError) { "ERROR" } else { "OK" }
+    $errSummary = if ($errorLines.Count -gt 0) { ($errorLines -join " | ") } elseif ($exitCode -ne 0) { "sqlcmd exited with code $exitCode" } else { "" }
+
+    if ($hasStepError) {
+        WriteLog -logLocation $foldername\$logFile -logMessage "[STEP-ERROR] $StepName | SQL=$SqlFile | DB=$DatabaseName | Out=$outLeaf | DurationMs=$($sw.ElapsedMilliseconds) | ExitCode=$exitCode | RowsAdded=$rowsAdded | Error=$errSummary" -logOperation "BOTH"
+        WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "[STEP-ERROR] $StepName ($SqlFile on $DatabaseName -> $outLeaf): $errSummary" -logOperation "FILE"
+        $script:StepExecutionErrors += [PSCustomObject]@{
+            StepName = $StepName
+            SqlFile  = $SqlFile
+            Database = $DatabaseName
+            File     = $outLeaf
+            Error    = $errSummary
+        }
+    }
+    else {
+        WriteLog -logLocation $foldername\$logFile -logMessage "[STEP-DONE]  $StepName | SQL=$SqlFile | DB=$DatabaseName | Out=$outLeaf | DurationMs=$($sw.ElapsedMilliseconds) | ExitCode=$exitCode | RowsAdded=$rowsAdded" -logOperation "BOTH"
+    }
+
+    $script:StepTelemetry += [PSCustomObject]@{
+        StepName   = $StepName
+        SqlFile    = $SqlFile
+        Database   = $DatabaseName
+        OutputFile = $outLeaf
+        DurationMs = $sw.ElapsedMilliseconds
+        ExitCode   = $exitCode
+        RowsAdded  = $rowsAdded
+        Status     = $status
+        ErrorText  = $errSummary
+    }
+}
+
+function Invoke-DmaPermissionAudit {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Running Pre-Flight SQL Server Permission & Security Context Audit..." -logOperation "BOTH"
+    $auditSqlPath = Join-Path $foldername "_dma_perm_audit.sql"
+    $auditSql = @'
+SET NOCOUNT ON;
+SELECT 'IDENTITY_LOGIN', ISNULL(SUSER_SNAME(), N'NULL');
+SELECT 'IDENTITY_ORIGINAL_LOGIN', ISNULL(ORIGINAL_LOGIN(), N'NULL');
+SELECT 'IDENTITY_USER', ISNULL(USER_NAME(), N'NULL');
+SELECT 'ROLE_SYSADMIN', CAST(ISNULL(IS_SRVROLEMEMBER('sysadmin'), 0) AS VARCHAR(10));
+SELECT 'ROLE_SECURITYADMIN', CAST(ISNULL(IS_SRVROLEMEMBER('securityadmin'), 0) AS VARCHAR(10));
+SELECT 'ROLE_SERVERADMIN', CAST(ISNULL(IS_SRVROLEMEMBER('serveradmin'), 0) AS VARCHAR(10));
+SELECT 'ROLE_PROCESSADMIN', CAST(ISNULL(IS_SRVROLEMEMBER('processadmin'), 0) AS VARCHAR(10));
+SELECT 'PERM_VIEW_SERVER_STATE', CAST(ISNULL(HAS_PERMS_BY_NAME(NULL, NULL, 'VIEW SERVER STATE'), 0) AS VARCHAR(10));
+SELECT 'PERM_VIEW_ANY_DEFINITION', CAST(ISNULL(HAS_PERMS_BY_NAME(NULL, NULL, 'VIEW ANY DEFINITION'), 0) AS VARCHAR(10));
+SELECT 'PERM_VIEW_ANY_DATABASE', CAST(ISNULL(HAS_PERMS_BY_NAME(NULL, NULL, 'VIEW ANY DATABASE'), 0) AS VARCHAR(10));
+SELECT 'PERM_XP_READERRORLOG', CAST(ISNULL(HAS_PERMS_BY_NAME('master.dbo.xp_readerrorlog', 'OBJECT', 'EXECUTE'), 0) AS VARCHAR(10));
+BEGIN TRY
+    EXEC(N'
+        USE [msdb];
+        SELECT ''MSDB_HAS_DBACCESS'', ''1'';
+        SELECT ''MSDB_SYSJOBS'', CAST(ISNULL(HAS_PERMS_BY_NAME(''dbo.sysjobs'', ''OBJECT'', ''SELECT''), 0) AS VARCHAR(10));
+        SELECT ''MSDB_SYSJOBSTEPS'', CAST(ISNULL(HAS_PERMS_BY_NAME(''dbo.sysjobsteps'', ''OBJECT'', ''SELECT''), 0) AS VARCHAR(10));
+        SELECT ''MSDB_BACKUPSET'', CAST(ISNULL(HAS_PERMS_BY_NAME(''dbo.backupset'', ''OBJECT'', ''SELECT''), 0) AS VARCHAR(10));
+        SELECT ''MSDB_SYSMAINTPLAN'', CAST(ISNULL(HAS_PERMS_BY_NAME(''dbo.sysmaintplan_plans'', ''OBJECT'', ''SELECT''), 0) AS VARCHAR(10));
+        SELECT ''MSDB_LOGSHIPPING'', CAST(ISNULL(HAS_PERMS_BY_NAME(''dbo.log_shipping_primary_databases'', ''OBJECT'', ''SELECT''), 0) AS VARCHAR(10));
+        SELECT ''MSDB_DATACOLLECTOR'', CAST(ISNULL(HAS_PERMS_BY_NAME(''dbo.syscollector_collection_sets'', ''OBJECT'', ''SELECT''), 0) AS VARCHAR(10));
+        SELECT ''MSDB_POLICY'', CAST(ISNULL(HAS_PERMS_BY_NAME(''dbo.syspolicy_policies'', ''OBJECT'', ''SELECT''), 0) AS VARCHAR(10));
+    ');
+END TRY
+BEGIN CATCH
+    SELECT 'MSDB_HAS_DBACCESS', '0';
+END CATCH;
+'@
+    try {
+        Set-Content -Path $auditSqlPath -Encoding utf8 -Value $auditSql
+        $auditCmdArgs = @('-S', $serverName, '-i', $auditSqlPath, '-d', 'master', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768', '-s|')
+        if ($sqlcmdAuthArgs -and $sqlcmdAuthArgs.Count -gt 0) {
+            $auditCmdArgs += $sqlcmdAuthArgs
+        }
+        $rawAudit = @(sqlcmd @auditCmdArgs 2>&1)
+        $auditMap = @{}
+        foreach ($line in $rawAudit) {
+            $str = [string]$line
+            if ($str -match '^([A-Z0-9_]+)\|(.*)$') {
+                $auditMap[$Matches[1].Trim()] = $Matches[2].Trim()
+            }
+        }
+
+        if ($auditMap.Count -gt 0) {
+            WriteLog -logLocation $foldername\$logFile -logMessage "  [PERM-AUDIT] Connected Login: $($auditMap['IDENTITY_LOGIN']) (Original: $($auditMap['IDENTITY_ORIGINAL_LOGIN']), DB User: $($auditMap['IDENTITY_USER']))" -logOperation "BOTH"
+            WriteLog -logLocation $foldername\$logFile -logMessage "  [PERM-AUDIT] Server Roles: sysadmin=$($auditMap['ROLE_SYSADMIN']) securityadmin=$($auditMap['ROLE_SECURITYADMIN']) serveradmin=$($auditMap['ROLE_SERVERADMIN']) processadmin=$($auditMap['ROLE_PROCESSADMIN'])" -logOperation "BOTH"
+            WriteLog -logLocation $foldername\$logFile -logMessage "  [PERM-AUDIT] Server Permissions: VIEW_SERVER_STATE=$($auditMap['PERM_VIEW_SERVER_STATE']) VIEW_ANY_DEFINITION=$($auditMap['PERM_VIEW_ANY_DEFINITION']) VIEW_ANY_DATABASE=$($auditMap['PERM_VIEW_ANY_DATABASE']) XP_READERRORLOG=$($auditMap['PERM_XP_READERRORLOG'])" -logOperation "BOTH"
+            WriteLog -logLocation $foldername\$logFile -logMessage "  [PERM-AUDIT] msdb Catalog Access: HAS_DBACCESS=$($auditMap['MSDB_HAS_DBACCESS']) sysjobs=$($auditMap['MSDB_SYSJOBS']) sysjobsteps=$($auditMap['MSDB_SYSJOBSTEPS']) backupset=$($auditMap['MSDB_BACKUPSET']) sysmaintplan=$($auditMap['MSDB_SYSMAINTPLAN']) log_shipping=$($auditMap['MSDB_LOGSHIPPING']) syscollector=$($auditMap['MSDB_DATACOLLECTOR']) syspolicy=$($auditMap['MSDB_POLICY'])" -logOperation "BOTH"
+
+            $requiredChecks = @(
+                @{ Key = 'PERM_VIEW_SERVER_STATE'; Desc = 'VIEW SERVER STATE permission is missing (DMV performance, memory, CPU, waits, and encryption checks may return incomplete data).' },
+                @{ Key = 'PERM_VIEW_ANY_DEFINITION'; Desc = 'VIEW ANY DEFINITION permission is missing (catalog metadata, T-SQL deep scanner, and server trigger checks may be incomplete).' },
+                @{ Key = 'PERM_VIEW_ANY_DATABASE'; Desc = 'VIEW ANY DATABASE permission is missing (database enumeration may be incomplete).' },
+                @{ Key = 'PERM_XP_READERRORLOG'; Desc = 'EXECUTE permission on master.dbo.xp_readerrorlog is missing (instanceErrorLog.sql will use fallback empty result).' },
+                @{ Key = 'MSDB_HAS_DBACCESS'; Desc = 'Access to msdb database is missing (SQL Agent jobs, backup history, maintenance plans, and log shipping checks will be skipped).' },
+                @{ Key = 'MSDB_SYSJOBS'; Desc = 'SELECT permission on msdb.dbo.sysjobs is missing (SQL Agent jobs and SSAS/subsystem detection will be incomplete).' },
+                @{ Key = 'MSDB_BACKUPSET'; Desc = 'SELECT permission on msdb.dbo.backupset is missing (Transaction log backup sizing and Azure/S3 backup URL detection will be incomplete).' }
+            )
+            foreach ($chk in $requiredChecks) {
+                if ($auditMap.ContainsKey($chk.Key) -and $auditMap[$chk.Key] -eq '0') {
+                    $warnMsg = "[PERM-WARN] $($chk.Key)=0 : $($chk.Desc)"
+                    $script:PermissionWarnings += $warnMsg
+                    WriteLog -logLocation $foldername\$logFile -logMessage "  $warnMsg" -logOperation "BOTH"
+                }
+            }
+        }
+        else {
+            WriteLog -logLocation $foldername\$logFile -logMessage "  [PERM-WARN] Pre-flight permission audit returned no structured rows." -logOperation "BOTH"
+        }
+    }
+    catch {
+        WriteLog -logLocation $foldername\$logFile -logMessage "  [PERM-WARN] Pre-flight permission audit encountered an error: $($_.Exception.Message)" -logOperation "BOTH"
+    }
+    finally {
+        if (Test-Path -Path $auditSqlPath) {
+            Remove-Item -Path $auditSqlPath -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
 if ($useEntraIDAuthentication -and $useWindowsAuthentication) {
     Write-Host "-useEntraIDAuthentication and -useWindowsAuthentication are mutually exclusive." -ForegroundColor Red
     Exit 1
@@ -356,6 +632,10 @@ if ($useEntraIDAuthentication -and ((-not [string]::IsNullOrEmpty($collectionUse
 $powerShellVersion = $PSVersionTable.PSVersion.Major
 $sqlcmdCommand = Get-Command sqlcmd.exe -ErrorAction SilentlyContinue
 if ($null -eq $sqlcmdCommand) {
+    $sqlcmdCommand = Get-Command sqlcmd -ErrorAction SilentlyContinue
+}
+if ($null -eq $sqlcmdCommand) {
+    Write-DmaBootstrapLog -Level "ERROR" -Message "sqlcmd is required but was not found in PATH."
     Write-Host "sqlcmd is required but was not found in PATH." -ForegroundColor Red
     Exit 1
 }
@@ -366,6 +646,7 @@ $script:DmaEntraIDUserName = $null
 $script:DmaEntraOdbcConnection = $null
 $foldername = ""
 $totalErrorCount = 0
+Write-DmaBootstrapLog -Message "Resolved sqlcmd executable: $($script:NativeSqlcmdPath) (Version: $sqlcmdVersion)"
 
 # Pull the windows version so that we can know whether or not to skip perfmon collection or not
 $windowsOSVersion = [Environment]::OSVersion.Version
@@ -473,79 +754,6 @@ if ($useEntraIDAuthentication) {
     $sqlcmdAuthArgs = @()
 }
 
-# Establish a persistent shared ADO.NET connection to guarantee exactly ONE Entra MFA prompt across all 50+ queries
-function sqlcmd {
-    $serverInstance = $serverName
-    $inputFile = ""
-    $dbName = "master"
-    $variables = @{}
-
-    for ($idx = 0; $idx -lt $args.Count; $idx++) {
-        $token = $args[$idx]
-        if ($token -eq "-S") { $serverInstance = $args[++$idx] }
-        elseif ($token -eq "-i") { $inputFile = $args[++$idx] }
-        elseif ($token -eq "-d") { $dbName = $args[++$idx] }
-        elseif ($token -eq "-v") {
-            while ($idx + 1 -lt $args.Count -and $args[$idx+1] -notmatch "^-") {
-                $assignment = $args[++$idx]
-                if ($assignment -match "=") {
-                    $parts = $assignment.Split('=', 2)
-                    $variables[$parts[0].Trim()] = $parts[1].Trim()
-                }
-            }
-        }
-    }
-
-    if (-not $global:persistentSqlConn) {
-        Import-Module SqlServer -ErrorAction SilentlyContinue
-        $connStr = "Server=$serverInstance;Database=$dbName;TrustServerCertificate=True"
-        if ($useEntraIDAuthentication) {
-            $connStr += ";Authentication=Active Directory Interactive"
-            if ($entraUpn) { $connStr += ";User ID=$entraUpn" }
-        } elseif ($env:SQLCMDUSER -and $env:SQLCMDPASSWORD) {
-            $connStr += ";User ID=$env:SQLCMDUSER;Password=$env:SQLCMDPASSWORD"
-        } else {
-            $connStr += ";Integrated Security=True"
-        }
-
-        try {
-            $global:persistentSqlConn = New-Object Microsoft.Data.SqlClient.SqlConnection($connStr)
-        } catch {
-            $global:persistentSqlConn = New-Object System.Data.SqlClient.SqlConnection($connStr)
-        }
-        $global:persistentSqlConn.Open()
-    } else {
-        if ($global:persistentSqlConn.Database -ne $dbName) {
-            $global:persistentSqlConn.ChangeDatabase($dbName)
-        }
-    }
-
-    if ($inputFile -and (Test-Path $inputFile)) {
-        $query = (Get-Content $inputFile -Raw)
-        foreach ($varKey in $variables.Keys) {
-            $query = $query.Replace("`$($varKey)", "$($variables[$varKey])")
-        }
-
-        $cmd = $global:persistentSqlConn.CreateCommand()
-        $cmd.CommandText = $query
-        $cmd.CommandTimeout = 300
-
-        try {
-            $reader = $cmd.ExecuteReader()
-            while ($reader.Read()) {
-                $rowVals = @()
-                for ($c = 0; $c -lt $reader.FieldCount; $c++) {
-                    $rowVals += "$($reader.GetValue($c))"
-                }
-                $rowVals -join "|"
-            }
-            $reader.Close()
-        } catch {
-            Write-Error $_.Exception.Message
-        }
-    }
-}
-
 if (-not $useEntraIDAuthentication) {
 $requiredVersion = "11.0.7512.0"
 if ($sqlcmdVersion -lt $requiredVersion) {
@@ -584,69 +792,83 @@ if ($(Get-Location).Path -ne $PSScriptRoot) {
 }
 
 if ([string]::IsNullorEmpty($serverName)) {
+    Write-DmaBootstrapLog -Level "ERROR" -Message "Server parameter serverName is empty."
     Write-Output "Server parameter $serverName is empty.  Ensure that the parameter is provided"
     Exit 1
 }
 elseif ([string]::IsNullorEmpty($collectionUserName) -and (-not $useWindowsAuthentication) -and (-not $useEntraIDAuthentication)) {
+    Write-DmaBootstrapLog -Level "ERROR" -Message "Collection Username parameter collectionUserName is empty without -useWindowsAuthentication or -useEntraIDAuthentication."
     Write-Output "Collection Username parameter $collectionUserName is empty."
     Write-Output "Ensure that the parameter is provided or -useWindowsAuthentication is specified"
     Exit 1
 }
 elseif (((checkStringForSpecialChars -inputString $manualUniqueId) -eq "fail") -and (![string]::IsNullorEmpty($manualUniqueId))) {
+    Write-DmaBootstrapLog -Level "ERROR" -Message "Manual Unique Id parameter '$manualUniqueId' contains invalid characters."
     Write-Output "Manual Unique Id parameter $manualUniqueId contains spaces or special characters.  Ensure that the parameter contains only letters, numbers and no spaces"
     Exit 1
 }
 else {
     ### Surround the databaseName variable with quotes to protect from values that have spaces in it
     $databaseNameFilter = '"{0}"' -f $database
-    if (([string]::IsNullorEmpty($port)) -or ($port -eq "default")) {
-        WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
-        $inputServerName = $serverName
-        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v database=$databaseNameFilter @sqlcmdAuthArgs | findstr /v /c:"---"
-        $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 @sqlcmdAuthArgs)
-        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=1 @sqlcmdAuthArgs)
-        $dbNameNoAccessArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=0 @sqlcmdAuthArgs)
-        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 @sqlcmdAuthArgs)
-
-        if ([string]$database -ne "all") {
-            $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter @sqlcmdAuthArgs | findstr /v /c:"-"
-            if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
-                Write-Output " "
-                Write-Output "SQL Server Database $database not valid.  Exiting Script...."
-                Exit 1
-            }
-        }
-    }
-    else {
-        $inputServerName = $serverName
+    $inputServerName = $serverName
+    if ((-not [string]::IsNullorEmpty($port)) -and ($port -ne "default")) {
         $serverName = "$serverName,$port"
-        WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
-        $folderObj = sqlcmd -S $serverName -i sql\foldername.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v database=$databaseNameFilter @sqlcmdAuthArgs | findstr /v /c:"---"
-        $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 @sqlcmdAuthArgs)
-        $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=1 @sqlcmdAuthArgs)
-        $dbNameNoAccessArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=0 @sqlcmdAuthArgs)
-        $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 @sqlcmdAuthArgs)
+    }
+    WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
+    Write-DmaBootstrapLog -Message "Connecting to SQL Server '$serverName' to retrieve initial metadata (sql\foldername.sql)..."
+    $rawFolderOut = @(sqlcmd -S $serverName -i sql\foldername.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v database=$databaseNameFilter @sqlcmdAuthArgs 2>&1)
+    $folderExitCode = $LASTEXITCODE
+    $folderObj = @($rawFolderOut | ForEach-Object { [string]$_ } | findstr /v /c:"---")
+    Write-DmaBootstrapLog -Message "sql\foldername.sql completed (ExitCode=$folderExitCode, Lines=$($rawFolderOut.Count)): $($rawFolderOut -join ' | ')"
 
-        if ([string]$database -ne "all") {
-            $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter @sqlcmdAuthArgs | findstr /v /c:"-"
-            if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
-                Write-Output " "
-                Write-Output "SQL Server Database $database not valid.  Exiting Script...."
-                Exit 1
-            }
+    $bootstrapConnectionFailed = $false
+    if ([string]::IsNullorEmpty($folderObj) -or ($folderObj.Count -lt 2)) {
+        $bootstrapConnectionFailed = $true
+    }
+    elseif (($rawFolderOut -join "`n") -match '(Sqlcmd:\s*Error:|Msg\s+\d+,\s*Level\s+\d+,\s*State\s+\d+|Login failed for user|HResult\s+0x)') {
+        $bootstrapConnectionFailed = $true
+    }
+
+    if (-not $bootstrapConnectionFailed) {
+        $splitobj = $folderObj[1].Split('')
+        $values = @($splitobj | ForEach-Object { if ($_.Trim() -ne '') { $_ } })
+        if ($values.Count -lt 6) {
+            $bootstrapConnectionFailed = $true
+        }
+    }
+
+    if ($bootstrapConnectionFailed) {
+        $errDetail = ($rawFolderOut | ForEach-Object { [string]$_ }) -join [Environment]::NewLine
+        Write-DmaBootstrapLog -Level "ERROR" -Message "Connection/Metadata query to SQL Server '$serverName' failed:`n$errDetail"
+        Write-Output " "
+        Write-Output "Connection Error to SQL Server $serverName.  Exiting Script...."
+        if (-not [string]::IsNullOrWhiteSpace($errDetail)) {
+            Write-Host "SQLCMD Output / Error Details:" -ForegroundColor Red
+            Write-Host $errDetail -ForegroundColor Red
+            Write-Host "Bootstrap diagnostic log written to: $script:BootstrapLogFile" -ForegroundColor Yellow
+        }
+        Exit 1
+    }
+
+    $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 @sqlcmdAuthArgs)
+    Write-DmaBootstrapLog -Message "sql\checkValidInstanceVersion.sql returned: $($validSQLInstanceVersionCheckArray -join ' | ')"
+    $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=1 @sqlcmdAuthArgs)
+    Write-DmaBootstrapLog -Message "sql\getDBList.sql (hasdbaccess=1) returned $($dbNameArray.Count) accessible database(s): $($dbNameArray -join ', ')"
+    $dbNameNoAccessArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=0 @sqlcmdAuthArgs)
+    Write-DmaBootstrapLog -Message "sql\getDBList.sql (hasdbaccess=0) returned $($dbNameNoAccessArray.Count) inaccessible database(s): $($dbNameNoAccessArray -join ', ')"
+    $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 @sqlcmdAuthArgs)
+    Write-DmaBootstrapLog -Message "sql\getDmaSourceId.sql returned: $($dmaSourceIdObj -join ' | ')"
+
+    if ([string]$database -ne "all") {
+        $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter @sqlcmdAuthArgs | findstr /v /c:"-"
+        if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
+            Write-DmaBootstrapLog -Level "ERROR" -Message "SQL Server Database '$database' not valid or inaccessible on $serverName."
+            Write-Output " "
+            Write-Output "SQL Server Database $database not valid.  Exiting Script...."
+            Exit 1
         }
     }
 }
-
-if ([string]::IsNullorEmpty($folderObj)) {
-    Write-Output " "
-    Write-Output "Connection Error to SQL Server $serverName.  Exiting Script...."
-    Exit 1
-}
-
-<# Fixup Variables to build folder name, check valid version, check if cloud #>
-$splitobj = $folderObj[1].Split('')
-$values = $splitobj | ForEach-Object { if ($_.Trim() -ne '') { $_ } }
 
 $dbversion = $values[0].Replace('.', '')
 $machinename = $values[1]
@@ -765,6 +987,11 @@ foreach ($logFileName in $logFileArray) {
     }
 }
 
+if (Test-Path -Path $script:BootstrapLogFile) {
+    Get-Content -Path $script:BootstrapLogFile | Add-Content -Encoding utf8 -Path $foldername\$logFile
+    Add-Content -Encoding utf8 -Path $foldername\$logFile -Value ""
+}
+
 WriteLog -logLocation $foldername\$logFile -logMessage "PS Version Table" -logOperation "FILE"
 $PSVersionTable | out-string | Add-Content -Encoding utf8 -Path $foldername\$logFile
 
@@ -847,9 +1074,21 @@ $dbServerConfig = 'opdb' + '__' + 'DbServerConfig' + $outputFileSuffix
 $dbServerDmvPerfmon = 'opdb' + '__' + 'DmvPerfmon' + $outputFileSuffix
 $manifestFile = 'opdb' + '__' + 'manifest' + $outputFileSuffix
 $computerSpecsFile = 'opdb' + '__' + 'DbMachineSpecs' + $outputFileSuffix
+$sqlAgentJobs = 'opdb' + '__' + 'SqlAgentJobs' + $outputFileSuffix
 $tranLogBkupCountByDayByHour = 'opdb' + '__' + 'TranLogBkupCountByHourByDay' + $outputFileSuffix
 $tranLogBkupSizeByDayByHour = 'opdb' + '__' + 'TranLogBkupSizeByHourByDay' + $outputFileSuffix
 $databaseLevelBlockingFeatures = 'opdb' + '__' + 'DatabaseLevelBlockFeatures' + $outputFileSuffix
+$cpuUsageFileName = 'opdb' + '__' + 'CpuUsage' + $outputFileSuffix
+$memoryUsageFileName = 'opdb' + '__' + 'MemoryUsage' + $outputFileSuffix
+$memorySizingFileName = 'opdb' + '__' + 'MemorySizing' + $outputFileSuffix
+$memoryClerksFileName = 'opdb' + '__' + 'MemoryClerks' + $outputFileSuffix
+$batchFootprintFileName = 'opdb' + '__' + 'BatchFootprint' + $outputFileSuffix
+$waitsStats = 'opdb' + '__' + 'WaitsStats' + $outputFileSuffix
+$queryOptimizerInfo = 'opdb' + '__' + 'QueryOptimizerInfo' + $outputFileSuffix
+$fileIoLatency = 'opdb' + '__' + 'FileIoLatency' + $outputFileSuffix
+$instanceErrorLog = 'opdb' + '__' + 'InstanceErrorLog' + $outputFileSuffix
+$deprecatedFeatures = 'opdb' + '__' + 'DeprecatedFeatures' + $outputFileSuffix
+$deepScanner = 'opdb' + '__' + 'PostgresMigrationIssues' + $outputFileSuffix
 
 $outputFileArray = @($compFileName,
     $srvFileName,
@@ -869,10 +1108,22 @@ $outputFileArray = @($compFileName,
     $dbServerConfig,
     $dbServerDmvPerfmon,
     $manifestFile,
-    $computerSpecsFile
+    $computerSpecsFile,
+    $sqlAgentJobs,
     $tranLogBkupCountByDayByHour,
     $tranLogBkupSizeByDayByHour,
-    $databaseLevelBlockingFeatures)
+    $databaseLevelBlockingFeatures,
+    $cpuUsageFileName,
+    $memoryUsageFileName,
+    $memorySizingFileName,
+    $memoryClerksFileName,
+    $batchFootprintFileName,
+    $waitsStats,
+    $queryOptimizerInfo,
+    $fileIoLatency,
+    $instanceErrorLog,
+    $deprecatedFeatures,
+    $deepScanner)
 
 # Check individual folder + file names for max length
 WriteLog -logMessage "Checking directory path + output file name lengths for max length limitations..." -logOperation "MESSAGE"
@@ -904,41 +1155,85 @@ if ($dbNameNoAccessArray.Count -gt 0) {
     }
 }
 
+Invoke-DmaPermissionAudit
+
+$stdSqlVars = @("pkey=$pkey", "dmaSourceId=$dmaSourceId", "dmaManualId=$manualUniqueId")
+
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Installed Components..." -logOperation "BOTH"
 Set-Content -Path $foldername\$compFileName -Encoding utf8 -Value '"PKEY"|"physical_server_name"|"sql_instance_name"|"sql_server_services"|"current_service_status"|"status_date_time"|"dma_source_id"|"dma_manual_id"'
-sqlcmd -S $serverName -i sql\componentsInstalled.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$compFileName -Encoding utf8
+Invoke-DmaSqlStep -StepName "ComponentsInstalled" -SqlFile "sql\componentsInstalled.sql" -DatabaseName "master" -OutputFilePath "$foldername\$compFileName" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Properties..." -logOperation "BOTH"
 Set-Content -Path $foldername\$srvFileName -Encoding utf8 -Value '"PKEY"|"property_name"|"property_value"|"dma_source_id"|"dma_manual_id"'
-sqlcmd -S $serverName -i sql\serverProperties.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$srvFileName -Encoding utf8
+Invoke-DmaSqlStep -StepName "ServerProperties" -SqlFile "sql\serverProperties.sql" -DatabaseName "master" -OutputFilePath "$foldername\$srvFileName" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server CloudSQL Unsupported Flag Info..." -logOperation "BOTH"
 Set-Content -Path $foldername\$dbServerFlags -Encoding utf8 -Value '"PKEY"|"flag_name"|"value"|"value_in_use"|"description"|"dma_source_id"|"dma_manual_id"'
-sqlcmd -S $serverName -i sql\dbServerUnsupportedFlags.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$dbServerFlags -Encoding utf8
+Invoke-DmaSqlStep -StepName "DbServerUnsupportedFlags" -SqlFile "sql\dbServerUnsupportedFlags.sql" -DatabaseName "master" -OutputFilePath "$foldername\$dbServerFlags" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Blocked Features in Use..." -logOperation "BOTH"
 Set-Content -Path $foldername\$blockingFeatures -Encoding utf8 -Value '"PKEY"|"Features"|"Is_EnabledOrUsed"|"Count"|"dma_source_id"|"dma_manual_id"'
-sqlcmd -S $serverName -i sql\dbServerFeatures.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$blockingFeatures -Encoding utf8
+Invoke-DmaSqlStep -StepName "DbServerFeatures" -SqlFile "sql\dbServerFeatures.sql" -DatabaseName "master" -OutputFilePath "$foldername\$blockingFeatures" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Linked Server Info..." -logOperation "BOTH"
 Set-Content -Path $foldername\$linkedServers -Encoding utf8 -Value '"pkey"|"name"|"product"|"provider"|"data_source"|"location"|"provider_string"|"catalog"|"dma_source_id"|"dma_manual_id"'
-sqlcmd -S $serverName -i sql\linkedServersDetail.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$linkedServers -Encoding utf8
+Invoke-DmaSqlStep -StepName "LinkedServersDetail" -SqlFile "sql\linkedServersDetail.sql" -DatabaseName "master" -OutputFilePath "$foldername\$linkedServers" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Cluster Node Info..." -logOperation "BOTH"
 Set-Content -Path $foldername\$dbClusterNodes -Encoding utf8 -Value '"pkey"|"node_name"|"status"|"status_description"|"dma_source_id"|"dma_manual_id"'
-sqlcmd -S $serverName -i sql\dbClusterNodes.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$dbClusterNodes -Encoding utf8
+Invoke-DmaSqlStep -StepName "DbClusterNodes" -SqlFile "sql\dbClusterNodes.sql" -DatabaseName "master" -OutputFilePath "$foldername\$dbClusterNodes" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server DBCC Trace Info..." -logOperation "BOTH"
 Set-Content -Path $foldername\$dbccTraceFlg -Encoding utf8 -Value '"PKEY"|"name"|"status"|"global"|"session"|"dma_source_id"|"dma_manual_id"'
-sqlcmd -S $serverName -i sql\dbccTraceFlags.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$dbccTraceFlg -Encoding utf8
+Invoke-DmaSqlStep -StepName "DbccTraceFlags" -SqlFile "sql\dbccTraceFlags.sql" -DatabaseName "master" -OutputFilePath "$foldername\$dbccTraceFlg" -SqlcmdVars $stdSqlVars
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server CPU Usage Info (Ring Buffer)..." -logOperation "BOTH"
+Set-Content -Path $foldername\$cpuUsageFileName -Encoding utf8 -Value '"PKEY"|"timestamp"|"process_utilization"|"system_idle"|"dma_source_id"|"dma_manual_id"'
+Invoke-DmaSqlStep -StepName "CpuUsage" -SqlFile "sql\cpuUsage.sql" -DatabaseName "master" -OutputFilePath "$foldername\$cpuUsageFileName" -SqlcmdVars $stdSqlVars
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Memory Usage Info (Ring Buffer)..." -logOperation "BOTH"
+Set-Content -Path $foldername\$memoryUsageFileName -Encoding utf8 -Value '"PKEY"|"timestamp"|"state"|"available_physical_memory_mb"|"working_set_mb"|"percent_committed_in_ws"|"system_physical_memory_high"|"system_physical_memory_low"|"process_physical_memory_low"|"process_virtual_memory_low"|"dma_source_id"|"dma_manual_id"'
+Invoke-DmaSqlStep -StepName "MemoryUsage" -SqlFile "sql\memoryUsage.sql" -DatabaseName "master" -OutputFilePath "$foldername\$memoryUsageFileName" -SqlcmdVars $stdSqlVars
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Memory Sizing Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$memorySizingFileName -Encoding utf8 -Value '"PKEY"|"host_ram_mb"|"available_host_ram_mb"|"max_server_memory_mb"|"min_server_memory_mb"|"sql_working_set_mb"|"memory_model"|"user_data_on_disk_mb"|"buffer_pool_user_data_mb"|"lifetime_pressure_events"|"internal_sql_pressure_events"|"external_os_pressure_events"|"dma_source_id"|"dma_manual_id"'
+Invoke-DmaSqlStep -StepName "MemorySizing" -SqlFile "sql\memorySizing.sql" -DatabaseName "master" -OutputFilePath "$foldername\$memorySizingFileName" -SqlcmdVars $stdSqlVars
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Memory Clerks Breakdown..." -logOperation "BOTH"
+Set-Content -Path $foldername\$memoryClerksFileName -Encoding utf8 -Value '"PKEY"|"memory_clerk_type"|"allocated_mb"|"pct_of_total_sql_memory"|"dma_source_id"|"dma_manual_id"'
+Invoke-DmaSqlStep -StepName "MemoryClerks" -SqlFile "sql\memoryClerks.sql" -DatabaseName "master" -OutputFilePath "$foldername\$memoryClerksFileName" -SqlcmdVars $stdSqlVars
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Batch Footprint Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$batchFootprintFileName -Encoding utf8 -Value '"PKEY"|"AvgRunTimeMS"|"StatementCount"|"counter_name"|"TotalElapsedTimeMS"|"ExecutionTimePercent"|"ExecutionCountPercent"|"dma_source_id"|"dma_manual_id"'
+Invoke-DmaSqlStep -StepName "BatchFootprint" -SqlFile "sql\batchFootprint.sql" -DatabaseName "master" -OutputFilePath "$foldername\$batchFootprintFileName" -SqlcmdVars $stdSqlVars
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Waits Stats Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$waitsStats -Encoding utf8 -Value '"PKEY"|"WaitType"|"Wait_S"|"Resource_S"|"Signal_S"|"WaitCount"|"Percentage"|"AvgWait_S"|"AvgRes_S"|"AvgSig_S"|"dma_source_id"|"dma_manual_id"'
+Invoke-DmaSqlStep -StepName "WaitsStats" -SqlFile "sql\waitsStats.sql" -DatabaseName "master" -OutputFilePath "$foldername\$waitsStats" -SqlcmdVars $stdSqlVars
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Query Optimizer Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$queryOptimizerInfo -Encoding utf8 -Value '"PKEY"|"counter"|"value"|"occurrence"|"dma_source_id"|"dma_manual_id"'
+Invoke-DmaSqlStep -StepName "QueryOptimizerInfo" -SqlFile "sql\queryOptimizerInfo.sql" -DatabaseName "master" -OutputFilePath "$foldername\$queryOptimizerInfo" -SqlcmdVars $stdSqlVars
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server File IO Latency Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$fileIoLatency -Encoding utf8 -Value '"PKEY"|"DatabaseName"|"LogicalFileName"|"FileType"|"PhysicalPath"|"TotalReads"|"DataReadMB"|"TotalReadStallMs"|"AvgReadLatencyMs"|"TotalWrites"|"DataWrittenMB"|"TotalWriteStallMs"|"AvgWriteLatencyMs"|"TotalIOStallMs"|"SizeOnDiskMB"|"dma_source_id"|"dma_manual_id"'
+Invoke-DmaSqlStep -StepName "FileIoLatency" -SqlFile "sql\fileIoLatency.sql" -DatabaseName "master" -OutputFilePath "$foldername\$fileIoLatency" -SqlcmdVars $stdSqlVars
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Instance Error Log Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$instanceErrorLog -Encoding utf8 -Value '"PKEY"|"timestamp"|"process_info"|"log_message"|"dma_source_id"|"dma_manual_id"'
+Invoke-DmaSqlStep -StepName "InstanceErrorLog" -SqlFile "sql\instanceErrorLog.sql" -DatabaseName "master" -OutputFilePath "$foldername\$instanceErrorLog" -SqlcmdVars $stdSqlVars
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Deprecated Features Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$deprecatedFeatures -Encoding utf8 -Value '"PKEY"|"FeatureName"|"UsageCount"|"dma_source_id"|"dma_manual_id"'
+Invoke-DmaSqlStep -StepName "DeprecatedFeatures" -SqlFile "sql\deprecatedFeatures.sql" -DatabaseName "master" -OutputFilePath "$foldername\$deprecatedFeatures" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Disk Volume Info..." -logOperation "BOTH"
 Set-Content -Path $foldername\$diskVolumeInfo -Encoding utf8 -Value '"PKEY"|"volume_mount_point"|"file_system_type"|"logical_volume_name"|"total_size_gb"|"available_size_gb"|"space_free_pct"|"cluster_block_size"|"dma_source_id"|"dma_manual_id"'
-sqlcmd -S $serverName -i sql\diskVolumeInfo.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$diskVolumeInfo -Encoding utf8
+Invoke-DmaSqlStep -StepName "DiskVolumeInfo" -SqlFile "sql\diskVolumeInfo.sql" -DatabaseName "master" -OutputFilePath "$foldername\$diskVolumeInfo" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Configuration Info..." -logOperation "BOTH"
 Set-Content -Path $foldername\$dbServerConfig -Encoding utf8 -Value '"pkey"|"configuration_id"|"name"|"value"|"minimum"|"maximum"|"value_in_use"|"description"|"dma_source_id"|"dma_manual_id"'
-sqlcmd -S $serverName -i sql\dbServerConfigurationSettings.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$dbServerConfig -Encoding utf8
+Invoke-DmaSqlStep -StepName "DbServerConfigurationSettings" -SqlFile "sql\dbServerConfigurationSettings.sql" -DatabaseName "master" -OutputFilePath "$foldername\$dbServerConfig" -SqlcmdVars $stdSqlVars
 
 if ($isCloudOrLinuxHost -eq "AZURE") {
     WriteLog -logLocation $foldername\$logFile -logMessage "Skipping SQL Server Transaction Log Backup Info...Unavailable in AZURE SQL Managed Instance." -logOperation "BOTH"
@@ -951,9 +1246,13 @@ else {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Transaction Log Backup Info..." -logOperation "BOTH"
     Set-Content -Path $foldername\$tranLogBkupCountByDayByHour -Encoding utf8 -Value '"PKEY"|"collection_date"|"day_of_month"|"total_logs_generated"|"h0_count"|"h1_count"|"h2_count"|"h3_count"|"h4_count"|"h5_count"|"h6_count"|"h7_count"|"h8_count"|"h9_count"|"h10_count"|"h11_count"|"h12_count"|"h13_count"|"h14_count"|"h15_count"|"h16_count"|"h17_count"|"h18_count"|"h19_count"|"h20_count"|"h21_count"|"h22_count"|"h23_count"|"avg_per_hour"|"dma_source_id"|"dma_manual_id"'
     Set-Content -Path $foldername\$tranLogBkupSizeByDayByHour -Encoding utf8 -Value '"PKEY"|"collection_date"|"day_of_month"|"total_logs_generated_in_mb"|"h0_size_in_mb"|"h1_size_in_mb"|"h2_size_in_mb"|"h3_size_in_mb"|"h4_size_in_mb"|"h5_size_in_mb"|"h6_size_in_mb"|"h7_size_in_mb"|"h8_size_in_mb"|"h9_size_in_mb"|"h10_size_in_mb"|"h11_size_in_mb"|"h12_size_in_mb"|"h13_size_in_mb"|"h14_size_in_mb"|"h15_size_in_mb"|"h16_size_in_mb"|"h17_size_in_mb"|"h18_size_in_mb"|"h19_size_in_mb"|"h20_size_in_mb"|"h21_size_in_mb"|"h22_size_in_mb"|"h23_size_in_mb"|"avg_mb_per_hour"|"dma_source_id"|"dma_manual_id"'
-    sqlcmd -S $serverName -i sql\dbServerTranLogBackupCountByDayByHour.sql -d msdb -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$tranLogBkupCountByDayByHour -Encoding utf8
-    sqlcmd -S $serverName -i sql\dbServerTranLogBackupSizeByDayByHour.sql -d msdb -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$tranLogBkupSizeByDayByHour -Encoding utf8
+    Invoke-DmaSqlStep -StepName "TranLogBackupCountByHourByDay" -SqlFile "sql\dbServerTranLogBackupCountByDayByHour.sql" -DatabaseName "msdb" -OutputFilePath "$foldername\$tranLogBkupCountByDayByHour" -SqlcmdVars $stdSqlVars
+    Invoke-DmaSqlStep -StepName "TranLogBackupSizeByHourByDay" -SqlFile "sql\dbServerTranLogBackupSizeByDayByHour.sql" -DatabaseName "msdb" -OutputFilePath "$foldername\$tranLogBkupSizeByDayByHour" -SqlcmdVars $stdSqlVars
 }
+
+WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Agent Jobs Info..." -logOperation "BOTH"
+Set-Content -Path $foldername\$sqlAgentJobs -Encoding utf8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"job_id"|"job_name"|"job_enabled"|"category_name"|"job_description"|"step_id"|"step_name"|"subsystem"|"command"|"database_name"|"incompatibility_category"|"incompatibility_type"|"severity"'
+Invoke-DmaSqlStep -StepName "SqlAgentJobs" -SqlFile "sql\sqlAgentJobs.sql" -DatabaseName "msdb" -OutputFilePath "$foldername\$sqlAgentJobs" -SqlcmdVars $stdSqlVars
 
 ### First establish headers for the collection files which could execute against multiple databases in the instance
 Set-Content -Path $foldername\$objectList -Encoding utf8 -Value '"PKEY"|"database_name"|"schema_name"|"object_name"|"object_type"|"object_type_desc"|"object_count"|"lines_of_code"|"associated_table_name"|"dma_source_id"|"dma_manual_id"'
@@ -964,35 +1263,44 @@ Set-Content -Path $foldername\$userConnectionList -Encoding utf8 -Value '"PKEY"|
 Set-Content -Path $foldername\$dbsizes -Encoding utf8 -Value '"PKEY"|"database_name"|"type_desc"|"current_size_mb"|"dma_source_id"|"dma_manual_id"|"recovery_model_desc"'
 Set-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8 -Value '"PKEY"|"collection_time"|"available_mbytes"|"physicaldisk_avg_disk_bytes_read"|"physicaldisk_avg_disk_bytes_write"|"physicaldisk_avg_disk_bytes_read_sec"|"physicaldisk_avg_disk_bytes_write_sec"|"physicaldisk_disk_reads_sec"|"physicaldisk_disk_writes_sec"|"processor_idle_time_pct"|"processor_total_time_pct"|"processor_frequency"|"processor_queue_length"|"buffer_cache_hit_ratio"|"checkpoint_pages_sec"|"free_list_stalls_sec"|"page_life_expectancy"|"page_lookups_sec"|"page_reads_sec"|"page_writes_sec"|"user_connection_count"|"memory_grants_pending"|"target_server_memory_kb"|"total_server_memory_kb"|"batch_requests_sec"|"dma_source_id"|"dma_manual_id"'
 Set-Content -Path $foldername\$databaseLevelBlockingFeatures -Encoding utf8 -Value '"PKEY"|"database_name"|"feature_name"|"is_enabled_or_used"|"occurance_count"|"dma_source_id"|"dma_manual_id"'
+Set-Content -Path $foldername\$deepScanner -Encoding utf8 -Value '"PKEY"|"database_name"|"schema_name"|"object_name"|"object_type"|"incompatibility_type"|"severity"|"violation_count"|"dma_source_id"|"dma_manual_id"'
 
 ### Iterate through collections that could execute against multiple databases in the instance
+$dbLoopCounter = 0
+$totalDbCount = $dbNameArray.Count
 foreach ($databaseName in $dbNameArray) {
+    $dbLoopCounter++
+    WriteLog -logLocation $foldername\$logFile -logMessage "Processing Database [$dbLoopCounter of $totalDbCount]: $databaseName ..." -logOperation "BOTH"
     ### Surround the databaseName variable with quotes to protect from values that have spaces in it
     $databaseName = '"{0}"' -f $databaseName
+    $dbSqlVars = @("pkey=$pkey", "database=$databaseName", "dmaSourceId=$dmaSourceId", "dmaManualId=$manualUniqueId")
     if ($databaseName -inotmatch "tempdb") {
         WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Object Info for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\objectList.sql -d $databaseName -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$objectList -Encoding utf8
+        Invoke-DmaSqlStep -StepName "ObjectList" -SqlFile "sql\objectList.sql" -DatabaseName $databaseName -OutputFilePath "$foldername\$objectList" -SqlcmdVars $dbSqlVars
 
         WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Table Info for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\tableList.sql -d $databaseName -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$tableList -Encoding utf8
+        Invoke-DmaSqlStep -StepName "TableList" -SqlFile "sql\tableList.sql" -DatabaseName $databaseName -OutputFilePath "$foldername\$tableList" -SqlcmdVars $dbSqlVars
 
         WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Index Info for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\indexList.sql -d $databaseName -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$indexList -Encoding utf8
+        Invoke-DmaSqlStep -StepName "IndexList" -SqlFile "sql\indexList.sql" -DatabaseName $databaseName -OutputFilePath "$foldername\$indexList" -SqlcmdVars $dbSqlVars
 
         WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Column Datatype Info for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\columnDatatypes.sql -d $databaseName -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$columnDatatypes -Encoding utf8
+        Invoke-DmaSqlStep -StepName "ColumnDatatypes" -SqlFile "sql\columnDatatypes.sql" -DatabaseName $databaseName -OutputFilePath "$foldername\$columnDatatypes" -SqlcmdVars $dbSqlVars
 
         WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server User Connection Info for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\userConnectionInfo.sql -d $databaseName -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$userConnectionList -Encoding utf8
+        Invoke-DmaSqlStep -StepName "UserConnectionInfo" -SqlFile "sql\userConnectionInfo.sql" -DatabaseName $databaseName -OutputFilePath "$foldername\$userConnectionList" -SqlcmdVars $dbSqlVars
 
         WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server DMV Perfmon Info for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\dbServerDmvPerfmon.sql -d $databaseName -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$dbServerDmvPerfmon -Encoding utf8
+        Invoke-DmaSqlStep -StepName "DbServerDmvPerfmon" -SqlFile "sql\dbServerDmvPerfmon.sql" -DatabaseName $databaseName -OutputFilePath "$foldername\$dbServerDmvPerfmon" -SqlcmdVars $dbSqlVars
 
         WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Blocked Features for Database $databaseName ..." -logOperation "BOTH"
-        sqlcmd -S $serverName -i sql\dbServerFeaturesDatabaseLevel.sql -d $databaseName -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$databaseLevelBlockingFeatures -Encoding utf8
+        Invoke-DmaSqlStep -StepName "DbServerFeaturesDatabaseLevel" -SqlFile "sql\dbServerFeaturesDatabaseLevel.sql" -DatabaseName $databaseName -OutputFilePath "$foldername\$databaseLevelBlockingFeatures" -SqlcmdVars $dbSqlVars
+
+        WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Deep Postgres Migration Blocker Info for Database $databaseName ..." -logOperation "BOTH"
+        Invoke-DmaSqlStep -StepName "TsqlPostgresDeepScanner" -SqlFile "sql\tsqlPostgresDeepScanner.sql" -DatabaseName $databaseName -OutputFilePath "$foldername\$deepScanner" -SqlcmdVars $dbSqlVars
     }
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Database Size Info for Database $databaseName ..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\dbSizes.sql -d $databaseName -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$dbsizes -Encoding utf8
+    Invoke-DmaSqlStep -StepName "DbSizes" -SqlFile "sql\dbSizes.sql" -DatabaseName $databaseName -OutputFilePath "$foldername\$dbsizes" -SqlcmdVars $dbSqlVars
 }
 
 ### Need to execute certain files against tempdb to gather temp table information
@@ -1001,13 +1309,35 @@ if ($isCloudOrLinuxHost -eq "AZURE") {
 }
 else {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Temp Table Info..." -logOperation "BOTH"
-    sqlcmd -S $serverName -i sql\tableList.sql -d tempdb -C -l 30 -W -m 1 -u -h-1 -w 32768 -v pkey=$pkey database=$databaseName dmaSourceId=$dmaSourceId dmaManualId=$manualUniqueId -s"|" @sqlcmdAuthArgs | findstr /v /c:"---" | Add-Content -Path $foldername\$tableList -Encoding utf8
+    $tempdbVars = @("pkey=$pkey", "database=$databaseName", "dmaSourceId=$dmaSourceId", "dmaManualId=$manualUniqueId")
+    Invoke-DmaSqlStep -StepName "TempdbTableList" -SqlFile "sql\tableList.sql" -DatabaseName "tempdb" -OutputFilePath "$foldername\$tableList" -SqlcmdVars $tempdbVars
 }
+
+if ($isCloudOrLinuxHost -eq "AZURE") {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Executing Azure-Specific Compute and Governance Stats..." -logOperation "BOTH"
+
+    $azureDbRes = 'opdb' + '__' + 'AzureDbResourceStats' + $outputFileSuffix
+    Set-Content -Path $foldername\$azureDbRes -Encoding utf8 -Value '"PKEY"|"end_time"|"avg_cpu_percent"|"avg_data_io_percent"|"avg_log_write_percent"|"max_worker_percent"|"max_session_percent"|"current_limit"|"current_storage_usage_db"|"dma_source_id"|"dma_manual_id"'
+    Invoke-DmaSqlStep -StepName "AzureDbResourceStats" -SqlFile "sql\azureDbResourceStats.sql" -DatabaseName $dbname -OutputFilePath "$foldername\$azureDbRes" -SqlcmdVars $stdSqlVars
+
+    $azureRes = 'opdb' + '__' + 'AzureResourceStats' + $outputFileSuffix
+    Set-Content -Path $foldername\$azureRes -Encoding utf8 -Value '"PKEY"|"start_time"|"end_time"|"database_name"|"sku"|"avg_cpu_percent"|"avg_data_io_percent"|"avg_log_write_percent"|"max_worker_percent"|"max_session_percent"|"dtu_limit"|"dma_source_id"|"dma_manual_id"'
+    Invoke-DmaSqlStep -StepName "AzureResourceStats" -SqlFile "sql\azureResourceStats.sql" -DatabaseName "master" -OutputFilePath "$foldername\$azureRes" -SqlcmdVars $stdSqlVars
+
+    $azureGov = 'opdb' + '__' + 'AzureResourceGovernance' + $outputFileSuffix
+    Set-Content -Path $foldername\$azureGov -Encoding utf8 -Value '"PKEY"|"database_id"|"logical_cpu_count"|"process_memory_limit_mb"|"max_global_index_size_mb"|"user_data_cap_gb"|"user_data_iops_cap"|"log_write_cap_mb_sec"|"dma_source_id"|"dma_manual_id"'
+    Invoke-DmaSqlStep -StepName "AzureResourceGovernance" -SqlFile "sql\azureResourceGovernance.sql" -DatabaseName $dbname -OutputFilePath "$foldername\$azureGov" -SqlcmdVars $stdSqlVars
+
+    $azurePool = 'opdb' + '__' + 'AzureElasticPoolStats' + $outputFileSuffix
+    Set-Content -Path $foldername\$azurePool -Encoding utf8 -Value '"PKEY"|"end_time"|"elastic_pool_name"|"avg_cpu_percent"|"avg_data_io_percent"|"avg_log_write_percent"|"max_worker_percent"|"elastic_pool_dtu_limit"|"dma_source_id"|"dma_manual_id"'
+    Invoke-DmaSqlStep -StepName "AzureElasticPoolStats" -SqlFile "sql\azureElasticPoolStats.sql" -DatabaseName "master" -OutputFilePath "$foldername\$azurePool" -SqlcmdVars $stdSqlVars
+}
+
 # Pull perfmon file if we are running from same server.  Generate empty file if running on remote server
 # Capability does not exist yet to run against remote computer
 
 if ($ignorePerfmon -eq "true") {
-    WriteLog -logLocation $foldername\$logFile -logMessage "Skipping Perfmon Information..."  -logOperation "FILE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Skipping Perfmon Information (creating empty PerfMonData file)..." -logOperation "BOTH"
     if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
         .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId
     }
@@ -1016,7 +1346,7 @@ if ($ignorePerfmon -eq "true") {
     }
 }
 else {
-    WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving Perfmon Information..."  -logOperation "FILE"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving Perfmon Information (host='$env:computername', target='$machinename', instance='$instancename')..." -logOperation "BOTH"
     if (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -eq [string]$machinename.toUpper())) {
         .\dmaSQLServerPerfmonDataset.ps1 -operation collect -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId
     }
@@ -1024,26 +1354,34 @@ else {
         .\dmaSQLServerPerfmonDataset.ps1 -operation collect -namedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId
     }
     elseif (($instancename -eq "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
+        WriteLog -logLocation $foldername\$logFile -logMessage "Host '$env:computername' differs from target '$machinename'; creating empty PerfMonData file..." -logOperation "BOTH"
         .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId
     }
     elseif (($instancename -ne "MSSQLSERVER") -and ([string]$env:computername.toUpper() -ne [string]$machinename.toUpper())) {
+        WriteLog -logLocation $foldername\$logFile -logMessage "Host '$env:computername' differs from target '$machinename'; creating empty PerfMonData file..." -logOperation "BOTH"
         .\dmaSQLServerPerfmonDataset.ps1 -operation createemptyfile -namedInstanceName $instancename -perfmonOutDir $foldername -perfmonOutFile $perfMonOutput -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId
     }
 }
 
 <# Getting HW Specs. #>
 if ($isCloudOrLinuxHost -eq "AZURE") {
-    WriteLog -logLocation $foldername\$logFile -logMessage "Skipping SQL Server HW Shape Info for Machine $machinename ...Unavailable in AZURE SQL Managed Instance." -logOperation "BOTH"
-    WriteLog -logLocation $foldername\$logFile -logMessage "     Writing Empty $computerSpecsFile file" -logOperation "BOTH"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server HW Shape Info for Machine $machinename via T-SQL..." -logOperation "BOTH"
     Set-Content -Path $foldername\$computerSpecsFile -Encoding utf8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"MachineName"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
+    Invoke-DmaSqlStep -StepName "MachineSpecsTsql" -SqlFile "sql\machineSpecsTsql.sql" -DatabaseName "master" -OutputFilePath "$foldername\$computerSpecsFile" -SqlcmdVars $stdSqlVars
 }
 elseif ($isCloudOrLinuxHost -eq "LINUX") {
-    WriteLog -logLocation $foldername\$logFile -logMessage "Skipping SQL Server HW Shape Info for Machine $machinename ...Unavailable for Linux Host." -logOperation "BOTH"
+    WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server HW Shape Info for Machine $machinename via T-SQL..." -logOperation "BOTH"
     Set-Content -Path $foldername\$computerSpecsFile -Encoding utf8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"MachineName"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
+    Invoke-DmaSqlStep -StepName "MachineSpecsTsql" -SqlFile "sql\machineSpecsTsql.sql" -DatabaseName "master" -OutputFilePath "$foldername\$computerSpecsFile" -SqlcmdVars $stdSqlVars
 }
 else {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server HW Shape Info for Machine $machinename ..." -logOperation "BOTH"
     .\dmaSQLServerHWSpecs.ps1 -computerName $machinename -outputPath $foldername\$computerSpecsFile -logLocation $foldername\$logFile -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId -requestCreds:$collectVMSpecs
+    if (-not (Test-Path -Path $foldername\$computerSpecsFile) -or ((Get-Content -Path $foldername\$computerSpecsFile).Count -le 1)) {
+        WriteLog -logLocation $foldername\$logFile -logMessage "WMI/CIM HW collection returned no data; falling back to T-SQL machineSpecsTsql.sql..." -logOperation "BOTH"
+        Set-Content -Path $foldername\$computerSpecsFile -Encoding utf8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"MachineName"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
+        Invoke-DmaSqlStep -StepName "MachineSpecsTsqlFallback" -SqlFile "sql\machineSpecsTsql.sql" -DatabaseName "master" -OutputFilePath "$foldername\$computerSpecsFile" -SqlcmdVars $stdSqlVars
+    }
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Remove special characters and UTF8 BOM from extracted files..." -logOperation "BOTH"
@@ -1067,6 +1405,7 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv -ErrorAction Stop) {
 
     # Step 1: Stream the normalized content to a temporary file
     $writer = $null
+    $lineCount = 0
     try {
         # Open the temporary file for writing using the specific UTF8-No-BOM encoding
         # This keeps only a small buffer of the file content in memory at any time.
@@ -1077,6 +1416,7 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv -ErrorAction Stop) {
 
         $firstLine = $true
         foreach ($line in $lines) {
+            $lineCount++
             # Explicitly remove any Carriage Return characters (`r) to ensure strict LF-only line endings,
             $cleanLine = $line.Replace("`r", "")
 
@@ -1115,7 +1455,15 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv -ErrorAction Stop) {
         # Rename the temporary file to the original filename
         Rename-Item $tempFile -NewName $file.Name -Force -ErrorAction Stop
 
-        WriteLog -logLocation $foldername\$logFile -logMessage "          $($file.Name) successfully processed..." -logOperation "BOTH"
+        $finalBytes = (Get-Item -Path $inputFile).Length
+        $dataRowCount = [Math]::Max(0, $lineCount - 1)
+        $script:CsvManifestStats += [PSCustomObject]@{
+            FileName  = $file.Name
+            DataRows  = $dataRowCount
+            TotalRows = $lineCount
+            SizeBytes = $finalBytes
+        }
+        WriteLog -logLocation $foldername\$logFile -logMessage "          $($file.Name) successfully processed (DataRows=$dataRowCount, SizeBytes=$finalBytes)..." -logOperation "BOTH"
     }
     catch {
         WriteLog -logLocation $foldername\$logFile -logMessage "          Failed to replace the original file $($file.Name). Temp file may remain. Error: $($_.Exception.Message)" -logOperation "BOTH"
@@ -1131,20 +1479,43 @@ foreach ($file in Get-ChildItem -Path $foldername\*.csv) {
 }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Checking for error messages within collection files..." -logOperation "BOTH"
-foreach ($file in Get-ChildItem -Path $foldername\*.csv, $foldername\*.log) {
+$detectedErrors = @()
+$missingFiles = @()
+
+foreach ($stepErr in $script:StepExecutionErrors) {
+    $detectedErrors += [PSCustomObject]@{
+        File  = "$($stepErr.File) [$($stepErr.SqlFile) on $($stepErr.Database)]"
+        Error = $stepErr.Error
+    }
+    $totalErrorCount = $totalErrorCount + 1
+}
+
+foreach ($file in Get-ChildItem -Path $foldername\*.csv, $foldername\*.log -Exclude $logFile, $sqlErrorLogFile) {
     $inputFile = Split-Path -Leaf $file
     $errorContentCount = 0
     [regex]$pattern = "(Msg(\s\d*)(.)(\n|\s)Level(\s\d*.)(\n|\s)State(\s\d*)(.)(\n|\s))"
-    $content = Get-Content -Path $foldername\$inputFile | select-string -Pattern $pattern
-    if (![string]::IsNullOrEmpty($content)) {
+    $hasError = Select-String -Path "$foldername\$inputFile" -Pattern $pattern -Quiet
+    if ($hasError) {
         $errorContentCount = 1
+        $errSample = Select-String -Path "$foldername\$inputFile" -Pattern "Msg\s+\d+,\s*Level\s+\d+.*" | Select-Object -First 3
+        $errSummary = ""
+        if ($errSample) {
+            $errSummary = ($errSample | ForEach-Object { $_.Line.Trim() }) -join " | "
+        }
+        else {
+            $errSummary = "SQL Engine Error (Msg/Level/State detected)"
+        }
+        $detectedErrors += [PSCustomObject]@{
+            File  = $inputFile
+            Error = $errSummary
+        }
+        WriteLog -logLocation $foldername\$logFile -logMessage "     [ERROR] Errors found in collection file $inputFile :" -logOperation "BOTH"
+        WriteLog -logLocation $foldername\$logFile -logMessage "             $errSummary" -logOperation "BOTH"
+        WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "     Errors found within collection $inputFile :" -logOperation "FILE"
+        WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "             $errSummary" -logOperation "FILE"
     }
     else {
-        $errorContentCount = 0
-    }
-    WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "Checking for error messages within collection $inputFile ..." -logOperation "FILE"
-    if ($errorContentCount -gt 0) {
-        WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "     Errors found within collection $inputFile ..." -logOperation "FILE"
+        WriteLog -logLocation $foldername\$sqlErrorLogFile -logMessage "Checking for error messages within collection $inputFile ... OK" -logOperation "FILE"
     }
     $totalErrorCount = $totalErrorCount + $errorContentCount
 }
@@ -1155,8 +1526,9 @@ foreach ($directory in $outputFileArray) {
         WriteLog -logLocation $foldername\$logFile -logMessage "  File $directory exists" -logOperation "FILE"
     }
     else {
-        WriteLog -logLocation $foldername\$logFile -logMessage "  File $directory does not exist" -logOperation "BOTH"
-		$totalErrorCount = $totalErrorCount + $errorContentCount
+        WriteLog -logLocation $foldername\$logFile -logMessage "  [ERROR] Required file $directory does not exist!" -logOperation "BOTH"
+        $totalErrorCount = $totalErrorCount + 1
+        $missingFiles += $directory
     }
 }
 
@@ -1166,6 +1538,97 @@ if ($totalErrorCount -gt 0) {
 else {
     $zippedopfolder = $foldername + '.zip'
 }
+
+# Generate Diagnostic Collection Summary
+$totalCollectionElapsedSec = [Math]::Round(((Get-Date) - $script:CollectionStartTime).TotalSeconds, 2)
+$totalSqlStepMs = ($script:StepTelemetry | Measure-Object -Property DurationMs -Sum).Sum
+if ($null -eq $totalSqlStepMs) { $totalSqlStepMs = 0 }
+
+$summaryFile = "$foldername\COLLECTION_SUMMARY.txt"
+$summaryLines = @()
+$summaryLines += "================================================================================"
+$summaryLines += "               DMA SQL Server Assessment Collection Summary                     "
+$summaryLines += "================================================================================"
+$summaryLines += "Timestamp:           $((Get-Date).ToString('yyyy-MM-dd HH:mm:ss'))"
+$summaryLines += "Total Duration:      $totalCollectionElapsedSec sec (SQL Steps: $totalSqlStepMs ms across $($script:StepTelemetry.Count) step executions)"
+$summaryLines += "Server Instance:     $serverName"
+$summaryLines += "Machine Name:        $machinename"
+$summaryLines += "Instance Name:       $instancename"
+$summaryLines += "SQL Version:         $dbversion (Product: $isValidSQLInstanceVersion, HostType: $isCloudOrLinuxHost)"
+$summaryLines += "Collection User:     $(if ($collectionUserName) { $collectionUserName } elseif ($useEntraIDAuthentication) { $entraIDUserName } else { [System.Security.Principal.WindowsIdentity]::GetCurrent().Name })"
+$summaryLines += "Target Scope:        $database"
+$summaryLines += "Databases Scanned:   $($dbNameArray.Count) ($($dbNameArray -join ', '))"
+$summaryLines += "Databases Skipped:   $($dbNameNoAccessArray.Count)"
+if ($dbNameNoAccessArray.Count -gt 0) {
+    $summaryLines += "  Skipped Databases (missing HAS_DBACCESS):"
+    foreach ($sk in $dbNameNoAccessArray) {
+        $summaryLines += "    - $sk"
+    }
+}
+if ($script:PermissionWarnings.Count -gt 0) {
+    $summaryLines += "--------------------------------------------------------------------------------"
+    $summaryLines += "PRE-FLIGHT PERMISSION WARNINGS ($($script:PermissionWarnings.Count)):"
+    foreach ($pw in $script:PermissionWarnings) {
+        $summaryLines += "  * $pw"
+    }
+}
+$summaryLines += "--------------------------------------------------------------------------------"
+if ($totalErrorCount -eq 0) {
+    $summaryLines += "Collection Status:   SUCCESS (0 errors detected)"
+    $summaryLines += "Output Archive:      $zippedopfolder"
+}
+else {
+    $summaryLines += "Collection Status:   COMPLETED WITH ERRORS ($totalErrorCount issue(s) detected)"
+    $summaryLines += "Output Archive:      $zippedopfolder"
+    $summaryLines += ""
+    $summaryLines += "DIAGNOSTIC FINDINGS & REMEDIATION:"
+    if ($detectedErrors.Count -gt 0) {
+        $summaryLines += "  [SQL Execution Errors Detected]:"
+        foreach ($de in $detectedErrors) {
+            $summaryLines += "    * File: $($de.File)"
+            $summaryLines += "      Error: $($de.Error)"
+            if ($de.Error -match "xp_readerrorlog") {
+                $summaryLines += "      Remediation: GRANT EXECUTE ON master.dbo.xp_readerrorlog TO [$collectionUserName] or run as sysadmin."
+            }
+            elseif ($de.Error -match "sys\.sql_expression_dependencies") {
+                $summaryLines += "      Remediation: GRANT VIEW ANY DEFINITION TO [$collectionUserName] or run as sysadmin."
+            }
+            elseif ($de.Error -match "permission was denied") {
+                $summaryLines += "      Remediation: Ensure collection login has VIEW SERVER STATE and VIEW ANY DATABASE permissions."
+            }
+        }
+    }
+    if ($missingFiles.Count -gt 0) {
+        $summaryLines += "  [Missing Expected Output Files]:"
+        foreach ($mf in $missingFiles) {
+            $summaryLines += "    * $mf"
+        }
+    }
+    if ($dbNameNoAccessArray.Count -gt 0) {
+        $summaryLines += "  [Database Access Limitations]:"
+        $summaryLines += "    * $($dbNameNoAccessArray.Count) database(s) skipped because collection login lacks CONNECT / HAS_DBACCESS permission."
+        $summaryLines += "      Remediation: Run createUserWithSQLAuth.ps1 against all user databases or execute assessment as sysadmin."
+    }
+}
+$summaryLines += "--------------------------------------------------------------------------------"
+$summaryLines += "STEP EXECUTION TELEMETRY ($($script:StepTelemetry.Count) steps):"
+foreach ($st in $script:StepTelemetry) {
+    $summaryLines += ("  [{0,-5}] {1,-30} | DB={2,-22} | {3,6} ms | Rows={4,6} | {5}" -f $st.Status, $st.StepName, $st.Database, $st.DurationMs, $st.RowsAdded, $st.SqlFile)
+}
+$summaryLines += "--------------------------------------------------------------------------------"
+$summaryLines += "CSV OUTPUT MANIFEST ($($script:CsvManifestStats.Count) files):"
+foreach ($cm in ($script:CsvManifestStats | Sort-Object FileName)) {
+    $summaryLines += ("  {0,-78} | DataRows={1,7} | Bytes={2,10}" -f $cm.FileName, $cm.DataRows, $cm.SizeBytes)
+}
+$summaryLines += "================================================================================"
+
+$summaryText = $summaryLines -join [Environment]::NewLine
+Set-Content -Path $summaryFile -Encoding utf8 -Value $summaryText
+Add-Content -Path "$foldername\$logFile" -Encoding utf8 -Value $summaryText
+
+Write-Host ""
+Write-Host $summaryText -ForegroundColor $(if ($totalErrorCount -gt 0) { "Yellow" } else { "Green" })
+Write-Host ""
 
 if ($powerShellVersion -ge 5) {
 
@@ -1212,6 +1675,10 @@ else {
     WriteLog -logLocation $foldername\$logFile -logMessage "Please manually zip the files in $foldername and" -logOperation "MESSAGE"
     WriteLog -logLocation $foldername\$logFile -logMessage "return to Google to complete assessment" -logOperation "MESSAGE"
     WriteLog -logLocation $foldername\$logFile -logMessage "Collection Complete..." -logOperation "MESSAGE"
+}
+
+if (Test-Path -Path $script:BootstrapLogFile) {
+    Remove-Item -Path $script:BootstrapLogFile -Force -ErrorAction SilentlyContinue
 }
 
 if (-not ([string]::IsNullOrEmpty($originalLocation)) -and ($originalLocation -ne $PSScriptRoot)) {
