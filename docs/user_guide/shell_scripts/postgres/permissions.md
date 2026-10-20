@@ -1,4 +1,4 @@
-## Permissions Required
+# Permissions Required
 
 The following permissions and built-in roles are required for full script execution across all targeted databases:
 

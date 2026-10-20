@@ -17,6 +17,7 @@ authors = [
     { name = "Steve Senior", email = "stevesenior@google.com" },
     { name = "Shane Borden", email = "shaneborden@google.com" },
     { name = "Eri Santos", email = "erisantos@google.com" },
+    { name = "Tim Chapman", email = "chapmantim@google.com" },
 ]
 keywords = [
     "database",
@@ -40,6 +41,8 @@ maintainers = [
     { name = "Warren Puziewicz", email = "wpuziewicz@google.com" },
     { name = "Steve Senior", email = "stevesenior@google.com" },
     { name = "Shane Borden", email = "shaneborden@google.com" },
+    { name = "Eri Santos", email = "erisantos@google.com" },
+    { name = "Tim Chapman", email = "chapmantim@google.com" },
 ]
 # options under https://pypi.org/classifiers/
 classifiers = [ # ToDo: Modify according to your needs!
@@ -51,19 +54,9 @@ classifiers = [ # ToDo: Modify according to your needs!
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
 ]
-# direct dependencies of this package, installed when users `pip install dma` later.
 dependencies = [
-    "duckdb>=1.4.3",
-    "polars[pyarrow]>=0.20.0",
-    "aiosql>=9.4",
     "click>=8.1.7",
-    "rich-click>=1.7.3",
-    "jinja2>=3.1.3",
-    "sqlalchemy>=2.0.25",
-    "typing-extensions>=4.0.0",
-    "msgspec",
-    "greenlet",
-    "anyio"
+    "packaging>=23.0",
 ]
 
 [project.urls]
@@ -72,63 +65,26 @@ Documentation = "https://googlecloudplatform.github.io/database-assessment/"
 Issues = "https://github.com/GoogleCloudPlatform/database-assessment/issues"
 Source = "https://github.com/GoogleCloudPlatform/database-assessment"
 
-[project.optional-dependencies]
-mssql = ["aioodbc"]
-mysql = ["asyncmy>=0.2.9"]
-oracle = ["oracledb"]
-postgres = ["psycopg[pool,binary]"]
-server = ["litestar[structlog,jinja]>=2.7.0", "litestar-granian>=0.2.3"]
-
-
-[project.scripts]
-dma = "dma.cli.main:app"
-
-######################
-# Build & Versioning #
-######################
-
-[build-system]
-build-backend = "hatchling.build"
-requires = ["hatchling"]
-
-[tool.hatch.metadata]
-# direct dependency references, e.g `pip @ git+https://github.com/pypa/pip.git@master`
-allow-direct-references = true
-
-[tool.hatch.build]
-dev-mode-dirs = ["src/"]
-sources = ["src"]
-
-[tool.hatch.build.targets.sdist]
-exclude = ["/.github", "/docs"]
-
 #####################
 # UV Configuration  #
 #####################
 
 [tool.uv]
 managed = true
-package = true
+package = false
 
 [dependency-groups]
 dev = [
     "bump-my-version",{ include-group = "lint" }, { include-group = "test" }, { include-group = "docs" }
 ]
 test = [
-    "psycopg[binary]",
-    "pymysql",
-    "pymssql",
-    "oracledb",
-    "cython",
-    "anyio",
     "coverage[toml]>=6.2",
     "pytest>=9.0.3",
     "pytest-cov>=5.0.0",
     "pytest-mock",
     "pytest-sugar",
-    "pytest-click",
     "pytest-xdist>=3.6.0",
-    "pytest-databases<=0.10.0",
+    "filelock>=3.0.0",
 ]
 lint = [
     "mypy>=1.13.0",
@@ -140,31 +96,16 @@ lint = [
     "types-decorator",
     "types-pyyaml",
     "types-setuptools",
-    "asyncpg-stubs",
     "pyyaml>=6",
 ]
 
 docs = [
-    # Core MkDocs Material (includes mkdocs>=1.6, pymdown-extensions, pygments)
-    "mkdocs-material[git,imaging,recommended]>=9.5.0",
-
-    # Versioning
-    "mike>=2.0.0",
-
-    # Documentation generation
-    "mkdocstrings[python]>=0.24.0",
-    "mkdocs-gen-files>=0.5.0",
-    "mkdocs-literate-nav>=0.6.0",
-    "mkdocs-section-index>=0.3.0",
-
-    # Content plugins
-    "mkdocs-include-markdown-plugin>=6.0.0",
-    "mkdocs-glightbox>=0.3.0",
-
-    # Optimization
-    "mkdocs-minify-plugin>=0.7.0",
-
-    # Validation
+    "sphinx>=8.0.0",
+    "sphinx-immaterial>=0.13.0",
+    "myst-parser>=4.0.0",
+    "sphinx-autobuild",
+    "sphinx-copybutton",
+    "sphinx-design",
     "linkchecker>=10.3.0",
 ]
 
@@ -251,22 +192,22 @@ skip = 'pdm.lock,package-lock.json,uv.lock,*.ps1'
 
 [tool.pyright]
 autoSearchPaths = false
-exclude = ["docs/**/*.py", "tests/**/*.py", "scripts/**/*.py"]
+exclude = ["docs/**/*.py", "scripts/**/*.py", "tools/scripts/**/*.py"]
 extraPaths = []                                                # Include paths from PYTHONPATH env var and .env definition
-include = ["src/dma", "tests"]
+include = ["tools", "tests"]
 pythonVersion = "3.10"
 reportMissingImports = "information"
 reportMissingTypeStubs = "information"
 reportUnknownMemberType = "none"
 reportUnnecessaryTypeIgnoreComments = true
-root = ['src']
+root = ["."]
 typeCheckingMode = "standard"
 useLibraryCodeForTypes = true
 
 [tool.mypy]
 python_version = "3.10"
 disallow_untyped_defs = false
-files = ["src/dma", "tests"]
+files = ["tools/lib", "tools/postgres", "tools/mysql", "tools/oracle", "tools/sqlserver", "tests"]
 follow_imports = "normal"     # "silent" for not following
 ignore_missing_imports = true
 pretty = true
@@ -280,20 +221,13 @@ module = ["tests.*"]
 warn_unused_ignores = false
 
 [[tool.mypy.overrides]]
-disable_error_code = ["arg-type"]
-disallow_untyped_calls = false
-disallow_untyped_decorators = false
-module = ["aisoql.*"]
-
-[[tool.mypy.overrides]]
-disallow_untyped_calls = false
-disallow_untyped_defs = false
-module = ["dma.lib.db.adapters.*", "dma.lib.db.adapters", "dma.lib.db.base", "dma.lib.db"]
-warn_unused_ignores = false
+ignore_missing_imports = true
+follow_imports = "skip"
+module = ["sphinx.*", "pygments.*", "docutils.*"]
 
 [[tool.mypy.overrides]]
 ignore_missing_imports = true
-module = ["sqlalchemy.*", "nodeenv"]
+module = ["nodeenv", "sqlspec.*"]
 
 [tool.ruff]
 exclude = [
@@ -315,11 +249,12 @@ exclude = [
     "build",
     "dist",
     "node_modules",
+    "tools/scripts",
     "venv",
     '__pycache__',
 ]
 fix = true
-include = ["src/**/*.py", "src/**/*.pyi", "tests/**/*.py", "tests/**/*.pyi"]
+include = ["tests/**/*.py", "tests/**/*.pyi", "tools/**/*.py", "docs/**/*.py"]
 line-length = 120
 lint.fixable = ["ALL"]
 lint.ignore = [
@@ -393,21 +328,21 @@ lint.select = ["ALL"]
 # Allow unused variables when underscore-prefixed.
 lint.dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 preview = true                                                    # preview features & checks, use with caution
-src = ["src", "tests/", "scripts/", "docs/", "notebooks/"]
+src = ["tests/", "scripts/", "tools/", "docs/", "notebooks/"]
 target-version = "py310"
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
 [tool.ruff.lint.isort]
-known-first-party = ["dma", "tests", "scripts"]
+known-first-party = ["tests", "scripts", "tools"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
 
 [tool.ruff.lint.per-file-ignores]
 # Allow print/pprint
-"docs/*" = ["S404", "INP001"]
+"docs/*" = ["S404", "INP001", "A001"]
 "examples/*" = ["T201"]
 # Tests can use magic values, assertions, and relative imports
 "__init__.py" = ['F401', 'D104']
@@ -427,10 +362,11 @@ ban-relative-imports = "all"
 ]
 "scripts/post_build.py" = ["ERA001"]
 "scripts/pre_build.py" = ["ERA001"]
-"tools/*.py" = ["INP001", "S404", "T201", "PLR0914", "S310", "ANN001", "ANN201", "S202", "ERA001"]
+"tools/**/*.py" = ["INP001", "S404", "T201", "PLR0904", "PLR0914", "S310", "ANN001", "ANN201", "S202", "ERA001"]
 "tests/**/*" = [
     "PLR2004",
     "S101",
+    "S324",
     "TID252",
     "ERA001",
     "ANN201",
@@ -443,11 +379,6 @@ ban-relative-imports = "all"
     "PLC2701",
     "FA102",
 ]
-# temp
-"src/dma/lib/db/adapters/*.py" = ["ANN001", "ANN201", "ANN204", "PLR6301"]
-
-"src/dma/lib/db/__init__.py" = ["RUF067"]
-"src/dma/cli/__init__.py" = ["RUF067"]
 
 # copyright
 "**/*.py" = ["CPY001", 'RUF029']
@@ -486,13 +417,14 @@ line-length = 120
 [tool.pytest.ini_options]
 addopts = "-n 2 --dist=loadgroup -ra -q --doctest-glob='*.md'"
 filterwarnings = [
-    "ignore::DeprecationWarning:aiosql.*",
     "ignore::DeprecationWarning:pkg_resources",
     "ignore::DeprecationWarning:xdist.*",
 ]
 markers = [
     "integration: Integration Tests",
     "unit: Unit Tests",
+    "script_test: Collection script tests",
+    "slow: Tests that take > 30 seconds",
     "mysql: MySQL Tests",
     "postgres: Postgres Tests",
     "oracle: Oracle Tests",
@@ -502,22 +434,23 @@ markers = [
     "server: Web server and API Tests",
 ]
 minversion = "6.0"
+pythonpath = ["."]
 testpaths = ["tests"]
 
 [tool.coverage.run]
 branch = true
 concurrency = ["multiprocessing"]
 omit = [
-    "_version.py",          # automatically created by hatch-vcs, not in repo
-    "src/dma/__about__.py",
+    "_version.py",
     "tests/*",
     "scripts/*",
+    "tools/scripts/*",
 ]
 parallel = true
-source = ["src/dma"]
+source = ["tools"]
 
 [tool.coverage.paths]
-source = ["src/", "*/site-packages/"]
+source = ["tools/"]
 
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration

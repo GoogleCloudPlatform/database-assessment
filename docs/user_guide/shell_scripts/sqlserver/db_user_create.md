@@ -6,7 +6,7 @@ The collection scripts can be executed with any DBA account. Alternately, a new 
 
 If an existing user with SYSADMIN privileges will not be used, from a command prompt, execute either of the following scripts depending on what type of authentication you currently use for your SYSADMIN user.
 
-#### SQL Authentication
+### SQL Authentication
 
 ```powershell
 
@@ -23,7 +23,7 @@ The following parameters can be specified:
     -collectionUserPass  ** Optional at script level.  Will be prompted if not provided
 ```
 
-#### Windows Authentication
+### Windows Authentication
 
 ```powershell
 .\createUserForAssessmentWithWindowsAuth.bat

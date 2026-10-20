@@ -1,11 +1,11 @@
 # Copyright 2024 Google LLC
-
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-
+#
 #     https://www.apache.org/licenses/LICENSE-2.0
-
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,14 +14,6 @@
 name: release
 
 on:
-#   push:
-#     tags:
-#     - v*
-#     branches:
-#     - master
-#   pull_request:
-#     branches:
-#     - master
   workflow_dispatch:
   release:
     types:
@@ -46,235 +38,42 @@ jobs:
     name: Package collections scripts for release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
-            # Fetch all tags
-            fetch-depth: 0
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
 
       - name: Set up Python
-        run: uv python install ${{ env.STABLE_PYTHON_VERSION }}
+        run: uv python install "${STABLE_PYTHON_VERSION}"
 
       - name: Building & Package Collector
         run: make clean && make build-collector
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
-            name: collections
-            path: dist/*.zip
-            if-no-files-found: error
-            overwrite: true
-
-  pure-python-wheel-and-sdist:
-    name: Build a pure Python wheel and source distribution
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v6
-      with:
-        # Fetch all tags
-        fetch-depth: 0
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
-
-    - name: Set up Python
-      run: uv python install ${{ env.STABLE_PYTHON_VERSION }}
-
-    - name: Build
-      run: uv build
-
-    - uses: actions/upload-artifact@v7
-      with:
-        name: wheels
-        path: dist/*
-        if-no-files-found: error
-        overwrite: true
-
-  build-binaries:
-    name: Build binary for ${{ matrix.job.target }} (${{ matrix.job.os }})
-    runs-on: ${{ matrix.job.os }}
-    needs:
-        - pure-python-wheel-and-sdist
-    strategy:
-      fail-fast: false
-      matrix:
-        job:
-        # Linux - GNU libc (manylinux2014 baseline: glibc 2.17+)
-        - target: x86_64-unknown-linux-gnu
-          os: ubuntu-latest
-          artifact: dma-x86_64-linux-gnu
-
-        - target: aarch64-unknown-linux-gnu
-          os: ubuntu-latest
-          artifact: dma-aarch64-linux-gnu
-
-        # macOS
-        - target: aarch64-apple-darwin
-          os: macos-latest
-          artifact: dma-aarch64-macos
-
-        # Windows
-        - target: x86_64-pc-windows-msvc
-          os: windows-latest
-          artifact: dma-x86_64-windows.exe
-
-    env:
-      PYAPP_REPO: pyapp
-      PYAPP_VERSION: v0.29.0
-      PYAPP_PYTHON_VERSION: "3.13"
-      PYAPP_PROJECT_NAME: "dma"
-
-      # Offline configuration: PYAPP_DISTRIBUTION_PATH (set at runtime) implies embedding
-      # NO PYAPP_UV_ENABLED to ensure fully offline operation
-      PYAPP_FULL_ISOLATION: "true"
-      PYAPP_PROJECT_FEATURES: "oracle,postgres,mssql,mysql,server"
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 0
-
-    - name: Clone PyApp
-      run: git clone --depth 1 --branch ${{ env.PYAPP_VERSION }} https://github.com/ofek/pyapp ${{ env.PYAPP_REPO }}
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v7
-
-    - name: Set up Python
-      run: uv python install ${{ env.STABLE_PYTHON_VERSION }}
-
-    - name: Install Zig
-      if: contains(matrix.job.target, 'linux-gnu')
-      uses: goto-bus-stop/setup-zig@v2
-      with:
-        version: 0.13.0
-
-    - name: Install cargo-zigbuild
-      if: contains(matrix.job.target, 'linux-gnu')
-      run: uv tool install cargo-zigbuild
-
-    - name: Install Rust toolchain
-      uses: dtolnay/rust-toolchain@stable
-      with:
-        targets: ${{ matrix.job.target }}
-
-    - name: Setup cross-compilation (Linux)
-      if: contains(matrix.job.target, 'linux') && !contains(matrix.job.target, 'linux-gnu')
-      uses: taiki-e/setup-cross-toolchain-action@v1
-      with:
-        target: ${{ matrix.job.target }}
-
-    - name: Download wheel artifact
-      uses: actions/download-artifact@v8
-      with:
-        name: wheels
-        path: dist/
-        merge-multiple: true
-
-    - name: Get version
-      id: version
-      run: |
-        VERSION=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-      shell: bash
-
-    - name: Generate requirements.txt
-      run: |
-        uv export --no-color --frozen --no-dev --no-editable --no-hashes --no-header --no-emit-project --extra postgres --extra server > dist/requirements.txt
-        echo "${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl" >> dist/requirements.txt
-        cat dist/requirements.txt
-
-    - name: Bundle Python dependencies
-      shell: bash
-      run: |
-        uv run tools/bundle_python.py build \
-          --target ${{ matrix.job.target }} \
-          --requirements dist/requirements.txt \
-          --output dist/python-dist-${{ matrix.job.target }}.tar.gz \
-          --pyapp-dir ${{ env.PYAPP_REPO }} \
-          --install-root "~/.dma"
-        # CRITICAL: Use PYAPP_DISTRIBUTION_PATH for local files (not PYAPP_DISTRIBUTION_SOURCE)
-        # PYAPP_DISTRIBUTION_SOURCE expects a URL, PYAPP_DISTRIBUTION_PATH accepts a filesystem path
-        echo "PYAPP_DISTRIBUTION_PATH=${{ github.workspace }}/dist/python-dist-${{ matrix.job.target }}.tar.gz" >> $GITHUB_ENV
-        echo "PYAPP_SKIP_INSTALL=true" >> $GITHUB_ENV
-        # Set the path to Python binary inside the custom distribution
-        if [[ "${{ matrix.job.target }}" == *"windows"* ]]; then
-          echo "PYAPP_DISTRIBUTION_PYTHON_PATH=python/python.exe" >> $GITHUB_ENV
-        else
-          echo "PYAPP_DISTRIBUTION_PYTHON_PATH=python/bin/python3" >> $GITHUB_ENV
-        fi
-
-    - name: Build PyApp binary (Linux GNU)
-      if: contains(matrix.job.target, 'linux-gnu')
-      working-directory: ${{ env.PYAPP_REPO }}
-      env:
-        PYAPP_PROJECT_PATH: ${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
-        PYAPP_PROJECT_DEPENDENCY_FILE: ""
-        PYAPP_SKIP_INSTALL: "true"
-      run: cargo zigbuild --release --target ${{ matrix.job.target }}.2.17
-
-    - name: Build PyApp binary (Others)
-      if: (!contains(matrix.job.target, 'linux-gnu'))
-      working-directory: ${{ env.PYAPP_REPO }}
-      env:
-        PYAPP_PROJECT_PATH: ${{ github.workspace }}/dist/dma-${{ steps.version.outputs.VERSION }}-py3-none-any.whl
-        PYAPP_PROJECT_DEPENDENCY_FILE: ""
-        PYAPP_SKIP_INSTALL: "true"
-      run: cargo build --release --target ${{ matrix.job.target }}
-
-    - name: Rename binary (Unix)
-      if: runner.os != 'Windows'
-      run: |
-        cp ${{ env.PYAPP_REPO }}/target/${{ matrix.job.target }}/release/pyapp ${{ matrix.job.artifact }}
-        chmod +x ${{ matrix.job.artifact }}
-
-    - name: Rename binary (Windows)
-      if: runner.os == 'Windows'
-      run: |
-        cp ${{ env.PYAPP_REPO }}/target/${{ matrix.job.target }}/release/pyapp.exe ${{ matrix.job.artifact }}
-
-    - name: Test binary offline (Linux)
-      if: contains(matrix.job.target, 'linux') && !contains(matrix.job.target, 'aarch64')
-      run: |
-        # Test in network-isolated container
-        docker run --network none -v $(pwd):/app ubuntu:20.04 /app/${{ matrix.job.artifact }} --help
-
-    - name: Test binary (macOS/Windows)
-      if: runner.os != 'Linux'
-      run: ./${{ matrix.job.artifact }} --help
-
-    - name: Upload binary artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: binary-${{ matrix.job.artifact }}
-        path: ${{ matrix.job.artifact }}
-        if-no-files-found: error
+          name: collections
+          path: |
+            dist/*.zip
+            dist/dma-collection-masker
+          if-no-files-found: error
+          overwrite: true
 
   publish:
     name: Publish release
     needs:
-    - collection-scripts
-    - pure-python-wheel-and-sdist
-    - build-binaries
+      - collection-scripts
     runs-on: ubuntu-latest
     permissions:
-     contents: write
+      contents: write
     steps:
-    - uses: actions/download-artifact@v8
-      with:
-        path: dist
-        merge-multiple: true
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          path: dist
+          merge-multiple: true
 
-    # - name: Push build artifacts to PyPI
-    #   uses: pypa/gh-action-pypi-publish@v1.6.4
-    #   with:
-    #     skip_existing: true
-    #     user: __token__
-    #     password: ${{ secrets.PYPI_API_TOKEN }}
-
-    - name: Add assets to release
-      uses: softprops/action-gh-release@v3
-      with:
-        files: dist/*
+      - name: Add assets to release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
+        with:
+          files: dist/*

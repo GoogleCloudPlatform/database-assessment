@@ -16,7 +16,7 @@ make install-uv
 
 ### `make install`
 
-Creates a fresh virtual environment and installs all dependencies (development, testing, linting, and documentation).
+Creates a fresh virtual environment and installs all development dependencies (testing, linting, documentation, and version management).
 
 **Usage:**
 
@@ -29,7 +29,7 @@ make install
 - Destroys any existing virtual environment
 - Pins Python to version 3.12
 - Creates `.venv/` virtual environment
-- Installs all dependencies with `uv sync --all-extras --dev`
+- Installs development dependencies with `uv sync --dev`
 - Installs pre-commit hooks
 
 ### `make upgrade`
@@ -59,43 +59,25 @@ make destroy
 
 ## Building
 
-### `make build-collector`
+### `make build` / `make build-collector`
 
-Builds database collection script packages (ZIP files) for all supported databases.
-
-**Usage:**
-
-```bash
-make build-collector
-```
-
-**Output:** Creates ZIP files in `dist/`:
-
-- `db-migration-assessment-collection-scripts-oracle.zip`
-- `db-migration-assessment-collection-scripts-sqlserver.zip`
-- `db-migration-assessment-collection-scripts-mysql.zip`
-- `db-migration-assessment-collection-scripts-postgres.zip`
-
-### `make build`
-
-Builds both collection script packages and the Python wheel.
+Builds database collection script packages (ZIP files) for all supported databases and copies the standalone collection masker script into `dist/`.
 
 **Usage:**
 
 ```bash
 make build
+# or
+make build-collector
 ```
-
-**What it does:**
-
-- Runs `make build-collector`
-- Runs `uv build` to create wheel and sdist
 
 **Output:** Creates in `dist/`:
 
-- Collection script ZIP files
-- `dma-{version}-py3-none-any.whl`
-- `dma-{version}.tar.gz`
+- `db-migration-assessment-collection-scripts-oracle.zip` (includes `masker/dma-collection-masker`)
+- `db-migration-assessment-collection-scripts-sqlserver.zip` (includes `masker/dma-collection-masker`)
+- `db-migration-assessment-collection-scripts-mysql.zip`
+- `db-migration-assessment-collection-scripts-postgres.zip`
+- `dma-collection-masker`
 
 ### `make clean`
 
@@ -139,12 +121,32 @@ make test
 **Equivalent to:**
 
 ```bash
-uv run pytest -n 2 --cov
+uv run pytest -n 2 --dist loadgroup --cov
+```
+
+### `make test-unit`
+
+Runs fast unit tests without starting any database containers.
+
+**Usage:**
+
+```bash
+make test-unit
+```
+
+### `make test-integration`
+
+Runs integration and collection script tests against database containers.
+
+**Usage:**
+
+```bash
+make test-integration
 ```
 
 ### `make test-all-pythons`
 
-Runs tests against all supported Python versions (3.9, 3.10, 3.11, 3.12, 3.13).
+Runs tests against all supported Python versions (3.10, 3.11, 3.12, 3.13).
 
 **Usage:**
 
@@ -157,18 +159,43 @@ make test-all-pythons
 ### Run Specific Tests
 
 ```bash
-# Run specific test file
-uv run pytest tests/unit/test_example.py
+# Run specific unit test file
+uv run pytest tests/unit/test_sqlserver_collection_scripts.py
 
 # Run with debugging
-uv run pytest -s --pdb tests/unit/test_example.py
+uv run pytest -s --pdb tests/unit/test_sqlserver_collection_scripts.py
 
 # Run tests matching a pattern
-uv run pytest -k "test_database"
+uv run pytest -k "test_postgres"
 
 # Run tests without coverage
 uv run pytest --no-cov
 ```
+
+### Collection Script Tests
+
+These tests execute the packaged collection scripts inside containers, then validate the output archives.
+They require Docker or Podman.
+
+```bash
+# Run all collection script tests
+uv run pytest -m script_test
+
+# Run Postgres script tests only
+uv run pytest -m "script_test and postgres"
+
+# Skip slow tests
+uv run pytest -m "script_test and not slow"
+```
+
+**Environment variables:**
+
+- `DMA_TEST_KEEP_CONTAINER=1` keeps containers running after the test session.
+- `DMA_TEST_KEEP_VOLUMES=1` keeps container volumes for debugging.
+
+**Structure:** Script tests live under `tests/integration/<db>/test_collection_scripts.py` and
+share session-scoped fixtures from `tests/lib/collector_build.py` and
+`tests/lib/script_executor.py` to avoid rebuilding artifacts per test.
 
 ## Linting and Code Quality
 
@@ -204,7 +231,7 @@ uv run ruff check --fix .
 uv run ruff format .
 
 # Run mypy type checking
-uv run mypy src/dma
+uv run mypy
 
 # Run codespell
 uv run codespell
@@ -212,26 +239,26 @@ uv run codespell
 
 ## Documentation
 
-### `make docs`
+### `make docs-build`
 
-Generates HTML documentation from Markdown files.
+Generates HTML documentation using Sphinx.
 
 **Usage:**
 
 ```bash
-make docs
+make docs-build
 ```
 
-**Output:** Creates documentation in `site/`
+**Output:** Creates documentation in `docs/_build/html/`
 
-### `make serve-docs`
+### `make docs-serve`
 
 Builds and serves documentation locally with auto-reload.
 
 **Usage:**
 
 ```bash
-make serve-docs
+make docs-serve
 ```
 
 **Access:** Opens at `http://localhost:8000`
@@ -252,32 +279,30 @@ make doc-privs
 
 ### `make release`
 
-Bumps the version number, updates all version references, and builds release artifacts.
+Bumps the version number across all collection scripts and builds documentation.
 
 **Usage:**
 
 ```bash
-# Bump patch version (e.g., 4.3.44 → 4.3.45)
+# Bump patch version (e.g., 4.3.48 → 4.3.49)
 make release bump=patch
 
-# Bump minor version (e.g., 4.3.44 → 4.4.0)
+# Bump minor version (e.g., 4.3.48 → 4.4.0)
 make release bump=minor
 
-# Bump major version (e.g., 4.3.44 → 5.0.0)
+# Bump major version (e.g., 4.3.48 → 5.0.0)
 make release bump=major
 ```
 
 **What it does:**
 
-1. Generates documentation
-2. Cleans build artifacts
+1. Generates documentation (`make docs-build`)
+2. Cleans build artifacts (`make clean`)
 3. Bumps version in all files using `bump-my-version`
-4. Builds collection scripts and wheel
 
 **Files updated:**
 
 - `pyproject.toml`
-- `uv.lock`
 - `scripts/masker/dma-collection-masker`
 - `scripts/collector/oracle/collect-data.sh`
 - `scripts/collector/mysql/collect-data.sh`
@@ -294,38 +319,14 @@ uv run bump-my-version show current_version
 uv run bump-my-version bump --dry-run patch
 ```
 
-## Running the CLI Locally
-
-### Using UV (Recommended)
-
-```bash
-# Run readiness check
-uv run dma readiness-check --db-type postgres --hostname localhost
-
-# Run data collection
-uv run dma collect-data --db-type mysql --hostname localhost
-```
-
-### Using Activated Virtual Environment
-
-```bash
-source .venv/bin/activate
-
-dma readiness-check --db-type postgres --hostname localhost
-dma collect-data --db-type mysql --hostname localhost
-```
-
 ## Database-Specific Testing
 
 ### Start Test Databases
 
-```bash
-# Start all test databases via Docker Compose
-docker-compose -f tests/docker-compose.yml up -d
+Test containers are managed automatically by pytest fixtures. Running tests will
+start and stop the required containers as needed.
 
-# Stop test databases
-docker-compose -f tests/docker-compose.yml down
-```
+To keep containers or volumes between runs, set `DMA_TEST_KEEP_CONTAINER=1` or `DMA_TEST_KEEP_VOLUMES=1` in the environment.
 
 ### Run Database-Specific Tests
 
@@ -347,10 +348,11 @@ uv run pytest -m mssql
 
 The project uses UV dependency groups defined in `pyproject.toml`:
 
-- **dev**: Test dependencies (pytest, pytest-cov, etc.)
-- **lint**: Linting tools (ruff, mypy, pre-commit, etc.)
-- **docs**: Documentation tools (mkdocs, mkdocs-material, etc.)
-- **build**: Build tools (bump-my-version)
+- **dev**: All development dependencies (`lint`, `test`, `docs`, and `bump-my-version`)
+- **test**: Test dependencies (`pytest`, `pytest-cov`, `pytest-xdist`, `filelock`, etc.)
+- **lint**: Linting tools (`ruff`, `mypy`, `pre-commit`, etc.)
+- **docs**: Documentation tools (`sphinx`, `sphinx-immaterial`, `myst-parser`, `sphinx-design`, etc.)
+- **build**: Version management tools (`bump-my-version`)
 
 ### Install Specific Groups
 
@@ -365,37 +367,17 @@ uv sync --group lint
 uv sync --group docs --group lint
 ```
 
-## Useful UV Commands
-
-```bash
-# Show installed packages
-uv pip list
-
-# Show dependency tree
-uv pip tree
-
-# Add a new dependency
-uv add requests
-
-# Add a dev dependency
-uv add --dev pytest-timeout
-
-# Remove a dependency
-uv remove requests
-
-# Sync environment with lockfile
-uv sync --locked
-```
-
 ## Quick Reference
 
 | Task | Command |
 |------|---------|
 | Set up environment | `make install` |
-| Run tests | `make test` |
+| Run all tests | `make test` |
+| Run unit tests | `make test-unit` |
+| Run integration tests | `make test-integration` |
 | Run linting | `make lint` |
-| Build everything | `make build` |
+| Build collector packages | `make build` |
 | Clean artifacts | `make clean` |
-| Serve docs | `make serve-docs` |
+| Build docs | `make docs-build` |
+| Serve docs | `make docs-serve` |
 | Bump version | `make release bump=patch` |
-| Run CLI | `uv run dma --help` |

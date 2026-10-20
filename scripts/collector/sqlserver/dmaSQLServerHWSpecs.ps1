@@ -103,7 +103,7 @@ $csvData = [PSCustomObject]@{
 }
 
 try {
-	WriteLog -logLocation $logLocation -logMessage "Fetching machine HW specs from computer:$computerName and storing it in output:$outputPath" -logOperation "FILE"
+	WriteLog -logLocation $logLocation -logMessage "[HW-SPECS] Fetching machine HW specs from computer '$computerName' via WMI -> output: $outputPath" -logOperation "BOTH"
 
 	# Physical cores count.
 	$csvData.PhysicalCpuCount = (Get-WmiObject Win32_Processor @params | Measure-Object -Property NumberOfCores -Sum).Sum
@@ -125,10 +125,10 @@ try {
 
 	# Writing to csv.
 	$csvData | Export-Csv -Path $outputPath -Delimiter "|" -NoTypeInformation -Encoding UTF8
-	WriteLog -logLocation $logLocation -logMessage "Successfully fetched machine HW specs of $computerName to output:$outputPath" -logOperation "FILE"
+	WriteLog -logLocation $logLocation -logMessage "[HW-SPECS] Successfully fetched WMI HW specs for '$computerName': PhysicalCPUs=$($csvData.PhysicalCpuCount), LogicalCPUs=$($csvData.LogicalCpuCount), TotalMemoryMB=$($csvData.TotalOSMemoryMB), PrimaryMAC=$($csvData.PrimaryMAC), IPs=$($csvData.IPAddresses)" -logOperation "BOTH"
 }
 catch {
-	WriteLog -logLocation $logLocation -logMessage "ERROR - Failed fetching machine HW specs of ${computerName}: $_" -logOperation "BOTH"
+	WriteLog -logLocation $logLocation -logMessage "[HW-SPECS] [WARN] Failed fetching WMI HW specs of '${computerName}' ($($_.Exception.GetType().FullName)): $($_.Exception.Message)" -logOperation "BOTH"
 	# Write at least MachineName to CSV.
 	$csvData | Export-Csv -Path $outputPath -Delimiter "|" -NoTypeInformation -Encoding UTF8
 }

@@ -1,7 +1,8 @@
 # Gather workload metadata
 
-!!! note
-    For MySQL homogeneous migrations, please upload the collections files to Google Migration Center
+:::{note}
+For MySQL homogeneous migrations, please upload the collections files to Google Migration Center
+:::
 
 
 The workload collection supports MySQL 5.6 and newer. Older versions of MySQL are not currently supported.  MariaDB is also not currently supported with this version of the script.
@@ -97,8 +98,9 @@ To collect data for a single database:
 
 Upon completion, the tool will automatically create an archive of the extracted metrics for upload into the DMA application.
 
-!!! important
-    Do not modify the name or the contents of the zip file without consultation from Google.
+:::{important}
+Do not modify the name or the contents of the zip file without consultation from Google.
+:::
 
 ## License
 

@@ -4,9 +4,10 @@ To begin local development, clone the [GoogleCloudPlatform/database-assessment](
 
 ## Prerequisites
 
-- **Python 3.9+** (UV will manage Python versions for you)
+- **Python 3.10+** (UV will manage Python versions for you)
 - **Git** for version control
 - **UV** package manager (installed automatically via `make install-uv`)
+- **Docker** or **Podman** (required only for running container-backed integration tests)
 
 ## Quick Start
 
@@ -16,7 +17,7 @@ To begin local development, clone the [GoogleCloudPlatform/database-assessment](
 make install-uv
 ```
 
-This installs the latest version of [UV](https://github.com/astral-sh/uv), a fast Python package manager and environment manager.
+This installs the latest version of [UV](https://github.com/astral-sh/uv), a fast Python package and environment manager.
 
 ### 2. Set up Development Environment
 
@@ -27,7 +28,7 @@ make install
 This command will:
 - Pin Python to version 3.12
 - Create a virtual environment at `.venv/`
-- Install all project dependencies (including dev, lint, and docs groups)
+- Install all development dependencies (`lint`, `test`, `docs`, and `build` groups) via `uv sync --dev`
 - Install pre-commit hooks for code quality checks
 
 ### 3. Activate the Virtual Environment (Optional)
@@ -39,21 +40,6 @@ source .venv/bin/activate
 ```
 
 ## Development Workflow
-
-### Install Optional Dependencies
-
-Install specific database drivers as needed:
-
-```bash
-# All database drivers at once
-uv sync --all-extras
-
-# Or individual drivers
-uv sync --extra mysql
-uv sync --extra postgres
-uv sync --extra oracle
-uv sync --extra mssql
-```
 
 ### Update Dependencies
 
@@ -70,17 +56,14 @@ This updates `uv.lock` and refreshes pre-commit hooks.
 Test that everything is set up correctly:
 
 ```bash
-# Run tests
-make test
+# Run unit tests
+make test-unit
 
 # Run linting
 make lint
 
-# Build collector scripts
-make build-collector
-
-# Build Python wheel
-uv build
+# Build collector script packages
+make build
 ```
 
 ## IDE Setup
