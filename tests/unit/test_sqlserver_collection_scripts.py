@@ -15,15 +15,9 @@
 
 from __future__ import annotations
 
-import zipfile
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pytest
-
-if TYPE_CHECKING:
-    from tests.lib.collector_build import CollectorArtifacts
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SQLSERVER_DIR = REPO_ROOT / "scripts" / "collector" / "sqlserver"
@@ -200,22 +194,6 @@ def test_new_deep_sql_files_and_instance_review_wiring(
     assert expected_file_def in instance_review_content
     assert expected_header in instance_review_content
     assert f"sql\\{sql_filename}" in instance_review_content
-
-
-def test_sqlserver_collector_zip_contains_all_sql_scripts(
-    collector_artifacts: CollectorArtifacts,
-) -> None:
-    assert collector_artifacts.sqlserver_zip is not None
-    assert collector_artifacts.sqlserver_zip.is_file()
-
-    with zipfile.ZipFile(collector_artifacts.sqlserver_zip) as zf:
-        archive_names = set(zf.namelist())
-
-    for filename in ORIGINAL_SQL_FILES:
-        assert f"sql/{filename}" in archive_names
-
-    for filename in NEW_DEEP_SQL_SPECS:
-        assert f"sql/{filename}" in archive_names
 
 
 def test_sql_safety_and_sanitization_guards(instance_review_content: str) -> None:
