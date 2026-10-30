@@ -84,7 +84,7 @@ test = [
     "pytest-mock",
     "pytest-sugar",
     "pytest-xdist>=3.6.0",
-    "filelock>=3.0.0",
+    "filelock>=4.1.0",
 ]
 lint = [
     "mypy>=1.13.0",
