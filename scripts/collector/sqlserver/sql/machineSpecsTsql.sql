@@ -29,7 +29,23 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 SELECT @MACHINENAME = CONVERT(NVARCHAR(256), SERVERPROPERTY('MachineName'));
 SELECT @PRODUCT_VERSION = CONVERT(INT, (@@microsoftversion / 0x1000000) & 0xff);
 
-IF @PRODUCT_VERSION >= 11
+/* Azure SQL Database (EngineEdition 5): sys.dm_os_sys_info describes the shared node (socket_count 0, hundreds of GB),
+   not this database. Report the SLO shape from sys.dm_user_db_resource_governance instead: cpu_limit vCores and
+   max_db_memory (KB). Run on the target connection so the governance row is the collected database's. Verified live. */
+IF CONVERT(INT, SERVERPROPERTY('EngineEdition')) = 5
+BEGIN
+    SELECT TOP 1
+        '"' + @PKEY + '"' AS pkey,
+        '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
+        '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id,
+        '"' + REPLACE(ISNULL(@MACHINENAME, CONVERT(NVARCHAR(256), @@SERVERNAME)), '"', '""') + '"' AS MachineName,
+        '"' + CONVERT(NVARCHAR(255), CEILING(ISNULL(rg.cpu_limit, si.cpu_count))) + '"' AS PhysicalCpuCount,
+        '"' + CONVERT(NVARCHAR(255), CEILING(ISNULL(rg.cpu_limit, si.cpu_count))) + '"' AS LogicalCpuCount,
+        '"' + CONVERT(NVARCHAR(255), ISNULL(rg.max_db_memory / 1024, si.committed_target_kb / 1024)) + '"' AS TotalOSMemoryMB
+    FROM sys.dm_os_sys_info AS si
+    LEFT JOIN sys.dm_user_db_resource_governance AS rg ON rg.database_id = DB_ID();
+END
+ELSE IF @PRODUCT_VERSION >= 11
 BEGIN
     EXEC sys.sp_executesql
         N'SELECT

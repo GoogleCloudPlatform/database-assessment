@@ -237,13 +237,21 @@ Operating System Versions:
                 Example (default port): runAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
                 Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
 
-        For Azure SQL Database (Ignore Perfmon Collection):
-             .\runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password] -ignorePerfmon true -manualUniqueId [string]
+        For Azure SQL Database (one database per run, -azureSqlDatabase):
+             .\runAssessment.bat -serverName [logical server].database.windows.net -database [database name] -azureSqlDatabase -collectionUserName [collection user name] -collectionUserPass [collection user password] -manualUniqueId [string]
 
-                Example (default port): runAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true -manualUniqueId [string]
-                Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true -manualUniqueId [string]
-                Example (default port / all databases): runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true -manualUniqueId [string]
-                Example (custom port / all databases): runAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true -manualUniqueId [string]
+                Example (SQL authentication): runAssessment.bat -serverName myserver.database.windows.net -database AdventureWorks -azureSqlDatabase -collectionUserName dmauser -collectionUserPass password123 -manualUniqueId myAzureDb1
+                Example (Entra ID, one MFA prompt): runAssessment.bat -serverName myserver.database.windows.net -database AdventureWorks -azureSqlDatabase -useEntraIDAuthentication -entraIDUserName user@domain.com -manualUniqueId myAzureDb1
+
+            -azureSqlDatabase declares the platform; -database is required and names the single database to collect ("all" is rejected).
+            The collector opens exactly two persistent connections, one to master and one to the target database, and routes every
+            query through one of them (no USE, no per-query sqlcmd process; sqlcmd.exe is not required in this mode). The collection
+            login must have access to both: a login with a user in master holding ##MS_DefinitionReader##, ##MS_SecurityDefinitionReader##
+            and ##MS_ServerStateReader##, and a user in the target database with VIEW DATABASE STATE. With -useEntraIDAuthentication the
+            connections use the same interactive Entra ID ODBC sign-in as Azure SQL Managed Instance. Perfmon, WMI host specs, msdb (SQL Agent jobs,
+            backup history) and tempdb steps are skipped on this platform and their files are written header-only; Azure resource
+            statistics (sys.dm_db_resource_stats, sys.resource_stats scoped to the database, elastic pool stats and resource governance)
+            are collected instead. Windows authentication is not available for Azure SQL Database.
 
         For Azure SQL Managed Instance using Microsoft Entra ID:
             .\runAssessment.bat -serverName [managed-instance-name].[dns-zone].database.windows.net -database [database name] -ignorePerfmon true -manualUniqueId [string] -useEntraIDAuthentication -entraIDUserName [user principal name]
