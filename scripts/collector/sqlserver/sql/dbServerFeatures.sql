@@ -1014,15 +1014,15 @@ BEGIN
     INSERT INTO #FeaturesEnabled VALUES ('IsHybridBufferPoolDirectWriteEnabled', '0', 0);
 END;
 
--- Multi-Write Replication (Merge, Peer-to-Peer, or Updatable Subscriptions)
+-- Multi-Write Replication (merge publishers only; sys.databases has no is_merge_subscribed column,
+-- peer-to-peer and updatable subscriptions are reported per database by dbServerFeaturesDatabaseLevel.sql)
 BEGIN TRY
     exec('INSERT INTO #FeaturesEnabled
           SELECT ''IsMultiWriteReplicationUsed'',
                  CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
                  COUNT(*)
           FROM sys.databases
-          WHERE is_merge_published = 1
-             OR is_merge_subscribed = 1');
+          WHERE is_merge_published = 1');
 END TRY
 BEGIN CATCH
     INSERT INTO #FeaturesEnabled VALUES ('IsMultiWriteReplicationUsed', '0', 0);
@@ -1061,6 +1061,535 @@ BEGIN TRY
 END TRY
 BEGIN CATCH
     INSERT INTO #FeaturesEnabled VALUES ('RESTORE', '0', 0);
+END CATCH;
+
+/* ------------------------------------------------------------------------------------------------
+   Coverage-gap rows (DMA 2.0 parity). Naming convention shared with the DMA 2.0 collector:
+   a feature name starting with "Is" carries 0/1 in Is_EnabledOrUsed, a plain noun carries the
+   count in both Is_EnabledOrUsed and Count, and a text-valued row carries the value in
+   Is_EnabledOrUsed with Count = 0. Every block falls back to ('0', 0) when the DMV is absent
+   or not readable so the script never fails as a whole.
+   ------------------------------------------------------------------------------------------------ */
+
+-- Policy-Based Management (DMA 2.0 row name; the legacy 'Policy-Based Management' row above is kept)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''IsPolicyBasedManagementEnabled'',
+                 CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                 COUNT(*)
+          FROM msdb.dbo.syspolicy_policies
+          WHERE is_enabled = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('IsPolicyBasedManagementEnabled', '0', 0);
+END CATCH;
+
+-- Extended Events sessions (user-defined only)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''ExtendedEventSessions'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.server_event_sessions
+          WHERE name NOT IN (''system_health'', ''AlwaysOn_health'', ''telemetry_xevents'', ''sp_server_diagnostics session'')');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('ExtendedEventSessions', '0', 0);
+END CATCH;
+
+-- Extended Events sessions writing to a local file target
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''ExtendedEventSessionsWithFileTarget'',
+                 CONVERT(NVARCHAR(255), COUNT(DISTINCT s.event_session_id)),
+                 COUNT(DISTINCT s.event_session_id)
+          FROM sys.server_event_sessions s
+          INNER JOIN sys.server_event_session_targets t ON s.event_session_id = t.event_session_id
+          WHERE t.name IN (''event_file'', ''asynchronous_file_target'')
+            AND s.name NOT IN (''system_health'', ''AlwaysOn_health'', ''telemetry_xevents'', ''sp_server_diagnostics session'')');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('ExtendedEventSessionsWithFileTarget', '0', 0);
+END CATCH;
+
+-- Server audit specifications (enabled)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''ServerAuditSpecifications'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.server_audit_specifications
+          WHERE is_state_enabled = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('ServerAuditSpecifications', '0', 0);
+END CATCH;
+
+-- Server audits by destination (enabled): file, Windows Security log, Windows Application log
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''ServerAuditsToFile'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.server_audits
+          WHERE type = ''FL'' AND is_state_enabled = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('ServerAuditsToFile', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''ServerAuditsToSecurityLog'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.server_audits
+          WHERE type = ''SL'' AND is_state_enabled = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('ServerAuditsToSecurityLog', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''ServerAuditsToApplicationLog'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.server_audits
+          WHERE type = ''AL'' AND is_state_enabled = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('ServerAuditsToApplicationLog', '0', 0);
+END CATCH;
+
+-- Startup procedures registered with sp_procoption (master only)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''StartupProcedures'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM master.sys.procedures
+          WHERE is_auto_executed = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('StartupProcedures', '0', 0);
+END CATCH;
+
+-- Login inventory by type (no names are emitted)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''SqlLogins'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.server_principals
+          WHERE type = ''S''
+            AND name NOT LIKE ''##MS_%''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('SqlLogins', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''WindowsLogins'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.server_principals
+          WHERE type = ''U''
+            AND name NOT LIKE ''NT SERVICE\%''
+            AND name NOT LIKE ''NT AUTHORITY\%''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('WindowsLogins', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''WindowsGroupLogins'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.server_principals
+          WHERE type = ''G''
+            AND name NOT LIKE ''NT SERVICE\%''
+            AND name NOT LIKE ''NT AUTHORITY\%''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('WindowsGroupLogins', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''CertificateMappedLogins'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.server_principals
+          WHERE type IN (''C'', ''K'')
+            AND name NOT LIKE ''##MS_%''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('CertificateMappedLogins', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''DisabledLogins'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.server_principals
+          WHERE type IN (''S'', ''U'', ''G'', ''C'', ''K'')
+            AND is_disabled = 1
+            AND name NOT LIKE ''##MS_%''
+            AND name NOT LIKE ''NT SERVICE\%''
+            AND name NOT LIKE ''NT AUTHORITY\%''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('DisabledLogins', '0', 0);
+END CATCH;
+
+-- Fixed server role membership counts (service accounts excluded, sa included)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''SysadminMembers'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.server_role_members rm
+          INNER JOIN sys.server_principals r ON rm.role_principal_id = r.principal_id
+          INNER JOIN sys.server_principals m ON rm.member_principal_id = m.principal_id
+          WHERE r.name = ''sysadmin''
+            AND m.name NOT LIKE ''NT SERVICE\%''
+            AND m.name NOT LIKE ''NT AUTHORITY\%''
+            AND m.name NOT LIKE ''##MS_%''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('SysadminMembers', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''SecurityadminMembers'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.server_role_members rm
+          INNER JOIN sys.server_principals r ON rm.role_principal_id = r.principal_id
+          INNER JOIN sys.server_principals m ON rm.member_principal_id = m.principal_id
+          WHERE r.name = ''securityadmin''
+            AND m.name NOT LIKE ''NT SERVICE\%''
+            AND m.name NOT LIKE ''NT AUTHORITY\%''
+            AND m.name NOT LIKE ''##MS_%''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('SecurityadminMembers', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''ServeradminMembers'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.server_role_members rm
+          INNER JOIN sys.server_principals r ON rm.role_principal_id = r.principal_id
+          INNER JOIN sys.server_principals m ON rm.member_principal_id = m.principal_id
+          WHERE r.name = ''serveradmin''
+            AND m.name NOT LIKE ''NT SERVICE\%''
+            AND m.name NOT LIKE ''NT AUTHORITY\%''
+            AND m.name NOT LIKE ''##MS_%''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('ServeradminMembers', '0', 0);
+END CATCH;
+
+-- User-defined server roles (SQL Server 2012 (11.x) and later; is_fixed_role does not exist before)
+IF @PRODUCT_VERSION >= 11
+BEGIN
+    BEGIN TRY
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''CustomServerRoles'',
+                     CONVERT(NVARCHAR(255), COUNT(*)),
+                     COUNT(*)
+              FROM sys.server_principals
+              WHERE type = ''R''
+                AND is_fixed_role = 0
+                AND name <> ''public''');
+    END TRY
+    BEGIN CATCH
+        INSERT INTO #FeaturesEnabled VALUES ('CustomServerRoles', '0', 0);
+    END CATCH
+END
+ELSE
+BEGIN
+    INSERT INTO #FeaturesEnabled VALUES ('CustomServerRoles', '0', 0);
+END;
+
+-- SQL Agent operators, alerts, proxies and jobs with notifications (Database Mail / OS dependencies)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''AgentOperators'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM msdb.dbo.sysoperators
+          WHERE enabled = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('AgentOperators', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''AgentAlerts'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM msdb.dbo.sysalerts
+          WHERE enabled = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('AgentAlerts', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''AgentProxies'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM msdb.dbo.sysproxies
+          WHERE enabled = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('AgentProxies', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''AgentJobsWithNotification'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM msdb.dbo.sysjobs
+          WHERE notify_level_email > 0
+             OR notify_level_page > 0
+             OR notify_level_netsend > 0');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('AgentJobsWithNotification', '0', 0);
+END CATCH;
+
+-- Maintenance plans and SSIS packages stored in msdb (packagetype 6 = maintenance plan internals)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''MaintenancePlans'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM msdb.dbo.sysmaintplan_plans');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('MaintenancePlans', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''SsisPackagesInMsdb'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM msdb.dbo.sysssispackages
+          WHERE packagetype <> 6');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('SsisPackagesInMsdb', '0', 0);
+END CATCH;
+
+-- SSIS catalog database present (excluded from per-database collection, so recorded here)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''IsSsisdbPresent'',
+                 CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                 COUNT(*)
+          FROM sys.databases
+          WHERE name = ''SSISDB''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('IsSsisdbPresent', '0', 0);
+END CATCH;
+
+-- Full-Text Search: installed component and running filter daemon launcher (engine-side view;
+-- componentsInstalled.sql reports the Windows service inventory for SSRS/SSAS/SSIS/Browser)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''IsFullTextInstalled'',
+                 CONVERT(NVARCHAR(255), ISNULL(CONVERT(INT, SERVERPROPERTY(''IsFullTextInstalled'')), 0)),
+                 ISNULL(CONVERT(INT, SERVERPROPERTY(''IsFullTextInstalled'')), 0)');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('IsFullTextInstalled', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''IsFullTextDaemonRunning'',
+                 CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                 COUNT(*)
+          FROM sys.dm_server_services
+          WHERE servicename LIKE ''SQL Full-text Filter Daemon Launcher%''
+            AND status = 4 /* SQL Server 2008 R2 SP1 and later */');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('IsFullTextDaemonRunning', '0', 0);
+END CATCH;
+
+-- Server collation (text value carried in Is_EnabledOrUsed)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''ServerCollation'',
+                 ISNULL(CONVERT(NVARCHAR(255), SERVERPROPERTY(''Collation'')), ''0''),
+                 0');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('ServerCollation', '0', 0);
+END CATCH;
+
+-- Encryption key inventory in master and EKM providers
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''SymmetricKeysInMaster'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM master.sys.symmetric_keys
+          WHERE name NOT LIKE ''##MS_%''');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('SymmetricKeysInMaster', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''AsymmetricKeysInMaster'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM master.sys.asymmetric_keys');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('AsymmetricKeysInMaster', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''EkmProviders'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.cryptographic_providers');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('EkmProviders', '0', 0);
+END CATCH;
+
+-- Replication roles by database (sys.databases carries no merge-subscriber flag; that role is
+-- reported per database by dbServerFeaturesDatabaseLevel.sql as IsMergeSubscribed)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''ReplicationPublisherDatabases'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.databases
+          WHERE is_published = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('ReplicationPublisherDatabases', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''ReplicationSubscriberDatabases'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.databases
+          WHERE is_subscribed = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('ReplicationSubscriberDatabases', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''ReplicationDistributorDatabases'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.databases
+          WHERE is_distributor = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('ReplicationDistributorDatabases', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''ReplicationMergePublisherDatabases'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.databases
+          WHERE is_merge_published = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('ReplicationMergePublisherDatabases', '0', 0);
+END CATCH;
+
+-- Replication topology peers from sys.servers (counts only; no server names are emitted).
+-- RemoteDistributor counts distributor entries whose data source is not this instance.
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''RemoteDistributor'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.servers
+          WHERE is_distributor = 1
+            AND UPPER(ISNULL(data_source, '''')) <> UPPER(CONVERT(NVARCHAR(128), @@SERVERNAME))
+            AND UPPER(ISNULL(data_source, '''')) <> UPPER(CONVERT(NVARCHAR(128), SERVERPROPERTY(''ServerName'')))');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('RemoteDistributor', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''ReplicationSubscriberServers'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.servers
+          WHERE is_subscriber = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('ReplicationSubscriberServers', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''ReplicationPublisherServers'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM sys.servers
+          WHERE is_publisher = 1');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('ReplicationPublisherServers', '0', 0);
+END CATCH;
+
+-- Distributor metadata in msdb (populated only when this instance hosts a distributor)
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''DistributionPublishers'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM msdb.dbo.MSdistpublishers');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('DistributionPublishers', '0', 0);
+END CATCH;
+
+BEGIN TRY
+    exec('INSERT INTO #FeaturesEnabled
+          SELECT ''DistributionDatabases'',
+                 CONVERT(NVARCHAR(255), COUNT(*)),
+                 COUNT(*)
+          FROM msdb.dbo.MSdistributiondbs');
+END TRY
+BEGIN CATCH
+    INSERT INTO #FeaturesEnabled VALUES ('DistributionDatabases', '0', 0);
 END CATCH;
 
 SELECT
