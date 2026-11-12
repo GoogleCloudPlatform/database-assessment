@@ -388,7 +388,21 @@ function Invoke-DmaEntraSql {
 }
 
 function sqlcmd {
-    $SqlcmdArgs = $args
+    $SqlcmdArgs = @(
+        foreach ($arg in $args) {
+            $argStr = [string]$arg
+            if ($argStr -match '^(-[A-Za-z]):$') {
+                $Matches[1]
+            }
+            elseif ($argStr -match '^(-[A-Za-z]):(.+)$') {
+                $Matches[1]
+                $Matches[2]
+            }
+            else {
+                $arg
+            }
+        }
+    )
 
     if (-not $script:UseEntraOdbcForSqlcmd) {
         & $script:NativeSqlcmdPath @SqlcmdArgs
@@ -867,25 +881,36 @@ else {
     }
     WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
     Write-DmaBootstrapLog -Message "Connecting to SQL Server '$serverName' to retrieve initial metadata (sql\foldername.sql)..."
-    $rawFolderOut = @(sqlcmd -S $serverName -i sql\foldername.sql -d master -C -l 30 -W -m 1 -u -w 32768 -v database=$databaseNameFilter @sqlcmdAuthArgs 2>&1)
-    $folderExitCode = $LASTEXITCODE
-    $folderObj = @($rawFolderOut | ForEach-Object { [string]$_ } | findstr /v /c:"---")
-    Write-DmaBootstrapLog -Message "sql\foldername.sql completed (ExitCode=$folderExitCode, Lines=$($rawFolderOut.Count)): $($rawFolderOut -join ' | ')"
-
     $bootstrapConnectionFailed = $false
-    if ([string]::IsNullorEmpty($folderObj) -or ($folderObj.Count -lt 2)) {
-        $bootstrapConnectionFailed = $true
-    }
-    elseif (($rawFolderOut -join "`n") -match '(Sqlcmd:\s*Error:|Msg\s+\d+,\s*Level\s+\d+,\s*State\s+\d+|Login failed for user|HResult\s+0x)') {
-        $bootstrapConnectionFailed = $true
-    }
+    $rawFolderOut = @()
+    $folderObj = @()
+    $values = @()
 
-    if (-not $bootstrapConnectionFailed) {
-        $splitobj = $folderObj[1].Split('')
-        $values = @($splitobj | ForEach-Object { if ($_.Trim() -ne '') { $_ } })
-        if ($values.Count -lt 6) {
+    try {
+        $folderCmdArgs = @('-S', $serverName, '-i', 'sql\foldername.sql', '-d', 'master', '-C', '-l', '30', '-W', '-m', '1', '-u', '-w', '32768', '-v', "database=$databaseNameFilter") + $sqlcmdAuthArgs
+        $rawFolderOut = @(sqlcmd @folderCmdArgs 2>&1)
+        $folderExitCode = $LASTEXITCODE
+        $folderObj = @($rawFolderOut | ForEach-Object { [string]$_ } | Where-Object { $_ -and ($_ -notmatch '^---') })
+        Write-DmaBootstrapLog -Message "sql\foldername.sql completed (ExitCode=$folderExitCode, Lines=$($rawFolderOut.Count)): $($rawFolderOut -join ' | ')"
+
+        if ([string]::IsNullorEmpty($folderObj) -or ($folderObj.Count -lt 2)) {
             $bootstrapConnectionFailed = $true
         }
+        elseif (($rawFolderOut -join "`n") -match '(Sqlcmd:\s*Error:|Msg\s+\d+,\s*Level\s+\d+,\s*State\s+\d+|Login failed for user|HResult\s+0x)') {
+            $bootstrapConnectionFailed = $true
+        }
+
+        if (-not $bootstrapConnectionFailed) {
+            $splitobj = $folderObj[1].Split('')
+            $values = @($splitobj | ForEach-Object { if ($_.Trim() -ne '') { $_ } })
+            if ($values.Count -lt 6) {
+                $bootstrapConnectionFailed = $true
+            }
+        }
+    }
+    catch {
+        $bootstrapConnectionFailed = $true
+        $rawFolderOut += $_.Exception.Message
     }
 
     if ($bootstrapConnectionFailed) {
@@ -901,17 +926,25 @@ else {
         Exit 1
     }
 
-    $validSQLInstanceVersionCheckArray = @(sqlcmd -S $serverName -i sql\checkValidInstanceVersion.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 @sqlcmdAuthArgs)
+    $versionCmdArgs = @('-S', $serverName, '-i', 'sql\checkValidInstanceVersion.sql', '-d', 'master', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768') + $sqlcmdAuthArgs
+    $validSQLInstanceVersionCheckArray = @(sqlcmd @versionCmdArgs)
     Write-DmaBootstrapLog -Message "sql\checkValidInstanceVersion.sql returned: $($validSQLInstanceVersionCheckArray -join ' | ')"
-    $dbNameArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=1 @sqlcmdAuthArgs)
+
+    $dbListCmdArgs = @('-S', $serverName, '-i', 'sql\getDBList.sql', '-d', 'master', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768', '-v', "database=$databaseNameFilter", '-v', 'hasdbaccess=1') + $sqlcmdAuthArgs
+    $dbNameArray = @(sqlcmd @dbListCmdArgs)
     Write-DmaBootstrapLog -Message "sql\getDBList.sql (hasdbaccess=1) returned $($dbNameArray.Count) accessible database(s): $($dbNameArray -join ', ')"
-    $dbNameNoAccessArray = @(sqlcmd -S $serverName -i sql\getDBList.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter -v hasdbaccess=0 @sqlcmdAuthArgs)
+
+    $dbListNoAccessCmdArgs = @('-S', $serverName, '-i', 'sql\getDBList.sql', '-d', 'master', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768', '-v', "database=$databaseNameFilter", '-v', 'hasdbaccess=0') + $sqlcmdAuthArgs
+    $dbNameNoAccessArray = @(sqlcmd @dbListNoAccessCmdArgs)
     Write-DmaBootstrapLog -Message "sql\getDBList.sql (hasdbaccess=0) returned $($dbNameNoAccessArray.Count) inaccessible database(s): $($dbNameNoAccessArray -join ', ')"
-    $dmaSourceIdObj = @(sqlcmd -S $serverName -i sql\getDmaSourceId.sql -d master -C -l 30 -W -m 1 -u -h-1 -w 32768 @sqlcmdAuthArgs)
+
+    $dmaSourceIdCmdArgs = @('-S', $serverName, '-i', 'sql\getDmaSourceId.sql', '-d', 'master', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768') + $sqlcmdAuthArgs
+    $dmaSourceIdObj = @(sqlcmd @dmaSourceIdCmdArgs)
     Write-DmaBootstrapLog -Message "sql\getDmaSourceId.sql returned: $($dmaSourceIdObj -join ' | ')"
 
     if ([string]$database -ne "all") {
-        $validDBObj = sqlcmd -S $serverName -i sql\checkValidDatabase.sql -C -l 30 -W -m 1 -u -h-1 -w 32768 -v database=$databaseNameFilter @sqlcmdAuthArgs | findstr /v /c:"-"
+        $validDBCmdArgs = @('-S', $serverName, '-i', 'sql\checkValidDatabase.sql', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768', '-v', "database=$databaseNameFilter") + $sqlcmdAuthArgs
+        $validDBObj = sqlcmd @validDBCmdArgs | findstr /v /c:"-"
         if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
             Write-DmaBootstrapLog -Level "ERROR" -Message "SQL Server Database '$database' not valid or inaccessible on $serverName."
             Write-Output " "
@@ -919,6 +952,12 @@ else {
             Exit 1
         }
     }
+}
+
+if ($null -eq $values -or $values.Count -lt 6) {
+    Write-DmaBootstrapLog -Level "ERROR" -Message "Metadata values were not populated from sql\foldername.sql. Exiting Script."
+    Write-Output "Connection Error to SQL Server $serverName.  Exiting Script...."
+    Exit 1
 }
 
 $dbversion = $values[0].Replace('.', '')
