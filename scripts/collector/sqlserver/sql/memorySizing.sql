@@ -28,45 +28,91 @@ SELECT @PKEY = N'$(pkey)';
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
-WITH DiskUserData AS (
+/* Azure SQL Database (EngineEdition 5): sys.master_files, sys.dm_os_sys_memory and sys.dm_os_process_memory are not
+   exposed, and sys.dm_os_sys_info.physical_memory_kb is the shared node, not this database. Report the SLO memory cap
+   (sys.dm_user_db_resource_governance.max_db_memory, KB) as host RAM, the engine's committed target / committed memory
+   as max server memory / working set, and the one collected database's own data size and buffer-pool footprint.
+   Verified against a live Azure SQL Database (EngineEdition 5). */
+IF CONVERT(INT, SERVERPROPERTY('EngineEdition')) = 5
+BEGIN
+    WITH DiskUserData AS (
+        SELECT
+            ISNULL(SUM(CAST(size AS BIGINT) * 8 / 1024), 0) AS user_data_on_disk_mb
+        FROM sys.database_files
+        WHERE type_desc = 'ROWS'
+    ),
+    BufferPoolUserData AS (
+        SELECT
+            ISNULL(COUNT_BIG(*) * 8 / 1024, 0) AS buffer_pool_user_data_mb
+        FROM sys.dm_os_buffer_descriptors
+        WHERE database_id = DB_ID()
+    ),
+    Governance AS (
+        SELECT TOP 1 max_db_memory / 1024 AS slo_memory_mb
+        FROM sys.dm_user_db_resource_governance
+    )
     SELECT
-        ISNULL(SUM(CAST(size AS BIGINT) * 8 / 1024), 0) AS user_data_on_disk_mb
-    FROM sys.master_files
-    WHERE type_desc = 'ROWS' AND database_id > 4
-),
-BufferPoolUserData AS (
+        '"' + @PKEY + '"' AS PKEY,
+        '"' + ISNULL(CONVERT(NVARCHAR(30), g.slo_memory_mb), CONVERT(NVARCHAR(30), si.committed_target_kb / 1024)) + '"' AS host_ram_mb,
+        '"' + CONVERT(NVARCHAR(30), CASE WHEN si.committed_target_kb > si.committed_kb THEN (si.committed_target_kb - si.committed_kb) / 1024 ELSE 0 END) + '"' AS available_host_ram_mb,
+        '"' + CONVERT(NVARCHAR(30), si.committed_target_kb / 1024) + '"' AS max_server_memory_mb,
+        '""' AS min_server_memory_mb,
+        '"' + CONVERT(NVARCHAR(30), si.committed_kb / 1024) + '"' AS sql_working_set_mb,
+        '"AZURE_MANAGED"' AS memory_model,
+        '"' + CONVERT(NVARCHAR(30), d.user_data_on_disk_mb) + '"' AS user_data_on_disk_mb,
+        '"' + CONVERT(NVARCHAR(30), b.buffer_pool_user_data_mb) + '"' AS buffer_pool_user_data_mb,
+        '"0"' AS lifetime_pressure_events,
+        '"0"' AS internal_sql_pressure_events,
+        '"0"' AS external_os_pressure_events,
+        '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
+        '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
+    FROM sys.dm_os_sys_info si
+    CROSS JOIN DiskUserData d
+    CROSS JOIN BufferPoolUserData b
+    LEFT JOIN Governance g ON 1 = 1;
+END
+ELSE
+BEGIN
+    WITH DiskUserData AS (
+        SELECT
+            ISNULL(SUM(CAST(size AS BIGINT) * 8 / 1024), 0) AS user_data_on_disk_mb
+        FROM sys.master_files
+        WHERE type_desc = 'ROWS' AND database_id > 4
+    ),
+    BufferPoolUserData AS (
+        SELECT
+            ISNULL(COUNT_BIG(*) * 8 / 1024, 0) AS buffer_pool_user_data_mb
+        FROM sys.dm_os_buffer_descriptors
+        WHERE database_id > 4
+    ),
+    RingBufferPressure AS (
+        SELECT
+            ISNULL(SUM(CASE WHEN (CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsProcess)[1]', 'INT') & 6) <> 0 OR (CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsSystem)[1]', 'INT') & 6) <> 0 THEN 1 ELSE 0 END), 0) AS total_pressure_events,
+            ISNULL(SUM(CASE WHEN (CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsProcess)[1]', 'INT') & 6) <> 0 THEN 1 ELSE 0 END), 0) AS internal_sql_pressure_events,
+            ISNULL(SUM(CASE WHEN (CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsSystem)[1]', 'INT') & 6) <> 0 THEN 1 ELSE 0 END), 0) AS external_os_pressure_events
+        FROM sys.dm_os_ring_buffers r
+        WHERE r.ring_buffer_type = 'RING_BUFFER_RESOURCE_MONITOR'
+    )
     SELECT
-        ISNULL(COUNT_BIG(*) * 8 / 1024, 0) AS buffer_pool_user_data_mb
-    FROM sys.dm_os_buffer_descriptors
-    WHERE database_id > 4
-),
-RingBufferPressure AS (
-    SELECT
-        COUNT(*) AS total_pressure_events,
-        ISNULL(SUM(CASE WHEN CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsProcess)[1]', 'INT') = 1 THEN 1 ELSE 0 END), 0) AS internal_sql_pressure_events,
-        ISNULL(SUM(CASE WHEN CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsSystem)[1]', 'INT') = 1 THEN 1 ELSE 0 END), 0) AS external_os_pressure_events
-    FROM sys.dm_os_ring_buffers r
-    WHERE r.ring_buffer_type = 'RING_BUFFER_RESOURCE_MONITOR'
-)
-SELECT
-    '"' + @PKEY + '"' AS PKEY,
-    '"' + CONVERT(NVARCHAR(30), sm.total_physical_memory_kb / 1024) + '"' AS host_ram_mb,
-    '"' + CONVERT(NVARCHAR(30), sm.available_physical_memory_kb / 1024) + '"' AS available_host_ram_mb,
-    '"' + CONVERT(NVARCHAR(30), cfg_max.value_in_use) + '"' AS max_server_memory_mb,
-    '"' + CONVERT(NVARCHAR(30), cfg_min.value_in_use) + '"' AS min_server_memory_mb,
-    '"' + CONVERT(NVARCHAR(30), pm.physical_memory_in_use_kb / 1024) + '"' AS sql_working_set_mb,
-    '"' + CASE WHEN pm.locked_page_allocations_kb > 0 THEN 'LOCK_PAGES' ELSE 'CONVENTIONAL' END + '"' AS memory_model,
-    '"' + CONVERT(NVARCHAR(30), d.user_data_on_disk_mb) + '"' AS user_data_on_disk_mb,
-    '"' + CONVERT(NVARCHAR(30), b.buffer_pool_user_data_mb) + '"' AS buffer_pool_user_data_mb,
-    '"' + CONVERT(NVARCHAR(20), rb.total_pressure_events) + '"' AS lifetime_pressure_events,
-    '"' + CONVERT(NVARCHAR(20), rb.internal_sql_pressure_events) + '"' AS internal_sql_pressure_events,
-    '"' + CONVERT(NVARCHAR(20), rb.external_os_pressure_events) + '"' AS external_os_pressure_events,
-    '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
-    '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
-FROM sys.dm_os_sys_memory sm
-CROSS JOIN sys.dm_os_process_memory pm
-CROSS JOIN (SELECT value_in_use FROM sys.configurations WHERE name = 'max server memory (MB)') cfg_max
-CROSS JOIN (SELECT value_in_use FROM sys.configurations WHERE name = 'min server memory (MB)') cfg_min
-CROSS JOIN DiskUserData d
-CROSS JOIN BufferPoolUserData b
-CROSS JOIN RingBufferPressure rb;
+        '"' + @PKEY + '"' AS PKEY,
+        '"' + CONVERT(NVARCHAR(30), sm.total_physical_memory_kb / 1024) + '"' AS host_ram_mb,
+        '"' + CONVERT(NVARCHAR(30), sm.available_physical_memory_kb / 1024) + '"' AS available_host_ram_mb,
+        '"' + CONVERT(NVARCHAR(30), cfg_max.value_in_use) + '"' AS max_server_memory_mb,
+        '"' + CONVERT(NVARCHAR(30), cfg_min.value_in_use) + '"' AS min_server_memory_mb,
+        '"' + CONVERT(NVARCHAR(30), pm.physical_memory_in_use_kb / 1024) + '"' AS sql_working_set_mb,
+        '"' + CASE WHEN pm.locked_page_allocations_kb > 0 THEN 'LOCK_PAGES' ELSE 'CONVENTIONAL' END + '"' AS memory_model,
+        '"' + CONVERT(NVARCHAR(30), d.user_data_on_disk_mb) + '"' AS user_data_on_disk_mb,
+        '"' + CONVERT(NVARCHAR(30), b.buffer_pool_user_data_mb) + '"' AS buffer_pool_user_data_mb,
+        '"' + CONVERT(NVARCHAR(20), rb.total_pressure_events) + '"' AS lifetime_pressure_events,
+        '"' + CONVERT(NVARCHAR(20), rb.internal_sql_pressure_events) + '"' AS internal_sql_pressure_events,
+        '"' + CONVERT(NVARCHAR(20), rb.external_os_pressure_events) + '"' AS external_os_pressure_events,
+        '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
+        '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
+    FROM sys.dm_os_sys_memory sm
+    CROSS JOIN sys.dm_os_process_memory pm
+    CROSS JOIN (SELECT value_in_use FROM sys.configurations WHERE name = 'max server memory (MB)') cfg_max
+    CROSS JOIN (SELECT value_in_use FROM sys.configurations WHERE name = 'min server memory (MB)') cfg_min
+    CROSS JOIN DiskUserData d
+    CROSS JOIN BufferPoolUserData b
+    CROSS JOIN RingBufferPressure rb;
+END

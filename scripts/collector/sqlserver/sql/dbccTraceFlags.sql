@@ -36,7 +36,9 @@ CREATE TABLE #dbccTraceTable (
     [session] int
 );
 
-INSERT INTO #dbccTraceTable exec('dbcc tracestatus()');
+/* Trace flags cannot be set or read on Azure SQL Database (EngineEdition 5); emit no rows instead of failing the step. */
+IF CONVERT(INT, SERVERPROPERTY('EngineEdition')) <> 5
+    INSERT INTO #dbccTraceTable exec('dbcc tracestatus()');
 
 SELECT
     '"' + @PKEY + '"' as PKEY,

@@ -228,14 +228,15 @@ To Execute the Collection:
         Example (default port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
         Example (custom port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -port 1437 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -manualUniqueId [string]
 
-      For Azure SQL Database (Ignore Perfmon Collection):
-        runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [collection user name] -collectionUserPass [collection user password] -ignorePerfmon true -manualUniqueId [string]
+      For Azure SQL Database (one database per run):
+        runAssessment.bat -serverName [logical server].database.windows.net -database [database name] -azureSqlDatabase -collectionUserName [collection user name] -collectionUserPass [collection user password] -manualUniqueId [string]
 
-        Example (default port): runAssessment.bat -serverName MS-SERVER1 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true -manualUniqueId [string]
-        Example (custom port): runAssessment.bat -serverName MS-SERVER1 -port 1435 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true -manualUniqueId [string]
-        Example (default port / all databases): runAssessment.bat -serverName MS-SERVER1 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true -manualUniqueId [string]
-        Example (custom port / all databases): runAssessment.bat -serverName MS-SERVER1 -port 1435 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon true -manualUniqueId [string]
+        Example (SQL authentication): runAssessment.bat -serverName myserver.database.windows.net -database AdventureWorks -azureSqlDatabase -collectionUserName dmauser -collectionUserPass password123 -manualUniqueId myAzureDb1
+        Example (Entra ID, one MFA prompt): runAssessment.bat -serverName myserver.database.windows.net -database AdventureWorks -azureSqlDatabase -useEntraIDAuthentication -entraIDUserName user@domain.com -manualUniqueId myAzureDb1
 
+        -azureSqlDatabase declares the platform and makes -database mandatory ("all" is rejected). The collector opens exactly
+        two persistent connections (master and the target database) and routes every query through one of them; the login
+        must have access to both. WMI, msdb, and tempdb steps are skipped (msdb and tempdb files are written header-only; `opdb__DbMachineSpecs__*.csv` is populated via `sql/machineSpecsTsql.sql`, and Perfmon writes zero-value placeholder rows).
 
 
         Notes:
@@ -274,7 +275,7 @@ In addition to the standard schema, configuration, and performance counter datas
 | `opdb__DeprecatedFeatures__*.csv` | `sql/deprecatedFeatures.sql` | Active deprecated feature counters (`SQLServer:Deprecated Features`) |
 | `opdb__SqlAgentJobs__*.csv` | `sql/sqlAgentJobs.sql` | SQL Server Agent job steps and migration incompatibility classification |
 | `opdb__PostgresMigrationIssues__*.csv` | `sql/tsqlPostgresDeepScanner.sql` | Per-database T-SQL procedural code scan for PostgreSQL migration blockers |
-| `opdb__DbMachineSpecs__*.csv` | `sql/machineSpecsTsql.sql` | Hardware CPU and OS memory specifications queried via T-SQL (`sys.dm_os_sys_info`) |
+| `opdb__DbMachineSpecs__*.csv` | `sql/machineSpecsTsql.sql` | Hardware CPU and OS memory specifications queried via T-SQL (`sys.dm_os_sys_info` / `sys.dm_user_db_resource_governance`) |
 | `opdb__AzureDbResourceStats__*.csv` | `sql/azureDbResourceStats.sql` | Azure SQL Database recent resource stats (`sys.dm_db_resource_stats`, Azure only) |
 | `opdb__AzureResourceStats__*.csv` | `sql/azureResourceStats.sql` | Azure SQL master historical resource stats (`sys.resource_stats`, Azure only) |
 | `opdb__AzureResourceGovernance__*.csv` | `sql/azureResourceGovernance.sql` | Azure SQL resource governance limits (`sys.dm_user_db_resource_governance`, Azure only) |

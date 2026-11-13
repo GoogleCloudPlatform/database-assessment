@@ -434,10 +434,10 @@ def test_sql_hardening_and_false_positive_guards(instance_review_content: str) -
 
     azure_db_res = _read_sql_file("azureDbResourceStats.sql")
     assert "dtu_limit" in azure_db_res
-    assert "xtp_storage_percent" in azure_db_res
+    assert "used_storage_mb" in azure_db_res
 
     azure_gov = _read_sql_file("azureResourceGovernance.sql")
-    assert "logical_cpus" in azure_gov
+    assert "cpu_limit" in azure_gov
     assert "primary_group_max_io" in azure_gov
     assert "primary_max_log_rate" in azure_gov
 
@@ -476,3 +476,87 @@ def test_version_consistency_across_collector_and_masker_scripts(instance_review
         script_path = REPO_ROOT / "scripts" / "collector" / db_engine / "collect-data.sh"
         script_content = script_path.read_text(encoding="utf-8")
         assert f'dma_version="{expected_version}"' in script_content, f"Version mismatch in {script_path}"
+
+
+def test_azure_sql_database_mode_two_routed_connections(instance_review_content: str) -> None:
+    """Verify the -azureSqlDatabase mode: declared platform, one named database, two persistent connections, routed steps."""
+    assert "[switch]$azureSqlDatabase" in instance_review_content
+    assert "-azureSqlDatabase requires -database [database name]" in instance_review_content
+    assert "$database -match '^(master|msdb|tempdb|model)$'" in instance_review_content
+
+    for name in (
+        "New-DmaRoutedSqlConnection",
+        "Initialize-DmaAzureSqlDatabaseConnections",
+        "Resolve-DmaRoutedConnection",
+        "Invoke-DmaRoutedSql",
+        "Close-DmaRoutedConnections",
+    ):
+        assert f"function {name}" in instance_review_content
+
+    assert "$script:DmaRoutedConnections = @{ master = $null; target = $null }" in instance_review_content
+    assert "System.Data.SqlClient.SqlConnection" in instance_review_content
+    routed_region = instance_review_content.split("#region Azure SQL Database routed connections")[1].split(
+        "#endregion", maxsplit=1
+    )[0]
+    assert "ChangeDatabase" not in routed_region
+    assert (
+        "if (-not ($script:UseEntraOdbcForSqlcmd -or $script:UseAzureSqlDatabaseConnections))"
+        in instance_review_content
+    )
+    assert "function Get-DmaEntraOdbcConnectionString" in instance_review_content
+    assert instance_review_content.count("Get-DmaEntraOdbcConnectionString -ServerInstance") == 2
+    assert "DmaAzureAccessToken" not in instance_review_content
+    assert "System.Data.Odbc.OdbcDataAdapter($command)" in instance_review_content
+    assert (
+        "##MS_DefinitionReader##, ##MS_SecurityDefinitionReader## and ##MS_ServerStateReader##"
+        in instance_review_content
+    )
+    assert (
+        "-azureSqlDatabase was specified but $ServerInstance reports $label, not Azure SQL Database (EngineEdition 5)"
+        in instance_review_content
+    )
+    assert "Skipping SQL Agent Jobs Info...msdb does not exist on Azure SQL Database" in instance_review_content
+    assert '$telemetryDb = if ($azureSqlDatabase) { $databaseNameFilter } else { "master" }' in instance_review_content
+    for step in (
+        "CpuUsage",
+        "MemoryUsage",
+        "MemorySizing",
+        "MemoryClerks",
+        "BatchFootprint",
+        "WaitsStats",
+        "QueryOptimizerInfo",
+        "FileIoLatency",
+    ):
+        assert re.search(
+            rf'Invoke-DmaSqlStep -StepName "{step}" [^\n]*-DatabaseName \$telemetryDb', instance_review_content
+        )
+    assert re.search(
+        r'Invoke-DmaSqlStep -StepName "AzureResourceStats" [^\n]*-DatabaseName "master" [^\n]*-SqlcmdVars \$azureSqlVars',
+        instance_review_content,
+    )
+    assert "$dbNameArray = @($database)" in instance_review_content
+    assert re.search(
+        r'Invoke-DmaSqlStep -StepName "MachineSpecsTsql" [^\n]*-DatabaseName \$telemetryDb',
+        instance_review_content,
+    )
+
+    assert "IF CONVERT(INT, SERVERPROPERTY('EngineEdition')) = 5" in _read_sql_file("fileIoLatency.sql")
+    assert "sys.database_files AS mf ON vfs.file_id = mf.file_id" in _read_sql_file("fileIoLatency.sql")
+    assert "IF CONVERT(INT, SERVERPROPERTY('EngineEdition')) = 5" in _read_sql_file("memorySizing.sql")
+    assert "IF CONVERT(INT, SERVERPROPERTY('EngineEdition')) <> 5" in _read_sql_file("dbccTraceFlags.sql")
+    assert "WHERE (@DBNAME IN (N''all'', N''master'', N'''') OR database_name = @DBNAME)" in _read_sql_file(
+        "azureResourceStats.sql"
+    )
+    assert "AND DB_NAME() <> 'master'" in _read_sql_file("getDmaSourceId.sql")
+    assert "used_storage_mb" in _read_sql_file("azureDbResourceStats.sql")
+    assert "max_db_memory / 1024" in _read_sql_file("azureResourceGovernance.sql")
+    assert "sys.dm_user_db_resource_governance AS rg ON rg.database_id = DB_ID()" in _read_sql_file(
+        "machineSpecsTsql.sql"
+    )
+    for name in ("componentsInstalled.sql", "instanceErrorLog.sql"):
+        assert not re.search(r"(?i)EXEC\s+master\.(sys|dbo)\.xp_", _read_sql_file(name))
+
+    bat = (SQLSERVER_DIR / "runAssessment.bat").read_text(encoding="utf-8")
+    assert 'if /i "%1" == "-azureSqlDatabase" set "azureSqlDbSwitch=-azureSqlDatabase"' in bat
+    assert bat.count("CALL %command% %azureSqlDbSwitch%") == 2
+    assert bat.count("CALL %command% -collectVMSpecs %azureSqlDbSwitch%") == 2

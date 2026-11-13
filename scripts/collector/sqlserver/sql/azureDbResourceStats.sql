@@ -30,6 +30,8 @@ SELECT @CLOUDTYPE = 'NONE';
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE';
 
+/* Column names verified against a live Azure SQL Database (EngineEdition 5): sys.dm_db_resource_stats exposes cpu_limit
+   (vCore) / dtu_limit and used_storage_mb; the CSV header keeps the historical current_limit / current_storage_usage_db names. */
 IF @CLOUDTYPE = 'AZURE' AND OBJECT_ID('sys.dm_db_resource_stats') IS NOT NULL
 BEGIN
     EXEC sys.sp_executesql
@@ -41,8 +43,8 @@ BEGIN
             ''"'' + CONVERT(NVARCHAR(MAX), avg_log_write_percent) + ''"'' AS avg_log_write_percent,
             ''"'' + CONVERT(NVARCHAR(MAX), max_worker_percent) + ''"'' AS max_worker_percent,
             ''"'' + CONVERT(NVARCHAR(MAX), max_session_percent) + ''"'' AS max_session_percent,
-            ''"'' + CONVERT(NVARCHAR(MAX), dtu_limit) + ''"'' AS current_limit,
-            ''"'' + CONVERT(NVARCHAR(MAX), xtp_storage_percent) + ''"'' AS current_storage_usage_db,
+            ''"'' + ISNULL(CONVERT(NVARCHAR(MAX), cpu_limit), ISNULL(CONVERT(NVARCHAR(MAX), dtu_limit), N'''')) + ''"'' AS current_limit,
+            ''"'' + ISNULL(CONVERT(NVARCHAR(MAX), used_storage_mb), N'''') + ''"'' AS current_storage_usage_db,
             ''"'' + @DMA_SOURCE_ID + ''"'' AS dma_source_id,
             ''"'' + @DMA_MANUAL_ID + ''"'' AS dma_manual_id
         FROM sys.dm_db_resource_stats
