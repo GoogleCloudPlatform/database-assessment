@@ -87,9 +87,9 @@ BEGIN
     ),
     RingBufferPressure AS (
         SELECT
-            COUNT(*) AS total_pressure_events,
-            ISNULL(SUM(CASE WHEN CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsProcess)[1]', 'INT') = 1 THEN 1 ELSE 0 END), 0) AS internal_sql_pressure_events,
-            ISNULL(SUM(CASE WHEN CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsSystem)[1]', 'INT') = 1 THEN 1 ELSE 0 END), 0) AS external_os_pressure_events
+            ISNULL(SUM(CASE WHEN (CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsProcess)[1]', 'INT') & 6) <> 0 OR (CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsSystem)[1]', 'INT') & 6) <> 0 THEN 1 ELSE 0 END), 0) AS total_pressure_events,
+            ISNULL(SUM(CASE WHEN (CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsProcess)[1]', 'INT') & 6) <> 0 THEN 1 ELSE 0 END), 0) AS internal_sql_pressure_events,
+            ISNULL(SUM(CASE WHEN (CAST(r.record AS XML).value('(//Record/ResourceMonitor/IndicatorsSystem)[1]', 'INT') & 6) <> 0 THEN 1 ELSE 0 END), 0) AS external_os_pressure_events
         FROM sys.dm_os_ring_buffers r
         WHERE r.ring_buffer_type = 'RING_BUFFER_RESOURCE_MONITOR'
     )

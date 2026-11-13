@@ -270,7 +270,7 @@ BEGIN CATCH
 END CATCH
 
 --Database scoped credentials (SQL Server 2016 (13.x) and later)
-IF @PRODUCT_VERSION >= 13
+IF @PRODUCT_VERSION >= 13 OR CONVERT(INT, SERVERPROPERTY('EngineEdition')) = 5
 BEGIN
     BEGIN TRY
         exec('INSERT INTO #FeaturesEnabledDbLevel
@@ -778,7 +778,7 @@ BEGIN
 END
 
 --Stretch Database per database (SQL Server 2016 (13.x) and later)
-IF @PRODUCT_VERSION >= 13
+IF @PRODUCT_VERSION >= 13 OR CONVERT(INT, SERVERPROPERTY('EngineEdition')) = 5
 BEGIN
     BEGIN TRY
         exec('INSERT INTO #FeaturesEnabledDbLevel
@@ -795,7 +795,7 @@ BEGIN
 END
 
 --Accelerated Database Recovery (SQL Server 2019 (15.x) and later)
-IF @PRODUCT_VERSION >= 15
+IF @PRODUCT_VERSION >= 15 OR CONVERT(INT, SERVERPROPERTY('EngineEdition')) = 5
 BEGIN
     BEGIN TRY
         exec('INSERT INTO #FeaturesEnabledDbLevel

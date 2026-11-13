@@ -236,7 +236,7 @@ To Execute the Collection:
 
         -azureSqlDatabase declares the platform and makes -database mandatory ("all" is rejected). The collector opens exactly
         two persistent connections (master and the target database) and routes every query through one of them; the login
-        must have access to both. Perfmon, WMI, msdb and tempdb steps are skipped and written header-only.
+        must have access to both. WMI, msdb, and tempdb steps are skipped (msdb and tempdb files are written header-only; `opdb__DbMachineSpecs__*.csv` is populated via `sql/machineSpecsTsql.sql`, and Perfmon writes zero-value placeholder rows).
 
 
         Notes:
@@ -275,7 +275,7 @@ In addition to the standard schema, configuration, and performance counter datas
 | `opdb__DeprecatedFeatures__*.csv` | `sql/deprecatedFeatures.sql` | Active deprecated feature counters (`SQLServer:Deprecated Features`) |
 | `opdb__SqlAgentJobs__*.csv` | `sql/sqlAgentJobs.sql` | SQL Server Agent job steps and migration incompatibility classification |
 | `opdb__PostgresMigrationIssues__*.csv` | `sql/tsqlPostgresDeepScanner.sql` | Per-database T-SQL procedural code scan for PostgreSQL migration blockers |
-| `opdb__DbMachineSpecs__*.csv` | `sql/machineSpecsTsql.sql` | Hardware CPU and OS memory specifications queried via T-SQL (`sys.dm_os_sys_info`) |
+| `opdb__DbMachineSpecs__*.csv` | `sql/machineSpecsTsql.sql` | Hardware CPU and OS memory specifications queried via T-SQL (`sys.dm_os_sys_info` / `sys.dm_user_db_resource_governance`) |
 | `opdb__AzureDbResourceStats__*.csv` | `sql/azureDbResourceStats.sql` | Azure SQL Database recent resource stats (`sys.dm_db_resource_stats`, Azure only) |
 | `opdb__AzureResourceStats__*.csv` | `sql/azureResourceStats.sql` | Azure SQL master historical resource stats (`sys.resource_stats`, Azure only) |
 | `opdb__AzureResourceGovernance__*.csv` | `sql/azureResourceGovernance.sql` | Azure SQL resource governance limits (`sys.dm_user_db_resource_governance`, Azure only) |

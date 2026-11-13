@@ -760,16 +760,19 @@ BEGIN
 END
 
 -- Performance Data Collector Check
-IF EXISTS (SELECT 1 FROM sys.databases WHERE name = 'msdb' AND HAS_DBACCESS('msdb') = 1)
-   AND OBJECT_ID('msdb.dbo.syscollector_collection_sets') IS NOT NULL
+IF CONVERT(INT, SERVERPROPERTY('EngineEdition')) <> 5
+   AND EXISTS (SELECT 1 FROM sys.databases WHERE name = 'msdb' AND HAS_DBACCESS('msdb') = 1)
 BEGIN
     BEGIN TRY
-        exec('INSERT INTO #FeaturesEnabled
-              SELECT ''Performance Data Collector'',
-                     CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
-                     COUNT(*)
-              FROM msdb.dbo.syscollector_collection_sets
-              WHERE is_running = 1');
+        exec('IF OBJECT_ID(''msdb.dbo.syscollector_collection_sets'') IS NOT NULL
+                  INSERT INTO #FeaturesEnabled
+                  SELECT ''Performance Data Collector'',
+                         CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                         COUNT(*)
+                  FROM msdb.dbo.syscollector_collection_sets
+                  WHERE is_running = 1;
+              ELSE
+                  INSERT INTO #FeaturesEnabled VALUES (''Performance Data Collector'', ''0'', 0);');
     END TRY
     BEGIN CATCH
         INSERT INTO #FeaturesEnabled VALUES ('Performance Data Collector', '0', 0);
@@ -1030,13 +1033,22 @@ END CATCH;
 
 -- Support for PFX Certificates and Cryptographic Improvements (Server-Level)
 BEGIN TRY
-    exec('INSERT INTO #FeaturesEnabled
-          SELECT ''UserCertificatesUsed'',
-                 CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
-                 COUNT(*)
-          FROM master.sys.certificates
-          WHERE name NOT LIKE ''##MS_%''
-            AND pvt_key_encryption_type <> ''NA''');
+    IF CONVERT(INT, SERVERPROPERTY('EngineEdition')) = 5
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''UserCertificatesUsed'',
+                     CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                     COUNT(*)
+              FROM sys.certificates
+              WHERE name NOT LIKE ''##MS_%''
+                AND pvt_key_encryption_type <> ''NA''');
+    ELSE
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''UserCertificatesUsed'',
+                     CASE WHEN COUNT(*) > 0 THEN ''1'' ELSE ''0'' END,
+                     COUNT(*)
+              FROM master.sys.certificates
+              WHERE name NOT LIKE ''##MS_%''
+                AND pvt_key_encryption_type <> ''NA''');
 END TRY
 BEGIN CATCH
     INSERT INTO #FeaturesEnabled VALUES ('UserCertificatesUsed', '0', 0);
@@ -1164,12 +1176,20 @@ END CATCH;
 
 -- Startup procedures registered with sp_procoption (master only)
 BEGIN TRY
-    exec('INSERT INTO #FeaturesEnabled
-          SELECT ''StartupProcedures'',
-                 CONVERT(NVARCHAR(255), COUNT(*)),
-                 COUNT(*)
-          FROM master.sys.procedures
-          WHERE is_auto_executed = 1');
+    IF CONVERT(INT, SERVERPROPERTY('EngineEdition')) = 5
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''StartupProcedures'',
+                     CONVERT(NVARCHAR(255), COUNT(*)),
+                     COUNT(*)
+              FROM sys.procedures
+              WHERE is_auto_executed = 1');
+    ELSE
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''StartupProcedures'',
+                     CONVERT(NVARCHAR(255), COUNT(*)),
+                     COUNT(*)
+              FROM master.sys.procedures
+              WHERE is_auto_executed = 1');
 END TRY
 BEGIN CATCH
     INSERT INTO #FeaturesEnabled VALUES ('StartupProcedures', '0', 0);
@@ -1446,23 +1466,38 @@ END CATCH;
 
 -- Encryption key inventory in master and EKM providers
 BEGIN TRY
-    exec('INSERT INTO #FeaturesEnabled
-          SELECT ''SymmetricKeysInMaster'',
-                 CONVERT(NVARCHAR(255), COUNT(*)),
-                 COUNT(*)
-          FROM master.sys.symmetric_keys
-          WHERE name NOT LIKE ''##MS_%''');
+    IF CONVERT(INT, SERVERPROPERTY('EngineEdition')) = 5
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''SymmetricKeysInMaster'',
+                     CONVERT(NVARCHAR(255), COUNT(*)),
+                     COUNT(*)
+              FROM sys.symmetric_keys
+              WHERE name NOT LIKE ''##MS_%''');
+    ELSE
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''SymmetricKeysInMaster'',
+                     CONVERT(NVARCHAR(255), COUNT(*)),
+                     COUNT(*)
+              FROM master.sys.symmetric_keys
+              WHERE name NOT LIKE ''##MS_%''');
 END TRY
 BEGIN CATCH
     INSERT INTO #FeaturesEnabled VALUES ('SymmetricKeysInMaster', '0', 0);
 END CATCH;
 
 BEGIN TRY
-    exec('INSERT INTO #FeaturesEnabled
-          SELECT ''AsymmetricKeysInMaster'',
-                 CONVERT(NVARCHAR(255), COUNT(*)),
-                 COUNT(*)
-          FROM master.sys.asymmetric_keys');
+    IF CONVERT(INT, SERVERPROPERTY('EngineEdition')) = 5
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''AsymmetricKeysInMaster'',
+                     CONVERT(NVARCHAR(255), COUNT(*)),
+                     COUNT(*)
+              FROM sys.asymmetric_keys');
+    ELSE
+        exec('INSERT INTO #FeaturesEnabled
+              SELECT ''AsymmetricKeysInMaster'',
+                     CONVERT(NVARCHAR(255), COUNT(*)),
+                     COUNT(*)
+              FROM master.sys.asymmetric_keys');
 END TRY
 BEGIN CATCH
     INSERT INTO #FeaturesEnabled VALUES ('AsymmetricKeysInMaster', '0', 0);

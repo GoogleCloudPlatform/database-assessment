@@ -29,9 +29,9 @@ IF OBJECT_ID('tempdb..#BlockerPatterns') IS NOT NULL
     DROP TABLE #BlockerPatterns;
 
 CREATE TABLE #BlockerPatterns (
-    Pattern NVARCHAR(100),
-    IncompatibilityType NVARCHAR(50),
-    Severity NVARCHAR(20)
+    Pattern NVARCHAR(100) COLLATE DATABASE_DEFAULT,
+    IncompatibilityType NVARCHAR(50) COLLATE DATABASE_DEFAULT,
+    Severity NVARCHAR(20) COLLATE DATABASE_DEFAULT
 );
 
 INSERT INTO #BlockerPatterns VALUES
@@ -179,38 +179,44 @@ IF OBJECT_ID('tempdb..#DetectedBlockers') IS NOT NULL
     DROP TABLE #DetectedBlockers;
 
 CREATE TABLE #DetectedBlockers (
-    database_name NVARCHAR(255),
-    schema_name NVARCHAR(255),
-    object_name NVARCHAR(255),
-    object_type NVARCHAR(100),
-    incompatibility_type NVARCHAR(100),
-    severity NVARCHAR(20)
+    database_name NVARCHAR(255) COLLATE DATABASE_DEFAULT,
+    schema_name NVARCHAR(255) COLLATE DATABASE_DEFAULT,
+    object_name NVARCHAR(255) COLLATE DATABASE_DEFAULT,
+    object_type NVARCHAR(100) COLLATE DATABASE_DEFAULT,
+    incompatibility_type NVARCHAR(100) COLLATE DATABASE_DEFAULT,
+    severity NVARCHAR(20) COLLATE DATABASE_DEFAULT
 );
 
 -- Part 1: Deep String Pattern Matching (sys.sql_modules)
-INSERT INTO #DetectedBlockers
-SELECT
-    DB_NAME() AS database_name,
-    s.name AS schema_name,
-    o.name AS object_name,
-    o.type_desc AS object_type,
-    p.IncompatibilityType AS incompatibility_type,
-    p.Severity AS severity
-FROM sys.sql_modules m
-INNER JOIN sys.objects o ON m.object_id = o.object_id
-INNER JOIN sys.schemas s ON o.schema_id = s.schema_id
-CROSS JOIN #BlockerPatterns p
-WHERE m.definition LIKE p.Pattern
-  AND o.is_ms_shipped = 0
-  AND (
-      p.IncompatibilityType <> 'EXTENDED_PROC_GENERIC'
-      OR NOT EXISTS (
-          SELECT 1
-          FROM #BlockerPatterns p2
-          WHERE p2.IncompatibilityType LIKE 'EXTENDED_PROC_XP_%'
-            AND m.definition LIKE p2.Pattern
-      )
-  );
+BEGIN TRY
+    INSERT INTO #DetectedBlockers
+    SELECT
+        DB_NAME() AS database_name,
+        s.name AS schema_name,
+        o.name AS object_name,
+        o.type_desc AS object_type,
+        p.IncompatibilityType AS incompatibility_type,
+        p.Severity AS severity
+    FROM sys.sql_modules m
+    INNER JOIN sys.objects o ON m.object_id = o.object_id
+    INNER JOIN sys.schemas s ON o.schema_id = s.schema_id
+    CROSS JOIN #BlockerPatterns p
+    WHERE m.definition IS NOT NULL
+      AND m.definition COLLATE Latin1_General_CI_AS LIKE p.Pattern COLLATE Latin1_General_CI_AS
+      AND o.is_ms_shipped = 0
+      AND (
+          p.IncompatibilityType <> 'EXTENDED_PROC_GENERIC'
+          OR NOT EXISTS (
+              SELECT 1
+              FROM #BlockerPatterns p2
+              WHERE p2.IncompatibilityType LIKE 'EXTENDED_PROC_XP_%'
+                AND m.definition COLLATE Latin1_General_CI_AS LIKE p2.Pattern COLLATE Latin1_General_CI_AS
+          )
+      );
+END TRY
+BEGIN CATCH
+    -- Gracefully skip Part 1 if sys.sql_modules cannot be read
+END CATCH;
 
 -- Part 2: Bulletproof Cross-Database 3-Part & 4-Part Name Dependencies
 BEGIN TRY
@@ -227,8 +233,10 @@ BEGIN TRY
         'CRITICAL' AS severity
     FROM sys.sql_expression_dependencies dep
     INNER JOIN sys.objects o ON dep.referencing_id = o.object_id
-    WHERE dep.referenced_database_name IS NOT NULL
-      AND dep.referenced_database_name <> DB_NAME()
+    WHERE (
+            dep.referenced_server_name IS NOT NULL
+            OR (dep.referenced_database_name IS NOT NULL AND dep.referenced_database_name <> DB_NAME())
+          )
       AND o.is_ms_shipped = 0;
 END TRY
 BEGIN CATCH

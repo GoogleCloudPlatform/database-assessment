@@ -41,7 +41,7 @@ BEGIN
             ''"'' + CONVERT(NVARCHAR(MAX), avg_data_io_percent) + ''"'' AS avg_data_io_percent,
             ''"'' + CONVERT(NVARCHAR(MAX), avg_log_write_percent) + ''"'' AS avg_log_write_percent,
             ''"'' + CONVERT(NVARCHAR(MAX), max_worker_percent) + ''"'' AS max_worker_percent,
-            ''"'' + CONVERT(NVARCHAR(MAX), elastic_pool_dtu_limit) + ''"'' AS elastic_pool_dtu_limit,
+            ''"'' + ISNULL(CONVERT(NVARCHAR(MAX), elastic_pool_dtu_limit), N'''') + ''"'' AS elastic_pool_dtu_limit,
             ''"'' + @DMA_SOURCE_ID + ''"'' AS dma_source_id,
             ''"'' + @DMA_MANUAL_ID + ''"'' AS dma_manual_id
         FROM sys.elastic_pool_resource_stats

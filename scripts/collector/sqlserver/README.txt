@@ -248,8 +248,8 @@ Operating System Versions:
             query through one of them (no USE, no per-query sqlcmd process; sqlcmd.exe is not required in this mode). The collection
             login must have access to both: a login with a user in master holding ##MS_DefinitionReader##, ##MS_SecurityDefinitionReader##
             and ##MS_ServerStateReader##, and a user in the target database with VIEW DATABASE STATE. With -useEntraIDAuthentication the
-            connections use the same interactive Entra ID ODBC sign-in as Azure SQL Managed Instance. Perfmon, WMI host specs, msdb (SQL Agent jobs,
-            backup history) and tempdb steps are skipped on this platform and their files are written header-only; Azure resource
+            connections use the same interactive Entra ID ODBC sign-in as Azure SQL Managed Instance. WMI host specs, msdb (SQL Agent jobs,
+            backup history), and tempdb steps are skipped on this platform (msdb/tempdb files are written header-only; DbMachineSpecs uses machineSpecsTsql.sql and Perfmon writes zero-value placeholder rows); Azure resource
             statistics (sys.dm_db_resource_stats, sys.resource_stats scoped to the database, elastic pool stats and resource governance)
             are collected instead. Windows authentication is not available for Azure SQL Database.
 
