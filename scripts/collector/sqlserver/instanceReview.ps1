@@ -41,6 +41,12 @@
     Specifies if the logging to the database will utilize the current Windows Authenticated User or the supplied username / password for SQL Authentication (default:false)
 .PARAMETER useEntraIDAuthentication
     Specifies if SQL connections will use Microsoft Entra ID authentication through sqlcmd -G -U. This does not use collection username / password parameters.
+.PARAMETER azureSqlDatabase
+    Declares that the target is an Azure SQL Database (single database, not a Managed Instance). Requires -database with the
+    name of that one database. The collector opens exactly two persistent connections (master and the target database), routes
+    every query through one of them, never issues USE, and skips msdb / tempdb / Perfmon / WMI steps that do not exist on this
+    platform. The collection login must have access to both master and the target database. With -useEntraIDAuthentication the
+    connections use the same ODBC ActiveDirectoryInteractive sign-in as the Managed Instance path.
 .PARAMETER outputDirectory
     User specified output directory if desired to be different from the $PSScriptRoot default
 .EXAMPLE
@@ -49,6 +55,12 @@
 
     To use a specific username / password combination for a default instance:
         instanceReview.ps1 -serverName [server name / ip address] -collectionUserName [collection username] -collectionUserPass [collection username password] -ignorePerfmon [true/false] -dmaManualId [string]
+
+    To collect one Azure SQL Database with SQL authentication:
+        instanceReview.ps1 -serverName [logical server].database.windows.net -database [database name] -azureSqlDatabase -collectionUserName [collection username] -collectionUserPass [collection username password] -manualUniqueId [string]
+
+    To collect one Azure SQL Database with Microsoft Entra ID (one MFA prompt):
+        instanceReview.ps1 -serverName [logical server].database.windows.net -database [database name] -azureSqlDatabase -useEntraIDAuthentication -entraIDUserName user@domain.com -manualUniqueId [string]
 
 .NOTES
     https://googlecloudplatform.github.io/database-assessment/
@@ -65,6 +77,7 @@ Param(
     [Parameter(Mandatory = $false)][switch]$collectVMSpecs,
     [Parameter(Mandatory = $false)][switch]$useWindowsAuthentication = $false,
     [Parameter(Mandatory = $false)][switch]$useEntraIDAuthentication = $false,
+    [Parameter(Mandatory = $false)][switch]$azureSqlDatabase = $false,
     [Parameter(Mandatory = $false)][string]$outputDirectory = "default"
 )
 
@@ -102,7 +115,7 @@ try {
         "Script Root:         $PSScriptRoot",
         "PowerShell Version:  $($PSVersionTable.PSVersion)",
         "Windows OS Version:  $([Environment]::OSVersion.VersionString)",
-        "Parameters:          serverName='$serverName' port='$port' database='$database' collectionUserName='$collectionUserName' collectionUserPass='$(if ([string]::IsNullOrEmpty($collectionUserPass)) { '<empty>' } else { '********' })' useWindowsAuthentication=$useWindowsAuthentication useEntraIDAuthentication=$useEntraIDAuthentication entraIDUserName='$entraIDUserName' ignorePerfmon='$ignorePerfmon' collectVMSpecs=$collectVMSpecs manualUniqueId='$manualUniqueId' outputDirectory='$outputDirectory'",
+        "Parameters:          serverName='$serverName' port='$port' database='$database' collectionUserName='$collectionUserName' collectionUserPass='$(if ([string]::IsNullOrEmpty($collectionUserPass)) { '<empty>' } else { '********' })' useWindowsAuthentication=$useWindowsAuthentication useEntraIDAuthentication=$useEntraIDAuthentication entraIDUserName='$entraIDUserName' azureSqlDatabase=$azureSqlDatabase ignorePerfmon='$ignorePerfmon' collectVMSpecs=$collectVMSpecs manualUniqueId='$manualUniqueId' outputDirectory='$outputDirectory'",
         "================================================================================"
     ) -join [Environment]::NewLine
     Set-Content -Path $script:BootstrapLogFile -Encoding utf8 -Value $bootstrapHeader -ErrorAction SilentlyContinue
@@ -140,12 +153,15 @@ trap {
     catch {}
 
     if (-not [string]::IsNullOrEmpty($foldername) -and (Test-Path -Path $foldername)) {
-        Set-Content -Path "$foldername\CRASH_REPORT.txt" -Encoding utf8 -Value $crashReport
+        try {
+            Set-Content -Path "$foldername\CRASH_REPORT.txt" -Encoding utf8 -Value $crashReport -ErrorAction SilentlyContinue
+        }
+        catch {}
         if (-not [string]::IsNullOrEmpty($logFile)) {
             Add-Content -Path "$foldername\$logFile" -Encoding utf8 -Value $crashReport -ErrorAction SilentlyContinue
         }
     }
-    continue
+    exit 1
 }
 
 function Get-DmaAzureSqlAccessToken {
@@ -306,6 +322,17 @@ function Resolve-DmaSqlOdbcDriverName {
     return $script:DmaSqlOdbcDriverName
 }
 
+function Get-DmaEntraOdbcConnectionString {
+    # One definition of the Entra ID interactive ODBC connection, shared by the Managed Instance path (single connection)
+    # and the Azure SQL Database path (master + target connections) so both authenticate exactly the same way.
+    param(
+        [Parameter(Mandatory = $true)][string]$ServerInstance,
+        [Parameter(Mandatory = $true)][string]$DatabaseName
+    )
+    $odbcDriver = Resolve-DmaSqlOdbcDriverName
+    return "Driver={$odbcDriver};Server=$ServerInstance;Database=$DatabaseName;Authentication=ActiveDirectoryInteractive;UID=$script:DmaEntraIDUserName;Encrypt=yes;TrustServerCertificate=yes;Connection Timeout=30;"
+}
+
 function Initialize-DmaEntraOdbcConnection {
     param(
         [Parameter(Mandatory = $true)][string]$ServerInstance,
@@ -326,8 +353,7 @@ function Initialize-DmaEntraOdbcConnection {
         return
     }
 
-    $odbcDriver = Resolve-DmaSqlOdbcDriverName
-    $connectionString = "Driver={$odbcDriver};Server=$ServerInstance;Database=$DatabaseName;Authentication=ActiveDirectoryInteractive;UID=$script:DmaEntraIDUserName;Encrypt=yes;TrustServerCertificate=yes;Connection Timeout=30;"
+    $connectionString = Get-DmaEntraOdbcConnectionString -ServerInstance $ServerInstance -DatabaseName $DatabaseName
     $script:DmaEntraOdbcConnection = [System.Data.Odbc.OdbcConnection]::new($connectionString)
     $script:DmaEntraOdbcConnection.Open()
 }
@@ -387,6 +413,186 @@ function Invoke-DmaEntraSql {
     }
 }
 
+#region Azure SQL Database routed connections (D-001..D-005)
+# Azure SQL Database is one database, not an instance: USE is rejected, msdb / tempdb cannot be opened, and a contained
+# user may exist only inside the target database. This mode therefore opens exactly two persistent SqlClient connections
+# (master + target) at bootstrap and routes every step to one of them by the database name the step already passes.
+# Entra ID: each connection is the same ODBC ActiveDirectoryInteractive connection the Managed Instance path uses
+# (Get-DmaEntraOdbcConnectionString); the driver's in-process token cache makes the second open silent after the first
+# sign-in. SQL authentication uses System.Data.SqlClient.
+
+function New-DmaRoutedSqlConnection {
+    param(
+        [Parameter(Mandatory = $true)][string]$ServerInstance,
+        [Parameter(Mandatory = $true)][string]$DatabaseName
+    )
+
+    if ($useEntraIDAuthentication) {
+        # Identical to the Managed Instance Entra path, pointed at the requested database.
+        $connectionString = Get-DmaEntraOdbcConnectionString -ServerInstance $ServerInstance -DatabaseName $DatabaseName
+        $connection = [System.Data.Odbc.OdbcConnection]::new($connectionString)
+        $connection.Open()
+        return $connection
+    }
+
+    $builder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder
+    $builder["Data Source"] = $ServerInstance
+    $builder["Initial Catalog"] = $DatabaseName
+    $builder["Encrypt"] = $true
+    $builder["TrustServerCertificate"] = $false
+    $builder["Connect Timeout"] = 30
+    $builder["Pooling"] = $false
+    $builder["Application Name"] = "Google DMA SQL Server Collector"
+    $builder["User ID"] = $script:DmaRoutedSqlUser
+    $builder["Password"] = $script:DmaRoutedSqlPassword
+
+    $connection = New-Object System.Data.SqlClient.SqlConnection
+    $connection.ConnectionString = $builder.ConnectionString
+    $connection.Open()
+    return $connection
+}
+
+function Initialize-DmaAzureSqlDatabaseConnections {
+    param(
+        [Parameter(Mandatory = $true)][string]$ServerInstance,
+        [Parameter(Mandatory = $true)][string]$TargetDatabase
+    )
+
+    if ($useEntraIDAuthentication) {
+        Write-Host "Microsoft Entra ID interactive sign-in (same ODBC flow as Managed Instance); the second connection reuses the cached token."
+        Write-DmaBootstrapLog -Message "Azure SQL Database mode: Entra ID via ODBC ActiveDirectoryInteractive for both routed connections."
+    }
+
+    try {
+        $script:DmaRoutedConnections['master'] = New-DmaRoutedSqlConnection -ServerInstance $ServerInstance -DatabaseName 'master'
+        Write-DmaBootstrapLog -Message "Azure SQL Database mode: opened persistent connection #1 to [master] on $ServerInstance."
+    }
+    catch {
+        $reason = $_.Exception.Message
+        Write-DmaBootstrapLog -Level "ERROR" -Message "Azure SQL Database mode: connection to [master] on $ServerInstance failed: $reason"
+        Write-Host ""
+        Write-Host "Azure SQL Database mode requires a connection to the logical server's master database, and it failed:" -ForegroundColor Red
+        Write-Host "    $reason" -ForegroundColor Red
+        Write-Host "The collection login must exist in master (CREATE USER [login] FROM LOGIN / FROM EXTERNAL PROVIDER) and hold" -ForegroundColor Red
+        Write-Host "##MS_DefinitionReader##, ##MS_SecurityDefinitionReader## and ##MS_ServerStateReader##, plus VIEW DATABASE STATE in the target database." -ForegroundColor Red
+        Write-Host "Bootstrap diagnostic log written to: $script:BootstrapLogFile" -ForegroundColor Yellow
+        Exit 1
+    }
+
+    # D-001: the platform is declared by the caller; EngineEdition only confirms it (5 = Azure SQL Database).
+    $engineEdition = -1
+    try {
+        $probe = $script:DmaRoutedConnections['master'].CreateCommand()
+        $probe.CommandText = "SELECT CONVERT(INT, SERVERPROPERTY('EngineEdition'))"
+        $engineEdition = [int]$probe.ExecuteScalar()
+    }
+    catch {
+        Write-DmaBootstrapLog -Level "WARN" -Message "Azure SQL Database mode: EngineEdition probe failed: $($_.Exception.Message)"
+    }
+    Write-DmaBootstrapLog -Message "Azure SQL Database mode: SERVERPROPERTY('EngineEdition') = $engineEdition"
+    if ($engineEdition -ne 5 -and $engineEdition -ne -1) {
+        $label = switch ($engineEdition) { 8 { "Azure SQL Managed Instance" } 6 { "Azure Synapse Analytics" } 11 { "Azure Synapse serverless SQL pool" } default { "SQL Server (EngineEdition $engineEdition)" } }
+        Write-Host ""
+        Write-Host "-azureSqlDatabase was specified but $ServerInstance reports $label, not Azure SQL Database (EngineEdition 5)." -ForegroundColor Red
+        Write-Host "Run without -azureSqlDatabase for that platform." -ForegroundColor Red
+        $script:DmaRoutedConnections['master'].Dispose()
+        Exit 1
+    }
+
+    try {
+        $script:DmaRoutedConnections['target'] = New-DmaRoutedSqlConnection -ServerInstance $ServerInstance -DatabaseName $TargetDatabase
+        Write-DmaBootstrapLog -Message "Azure SQL Database mode: opened persistent connection #2 to [$TargetDatabase] on $ServerInstance."
+    }
+    catch {
+        $reason = $_.Exception.Message
+        Write-DmaBootstrapLog -Level "ERROR" -Message "Azure SQL Database mode: connection to [$TargetDatabase] on $ServerInstance failed: $reason"
+        Write-Host ""
+        Write-Host "Azure SQL Database mode could not open the target database [$TargetDatabase]:" -ForegroundColor Red
+        Write-Host "    $reason" -ForegroundColor Red
+        Write-Host "Check the database name and that the collection login has a user in that database with VIEW DATABASE STATE." -ForegroundColor Red
+        Write-Host "Bootstrap diagnostic log written to: $script:BootstrapLogFile" -ForegroundColor Yellow
+        if ($null -ne $script:DmaRoutedConnections['master']) {
+            $script:DmaRoutedConnections['master'].Dispose()
+        }
+        Exit 1
+    }
+}
+
+function Resolve-DmaRoutedConnection {
+    param([Parameter(Mandatory = $false)][string]$DatabaseName = "master")
+
+    $name = Convert-DmaSqlcmdVariableValue -Value $DatabaseName
+    if ([string]::IsNullOrWhiteSpace($name) -or ($name -ieq 'master')) {
+        return $script:DmaRoutedConnections['master']
+    }
+    if ($name -ieq $script:DmaRoutedTargetDatabase) {
+        return $script:DmaRoutedConnections['target']
+    }
+    throw "Azure SQL Database mode routes queries only to [master] or [$($script:DmaRoutedTargetDatabase)]; database '$name' is not available on this platform."
+}
+
+function Invoke-DmaRoutedSql {
+    param(
+        [Parameter(Mandatory = $false)][string]$DatabaseName = "master",
+        [Parameter(Mandatory = $true)][string]$InputFile,
+        [Parameter(Mandatory = $false)][string]$Separator = " ",
+        [Parameter(Mandatory = $false)][bool]$IncludeHeaders = $true,
+        [Parameter(Mandatory = $false)][hashtable]$Variables = @{}
+    )
+
+    $connection = Resolve-DmaRoutedConnection -DatabaseName $DatabaseName
+    if ($connection.State -ne [System.Data.ConnectionState]::Open) {
+        $connection.Open()
+    }
+
+    $sqlText = Get-Content -Path $InputFile -Raw
+    foreach ($key in $Variables.Keys) {
+        $sqlText = $sqlText.Replace('$(' + $key + ')', [string]$Variables[$key])
+    }
+
+    $command = $connection.CreateCommand()
+    $command.CommandTimeout = 0
+    $command.CommandText = $sqlText
+
+    if ($connection -is [System.Data.Odbc.OdbcConnection]) {
+        $adapter = New-Object System.Data.Odbc.OdbcDataAdapter($command)
+    }
+    else {
+        $adapter = New-Object System.Data.SqlClient.SqlDataAdapter($command)
+    }
+    $dataSet = New-Object System.Data.DataSet
+    [void]$adapter.Fill($dataSet)
+
+    foreach ($table in $dataSet.Tables) {
+        if ($IncludeHeaders) {
+            $headers = foreach ($column in $table.Columns) {
+                $column.ColumnName
+            }
+            $headers -join $Separator
+        }
+        foreach ($row in $table.Rows) {
+            $values = foreach ($column in $table.Columns) {
+                Convert-DmaSqlcmdValue -Value $row[$column.ColumnName]
+            }
+            $values -join $Separator
+        }
+    }
+    $global:LASTEXITCODE = 0
+}
+
+function Close-DmaRoutedConnections {
+    foreach ($key in @($script:DmaRoutedConnections.Keys)) {
+        $conn = $script:DmaRoutedConnections[$key]
+        if ($null -ne $conn) {
+            try { $conn.Close() } catch {}
+            $conn.Dispose()
+            $script:DmaRoutedConnections[$key] = $null
+        }
+    }
+    $script:DmaRoutedSqlPassword = $null
+}
+#endregion
+
 function sqlcmd {
     $SqlcmdArgs = @(
         foreach ($arg in $args) {
@@ -404,7 +610,7 @@ function sqlcmd {
         }
     )
 
-    if (-not $script:UseEntraOdbcForSqlcmd) {
+    if (-not ($script:UseEntraOdbcForSqlcmd -or $script:UseAzureSqlDatabaseConnections)) {
         & $script:NativeSqlcmdPath @SqlcmdArgs
         return
     }
@@ -478,7 +684,14 @@ function sqlcmd {
 
     $global:LASTEXITCODE = 0
     try {
+        if ($script:UseAzureSqlDatabaseConnections) {
+            Invoke-DmaRoutedSql -DatabaseName $databaseName -InputFile $inputFile -Separator $separator -IncludeHeaders $includeHeaders -Variables $variables
+            $global:LASTEXITCODE = 0
+            return
+        }
+
         Invoke-DmaEntraSql -ServerInstance $serverInstance -DatabaseName $databaseName -InputFile $inputFile -Separator $separator -IncludeHeaders $includeHeaders -Variables $variables
+        $global:LASTEXITCODE = 0
     }
     catch {
         $global:LASTEXITCODE = 1
@@ -662,6 +875,10 @@ END CATCH;
                 @{ Key = 'MSDB_BACKUPSET'; Desc = 'SELECT permission on msdb.dbo.backupset is missing (Transaction log backup sizing and Azure/S3 backup URL detection will be incomplete).' }
             )
             foreach ($chk in $requiredChecks) {
+                # On Azure SQL Database msdb and xp_readerrorlog do not exist; those checks are platform facts, not missing grants.
+                if ($azureSqlDatabase -and ($chk.Key -like 'MSDB_*' -or $chk.Key -eq 'PERM_XP_READERRORLOG')) {
+                    continue
+                }
                 if ($auditMap.ContainsKey($chk.Key) -and $auditMap[$chk.Key] -eq '0') {
                     $warnMsg = "[PERM-WARN] $($chk.Key)=0 : $($chk.Desc)"
                     $script:PermissionWarnings += $warnMsg
@@ -694,21 +911,59 @@ if ($useEntraIDAuthentication -and ((-not [string]::IsNullOrEmpty($collectionUse
     Exit 1
 }
 
+if ($azureSqlDatabase) {
+    # D-002: Azure SQL Database is collected one database at a time; the caller must name it.
+    if ([string]::IsNullOrWhiteSpace($database) -or ($database -ieq "all")) {
+        Write-Host "-azureSqlDatabase requires -database [database name]. Azure SQL Database is collected one database at a time; 'all' is not valid." -ForegroundColor Red
+        Exit 1
+    }
+    if ($database -match '^(master|msdb|tempdb|model)$') {
+        Write-Host "-database '$database' is a system database. Name the user database to collect." -ForegroundColor Red
+        Exit 1
+    }
+    if ($useWindowsAuthentication) {
+        Write-Host "-useWindowsAuthentication is not available for Azure SQL Database. Use -collectionUserName/-collectionUserPass or -useEntraIDAuthentication." -ForegroundColor Red
+        Exit 1
+    }
+    if ($collectVMSpecs) {
+        Write-Host "-collectVMSpecs is ignored for Azure SQL Database; there is no host to query." -ForegroundColor Yellow
+        $collectVMSpecs = $false
+    }
+    # Perfmon and WMI never apply to this platform; skip the interactive acknowledgement below.
+    $script:AzureSqlDatabasePerfmonForced = ($ignorePerfmon -ne "true")
+    $ignorePerfmon = "true"
+}
+
 $powerShellVersion = $PSVersionTable.PSVersion.Major
 $sqlcmdCommand = Get-Command sqlcmd.exe -ErrorAction SilentlyContinue
 if ($null -eq $sqlcmdCommand) {
     $sqlcmdCommand = Get-Command sqlcmd -ErrorAction SilentlyContinue
 }
 if ($null -eq $sqlcmdCommand) {
-    Write-DmaBootstrapLog -Level "ERROR" -Message "sqlcmd is required but was not found in PATH."
-    Write-Host "sqlcmd is required but was not found in PATH." -ForegroundColor Red
-    Exit 1
+    if ($azureSqlDatabase) {
+        # Azure SQL Database mode never starts sqlcmd.exe; every query runs over the two SqlClient connections.
+        Write-DmaBootstrapLog -Message "sqlcmd not found in PATH; not required in Azure SQL Database mode."
+        $sqlcmdVersion = "n/a"
+        $script:NativeSqlcmdPath = $null
+    }
+    else {
+        Write-DmaBootstrapLog -Level "ERROR" -Message "sqlcmd is required but was not found in PATH."
+        Write-Host "sqlcmd is required but was not found in PATH." -ForegroundColor Red
+        Exit 1
+    }
 }
-$sqlcmdVersion = $sqlcmdCommand.Version
-$script:NativeSqlcmdPath = $sqlcmdCommand.Source
+else {
+    $sqlcmdVersion = $sqlcmdCommand.Version
+    $script:NativeSqlcmdPath = $sqlcmdCommand.Source
+}
 $script:UseEntraOdbcForSqlcmd = $false
 $script:DmaEntraIDUserName = $null
 $script:DmaEntraOdbcConnection = $null
+$script:UseAzureSqlDatabaseConnections = $false
+$script:DmaRoutedConnections = @{ master = $null; target = $null }
+$script:DmaRoutedTargetDatabase = $null
+$script:DmaRoutedSqlUser = $null
+$script:DmaRoutedSqlPassword = $null
 $foldername = ""
 $totalErrorCount = 0
 Write-DmaBootstrapLog -Message "Resolved sqlcmd executable: $($script:NativeSqlcmdPath) (Version: $sqlcmdVersion)"
@@ -717,7 +972,11 @@ Write-DmaBootstrapLog -Message "Resolved sqlcmd executable: $($script:NativeSqlc
 $windowsOSVersion = [Environment]::OSVersion.Version
 $checkWindowsOSVersion = [Environment]::OSVersion.Version -ge (new-object 'Version' 6,2)
 
-if ($ignorePerfmon -eq "true") {
+if ($azureSqlDatabase) {
+    Write-Host "Azure SQL Database mode: Perfmon and host (WMI) collection do not apply and are skipped; right-sizing uses sys.dm_db_resource_stats, sys.resource_stats and resource governance instead."
+    Write-DmaBootstrapLog -Message "Azure SQL Database mode: ignorePerfmon forced to true (was forced: $($script:AzureSqlDatabasePerfmonForced)); perfmon acknowledgement prompt skipped."
+}
+elseif ($ignorePerfmon -eq "true") {
     Write-Host "#############################################################"
     Write-Host "#                                                           #"
     Write-Host "#  !!!! No Windows Perfmon Data Will be Collected !!!!      #"
@@ -810,16 +1069,42 @@ if ($useEntraIDAuthentication) {
     Write-Host "    Entra ID sign-in user: $entraIDUserName"
     Write-Host "    sqlcmd path: $($sqlcmdCommand.Source)"
     Write-Host "    sqlcmd version: $sqlcmdVersion"
-    Write-Host "    Entra ID collection will use one persistent ODBC connection."
+    if ($azureSqlDatabase) {
+        Write-Host "    Entra ID sign-in uses the same interactive ODBC flow as Managed Instance, for the two Azure SQL Database connections (master + $database)."
+    }
+    else {
+        Write-Host "    Entra ID collection will use one persistent ODBC connection."
+    }
     Write-Host ""
     $script:DmaEntraIDUserName = $entraIDUserName
-    $script:UseEntraOdbcForSqlcmd = $true
+    $script:UseEntraOdbcForSqlcmd = (-not $azureSqlDatabase)
     $sqlcmdAuthArgs = @()
 } else {
     $sqlcmdAuthArgs = @()
 }
 
-if (-not $useEntraIDAuthentication) {
+if ($azureSqlDatabase) {
+    # D-001/D-003r: explicit platform declaration; every query goes through two persistent connections opened at bootstrap.
+    Write-Host ""
+    Write-Host "#############################################################"
+    Write-Host "#                                                           #"
+    Write-Host "#        Azure SQL Database Mode (single database)          #"
+    Write-Host "#                                                           #"
+    Write-Host "#############################################################"
+    Write-Host "    Target database: $database"
+    Write-Host "    Connections: 2 persistent (master + target); no USE, no per-query sqlcmd process."
+    Write-Host "    Skipped on this platform: msdb (Agent jobs, backup history), tempdb, Perfmon, WMI host specs."
+    Write-Host ""
+    $script:UseAzureSqlDatabaseConnections = $true
+    $script:DmaRoutedTargetDatabase = $database
+    if (-not $useEntraIDAuthentication) {
+        $script:DmaRoutedSqlUser = $collectionUserName
+        $script:DmaRoutedSqlPassword = $collectionUserPass
+    }
+    $sqlcmdAuthArgs = @()
+}
+
+if (-not ($useEntraIDAuthentication -or $azureSqlDatabase)) {
 $requiredVersion = "11.0.7512.0"
 if ($sqlcmdVersion -lt $requiredVersion) {
     Write-Host "#############################################################"
@@ -880,6 +1165,11 @@ else {
         $serverName = "$serverName,$port"
     }
     WriteLog -logMessage "Retrieving Metadata Information from $serverName" -logOperation "MESSAGE"
+    if ($azureSqlDatabase) {
+        # D-003r / D-004 / D-005: both connections (and the single Entra sign-in) happen here, before any probe.
+        Initialize-DmaAzureSqlDatabaseConnections -ServerInstance $serverName -TargetDatabase $database
+        WriteLog -logMessage "Azure SQL Database mode: two persistent connections open (master, $database)" -logOperation "MESSAGE"
+    }
     Write-DmaBootstrapLog -Message "Connecting to SQL Server '$serverName' to retrieve initial metadata (sql\foldername.sql)..."
     $bootstrapConnectionFailed = $false
     $rawFolderOut = @()
@@ -929,27 +1219,38 @@ else {
     $versionCmdArgs = @('-S', $serverName, '-i', 'sql\checkValidInstanceVersion.sql', '-d', 'master', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768') + $sqlcmdAuthArgs
     $validSQLInstanceVersionCheckArray = @(sqlcmd @versionCmdArgs)
     Write-DmaBootstrapLog -Message "sql\checkValidInstanceVersion.sql returned: $($validSQLInstanceVersionCheckArray -join ' | ')"
+    if ($azureSqlDatabase) {
+        # D-002: one declared database; opening the target connection already proved it exists and is accessible.
+        $dbNameArray = @($database)
+        $dbNameNoAccessArray = @()
+        Write-DmaBootstrapLog -Message "Azure SQL Database mode: database list is the declared target [$database]; sql\getDBList.sql and sql\checkValidDatabase.sql are not run."
+        # The source identifier is derived from the target database row (not master) so each collected database is its own source.
+        $dmaSourceIdCmdArgs = @('-S', $serverName, '-i', 'sql\getDmaSourceId.sql', '-d', $databaseNameFilter, '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768') + $sqlcmdAuthArgs
+        $dmaSourceIdObj = @(sqlcmd @dmaSourceIdCmdArgs)
+        Write-DmaBootstrapLog -Message "sql\getDmaSourceId.sql (on target) returned: $($dmaSourceIdObj -join ' | ')"
+    }
+    else {
+        $dbListCmdArgs = @('-S', $serverName, '-i', 'sql\getDBList.sql', '-d', 'master', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768', '-v', "database=$databaseNameFilter", '-v', 'hasdbaccess=1') + $sqlcmdAuthArgs
+        $dbNameArray = @(sqlcmd @dbListCmdArgs)
+        Write-DmaBootstrapLog -Message "sql\getDBList.sql (hasdbaccess=1) returned $($dbNameArray.Count) accessible database(s): $($dbNameArray -join ', ')"
 
-    $dbListCmdArgs = @('-S', $serverName, '-i', 'sql\getDBList.sql', '-d', 'master', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768', '-v', "database=$databaseNameFilter", '-v', 'hasdbaccess=1') + $sqlcmdAuthArgs
-    $dbNameArray = @(sqlcmd @dbListCmdArgs)
-    Write-DmaBootstrapLog -Message "sql\getDBList.sql (hasdbaccess=1) returned $($dbNameArray.Count) accessible database(s): $($dbNameArray -join ', ')"
+        $dbListNoAccessCmdArgs = @('-S', $serverName, '-i', 'sql\getDBList.sql', '-d', 'master', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768', '-v', "database=$databaseNameFilter", '-v', 'hasdbaccess=0') + $sqlcmdAuthArgs
+        $dbNameNoAccessArray = @(sqlcmd @dbListNoAccessCmdArgs)
+        Write-DmaBootstrapLog -Message "sql\getDBList.sql (hasdbaccess=0) returned $($dbNameNoAccessArray.Count) inaccessible database(s): $($dbNameNoAccessArray -join ', ')"
 
-    $dbListNoAccessCmdArgs = @('-S', $serverName, '-i', 'sql\getDBList.sql', '-d', 'master', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768', '-v', "database=$databaseNameFilter", '-v', 'hasdbaccess=0') + $sqlcmdAuthArgs
-    $dbNameNoAccessArray = @(sqlcmd @dbListNoAccessCmdArgs)
-    Write-DmaBootstrapLog -Message "sql\getDBList.sql (hasdbaccess=0) returned $($dbNameNoAccessArray.Count) inaccessible database(s): $($dbNameNoAccessArray -join ', ')"
+        $dmaSourceIdCmdArgs = @('-S', $serverName, '-i', 'sql\getDmaSourceId.sql', '-d', 'master', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768') + $sqlcmdAuthArgs
+        $dmaSourceIdObj = @(sqlcmd @dmaSourceIdCmdArgs)
+        Write-DmaBootstrapLog -Message "sql\getDmaSourceId.sql returned: $($dmaSourceIdObj -join ' | ')"
 
-    $dmaSourceIdCmdArgs = @('-S', $serverName, '-i', 'sql\getDmaSourceId.sql', '-d', 'master', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768') + $sqlcmdAuthArgs
-    $dmaSourceIdObj = @(sqlcmd @dmaSourceIdCmdArgs)
-    Write-DmaBootstrapLog -Message "sql\getDmaSourceId.sql returned: $($dmaSourceIdObj -join ' | ')"
-
-    if ([string]$database -ne "all") {
-        $validDBCmdArgs = @('-S', $serverName, '-i', 'sql\checkValidDatabase.sql', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768', '-v', "database=$databaseNameFilter") + $sqlcmdAuthArgs
-        $validDBObj = sqlcmd @validDBCmdArgs | findstr /v /c:"-"
-        if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
-            Write-DmaBootstrapLog -Level "ERROR" -Message "SQL Server Database '$database' not valid or inaccessible on $serverName."
-            Write-Output " "
-            Write-Output "SQL Server Database $database not valid.  Exiting Script...."
-            Exit 1
+        if ([string]$database -ne "all") {
+            $validDBCmdArgs = @('-S', $serverName, '-i', 'sql\checkValidDatabase.sql', '-C', '-l', '30', '-W', '-m', '1', '-u', '-h-1', '-w', '32768', '-v', "database=$databaseNameFilter") + $sqlcmdAuthArgs
+            $validDBObj = sqlcmd @validDBCmdArgs | findstr /v /c:"-"
+            if (([string]::IsNullorEmpty($folderObj)) -or ([int]$validDBObj -eq 0)) {
+                Write-DmaBootstrapLog -Level "ERROR" -Message "SQL Server Database '$database' not valid or inaccessible on $serverName."
+                Write-Output " "
+                Write-Output "SQL Server Database $database not valid.  Exiting Script...."
+                Exit 1
+            }
         }
     }
 }
@@ -1248,6 +1549,9 @@ if ($dbNameNoAccessArray.Count -gt 0) {
 Invoke-DmaPermissionAudit
 
 $stdSqlVars = @("pkey=$pkey", "dmaSourceId=$dmaSourceId", "dmaManualId=$manualUniqueId")
+# Database-scoped telemetry (file I/O, memory, waits, CPU, batch, optimizer) runs on the target connection in Azure SQL
+# Database mode because those DMVs describe the one database there; elsewhere it stays on master as before.
+$telemetryDb = if ($azureSqlDatabase) { $databaseNameFilter } else { "master" }
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Installed Components..." -logOperation "BOTH"
 Set-Content -Path $foldername\$compFileName -Encoding utf8 -Value '"PKEY"|"physical_server_name"|"sql_instance_name"|"sql_server_services"|"current_service_status"|"status_date_time"|"dma_source_id"|"dma_manual_id"'
@@ -1279,35 +1583,35 @@ Invoke-DmaSqlStep -StepName "DbccTraceFlags" -SqlFile "sql\dbccTraceFlags.sql" -
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server CPU Usage Info (Ring Buffer)..." -logOperation "BOTH"
 Set-Content -Path $foldername\$cpuUsageFileName -Encoding utf8 -Value '"PKEY"|"timestamp"|"process_utilization"|"system_idle"|"dma_source_id"|"dma_manual_id"'
-Invoke-DmaSqlStep -StepName "CpuUsage" -SqlFile "sql\cpuUsage.sql" -DatabaseName "master" -OutputFilePath "$foldername\$cpuUsageFileName" -SqlcmdVars $stdSqlVars
+Invoke-DmaSqlStep -StepName "CpuUsage" -SqlFile "sql\cpuUsage.sql" -DatabaseName $telemetryDb -OutputFilePath "$foldername\$cpuUsageFileName" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Memory Usage Info (Ring Buffer)..." -logOperation "BOTH"
 Set-Content -Path $foldername\$memoryUsageFileName -Encoding utf8 -Value '"PKEY"|"timestamp"|"state"|"available_physical_memory_mb"|"working_set_mb"|"percent_committed_in_ws"|"system_physical_memory_high"|"system_physical_memory_low"|"process_physical_memory_low"|"process_virtual_memory_low"|"dma_source_id"|"dma_manual_id"'
-Invoke-DmaSqlStep -StepName "MemoryUsage" -SqlFile "sql\memoryUsage.sql" -DatabaseName "master" -OutputFilePath "$foldername\$memoryUsageFileName" -SqlcmdVars $stdSqlVars
+Invoke-DmaSqlStep -StepName "MemoryUsage" -SqlFile "sql\memoryUsage.sql" -DatabaseName $telemetryDb -OutputFilePath "$foldername\$memoryUsageFileName" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Memory Sizing Info..." -logOperation "BOTH"
 Set-Content -Path $foldername\$memorySizingFileName -Encoding utf8 -Value '"PKEY"|"host_ram_mb"|"available_host_ram_mb"|"max_server_memory_mb"|"min_server_memory_mb"|"sql_working_set_mb"|"memory_model"|"user_data_on_disk_mb"|"buffer_pool_user_data_mb"|"lifetime_pressure_events"|"internal_sql_pressure_events"|"external_os_pressure_events"|"dma_source_id"|"dma_manual_id"'
-Invoke-DmaSqlStep -StepName "MemorySizing" -SqlFile "sql\memorySizing.sql" -DatabaseName "master" -OutputFilePath "$foldername\$memorySizingFileName" -SqlcmdVars $stdSqlVars
+Invoke-DmaSqlStep -StepName "MemorySizing" -SqlFile "sql\memorySizing.sql" -DatabaseName $telemetryDb -OutputFilePath "$foldername\$memorySizingFileName" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Memory Clerks Breakdown..." -logOperation "BOTH"
 Set-Content -Path $foldername\$memoryClerksFileName -Encoding utf8 -Value '"PKEY"|"memory_clerk_type"|"allocated_mb"|"pct_of_total_sql_memory"|"dma_source_id"|"dma_manual_id"'
-Invoke-DmaSqlStep -StepName "MemoryClerks" -SqlFile "sql\memoryClerks.sql" -DatabaseName "master" -OutputFilePath "$foldername\$memoryClerksFileName" -SqlcmdVars $stdSqlVars
+Invoke-DmaSqlStep -StepName "MemoryClerks" -SqlFile "sql\memoryClerks.sql" -DatabaseName $telemetryDb -OutputFilePath "$foldername\$memoryClerksFileName" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Batch Footprint Info..." -logOperation "BOTH"
 Set-Content -Path $foldername\$batchFootprintFileName -Encoding utf8 -Value '"PKEY"|"AvgRunTimeMS"|"StatementCount"|"counter_name"|"TotalElapsedTimeMS"|"ExecutionTimePercent"|"ExecutionCountPercent"|"dma_source_id"|"dma_manual_id"'
-Invoke-DmaSqlStep -StepName "BatchFootprint" -SqlFile "sql\batchFootprint.sql" -DatabaseName "master" -OutputFilePath "$foldername\$batchFootprintFileName" -SqlcmdVars $stdSqlVars
+Invoke-DmaSqlStep -StepName "BatchFootprint" -SqlFile "sql\batchFootprint.sql" -DatabaseName $telemetryDb -OutputFilePath "$foldername\$batchFootprintFileName" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Waits Stats Info..." -logOperation "BOTH"
 Set-Content -Path $foldername\$waitsStats -Encoding utf8 -Value '"PKEY"|"WaitType"|"Wait_S"|"Resource_S"|"Signal_S"|"WaitCount"|"Percentage"|"AvgWait_S"|"AvgRes_S"|"AvgSig_S"|"dma_source_id"|"dma_manual_id"'
-Invoke-DmaSqlStep -StepName "WaitsStats" -SqlFile "sql\waitsStats.sql" -DatabaseName "master" -OutputFilePath "$foldername\$waitsStats" -SqlcmdVars $stdSqlVars
+Invoke-DmaSqlStep -StepName "WaitsStats" -SqlFile "sql\waitsStats.sql" -DatabaseName $telemetryDb -OutputFilePath "$foldername\$waitsStats" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Query Optimizer Info..." -logOperation "BOTH"
 Set-Content -Path $foldername\$queryOptimizerInfo -Encoding utf8 -Value '"PKEY"|"counter"|"value"|"occurrence"|"dma_source_id"|"dma_manual_id"'
-Invoke-DmaSqlStep -StepName "QueryOptimizerInfo" -SqlFile "sql\queryOptimizerInfo.sql" -DatabaseName "master" -OutputFilePath "$foldername\$queryOptimizerInfo" -SqlcmdVars $stdSqlVars
+Invoke-DmaSqlStep -StepName "QueryOptimizerInfo" -SqlFile "sql\queryOptimizerInfo.sql" -DatabaseName $telemetryDb -OutputFilePath "$foldername\$queryOptimizerInfo" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server File IO Latency Info..." -logOperation "BOTH"
 Set-Content -Path $foldername\$fileIoLatency -Encoding utf8 -Value '"PKEY"|"DatabaseName"|"LogicalFileName"|"FileType"|"PhysicalPath"|"TotalReads"|"DataReadMB"|"TotalReadStallMs"|"AvgReadLatencyMs"|"TotalWrites"|"DataWrittenMB"|"TotalWriteStallMs"|"AvgWriteLatencyMs"|"TotalIOStallMs"|"SizeOnDiskMB"|"dma_source_id"|"dma_manual_id"'
-Invoke-DmaSqlStep -StepName "FileIoLatency" -SqlFile "sql\fileIoLatency.sql" -DatabaseName "master" -OutputFilePath "$foldername\$fileIoLatency" -SqlcmdVars $stdSqlVars
+Invoke-DmaSqlStep -StepName "FileIoLatency" -SqlFile "sql\fileIoLatency.sql" -DatabaseName $telemetryDb -OutputFilePath "$foldername\$fileIoLatency" -SqlcmdVars $stdSqlVars
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server Instance Error Log Info..." -logOperation "BOTH"
 Set-Content -Path $foldername\$instanceErrorLog -Encoding utf8 -Value '"PKEY"|"timestamp"|"process_info"|"log_message"|"dma_source_id"|"dma_manual_id"'
@@ -1342,7 +1646,12 @@ else {
 
 WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Agent Jobs Info..." -logOperation "BOTH"
 Set-Content -Path $foldername\$sqlAgentJobs -Encoding utf8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"job_id"|"job_name"|"job_enabled"|"category_name"|"job_description"|"step_id"|"step_name"|"subsystem"|"command"|"database_name"|"incompatibility_category"|"incompatibility_type"|"severity"'
-Invoke-DmaSqlStep -StepName "SqlAgentJobs" -SqlFile "sql\sqlAgentJobs.sql" -DatabaseName "msdb" -OutputFilePath "$foldername\$sqlAgentJobs" -SqlcmdVars $stdSqlVars
+if ($azureSqlDatabase) {
+    WriteLog -logLocation $foldername\$logFile -logMessage "Skipping SQL Agent Jobs Info...msdb does not exist on Azure SQL Database (header-only file written)." -logOperation "BOTH"
+}
+else {
+    Invoke-DmaSqlStep -StepName "SqlAgentJobs" -SqlFile "sql\sqlAgentJobs.sql" -DatabaseName "msdb" -OutputFilePath "$foldername\$sqlAgentJobs" -SqlcmdVars $stdSqlVars
+}
 
 ### First establish headers for the collection files which could execute against multiple databases in the instance
 Set-Content -Path $foldername\$objectList -Encoding utf8 -Value '"PKEY"|"database_name"|"schema_name"|"object_name"|"object_type"|"object_type_desc"|"object_count"|"lines_of_code"|"associated_table_name"|"dma_source_id"|"dma_manual_id"'
@@ -1406,12 +1715,14 @@ else {
 if ($isCloudOrLinuxHost -eq "AZURE") {
     WriteLog -logLocation $foldername\$logFile -logMessage "Executing Azure-Specific Compute and Governance Stats..." -logOperation "BOTH"
 
+    # master-side Azure views (sys.resource_stats) cover every database on the logical server; scope them to the collected one.
+    $azureSqlVars = @("pkey=$pkey", "database=$databaseNameFilter", "dmaSourceId=$dmaSourceId", "dmaManualId=$manualUniqueId")
     $azureDbRes = 'opdb' + '__' + 'AzureDbResourceStats' + $outputFileSuffix
     Set-Content -Path $foldername\$azureDbRes -Encoding utf8 -Value '"PKEY"|"end_time"|"avg_cpu_percent"|"avg_data_io_percent"|"avg_log_write_percent"|"max_worker_percent"|"max_session_percent"|"current_limit"|"current_storage_usage_db"|"dma_source_id"|"dma_manual_id"'
 
     $azureRes = 'opdb' + '__' + 'AzureResourceStats' + $outputFileSuffix
     Set-Content -Path $foldername\$azureRes -Encoding utf8 -Value '"PKEY"|"start_time"|"end_time"|"database_name"|"sku"|"avg_cpu_percent"|"avg_data_io_percent"|"avg_log_write_percent"|"max_worker_percent"|"max_session_percent"|"dtu_limit"|"dma_source_id"|"dma_manual_id"'
-    Invoke-DmaSqlStep -StepName "AzureResourceStats" -SqlFile "sql\azureResourceStats.sql" -DatabaseName "master" -OutputFilePath "$foldername\$azureRes" -SqlcmdVars $stdSqlVars
+    Invoke-DmaSqlStep -StepName "AzureResourceStats" -SqlFile "sql\azureResourceStats.sql" -DatabaseName "master" -OutputFilePath "$foldername\$azureRes" -SqlcmdVars $azureSqlVars
 
     $azureGov = 'opdb' + '__' + 'AzureResourceGovernance' + $outputFileSuffix
     Set-Content -Path $foldername\$azureGov -Encoding utf8 -Value '"PKEY"|"database_id"|"logical_cpu_count"|"process_memory_limit_mb"|"max_global_index_size_mb"|"user_data_cap_gb"|"user_data_iops_cap"|"log_write_cap_mb_sec"|"dma_source_id"|"dma_manual_id"'
@@ -1465,7 +1776,8 @@ else {
 if ($isCloudOrLinuxHost -eq "AZURE") {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server HW Shape Info for Machine $machinename via T-SQL..." -logOperation "BOTH"
     Set-Content -Path $foldername\$computerSpecsFile -Encoding utf8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"MachineName"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
-    Invoke-DmaSqlStep -StepName "MachineSpecsTsql" -SqlFile "sql\machineSpecsTsql.sql" -DatabaseName "master" -OutputFilePath "$foldername\$computerSpecsFile" -SqlcmdVars $stdSqlVars
+    # Azure SQL Database: the shape is the database's SLO (vCores / max memory), read from the target connection.
+    Invoke-DmaSqlStep -StepName "MachineSpecsTsql" -SqlFile "sql\machineSpecsTsql.sql" -DatabaseName $telemetryDb -OutputFilePath "$foldername\$computerSpecsFile" -SqlcmdVars $stdSqlVars
 }
 elseif ($isCloudOrLinuxHost -eq "LINUX") {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server HW Shape Info for Machine $machinename via T-SQL..." -logOperation "BOTH"
@@ -1475,7 +1787,9 @@ elseif ($isCloudOrLinuxHost -eq "LINUX") {
 else {
     WriteLog -logLocation $foldername\$logFile -logMessage "Retrieving SQL Server HW Shape Info for Machine $machinename ..." -logOperation "BOTH"
     .\dmaSQLServerHWSpecs.ps1 -computerName $machinename -outputPath $foldername\$computerSpecsFile -logLocation $foldername\$logFile -pkey $pkey -dmaSourceId $dmaSourceId -dmaManualId $manualUniqueId -requestCreds:$collectVMSpecs
-    if (-not (Test-Path -Path $foldername\$computerSpecsFile) -or ((Get-Content -Path $foldername\$computerSpecsFile).Count -le 1)) {
+    $hwSpecsRows = @(if (Test-Path -Path $foldername\$computerSpecsFile) { Import-Csv -Path $foldername\$computerSpecsFile -Delimiter '|' -ErrorAction SilentlyContinue })
+    $hasHwMetrics = @($hwSpecsRows | Where-Object { -not [string]::IsNullOrWhiteSpace($_.LogicalCpuCount) -and -not [string]::IsNullOrWhiteSpace($_.TotalOSMemoryMB) }).Count -gt 0
+    if (-not $hasHwMetrics) {
         WriteLog -logLocation $foldername\$logFile -logMessage "WMI/CIM HW collection returned no data; falling back to T-SQL machineSpecsTsql.sql..." -logOperation "BOTH"
         Set-Content -Path $foldername\$computerSpecsFile -Encoding utf8 -Value '"pkey"|"dma_source_id"|"dma_manual_id"|"MachineName"|"PhysicalCpuCount"|"LogicalCpuCount"|"TotalOSMemoryMB"'
         Invoke-DmaSqlStep -StepName "MachineSpecsTsqlFallback" -SqlFile "sql\machineSpecsTsql.sql" -DatabaseName "master" -OutputFilePath "$foldername\$computerSpecsFile" -SqlcmdVars $stdSqlVars
@@ -1653,6 +1967,9 @@ $summaryLines += "Server Instance:     $serverName"
 $summaryLines += "Machine Name:        $machinename"
 $summaryLines += "Instance Name:       $instancename"
 $summaryLines += "SQL Version:         $dbversion (Product: $isValidSQLInstanceVersion, HostType: $isCloudOrLinuxHost)"
+if ($azureSqlDatabase) {
+    $summaryLines += "Platform Mode:       Azure SQL Database (declared); 2 persistent connections (master + $database); msdb/tempdb/Perfmon/WMI steps skipped"
+}
 $summaryLines += "Collection User:     $(if ($collectionUserName) { $collectionUserName } elseif ($useEntraIDAuthentication) { $entraIDUserName } else { [System.Security.Principal.WindowsIdentity]::GetCurrent().Name })"
 $summaryLines += "Target Scope:        $database"
 $summaryLines += "Databases Scanned:   $($dbNameArray.Count) ($($dbNameArray -join ', '))"
@@ -1789,6 +2106,10 @@ if (-not ([string]::IsNullOrEmpty($originalLocation)) -and ($originalLocation -n
 if ($null -ne $script:DmaEntraOdbcConnection) {
     $script:DmaEntraOdbcConnection.Close()
     $script:DmaEntraOdbcConnection.Dispose()
+}
+
+if ($script:UseAzureSqlDatabaseConnections) {
+    Close-DmaRoutedConnections
 }
 
 Exit 0

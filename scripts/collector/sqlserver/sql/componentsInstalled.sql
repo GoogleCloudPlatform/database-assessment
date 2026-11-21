@@ -14,6 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 */
+
+/* xp_ procedures are referenced without the master. prefix: Azure SQL Database rejects three-part names at compile time
+   (error 40515, not catchable by TRY/CATCH), while a bare xp_ name resolves to master on SQL Server and raises a catchable
+   2812 on Azure. Verified live 2026-11-05. */
 SET nocount ON;
 SET language us_english;
 DECLARE @PKEY AS VARCHAR(256)
@@ -101,6 +105,9 @@ DECLARE @ChkInstanceName NVARCHAR(128) /*Stores SQL Instance Name*/
       ,
       @R_INFO_SERVICES NVARCHAR(256) /*Stores Info on R Language Installation information*/
   SET @PhysicalSrvName = Cast(Serverproperty('MachineName') AS VARCHAR(128))
+  /* Azure SQL Database returns NULL for MachineName; fall back to the logical server name so the CSV stays quoted. */
+  IF @PhysicalSrvName IS NULL
+    SET @PhysicalSrvName = Cast(@@SERVERNAME AS VARCHAR(128))
   SET @ChkSrvName = Cast(Serverproperty('INSTANCENAME') AS VARCHAR(128))
   SET @ChkInstanceName = @@serverName
 
@@ -140,7 +147,7 @@ SET @REGKEY = 'System\CurrentControlSet\Services\'
               + @SQLSrv
 INSERT #regresult
        (resultvalue)
-EXEC master.sys.Xp_regread
+EXEC xp_regread
   @rootkey='HKEY_LOCAL_MACHINE',
   @key=@REGKEY
 IF (SELECT resultvalue
@@ -214,7 +221,7 @@ SET @REGKEY = 'System\CurrentControlSet\Services\'
               + @SQLAgent
 INSERT #regresult
        (resultvalue)
-EXEC master.sys.Xp_regread
+EXEC xp_regread
   @rootkey='HKEY_LOCAL_MACHINE',
   @key=@REGKEY
 IF (SELECT resultvalue
@@ -290,7 +297,7 @@ BEGIN TRY
 
     INSERT #regresult
           (resultvalue)
-    EXEC master.sys.Xp_regread
+    EXEC xp_regread
       @rootkey='HKEY_LOCAL_MACHINE',
       @key=@REGKEY
     IF (SELECT resultvalue
@@ -298,7 +305,7 @@ BEGIN TRY
       BEGIN
           INSERT #servicesservicestatus
                 (servicestatus) /*Detecting status of SQL Browser Service*/
-          EXEC master.dbo.Xp_servicecontrol
+          EXEC xp_servicecontrol
             N'QUERYSTATE',
             N'sqlbrowser'
 
@@ -359,7 +366,7 @@ BEGIN TRY
 
   INSERT #regresult
         (resultvalue)
-  EXEC master.sys.Xp_regread
+  EXEC xp_regread
     @rootkey='HKEY_LOCAL_MACHINE',
     @key=@REGKEY
     IF (SELECT resultvalue
@@ -367,7 +374,7 @@ BEGIN TRY
     BEGIN
         INSERT #servicesservicestatus
               (servicestatus) /*Detecting status of Integration Service*/
-        EXEC master.dbo.Xp_servicecontrol
+        EXEC xp_servicecontrol
           N'QUERYSTATE',
           N'sqlbrowser'
 
@@ -428,7 +435,7 @@ BEGIN TRY
 
   INSERT #regresult
         (resultvalue)
-  EXEC master.sys.Xp_regread
+  EXEC xp_regread
     @rootkey='HKEY_LOCAL_MACHINE',
     @key=@REGKEY
     IF (SELECT resultvalue
@@ -436,7 +443,7 @@ BEGIN TRY
     BEGIN
         INSERT #servicesservicestatus
               (servicestatus) /*Detecting status of Reporting service*/
-        EXEC master.dbo.Xp_servicecontrol
+        EXEC xp_servicecontrol
           N'QUERYSTATE',
           N'sqlbrowser'
 
@@ -505,7 +512,7 @@ BEGIN TRY
   BEGIN
   INSERT #regresult
         (resultvalue)
-  EXEC master.sys.Xp_regread
+  EXEC xp_regread
     @rootkey='HKEY_LOCAL_MACHINE',
     @key=@REGKEY
 
@@ -514,7 +521,7 @@ BEGIN TRY
     BEGIN
         INSERT #servicesservicestatus
               (servicestatus) /*Detecting status of Analysis service*/
-        EXEC master.dbo.Xp_servicecontrol
+        EXEC xp_servicecontrol
           N'QUERYSTATE',
           @OLAP
 
@@ -575,7 +582,7 @@ BEGIN TRY
   BEGIN
   INSERT #regresult
         (resultvalue)
-  EXEC master.sys.Xp_regread
+  EXEC xp_regread
     @rootkey='HKEY_LOCAL_MACHINE',
     @key=@REGKEY
 
@@ -584,7 +591,7 @@ BEGIN TRY
     BEGIN
         INSERT #servicesservicestatus
               (servicestatus) /*Detecting status of Full Text Search service*/
-        EXEC master.dbo.Xp_servicecontrol
+        EXEC xp_servicecontrol
           N'QUERYSTATE',
           @FTS
 

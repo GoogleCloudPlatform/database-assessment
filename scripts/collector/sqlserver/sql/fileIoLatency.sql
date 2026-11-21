@@ -25,33 +25,71 @@ SELECT @PKEY = N'$(pkey)';
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
-SELECT
-    '"' + @PKEY + '"' AS PKEY,
-    '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), DB_NAME(vfs.database_id)), N''), '"', '""') + '"' AS DatabaseName,
-    '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), mf.name), N''), '"', '""') + '"' AS LogicalFileName,
-    '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), mf.type_desc), N''), '"', '""') + '"' AS FileType,
-    '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), mf.physical_name), N''), '"', '""') + '"' AS PhysicalPath,
-    '"' + CONVERT(NVARCHAR(MAX), vfs.num_of_reads) + '"' AS TotalReads,
-    '"' + CONVERT(NVARCHAR(MAX), vfs.num_of_bytes_read / 1024 / 1024) + '"' AS DataReadMB,
-    '"' + CONVERT(NVARCHAR(MAX), vfs.io_stall_read_ms) + '"' AS TotalReadStallMs,
-    '"' + CONVERT(NVARCHAR(MAX), CASE
-        WHEN vfs.num_of_reads = 0 THEN 0
-        ELSE vfs.io_stall_read_ms / vfs.num_of_reads
-    END) + '"' AS AvgReadLatencyMs,
-    '"' + CONVERT(NVARCHAR(MAX), vfs.num_of_writes) + '"' AS TotalWrites,
-    '"' + CONVERT(NVARCHAR(MAX), vfs.num_of_bytes_written / 1024 / 1024) + '"' AS DataWrittenMB,
-    '"' + CONVERT(NVARCHAR(MAX), vfs.io_stall_write_ms) + '"' AS TotalWriteStallMs,
-    '"' + CONVERT(NVARCHAR(MAX), CASE
-        WHEN vfs.num_of_writes = 0 THEN 0
-        ELSE vfs.io_stall_write_ms / vfs.num_of_writes
-    END) + '"' AS AvgWriteLatencyMs,
-    '"' + CONVERT(NVARCHAR(MAX), vfs.io_stall) + '"' AS TotalIOStallMs,
-    '"' + CONVERT(NVARCHAR(MAX), vfs.size_on_disk_bytes / 1024 / 1024) + '"' AS SizeOnDiskMB,
-    '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
-    '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
-FROM
-    sys.dm_io_virtual_file_stats(NULL, NULL) AS vfs
-JOIN
-    sys.master_files AS mf ON vfs.database_id = mf.database_id AND vfs.file_id = mf.file_id
-ORDER BY
-    vfs.io_stall DESC;
+/* Azure SQL Database (EngineEdition 5) exposes no sys.master_files; the connection is scoped to the one collected
+   database, so read its own sys.database_files and dm_io_virtual_file_stats(DB_ID()). Same projection either way. */
+IF CONVERT(INT, SERVERPROPERTY('EngineEdition')) = 5
+BEGIN
+    SELECT
+        '"' + @PKEY + '"' AS PKEY,
+        '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), DB_NAME(vfs.database_id)), N''), '"', '""') + '"' AS DatabaseName,
+        '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), mf.name), N''), '"', '""') + '"' AS LogicalFileName,
+        '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), mf.type_desc), N''), '"', '""') + '"' AS FileType,
+        '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), mf.physical_name), N''), '"', '""') + '"' AS PhysicalPath,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.num_of_reads) + '"' AS TotalReads,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.num_of_bytes_read / 1024 / 1024) + '"' AS DataReadMB,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.io_stall_read_ms) + '"' AS TotalReadStallMs,
+        '"' + CONVERT(NVARCHAR(MAX), CASE
+            WHEN vfs.num_of_reads = 0 THEN 0
+            ELSE vfs.io_stall_read_ms / vfs.num_of_reads
+        END) + '"' AS AvgReadLatencyMs,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.num_of_writes) + '"' AS TotalWrites,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.num_of_bytes_written / 1024 / 1024) + '"' AS DataWrittenMB,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.io_stall_write_ms) + '"' AS TotalWriteStallMs,
+        '"' + CONVERT(NVARCHAR(MAX), CASE
+            WHEN vfs.num_of_writes = 0 THEN 0
+            ELSE vfs.io_stall_write_ms / vfs.num_of_writes
+        END) + '"' AS AvgWriteLatencyMs,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.io_stall) + '"' AS TotalIOStallMs,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.size_on_disk_bytes / 1024 / 1024) + '"' AS SizeOnDiskMB,
+        '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
+        '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
+    FROM
+        sys.dm_io_virtual_file_stats(DB_ID(), NULL) AS vfs
+    JOIN
+        sys.database_files AS mf ON vfs.file_id = mf.file_id
+    ORDER BY
+        vfs.io_stall DESC;
+END
+ELSE
+BEGIN
+    SELECT
+        '"' + @PKEY + '"' AS PKEY,
+        '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), DB_NAME(vfs.database_id)), N''), '"', '""') + '"' AS DatabaseName,
+        '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), mf.name), N''), '"', '""') + '"' AS LogicalFileName,
+        '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), mf.type_desc), N''), '"', '""') + '"' AS FileType,
+        '"' + REPLACE(ISNULL(CONVERT(NVARCHAR(MAX), mf.physical_name), N''), '"', '""') + '"' AS PhysicalPath,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.num_of_reads) + '"' AS TotalReads,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.num_of_bytes_read / 1024 / 1024) + '"' AS DataReadMB,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.io_stall_read_ms) + '"' AS TotalReadStallMs,
+        '"' + CONVERT(NVARCHAR(MAX), CASE
+            WHEN vfs.num_of_reads = 0 THEN 0
+            ELSE vfs.io_stall_read_ms / vfs.num_of_reads
+        END) + '"' AS AvgReadLatencyMs,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.num_of_writes) + '"' AS TotalWrites,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.num_of_bytes_written / 1024 / 1024) + '"' AS DataWrittenMB,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.io_stall_write_ms) + '"' AS TotalWriteStallMs,
+        '"' + CONVERT(NVARCHAR(MAX), CASE
+            WHEN vfs.num_of_writes = 0 THEN 0
+            ELSE vfs.io_stall_write_ms / vfs.num_of_writes
+        END) + '"' AS AvgWriteLatencyMs,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.io_stall) + '"' AS TotalIOStallMs,
+        '"' + CONVERT(NVARCHAR(MAX), vfs.size_on_disk_bytes / 1024 / 1024) + '"' AS SizeOnDiskMB,
+        '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
+        '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
+    FROM
+        sys.dm_io_virtual_file_stats(NULL, NULL) AS vfs
+    JOIN
+        sys.master_files AS mf ON vfs.database_id = mf.database_id AND vfs.file_id = mf.file_id
+    ORDER BY
+        vfs.io_stall DESC;
+END

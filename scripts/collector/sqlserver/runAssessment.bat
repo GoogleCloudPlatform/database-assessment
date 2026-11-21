@@ -24,9 +24,10 @@ set noPerfmon=false
 set collectVMSpecs=
 set useWindowsAuthentication=false
 set useEntraIDAuthentication=false
+set azureSqlDbSwitch=
 set outputDir=default
 
-set helpMessage=Usage: runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [username] -collectionUserPass [password] -ignorePerfmon [true/false] -manualUniqueId [unique tag to identify collection] [-collectVMSpecs] [-useWindowsAuthentication or -useEntraIDAuthentication] -outputDirectory [write zip file to different directory]
+set helpMessage=Usage: runAssessment.bat -serverName [servername] -port [port number] -database [database name] -collectionUserName [username] -collectionUserPass [password] -ignorePerfmon [true/false] -manualUniqueId [unique tag to identify collection] [-collectVMSpecs] [-useWindowsAuthentication or -useEntraIDAuthentication] [-azureSqlDatabase] -outputDirectory [write zip file to different directory]
 set helpExample=Example (default port): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
 set helpExamplePort=Example (specified port): runAssessment.bat -serverName MS-SERVER1 -port 1436 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
 set helpExampleDatabase=Example (default port / single database): runAssessment.bat -serverName MS-SERVER1\SQL2019 -database AdventureWorks2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1
@@ -34,6 +35,7 @@ set helpExampleDatabasePort=Example (specified port / single database): runAsses
 set helpExampleCollectVMSpecs=Example (collect specs from host VM): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -collectionUserPass password123 -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1 -collectVMSpecs
 set helpUseWindowsAuth=Example (collect specs from host VM): runAssessment.bat -serverName MS-SERVER1\SQL2019 -collectionUserName sa -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1 -collectVMSpecs -useWindowsAuthentication
 set helpUseEntraIDAuth=Example (Entra ID / Azure AD MFA): runAssessment.bat -serverName MI-SERVER.database.windows.net -ignorePerfmon [true/false] -manualUniqueId mySQLServerDB1 -useEntraIDAuthentication -entraIDUserName user@domain.com
+set helpAzureSqlDatabase=Example (Azure SQL Database, one database, SQL or Entra ID auth): runAssessment.bat -serverName myserver.database.windows.net -database MyDb -azureSqlDatabase -collectionUserName dmauser -collectionUserPass password123 -manualUniqueId myAzureDb1
 
 if [%1]==[] (
     goto helpOperation
@@ -60,6 +62,8 @@ if /i "%1" == "-useEntraIDAuth" set "useEntraIDAuthentication=true"
 if /i "%1" == "/useEntraIDAuthentication" set "useEntraIDAuthentication=true"
 if /i "%1" == "/useEntraIDAuth" set "useEntraIDAuthentication=true"
 if /i "%1" == "-outputDirectory" set "outputDir=%2"
+if /i "%1" == "-azureSqlDatabase" set "azureSqlDbSwitch=-azureSqlDatabase"
+if /i "%1" == "/azureSqlDatabase" set "azureSqlDbSwitch=-azureSqlDatabase"
 
 shift
 goto :loop
@@ -93,9 +97,9 @@ if "%useWindowsAuthentication%"=="false" (
 )
 
 if "%collectVMSpecs%"=="" (
-	CALL %command%
+	CALL %command% %azureSqlDbSwitch%
 ) ELSE (
-	CALL %command% -collectVMSpecs
+	CALL %command% -collectVMSpecs %azureSqlDbSwitch%
 )
 
 if %errorlevel% == 1 goto exit
@@ -108,9 +112,9 @@ if not "%pass%"=="false" goto raiseEntraCredentialError
 if [%entraIDUser%]==[] goto raiseEntraUserError
 SET "command=PowerShell -nologo -NoProfile -ExecutionPolicy Bypass -File .\instanceReview.ps1 -serverName %serverName% -port %port% -database %database% -ignorePerfmon %noPerfmon% -manualUniqueId %manualUniqueId% -useEntraIDAuthentication -entraIDUserName %entraIDUser% -outputDirectory %outputDir%"
 if "%collectVMSpecs%"=="" (
-    CALL %command%
+    CALL %command% %azureSqlDbSwitch%
 ) ELSE (
-    CALL %command% -collectVMSpecs
+    CALL %command% -collectVMSpecs %azureSqlDbSwitch%
 )
 if %errorlevel% == 1 goto exit
 goto done
@@ -167,6 +171,8 @@ echo:
 echo %helpUseWindowsAuth%
 echo:
 echo %helpUseEntraIDAuth%
+echo:
+echo %helpAzureSqlDatabase%
 echo:
 goto done
 
