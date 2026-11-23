@@ -18,12 +18,16 @@ import argparse
 import csv
 import hashlib
 import logging
+import ntpath
+import os
 import random
 import shutil
+import stat
 import string
 import sys
 import tarfile
 import zipfile as zf
+import zlib
 from collections import Counter
 from dataclasses import dataclass, field
 from enum import Flag, auto
@@ -2286,20 +2290,285 @@ def _find_collections_to_process(search_path: Path) -> List[Path]:
     return list(file_list)
 
 
-def _extract_collection(collection_file: Path, extract_path: Path) -> None:
-    """Extract collection.
+_EXTRACT_CHUNK_BYTES = 1024 * 1024
+_ALLOWED_ARCHIVE_SUFFIXES = frozenset({".csv", ".log", ".txt"})
+_WINDOWS_RESERVED_STEMS = frozenset({
+    "CON",
+    "PRN",
+    "AUX",
+    "NUL",
+    *(f"COM{i}" for i in range(1, 10)),
+    *(f"LPT{i}" for i in range(1, 10)),
+})
+
+
+def _is_root_directory_entry(member_name: str) -> bool:
+    """Return True if an archive directory entry refers strictly to the archive root."""
+    if not member_name:
+        return False
+    normalized = member_name
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    return normalized in {"", "."}
+
+
+def _is_nested_oee_archive(filename: str) -> bool:
+    """Return True if a normalized basename is an Oracle Estate Explorer (OEE) zip bundle."""
+    return filename.startswith("mpack") and filename.lower().endswith(".zip")
+
+
+def _normalize_archive_filename(member_name: str) -> str:
+    """Validate and normalize a flat archive member name to a bare filename.
 
     Args:
-        collection_file (Path): The collection file to extract.
-        extract_path (Path): The past to extract the collection to.
+        member_name (str): Raw member path from a ZIP or TAR archive.
+
+    Returns:
+        str: Validated bare filename safe for extraction directly under extract_root.
+
+    Raises:
+        ApplicationError: If the member name is empty, traverses directories, is
+            hidden, contains unsafe characters/separators, or uses a reserved name.
+    """
+    if not member_name or any(ord(ch) < 32 or ord(ch) == 127 for ch in member_name):
+        msg = f"Unsafe archive member name: {member_name!r}"
+        raise ApplicationError(msg)
+    if "\\" in member_name or ntpath.splitdrive(member_name)[0]:
+        msg = f"Unsafe path in archive member: {member_name!r}"
+        raise ApplicationError(msg)
+
+    normalized = member_name
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+
+    if not normalized or normalized in {".", ".."} or "/" in normalized:
+        msg = f"Unsafe or nested path in archive member: {member_name!r}"
+        raise ApplicationError(msg)
+    if ":" in normalized or ntpath.splitdrive(normalized)[0]:
+        msg = f"Unsafe drive or stream specifier in archive member: {member_name!r}"
+        raise ApplicationError(msg)
+    if normalized.startswith(".") or normalized.endswith((" ", ".")):
+        msg = f"Disallowed archive member filename: {member_name!r}"
+        raise ApplicationError(msg)
+
+    stem = normalized.split(".", maxsplit=1)[0].upper()
+    if stem in _WINDOWS_RESERVED_STEMS:
+        msg = f"Reserved device name in archive member: {member_name!r}"
+        raise ApplicationError(msg)
+    return normalized
+
+
+def _resolve_contained_path(filename: str, member_name: str, extract_root: Path) -> Path:
+    """Resolve a validated basename inside ``extract_root`` and assert containment."""
+    candidate = extract_root / filename
+    if candidate.is_symlink():
+        msg = f"Refusing to extract over existing symlink for archive member: {member_name!r}"
+        raise ApplicationError(msg)
+    resolved = candidate.resolve()
+    if (
+        resolved == extract_root
+        or resolved.parent != extract_root
+        or not resolved.is_relative_to(extract_root)
+        or os.path.commonpath([str(extract_root), str(resolved)]) != str(extract_root)
+    ):
+        msg = f"Archive member escapes extraction directory: {member_name!r}"
+        raise ApplicationError(msg)
+    return resolved
+
+
+def _plan_archive_member(
+    member_name: str,
+    extract_root: Path,
+    seen_names: set[str],
+) -> tuple[Path | None, str | None]:
+    """Validate one regular archive member and decide whether to extract or skip it.
+
+    Returns:
+        tuple[Path | None, str | None]: ``(dest_path, None)`` for files to extract,
+        or ``(None, filename)`` for nested Oracle OEE ``mpack*.zip`` bundles skipped
+        unmodified.
+    """
+    filename = _normalize_archive_filename(member_name)
+    folded = filename.casefold()
+    if folded in seen_names:
+        msg = f"Duplicate or case-colliding archive member: {member_name!r}"
+        raise ApplicationError(msg)
+    seen_names.add(folded)
+
+    target_path = _resolve_contained_path(filename, member_name, extract_root)
+    if _is_nested_oee_archive(filename):
+        return None, filename
+
+    if Path(filename).suffix.lower() not in _ALLOWED_ARCHIVE_SUFFIXES:
+        msg = f"Disallowed archive member extension: {member_name!r}"
+        raise ApplicationError(msg)
+    return target_path, None
+
+
+def _write_validated_stream(src: Any, dest_path: Path, member_name: str) -> None:
+    """Stream validated archive member bytes exclusively into ``dest_path``."""
+    try:
+        dst = dest_path.open("xb")
+    except FileExistsError as err:
+        msg = f"Destination file already exists for archive member: {member_name!r}"
+        raise ApplicationError(msg) from err
+
+    try:
+        with dst:
+            shutil.copyfileobj(src, dst, length=_EXTRACT_CHUNK_BYTES)
+    except Exception:
+        dest_path.unlink(missing_ok=True)
+        raise
+
+
+def _cleanup_extracted_files(paths: List[Path]) -> None:
+    """Best-effort removal of partially extracted files after an error."""
+    for path in paths:
+        path.unlink(missing_ok=True)
+
+
+def _plan_zip_members(
+    archive: zf.ZipFile,
+    extract_root: Path,
+) -> Tuple[List[Tuple[zf.ZipInfo, Path]], List[str]]:
+    """Validate all ZIP members up front before extracting any bytes."""
+    planned: List[Tuple[zf.ZipInfo, Path]] = []
+    skipped_oee: List[str] = []
+    seen_names: set[str] = set()
+
+    for info in archive.infolist():
+        file_type = stat.S_IFMT(info.external_attr >> 16)
+        if info.is_dir() or file_type == stat.S_IFDIR:
+            if file_type not in {0, stat.S_IFDIR}:
+                msg = f"Unsupported non-regular file entry in archive: {info.filename!r}"
+                raise ApplicationError(msg)
+            if _is_root_directory_entry(info.filename):
+                continue
+            msg = f"Unsupported directory entry in archive: {info.filename!r}"
+            raise ApplicationError(msg)
+        if file_type not in {0, stat.S_IFREG}:
+            msg = f"Unsupported non-regular file entry in archive: {info.filename!r}"
+            raise ApplicationError(msg)
+
+        dest_path, skipped_name = _plan_archive_member(info.filename, extract_root, seen_names)
+        if skipped_name is not None:
+            skipped_oee.append(skipped_name)
+        elif dest_path is not None:
+            planned.append((info, dest_path))
+
+    return planned, skipped_oee
+
+
+def _plan_tar_members(
+    archive: tarfile.TarFile,
+    extract_root: Path,
+) -> Tuple[List[Tuple[tarfile.TarInfo, Path]], List[str]]:
+    """Validate all TAR members up front before extracting any bytes."""
+    planned: List[Tuple[tarfile.TarInfo, Path]] = []
+    skipped_oee: List[str] = []
+    seen_names: set[str] = set()
+
+    for member in archive.getmembers():
+        if member.isdir():
+            if _is_root_directory_entry(member.name):
+                continue
+            msg = f"Unsupported directory entry in archive: {member.name!r}"
+            raise ApplicationError(msg)
+        if member.issym() or member.islnk():
+            msg = f"Unsafe link entry in archive: {member.name!r}"
+            raise ApplicationError(msg)
+        if not member.isreg():
+            msg = f"Unsupported non-regular file entry in archive: {member.name!r}"
+            raise ApplicationError(msg)
+
+        dest_path, skipped_name = _plan_archive_member(member.name, extract_root, seen_names)
+        if skipped_name is not None:
+            skipped_oee.append(skipped_name)
+        elif dest_path is not None:
+            planned.append((member, dest_path))
+
+    return planned, skipped_oee
+
+
+def _open_tar_member(archive: tarfile.TarFile, member: tarfile.TarInfo) -> Any:
+    """Open a validated regular TAR member as a readable binary stream."""
+    src = archive.extractfile(member)
+    if src is None:
+        msg = f"Could not read archive member: {member.name!r}"
+        raise ApplicationError(msg)
+    return src
+
+
+def _extract_zip_archive(collection_file: Path, extract_root: Path) -> None:
+    """Validate and safely stream-extract a ZIP collection archive."""
+    created_files: List[Path] = []
+    try:
+        with zf.ZipFile(collection_file, "r") as archive:
+            planned, skipped_oee = _plan_zip_members(archive, extract_root)
+            for oee_name in skipped_oee:
+                logger.warning(
+                    "Skipping nested Oracle OEE archive %s; mpack*.zip files are not modified during masking.",
+                    oee_name,
+                )
+            for info, dest_path in planned:
+                with archive.open(info, "r") as src:
+                    _write_validated_stream(src, dest_path, info.filename)
+                created_files.append(dest_path)
+    except ApplicationError:
+        _cleanup_extracted_files(created_files)
+        raise
+    except (zf.BadZipFile, zf.LargeZipFile, EOFError, OSError, RuntimeError, zlib.error) as err:
+        _cleanup_extracted_files(created_files)
+        msg = f"Failed to extract ZIP archive {collection_file}: {err}"
+        raise ApplicationError(msg) from err
+
+
+def _extract_tar_archive(collection_file: Path, extract_root: Path) -> None:
+    """Validate and safely stream-extract a gzip-compressed TAR collection archive."""
+    created_files: List[Path] = []
+    try:
+        with tarfile.open(collection_file, "r:gz") as archive:
+            planned, skipped_oee = _plan_tar_members(archive, extract_root)
+            for oee_name in skipped_oee:
+                logger.warning(
+                    "Skipping nested Oracle OEE archive %s; mpack*.zip files are not modified during masking.",
+                    oee_name,
+                )
+            for member, dest_path in planned:
+                with _open_tar_member(archive, member) as src:
+                    _write_validated_stream(src, dest_path, member.name)
+                created_files.append(dest_path)
+    except ApplicationError:
+        _cleanup_extracted_files(created_files)
+        raise
+    except (tarfile.TarError, EOFError, OSError, zlib.error) as err:
+        _cleanup_extracted_files(created_files)
+        msg = f"Failed to extract gzip tar archive {collection_file}: {err}"
+        raise ApplicationError(msg) from err
+
+
+def _extract_collection(collection_file: Path, extract_path: Path) -> None:
+    """Extract collection archive safely after validating all members.
+
+    Args:
+        collection_file (Path): The collection archive file to extract.
+        extract_path (Path): The directory to extract the collection to.
+
+    Raises:
+        ApplicationError: Raised when the archive format is unsupported, corrupt,
+            or contains unsafe or disallowed members.
     """
     logger.info("Processing %s", collection_file)
-    if str(collection_file).endswith("zip"):
-        with zf.ZipFile(collection_file, "r") as f:
-            f.extractall(path=extract_path)
-    elif str(collection_file).endswith("gz"):
-        with tarfile.open(collection_file) as tf:
-            tf.extractall(extract_path)
+    extract_path.mkdir(parents=True, exist_ok=True)
+    extract_root = extract_path.resolve()
+    lower_name = collection_file.name.lower()
+    if lower_name.endswith(".zip"):
+        _extract_zip_archive(collection_file, extract_root)
+    elif lower_name.endswith((".gz", ".tgz")):
+        _extract_tar_archive(collection_file, extract_root)
+    else:
+        msg = f"Unsupported collection archive format: {collection_file}"
+        raise ApplicationError(msg)
 
 
 def _find_files_referenced_by_rule(rule: DataMaskRule, search_path: Path) -> Path | None:
@@ -2473,7 +2742,7 @@ def _apply_identity_map_to_file(rule: DataMaskRule, collection_file: Path, ident
             temp_file,
             column_position,
         )
-        shutil.move(t.name, collection_file)
+    shutil.move(t.name, collection_file)
 
 
 def _write_mapped_files(
@@ -2717,9 +2986,9 @@ def _clean_folder(extract_path: Path) -> None:
     logger.info("Cleaning temporary files")
     matched_files = list(extract_path.glob("*"))
     for file in matched_files:
-        if file.exists() and file.is_file():
+        if file.is_symlink() or (file.exists() and file.is_file()):
             file.unlink()
-        if file.exists() and file.is_dir():
+        elif file.exists() and file.is_dir():
             shutil.rmtree(file, ignore_errors=True)
 
 

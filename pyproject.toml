@@ -351,7 +351,6 @@ ban-relative-imports = "all"
 "scripts/masker/dma-collection-masker" = [
     "PYI024",
     "FA100",
-    "S202",
     "S311",
     "UP006",
     "UP035",
@@ -362,7 +361,7 @@ ban-relative-imports = "all"
 ]
 "scripts/post_build.py" = ["ERA001"]
 "scripts/pre_build.py" = ["ERA001"]
-"tools/**/*.py" = ["INP001", "S404", "T201", "PLR0904", "PLR0914", "S310", "ANN001", "ANN201", "S202", "ERA001"]
+"tools/**/*.py" = ["INP001", "S404", "T201", "PLR0904", "PLR0914", "S310", "ANN001", "ANN201", "ERA001"]
 "tests/**/*" = [
     "PLR2004",
     "S101",
