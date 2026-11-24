@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Pull in helper scripts.
-. ./dma_print_pass_fail.sh
-. ./dma_oee.sh
+# Pull in helper scripts relative to this script's directory.
+_dma_helper_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+. "${_dma_helper_dir}/dma_print_pass_fail.sh"
+. "${_dma_helper_dir}/dma_oee.sh"
 
 # Global variables and constants
 dma_version="4.3.48"
@@ -46,9 +47,10 @@ manual_unique_id=""
 stats_window=30
 collect_oee="N"
 oee_group_name="DEFAULT-$$"
-oee_run_id=$(echo $(date +%Y%m%d%H%M%S)_${BASHPID})
+oee_run_id="$(date +%Y%m%d%H%M%S)_${BASHPID:-$$}"
 extractor_version=""
 dma_automation_flag="N"
+_dma_oee_cleanup_armed=0
 
 
 # Define global variables that define how/what executables to use based on the platform on which we are running.
@@ -255,18 +257,23 @@ function cleanup_dma_output() {
 function compress_dma_files() {
   local v_file_tag=$1
   local db_type=$2
-  local oee_file=$3
+  shift 2
+  local -a oee_files=()
+  local _oee_arg
+  for _oee_arg in "$@"; do
+    [[ -n "${_oee_arg}" ]] && oee_files+=( "${_oee_arg}" )
+  done
   local v_err_tag=""
   local err_cnt
-  local -i retval
+  local -i retval=0
   local tar_file
   local zip_file
 
   echo ""
-  if [[ "${oee_file}" = "" ]]; then
+  if [[ "${#oee_files[@]}" -eq 0 ]]; then
     echo "Archiving output files with tag ${v_file_tag}"
   else
-    echo "Archiving output files with tag ${v_file_tag} including oee file ${oee_file}"
+    echo "Archiving output files with tag ${v_file_tag} including oee file(s) ${oee_files[*]}"
   fi
 
   current_working_dir=$(pwd)
@@ -305,10 +312,10 @@ function compress_dma_files() {
   fi
 
   # Skip creating the manifest file if the platform does not have md5_cmd installed
-  for file in opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt ${oee_file}
+  for file in opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt ${oee_files[@]+"${oee_files[@]}"}
   do
     if [[ -f "${md5_cmd}" ]] ; then
-      md5_val=$(${md5_cmd} $file | cut -d ' ' -f ${md5_col})
+      md5_val=$(${md5_cmd} "${file}" | cut -d ' ' -f ${md5_col})
     else
       md5_val="N/A"
     fi
@@ -316,16 +323,16 @@ function compress_dma_files() {
   done
 
   if [[ ! "${zip_cmd}" = "" ]];then
-    ${zip_cmd} ${zip_file}  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt ${oee_file}
+    ${zip_cmd} ${zip_file}  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt ${oee_files[@]+"${oee_files[@]}"}
     output_file=${zip_file}
   else
-    tar cvf "${tar_file}"  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt ${oee_file}
+    tar cvf "${tar_file}"  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt ${oee_files[@]+"${oee_files[@]}"}
     $gzip_cmd "${tar_file}"
     output_file="${tar_file}".gz
   fi
 
   if [[ -f $output_file ]];then
-    rm  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt ${oee_file}
+    rm  opdb*${v_file_tag}.csv opdb*${v_file_tag}*.log opdb*${v_file_tag}*.txt ${oee_files[@]+"${oee_files[@]}"}
   fi
 
   cd ${current_working_dir}
@@ -416,9 +423,78 @@ function print_usage() {
 }
 ### Validate input
 
+# Redact password from an Oracle connection string before logging or printing.
+function redact_connection_string() {
+  local raw="${1:-}"
+  if [[ -z "${raw}" ]]; then
+    printf '<REDACTED>\n'
+    return 0
+  fi
+
+  local outer_q=""
+  if [[ ${#raw} -ge 2 ]]; then
+    if [[ "${raw}" == \'*\' && "${raw:1:${#raw}-2}" != *"'"* ]]; then
+      outer_q="'"
+      raw="${raw:1:${#raw}-2}"
+    elif [[ "${raw}" == \"*\" && "${raw:1:${#raw}-2}" != *'"'* ]]; then
+      outer_q='"'
+      raw="${raw:1:${#raw}-2}"
+    fi
+  fi
+
+  local creds="" target="" has_at=0
+  if [[ "${raw}" == *"@//"* ]]; then
+    creds="${raw%@//*}"
+    target="//${raw##*@//}"
+    has_at=1
+  elif [[ "${raw}" == *"@"* ]]; then
+    creds="${raw%@*}"
+    target="${raw##*@}"
+    has_at=1
+  else
+    creds="${raw}"
+  fi
+
+  local inner="${creds}" open_q="" close_q=""
+  if [[ ${#inner} -ge 2 ]]; then
+    if [[ "${inner}" == \'*\' ]]; then
+      open_q="'"
+      close_q="'"
+      inner="${inner:1:${#inner}-2}"
+    elif [[ "${inner}" == \"*\" ]]; then
+      open_q='"'
+      close_q='"'
+      inner="${inner:1:${#inner}-2}"
+    fi
+  fi
+
+  if [[ "${inner}" == */* ]]; then
+    local user_part="${inner%%/*}"
+    if [[ "${has_at}" -eq 1 ]]; then
+      printf '%s%s%s/<REDACTED>%s@%s%s\n' "${outer_q}" "${open_q}" "${user_part}" "${close_q}" "${target}" "${outer_q}"
+    else
+      printf '%s%s%s/<REDACTED>%s%s\n' "${outer_q}" "${open_q}" "${user_part}" "${close_q}" "${outer_q}"
+    fi
+  elif [[ "${has_at}" -eq 1 ]]; then
+    printf '%s<REDACTED>@%s%s\n' "${outer_q}" "${target}" "${outer_q}"
+  else
+    printf '<REDACTED>\n'
+  fi
+}
+
+
+# Trap handler that ensures any generated OEE driver files and staging directories are removed on exit/signal.
+function _dma_oee_cleanup_on_exit() {
+  if [[ "${_dma_oee_cleanup_armed:-0}" -eq 1 ]] && [[ -n "${oee_dir:-}" ]] && [[ -n "${oee_run_id:-}" ]]; then
+    _dma_oee_cleanup_armed=0
+    oee_cleanup_run "${oee_dir}" "${oee_run_id}" >/dev/null 2>&1 || true
+  fi
+}
+
+
 function parse_parameters() {
   if [[ $(($# & 1)) == 1 ]] ; then
-    echo "Invalid number of parameters : $# $@"
+    echo "Invalid number of parameters : $#"
     print_usage
     exit
   fi
@@ -467,13 +543,57 @@ function parse_parameters() {
       exit
     fi
   else
-    # Parse the EZ connect string to get the user/pass for OEE
-    collection_user_name=$(echo ${connection_string} | cut -d '/' -f 1)
-    collection_user_pass=$(echo ${connection_string} | cut -d '/' -f 2 | cut -d '@' -f 1)
-    host_and_port=$(echo ${connection_string} | cut -d '/' -f 4)
-    host_name=$(echo ${host_and_port} | cut -d ':' -f 1)
-    port=$(echo ${host_and_port} | cut -d ':' -f 2)
-    database_service=$(echo ${connection_string} | cut -d '/' -f 5)
+    # Parse the EZ connect string safely using quoted parameter expansion (handles '@', '/', '#', '&', '*').
+    local conn_raw="${connection_string}"
+    local conn_creds="" conn_target=""
+    if [[ ${#conn_raw} -ge 2 ]]; then
+      if [[ "${conn_raw}" == \'*\' && "${conn_raw:1:${#conn_raw}-2}" != *"'"* ]]; then
+        conn_raw="${conn_raw:1:${#conn_raw}-2}"
+      elif [[ "${conn_raw}" == \"*\" && "${conn_raw:1:${#conn_raw}-2}" != *'"'* ]]; then
+        conn_raw="${conn_raw:1:${#conn_raw}-2}"
+      fi
+    fi
+    if [[ "${conn_raw}" == *"@//"* ]]; then
+      conn_creds="${conn_raw%@//*}"
+      conn_target="${conn_raw##*@//}"
+    elif [[ "${conn_raw}" == *"@"* ]]; then
+      conn_creds="${conn_raw%@*}"
+      conn_target="${conn_raw##*@}"
+      conn_target="${conn_target#//}"
+    else
+      conn_creds="${conn_raw}"
+    fi
+    if [[ "${conn_creds}" == \'*\' && ${#conn_creds} -ge 2 ]]; then
+      conn_creds="${conn_creds:1:${#conn_creds}-2}"
+    elif [[ "${conn_creds}" == \"*\" && ${#conn_creds} -ge 2 ]]; then
+      conn_creds="${conn_creds:1:${#conn_creds}-2}"
+    fi
+    collection_user_name="${conn_creds%%/*}"
+    if [[ "${conn_creds}" == */* ]]; then
+      collection_user_pass="${conn_creds#*/}"
+    else
+      collection_user_pass=""
+    fi
+    if [[ "${collection_user_pass}" == \"*\" && ${#collection_user_pass} -ge 2 ]]; then
+      collection_user_pass="${collection_user_pass:1:${#collection_user_pass}-2}"
+    elif [[ "${collection_user_pass}" == \'*\' && ${#collection_user_pass} -ge 2 ]]; then
+      collection_user_pass="${collection_user_pass:1:${#collection_user_pass}-2}"
+    fi
+    if [[ -n "${conn_target}" ]]; then
+      host_and_port="${conn_target%%/*}"
+      host_name="${host_and_port%%:*}"
+      if [[ "${host_and_port}" == *":"* ]]; then
+        port="${host_and_port#*:}"
+      else
+        port=""
+      fi
+      if [[ "${conn_target}" == */* ]]; then
+        database_service="${conn_target#*/}"
+        database_service="${database_service%% *}"
+      else
+        database_service=""
+      fi
+    fi
   fi
 
   if [[ "${collect_oee}" == "Y" ]] ; then
@@ -483,7 +603,7 @@ function parse_parameters() {
       exit
     fi
     if [[ "${oee_run_id}" == "" ]] ; then
-      oee_run_id=${BASHPID}
+      oee_run_id="${BASHPID:-$$}"
       oee_run_id="$(date +%Y%m%d%H%M%S)_${oee_run_id}"
     fi
     if [[ ! -f $oee_dir/oee_group_extract-SA.sh ]]; then
@@ -521,10 +641,20 @@ function parse_parameters() {
 function check_db_connection() {
   connect_string="${connection_string}"
   result_string=$(check_version "${connect_string}" "${dma_version}" )
-  sqlcmd_result=$(echo ${result_string} | ${grep_cmd} DMAFILETAG | cut -d '~' -f 2)
+  sqlcmd_result=$(printf '%s\n' "${result_string}" | ${grep_cmd} DMAFILETAG | cut -d '~' -f 2)
   if [[ "${sqlcmd_result}" = "" ]]; then
-    echo "Unable to connect to the target database using ${connect_string}.  Please verify the connection information and target database status."
-    echo "Connection attempt returned ${result_string}"
+    local safe_conn_str safe_result
+    safe_conn_str=$(redact_connection_string "${connect_string}")
+    safe_result="${result_string}"
+    if [[ -n "${connect_string}" && "${safe_result}" == *"${connect_string}"* ]]; then
+      safe_result="${safe_result//"${connect_string}"/${safe_conn_str}}"
+    fi
+    if [[ -n "${collection_user_pass:-}" && "${safe_result}" == *"/${collection_user_pass}@"* ]]; then
+      local slash_redacted='/<REDACTED>@'
+      safe_result="${safe_result//"/${collection_user_pass}@"/${slash_redacted}}"
+    fi
+    echo "Unable to connect to the target database using ${safe_conn_str}.  Please verify the connection information and target database status."
+    echo "Connection attempt returned ${safe_result}"
     exit 255
   fi
 }
@@ -596,29 +726,57 @@ function main() {
       fi
       # Now start processing OEE collection if requested.
       dma_id=$(get_dma_source_id ${v_tag})
-      oee_output_file=""
+      local -a oee_output_files=()
       if [[ "${collect_oee}" == "Y" ]]; then
         oee_check_results=$(oee_check_conditions "${connection_string}")
         if [[ "${oee_check_results}" == "PASS" ]] ; then
-          echo Generating OEE driver file for run id ${oee_run_id}
-          oee_generate_config ${dma_id} ${database_service} ${host_name} ${port} ${collection_user_name} ${collection_user_pass} ${oee_group_name} ${oee_run_id} ${v_tag}
-          #if [[ "${dma_automation_flag}" != "Y" ]] ; then
-            echo Running OEE
-            current_dir=$(pwd)
-            cd oee
-            oee_run "${oee_run_id}"
-            oee_ret_val=$?
-            cd ${current_dir}
-            if [[ ${oee_ret_val} -eq 1 ]]; then
-              final_status="WARNING"
-              print_warning
-              echo
-              echo "Oracle Estate Explorer collection encountered errors.  Collection may be missing some data."
-              echo
-            else
-              oee_output_file=$(find ${output_dir} -type f -name "mpack*${v_tagbase}.zip" -printf "%f")
-            fi
-          #fi
+          _dma_oee_cleanup_armed=1
+          trap '_dma_oee_cleanup_on_exit' EXIT
+          trap '_dma_oee_cleanup_on_exit; exit 130' INT
+          trap '_dma_oee_cleanup_on_exit; exit 143' TERM
+          trap '_dma_oee_cleanup_on_exit; exit 129' HUP
+
+          echo "Generating OEE driver file for run id ${oee_run_id}"
+          if oee_generate_config "${dma_id}" "${database_service}" "${host_name}" "${port}" "${collection_user_name}" "${collection_user_pass}" "${oee_group_name}" "${oee_run_id}" "${v_tag}"; then
+            #if [[ "${dma_automation_flag}" != "Y" ]] ; then
+              echo "Running OEE"
+              current_dir=$(pwd)
+              oee_ret_val=1
+              if cd -- "${oee_dir}"; then
+                oee_run "${oee_run_id}"
+                oee_ret_val=$?
+                cd -- "${current_dir}" || true
+              fi
+              if [[ ${oee_ret_val} -ne 0 ]]; then
+                final_status="WARNING"
+                print_warning
+                echo
+                echo "Oracle Estate Explorer collection encountered errors.  Collection may be missing some data."
+                echo
+              fi
+              local _oee_nullglob_was_set=0
+              shopt -q nullglob && _oee_nullglob_was_set=1
+              shopt -s nullglob
+              local _oee_zip_path
+              for _oee_zip_path in \
+                "${output_dir}"/mpack*"${v_tagbase}".zip \
+                "${output_dir}"/mpack*"${v_tagbase}"_[0-9][0-9][0-9].zip \
+                "${output_dir}"/mpack*"${v_tagbase}"_[0-9][0-9][0-9][0-9].zip; do
+                [[ -f "${_oee_zip_path}" ]] || continue
+                oee_output_files+=( "$(basename -- "${_oee_zip_path}")" )
+              done
+              if [[ "${_oee_nullglob_was_set}" -eq 0 ]]; then
+                shopt -u nullglob
+              fi
+            #fi
+          else
+            final_status="WARNING"
+            print_warning
+            echo
+            echo "Failed to generate Oracle Estate Explorer driver file for run id ${oee_run_id}."
+            echo
+          fi
+          _dma_oee_cleanup_on_exit
         else
           final_status="WARNING"
           echo
@@ -627,7 +785,7 @@ function main() {
           echo
         fi
       fi
-      compress_dma_files  ${v_tagbase} ${database_type} ${oee_output_file}
+      compress_dma_files "${v_tagbase}" "${database_type}" ${oee_output_files[@]+"${oee_output_files[@]}"}
       retval=$?
       if [[ $retval -ne 0 ]];then
         print_failure
@@ -664,4 +822,6 @@ function main() {
   fi
 }
 
-main "$@"
+if [[ -z "${BASH_SOURCE[0]:-}" || "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  main "$@"
+fi
