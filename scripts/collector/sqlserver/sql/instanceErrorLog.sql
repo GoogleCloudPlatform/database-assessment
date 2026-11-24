@@ -14,6 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/* xp_readerrorlog is referenced without the master. prefix: Azure SQL Database rejects three-part names at compile time
+   (error 40515, not catchable by TRY/CATCH); the bare name raises a catchable 2812 there and resolves to master elsewhere. */
+
 SET NOCOUNT ON;
 SET LANGUAGE us_english;
 
@@ -36,7 +39,7 @@ CREATE TABLE #ErrLog (
 
 BEGIN TRY
     INSERT INTO #ErrLog
-    EXEC master.dbo.xp_readerrorlog 0, 1, NULL, NULL, NULL, NULL, N'desc';
+    EXEC xp_readerrorlog 0, 1, NULL, NULL, NULL, NULL, N'desc';
 END TRY
 BEGIN CATCH
     -- Non-sysadmin / non-securityadmin logins without EXECUTE on xp_readerrorlog return an empty log set cleanly

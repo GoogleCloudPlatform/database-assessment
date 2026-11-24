@@ -21,11 +21,15 @@ DECLARE @PKEY AS VARCHAR(256)
 DECLARE @DMA_SOURCE_ID AS VARCHAR(256)
 DECLARE @DMA_MANUAL_ID AS VARCHAR(256)
 DECLARE @CLOUDTYPE AS VARCHAR(256)
+DECLARE @DBNAME AS NVARCHAR(256)
 
 SELECT @PKEY = N'$(pkey)';
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 SELECT @CLOUDTYPE = 'NONE';
+/* Azure SQL Database is collected one database at a time; sys.resource_stats in master covers every database on
+   the logical server, so scope it to the declared target. 'all' / 'master' keep the historical unfiltered output. */
+SELECT @DBNAME = N'$(database)';
 
 IF UPPER(@@VERSION) LIKE '%AZURE%'
 	SELECT @CLOUDTYPE = 'AZURE';
@@ -44,15 +48,17 @@ BEGIN
             ''"'' + CONVERT(NVARCHAR(MAX), avg_log_write_percent) + ''"'' AS avg_log_write_percent,
             ''"'' + CONVERT(NVARCHAR(MAX), max_worker_percent) + ''"'' AS max_worker_percent,
             ''"'' + CONVERT(NVARCHAR(MAX), max_session_percent) + ''"'' AS max_session_percent,
-            ''"'' + CONVERT(NVARCHAR(MAX), dtu_limit) + ''"'' AS dtu_limit,
+            ''"'' + ISNULL(CONVERT(NVARCHAR(MAX), dtu_limit), N'''') + ''"'' AS dtu_limit,
             ''"'' + @DMA_SOURCE_ID + ''"'' AS dma_source_id,
             ''"'' + @DMA_MANUAL_ID + ''"'' AS dma_manual_id
         FROM sys.resource_stats
+        WHERE (@DBNAME IN (N''all'', N''master'', N'''') OR database_name = @DBNAME)
         ORDER BY end_time DESC;',
-        N'@PKEY VARCHAR(256), @DMA_SOURCE_ID VARCHAR(256), @DMA_MANUAL_ID VARCHAR(256)',
+        N'@PKEY VARCHAR(256), @DMA_SOURCE_ID VARCHAR(256), @DMA_MANUAL_ID VARCHAR(256), @DBNAME NVARCHAR(256)',
         @PKEY = @PKEY,
         @DMA_SOURCE_ID = @DMA_SOURCE_ID,
-        @DMA_MANUAL_ID = @DMA_MANUAL_ID;
+        @DMA_MANUAL_ID = @DMA_MANUAL_ID,
+        @DBNAME = @DBNAME;
 END
 ELSE
 BEGIN

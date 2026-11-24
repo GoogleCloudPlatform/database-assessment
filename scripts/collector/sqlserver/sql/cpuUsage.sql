@@ -40,19 +40,27 @@ CREATE TABLE #RBSM (
 );
 
 BEGIN TRY
-    INSERT INTO #RBSM (PKEY, [timestamp], process_utilization, system_idle, dma_source_id, dma_manual_id)
-    SELECT
-        '"' + @PKEY + '"' AS PKEY,
-        '"' + CONVERT(NVARCHAR(30), CAST(x.event_xml.value('(/event/@timestamp)[1]', 'datetime') AS datetime), 126) + '"' AS [timestamp],
-        '"' + CONVERT(NVARCHAR(20), x.event_xml.value('(/event/data[@name="process_utilization"]/value)[1]', 'int')) + '"' AS process_utilization,
-        '"' + CONVERT(NVARCHAR(20), x.event_xml.value('(/event/data[@name="system_idle"]/value)[1]', 'int')) + '"' AS system_idle,
-        '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
-        '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
-    FROM sys.fn_xe_file_target_read_file('system_health*.xel', NULL, NULL, NULL) AS f
-    CROSS APPLY (SELECT TRY_CAST(f.event_data AS XML) AS event_xml) AS x
-    WHERE f.object_name = 'scheduler_monitor_system_health_ring_buffer_recorded'
-      AND x.event_xml IS NOT NULL
-      AND x.event_xml.value('(/event/@timestamp)[1]', 'datetime2') >= DATEADD(day, -7, GETDATE());
+    IF CONVERT(INT, (@@microsoftversion / 0x1000000) & 0xff) >= 11
+    BEGIN
+        EXEC sys.sp_executesql
+            N'INSERT INTO #RBSM (PKEY, [timestamp], process_utilization, system_idle, dma_source_id, dma_manual_id)
+            SELECT
+                ''"'' + @PKEY + ''"'' AS PKEY,
+                ''"'' + ISNULL(CONVERT(NVARCHAR(30), x.event_xml.value(''(/event/@timestamp)[1]'', ''datetime2''), 126), N'''') + ''"'' AS [timestamp],
+                ''"'' + ISNULL(CONVERT(NVARCHAR(20), x.event_xml.value(''(/event/data[@name="process_utilization"]/value)[1]'', ''int'')), N'''') + ''"'' AS process_utilization,
+                ''"'' + ISNULL(CONVERT(NVARCHAR(20), x.event_xml.value(''(/event/data[@name="system_idle"]/value)[1]'', ''int'')), N'''') + ''"'' AS system_idle,
+                ''"'' + @DMA_SOURCE_ID + ''"'' AS dma_source_id,
+                ''"'' + @DMA_MANUAL_ID + ''"'' AS dma_manual_id
+            FROM sys.fn_xe_file_target_read_file(''system_health*.xel'', NULL, NULL, NULL) AS f
+            CROSS APPLY (SELECT TRY_CAST(f.event_data AS XML) AS event_xml) AS x
+            WHERE f.object_name = ''scheduler_monitor_system_health_ring_buffer_recorded''
+              AND x.event_xml IS NOT NULL
+              AND x.event_xml.value(''(/event/@timestamp)[1]'', ''datetime2'') >= DATEADD(day, -7, GETDATE());',
+            N'@PKEY VARCHAR(256), @DMA_SOURCE_ID VARCHAR(256), @DMA_MANUAL_ID VARCHAR(256)',
+            @PKEY = @PKEY,
+            @DMA_SOURCE_ID = @DMA_SOURCE_ID,
+            @DMA_MANUAL_ID = @DMA_MANUAL_ID;
+    END
 END TRY
 BEGIN CATCH
     -- Gracefully return 0 rows on Azure SQL Database or restricted hosts without system_health XEL file access

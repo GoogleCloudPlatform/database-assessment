@@ -28,7 +28,7 @@ SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 SELECT
     '"' + @PKEY + '"' AS PKEY,
     '"' + counter + '"' AS counter,
-    '"' + CONVERT(NVARCHAR(MAX), value) + '"' AS value,
+    '"' + ISNULL(CONVERT(NVARCHAR(MAX), value), '') + '"' AS value,
     '"' + CONVERT(NVARCHAR(MAX), occurrence) + '"' AS occurrence,
     '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
     '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id

@@ -28,19 +28,54 @@ SELECT @PKEY = N'$(pkey)';
 SELECT @DMA_SOURCE_ID = N'$(dmaSourceId)';
 SELECT @DMA_MANUAL_ID = N'$(dmaManualId)';
 
-WITH TotalMemory AS (
-    SELECT
-        ISNULL(NULLIF(SUM(pages_kb), 0), 1) AS total_pages_kb
-    FROM sys.dm_os_memory_clerks
-)
-SELECT TOP (20)
-    '"' + @PKEY + '"' AS PKEY,
-    '"' + CONVERT(NVARCHAR(128), mc.type) + '"' AS memory_clerk_type,
-    '"' + CONVERT(NVARCHAR(30), SUM(mc.pages_kb) / 1024) + '"' AS allocated_mb,
-    '"' + CONVERT(NVARCHAR(20), CAST((SUM(mc.pages_kb) * 100.0 / tm.total_pages_kb) AS DECIMAL(5,2))) + '"' AS pct_of_total_sql_memory,
-    '"' + @DMA_SOURCE_ID + '"' AS dma_source_id,
-    '"' + @DMA_MANUAL_ID + '"' AS dma_manual_id
-FROM sys.dm_os_memory_clerks mc
-CROSS JOIN TotalMemory tm
-GROUP BY mc.type, tm.total_pages_kb
-ORDER BY SUM(mc.pages_kb) DESC;
+DECLARE @PRODUCT_VERSION AS INT;
+SELECT @PRODUCT_VERSION = CONVERT(INT, (@@microsoftversion / 0x1000000) & 0xff);
+
+IF @PRODUCT_VERSION >= 11
+BEGIN
+    EXEC sys.sp_executesql
+        N'WITH TotalMemory AS (
+            SELECT
+                ISNULL(NULLIF(SUM(pages_kb), 0), 1) AS total_pages_kb
+            FROM sys.dm_os_memory_clerks
+        )
+        SELECT TOP (20)
+            ''"'' + @PKEY + ''"'' AS PKEY,
+            ''"'' + CONVERT(NVARCHAR(128), mc.type) + ''"'' AS memory_clerk_type,
+            ''"'' + CONVERT(NVARCHAR(30), SUM(mc.pages_kb) / 1024) + ''"'' AS allocated_mb,
+            ''"'' + CONVERT(NVARCHAR(20), CAST((SUM(mc.pages_kb) * 100.0 / tm.total_pages_kb) AS DECIMAL(5,2))) + ''"'' AS pct_of_total_sql_memory,
+            ''"'' + @DMA_SOURCE_ID + ''"'' AS dma_source_id,
+            ''"'' + @DMA_MANUAL_ID + ''"'' AS dma_manual_id
+        FROM sys.dm_os_memory_clerks mc
+        CROSS JOIN TotalMemory tm
+        GROUP BY mc.type, tm.total_pages_kb
+        ORDER BY SUM(mc.pages_kb) DESC;',
+        N'@PKEY VARCHAR(256), @DMA_SOURCE_ID VARCHAR(256), @DMA_MANUAL_ID VARCHAR(256)',
+        @PKEY = @PKEY,
+        @DMA_SOURCE_ID = @DMA_SOURCE_ID,
+        @DMA_MANUAL_ID = @DMA_MANUAL_ID;
+END
+ELSE
+BEGIN
+    EXEC sys.sp_executesql
+        N'WITH TotalMemory AS (
+            SELECT
+                ISNULL(NULLIF(SUM(single_pages_kb + multi_pages_kb), 0), 1) AS total_pages_kb
+            FROM sys.dm_os_memory_clerks
+        )
+        SELECT TOP (20)
+            ''"'' + @PKEY + ''"'' AS PKEY,
+            ''"'' + CONVERT(NVARCHAR(128), mc.type) + ''"'' AS memory_clerk_type,
+            ''"'' + CONVERT(NVARCHAR(30), SUM(mc.single_pages_kb + mc.multi_pages_kb) / 1024) + ''"'' AS allocated_mb,
+            ''"'' + CONVERT(NVARCHAR(20), CAST((SUM(mc.single_pages_kb + mc.multi_pages_kb) * 100.0 / tm.total_pages_kb) AS DECIMAL(5,2))) + ''"'' AS pct_of_total_sql_memory,
+            ''"'' + @DMA_SOURCE_ID + ''"'' AS dma_source_id,
+            ''"'' + @DMA_MANUAL_ID + ''"'' AS dma_manual_id
+        FROM sys.dm_os_memory_clerks mc
+        CROSS JOIN TotalMemory tm
+        GROUP BY mc.type, tm.total_pages_kb
+        ORDER BY SUM(mc.single_pages_kb + mc.multi_pages_kb) DESC;',
+        N'@PKEY VARCHAR(256), @DMA_SOURCE_ID VARCHAR(256), @DMA_MANUAL_ID VARCHAR(256)',
+        @PKEY = @PKEY,
+        @DMA_SOURCE_ID = @DMA_SOURCE_ID,
+        @DMA_MANUAL_ID = @DMA_MANUAL_ID;
+END;
