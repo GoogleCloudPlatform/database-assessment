@@ -100,6 +100,16 @@ destroy:                                            ## Destroy the virtual envir
 	@echo "${OK} Virtual environment destroyed 🗑️"
 
 
+.PHONY: update-oee
+update-oee:                                         ## Check GitHub for newer OEE scripts and update locally
+	@echo "${INFO} Checking upstream Oracle Estate Explorer scripts..."
+	@python3 tools/update_oee.py $(if $(filter 1 true yes Y,$(CHECK_ONLY)),--check) $(if $(filter 1 true yes Y,$(FORCE)),--force)
+	@echo "${OK} OEE check complete"
+
+.PHONY: check_oee_release
+check_oee_release:                                  ## Return newer Oracle OEE download link or null
+	@python3 tools/update_oee.py --check-release
+
 .PHONY: build-collector
 build-collector: 										## Build the collector SQL scripts.
 	@tools/build-collector.sh
