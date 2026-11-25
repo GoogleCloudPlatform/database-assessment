@@ -192,7 +192,11 @@ EOF
 
   for f in $(ls -1 "sql/${SCRIPT_PATH}"/*.sql | "${grep_cmd}" -v -E "init.sql|_base_path_lookup.sql|hostname.sql"); do
     fname=$(echo "${f}" | cut -d '/' -f 3 | cut -d '.' -f 1)
-    ${sql_cmd} --user="${user}" --password="${pass}" -h "${host}" -P "${port}" --force --table  "${db}" >"${output_dir}/opdb__mysql_${fname}__${v_file_tag}.csv" 2>>"${output_dir}/opdb__stderr_${v_file_tag}.log"  <<EOF
+    APPENDPARAMS=""
+    if [[ -f "${output_dir}/opdb__mysql_${fname}__${v_file_tag}.csv" ]]; then
+      APPENDPARAMS=" --silent --skip-column-names "
+    fi
+    ${sql_cmd} --user="${user}" --password="${pass}" -h "${host}" -P "${port}" --force --table ${APPENDPARAMS} "${db}" >>"${output_dir}/opdb__mysql_${fname}__${v_file_tag}.csv" 2>>"${output_dir}/opdb__stderr_${v_file_tag}.log"  <<EOF
 SET @DMA_SOURCE_ID='${DMA_SOURCE_ID}';
 SET @DMA_MANUAL_ID='${v_manual_id}';
 SET @PKEY='${v_file_tag}';
@@ -349,7 +353,7 @@ function print_extractor_version() {
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo "This appears to be an unsupported version of this code. "
     echo "Please download the latest stable version from "
-    echo "https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-postgres.zip"
+    echo "https://github.com/GoogleCloudPlatform/database-assessment/releases/latest/download/db-migration-assessment-collection-scripts-mysql.zip"
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
